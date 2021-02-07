@@ -21,13 +21,13 @@
     ],
     "autoload": {
         "psr-4": {
-            "Lightpack\\": "src/framework"
+            "Lightpack\\": "src/Framework"
         },
         "files": [
-            "src/framework/utilities.php"
+            "src/framework/Utilities.php"
         ],
         "exclude-from-classmap": [
-            "src/tests/"
+            "src/Tests/"
         ]
     },
     "minimum-stability": "dev",
