@@ -24,7 +24,7 @@
             "Lightpack\\": "src/Framework"
         },
         "files": [
-            "src/framework/Utilities.php"
+            "src/Framework/utilities.php"
         ],
         "exclude-from-classmap": [
             "src/Tests/"
