@@ -3,8 +3,8 @@
 return [
     'host' => 'localhost',
     'port' => 3306,
-    'username' => 'ganapati',
-    'password' => 'mahadeva*#@$3210DONE',
+    'username' => 'root',
+    'password' => '',
     'database' => 'lightpack',
     'options' => null,
 ];
