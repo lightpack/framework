@@ -84,7 +84,7 @@ class ExceptionRenderer
         return 'http'; 
     }
 
-    private function getCodePreview(string $file, int $line): string
+    private function getCodePreview(string $file, int $line): ?string
     {
         if(!file_exists($file)) {
             return null;
