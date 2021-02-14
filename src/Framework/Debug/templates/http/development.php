@@ -28,11 +28,13 @@
             <span class="file-label">File:</span> <?= $file ?>
         </div>
 
+        <?php if($code_preview) : ?>
         <div class="code-preview">
             <code>
                 <?= $code_preview ?>
             </code>
         </div>
+        <?php endif; ?>
 
         <?php if(trim($trace)) { ?>
             <div class="trace-container">
