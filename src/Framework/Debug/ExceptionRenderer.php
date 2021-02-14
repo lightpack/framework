@@ -86,6 +86,10 @@ class ExceptionRenderer
 
     private function getCodePreview(string $file, int $line): string
     {
+        if(!file_exists($file)) {
+            return null;
+        }
+
         $preview = '';
         $file = file($file);
         $line = $line;
