@@ -35,6 +35,8 @@ class ValidatorFactory
      */
     public function __construct($strategy)
     {
+        $strategy = ucfirst($strategy);
+        
         try {
             $reflectStrategy = new ReflectionClass("Lightpack\Validator\Strategies\\$strategy");
         } catch(ReflectionException $e) {
