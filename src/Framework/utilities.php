@@ -23,9 +23,9 @@ if (!function_exists('url')) {
     */
     function url(string ...$fragments) {
         $path = implode('/', $fragments);
-        $url = app('request')->basepath() . '/' . trim($path, '/');
+        $url = '/' . trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
         
-        return '/' . trim($url, '/');
+        return $url;
     }
 }
 
