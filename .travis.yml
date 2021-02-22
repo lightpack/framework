@@ -10,6 +10,6 @@ php:
 services:
     - mysql
 script:
-    - ./vendor/bin/phpunit src/Tests
+    - ./vendor/bin/phpunit --bootstrap vendor/autoload.php src/Tests
 notifications:
     email: false
