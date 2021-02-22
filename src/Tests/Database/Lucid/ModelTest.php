@@ -15,9 +15,19 @@ final class ModelTest extends TestCase
         $config = require __DIR__ . '/../tmp/mysql.config.php';
 
         $this->db = new \Lightpack\Database\Adapters\Mysql($config); 
+        $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
+        $stmt = $this->db->query($sql);
+        $stmt->closeCursor();
         $this->product = $this->db->model(Product::class);
     }
 
+    public function tearDown(): void
+    {
+        $sql = "DROP TABLE `products`, `options`, `owners`;";
+        $this->db->query($sql);
+        $this->db = null;
+    }
+    
     public function testModelInstance()
     {
         $this->assertInstanceOf(Model::class, $this->product);

@@ -5,6 +5,6 @@ return [
     'port' => 3306,
     'username' => 'root',
     'password' => '',
-    'database' => 'lightpack',
+    'database' => 'test_lightpack',
     'options' => null,
 ];

@@ -4,14 +4,24 @@ use PHPUnit\Framework\TestCase;
 
 final class QueryTest extends TestCase
 {
+    private $db;
     private $query;
 
     public function setUp(): void
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
-        $db = new \Lightpack\Database\Adapters\Mysql($config);   
+        $this->db = new \Lightpack\Database\Adapters\Mysql($config);   
+        $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
+        $stmt = $this->db->query($sql);
+        $stmt->closeCursor();
+        $this->query = new \Lightpack\Database\Query\Query('products', $this->db);
+    }
 
-        $this->query = new \Lightpack\Database\Query\Query('products', $db);
+    public function tearDown(): void
+    {
+        $sql = "DROP TABLE `products`, `options`, `owners`;";
+        $this->db->query($sql);
+        $this->db = null;
     }
 
     public function testSelectFetchAll()
