@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "23266b3623871e0f68e65dd6dd2c5257",
+    "content-hash": "5e6e72fe8cc8a4d64ed4e941ee4c6868",
     "packages": [],
     "packages-dev": [
         {
@@ -364,12 +364,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "6a467b8989322d92aa1c8bf2bebcc6e5c2ba55c0"
+                "reference": "6759f2268deb9f329812679e9dcb2d0083b2a30b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/6a467b8989322d92aa1c8bf2bebcc6e5c2ba55c0",
-                "reference": "6a467b8989322d92aa1c8bf2bebcc6e5c2ba55c0",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/6759f2268deb9f329812679e9dcb2d0083b2a30b",
+                "reference": "6759f2268deb9f329812679e9dcb2d0083b2a30b",
                 "shasum": ""
             },
             "require": {
@@ -404,9 +404,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.4.0"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.x"
             },
-            "time": "2020-09-17T18:55:26+00:00"
+            "time": "2021-02-02T21:09:27+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -778,12 +778,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "83491f4d19d18c868829a013f0ee0839dd53c684"
+                "reference": "f584ccde2bc08617ad82285e5f0c9849575163d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/83491f4d19d18c868829a013f0ee0839dd53c684",
-                "reference": "83491f4d19d18c868829a013f0ee0839dd53c684",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/f584ccde2bc08617ad82285e5f0c9849575163d2",
+                "reference": "f584ccde2bc08617ad82285e5f0c9849575163d2",
                 "shasum": ""
             },
             "require": {
@@ -867,7 +867,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-01-07T15:20:39+00:00"
+            "time": "2021-02-21T06:28:41+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -1660,7 +1660,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.22.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.22.1"
             },
             "funding": [
                 {
@@ -1730,20 +1730,20 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "1.9.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/webmozart/assert.git",
-                "reference": "bafc69caeb4d49c39fd0779086c03a3738cbb389"
+                "url": "https://github.com/webmozarts/assert.git",
+                "reference": "9c89b265ccc4092d58e66d72af5d343ee77a41ae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/assert/zipball/bafc69caeb4d49c39fd0779086c03a3738cbb389",
-                "reference": "bafc69caeb4d49c39fd0779086c03a3738cbb389",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/9c89b265ccc4092d58e66d72af5d343ee77a41ae",
+                "reference": "9c89b265ccc4092d58e66d72af5d343ee77a41ae",
                 "shasum": ""
             },
             "require": {
-                "php": "^5.3.3 || ^7.0 || ^8.0",
+                "php": "^7.2 || ^8.0",
                 "symfony/polyfill-ctype": "^1.8"
             },
             "conflict": {
@@ -1751,9 +1751,15 @@
                 "vimeo/psalm": "<3.9.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.8.36 || ^7.5.13"
+                "phpunit/phpunit": "^8.5.13"
             },
+            "default-branch": true,
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.10-dev"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "Webmozart\\Assert\\": "src/"
@@ -1776,10 +1782,10 @@
                 "validate"
             ],
             "support": {
-                "issues": "https://github.com/webmozart/assert/issues",
-                "source": "https://github.com/webmozart/assert/tree/master"
+                "issues": "https://github.com/webmozarts/assert/issues",
+                "source": "https://github.com/webmozarts/assert/tree/master"
             },
-            "time": "2020-07-08T17:02:28+00:00"
+            "time": "2021-01-18T12:52:36+00:00"
         }
     ],
     "aliases": [],
@@ -1788,7 +1794,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.1"
+        "php": "^7.2||^8.0"
     },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"
