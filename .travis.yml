@@ -10,6 +10,6 @@ php:
 services:
     - mysql
 script:
-    - ./vendor/bin/phpunit
+    - vendor/bin/phpunit --verbose
 notifications:
     email: false
