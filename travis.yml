@@ -1,3 +1,5 @@
+# Travis CI configuration for lightpack/framework
+
 before_script:
     - mysql -e 'CREATE DATABASE IF NOT EXISTS test_lightpack;'
     - composer self-update
