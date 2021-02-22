@@ -21,6 +21,13 @@ final class ModelTest extends TestCase
         $this->product = $this->db->model(Product::class);
     }
 
+    public function tearDown(): void
+    {
+        $sql = "DROP TABLE `products`, `options`, `owners`;";
+        $this->db->query($sql);
+        $this->db = null;
+    }
+    
     public function testModelInstance()
     {
         $this->assertInstanceOf(Model::class, $this->product);

@@ -17,12 +17,12 @@ final class QueryTest extends TestCase
         $this->query = new \Lightpack\Database\Query\Query('products', $this->db);
     }
 
-    // public function tearDown(): void
-    // {
-    //     $sql = "DROP TABLE `products`, `options`, `owners`;";
-    //     $this->db->query($sql);
-    //     $this->db = null;
-    // }
+    public function tearDown(): void
+    {
+        $sql = "DROP TABLE `products`, `options`, `owners`;";
+        $this->db->query($sql);
+        $this->db = null;
+    }
 
     public function testSelectFetchAll()
     {
