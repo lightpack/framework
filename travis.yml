@@ -1,0 +1,11 @@
+before_script:
+    - mysql -e 'CREATE DATABASE IF NOT EXISTS test_lightpack;'
+    - composer self-update
+    - composer install
+language: php
+php:
+    - 7.1
+script:
+    - ./vendor/bin/phpunit src/Tests
+notifications:
+    email: false
