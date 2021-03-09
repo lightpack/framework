@@ -102,7 +102,7 @@ if (!function_exists('asset_url')) {
      * asset_url('js', 'scripts.js');
      */
     function asset_url(string $type, string $file): ?string {
-        return url('public/assets', $type, $file);
+        return url('assets', $type, $file);
     }
 }
 
