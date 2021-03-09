@@ -23,7 +23,7 @@ if (!function_exists('url')) {
     */
     function url(string ...$fragments) {
         $path = implode('/', $fragments);
-        $url = '/' . trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
+        $url = trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
         
         return $url;
     }
