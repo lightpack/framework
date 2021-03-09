@@ -23,7 +23,7 @@ if (!function_exists('url')) {
     */
     function url(string ...$fragments) {
         $path = implode('/', $fragments);
-        $url = '/' . trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
+        $url = trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
         
         return $url;
     }
@@ -102,7 +102,7 @@ if (!function_exists('asset_url')) {
      * asset_url('js', 'scripts.js');
      */
     function asset_url(string $type, string $file): ?string {
-        return url('public/assets', $type, $file);
+        return url('assets', $type, $file);
     }
 }
 
