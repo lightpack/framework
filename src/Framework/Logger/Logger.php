@@ -53,6 +53,7 @@ class Logger implements LoggerInterface
     
     public function log($level, $message, array $context = [])
     {
-        file_put_contents($this->filename, "[$level] " . $message, LOCK_EX | FILE_APPEND);
+        $content = date('Y-m-d H:i:s') . " $level : " . $message . PHP_EOL;
+        file_put_contents($this->filename, $content, LOCK_EX | FILE_APPEND);
     }
 }
