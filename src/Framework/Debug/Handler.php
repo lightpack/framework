@@ -7,14 +7,20 @@ use Throwable;
 use TypeError;
 use ParseError;
 use ErrorException;
+use Psr\Log\LoggerInterface;
 use Lightpack\Debug\ExceptionRenderer;
 
 class Handler
 {
+    private $logger;
     private $exceptionRenderer;
     
-    public function __construct(ExceptionRenderer $exceptionRenderer)
+    public function __construct(
+        LoggerInterface $logger, 
+        ExceptionRenderer $exceptionRenderer
+    )
     {
+        $this->logger = $logger;
         $this->exceptionRenderer = $exceptionRenderer;
     }
     
@@ -24,6 +30,7 @@ class Handler
             $message, $code, $code, $file, $line
         );
 
+        $this->log($exc);
         $this->exceptionRenderer->render($exc, 'Error');
     }
     
@@ -48,10 +55,17 @@ class Handler
             } else {
                 $this->handleError(E_ERROR, "Fatal error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
             }
-
+            
             return;
         }
-
+        
         $this->exceptionRenderer->render($exc);
+    }
+
+    private function log($exc)
+    {
+        if(APP_ENV == 'development') {
+            $this->logger->error($exc);
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-class InvalidCsrfTokenException extends \Exception 
+class InvalidCsrfTokenException extends HttpException 
 {
     public function __construct(string $message) 
     {

@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-class ControllerNotFoundException extends \Exception 
+class ControllerNotFoundException extends HttpException 
 {
     public function __construct(string $message) 
     {
