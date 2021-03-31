@@ -2,4 +2,4 @@
 
 namespace Lightpack\Exceptions;
 
-class InvalidRedirectUrlException extends \Exception {}
+class InvalidRedirectUrlException extends HttpException {}

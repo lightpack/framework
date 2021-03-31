@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-class RouteNotFoundException extends \Exception 
+class RouteNotFoundException extends HttpException 
 {
     public function __construct(string $message) 
     {

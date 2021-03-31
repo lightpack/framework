@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-class ActionNotFoundException extends \Exception 
+class ActionNotFoundException extends HttpException 
 {
     public function __construct(string $message) 
     {

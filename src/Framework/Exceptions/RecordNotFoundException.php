@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-class RecordNotFoundException extends \Exception 
+class RecordNotFoundException extends HttpException 
 {
     public function __construct() 
     {
