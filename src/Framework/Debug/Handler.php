@@ -64,7 +64,7 @@ class Handler
 
     private function log($exc)
     {
-        if(APP_ENV == 'development') {
+        if(APP_ENV !== 'development') {
             $this->logger->error($exc);
         }
     }
