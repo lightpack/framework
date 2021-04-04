@@ -60,9 +60,10 @@ class Session
     public function verifyAgent(): bool 
     {
         if($this->get('user_agent') == $_SERVER['HTTP_USER_AGENT']) {
-            return TRUE;
+            return true;
         }
-        return FALSE;
+        
+        return false;
     }
 
     public function token()
