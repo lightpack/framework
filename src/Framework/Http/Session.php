@@ -59,7 +59,7 @@ class Session
 
     public function verifyAgent(): bool 
     {
-        if(self::get('user_agent') == $_SERVER['HTTP_USER_AGENT']) {
+        if($this->get('user_agent') == $_SERVER['HTTP_USER_AGENT']) {
             return TRUE;
         }
         return FALSE;
