@@ -12,6 +12,7 @@ class Route
         'PUT' => [],
         'PATCH' => [],
         'DELETE' => [],
+        'OPTIONS' => [],
     ];
     private $placeholders = [
         ':any' => '(.*)',
@@ -56,6 +57,11 @@ class Route
     public function delete(string $path, string $handler, array $filters = []): void
     {
         $this->add('DELETE', $this->options['prefix'] . $path, $handler, $filters);
+    }
+
+    public function options(string $path, string $handler, array $filters = []): void
+    {
+        $this->add('OPTIONS', $this->options['prefix'] . $path, $handler, $filters);
     }
 
     public function paths(string $method): array
