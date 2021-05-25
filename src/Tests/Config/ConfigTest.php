@@ -11,7 +11,7 @@ final class ConfigTest extends TestCase
     {
         $config = new \Lightpack\Config\Config(['app', 'db']);
         $this->assertEquals('Lightpack', $config->app['name']);
-        $this->assertEquals('test_db', $config->db['name']);
+        $this->assertEquals('lightpack', $config->db['name']);
     }
 
     public function testConfigFileNotFoundException()
