@@ -21,6 +21,6 @@ class Runner
             array_shift($arguments);
         }
 
-        Console::runCommand($command, $arguments);
+        Console::run($command, $arguments);
     }
 }
