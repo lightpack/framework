@@ -30,10 +30,10 @@ class Console
             exit(0);
         }
 
-        return self::$commands[$command];
+        return new self::$commands[$command];
     }
 
-    public static function runCommand(string $command = null, array $arguments = [])
+    public static function run(string $command = null, array $arguments = [])
     {
         if ($command === null) {
             fputs(STDOUT, "Need help? https://lightpack.github.io/docs/#/console\n");
