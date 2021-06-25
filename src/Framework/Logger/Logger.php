@@ -7,10 +7,13 @@ use Psr\Log\LoggerInterface;
 
 class Logger implements LoggerInterface
 {
-    public function __construct(string $filename) 
+    private $logger;
+
+    public function __construct(ILogger $logger)
     {
-        $this->filename = $filename;
+        $this->logger = $logger;
     }
+
     public function emergency($message, array $context = [])
     {
         $this->log(LogLevel::EMERGENCY, $message, $context);
@@ -50,10 +53,9 @@ class Logger implements LoggerInterface
     {
         $this->log(LogLevel::DEBUG, $message, $context);
     }
-    
+
     public function log($level, $message, array $context = [])
     {
-        $content = date('Y-m-d H:i:s') . " $level : " . $message . PHP_EOL;
-        file_put_contents($this->filename, $content, LOCK_EX | FILE_APPEND);
+        $this->logger->log($level, $message, $context);
     }
 }
