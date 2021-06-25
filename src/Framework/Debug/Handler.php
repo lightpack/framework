@@ -14,40 +14,46 @@ class Handler
 {
     private $logger;
     private $exceptionRenderer;
-    
+
     public function __construct(
-        LoggerInterface $logger, 
+        LoggerInterface $logger,
         ExceptionRenderer $exceptionRenderer
-    )
-    {
+    ) {
         $this->logger = $logger;
         $this->exceptionRenderer = $exceptionRenderer;
     }
-    
+
     public function handleError(int $code, string $message, string $file, int $line)
     {
         $exc = new ErrorException(
-            $message, $code, $code, $file, $line
+            $message,
+            $code,
+            $code,
+            $file,
+            $line
         );
 
         $this->log($exc);
         $this->exceptionRenderer->render($exc, 'Error');
     }
-    
+
     public function handleShutdown()
     {
         $error = error_get_last();
-        
+
         if ($error) {
             $this->handleError(
-                $error['type'], $error['message'], $error['file'], $error['line']
+                $error['type'],
+                $error['message'],
+                $error['file'],
+                $error['line']
             );
-        } 
+        }
     }
 
     public function handleException(Throwable $exc)
     {
-        if($exc instanceof Error) {
+        if ($exc instanceof Error) {
             if ($exc instanceof ParseError) {
                 $this->handleError(E_PARSE, "Parse error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
             } elseif ($exc instanceof TypeError) {
@@ -55,17 +61,15 @@ class Handler
             } else {
                 $this->handleError(E_ERROR, "Fatal error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
             }
-            
+
             return;
         }
-        
+
         $this->exceptionRenderer->render($exc);
     }
 
     private function log($exc)
     {
-        if(APP_ENV !== 'development') {
-            $this->logger->error($exc);
-        }
+        $this->logger->error($exc);
     }
 }
