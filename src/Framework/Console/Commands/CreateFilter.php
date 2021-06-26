@@ -24,10 +24,10 @@ class CreateFilter implements ICommand
         }
 
         $template = FilterView::getTemplate();
-
         $template = str_replace('__FILTER_NAME__', $className, $template);
+        $directory = '/app/Filters';
 
         file_put_contents(DIR_ROOT . '/app/Filters/' . $className . '.php', $template);
-        fputs(STDOUT, "Filter created in /app/Filters\n\n");
+        fputs(STDOUT, "✓ Filter created: {$directory}/{$className}.php\n\n");
     }
 }
