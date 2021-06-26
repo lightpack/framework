@@ -9,7 +9,7 @@ class ControllerView
         return <<<'TEMPLATE'
 <?php
 
-namespace App\Controllers;
+namespace __NAMESPACE__;
 
 class __CONTROLLER_NAME__ 
 {
