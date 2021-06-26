@@ -37,15 +37,15 @@ class CreateModel implements ICommand
         }
 
         $template = ModelView::getTemplate();
-
         $template = str_replace(
             ['__MODEL_NAME__', '__TABLE_NAME__'],
             [$className, $tableName],
             $template
         );
+        $directory = '/app/Models';
 
         file_put_contents(DIR_ROOT . '/app/Models/' . $className . '.php', $template);
-        fputs(STDOUT, "Model created in /app/Models\n\n");
+        fputs(STDOUT, "✓ Model created: {$directory}/{$className}.php\n\n");
     }
 
     private function parseTableName(array $arguments)

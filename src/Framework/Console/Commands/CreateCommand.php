@@ -24,10 +24,10 @@ class CreateCommand implements ICommand
         }
 
         $template = CommandView::getTemplate();
-
         $template = str_replace('__COMMAND_NAME__', $className, $template);
+        $directory = '/app/Console';
 
         file_put_contents(DIR_ROOT . '/app/Console/' . $className . '.php', $template);
-        fputs(STDOUT, "Command created in /app/Console\n\n");
+        fputs(STDOUT, "✓ Command created: {$directory}/{$className}.php\n\n");
     }
 }

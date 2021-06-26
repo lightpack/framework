@@ -24,10 +24,10 @@ class CreateEvent implements ICommand
         }
 
         $template = EventView::getTemplate();
-
         $template = str_replace('__EVENT_NAME__', $className, $template);
+        $directory = '/app/Events';
 
         file_put_contents(DIR_ROOT . '/app/Events/' . $className . '.php', $template);
-        fputs(STDOUT, "Event created in /app/Events\n\n");
+        fputs(STDOUT, "✓ Event created: {$directory}/{$className}.php\n\n");
     }
 }
