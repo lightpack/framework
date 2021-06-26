@@ -27,7 +27,7 @@ class CreateCommand implements ICommand
         $template = str_replace('__COMMAND_NAME__', $className, $template);
         $directory = '/app/Console';
 
-        file_put_contents(DIR_ROOT . '/app/Console/' . $className . '.php', $template);
+        file_put_contents(DIR_ROOT . '/app/Commands/' . $className . '.php', $template);
         fputs(STDOUT, "✓ Command created: {$directory}/{$className}.php\n\n");
     }
 }

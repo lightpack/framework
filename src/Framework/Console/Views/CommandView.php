@@ -9,7 +9,7 @@ class CommandView
         return <<<'TEMPLATE'
 <?php
 
-namespace App\Console;
+namespace App\Commands;
 
 use Lightpack\Console\ICommand;
 
