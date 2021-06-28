@@ -20,7 +20,7 @@ class Dispatcher
         $this->request = $request;
         $this->router = $router;
         $this->throwExceptionIfRouteNotFound($router->meta());
-        $this->controller = $router->namespace() . '\\' . $router->controller();
+        $this->controller = $router->controller();
         $this->action = $router->action();
         $this->params = $router->params();
     }

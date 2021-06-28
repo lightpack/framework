@@ -23,25 +23,18 @@ final class RouteTest extends TestCase
     public function testRoutePathException()
     {
         $this->expectException('\\Exception');
-        $this->route->get('', 'UserController@index');
+        $this->route->get('', 'UserController', 'index');
         $this->fail('Empty route path');
-    }
-
-    public function testRouteMetaException()
-    {
-        $this->expectException('\\Exception');
-        $this->route->get('/users', 'UserController:index');
-        $this->fail('Invalid route path configuration');
     }
 
     public function testRoutePathsRegisteredForMethod()
     {
-        $this->route->get('/users', 'UserController@index');
-        $this->route->get('/users/23', 'UserController@edit');
-        $this->route->post('/users/23', 'UserController@delete');
-        $this->route->put('/users', 'UserController@index');
-        $this->route->patch('/users', 'UserController@index');
-        $this->route->delete('/users', 'UserController@index');
+        $this->route->get('/users', 'UserController', 'index');
+        $this->route->get('/users/23', 'UserController', 'edit');
+        $this->route->post('/users/23', 'UserController', 'delete');
+        $this->route->put('/users', 'UserController', 'index');
+        $this->route->patch('/users', 'UserController', 'index');
+        $this->route->delete('/users', 'UserController', 'index');
 
         $this->assertCount(
             2,
@@ -76,9 +69,9 @@ final class RouteTest extends TestCase
 
     public function testRouteMatchesUrl()
     {
-        $this->route->get('/users', 'UserController@index');
-        $this->route->get('/users/:num/role/:alpha', 'UserController@showForm');
-        $this->route->post('/users/:num/profile', 'UserController@submitForm');
+        $this->route->get('/users', 'UserController', 'index');
+        $this->route->get('/users/:num/role/:alpha', 'UserController', 'showForm');
+        $this->route->post('/users/:num/profile', 'UserController', 'submitForm');
 
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $this->assertTrue(
@@ -106,7 +99,7 @@ final class RouteTest extends TestCase
     }
 
     public function testRouteShouldMapMultipleVerbs() {
-        $this->route->map(['GET', 'POST'], '/users/:num', 'UserController@index');
+        $this->route->map(['GET', 'POST'], '/users/:num', 'UserController', 'index');
 
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $this->assertTrue(
@@ -127,12 +120,12 @@ final class RouteTest extends TestCase
         );
 
         $this->expectException('\\Exception');
-        $this->route->map(['get'], '/users', 'UserController@index');
+        $this->route->map(['get'], '/users', 'UserController', 'index');
         $this->fail('Unsupported HTTP request method: ' . 'get');
     }
 
     public function testRouteShouldMapAnyAllowedVerb() {
-        $this->route->any('/users/:num', 'UserController@index');
+        $this->route->any('/users/:num', 'UserController', 'index');
 
         foreach($this->verbs as $verb) {
             $_SERVER['REQUEST_METHOD'] = $verb;
@@ -147,12 +140,12 @@ final class RouteTest extends TestCase
         $this->route->group(
             ['prefix' => '/admin'], 
             function($route) {
-                $route->get('/users/:num', 'UserController@index');
-                $route->post('/users/:num', 'UserController@index');
-                $route->put('/users/:num', 'UserController@index');
-                $route->patch('/users/:num', 'UserController@index');
-                $route->delete('/users/:num', 'UserController@index');
-                $route->any('/pages/:num', 'PageController@index');
+                $route->get('/users/:num', 'UserController', 'index');
+                $route->post('/users/:num', 'UserController', 'index');
+                $route->put('/users/:num', 'UserController', 'index');
+                $route->patch('/users/:num', 'UserController', 'index');
+                $route->delete('/users/:num', 'UserController', 'index');
+                $route->any('/pages/:num', 'PageController', 'index');
             }
         );
 
@@ -171,11 +164,11 @@ final class RouteTest extends TestCase
 
     public function testRouteShouldResetScopeToDefault() {
         $this->route->group(['prefix' => '/admin'], function($route) {
-            $route->get('/users/:num', 'UserController@index');
+            $route->get('/users/:num', 'UserController', 'index');
         });
 
         // new routes should reset scope from '/admin' to default
-        $this->route->get('/users/:num', 'UserController@index');
+        $this->route->get('/users/:num', 'UserController', 'index');
 
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $this->assertTrue(
@@ -188,16 +181,16 @@ final class RouteTest extends TestCase
         // nested prefix
         $this->route->group(['prefix' => '/admin'], function($route) {
             $route->group(['prefix' => '/posts'], function($route) {
-                $route->get('/edit/:num', 'PostController@edit');
+                $route->get('/edit/:num', 'PostController', 'edit');
             });
             $route->group(['prefix' => '/dashboard'], function($route) {
                 $route->group(['prefix' => '/charts'], function($route) {
-                    $route->get('/:num', 'ChartController@index');
+                    $route->get('/:num', 'ChartController', 'index');
                 });
             });
         });
         // non prefix
-        $this->route->get('/users/:num/profile', 'UserController@profile');
+        $this->route->get('/users/:num/profile', 'UserController', 'profile');
 
         // assertions
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;

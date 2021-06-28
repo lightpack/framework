@@ -24,7 +24,6 @@ class Route
     ];
     private $options = [
         'prefix' => '',
-        'namespace' => '',
         'filters' => [],
     ];
     private $request;
@@ -34,34 +33,34 @@ class Route
         $this->request = $request;
     }
 
-    public function get(string $path, string $handler, array $filters = []): void
+    public function get(string $path, string $controller, string $action = 'index', array $filters = []): void
     {
-        $this->add('GET', $this->options['prefix'] . $path, $handler, $filters);
+        $this->add('GET', $this->options['prefix'] . $path, $controller, $action, $filters);
     }
 
-    public function post(string $path, string $handler, array $filters = []): void
+    public function post(string $path, string $controller, string $action = 'index', array $filters = []): void
     {
-        $this->add('POST', $this->options['prefix'] . $path, $handler, $filters);
+        $this->add('POST', $this->options['prefix'] . $path, $controller, $action, $filters);
     }
 
-    public function put(string $path, string $handler, array $filters = []): void
+    public function put(string $path, string $controller, string $action = 'index', array $filters = []): void
     {
-        $this->add('PUT', $this->options['prefix'] . $path, $handler, $filters);
+        $this->add('PUT', $this->options['prefix'] . $path, $controller, $action, $filters);
     }
 
-    public function patch(string $path, string $handler, array $filters = []): void
+    public function patch(string $path, string $controller, string $action = 'index', array $filters = []): void
     {
-        $this->add('PATCH', $this->options['prefix'] . $path, $handler, $filters);
+        $this->add('PATCH', $this->options['prefix'] . $path, $controller, $action, $filters);
     }
 
-    public function delete(string $path, string $handler, array $filters = []): void
+    public function delete(string $path, string $controller, string $action = 'index', array $filters = []): void
     {
-        $this->add('DELETE', $this->options['prefix'] . $path, $handler, $filters);
+        $this->add('DELETE', $this->options['prefix'] . $path, $controller, $action, $filters);
     }
 
-    public function options(string $path, string $handler, array $filters = []): void
+    public function options(string $path, string $controller, string $action = 'index', array $filters = []): void
     {
-        $this->add('OPTIONS', $this->options['prefix'] . $path, $handler, $filters);
+        $this->add('OPTIONS', $this->options['prefix'] . $path, $controller, $action, $filters);
     }
 
     public function paths(string $method): array
@@ -77,21 +76,21 @@ class Route
         $this->options = $oldOptions;
     }
 
-    public function map(array $verbs, string $route, string $handler): void {
+    public function map(array $verbs, string $route, string $controller, string $action = 'index', array $filters = []): void {
         foreach($verbs as $verb) {
             if(false === \array_key_exists($verb, $this->routes)) {
                 throw new \Exception('Unsupported HTTP request method: ' . $verb);
             }
             
-            $this->{$verb}($route, $handler);
+            $this->{$verb}($route, $controller, $action, $filters);
         }
     }
 
-    public function any(string $path, string $handler, array $filters = []): void {
+    public function any(string $path, string $controller, string $action = 'index', array $filters = []): void {
         $verbs = \array_keys($this->routes);
 
         foreach($verbs as $verb) {
-            $this->{$verb}($path, $handler, $filters);
+            $this->{$verb}($path, $controller, $action, $filters);
         }
     }
 
@@ -115,26 +114,15 @@ class Route
         return false;
     }
 
-    private function add(string $method, string $path, string $handler, array $filters = []): void
+    private function add(string $method, string $path, string $controller, string $action, array $filters = []): void
     {
         
         if (trim($path) === '') {
             throw new \Exception('Empty route path');
         }
         
-        $this->routes[$method][$path] = $this->normalizeHandler($handler);
+        $this->routes[$method][$path] = ['controller' => $controller, 'action' => $action];
         $this->routes[$method][$path]['filters'] = array_unique(array_merge($this->options['filters'], $filters));
-    }
-
-    private function normalizeHandler(string $handler): array
-    {
-        $parts = explode('@', $handler);
-
-        if (count($parts) !== 2) {
-            throw new \Exception('Invalid route path configuration: ' . $handler);
-        }
-
-        return ['namespace' => $this->options['namespace'], 'controller' => $parts[0], 'action' => $parts[1]];
     }
 
     private function regex(string $path): string
