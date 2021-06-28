@@ -54,11 +54,6 @@ class Router
         return $this->routeMeta['method'];
     }
 
-    public function namespace(): string
-    {
-        return $this->routeMeta['namespace'];
-    }
-
     public function meta(): array
     {
         return $this->routeMeta;
