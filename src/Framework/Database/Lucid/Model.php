@@ -44,19 +44,19 @@ class Model
     public function hasOne(string $model, string $foreignKey) 
     {
         $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->id)->fetchOne();
+        return $model->query()->where($foreignKey, '=', $this->id);
     }
 
     public function hasMany(string $model, string $foreignKey) 
     {
         $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->id)->fetchAll();
+        return $model->query()->where($foreignKey, '=', $this->id);
     }
 
     public function belongsTo(string $model, string $foreignKey)
     {
         $model = $this->connection->model($model);
-        return $model->query()->where('id', '=', $this->data->{$foreignKey})->fetchOne();
+        return $model->query()->where('id', '=', $this->data->{$foreignKey}); 
     }
 
     public function pivot(string $model, string $pivot, string $foreignKey, string $associateKey)
@@ -66,8 +66,7 @@ class Model
                     ->query()
                     ->select(["$model->table.*"])
                     ->join($pivot, "$model->table.id", "$pivot.$associateKey")
-                    ->where("$pivot.$foreignKey", '=', $this->id)
-                    ->fetchAll();
+                    ->where("$pivot.$foreignKey", '=', $this->id);
     }
 
     public function find(int $id)
