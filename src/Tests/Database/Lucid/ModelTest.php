@@ -95,7 +95,7 @@ final class ModelTest extends TestCase
         }
 
         $this->product->find($product->id);
-        $productOwner = $this->product->owner;
+        $productOwner = $this->product->owner->fetchOne();
         $this->assertTrue(isset($productOwner->id));
     }
 
@@ -107,7 +107,7 @@ final class ModelTest extends TestCase
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => '#000']);
         
         $this->product->find($product->id);
-        $productOptions = $this->product->options;
+        $productOptions = $this->product->options->fetchAll();
         $this->assertEquals(2, count($productOptions));
     }
 
@@ -124,7 +124,7 @@ final class ModelTest extends TestCase
 
         $ownerModel = $this->db->model(Owner::class);
         $ownerModel->find($owner->id);
-        $ownerProduct = $ownerModel->product;
+        $ownerProduct = $ownerModel->product->fetchOne();
 
         $this->assertTrue(isset($ownerProduct->id));
     }
