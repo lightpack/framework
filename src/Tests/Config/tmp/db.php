@@ -1,6 +1,6 @@
 <?php
 
 return [
-    'name' => 'lightpack',
-    'host' => 'localhost',
+    'db.name' => 'lightpack',
+    'db.host' => 'localhost',
 ];

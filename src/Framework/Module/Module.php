@@ -7,8 +7,8 @@ use Lightpack\Config\Config;
 
 class Module
 {
-    private $type; 
-    private $name; 
+    private $type;
+    private $name;
     private $config;
     private $request;
 
@@ -17,7 +17,7 @@ class Module
         $this->config = $config;
         $this->request = $request;
 
-        $this->setModuleType();   
+        $this->setModuleType();
         $this->setModuleName();
     }
 
@@ -28,24 +28,24 @@ class Module
 
     public function getModuleName()
     {
-        return $this->name;  
+        return $this->name;
     }
 
     public function getModuleType()
     {
-        return $this->type;  
+        return $this->type;
     }
-    
+
     public function getModulePath()
     {
-        return DIR_MODULES . '/' . $this->name;  
+        return DIR_MODULES . '/' . $this->name;
     }
 
     public function getModuleRoutesFilePath()
     {
         $routesFile = $this->getModulePath() . '/routes/' . $this->type . '.php';
 
-        if(file_exists($routesFile)) {
+        if (file_exists($routesFile)) {
             return $routesFile;
         }
 
@@ -56,7 +56,7 @@ class Module
     {
         $configFile = $this->getModulePath() . '/config.php';
 
-        if(file_exists($configFile)) {
+        if (file_exists($configFile)) {
             $this->configuration = require_once($configFile);
         }
 
@@ -65,29 +65,31 @@ class Module
 
     public function getActiveModules()
     {
-        return $this->config->default['modules'];
+        return $this->config->get('modules');
     }
 
     private function setModuleType()
     {
+        $segment = $this->request->segments(0);
+
         $this->type = 'frontend';
 
-        if($this->request->segments(0) == $this->config->default['url']['admin_route_prefix']) {
+        if ($segment == $this->config->get('app.admin.route.prefix')) {
             $this->type = 'backend';
-        } elseif($this->request->segments(0) == $this->config->default['url']['api_route_prefix']) {
+        } elseif ($segment == $this->config->get('app.api.route.prefix')) {
             $this->type = 'api';
-        } 
+        }
     }
 
     private function setModuleName()
     {
-        if($this->type == 'api' || $this->type == 'backend') {
+        if ($this->type == 'api' || $this->type == 'backend') {
             $segment = $this->request->segments(1);
         } else {
             $segment = $this->request->segments(0);
         }
 
-        $modules = $this->config->default['modules'];
+        $modules = $this->config->get('modules');
         $this->name = $modules['/' . $segment] ?? null;
     }
 }
