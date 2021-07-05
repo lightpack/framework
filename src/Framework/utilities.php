@@ -195,3 +195,15 @@ if (!function_exists('set_env')) {
         }
     }
 }
+
+if (!function_exists('config')) {
+    /**
+     * ------------------------------------------------------------
+     * Gets config data.
+     * ------------------------------------------------------------
+     */
+    function config($key, $default = null)
+    {
+        return app('config')->get($key, $default);
+    }
+}
