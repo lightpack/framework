@@ -10,9 +10,9 @@ class Sqlite extends Pdo
     {
         if ($args['database'] !== ':memory' && !file_exists($args['database'])) {
             throw new \Exception("Could not locate Sqlite database file:{$args['database']}");
-		}
-        
-        $dsn = 'sqlite:' . $args['database'] . ':';
+        }
+
+        $dsn = 'sqlite:' . $args['database'];
         parent::__construct($dsn);
     }
 }
