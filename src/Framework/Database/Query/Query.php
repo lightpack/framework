@@ -37,7 +37,7 @@ class Query
     public function update(array $data)
     {
         $compiler = new Compiler($this);
-        $this->bindings = array_merge($this->bindings, array_values($data));
+        $this->bindings = array_merge(array_values($data), $this->bindings);
         $query = $compiler->compileUpdate(array_keys($data));
         $this->connection->query($query, $this->bindings);
         $this->resetQuery();

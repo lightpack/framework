@@ -86,10 +86,10 @@ class Model
     public function save()
     {
         if(null === $this->{$this->key}) {
-            $this->insert();
+            return $this->insert();
         }
 
-        $this->update();
+        return $this->update();
     }
 
     public function delete()
@@ -114,13 +114,13 @@ class Model
     private function insert()
     {
         $data = \get_object_vars($this->data);
-        $this->connection->table($this->table)->insert($data);
+        return $this->connection->table($this->table)->insert($data);
     }
 
     private function update()
     {
         $data = \get_object_vars($this->data);
         unset($data[$this->key]);
-        $this->connection->table($this->table)->where($this->{$this->key}, '=', $this->key)->update($data);
+        return $this->connection->table($this->table)->where($this->key, '=', $this->{$this->key})->update($data);
     }
 }

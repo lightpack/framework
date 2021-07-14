@@ -48,7 +48,7 @@ final class ModelTest extends TestCase
         $this->assertEquals($productsCountBeforeSave + 1, $productsCountAfterSave);
     }
 
-    public function __testModelSaveUpdateMethod()
+    public function testModelSaveUpdateMethod()
     {
         $product = $this->db->table('products')->fetchOne();
         $products = $this->db->table('products')->fetchAll();
