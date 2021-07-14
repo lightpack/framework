@@ -35,9 +35,9 @@ class Compiler
         return "INSERT INTO {$this->query->table} ($columns) VALUES ($parameters)";
     }
 
-    public function compileUpdate(array $where, array $columns)
+    public function compileUpdate(array $columns)
     {
-        $where = $where[0] . ' = ' . (int) $where[1];
+        $where = $this->where();
 
         foreach ($columns as $column)
 		{
@@ -46,14 +46,13 @@ class Compiler
         
         $columnValuePairs = implode(', ', $columnValuePairs);
 
-        return "UPDATE {$this->query->table} SET {$columnValuePairs} WHERE {$where}";
+        return "UPDATE {$this->query->table} SET {$columnValuePairs} {$where}";
     }
 
-    public function compileDelete(array $where)
+    public function compileDelete()
     {
-        $where = $where[0] . ' = ' . (int) $where[1];
-        
-        return "DELETE FROM {$this->query->table} WHERE {$where}";
+        $where = $this->where();
+        return "DELETE FROM {$this->query->table} {$where}";
     }
 
     private function select(): string

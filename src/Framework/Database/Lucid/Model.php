@@ -8,13 +8,14 @@ use Lightpack\Exceptions\RecordNotFoundException;
 
 class Model
 {
+    protected $key;
     protected $table;
     protected $data = [];
     protected $connection;
 
     public function __construct(string $table, Pdo $connection = null)
     {
-        $this->table = $table;
+        $this->key = 'id';
         $this->table = $table;
         $this->data = new \stdClass();
         $this->connection = $connection ?? app('db');
@@ -44,19 +45,19 @@ class Model
     public function hasOne(string $model, string $foreignKey) 
     {
         $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->id);
+        return $model->query()->where($foreignKey, '=', $this->{$this->key});
     }
 
     public function hasMany(string $model, string $foreignKey) 
     {
         $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->id);
+        return $model->query()->where($foreignKey, '=', $this->{$this->key});
     }
 
     public function belongsTo(string $model, string $foreignKey)
     {
         $model = $this->connection->model($model);
-        return $model->query()->where('id', '=', $this->data->{$foreignKey}); 
+        return $model->query()->where($this->key, '=', $this->{$foreignKey}); 
     }
 
     public function pivot(string $model, string $pivot, string $foreignKey, string $associateKey)
@@ -65,13 +66,13 @@ class Model
         return $model
                     ->query()
                     ->select(["$model->table.*"])
-                    ->join($pivot, "$model->table.id", "$pivot.$associateKey")
-                    ->where("$pivot.$foreignKey", '=', $this->id);
+                    ->join($pivot, "$model->table.{$this->key}", "$pivot.$associateKey")
+                    ->where("$pivot.$foreignKey", '=', $this->{$this->key});
     }
 
     public function find(int $id)
     {
-        $this->data = $this->connection->table($this->table)->where('id', '=', $id)->fetchOne();
+        $this->data = $this->connection->table($this->table)->where($this->key, '=', $id)->fetchOne();
 
         if(!$this->data) {
             throw new RecordNotFoundException(
@@ -84,20 +85,20 @@ class Model
 
     public function save()
     {
-        if(isset($this->data->id)) {
-            $this->update();
-        } else {
+        if(null === $this->{$this->key}) {
             $this->insert();
         }
+
+        $this->update();
     }
 
     public function delete()
     {
-        if(! isset($this->data->id)) {
+        if(null === $this->{$this->key}) {
             return false;
         }
 
-        $this->connection->table($this->table)->delete(['id', $this->data->id]);
+        $this->connection->table($this->table)->where($this->key, '=', $this->{$this->key})->delete();
     }
 
     public function query()
@@ -118,9 +119,8 @@ class Model
 
     private function update()
     {
-        $where = 'id = ' . (int) $this->data->id;
         $data = \get_object_vars($this->data);
-        unset($data['id']);
-        $this->connection->table($this->table)->update(['id', $this->data->id], $data);
+        unset($data[$this->key]);
+        $this->connection->table($this->table)->where($this->{$this->key}, '=', $this->key)->update($data);
     }
 }

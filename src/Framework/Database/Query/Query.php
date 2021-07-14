@@ -7,7 +7,6 @@ use Lightpack\Database\Pdo;
 class Query
 {
     private $table;
-    private $compiler;
     private $bindings = [];
     private $components = [
         'columns' => [],
@@ -20,10 +19,10 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct(string $table, Pdo $connection)
+    public function __construct(string $table, Pdo $connection = null)
     {
         $this->table = $table;
-        $this->connection = $connection;
+        $this->connection = $connection ?? app('db');
     }
 
     public function insert(array $data)
@@ -35,24 +34,24 @@ class Query
         $this->resetQuery();
     }
 
-    public function update(array $where, array $data)
+    public function update(array $data)
     {
         $compiler = new Compiler($this);
-        $this->bindings = array_values($data);
-        $query = $compiler->compileUpdate($where, array_keys($data));
+        $this->bindings = array_merge($this->bindings, array_values($data));
+        $query = $compiler->compileUpdate(array_keys($data));
         $this->connection->query($query, $this->bindings);
         $this->resetQuery();
     }
 
-    public function delete(array $where)
+    public function delete()
     {
         $compiler = new Compiler($this);
-        $query = $compiler->compileDelete($where);
+        $query = $compiler->compileDelete();
         $this->connection->query($query, $this->bindings);
         $this->resetQuery();
     }
 
-    public function select(array $columns = []): self
+    public function select(string ...$columns): self
     {
         $this->components['columns'] = $columns;
         return $this;
