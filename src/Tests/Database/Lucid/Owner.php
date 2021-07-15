@@ -6,10 +6,7 @@ use \Lightpack\Database\Lucid\Model;
 
 class Owner extends Model
 {   
-    public function __construct()
-    {
-        parent::__construct('owners');
-    }
+    protected $table = 'owners';
 
     public function product()
     {

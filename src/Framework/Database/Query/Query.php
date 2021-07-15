@@ -30,8 +30,9 @@ class Query
         $compiler = new Compiler($this);
         $this->bindings = array_values($data);
         $query = $compiler->compileInsert(array_keys($data));
-        $this->connection->query($query, $this->bindings);
+        $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+        return $result;
     }
 
     public function update(array $data)
@@ -39,16 +40,18 @@ class Query
         $compiler = new Compiler($this);
         $this->bindings = array_merge(array_values($data), $this->bindings);
         $query = $compiler->compileUpdate(array_keys($data));
-        $this->connection->query($query, $this->bindings);
+        $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+        return $result;
     }
 
     public function delete()
     {
         $compiler = new Compiler($this);
         $query = $compiler->compileDelete();
-        $this->connection->query($query, $this->bindings);
+        $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+        return $result;
     }
 
     public function select(string ...$columns): self
@@ -66,8 +69,8 @@ class Query
     public function where(string $column, string $operator, string $value, string $joiner = 'AND'): self
     {
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
-        
-        if($operator) {
+
+        if ($operator) {
             $this->bindings[] = $value;
         }
         return $this;
@@ -122,7 +125,7 @@ class Query
         $this->andWhere($column, '', 'IS NOT NULL');
         return $this;
     }
-    
+
     public function andWhereNull(string $column): self
     {
         $this->andWhere($column, '', 'IS NULL');
@@ -172,7 +175,7 @@ class Query
         $this->components['group'] = $columns;
         return $this;
     }
-    
+
     public function orderBy(string $column, $sort = 'ASC')
     {
         $this->components['order'][] = compact('column', 'sort');
@@ -186,12 +189,13 @@ class Query
     }
 
     public function offset(int $offset)
-	{
-		$this->components['offset'] = $offset;
-		return $this;
-    }   
+    {
+        $this->components['offset'] = $offset;
+        return $this;
+    }
 
-    public function paginate(int $limit, int $page = null) {
+    public function paginate(int $limit, int $page = null)
+    {
         $page = $page ?? app('request')->get('page');
         $page = (int) $page;
 
@@ -207,17 +211,17 @@ class Query
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
-        
+
         return $result->num;
     }
 
     public function __get(string $key)
     {
-        if($key === 'bindings') {
+        if ($key === 'bindings') {
             return $this->bindings;
         }
 
-        if($key === 'table') {
+        if ($key === 'table') {
             return $this->table;
         }
 

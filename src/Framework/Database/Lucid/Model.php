@@ -8,29 +8,42 @@ use Lightpack\Exceptions\RecordNotFoundException;
 
 class Model
 {
-    protected $key;
+    /** 
+     * @var string Database table name 
+     */
     protected $table;
-    protected $data = [];
+
+    /** 
+     * @var string Table primary key 
+     */
+    protected $primaryKey = 'id';
+
+    /** 
+     * @var stdClass Model data object 
+     */
+    protected $data;
+
+    /** 
+     * @var object Pdo connection instance
+     */
     protected $connection;
 
-    public function __construct(string $table, Pdo $connection = null)
+    public function __construct(Pdo $connection = null)
     {
-        $this->key = 'id';
-        $this->table = $table;
         $this->data = new \stdClass();
         $this->connection = $connection ?? app('db');
     }
 
     public function __set($column, $value)
     {
-        if(!method_exists($this, $column)) {
+        if (!method_exists($this, $column)) {
             $this->data->$column = $value;
         }
     }
 
     public function __get($column)
     {
-        if(method_exists($this, $column)) {
+        if (method_exists($this, $column)) {
             return $this->{$column}();
         }
 
@@ -42,39 +55,39 @@ class Model
         $this->connection = $connection;
     }
 
-    public function hasOne(string $model, string $foreignKey) 
+    public function hasOne(string $model, string $foreignKey)
     {
         $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->{$this->key});
+        return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
-    public function hasMany(string $model, string $foreignKey) 
+    public function hasMany(string $model, string $foreignKey)
     {
         $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->{$this->key});
+        return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
     public function belongsTo(string $model, string $foreignKey)
     {
         $model = $this->connection->model($model);
-        return $model->query()->where($this->key, '=', $this->{$foreignKey}); 
+        return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
 
     public function pivot(string $model, string $pivot, string $foreignKey, string $associateKey)
     {
         $model = $this->connection->model($model);
         return $model
-                    ->query()
-                    ->select(["$model->table.*"])
-                    ->join($pivot, "$model->table.{$this->key}", "$pivot.$associateKey")
-                    ->where("$pivot.$foreignKey", '=', $this->{$this->key});
+            ->query()
+            ->select(["$model->table.*"])
+            ->join($pivot, "$model->table.{$this->primaryKey}", "$pivot.$associateKey")
+            ->where("$pivot.$foreignKey", '=', $this->{$this->primaryKey});
     }
 
     public function find(int $id, bool $fail = true)
     {
-        $this->data = $this->connection->table($this->table)->where($this->key, '=', $id)->fetchOne();
+        $this->data = $this->connection->table($this->table)->where($this->primaryKey, '=', $id)->fetchOne();
 
-        if(!$this->data && $fail) {
+        if (!$this->data && $fail) {
             throw new RecordNotFoundException(
                 sprintf('%s: No record found for ID = %d', get_called_class(), $id)
             );
@@ -85,7 +98,7 @@ class Model
 
     public function save()
     {
-        if(null === $this->{$this->key}) {
+        if (null === $this->{$this->primaryKey}) {
             return $this->insert();
         }
 
@@ -94,11 +107,11 @@ class Model
 
     public function delete()
     {
-        if(null === $this->{$this->key}) {
+        if (null === $this->{$this->primaryKey}) {
             return false;
         }
 
-        $this->connection->table($this->table)->where($this->key, '=', $this->{$this->key})->delete();
+        $this->connection->table($this->table)->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
     }
 
     public function query()
@@ -111,6 +124,16 @@ class Model
         return $this->connection->lastInsertId();
     }
 
+    public function getTableName()
+    {
+        return $this->table;
+    }
+
+    public function getPrimaryKey()
+    {
+        return $this->primaryKey;
+    }
+
     private function insert()
     {
         $data = \get_object_vars($this->data);
@@ -120,7 +143,7 @@ class Model
     private function update()
     {
         $data = \get_object_vars($this->data);
-        unset($data[$this->key]);
-        return $this->connection->table($this->table)->where($this->key, '=', $this->{$this->key})->update($data);
+        unset($data[$this->primaryKey]);
+        return $this->connection->table($this->table)->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
     }
 }

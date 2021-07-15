@@ -15,10 +15,11 @@ use Lightpack\Database\Lucid\Model;
 
 class __MODEL_NAME__ extends Model
 {
-    public function __construct()
-    {
-        parent::__construct('__TABLE_NAME__');
-    }
+    /** @inheritDoc */
+    protected $table = '{__TABLE_NAME__}';
+
+    /** @inheritDoc */
+    protected $primaryKey = '{__PRIMARY_KEY__}';
 }
 TEMPLATE;
     }
