@@ -70,11 +70,11 @@ class Model
                     ->where("$pivot.$foreignKey", '=', $this->{$this->key});
     }
 
-    public function find(int $id)
+    public function find(int $id, bool $fail = true)
     {
         $this->data = $this->connection->table($this->table)->where($this->key, '=', $id)->fetchOne();
 
-        if(!$this->data) {
+        if(!$this->data && $fail) {
             throw new RecordNotFoundException(
                 sprintf('%s: No record found for ID = %d', get_called_class(), $id)
             );
