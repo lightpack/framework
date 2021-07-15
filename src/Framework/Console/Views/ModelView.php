@@ -20,6 +20,9 @@ class __MODEL_NAME__ extends Model
 
     /** @inheritDoc */
     protected $primaryKey = '{__PRIMARY_KEY__}';
+
+    /** @inheritDoc */
+    protected $timestamps = false;
 }
 TEMPLATE;
     }

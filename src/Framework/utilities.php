@@ -207,3 +207,39 @@ if (!function_exists('config')) {
         return app('config')->get($key, $default);
     }
 }
+
+if (!function_exists('underscore')) {
+    /**
+     * ------------------------------------------------------------     
+     * Converts a string to underscored, lowercase form.
+     * ------------------------------------------------------------      
+     * 
+     * It replaces dashes and whitespaces with underscore 
+     * character. Then converts to lowercased string.
+     */
+    function underscore(string $text)
+    {
+        // $text = trim($text);
+        // $text = str_replace(['-', ' '], '_', $text);
+        $text = preg_replace('/(?<=\\w)([a-zA-Z])/', '_\\1', $text);
+
+        return strtolower($text);
+    }
+}
+
+if (!function_exists('camelize')) {
+    /**
+     * ------------------------------------------------------------     
+     * Converts a string to its camelized form.
+     * ------------------------------------------------------------      
+     * 
+     * For example: product thinker => ProductThinker
+     */
+    function camelize(string $text)
+    {
+        $text = ucwords(str_replace(['_', '-'], ' ', $text));
+        $text = str_replace(' ', '', trim($text));
+
+        return $text;
+    }
+}

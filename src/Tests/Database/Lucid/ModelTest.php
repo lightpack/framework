@@ -81,7 +81,7 @@ final class ModelTest extends TestCase
 
     public function testModelDeleteWhenIdNotSet()
     {
-        $this->assertFalse($this->product->delete());
+        $this->assertNull($this->product->delete());
     }
 
     public function testModelHasOneRelation()

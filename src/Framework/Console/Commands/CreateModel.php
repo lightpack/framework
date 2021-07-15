@@ -11,6 +11,7 @@ class CreateModel implements ICommand
     {
         $className = $arguments[0] ?? null;
         $tableName = $this->parseTableName($arguments);
+        $tableName = $tableName ?? $this->createTableName($className);
         $primaryKey = $this->parsePrimaryKey($arguments) ?? 'id';
 
         if (null === $className) {
@@ -27,12 +28,6 @@ class CreateModel implements ICommand
 
         if (null === $className) {
             $message = "Please provide a model class name.\n\n";
-            fputs(STDERR, $message);
-            return;
-        }
-
-        if (null === $tableName) {
-            $message = "Please provide the table name as --table flag.\n\n";
             fputs(STDERR, $message);
             return;
         }
@@ -77,5 +72,12 @@ class CreateModel implements ICommand
                 return $key;
             }
         }
+    }
+    
+    private function createTableName(string $text)
+    {
+        $text = str_replace('Model', '', $text);
+
+        return underscore($text);
     }
 }
