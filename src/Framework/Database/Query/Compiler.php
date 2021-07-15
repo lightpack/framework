@@ -71,7 +71,7 @@ class Compiler
 
     private function from(): string
     {
-        return 'FROM ' . $this->query->table;
+        return 'FROM ' . $this->query->table . ($this->query->alias ? ' as ' . $this->query->alias : '');
     }
 
     private function join()
@@ -97,7 +97,7 @@ class Compiler
 
         $wheres[] = 'WHERE 1=1';
         $parameters = $this->parameterize(1);
-        
+
         foreach($this->query->where as $where) {
 
             // Workaround for IS NULL and IS NOT NULL conditions.
@@ -161,6 +161,10 @@ class Compiler
     {
         $parameters = array_fill(0, $count, '?');
         $parameters = implode(', ', $parameters); 
+
+        if($count > 1) {
+            $parameters = '(' . $parameters . ')'; 
+        }
 
         return $parameters;
     }

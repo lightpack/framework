@@ -9,6 +9,7 @@ class Query
     private $table;
     private $bindings = [];
     private $components = [
+        'alias' => null,
         'columns' => [],
         'distinct' => false,
         'join' => [],
@@ -54,6 +55,12 @@ class Query
         return $result;
     }
 
+    public function alias(string $alias): self
+    {
+        $this->components['alias'] = $alias;
+        return $this;
+    }
+
     public function select(string ...$columns): self
     {
         $this->components['columns'] = $columns;
@@ -92,7 +99,7 @@ class Query
     {
         $operator = $negate ? 'NOT IN' : 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
-        $this->bindings[] = array_merge($this->bindings, $values);
+        $this->bindings = array_merge($this->bindings, $values);
         return $this;
     }
 
@@ -170,7 +177,7 @@ class Query
         return $this;
     }
 
-    public function groupBy(array $columns)
+    public function groupBy(string ...$columns)
     {
         $this->components['group'] = $columns;
         return $this;
@@ -231,9 +238,15 @@ class Query
     public function fetchAll(bool $assoc = false)
     {
         $query = $this->getCompiledSelect();
+        d($this->bindings);
         $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
         return $result;
+    }
+
+    public function all(bool $assoc = false)
+    {
+        return $this->fetchAll($assoc);
     }
 
     public function fetchOne(bool $assoc = false)
@@ -245,6 +258,11 @@ class Query
         return $result;
     }
 
+    public function one(bool $assoc = false)
+    {
+        return $this->fetchOne($assoc);
+    }
+
     public function getCompiledSelect()
     {
         $compiler = new Compiler($this);
@@ -253,6 +271,7 @@ class Query
 
     public function resetQuery()
     {
+        $this->components['alias'] = null;
         $this->components['columns'] = [];
         $this->components['distinct'] = false;
         $this->components['where'] = [];

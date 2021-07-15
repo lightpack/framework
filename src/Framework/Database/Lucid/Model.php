@@ -33,10 +33,20 @@ class Model
      */
     protected $timestamps = false;
 
-    public function __construct(Pdo $connection = null)
+    /**
+     * Constructor.
+     *
+     * @param [int|string] $id
+     * @param Pdo $connection
+     */
+    public function __construct($id = null, Pdo $connection = null)
     {
         $this->data = new \stdClass();
         $this->connection = $connection ?? app('db');
+
+        if($id) {
+            $this->find($id);
+        }
     }
 
     public function __set($column, $value)
@@ -118,7 +128,56 @@ class Model
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
     }
 
-    public function find(int $id, bool $fail = true): self
+    public function with(string ...$models)
+    {
+        $data = $this->query()->all(true);
+        $data = array_column($data, null, $this->primaryKey);
+        $ids = array_column($data, 'department_id');
+
+        foreach($models as $model) {
+            $modelTable = (new $model)->getTableName();
+            $dataChild = (new $model)->query()->whereIn($this->primaryKey, $ids)->all(true);
+
+            foreach($dataChild as $r) {
+                $data[$r[$this->primaryKey]][$modelTable][] = $r;
+            }
+        }
+
+        return $data;
+    }
+
+    public function ____with(string $table): Query
+    {
+        $data = $this->query()->all();
+
+        $ids = [];
+
+        foreach($data as $row) {
+            $ids[] = $row->{$this->primaryKey};
+        }
+
+        $model = new $table;
+        $tableQuery = new Query($model->getTableName());
+
+        $tableData = $tableQuery->whereIn($this->getPrimaryKey(), $ids)->all(); //->getCompiledSelect();
+d($data);
+d($ids);
+d($tableData);
+        // foreach($data as $row) {
+        //     $data->{$model->getTableName()} = $tableData
+        // }
+
+        return $this->query();
+    }
+
+    /**
+     * Find a record by its primary key.
+     *
+     * @param [int|string] $id
+     * @param boolean $fail
+     * @return self
+     */
+    public function find($id, bool $fail = true): self
     {
         $this->data = $this->connection->table($this->table)->where($this->primaryKey, '=', $id)->fetchOne();
 
