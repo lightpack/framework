@@ -112,7 +112,7 @@ class Compiler
             $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . $parameters;
         }
 
-        return implode(' ', $wheres);
+        return str_replace('1=1 AND ', '', implode(' ', $wheres));
     }
 
     private function groupBy()
