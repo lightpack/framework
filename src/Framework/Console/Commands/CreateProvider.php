@@ -25,7 +25,7 @@ class CreateProvider implements ICommand
 
         $provider = strtolower(str_replace('Provider', '', $className));
         $binding = in_array('--instance', $arguments) ? 'factory' : 'register';
-        $directory = '/app/Providers';
+        $directory = './app/Providers';
         $template = ProviderView::getTemplate();
         $template = str_replace(
             ['__PROVIDER_NAME__', '__PROVIDER_ALIAS__', '__PROVIDER_BINDING__'], 

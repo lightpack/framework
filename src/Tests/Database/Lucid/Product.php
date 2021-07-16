@@ -7,10 +7,7 @@ use \Lightpack\Database\Lucid\Model;
 
 class Product extends Model
 {   
-    public function __construct()
-    {
-        parent::__construct('products');
-    }
+    protected $table = 'products';
 
     public function options()
     {

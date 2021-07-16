@@ -12,11 +12,11 @@ class CreateEnv implements ICommand
         $file = new File();
 
         if ($file->exists(DIR_ROOT . '/env.php')) {
-            fputs(STDOUT, "env.php file already exists.\n\n");
+            fputs(STDOUT, "./env.php file already exists.\n\n");
             return;
         }
 
         (new File)->copy(DIR_ROOT . '/env.example.php', DIR_ROOT . '/env.php');
-        fputs(STDOUT, "✓ Created env.php file.\n\n");
+        fputs(STDOUT, "✓ Created ./env.php file.\n\n");
     }
 }

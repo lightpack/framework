@@ -7,9 +7,9 @@ use Lightpack\Database\Pdo;
 class Query
 {
     private $table;
-    private $compiler;
     private $bindings = [];
     private $components = [
+        'alias' => null,
         'columns' => [],
         'distinct' => false,
         'join' => [],
@@ -20,10 +20,10 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct(string $table, Pdo $connection)
+    public function __construct(string $table, Pdo $connection = null)
     {
         $this->table = $table;
-        $this->connection = $connection;
+        $this->connection = $connection ?? app('db');
     }
 
     public function insert(array $data)
@@ -31,28 +31,37 @@ class Query
         $compiler = new Compiler($this);
         $this->bindings = array_values($data);
         $query = $compiler->compileInsert(array_keys($data));
-        $this->connection->query($query, $this->bindings);
+        $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+        return $result;
     }
 
-    public function update(array $where, array $data)
+    public function update(array $data)
     {
         $compiler = new Compiler($this);
-        $this->bindings = array_values($data);
-        $query = $compiler->compileUpdate($where, array_keys($data));
-        $this->connection->query($query, $this->bindings);
+        $this->bindings = array_merge(array_values($data), $this->bindings);
+        $query = $compiler->compileUpdate(array_keys($data));
+        $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+        return $result;
     }
 
-    public function delete(array $where)
+    public function delete()
     {
         $compiler = new Compiler($this);
-        $query = $compiler->compileDelete($where);
-        $this->connection->query($query, $this->bindings);
+        $query = $compiler->compileDelete();
+        $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+        return $result;
     }
 
-    public function select(array $columns = []): self
+    public function alias(string $alias): self
+    {
+        $this->components['alias'] = $alias;
+        return $this;
+    }
+
+    public function select(string ...$columns): self
     {
         $this->components['columns'] = $columns;
         return $this;
@@ -67,8 +76,8 @@ class Query
     public function where(string $column, string $operator, string $value, string $joiner = 'AND'): self
     {
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
-        
-        if($operator) {
+
+        if ($operator) {
             $this->bindings[] = $value;
         }
         return $this;
@@ -90,7 +99,7 @@ class Query
     {
         $operator = $negate ? 'NOT IN' : 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
-        $this->bindings[] = array_merge($this->bindings, $values);
+        $this->bindings = array_merge($this->bindings, $values);
         return $this;
     }
 
@@ -123,7 +132,7 @@ class Query
         $this->andWhere($column, '', 'IS NOT NULL');
         return $this;
     }
-    
+
     public function andWhereNull(string $column): self
     {
         $this->andWhere($column, '', 'IS NULL');
@@ -168,12 +177,12 @@ class Query
         return $this;
     }
 
-    public function groupBy(array $columns)
+    public function groupBy(string ...$columns)
     {
         $this->components['group'] = $columns;
         return $this;
     }
-    
+
     public function orderBy(string $column, $sort = 'ASC')
     {
         $this->components['order'][] = compact('column', 'sort');
@@ -187,12 +196,13 @@ class Query
     }
 
     public function offset(int $offset)
-	{
-		$this->components['offset'] = $offset;
-		return $this;
-    }   
+    {
+        $this->components['offset'] = $offset;
+        return $this;
+    }
 
-    public function paginate(int $limit, int $page = null) {
+    public function paginate(int $limit, int $page = null)
+    {
         $page = $page ?? app('request')->get('page');
         $page = (int) $page;
 
@@ -208,17 +218,17 @@ class Query
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
-        
+
         return $result->num;
     }
 
     public function __get(string $key)
     {
-        if($key === 'bindings') {
+        if ($key === 'bindings') {
             return $this->bindings;
         }
 
-        if($key === 'table') {
+        if ($key === 'table') {
             return $this->table;
         }
 
@@ -233,6 +243,11 @@ class Query
         return $result;
     }
 
+    public function all(bool $assoc = false)
+    {
+        return $this->fetchAll($assoc);
+    }
+
     public function fetchOne(bool $assoc = false)
     {
         $compiler = new Compiler($this);
@@ -240,6 +255,11 @@ class Query
         $result = $this->connection->query($query, $this->bindings)->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
         return $result;
+    }
+
+    public function one(bool $assoc = false)
+    {
+        return $this->fetchOne($assoc);
     }
 
     public function getCompiledSelect()
@@ -250,6 +270,7 @@ class Query
 
     public function resetQuery()
     {
+        $this->components['alias'] = null;
         $this->components['columns'] = [];
         $this->components['distinct'] = false;
         $this->components['where'] = [];

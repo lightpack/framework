@@ -50,6 +50,6 @@ class CreateController implements ICommand
         $directory = substr($directory, strlen(DIR_ROOT));
 
         file_put_contents($filename . '.php', $template);
-        fputs(STDOUT, "✓ Controller created: {$directory}/{$className}.php\n\n");
+        fputs(STDOUT, "✓ Controller created: .{$directory}/{$className}.php\n\n");
     }
 }

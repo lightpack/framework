@@ -26,7 +26,7 @@ final class QueryTest extends TestCase
 
     public function testSelectFetchAll()
     {
-        $products = $this->query->select(['id', 'name'])->fetchAll();
+        $products = $this->query->select('id', 'name')->fetchAll();
         $this->assertGreaterThan(0, count($products));
     }
 
@@ -46,7 +46,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 2
-        $this->query->select(['id', 'name']);
+        $this->query->select('id', 'name');
 
         $this->assertEquals(
             'SELECT id, name FROM products',
@@ -56,7 +56,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 3
-        $this->query->select(['id', 'name'])->orderBy('id');
+        $this->query->select('id', 'name')->orderBy('id');
         
         $this->assertEquals(
             'SELECT id, name FROM products ORDER BY id ASC',
@@ -66,7 +66,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 4
-        $this->query->select(['id', 'name'])->orderBy('id', 'DESC');
+        $this->query->select('id', 'name')->orderBy('id', 'DESC');
         
         $this->assertEquals(
             'SELECT id, name FROM products ORDER BY id DESC',
@@ -76,7 +76,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 5
-        $this->query->select(['id', 'name'])->orderBy('name', 'DESC')->orderBy('id', 'DESC');
+        $this->query->select('id', 'name')->orderBy('name', 'DESC')->orderBy('id', 'DESC');
         
         $this->assertEquals(
             'SELECT id, name FROM products ORDER BY name DESC, id DESC',
@@ -86,7 +86,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 6
-        $this->query->select(['name'])->distinct();
+        $this->query->select('name')->distinct();
         
         $this->assertEquals(
             'SELECT DISTINCT name FROM products',
@@ -99,7 +99,7 @@ final class QueryTest extends TestCase
         $this->query->where('id', '>', 2);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE 1=1 AND id > ?',
+            'SELECT * FROM products WHERE id > ?',
             $this->query->getCompiledSelect()
         );
 
@@ -109,7 +109,7 @@ final class QueryTest extends TestCase
         $this->query->where('id', '>', 2)->where('color', '=', '#000');
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE 1=1 AND id > ? AND color = ?',
+            'SELECT * FROM products WHERE id > ? AND color = ?',
             $this->query->getCompiledSelect()
         );
 
@@ -119,7 +119,7 @@ final class QueryTest extends TestCase
         $this->query->where('id', '>', 2)->andWhere('color', '=', '#000')->orWhere('color', '=', '#FFF');
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE 1=1 AND id > ? AND color = ? OR color = ?',
+            'SELECT * FROM products WHERE id > ? AND color = ? OR color = ?',
             $this->query->getCompiledSelect()
         );
 
@@ -129,7 +129,7 @@ final class QueryTest extends TestCase
         $this->query->whereIn('id', [23, 24, 25]);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE 1=1 AND id IN ?, ?, ?',
+            'SELECT * FROM products WHERE id IN (?, ?, ?)',
             $this->query->getCompiledSelect()
         );
 
@@ -139,7 +139,7 @@ final class QueryTest extends TestCase
         $this->query->whereIn('id', [23, 24, 25])->orWhereIn('color', ['#000', '#FFF']);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE 1=1 AND id IN ?, ?, ? OR color IN ?, ?',
+            'SELECT * FROM products WHERE id IN (?, ?, ?) OR color IN (?, ?)',
             $this->query->getCompiledSelect()
         );
 
@@ -149,7 +149,7 @@ final class QueryTest extends TestCase
         $this->query->whereNotIn('id', [23, 24, 25]);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE 1=1 AND id NOT IN ?, ?, ?',
+            'SELECT * FROM products WHERE id NOT IN (?, ?, ?)',
             $this->query->getCompiledSelect()
         );
 
@@ -159,7 +159,7 @@ final class QueryTest extends TestCase
         $this->query->whereNotIn('id', [23, 24, 25])->orWhereNotIn('color', ['#000', '#FFF']);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE 1=1 AND id NOT IN ?, ?, ? OR color NOT IN ?, ?',
+            'SELECT * FROM products WHERE id NOT IN (?, ?, ?) OR color NOT IN (?, ?)',
             $this->query->getCompiledSelect()
         );
 
@@ -196,7 +196,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 17
-        $this->query->select(['products.*', 'options.name AS oname'])->join('options', 'products.id', 'options.product_id');
+        $this->query->select('products.*', 'options.name AS oname')->join('options', 'products.id', 'options.product_id');
         
         $this->assertEquals(
             'SELECT products.*, options.name AS oname FROM products INNER JOIN options ON products.id = options.product_id',
@@ -230,14 +230,13 @@ final class QueryTest extends TestCase
 
     public function testUpdateMethod()
     {
-        $product = $this->query->select(['id'])->fetchOne();
+        $product = $this->query->select('id')->fetchOne();
 
-        $this->query->update(
-            ['id', $product->id], 
+        $this->query->where('id', '=', $product->id)->update(
             ['color' => '#09F']
         );
 
-        $updatedProduct = $this->query->select(['color'])->where('id', '=', $product->id)->fetchOne();
+        $updatedProduct = $this->query->select('color')->where('id', '=', $product->id)->fetchOne();
 
         $this->assertEquals('#09F', $updatedProduct->color);
     }
@@ -248,7 +247,7 @@ final class QueryTest extends TestCase
         $products = $this->query->fetchAll();
         $productsCountBeforeDelete = count($products);
 
-        $this->query->delete(['id', $product->id]);
+        $this->query->where('id', '=', $product->id)->delete();
 
         $products = $this->query->fetchAll();
         $productsCountAfterDelete = count($products);
