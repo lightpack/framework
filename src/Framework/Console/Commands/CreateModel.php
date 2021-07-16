@@ -38,7 +38,7 @@ class CreateModel implements ICommand
             [$className, $tableName, $primaryKey],
             $template
         );
-        $directory = 'app/Models';
+        $directory = './app/Models';
 
         file_put_contents(DIR_ROOT . '/app/Models/' . $className . '.php', $template);
         fputs(STDOUT, "✓ Model created: {$directory}/{$className}.php\n\n");
