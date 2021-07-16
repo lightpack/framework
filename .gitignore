@@ -3,3 +3,5 @@ storage/*
 .DS_Store
 .vscode
 composer.phar
+:memory
+.phpunit.result.cache
