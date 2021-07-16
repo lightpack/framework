@@ -10,9 +10,6 @@ class CreateModel implements ICommand
     public function run(array $arguments = [])
     {
         $className = $arguments[0] ?? null;
-        $tableName = $this->parseTableName($arguments);
-        $tableName = $tableName ?? $this->createTableName($className);
-        $primaryKey = $this->parsePrimaryKey($arguments) ?? 'id';
 
         if (null === $className) {
             $message = "Please provide a model class name.\n\n";
@@ -20,17 +17,17 @@ class CreateModel implements ICommand
             return;
         }
 
-        if (!preg_match('#[A-Za-z0-9]#', $className)) {
+        $className = trim($className);
+
+        if (!ctype_alnum($className)) {
             $message = "Invalid model class name.\n\n";
             fputs(STDERR, $message);
             return;
         }
 
-        if (null === $className) {
-            $message = "Please provide a model class name.\n\n";
-            fputs(STDERR, $message);
-            return;
-        }
+        $tableName = $this->parseTableName($arguments);
+        $tableName = $tableName ?? $this->createTableName($className);
+        $primaryKey = $this->parsePrimaryKey($arguments) ?? 'id';
 
         $template = ModelView::getTemplate();
         $template = str_replace(
