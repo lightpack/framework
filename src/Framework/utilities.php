@@ -221,7 +221,7 @@ if (!function_exists('underscore')) {
     {
         // $text = trim($text);
         // $text = str_replace(['-', ' '], '_', $text);
-        $text = preg_replace('/(?<=\\w)([a-zA-Z])/', '_\\1', $text);
+        $text = preg_replace('/(?<=\\w)([A-Z])/', '_\\1', $text);
 
         return strtolower($text);
     }
