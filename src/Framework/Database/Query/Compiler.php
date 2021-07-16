@@ -32,7 +32,7 @@ class Compiler
         $parameters = $this->parameterize(count($columns));
         $columns = implode(', ', $columns);
         
-        return "INSERT INTO {$this->query->table} ($columns) VALUES ($parameters)";
+        return "INSERT INTO {$this->query->table} ($columns) VALUES $parameters";
     }
 
     public function compileUpdate(array $columns)

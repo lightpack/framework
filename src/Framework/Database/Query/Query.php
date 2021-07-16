@@ -238,7 +238,6 @@ class Query
     public function fetchAll(bool $assoc = false)
     {
         $query = $this->getCompiledSelect();
-        d($this->bindings);
         $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
         return $result;

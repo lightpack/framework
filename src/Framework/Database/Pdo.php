@@ -33,7 +33,6 @@ class Pdo
 
     public function query(string $sql, array $params = null)
     {
-        d($sql, $params);
         if ($params) {
             $this->statement = $this->connection->prepare($sql);
             $this->statement->execute($params);

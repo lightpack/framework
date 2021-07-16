@@ -49,6 +49,12 @@ class Model
         }
     }
 
+    /**
+     * Sets the model properties.
+     *
+     * @param string $column
+     * @param mix $value
+     */
     public function __set($column, $value)
     {
         if (!method_exists($this, $column)) {
@@ -56,7 +62,14 @@ class Model
         }
     }
 
-    public function __get($column)
+    /**
+     * Returns a model property or executes a relation
+     * method if present.
+     *
+     * @param string $column
+     * @return void
+     */
+    public function __get(string $column)
     {
         if (method_exists($this, $column)) {
             return $this->{$column}();
@@ -65,6 +78,13 @@ class Model
         return $this->data->$column ?? null;
     }
 
+    /**
+     * Sets the database connection to be used for querying
+     * the tables.
+     *
+     * @param Pdo $connection
+     * @return void
+     */
     public function setConnection(Pdo $connection): void
     {
         $this->connection = $connection;
@@ -128,9 +148,18 @@ class Model
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
     }
 
-    public function with(string ...$models)
+    /**
+     * Enables eager loading relationships.
+     * 
+     * @todo Needs refactoring it using collections by
+     * hydrating arrays into objects.
+     *
+     * @param string ...$models
+     * @return object|array
+     */
+    private function with(string ...$models)
     {
-        $data = $this->query()->all(true);
+        $data = $this->query->all(true);
         $data = array_column($data, null, $this->primaryKey);
         $ids = array_column($data, 'department_id');
 
@@ -144,30 +173,6 @@ class Model
         }
 
         return $data;
-    }
-
-    public function ____with(string $table): Query
-    {
-        $data = $this->query()->all();
-
-        $ids = [];
-
-        foreach($data as $row) {
-            $ids[] = $row->{$this->primaryKey};
-        }
-
-        $model = new $table;
-        $tableQuery = new Query($model->getTableName());
-
-        $tableData = $tableQuery->whereIn($this->getPrimaryKey(), $ids)->all(); //->getCompiledSelect();
-d($data);
-d($ids);
-d($tableData);
-        // foreach($data as $row) {
-        //     $data->{$model->getTableName()} = $tableData
-        // }
-
-        return $this->query();
     }
 
     /**
@@ -190,6 +195,11 @@ d($tableData);
         return $this;
     }
 
+    /**
+     * Insert or update a model.
+     *
+     * @return void
+     */
     public function save(): void
     {
         $this->setTimestamps();
@@ -204,6 +214,11 @@ d($tableData);
         $this->afterSave();
     }
 
+    /**
+     * Deletes a model.
+     *
+     * @return void
+     */
     public function delete(): void
     {
         if (null === $this->{$this->primaryKey}) {
@@ -215,24 +230,45 @@ d($tableData);
         $this->afterDelete();
     }
 
-    public function query(): Query
-    {
-        return new Query($this->table, $this->connection);
-    }
-
+    /**
+     * Returns the last inserted row id.
+     *
+     * @return void
+     */
     public function lastInsertId()
     {
         return $this->connection->lastInsertId();
     }
 
+    /**
+     * Returns the database table name the model
+     * represents.
+     *
+     * @return string
+     */
     public function getTableName(): string
     {
         return $this->table;
     }
 
+    /**
+     * Returns the primary key identifier.
+     *
+     * @return string
+     */
     public function getPrimaryKey(): string
     {
         return $this->primaryKey;
+    }
+
+    /**
+     * Makes models capable of querying data. 
+     *
+     * @return Query
+     */
+    public function query(): Query
+    {
+        return new Query($this->table, $this->connection);
     }
 
     /**

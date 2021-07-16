@@ -129,7 +129,7 @@ final class QueryTest extends TestCase
         $this->query->whereIn('id', [23, 24, 25]);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE id IN ?, ?, ?',
+            'SELECT * FROM products WHERE id IN (?, ?, ?)',
             $this->query->getCompiledSelect()
         );
 
@@ -139,7 +139,7 @@ final class QueryTest extends TestCase
         $this->query->whereIn('id', [23, 24, 25])->orWhereIn('color', ['#000', '#FFF']);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE id IN ?, ?, ? OR color IN ?, ?',
+            'SELECT * FROM products WHERE id IN (?, ?, ?) OR color IN (?, ?)',
             $this->query->getCompiledSelect()
         );
 
@@ -149,7 +149,7 @@ final class QueryTest extends TestCase
         $this->query->whereNotIn('id', [23, 24, 25]);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE id NOT IN ?, ?, ?',
+            'SELECT * FROM products WHERE id NOT IN (?, ?, ?)',
             $this->query->getCompiledSelect()
         );
 
@@ -159,7 +159,7 @@ final class QueryTest extends TestCase
         $this->query->whereNotIn('id', [23, 24, 25])->orWhereNotIn('color', ['#000', '#FFF']);
         
         $this->assertEquals(
-            'SELECT * FROM products WHERE id NOT IN ?, ?, ? OR color NOT IN ?, ?',
+            'SELECT * FROM products WHERE id NOT IN (?, ?, ?) OR color NOT IN (?, ?)',
             $this->query->getCompiledSelect()
         );
 
