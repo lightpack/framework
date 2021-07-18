@@ -240,3 +240,20 @@ if (!function_exists('camelize')) {
         return $text;
     }
 }
+
+if (!function_exists('route')) {
+    /**
+     * ------------------------------------------------------------     
+     * Route function.
+     * ------------------------------------------------------------      
+     * 
+     * This function returns an instance of route object from
+     * the app container.
+     * 
+     * @return \Lightpack\Routing\Route
+     */
+    function route()
+    {
+        return app('route');
+    }
+}

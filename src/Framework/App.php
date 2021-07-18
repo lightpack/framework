@@ -3,7 +3,6 @@
 namespace Lightpack;
 
 use Lightpack\Http\Response;
-use Lightpack\Filters\Filter;
 use Lightpack\Routing\Dispatcher;
 use Lightpack\Container\Container;
 
