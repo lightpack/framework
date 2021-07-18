@@ -111,7 +111,7 @@ if (!function_exists('asset_url')) {
     {
         $url = trim(app('request')->basepath(), '/') . '/' . $type . '/' . $file;
 
-        return get_env('ASSET_URL') . $url;
+        return get_env('ASSET_URL', 'assets') . $url;
     }
 }
 
