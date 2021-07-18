@@ -16,18 +16,18 @@ if (!function_exists('app')) {
 if (!function_exists('url')) {
     /*
     * ------------------------------------------------------------
-    * Creates a relative URL.
+    * Creates a URL.
     * ------------------------------------------------------------
     * 
-    * It takes any number of string texts to generate relative
-    * URL to application basepath.
+    * It takes any number of string texts and concatenates them
+    * to generate the URL.
     */
     function url(string ...$fragments)
     {
         $path = implode('/', $fragments);
         $url = trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
 
-        return $url;
+        return get_env('APP_URL') . $url;
     }
 }
 
@@ -98,7 +98,7 @@ if (!function_exists('slugify')) {
 if (!function_exists('asset_url')) {
     /**
      * ------------------------------------------------------------
-     * Generates relaive URL to /public/assets folder.
+     * Generates URL for assets in /public/assets folder.
      * ------------------------------------------------------------
      * 
      * Usage: 
@@ -109,7 +109,9 @@ if (!function_exists('asset_url')) {
      */
     function asset_url(string $type, string $file): ?string
     {
-        return url('assets', $type, $file);
+        $url = trim(app('request')->basepath(), '/') . '/' . $type . '/' . $file;
+
+        return get_env('ASSET_URL') . $url;
     }
 }
 
@@ -134,7 +136,7 @@ if (!function_exists('humanize')) {
 if (!function_exists('query_url')) {
     /**
      * ------------------------------------------------------------
-     * Generates relaive URL with support for query params.
+     * Generates URL with support for query params.
      * ------------------------------------------------------------
      * 
      * For example:
@@ -156,7 +158,7 @@ if (!function_exists('query_url')) {
             array_pop($fragments);
         }
 
-        return url(...$fragments) . $query;
+        return trim(url(...$fragments), '/') . $query;
     }
 }
 
