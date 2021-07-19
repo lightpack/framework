@@ -1,0 +1,20 @@
+.container {
+    line-height: 1.6;
+}
+
+.bg-dumper {
+    background-color: #2E79FF;
+}
+
+.code-preview {
+    background-color: beige;
+    border-bottom: 1px solid #cd5c5c42;
+}
+
+.code-preview:last-child {
+    border-bottom: 0;
+}
+
+pre {
+    margin-bottom: 0;
+}
