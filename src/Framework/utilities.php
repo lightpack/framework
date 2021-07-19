@@ -259,3 +259,37 @@ if (!function_exists('route')) {
         return app('route');
     }
 }
+
+if (!function_exists('dd')) {
+    /**
+     * ------------------------------------------------------------
+     * Pretty dump using var_dump()
+     * ------------------------------------------------------------
+     * 
+     */
+    function dd(...$args)
+    {
+        $renderer = new Lightpack\Debug\Dumper;
+
+        $renderer->varDump($args);
+
+        die;
+    }
+}
+
+if (!function_exists('pp')) {
+    /**
+     * ------------------------------------------------------------
+     * Pretty print using print_r()
+     * ------------------------------------------------------------
+     * 
+     */
+    function pp(...$args)
+    {
+        $renderer = new Lightpack\Debug\Dumper;
+
+        $renderer->printDump($args);
+
+        die;
+    }
+}
