@@ -14,3 +14,7 @@
 .code-preview:last-child {
     border-bottom: 0;
 }
+
+pre {
+    margin-bottom: 0;
+}
