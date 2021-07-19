@@ -7,7 +7,7 @@ class Dumper
     public function varDump(...$args)
     {
         $this->dump(function ($data) {
-            return var_dump($data);
+            var_dump($data);
         }, ...$args);
     }
 
