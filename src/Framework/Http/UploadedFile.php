@@ -10,6 +10,7 @@ class UploadedFile
     private $size;
     private $type;
     private $error;
+    private $tmpName;
 
     public function __construct($file)
     {
@@ -17,6 +18,7 @@ class UploadedFile
         $this->size = $file['size'];
         $this->type = $file['type'];
         $this->error = $file['error'];    
+        $this->tmpName = $file['tmp_name'];
     }
 
     public function getName(): string
@@ -44,6 +46,11 @@ class UploadedFile
         return $this->error;
     }
 
+    public function tmpName(): string
+    {
+        return $this->tmpName();
+    }
+
     public function hasErrors(): bool
     {
         return UPLOAD_ERR_OK !== $this->error;
@@ -51,7 +58,7 @@ class UploadedFile
 
     public function move(string $destination, string $name = null): void
     {
-        if(!$this->hasErrors()) {
+        if($this->hasErrors()) {
             throw new FileUploadException('Uploaded file has errors');
         }
 
@@ -63,13 +70,13 @@ class UploadedFile
             throw new FileUploadException('Could not create upload directory: ' . $destination);
         }
 
-        $this->processUpload($name ?? $this->name, $destination);
+        $this->processUpload($name, $destination);
     }
 
     private function processUpload(string $name, string $destination): void
     {
-        $targetPath = rtrim($destination, '\\/') . '/' . $name;
-        $success = move_uploaded_file($name, $targetPath);
+        $targetPath = rtrim($destination, '\\/') . '/' . ($name ?? $this->name);
+        $success = move_uploaded_file($this->tmpName, $targetPath);
 
         if(!$success) {
             throw new FileUploadException('Could not upload the file.');

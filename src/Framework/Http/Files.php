@@ -8,8 +8,8 @@ class Files
 
     public function __construct(array $files = [])
     {
-        foreach($files as $file) {
-            $this->files[$file['name']] = new UploadedFile($file);
+        foreach($files as $key => $file) {
+            $this->files[$key] = new UploadedFile($file);
         }
     }
 
