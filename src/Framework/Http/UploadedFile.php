@@ -46,9 +46,9 @@ class UploadedFile
         return $this->error;
     }
 
-    public function tmpName(): string
+    public function getTmpName(): string
     {
-        return $this->tmpName();
+        return $this->tmpName;
     }
 
     public function hasError(): bool
