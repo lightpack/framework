@@ -11,6 +11,6 @@ final class PasswordTest extends TestCase
     {
         $verified = Password::verify('lightpack', Password::hash('lightpack'));
 
-        $this->assertEquals(true, $verified);
+        $this->assertTrue($verified);
     }
 }
