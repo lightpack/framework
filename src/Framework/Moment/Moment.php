@@ -104,4 +104,17 @@ class Moment
 
         return $date->modify("-$days days")->format($format);
     }
+
+    public static function diff(string $date1, string $date2): \DateInterval
+    {
+        $datetime1 = new \DateTime($date1);
+        $datetime2 = new \DateTime($date2);
+
+        return $datetime1->diff($datetime2, true);
+    }
+
+    public static function daysBetween(string $date1, string $date2): int
+    {
+        return self::diff($date1, $date2)->days; 
+    }
 }
