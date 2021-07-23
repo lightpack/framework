@@ -139,6 +139,13 @@ class Moment
         return new DateTime($datetime);
     }
 
+    public static function travel(string $modifier, string $format = null): string
+    {
+        $datetime = self::create();
+
+        return $datetime->modify($modifier)->format($format ?? self::$format);
+    }
+
     public static function fromNow(string $datetime): ?string
     {
         $datetimetime1 = new DateTime();
