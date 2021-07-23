@@ -133,7 +133,7 @@ class Moment
         // Minutes
         $minutes = round($seconds / 60);
         
-        if($minutes === 1) {
+        if($minutes == 1) {
             return 'a minute ago';
         }
 
@@ -144,7 +144,7 @@ class Moment
         // Hours
         $hours = round($seconds / 3600);
 
-        if($hours === 1) {
+        if($hours == 1) {
             return 'an hour ago';
         }
 
@@ -155,7 +155,7 @@ class Moment
         // Days
         $days = round($seconds / 86400);
 
-        if($days === 1) {
+        if($days == 1) {
             return 'yesterday';
         }
 
@@ -166,7 +166,7 @@ class Moment
         // Weeks
         $weeks = round($seconds / 604800);
 
-        if($weeks === 1) {
+        if($weeks == 1) {
             return 'a week ago';
         }
 
@@ -177,7 +177,7 @@ class Moment
         // Months
         $months = round($seconds / 2600640);
 
-        if($months === 1) {
+        if($months == 1) {
             return 'a month ago';
         }
 
@@ -188,7 +188,7 @@ class Moment
         // Years
         $years = round($seconds / 31207680);
 
-        if($years === 1) {
+        if($years == 1) {
             return 'a year ago';
         }
         
