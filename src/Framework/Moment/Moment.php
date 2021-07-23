@@ -115,6 +115,83 @@ class Moment
 
     public static function daysBetween(string $date1, string $date2): int
     {
-        return self::diff($date1, $date2)->days; 
+        return self::diff($date1, $date2)->days;
+    }
+
+    public static function fromNow(string $date): ?string
+    {
+        $datetime1 = new \DateTime();
+        $datetime2 = new \DateTime($date);
+
+        // Seconds
+        $seconds = $datetime1->getTimestamp() - $datetime2->getTimestamp();
+
+        if($seconds <= 60) {
+            return 'just now';
+        }
+
+        // Minutes
+        $minutes = round($seconds / 60);
+        
+        if($minutes === 1) {
+            return 'a minute ago';
+        }
+
+        if($minutes <= 60) {
+            return "{$minutes} minutes ago";
+        }
+
+        // Hours
+        $hours = round($seconds / 3600);
+
+        if($hours === 1) {
+            return 'an hour ago';
+        }
+
+        if($hours <= 24) {
+            return "{$hours} hours ago";
+        }
+
+        // Days
+        $days = round($seconds / 86400);
+
+        if($days === 1) {
+            return 'yesterday';
+        }
+
+        if($days <= 7) {
+            return "{$days} days ago";
+        }
+
+        // Weeks
+        $weeks = round($seconds / 604800);
+
+        if($weeks === 1) {
+            return 'a week ago';
+        }
+
+        if($weeks <= 4.3) {
+            return "{$weeks} weeks ago";
+        }
+        
+        // Months
+        $months = round($seconds / 2600640);
+
+        if($months === 1) {
+            return 'a month ago';
+        }
+
+        if($months <= 12) {
+            return "{$months} months ago";
+        }
+
+        // Years
+        $years = round($seconds / 31207680);
+
+        if($years === 1) {
+            return 'a year ago';
+        }
+        
+        return "{$years} years ago";
     }
 }
