@@ -49,9 +49,9 @@ class Moment
         return $date->format($format);
     }
 
-    public static function  endOfMonth(string $format = 'Y-m-d'): string
+    public static function previous(string $day, string $format = 'Y-m-d'): string
     {
-        $date = new \DateTime('last day of this month');
+        $date = new \DateTime('previous ' . strtolower($day));
 
         return $date->format($format);
     }
@@ -66,6 +66,27 @@ class Moment
     public static function after(int $days, string $format = 'Y-m-d'): string
     {
         $date = new \DateTime("+{$days} days");
+
+        return $date->format($format);
+    }
+
+    public static function  endOfThisMonth(string $format = 'Y-m-d'): string
+    {
+        $date = new \DateTime('last day of this month');
+
+        return $date->format($format);
+    }
+
+    public static function  endOfNextMonth(string $format = 'Y-m-d'): string
+    {
+        $date = new \DateTime('last day of next month');
+
+        return $date->format($format);
+    }
+
+    public static function  endOfPreviousMonth(string $format = 'Y-m-d'): string
+    {
+        $date = new \DateTime('last day of previous month');
 
         return $date->format($format);
     }
