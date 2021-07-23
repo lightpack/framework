@@ -123,14 +123,14 @@ class Moment
         $datetime1 = new \DateTime();
         $datetime2 = new \DateTime($date);
 
-        // Seconds
+        // Seconds from now
         $seconds = $datetime1->getTimestamp() - $datetime2->getTimestamp();
 
         if($seconds <= 60) {
             return 'just now';
         }
 
-        // Minutes
+        // Minutes from now
         $minutes = round($seconds / 60);
         
         if($minutes == 1) {
@@ -141,7 +141,7 @@ class Moment
             return "{$minutes} minutes ago";
         }
 
-        // Hours
+        // Hours from now
         $hours = round($seconds / 3600);
 
         if($hours == 1) {
@@ -152,7 +152,7 @@ class Moment
             return "{$hours} hours ago";
         }
 
-        // Days
+        // Days from now
         $days = round($seconds / 86400);
 
         if($days == 1) {
@@ -163,7 +163,7 @@ class Moment
             return "{$days} days ago";
         }
 
-        // Weeks
+        // Weeks from now
         $weeks = round($seconds / 604800);
 
         if($weeks == 1) {
@@ -174,7 +174,7 @@ class Moment
             return "{$weeks} weeks ago";
         }
         
-        // Months
+        // Months from now
         $months = round($seconds / 2600640);
 
         if($months == 1) {
@@ -185,7 +185,7 @@ class Moment
             return "{$months} months ago";
         }
 
-        // Years
+        // Years from now
         $years = round($seconds / 31207680);
 
         if($years == 1) {
