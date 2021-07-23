@@ -37,81 +37,39 @@ class Moment
         return $datetime->format($format ?? self::$format);
     }
 
-    public static function this(string $day, string $format = null): string
+    public static function next(string $dayname, string $format = null): string
     {
-        $datetime = new DateTime('this ' . strtolower($day));
+        $datetime = new DateTime('next ' . strtolower($dayname));
 
         return $datetime->format($format ?? self::$format);
     }
 
-    public static function next(string $day, string $format = null): string
+    public static function last(string $dayname, string $format = null): string
     {
-        $datetime = new DateTime('next ' . strtolower($day));
+        $datetime = new DateTime('last ' . strtolower($dayname));
 
         return $datetime->format($format ?? self::$format);
     }
 
-    public static function last(string $day, string $format = null): string
-    {
-        $datetime = new DateTime('last ' . strtolower($day));
-
-        return $datetime->format($format ?? self::$format);
-    }
-
-    public static function previous(string $day, string $format = null): string
-    {
-        $datetime = new DateTime('previous ' . strtolower($day));
-
-        return $datetime->format($format ?? self::$format);
-    }
-
-    public static function ago(int $days, string $format = null): string
-    {
-        $datetime = new DateTime("-{$days} days");
-
-        return $datetime->format($format ?? self::$format);
-    }
-
-    public static function after(int $days, string $format = null): string
-    {
-        $datetime = new DateTime("+{$days} days");
-
-        return $datetime->format($format ?? self::$format);
-    }
-
-    public static function  endOfThisMonth(string $format = null): string
+    public static function  thisMonthEnd(string $format = null): string
     {
         $datetime = new DateTime('last day of this month');
 
         return $datetime->format($format ?? self::$format);
     }
 
-    public static function  endOfNextMonth(string $format = null): string
+    public static function  nextMonthEnd(string $format = null): string
     {
         $datetime = new DateTime('last day of next month');
 
         return $datetime->format($format ?? self::$format);
     }
 
-    public static function  endOfPreviousMonth(string $format = null): string
+    public static function  lastMonthEnd(string $format = null): string
     {
-        $datetime = new DateTime('last day of previous month');
+        $datetime = new DateTime('last day of last month');
 
         return $datetime->format($format ?? self::$format);
-    }
-
-    public static function add(string $datetime, int $days, string $format = null): string
-    {
-        $datetime = new DateTime($datetime);
-
-        return $datetime->modify("+$days days")->format($format ?? self::$format);
-    }
-
-    public static function remove(string $datetime, int $days, string $format = null): string
-    {
-        $datetime = new DateTime($datetime);
-
-        return $datetime->modify("-$days days")->format($format ?? self::$format);
     }
 
     public static function diff(string $datetime1, string $datetime2): \DateInterval
