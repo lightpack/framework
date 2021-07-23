@@ -90,4 +90,18 @@ class Moment
 
         return $date->format($format);
     }
+
+    public static function add(string $date, int $days, string $format = 'Y-m-d'): string
+    {
+        $date = new \DateTime($date);
+
+        return $date->modify("+$days days")->format($format);
+    }
+
+    public static function remove(string $date, int $days, string $format = 'Y-m-d'): string
+    {
+        $date = new \DateTime($date);
+
+        return $date->modify("-$days days")->format($format);
+    }
 }
