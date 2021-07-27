@@ -19,7 +19,7 @@ class LinkStorage implements ICommand
         $success = symlink($target, $link);
 
         if($success) {
-            fputs(STDOUT, "✓ Created symlink from \n\n{$link} \n -- to -- \n{$target}\n\n");
+            fputs(STDOUT, '✓ Created symlink from "public/uploads" to "storage/uploads/public"' . "\n\n");
             return;
         }
 
