@@ -4,7 +4,7 @@ namespace Lightpack\Console\Commands;
 
 use Lightpack\Console\ICommand;
 
-class SymlinkStorage implements ICommand
+class LinkStorage implements ICommand
 {
     public function run(array $arguments = [])
     {
