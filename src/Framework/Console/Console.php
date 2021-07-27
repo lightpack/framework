@@ -7,6 +7,8 @@ use Lightpack\Console\Commands\CreateEvent;
 use Lightpack\Console\Commands\CreateModel;
 use Lightpack\Console\Commands\CreateFilter;
 use Lightpack\Console\Commands\CreateCommand;
+use Lightpack\Console\Commands\UnlinkStorage;
+use Lightpack\Console\Commands\SymlinkStorage;
 use Lightpack\Console\Commands\CreateProvider;
 use Lightpack\Console\Commands\CreateController;
 
@@ -18,6 +20,8 @@ class Console
         'create:model' => CreateModel::class,
         'create:filter' => CreateFilter::class,
         'create:command' => CreateCommand::class,
+        'unlink:storage' => UnlinkStorage::class,
+        'symlink:storage' => SymlinkStorage::class,
         'create:provider' => CreateProvider::class,
         'create:controller' => CreateController::class,
     ];
