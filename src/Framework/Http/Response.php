@@ -237,7 +237,7 @@ class Response
         $name = $name ?? basename($path);
 
         $headers = array_merge([
-			'Content-Type'              => 'application/octet-stream',
+			'Content-Type'              => MimeTypes::getMime($path),
             'Content-Disposition'       => 'attachment; filename="' . $name . '"',
 			'Content-Transfer-Encoding' => 'binary',
 			'Expires'                   => 0,
