@@ -15,7 +15,7 @@ interface IValidationStrategy
      * @param  string  $param  The value to validate against.
      */
     public function validate($data, $param);
-    
+
     /**
      * The method to be called to access the generated error message.
      *
