@@ -106,6 +106,11 @@ class AbstractValidator
         }
 
         foreach ($this->rules as $field => $values) {
+            if(is_callable($values)) {
+                $this->validate($field, 'callback');
+                continue;
+            }
+
             foreach ($values as $value) {
                 if (
                     !in_array('required', $values, true) && // if current field is not required &&
