@@ -95,29 +95,30 @@ class AbstractValidator
      */
     protected function processRules()
     {
-        if(!empty($this->rules)) {
-            foreach($this->rules as $field => $values)
-            {
-                foreach($values as $value) {
-                    if(
-                       !in_array('required', $values, true) && // if current field is not required &&
-                       !$this->notEmpty($this->dataSource[$field]) // no data has been provided then
-                    ) {
-                        continue; // skip the loop
-                    }
-                    $continue = true;            
+        if(empty($this->rules)) {
+            return;
+        }
+        
+        foreach($this->rules as $field => $values) {
+            foreach($values as $value) {
+                if(
+                    !in_array('required', $values, true) && // if current field is not required &&
+                    !$this->notEmpty($this->dataSource[$field]) // no data has been provided then
+                ) {
+                    continue; // skip the loop
+                }
+                $continue = true;            
 
-                    if(strpos($value, ':') !== false) {
-                        list($strategy, $param) = $this->explodeString($value, ':');
-                        $continue = $this->_validate($field, $strategy, $param);
-                    } else {
-                        $strategy = $value;
-                        $continue = $this->_validate($field, $strategy);
-                    }
-                    
-                    if(!$continue) { //break validating further the same field as soon as we break
-                        break;
-                    }
+                if(strpos($value, ':') !== false) {
+                    list($strategy, $param) = $this->explodeString($value, ':');
+                    $continue = $this->_validate($field, $strategy, $param);
+                } else {
+                    $strategy = $value;
+                    $continue = $this->_validate($field, $strategy);
+                }
+                
+                if(!$continue) { //break validating further the same field as soon as we break
+                    break;
                 }
             }
         }
