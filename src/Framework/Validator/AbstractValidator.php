@@ -3,8 +3,6 @@
 namespace Lightpack\Validator;
 
 use RuntimeException;
-use Lightpack\Validator\StringTrait;
-use Lightpack\Validator\ValidatorFactory;
 
 /**
  * The abstract class for Lightpack\Validator\Validator.
