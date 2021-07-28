@@ -107,6 +107,7 @@ class AbstractValidator
                 ) {
                     continue; // skip the loop
                 }
+                
                 $continue = true;
 
                 if (strpos($value, ':') !== false) {
