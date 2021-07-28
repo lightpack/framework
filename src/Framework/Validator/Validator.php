@@ -18,7 +18,7 @@ use RuntimeException;
  * array     public   function    getErrors(void);
  */
 class Validator extends AbstractValidator
-{   
+{
     /**
      * Class constructor.
      *
@@ -29,7 +29,7 @@ class Validator extends AbstractValidator
     {
         parent::__construct($dataSource);
     }
-    
+
     /**
      * This is the method to be called when setting a rule for a data field. For
      * an example, to validate field "username" with rules required, alpha, min,
@@ -50,11 +50,11 @@ class Validator extends AbstractValidator
      */
     public function setRule($key, $rules)
     {
-        if(!array_key_exists($key, $this->dataSource)) {
+        if (!array_key_exists($key, $this->dataSource)) {
             throw new RuntimeException(sprintf("Invalid key: %s", $key));
         }
 
-        $this->addRule($key, $rules);    
+        $this->addRule($key, $rules);
 
         return $this;
     }
@@ -83,13 +83,13 @@ class Validator extends AbstractValidator
      */
     public function setRules(array $config)
     {
-        foreach($config as $key => $rules) {
+        foreach ($config as $key => $rules) {
             $this->setRule($key, $rules);
         }
 
         return $this;
     }
-    
+
     /**
      * This is the method to be called when all the rules have been set. 
      * It simply delegates the task to a protected method inherited from 
@@ -102,7 +102,7 @@ class Validator extends AbstractValidator
         $this->processRules();
         return $this;
     }
-    
+
     /**
      * This method confirms the state of overall validation. Call this method to
      * ensure that the data source passes all the validation rules imposed.
@@ -114,7 +114,7 @@ class Validator extends AbstractValidator
     {
         return empty($this->errors) === false;
     }
-    
+
     /**
      * This method returns the error message associated with a data field that failed
      * the validation. In case there is no error, it simply returns an empty string.
@@ -126,7 +126,7 @@ class Validator extends AbstractValidator
     {
         return isset($this->errors[$field]) ? $this->errors[$field] : '';
     }
-    
+
     /**
      * This method returns an array of all errors after validation.
      *
