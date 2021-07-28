@@ -36,14 +36,14 @@ class ValidatorFactory
     public function __construct($strategy)
     {
         $strategy = ucfirst($strategy);
-        
+
         try {
             $reflectStrategy = new ReflectionClass("Lightpack\Validator\Strategies\\$strategy");
-        } catch(ReflectionException $e) {
+        } catch (ReflectionException $e) {
             throw new RuntimeException(sprintf("No class exists for rule: %s", $strategy));
         }
 
-        if(!$reflectStrategy->implementsInterface('Lightpack\Validator\IValidationStrategy')) {
+        if (!$reflectStrategy->implementsInterface('Lightpack\Validator\IValidationStrategy')) {
             throw new RuntimeException(sprintf("The class defined for rule: %s must implement interface: IValidationStrategy", $strategy));
         }
 
