@@ -3,7 +3,6 @@
 namespace Lightpack\Validator;
 
 use RuntimeException;
-use Lightpack\Validator\AbstractValidator;
 
 /**
  * This is the main class to be exposed to the end user. It extends the core
