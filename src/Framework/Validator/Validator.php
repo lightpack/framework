@@ -51,11 +51,11 @@ class Validator extends AbstractValidator
      */
     public function setRule($key, $rules)
     {
-        if(array_key_exists($key, $this->dataSource)) {
-            $this->addRule($key, $rules);    
-        } else {
+        if(!array_key_exists($key, $this->dataSource)) {
             throw new RuntimeException(sprintf("Invalid key: %s", $key));
         }
+
+        $this->addRule($key, $rules);    
 
         return $this;
     }
