@@ -13,7 +13,7 @@ use RuntimeException;
  * void     protected     function    addRule($key, $rules)
  * void     protected     function    processRules();
  * void     protected     function    processRules();
- * boolean  private       function    _validate(string $field, string $strategy, string $param = null);
+ * boolean  private       function    validate(string $field, string $strategy, string $param = null);
  */
 class AbstractValidator
 {
@@ -107,15 +107,15 @@ class AbstractValidator
                 ) {
                     continue; // skip the loop
                 }
-                
+
                 $continue = true;
 
                 if (strpos($value, ':') !== false) {
                     list($strategy, $param) = $this->explodeString($value, ':');
-                    $continue = $this->_validate($field, $strategy, $param);
+                    $continue = $this->validate($field, $strategy, $param);
                 } else {
                     $strategy = $value;
-                    $continue = $this->_validate($field, $strategy);
+                    $continue = $this->validate($field, $strategy);
                 }
 
                 if (!$continue) { //break validating further the same field as soon as we break
@@ -136,7 +136,7 @@ class AbstractValidator
      * @param   mixed    $param     An extra parameter for the strategy (if required)
      * @return  boolean             Returns true if the field passes the rule else false
      */
-    private function _validate($field, $strategy, $param = null)
+    private function validate($field, $strategy, $param = null)
     {
         $isValidFlag = true; // we are optimistic
         $factoryInstance = new ValidatorFactory($strategy);
