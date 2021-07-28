@@ -21,7 +21,7 @@ trait StringTrait
     {
         return trim($string) !== '';
     }
-    
+
     /**
      * Checks if the datatype is string.
      *
@@ -33,7 +33,7 @@ trait StringTrait
     {
         return is_string($string);
     }
-    
+
     /**
      * Returns an array from a csv.
      *
@@ -70,7 +70,8 @@ trait StringTrait
      * @param   string  $slug
      * @return string
      */
-    protected function humanize(string $slug): string {
+    protected function humanize(string $slug): string
+    {
         $text = str_replace(['_', '-'], ' ', $slug);
         $text = trim($text);
 
