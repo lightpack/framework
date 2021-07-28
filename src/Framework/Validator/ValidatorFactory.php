@@ -22,7 +22,7 @@ class ValidatorFactory
      *
      * @var object
      */
-    private $_strategyInstance = null;
+    private $strategyInstance = null;
 
     /**
      * Class constructor.
@@ -47,7 +47,7 @@ class ValidatorFactory
         }
 
         // things are fine, let us produce our strategy instance
-        $this->_strategyInstance = $reflectStrategy->newInstance();
+        $this->strategyInstance = $reflectStrategy->newInstance();
     }
 
     /**
@@ -58,6 +58,6 @@ class ValidatorFactory
      */
     public function getStrategy()
     {
-        return $this->_strategyInstance;
+        return $this->strategyInstance;
     }
 }
