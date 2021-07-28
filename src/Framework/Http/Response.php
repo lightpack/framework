@@ -255,14 +255,19 @@ class Response
      * This method display a file directly in the browser instead of downloading.
      *
      * @param string $path  The path of file to download.
+     * @param string $name  Custom name for downloaded file.
      * @param array $headers  Additional headers for download response.
      * @return void
      */
-    public function file(string $path, array $headers = [])
+    public function file(string $path, string $name = null, array $headers = [])
     {
-        $headers = array_merge(['Content-Disposition' => 'inline'], $headers);
+        $name = $name ?? basename($path);
 
-        $this->download($path, null, $headers);
+        $headers = array_merge([
+            'Content-Disposition' => 'inline; filename=' . $name
+        ], $headers);
+
+        $this->download($path, $name, $headers);
     }
 
     /**
