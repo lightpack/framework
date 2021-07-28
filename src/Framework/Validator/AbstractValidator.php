@@ -81,11 +81,23 @@ class AbstractValidator
         }
 
         if (is_array($rules) && isset($rules['rules'])) {
-            $this->rules[$key] =  $this->explodeString($rules['rules'], '|');
+            if(is_callable($rules['rules'])) {
+                $this->rules[$key] =  $rules['rules'];
+            } else {
+                $this->rules[$key] =  $this->explodeString($rules['rules'], '|');
+            }
+
             $this->customErrors[$key] = $rules['error'] ?? null;
             $this->customLabels[$key] = $rules['label'] ?? null;
+            
             return;
         }
+
+        if (is_callable($rules)) {
+            $this->rules[$key] =  $rules;
+            return;
+        }
+
 
         throw new RuntimeException(sprintf("Could not add the rules for key: %s", $key));
     }
@@ -100,6 +112,11 @@ class AbstractValidator
         }
 
         foreach ($this->rules as $field => $values) {
+            if (is_callable($values)) {
+                $this->validate($field, 'callback');
+                continue;
+            }
+
             foreach ($values as $value) {
                 if (
                     !in_array('required', $values, true) && // if current field is not required &&
@@ -144,6 +161,8 @@ class AbstractValidator
 
         if ($param) {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $param);
+        } elseif ($strategy === 'callback') {
+            $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $this->rules[$field]);
         } else {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field]);
         }
