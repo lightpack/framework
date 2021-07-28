@@ -81,9 +81,15 @@ class AbstractValidator
         }
 
         if (is_array($rules) && isset($rules['rules'])) {
-            $this->rules[$key] =  $this->explodeString($rules['rules'], '|');
+            if(is_callable($rules['rules'])) {
+                $this->rules[$key] =  $rules['rules'];
+            } else {
+                $this->rules[$key] =  $this->explodeString($rules['rules'], '|');
+            }
+
             $this->customErrors[$key] = $rules['error'] ?? null;
             $this->customLabels[$key] = $rules['label'] ?? null;
+            
             return;
         }
 
