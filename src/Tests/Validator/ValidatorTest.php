@@ -358,4 +358,20 @@ final class ValidatorTest extends TestCase
 
         $this->assertFalse($validator->hasErrors());
     }
+
+    public function testValidationRuleCanUseCallback()
+    {
+        $validator = new Validator(['framework' => 'Lightpack']);
+        $validator->setRule('framework', function() {})->run();
+
+        $this->assertFalse($validator->hasErrors());
+    }
+
+    public function testValidationRuleCanExecuteCallback()
+    {
+        $validator = new Validator(['framework' => 'Lightpack']);
+        $validator->setRule('framework', function() {})->run();
+
+        $this->assertFalse($validator->hasErrors());
+    }
 }

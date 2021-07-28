@@ -87,6 +87,12 @@ class AbstractValidator
             return;
         }
 
+        if (is_callable($rules)) {
+            $this->rules[$key] =  $rules;
+            return;
+        }
+
+
         throw new RuntimeException(sprintf("Could not add the rules for key: %s", $key));
     }
 
