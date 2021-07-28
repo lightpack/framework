@@ -393,4 +393,18 @@ final class ValidatorTest extends TestCase
         $this->assertTrue($validator->hasErrors());
         $this->assertEquals($validator->getError('age'), 'You must be above 18');
     }
+
+    public function testValidationRuleCanSetCustomCallbackLabels()
+    {
+        $validator = new Validator(['age' => 17]);
+        $validator->setRule('age', [
+            'label' => 'Your age',
+            'rules' => function($data) {
+                return $data >= 18;
+            }
+        ])->run();
+
+        $this->assertTrue($validator->hasErrors());
+        $this->assertEquals($validator->getError('age'), 'Your age is invalid');
+    }
 }
