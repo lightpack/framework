@@ -18,7 +18,7 @@ use RuntimeException;
 class AbstractValidator
 {
     use StringTrait;
-    
+
     /**
      * Holds the input data for validation.
      *
@@ -79,14 +79,14 @@ class AbstractValidator
             $this->rules[$key] =  $this->explodeString($rules, '|');
             return;
         }
-        
-        if(is_array($rules) && isset($rules['rules'])) {
+
+        if (is_array($rules) && isset($rules['rules'])) {
             $this->rules[$key] =  $this->explodeString($rules['rules'], '|');
             $this->customErrors[$key] = $rules['error'] ?? null;
             $this->customLabels[$key] = $rules['label'] ?? null;
             return;
-        } 
-        
+        }
+
         throw new RuntimeException(sprintf("Could not add the rules for key: %s", $key));
     }
 
@@ -95,29 +95,29 @@ class AbstractValidator
      */
     protected function processRules()
     {
-        if(empty($this->rules)) {
+        if (empty($this->rules)) {
             return;
         }
-        
-        foreach($this->rules as $field => $values) {
-            foreach($values as $value) {
-                if(
+
+        foreach ($this->rules as $field => $values) {
+            foreach ($values as $value) {
+                if (
                     !in_array('required', $values, true) && // if current field is not required &&
                     !$this->notEmpty($this->dataSource[$field]) // no data has been provided then
                 ) {
                     continue; // skip the loop
                 }
-                $continue = true;            
+                $continue = true;
 
-                if(strpos($value, ':') !== false) {
+                if (strpos($value, ':') !== false) {
                     list($strategy, $param) = $this->explodeString($value, ':');
                     $continue = $this->_validate($field, $strategy, $param);
                 } else {
                     $strategy = $value;
                     $continue = $this->_validate($field, $strategy);
                 }
-                
-                if(!$continue) { //break validating further the same field as soon as we break
+
+                if (!$continue) { //break validating further the same field as soon as we break
                     break;
                 }
             }
@@ -141,18 +141,17 @@ class AbstractValidator
         $factoryInstance = new ValidatorFactory($strategy);
         $strategyInstance = $factoryInstance->getStrategy();
 
-        if($param) {
+        if ($param) {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $param);
         } else {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field]);
         }
-        
-        if($isValidFlag === false) {
+
+        if ($isValidFlag === false) {
             $label = $this->customLabels[$field] ?? $this->humanize($field);
-            $this->errors[$field] = $this->customErrors[$field] ?? $strategyInstance->getErrorMessage($label);    
+            $this->errors[$field] = $this->customErrors[$field] ?? $strategyInstance->getErrorMessage($label);
         }
-        
+
         return $isValidFlag;
     }
-    
 }
