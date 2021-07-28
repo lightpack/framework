@@ -362,9 +362,21 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleCanUseCallback()
     {
         $validator = new Validator(['framework' => 'Lightpack']);
-        $validator->setRule('framework', function($data) {
+        $validator->setRule('framework', function ($data) {
             return 'Lightpack' === $data;
         })->run();
+
+        $this->assertFalse($validator->hasErrors());
+    }
+
+    public function testValidationRuleCanSetCallback()
+    {
+        $validator = new Validator(['framework' => 'Lightpack']);
+        $validator->setRules([
+            'framework' => function ($data) {
+                return 'Lightpack' === $data;
+            }
+        ])->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -372,7 +384,7 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleCanSetCallbackErrors()
     {
         $validator = new Validator(['age' => 23]);
-        $validator->setRule('age', function($data) {
+        $validator->setRule('age', function ($data) {
             return 23 !== $data;
         })->run();
 
@@ -385,7 +397,7 @@ final class ValidatorTest extends TestCase
         $validator = new Validator(['age' => 17]);
         $validator->setRule('age', [
             'error' => 'You must be above 18',
-            'rules' => function($data) {
+            'rules' => function ($data) {
                 return $data >= 18;
             }
         ])->run();
@@ -399,12 +411,37 @@ final class ValidatorTest extends TestCase
         $validator = new Validator(['age' => 17]);
         $validator->setRule('age', [
             'label' => 'Your age',
-            'rules' => function($data) {
+            'rules' => function ($data) {
                 return $data >= 18;
             }
         ])->run();
 
         $this->assertTrue($validator->hasErrors());
         $this->assertEquals($validator->getError('age'), 'Your age is invalid');
+    }
+
+    public function testValidationRuleCanSetMultipleCallbacksTogether()
+    {
+        $validator = new Validator(['age1' => 17, 'age2' => 23, 'age3' => 49]);
+
+        $validator->setRules([
+            'age1' => function ($data) {
+                return $data >= 23;
+            },
+            'age2' => function ($data) {
+                return $data >= 23;
+            },
+            'age3' => [
+                'label' => 'Grandpa\'s age',
+                'rules' => function($data) {
+                    return $data >= 50;
+                }
+            ],
+        ])->run();
+
+        $this->assertTrue($validator->hasErrors());
+        $this->assertEquals($validator->getError('age1'), 'Age1 is invalid');
+        $this->assertEmpty($validator->getError('age2'));
+        $this->assertEquals($validator->getError('age3'), "Grandpa's age is invalid");
     }
 }
