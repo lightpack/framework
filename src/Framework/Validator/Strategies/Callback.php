@@ -6,9 +6,13 @@ use Lightpack\Validator\IValidationStrategy;
 
 class Callback implements IValidationStrategy
 {
-    public function validate($data, $param = null)
+    public function validate($data, $callback)
     {
-        return true;
+        if(is_callable($callback)) {
+            return $callback($data);
+        }
+
+        return false;
     }
     
     public function getErrorMessage($field)

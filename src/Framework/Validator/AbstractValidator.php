@@ -106,7 +106,7 @@ class AbstractValidator
         }
 
         foreach ($this->rules as $field => $values) {
-            if(is_callable($values)) {
+            if (is_callable($values)) {
                 $this->validate($field, 'callback');
                 continue;
             }
@@ -155,6 +155,8 @@ class AbstractValidator
 
         if ($param) {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $param);
+        } elseif ($strategy === 'callback') {
+            $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $this->rules[$field]);
         } else {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field]);
         }

@@ -362,16 +362,21 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleCanUseCallback()
     {
         $validator = new Validator(['framework' => 'Lightpack']);
-        $validator->setRule('framework', function() {})->run();
+        $validator->setRule('framework', function($data) {
+            return 'Lightpack' === $data;
+        })->run();
 
         $this->assertFalse($validator->hasErrors());
     }
 
-    public function testValidationRuleCanExecuteCallback()
+    public function testValidationRuleCanSetCallbackErrors()
     {
-        $validator = new Validator(['framework' => 'Lightpack']);
-        $validator->setRule('framework', function() {})->run();
+        $validator = new Validator(['age' => 23]);
+        $validator->setRule('age', function($data) {
+            return 23 !== $data;
+        })->run();
 
-        $this->assertFalse($validator->hasErrors());
+        $this->assertTrue($validator->hasErrors());
+        $this->assertEquals($validator->getError('age'), 'Age is invalid');
     }
 }
