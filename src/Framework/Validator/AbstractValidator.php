@@ -3,8 +3,6 @@
 namespace Lightpack\Validator;
 
 use RuntimeException;
-use Lightpack\Validator\StringTrait;
-use Lightpack\Validator\ValidatorFactory;
 
 /**
  * The abstract class for Lightpack\Validator\Validator.
@@ -15,12 +13,12 @@ use Lightpack\Validator\ValidatorFactory;
  * void     protected     function    addRule($key, $rules)
  * void     protected     function    processRules();
  * void     protected     function    processRules();
- * boolean  private       function    _validate(string $field, string $strategy, string $param = null);
+ * boolean  private       function    validate(string $field, string $strategy, string $param = null);
  */
 class AbstractValidator
 {
     use StringTrait;
-    
+
     /**
      * Holds the input data for validation.
      *
@@ -81,14 +79,14 @@ class AbstractValidator
             $this->rules[$key] =  $this->explodeString($rules, '|');
             return;
         }
-        
-        if(is_array($rules) && isset($rules['rules'])) {
+
+        if (is_array($rules) && isset($rules['rules'])) {
             $this->rules[$key] =  $this->explodeString($rules['rules'], '|');
             $this->customErrors[$key] = $rules['error'] ?? null;
             $this->customLabels[$key] = $rules['label'] ?? null;
             return;
-        } 
-        
+        }
+
         throw new RuntimeException(sprintf("Could not add the rules for key: %s", $key));
     }
 
@@ -97,29 +95,31 @@ class AbstractValidator
      */
     protected function processRules()
     {
-        if(!empty($this->rules)) {
-            foreach($this->rules as $field => $values)
-            {
-                foreach($values as $value) {
-                    if(
-                       !in_array('required', $values, true) && // if current field is not required &&
-                       !$this->notEmpty($this->dataSource[$field]) // no data has been provided then
-                    ) {
-                        continue; // skip the loop
-                    }
-                    $continue = true;            
+        if (empty($this->rules)) {
+            return;
+        }
 
-                    if(strpos($value, ':') !== false) {
-                        list($strategy, $param) = $this->explodeString($value, ':');
-                        $continue = $this->_validate($field, $strategy, $param);
-                    } else {
-                        $strategy = $value;
-                        $continue = $this->_validate($field, $strategy);
-                    }
-                    
-                    if(!$continue) { //break validating further the same field as soon as we break
-                        break;
-                    }
+        foreach ($this->rules as $field => $values) {
+            foreach ($values as $value) {
+                if (
+                    !in_array('required', $values, true) && // if current field is not required &&
+                    !$this->notEmpty($this->dataSource[$field]) // no data has been provided then
+                ) {
+                    continue; // skip the loop
+                }
+
+                $continue = true;
+
+                if (strpos($value, ':') !== false) {
+                    list($strategy, $param) = $this->explodeString($value, ':');
+                    $continue = $this->validate($field, $strategy, $param);
+                } else {
+                    $strategy = $value;
+                    $continue = $this->validate($field, $strategy);
+                }
+
+                if (!$continue) { //break validating further the same field as soon as we break
+                    break;
                 }
             }
         }
@@ -136,24 +136,23 @@ class AbstractValidator
      * @param   mixed    $param     An extra parameter for the strategy (if required)
      * @return  boolean             Returns true if the field passes the rule else false
      */
-    private function _validate($field, $strategy, $param = null)
+    private function validate($field, $strategy, $param = null)
     {
         $isValidFlag = true; // we are optimistic
         $factoryInstance = new ValidatorFactory($strategy);
         $strategyInstance = $factoryInstance->getStrategy();
 
-        if($param) {
+        if ($param) {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $param);
         } else {
             $isValidFlag = $strategyInstance->validate($this->dataSource[$field]);
         }
-        
-        if($isValidFlag === false) {
+
+        if ($isValidFlag === false) {
             $label = $this->customLabels[$field] ?? $this->humanize($field);
-            $this->errors[$field] = $this->customErrors[$field] ?? $strategyInstance->getErrorMessage($label);    
+            $this->errors[$field] = $this->customErrors[$field] ?? $strategyInstance->getErrorMessage($label);
         }
-        
+
         return $isValidFlag;
     }
-    
 }
