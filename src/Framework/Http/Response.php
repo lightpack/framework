@@ -10,35 +10,35 @@ class Response
      * @var string
      */
     private $type;
-    
+
     /**
      * Represents HTTTP response body
      *
      * @var string
      */
     private $body;
-    
+
     /**
      * Represents HTTP response status code
      *
      * @var int
      */
     private $code;
-    
+
     /**
      * Represents HTTP response status message
      *
      * @var string
      */
     private $message;
-    
+
     /**
      * Represents HTTP response headers.
      * 
      * @var array
      */
     private $headers;
-    
+
     /**
      * Class contructor
      *
@@ -52,7 +52,7 @@ class Response
         $this->headers = [];
         $this->body    = '';
     }
-    
+
     /**
      * Return HTTP response status code.
      *
@@ -63,7 +63,7 @@ class Response
     {
         return $this->code;
     }
-    
+
     /**
      * Return HTTP response content type.
      *
@@ -134,7 +134,7 @@ class Response
         $this->headers[$name] = $value;
         return $this;
     }
-    
+
     /**
      * This method sets multiple response headers.
      *
@@ -144,13 +144,13 @@ class Response
      */
     public function setHeaders(array $headers): self
     {
-        foreach($headers as $name => $value) {
+        foreach ($headers as $name => $value) {
             $this->headers[$name] = $value;
         }
 
         return $this;
     }
-    
+
     /**
      * This method sets the HTTP response message supplied by the client.
      *
@@ -200,11 +200,11 @@ class Response
     public function json(array $data): self
     {
         $json = json_encode($data);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception('Failed encoding JSON content: ' . json_last_error_msg());
         }
-        
+
         $this->setType('application/json');
         $this->setBody($json);
         return $this;
@@ -223,13 +223,13 @@ class Response
         $this->setBody($data);
         return $this;
     }
-    
+
     /**
      * This method sends a download response to the client.
      *
      * @param string $path  The path of file to download.
      * @param string $name  Custom name for downloaded file.
-     * @param array $headers Additional headers for download response.
+     * @param array $headers  Additional headers for download response.
      * @return void
      */
     public function download(string $path, string $name = null, array $headers = [])
@@ -237,18 +237,32 @@ class Response
         $name = $name ?? basename($path);
 
         $headers = array_merge([
-			'Content-Type'              => 'application/octet-stream',
+            'Content-Type'              => MimeTypes::getMime($path),
             'Content-Disposition'       => 'attachment; filename="' . $name . '"',
-			'Content-Transfer-Encoding' => 'binary',
-			'Expires'                   => 0,
-			'Cache-Control'             => 'private',
-			'Pragma'                    => 'private',
-			'Content-Length'            => filesize($path),
+            'Content-Transfer-Encoding' => 'binary',
+            'Expires'                   => 0,
+            'Cache-Control'             => 'private',
+            'Pragma'                    => 'private',
+            'Content-Length'            => filesize($path),
         ], $headers);
 
         $this->setBody(file_get_contents($path));
         $this->setHeaders($headers);
         $this->send();
+    }
+
+    /**
+     * This method display a file directly in the browser instead of downloading.
+     *
+     * @param string $path  The path of file to download.
+     * @param array $headers  Additional headers for download response.
+     * @return void
+     */
+    public function file(string $path, array $headers = [])
+    {
+        $headers = array_merge(['Content-Disposition' => 'inline'], $headers);
+
+        $this->download($path, null, $headers);
     }
 
     /**
@@ -291,12 +305,12 @@ class Response
     {
         header(sprintf("HTTP/1.1 %s %s", $this->code, $this->message));
         header(sprintf("Content-Type: %s; charset=UTF-8", $this->type));
-        
-        foreach($this->headers as $name => $value) {
+
+        foreach ($this->headers as $name => $value) {
             header(sprintf("%s: %s", $name, $value), true, $this->getCode());
         }
     }
-    
+
     /**
      * This method outputs the HTTP response body.
      *
