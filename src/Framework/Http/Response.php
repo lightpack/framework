@@ -223,6 +223,33 @@ class Response
         $this->setBody($data);
         return $this;
     }
+    
+    /**
+     * This method sends a download response to the client.
+     *
+     * @param string $path  The path of file to download.
+     * @param string $name  Custom name for downloaded file.
+     * @param array $headers Additional headers for download response.
+     * @return void
+     */
+    public function download(string $path, string $name = null, array $headers = [])
+    {
+        $name = $name ?? basename($path);
+
+        $headers = array_merge([
+			'Content-Type'              => 'application/octet-stream',
+            'Content-Disposition'       => 'attachment; filename="' . $name . '"',
+			'Content-Transfer-Encoding' => 'binary',
+			'Expires'                   => 0,
+			'Cache-Control'             => 'private',
+			'Pragma'                    => 'private',
+			'Content-Length'            => filesize($path),
+        ], $headers);
+
+        $this->setBody(file_get_contents($path));
+        $this->setHeaders($headers);
+        $this->send();
+    }
 
     /**
      * This method sets the HTTP response content as HTML.
