@@ -55,7 +55,12 @@ class Migrator
 
         $migrations = array_keys($migrationFiles);
 
-        ksort($migrations);
+        // Reverse sort migrations
+        krsort($migrations);
+
+        if($steps) {
+            $migrations = array_slice($migrations, 0, $steps);
+        }
 
         foreach ($migrations as $migration) {
             $migrationFile = $migrationFiles[$migration];
@@ -64,6 +69,10 @@ class Migrator
             // Execute migration
             $sql = file_get_contents($migrationFilepath);
             $this->connection->query($sql);  
+
+            // Delete migration
+            $sql = "DELETE FROM migrations WHERE migration = '{$migration}'";
+            $this->connection->query($sql);
         }
     }
 
