@@ -13,6 +13,7 @@ use Lightpack\Console\Commands\CreateProvider;
 use Lightpack\Console\Commands\CreateMigration;
 use Lightpack\Console\Commands\CreateController;
 use Lightpack\Console\Commands\RunMigrationUp;
+use Lightpack\Console\Commands\RunMigrationDown;
 
 class Console
 {
@@ -28,6 +29,7 @@ class Console
         'create:migration' => CreateMigration::class,
         'create:controller' => CreateController::class,
         'migrate:up' => RunMigrationUp::class,
+        'migrate:down' => RunMigrationDown::class,
     ];
 
     public static function register(string $command, ICommand $handler)
