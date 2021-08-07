@@ -34,7 +34,7 @@ class CreateController implements ICommand
 
         $filename = $directory . '/' . $className;
 
-        if (!preg_match('#[A-Za-z0-9]#', $className)) {
+        if (!preg_match('/^[\w]+$/', $className)) {
             $message = "Invalid controller class name.\n\n";
             fputs(STDERR, $message);
             return;

@@ -47,7 +47,7 @@ class CreateModel implements ICommand
             if (strpos($arg, '--table') === 0) {
                 $tableName = explode('=', $arg)[1] ?? null;
 
-                if (preg_match('#[A-Za-z0-9]#', $tableName)) {
+                if (preg_match('/^[\w]+$/', $tableName)) {
                     return $tableName;
                 }
             }
