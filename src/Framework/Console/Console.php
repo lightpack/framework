@@ -10,6 +10,7 @@ use Lightpack\Console\Commands\CreateCommand;
 use Lightpack\Console\Commands\LinkStorage;
 use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\CreateProvider;
+use Lightpack\Console\Commands\CreateMigration;
 use Lightpack\Console\Commands\CreateController;
 
 class Console
@@ -23,6 +24,7 @@ class Console
         'link:storage' => LinkStorage::class,
         'unlink:storage' => UnlinkStorage::class,
         'create:provider' => CreateProvider::class,
+        'create:migration' => CreateMigration::class,
         'create:controller' => CreateController::class,
     ];
 
