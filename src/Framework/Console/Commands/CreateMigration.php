@@ -15,8 +15,7 @@ class CreateMigration implements ICommand
             fputs(STDERR, $message);
             return;
         }
-
-        if (!preg_match('#[A-Za-z0-9_]#', $migration)) {
+        if (!preg_match('/^[\w_]+$/', $migration)) {
             $message = "Migration file name can only contain alphanumeric characters and underscores.\n\n";
             fputs(STDERR, $message);
             return;

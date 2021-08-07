@@ -17,7 +17,7 @@ class CreateProvider implements ICommand
             return;
         }
 
-        if (!preg_match('#[A-Za-z0-9]#', $className)) {
+        if (!preg_match('/^[\w]+$/', $className)) {
             $message = "Invalid service provider class name.\n\n";
             fputs(STDERR, $message);
             return;
