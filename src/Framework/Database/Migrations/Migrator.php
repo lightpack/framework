@@ -5,14 +5,6 @@ namespace Lightpack\Database\Migrations;
 use Lightpack\Database\Pdo;
 use Lightpack\File\File;
 
-/*
-CREATE TABLE migrations (
-    id int NOT NULL AUTO_INCREMENT,
-    migration VARCHAR(255),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-); 
-*/
 class Migrator
 {
     /**
@@ -23,6 +15,7 @@ class Migrator
     public function __construct(Pdo $connection)
     {
         $this->connection = $connection;
+        $this->createMigrationsTable();
     }
 
     public function run(string $path)
@@ -86,5 +79,17 @@ class Migrator
         }
 
         return $migrations;
+    }
+
+    private function createMigrationsTable()
+    {
+        $this->connection->query("
+            CREATE TABLE IF NOT EXISTS migrations (
+                id int NOT NULL AUTO_INCREMENT,
+                migration VARCHAR(255),
+                executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id)
+            ); 
+        ");
     }
 }

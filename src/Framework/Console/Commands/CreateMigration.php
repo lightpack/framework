@@ -23,12 +23,12 @@ class CreateMigration implements ICommand
         }
 
         $migration = date('YmdHis') . '_' . $migration;
-        $migrationUpFilepath = './migrations/up/' . $migration . '.sql';
-        $migrationDownFilepath = './migrations/down/' . $migration . '.sql';
+        $migrationUpFilepath = './database/migrations/up/' . $migration . '.sql';
+        $migrationDownFilepath = './database/migrations/down/' . $migration . '.sql';
 
         file_put_contents($migrationUpFilepath, null);
         file_put_contents($migrationDownFilepath, null);
 
-        fputs(STDOUT, "✓ Migration created in ./migrations directory.\n\n");
+        fputs(STDOUT, "✓ Migration created in ./database/migrations directory.\n\n");
     }
 }
