@@ -12,6 +12,7 @@ use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\CreateProvider;
 use Lightpack\Console\Commands\CreateMigration;
 use Lightpack\Console\Commands\CreateController;
+use Lightpack\Console\Commands\RunMigrationUp;
 
 class Console
 {
@@ -26,6 +27,7 @@ class Console
         'create:provider' => CreateProvider::class,
         'create:migration' => CreateMigration::class,
         'create:controller' => CreateController::class,
+        'migrate:up' => RunMigrationUp::class,
     ];
 
     public static function register(string $command, ICommand $handler)

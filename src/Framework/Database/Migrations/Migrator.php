@@ -34,7 +34,10 @@ class Migrator
 
             // Execute migration
             $sql = file_get_contents($migrationFilepath);
-            $this->connection->query($sql);  
+
+            if(trim($sql)) {
+                $this->connection->query($sql);  
+            }
 
             // Record migration
             $sql = "INSERT INTO migrations (migration) VALUES ('{$migration}');";
@@ -61,7 +64,10 @@ class Migrator
 
             // Execute migration
             $sql = file_get_contents($migrationFilepath);
-            $this->connection->query($sql);  
+
+            if(trim($sql)) {
+                $this->connection->query($sql);  
+            }
 
             // Delete migration
             $sql = "DELETE FROM migrations WHERE migration = '{$migration}'";
