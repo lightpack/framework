@@ -20,15 +20,14 @@ class Migrator
 
     public function run(string $path)
     {
-        $migrationFiles = (new File)->traverse($path);
-
+        $migrationFiles = $this->findMigrationFiles($path);
         $allMigrations = array_keys($migrationFiles);
         $executedMigrations = $this->getExecutedMigrations();
-        $migrations = array_diff($allMigrations, $executedMigrations);
+        $migrationsToRun = array_diff($allMigrations, $executedMigrations);
 
-        ksort($migrations);
+        ksort($migrationsToRun);
 
-        foreach ($migrations as $migration) {
+        foreach ($migrationsToRun as $migration) {
             $migrationFile = $migrationFiles[$migration];
             $migrationFilepath = $migrationFile->getPathname();
 
@@ -47,7 +46,7 @@ class Migrator
 
     public function rollback($path, int $steps = null)
     {
-        $migrationFiles = (new File)->traverse($path);
+        $migrationFiles = $this->findMigrationFiles($path);
 
         $migrations = array_keys($migrationFiles);
 
@@ -85,6 +84,19 @@ class Migrator
         }
 
         return $migrations;
+    }
+
+    private function findMigrationFiles(string $path): array
+    {
+        $files = (new File)->traverse($path);
+        
+        foreach($files as $index => $file) {
+            if($file->getExtension() !== 'sql') {
+                unset($files[$index]);
+            }
+        }
+
+        return $files;
     }
 
     private function createMigrationsTable()
