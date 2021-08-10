@@ -4,6 +4,7 @@ namespace Lightpack\Database;
 
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
+use PDOStatement;
 
 class Pdo
 {
@@ -27,12 +28,25 @@ class Pdo
         $this->connection->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
     }
 
-    public function table(string $table)
+    /**
+     * Returns an instance of query builder.
+     *
+     * @param string $table The table name to query against.
+     * @return Query
+     */
+    public function table(string $table): Query
     {
         return new Query($table, $this);
     }
 
-    public function query(string $sql, array $params = null)
+    /**
+     * Executes an SQL statement, returning a result set as a PDOStatement object.
+     *
+     * @param string $sql
+     * @param array $params
+     * @return PDOStatement
+     */
+    public function query(string $sql, array $params = null): PDOStatement
     {
         $this->logQuery($sql, $params);
 
@@ -46,7 +60,15 @@ class Pdo
         return $this->statement;
     }
 
-    public function model(string $model)
+    /**
+     * Takes a classname as string and returns a Lucid Model
+     * instance thereby making the class database connection 
+     * aware.
+     *
+     * @param string $model
+     * @return void
+     */
+    public function model(string $model): Model
     {
         $modelInstance = new $model;
         $modelInstance->setConnection($this);
@@ -54,19 +76,91 @@ class Pdo
         return $modelInstance;
     }
 
-    public function lastInsertId()
+    /**
+     * Returns the ID of the last inserted row or sequence value.
+     *
+     * @return string
+     */
+    public function lastInsertId(): string
     {
         return $this->connection->lastInsertId();
     }
 
-    public function getQueryLogs()
+    /**
+     * Returns an array of logged queries.
+     *
+     * @return array
+     */
+    public function getQueryLogs(): array
     {
         return $this->queryLogs;
     }
 
-    public function printQueryLogs()
+    /**
+     * Prints all the logged queries.
+     *
+     * @return void
+     */
+    public function printQueryLogs(): void
     {
         pp($this->queryLogs);
+    }
+
+    /**
+     * Initiates a transaction.
+     *
+     * @throws PDOException — If there is already a transaction started 
+     *                        or the driver does not support transactions.
+     * @return boolean
+     */
+    public function begin(): bool
+    {
+        return $this->connection->beginTransaction();
+    }
+
+    /**
+     * Commits the current active transaction.
+     *
+     * @throws PDOException — if there is no active transaction.
+     * @return boolean
+     */
+    public function commit(): bool
+    {
+        return $this->connection->commit();
+    }
+
+    /**
+     * Rollsback a transaction.
+     * 
+     * Make sure to put this method call in a try-catch block
+     * when executing transactions.
+     *
+     * @throws PDOException — if there is no active transaction.
+     * @return boolean
+     */
+    public function rollback(): bool
+    {
+        return $this->connection->rollBack();
+    }
+
+    /**
+     * Returns the PDO connection instance.
+     *
+     * @return \PDO
+     */
+    public function getConnection(): \PDO
+    {
+        return $this->connection;
+    }
+
+    /**
+     * Return the PDO connection driver.
+     *
+     * @return string|null
+     */
+    public function getDriver(): ?string
+    {
+        return $this->connection->getAttribute(\PDO::ATTR_DRIVER_NAME);
     }
 
     protected function logQuery($sql, $params)
