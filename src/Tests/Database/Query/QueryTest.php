@@ -106,7 +106,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 8
-        $this->query->where('id', '>', 2)->where('color', '=', '#000');
+        $this->query->where('id', '>', 2)->andWhere('color', '=', '#000');
         
         $this->assertEquals(
             'SELECT * FROM products WHERE id > ? AND color = ?',
