@@ -10,7 +10,7 @@ final class QueryTest extends TestCase
     public function setUp(): void
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
-        $this->db = new \Lightpack\Database\Adapters\Mysql($config);   
+        $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
         $stmt = $this->db->query($sql);
         $stmt->closeCursor();
@@ -57,7 +57,7 @@ final class QueryTest extends TestCase
 
         // Test 3
         $this->query->select('id', 'name')->orderBy('id');
-        
+
         $this->assertEquals(
             'SELECT id, name FROM products ORDER BY id ASC',
             $this->query->getCompiledSelect()
@@ -67,7 +67,7 @@ final class QueryTest extends TestCase
 
         // Test 4
         $this->query->select('id', 'name')->orderBy('id', 'DESC');
-        
+
         $this->assertEquals(
             'SELECT id, name FROM products ORDER BY id DESC',
             $this->query->getCompiledSelect()
@@ -77,7 +77,7 @@ final class QueryTest extends TestCase
 
         // Test 5
         $this->query->select('id', 'name')->orderBy('name', 'DESC')->orderBy('id', 'DESC');
-        
+
         $this->assertEquals(
             'SELECT id, name FROM products ORDER BY name DESC, id DESC',
             $this->query->getCompiledSelect()
@@ -87,7 +87,7 @@ final class QueryTest extends TestCase
 
         // Test 6
         $this->query->select('name')->distinct();
-        
+
         $this->assertEquals(
             'SELECT DISTINCT name FROM products',
             $this->query->getCompiledSelect()
@@ -97,7 +97,7 @@ final class QueryTest extends TestCase
 
         // Test 7
         $this->query->where('id', '>', 2);
-        
+
         $this->assertEquals(
             'SELECT * FROM products WHERE id > ?',
             $this->query->getCompiledSelect()
@@ -106,8 +106,8 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 8
-        $this->query->where('id', '>', 2)->where('color', '=', '#000');
-        
+        $this->query->where('id', '>', 2)->andWhere('color', '=', '#000');
+
         $this->assertEquals(
             'SELECT * FROM products WHERE id > ? AND color = ?',
             $this->query->getCompiledSelect()
@@ -117,7 +117,7 @@ final class QueryTest extends TestCase
 
         // Test 9
         $this->query->where('id', '>', 2)->andWhere('color', '=', '#000')->orWhere('color', '=', '#FFF');
-        
+
         $this->assertEquals(
             'SELECT * FROM products WHERE id > ? AND color = ? OR color = ?',
             $this->query->getCompiledSelect()
@@ -127,7 +127,7 @@ final class QueryTest extends TestCase
 
         // Test 10
         $this->query->whereIn('id', [23, 24, 25]);
-        
+
         $this->assertEquals(
             'SELECT * FROM products WHERE id IN (?, ?, ?)',
             $this->query->getCompiledSelect()
@@ -137,7 +137,7 @@ final class QueryTest extends TestCase
 
         // Test 11
         $this->query->whereIn('id', [23, 24, 25])->orWhereIn('color', ['#000', '#FFF']);
-        
+
         $this->assertEquals(
             'SELECT * FROM products WHERE id IN (?, ?, ?) OR color IN (?, ?)',
             $this->query->getCompiledSelect()
@@ -147,7 +147,7 @@ final class QueryTest extends TestCase
 
         // Test 12
         $this->query->whereNotIn('id', [23, 24, 25]);
-        
+
         $this->assertEquals(
             'SELECT * FROM products WHERE id NOT IN (?, ?, ?)',
             $this->query->getCompiledSelect()
@@ -157,7 +157,7 @@ final class QueryTest extends TestCase
 
         // Test 13
         $this->query->whereNotIn('id', [23, 24, 25])->orWhereNotIn('color', ['#000', '#FFF']);
-        
+
         $this->assertEquals(
             'SELECT * FROM products WHERE id NOT IN (?, ?, ?) OR color NOT IN (?, ?)',
             $this->query->getCompiledSelect()
@@ -167,7 +167,7 @@ final class QueryTest extends TestCase
 
         // Test 14
         $this->query->join('options', 'products.id', 'options.product_id');
-        
+
         $this->assertEquals(
             'SELECT * FROM products INNER JOIN options ON products.id = options.product_id',
             $this->query->getCompiledSelect()
@@ -177,7 +177,7 @@ final class QueryTest extends TestCase
 
         // Test 15
         $this->query->leftJoin('options', 'options.product_id', 'products.id');
-        
+
         $this->assertEquals(
             'SELECT * FROM products LEFT JOIN options ON options.product_id = products.id',
             $this->query->getCompiledSelect()
@@ -187,7 +187,7 @@ final class QueryTest extends TestCase
 
         // Test 16
         $this->query->rightJoin('options', 'products.id', 'options.product_id');
-        
+
         $this->assertEquals(
             'SELECT * FROM products RIGHT JOIN options ON products.id = options.product_id',
             $this->query->getCompiledSelect()
@@ -197,7 +197,7 @@ final class QueryTest extends TestCase
 
         // Test 17
         $this->query->select('products.*', 'options.name AS oname')->join('options', 'products.id', 'options.product_id');
-        
+
         $this->assertEquals(
             'SELECT products.*, options.name AS oname FROM products INNER JOIN options ON products.id = options.product_id',
             $this->query->getCompiledSelect()

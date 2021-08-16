@@ -23,7 +23,9 @@ class Compiler
         $sql[] = $this->limit();
         $sql[] = $this->offset();
 
-        $sql = array_filter($sql, function($v) { return empty($v) === false; });
+        $sql = array_filter($sql, function ($v) {
+            return empty($v) === false;
+        });
         return trim(implode(' ', $sql));
     }
 
@@ -31,7 +33,7 @@ class Compiler
     {
         $parameters = $this->parameterize(count($columns));
         $columns = implode(', ', $columns);
-        
+
         return "INSERT INTO {$this->query->table} ($columns) VALUES $parameters";
     }
 
@@ -39,11 +41,10 @@ class Compiler
     {
         $where = $this->where();
 
-        foreach ($columns as $column)
-		{
-			$columnValuePairs[] = $column . ' = ?';
+        foreach ($columns as $column) {
+            $columnValuePairs[] = $column . ' = ?';
         }
-        
+
         $columnValuePairs = implode(', ', $columnValuePairs);
 
         return "UPDATE {$this->query->table} SET {$columnValuePairs} {$where}";
@@ -62,7 +63,7 @@ class Compiler
 
     private function columns(): string
     {
-        if(!$this->query->columns) {
+        if (!$this->query->columns) {
             return '*';
         }
 
@@ -76,13 +77,13 @@ class Compiler
 
     private function join()
     {
-        if(!$this->query->join) {
+        if (!$this->query->join) {
             return '';
         }
 
         $joins = [];
 
-        foreach($this->query->join as $join) {
+        foreach ($this->query->join as $join) {
             $joins[] = strtoupper($join['type']) . ' JOIN ' . $join['table'] . ' ON ' . $join['column1'] . ' = ' . $join['column2'];
         }
 
@@ -91,48 +92,54 @@ class Compiler
 
     private function where(): string
     {
-        if(!$this->query->where) {
+        if (!$this->query->where) {
             return '';
         }
 
-        $wheres[] = 'WHERE 1=1';
+        // $wheres[] = 'WHERE 1=1';
+        $wheres = [];
         $parameters = $this->parameterize(1);
 
-        foreach($this->query->where as $where) {
+        foreach ($this->query->where as $where) {
+            // Workaround for raw where queries
+            if (isset($where['type']) && $where['type'] === 'where_raw') {
+                $wheres[] = strtoupper($where['joiner']) . ' ' . $where['where'];
+                continue;
+            }
 
             // Workaround for IS NULL and IS NOT NULL conditions.
-            if(!$where['operator'] && isset($where['value'])) {
+            if (!$where['operator'] && isset($where['value'])) {
                 $parameters = $where['value'];
             }
 
-            if(isset($where['values'])) {
+            if (isset($where['values'])) {
                 $parameters = $this->parameterize(count($where['values']));
             }
 
             $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . $parameters;
         }
 
-        return str_replace('1=1 AND ', '', implode(' ', $wheres));
+        return $wheres ? 'WHERE ' . trim(implode(' ', $wheres)) : null;
     }
 
     private function groupBy()
     {
-        if(!$this->query->group) {
+        if (!$this->query->group) {
             return '';
         }
 
         return 'GROUP BY ' . implode(', ', $this->query->group);
     }
-    
+
     private function orderBy()
     {
-        if(!$this->query->order) {
+        if (!$this->query->order) {
             return '';
         }
 
         $orders = [];
 
-        foreach($this->query->order as $order) {
+        foreach ($this->query->order as $order) {
             $orders[] = $order['column'] . ' ' . $order['sort'];
         }
 
@@ -141,7 +148,7 @@ class Compiler
 
     private function limit()
     {
-        if(!$this->query->limit) {
+        if (!$this->query->limit) {
             return '';
         }
 
@@ -150,7 +157,7 @@ class Compiler
 
     private function offset()
     {
-        if(!$this->query->offset) {
+        if (!$this->query->offset) {
             return '';
         }
 
@@ -160,10 +167,10 @@ class Compiler
     private function parameterize(int $count)
     {
         $parameters = array_fill(0, $count, '?');
-        $parameters = implode(', ', $parameters); 
+        $parameters = implode(', ', $parameters);
 
-        if($count > 1) {
-            $parameters = '(' . $parameters . ')'; 
+        if ($count > 1) {
+            $parameters = '(' . $parameters . ')';
         }
 
         return $parameters;
