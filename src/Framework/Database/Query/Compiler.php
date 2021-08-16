@@ -103,7 +103,7 @@ class Compiler
         foreach ($this->query->where as $where) {
             // Workaround for raw where queries
             if (isset($where['type']) && $where['type'] === 'where_raw') {
-                $wheres[] = strtoupper($where['joiner']) . ' ' . $where['where']; 
+                $wheres[] = strtoupper($where['joiner']) . ' ' . $where['where'];
                 continue;
             }
 
