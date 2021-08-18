@@ -15,9 +15,9 @@ class Pagination
     {
         $this->total = $total;
         $this->perPage = $perPage;
-        $this->currentPage = $currentPage ?? app('request')->get('page', 1);
         $this->lastPage = ceil($this->total / $this->perPage);
         $this->path = app('request')->fullpath();
+        $this->setCurrentPage($currentPage);
     }
 
     public function links()
@@ -99,5 +99,12 @@ class Pagination
         $params = array_merge($params, ['page' => $page]);
 
         return http_build_query($params);
+    }
+
+    private function setCurrentPage($currentPage = null)
+    {
+        $this->currentPage = $currentPage ?? app('request')->get('page', 1);
+        $this->currentPage = (int) $this->currentPage;
+        $this->currentPage = $this->currentPage > 0 ? $this->currentPage : 1;
     }
 }
