@@ -14,6 +14,7 @@ use Lightpack\Console\Commands\CreateMigration;
 use Lightpack\Console\Commands\CreateController;
 use Lightpack\Console\Commands\RunMigrationUp;
 use Lightpack\Console\Commands\RunMigrationDown;
+use Lightpack\Console\Commands\CreateRequest;
 
 class Console
 {
@@ -30,6 +31,7 @@ class Console
         'create:controller' => CreateController::class,
         'migrate:up' => RunMigrationUp::class,
         'migrate:down' => RunMigrationDown::class,
+        'create:request' => CreateRequest::class,
     ];
 
     public static function register(string $command, ICommand $handler)

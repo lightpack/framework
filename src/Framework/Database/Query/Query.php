@@ -246,6 +246,7 @@ class Query
     {
         $page = $page ?? app('request')->get('page');
         $page = (int) $page;
+        $page = $page > 0 ? $page : 1;
 
         $this->components['limit'] = $limit;
         $this->components['offset'] = $limit * ($page - 1);
