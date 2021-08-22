@@ -13,7 +13,7 @@ namespace __NAMESPACE__;
 
 use Lightpack\Http\FormRequest;
 
-class __REQUEST_NAME__  extends FormRequest
+class __REQUEST_NAME__ extends FormRequest
 {
     public function __construct()
     {
