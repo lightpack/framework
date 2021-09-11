@@ -12,6 +12,7 @@ class ProviderView
 namespace App\Providers;
 
 use Lightpack\Container\Container;
+use Lightpack\Providers\ProviderInterface;
 
 class __PROVIDER_NAME__ implements ProviderInterface
 {
