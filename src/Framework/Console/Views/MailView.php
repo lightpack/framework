@@ -2,21 +2,20 @@
 
 namespace Lightpack\Console\Views;
 
-class JobView
+class MailView
 {
     public static function getTemplate()
     {
         return <<<'TEMPLATE'
 <?php
 
-namespace App\Jobs;
+namespace App\Mails;
 
-use Lightpack\Jobs\Job;
+use Lightpack\Mail\Mail;
 
-class __JOB_NAME__ extends Job
+class __MAIL_NAME__ extends Mail
 {
-    /** @inheritDoc */
-    public function execute(array $payload)
+    public function execute(array $payload = [])
     {
         // ...
     }

@@ -17,6 +17,7 @@ use Lightpack\Console\Commands\RunMigrationUp;
 use Lightpack\Console\Commands\RunMigrationDown;
 use Lightpack\Console\Commands\CreateRequest;
 use Lightpack\Console\Commands\ProcessJobs;
+use Lightpack\Console\Commands\CreateMail;
 
 class Console
 {
@@ -36,6 +37,7 @@ class Console
         'create:request' => CreateRequest::class,
         'process:jobs' => ProcessJobs::class,
         'create:job' => CreateJob::class,
+        'create:mail' => CreateMail::class,
     ];
 
     public static function register(string $command, ICommand $handler)
