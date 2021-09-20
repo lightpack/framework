@@ -28,12 +28,6 @@ final class ConfigTest extends TestCase
         $this->assertEquals('1.0', $config->get('cache')['version']);
     }
 
-    public function testConfigFileNotFoundException()
-    {
-        $this->expectException(\Lightpack\Exceptions\ConfigFileNotFoundException::class);
-        new \Lightpack\Config\Config(['app', 'db', 'session']);
-    }
-
     public function testConfigDoesNotAllowModifyingExistingKeys()
     {
         $config = new \Lightpack\Config\Config(['app']);

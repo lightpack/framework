@@ -2,14 +2,14 @@
 
 namespace Lightpack\Config;
 
-use Lightpack\Exceptions\ConfigFileNotFoundException;
-
 class Config
 {
     protected $config = [];
 
-    public function __construct(array $configs = [])
+    public function __construct()
     {
+        $configs = glob(DIR_CONFIG . '/*.php');
+
         foreach ($configs as $config) {
             $this->config = array_merge(
                 $this->config,
@@ -32,14 +32,6 @@ class Config
 
     private function loadConfig($file): array
     {
-        $filePath = DIR_CONFIG . '/' . $file . '.php';
-
-        if (!file_exists($filePath)) {
-            throw new ConfigFileNotFoundException(
-                'Could not load config file path: ' . $filePath
-            );
-        }
-
-        return include $filePath;
+        return include $file;
     }
 }
