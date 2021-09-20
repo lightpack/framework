@@ -17,7 +17,7 @@ class RunMigrationDown implements ICommand
             exit;
         }
         
-        $config = require_once DIR_ROOT . '/env.php';
+        $config = require DIR_ROOT . '/env.php';
         
         if ('mysql' !== $config['DB_DRIVER']) {
             fputs(STDOUT, "Migrations are supported only for MySQL/MariaDB.\n\n");
