@@ -10,15 +10,7 @@ class ConfigProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->register('config', function ($container) {
-            return new Config([
-                'app',
-                'filters',
-                'cors',
-                'db',
-                'events',
-                'cookie',
-                'storage',
-            ]);
+            return new Config();
         });
     }
 }
