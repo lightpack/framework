@@ -98,9 +98,10 @@ class Compiler
 
         // $wheres[] = 'WHERE 1=1';
         $wheres = [];
-        $parameters = $this->parameterize(1);
-
+        
         foreach ($this->query->where as $where) {
+            $parameters = $this->parameterize(1);
+            
             // Workaround for raw where queries
             if (isset($where['type']) && $where['type'] === 'where_raw') {
                 $wheres[] = strtoupper($where['joiner']) . ' ' . $where['where'];
