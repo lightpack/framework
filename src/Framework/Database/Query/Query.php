@@ -164,13 +164,13 @@ class Query
 
     public function whereNull(string $column): self
     {
-        $this->andWhere($column, '', 'IS NULL');
+        $this->where($column, '', 'IS NULL');
         return $this;
     }
 
     public function whereNotNull(string $column): self
     {
-        $this->andWhere($column, '', 'IS NOT NULL');
+        $this->where($column, '', 'IS NOT NULL');
         return $this;
     }
 

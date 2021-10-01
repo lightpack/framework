@@ -34,6 +34,11 @@ class Model
     protected $timestamps = false;
 
     /**
+     * @var string Type of relation to be resolved.
+     */
+    protected $relationType;
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
@@ -66,16 +71,22 @@ class Model
      * Returns a model property or executes a relation
      * method if present.
      *
-     * @param string $column
+     * @param string $key
      * @return void
      */
-    public function __get(string $column)
+    public function __get(string $key)
     {
-        if (method_exists($this, $column)) {
-            return $this->{$column}();
+        if (!method_exists($this, $key)) {
+            return $this->data->$key ?? null;
         }
 
-        return $this->data->$column ?? null;
+        $query = $this->{$key}();
+
+        if($this->relationType === 'hasMany') {
+            return $query->all();
+        }
+
+        return $query->one();
     }
 
     /**
@@ -99,6 +110,7 @@ class Model
      */
     public function hasOne(string $model, string $foreignKey): Query
     {
+        $this->relationType = __FUNCTION__;
         $model = $this->connection->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -112,6 +124,7 @@ class Model
      */
     public function hasMany(string $model, string $foreignKey): Query
     {
+        $this->relationType = __FUNCTION__;
         $model = $this->connection->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -125,6 +138,7 @@ class Model
      */
     public function belongsTo(string $model, string $foreignKey): Query
     {
+        $this->relationType = __FUNCTION__;
         $model = $this->connection->model($model);
         return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
@@ -143,7 +157,7 @@ class Model
         $model = $this->connection->model($model);
         return $model
             ->query()
-            ->select(["$model->table.*"])
+            ->select("$model->table.*")
             ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey")
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
     }
