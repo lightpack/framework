@@ -32,8 +32,8 @@ class Compiler
     public function compileInsert(array $columns)
     {
         $parameters = $this->parameterize(count($columns));
+        $parameters = count($columns) === 1 ? "($parameters)" : $parameters;
         $columns = implode(', ', $columns);
-
         return "INSERT INTO {$this->query->table} ($columns) VALUES $parameters";
     }
 
