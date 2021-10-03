@@ -40,6 +40,16 @@ class Model
     protected $relationType;
 
     /**
+     * @var string The key used to resolve the relation while eager loading.
+     */
+    protected $relatingKey;
+
+    /**
+     * @var array Cached models that have already been loaded.
+     */
+    protected $cachedModels = [];
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
@@ -81,13 +91,17 @@ class Model
             return $this->data->$key ?? null;
         }
 
+        if(array_key_exists($key, $this->cachedModels)) {
+            return $this->cachedModels[$key];
+        }
+
         $query = $this->{$key}();
 
         if($this->relationType === 'hasMany') {
-            return $query->all();
+            return $this->cachedModels[$key] = $query->all();
         }
 
-        return $query->one();
+        return $this->cachedModels[$key] = $query->one();
     }
 
     /**
@@ -141,9 +155,9 @@ class Model
      */
     public function belongsTo(string $model, string $foreignKey): Query
     {
-        $this->relationType = __FUNCTION__;
-        $this->relatingKey = $foreignKey;
         $model = $this->connection->model($model);
+        $this->relationType = __FUNCTION__;
+        $this->relatingKey = $model->getPrimaryKey();
         return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
 
@@ -349,10 +363,10 @@ class Model
         return $this;
     }
 
-    public function loadEagerly()
+    public function loadEagerly(array &$parents = null)
     {
         // First get the parent rows.
-        $parents = $this->query()->all();
+        $parents = $parents ?? $this->query()->all();
         $ids = array_column($parents, $this->primaryKey);
 
         // Eager load included relations.
@@ -372,8 +386,8 @@ class Model
             $children = $query->whereIn($this->relatingKey, $ids)->all();
 
             foreach($parents as $parent) {
-                // If the relation is 1:1
-                if($this->relationType === 'hasOne') {
+                // If the relation hasOne or belongsTo
+                if($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
                     $parent->{$include} = null;
                 }
 
@@ -384,7 +398,7 @@ class Model
 
                 foreach($children as $child) {
                     if($child->{$this->relatingKey} === $parent->{$this->primaryKey}) {
-                        if($this->relationType === 'hasOne') {
+                        if($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
                             $parent->{$include} = $child;
                         } 
 
