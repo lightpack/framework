@@ -73,7 +73,7 @@ class Query
         return $this;
     }
 
-    public function where(string $column, string $operator, string $value, string $joiner = null): self
+    public function where(string $column, string $operator, string $value = null, string $joiner = null): self
     {
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
@@ -321,6 +321,16 @@ class Query
         $this->components['order'] = [];
         $this->components['limit'] = null;
         $this->components['offset'] = null;
+        $this->bindings = [];
+    }
+
+    public function resetWhere()
+    {
+        $this->components['where'] = [];
+    }
+
+    public function resetBindings()
+    {
         $this->bindings = [];
     }
 }
