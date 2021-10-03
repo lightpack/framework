@@ -348,22 +348,29 @@ class Model
     }
 
     /**
-     * Enables eager loading relationships.
-     * 
-     * @todo Needs refactoring it using collections by
-     * hydrating arrays into objects.
+     * Set eager loading relationships.
      *
-     * @param string ...$models
-     * @return object|array
+     * @param string Any number of relations to eager load.
+     * @return object \Lightpack\Database\Lucid\Model
      */
-    public function with(string ...$includes)
+    public function with(string ...$includes): self
     {
         $this->includes = $includes;
 
         return $this;
     }
 
-    public function eagerLoad(array &$parents = null)
+    /**
+     * Eager load all relations.
+     * 
+     * To defer eager loading all relations, pass it an array of pre-fetched parent 
+     * records.
+     *
+     * @param array|null $parents
+     * @return array
+     * 
+     */
+    public function eagerLoad(array &$parents = null): array
     {
         // First get the parent rows.
         $parents = $parents ?? $this->query()->all();
