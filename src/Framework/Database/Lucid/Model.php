@@ -363,7 +363,7 @@ class Model
         return $this;
     }
 
-    public function loadEagerly(array &$parents = null)
+    public function eagerLoad(array &$parents = null)
     {
         // First get the parent rows.
         $parents = $parents ?? $this->query()->all();
