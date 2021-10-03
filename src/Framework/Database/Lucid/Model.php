@@ -2,6 +2,7 @@
 
 namespace Lightpack\Database\Lucid;
 
+use Exception;
 use Lightpack\Database\Pdo;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
@@ -111,6 +112,7 @@ class Model
     public function hasOne(string $model, string $foreignKey): Query
     {
         $this->relationType = __FUNCTION__;
+        $this->relatingKey = $foreignKey;
         $model = $this->connection->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -125,6 +127,7 @@ class Model
     public function hasMany(string $model, string $foreignKey): Query
     {
         $this->relationType = __FUNCTION__;
+        $this->relatingKey = $foreignKey;
         $model = $this->connection->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -139,6 +142,7 @@ class Model
     public function belongsTo(string $model, string $foreignKey): Query
     {
         $this->relationType = __FUNCTION__;
+        $this->relatingKey = $foreignKey;
         $model = $this->connection->model($model);
         return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
@@ -160,33 +164,6 @@ class Model
             ->select("$model->table.*")
             ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey")
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
-    }
-
-    /**
-     * Enables eager loading relationships.
-     * 
-     * @todo Needs refactoring it using collections by
-     * hydrating arrays into objects.
-     *
-     * @param string ...$models
-     * @return object|array
-     */
-    private function with(string ...$models)
-    {
-        $data = $this->query->all(true);
-        $data = array_column($data, null, $this->primaryKey);
-        $ids = array_column($data, 'department_id');
-
-        foreach($models as $model) {
-            $modelTable = (new $model)->getTableName();
-            $dataChild = (new $model)->query()->whereIn($this->primaryKey, $ids)->all(true);
-
-            foreach($dataChild as $r) {
-                $data[$r[$this->primaryKey]][$modelTable][] = $r;
-            }
-        }
-
-        return $data;
     }
 
     /**
@@ -354,5 +331,71 @@ class Model
         if ($this->data->{$this->primaryKey}) {
             $this->data->created_at = date('Y-m-d H:i:s');
         }
+    }
+
+    /**
+     * Enables eager loading relationships.
+     * 
+     * @todo Needs refactoring it using collections by
+     * hydrating arrays into objects.
+     *
+     * @param string ...$models
+     * @return object|array
+     */
+    public function with(string ...$includes)
+    {
+        $this->includes = $includes;
+
+        return $this;
+    }
+
+    public function loadEagerly()
+    {
+        // First get the parent rows.
+        $parents = $this->query()->all();
+        $ids = array_column($parents, $this->primaryKey);
+
+        // Eager load included relations.
+        foreach($this->includes as $include) {
+            if(!method_exists($this, $include)) {
+                throw new Exception("Trying to eager load `{$include}` but no relationship has been defined.");
+            }
+
+            // Get query instance on the relationship being resolved
+            $query = $this->{$include}();
+            
+            // We need to reset the where clause for current query instance.
+            $query->resetWhere();
+            $query->resetBindings();
+
+            // Fetch all related rows
+            $children = $query->whereIn($this->relatingKey, $ids)->all();
+
+            foreach($parents as $parent) {
+                // If the relation is 1:1
+                if($this->relationType === 'hasOne') {
+                    $parent->{$include} = null;
+                }
+
+                // If the relation is 1:N
+                if($this->relationType === 'hasMany') {
+                    $parent->{$include} = [];
+                }
+
+                foreach($children as $child) {
+                    if($child->{$this->relatingKey} === $parent->{$this->primaryKey}) {
+                        if($this->relationType === 'hasOne') {
+                            $parent->{$include} = $child;
+                        } 
+
+                        if($this->relationType === 'hasMany') {
+                            $parent->{$include}[] = $child;
+                        }
+                    }
+                }
+            }            
+        }
+
+        return $parents;
     }
 }
