@@ -19,6 +19,7 @@ use Lightpack\Console\Commands\CreateRequest;
 use Lightpack\Console\Commands\ProcessJobs;
 use Lightpack\Console\Commands\CreateMail;
 use Lightpack\Console\Commands\CreateSeeder;
+use Lightpack\Console\Commands\SeedCommand;
 
 class Console
 {
@@ -40,6 +41,7 @@ class Console
         'create:job' => CreateJob::class,
         'create:mail' => CreateMail::class,
         'create:seeder' => CreateSeeder::class,
+        'db:seed' => SeedCommand::class,
     ];
 
     public static function register(string $command, ICommand $handler)
