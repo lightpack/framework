@@ -98,7 +98,7 @@ class Compiler
 
         // $wheres[] = 'WHERE 1=1';
         $wheres = [];
-        
+
         foreach ($this->query->where as $where) {
             $parameters = $this->parameterize(1);
             
@@ -115,6 +115,11 @@ class Compiler
 
             if (isset($where['values'])) {
                 $parameters = $this->parameterize(count($where['values']));
+            }
+
+            // Workaround for IN conditions
+            if($where['operator'] === 'IN' && count($where['values']) === 1) {
+                $parameters = '(' . $parameters . ')';
             }
 
             $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . $parameters;
