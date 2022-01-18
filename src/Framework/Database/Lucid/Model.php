@@ -60,7 +60,7 @@ class Model
         $this->data = new \stdClass();
         $this->connection = $connection ?? app('db');
 
-        if($id) {
+        if ($id) {
             $this->find($id);
         }
     }
@@ -91,13 +91,13 @@ class Model
             return $this->data->$key ?? null;
         }
 
-        if(array_key_exists($key, $this->cachedModels)) {
+        if (array_key_exists($key, $this->cachedModels)) {
             return $this->cachedModels[$key];
         }
 
         $query = $this->{$key}();
 
-        if($this->relationType === 'hasMany') {
+        if ($this->relationType === 'hasMany') {
             return $this->cachedModels[$key] = $query->all();
         }
 
@@ -221,17 +221,17 @@ class Model
 
     /**
      * Deletes a model.
-     *
-     * @return void
      */
-    public function delete(): void
+    public function delete()
     {
-        if (null === $this->{$this->primaryKey}) {
+        if (!isset($this->data->{$this->primaryKey})) {
             return;
         }
 
         $this->beforeDelete();
+
         $this->connection->table($this->table)->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
+
         $this->afterDelete();
     }
 
@@ -340,9 +340,10 @@ class Model
             return;
         }
 
-        $this->data->updated_at = date('Y-m-d H:i:s');
-
-        if ($this->data->{$this->primaryKey}) {
+        
+        if ($this->data->{$this->primaryKey} ?? false) {
+            $this->data->updated_at = date('Y-m-d H:i:s');
+        } else {
             $this->data->created_at = date('Y-m-d H:i:s');
         }
     }
@@ -377,14 +378,14 @@ class Model
         $ids = array_column($parents, $this->primaryKey);
 
         // Eager load included relations.
-        foreach($this->includes as $include) {
-            if(!method_exists($this, $include)) {
+        foreach ($this->includes as $include) {
+            if (!method_exists($this, $include)) {
                 throw new Exception("Trying to eager load `{$include}` but no relationship has been defined.");
             }
 
             // Get query instance on the relationship being resolved
             $query = $this->{$include}();
-            
+
             // We need to reset the where clause for current query instance.
             $query->resetWhere();
             $query->resetBindings();
@@ -392,29 +393,29 @@ class Model
             // Fetch all related rows
             $children = $query->whereIn($this->relatingKey, $ids)->all();
 
-            foreach($parents as $parent) {
+            foreach ($parents as $parent) {
                 // If the relation hasOne or belongsTo
-                if($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
+                if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
                     $parent->{$include} = null;
                 }
 
                 // If the relation is 1:N
-                if($this->relationType === 'hasMany') {
+                if ($this->relationType === 'hasMany') {
                     $parent->{$include} = [];
                 }
 
-                foreach($children as $child) {
-                    if($child->{$this->relatingKey} === $parent->{$this->primaryKey}) {
-                        if($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
+                foreach ($children as $child) {
+                    if ($child->{$this->relatingKey} === $parent->{$this->primaryKey}) {
+                        if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
                             $parent->{$include} = $child;
-                        } 
+                        }
 
-                        if($this->relationType === 'hasMany') {
+                        if ($this->relationType === 'hasMany') {
                             $parent->{$include}[] = $child;
                         }
                     }
                 }
-            }            
+            }
         }
 
         return $parents;

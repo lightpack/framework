@@ -242,13 +242,13 @@ class Query
         return $this;
     }
 
-    public function paginate(int $limit, int $page = null)
+    public function paginate(int $limit = 10, int $page = null)
     {
         $page = $page ?? app('request')->get('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
 
-        $this->components['limit'] = $limit;
+        $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);
 
         return $this;

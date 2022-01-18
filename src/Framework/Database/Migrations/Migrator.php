@@ -27,6 +27,9 @@ class Migrator
 
         ksort($migrationsToRun);
 
+        // Get next migration batch
+        $nextBatch = $this->getLastBatch() + 1;
+
         foreach ($migrationsToRun as $migration) {
             $migrationFile = $migrationFiles[$migration];
             $migrationFilepath = $migrationFile->getPathname();
@@ -34,17 +37,24 @@ class Migrator
             // Execute migration
             $sql = file_get_contents($migrationFilepath);
 
-            if(trim($sql)) {
-                $this->connection->query($sql);  
+            if (trim($sql)) {
+                $this->connection->query($sql);
             }
 
             // Record migration
-            $sql = "INSERT INTO migrations (migration) VALUES ('{$migration}');";
+            $sql = "INSERT INTO migrations (migration, batch) VALUES ('{$migration}', {$nextBatch});";
             $this->connection->query($sql);
         }
     }
 
-    public function rollback($path, int $steps = null)
+    /**
+     * Rollback migrations.
+     *
+     * @param string $path Migration rollback directory.
+     * @param integer|null $steps No. of batches to rollback.
+     * @return array Array of rolled back migratins.
+     */
+    public function rollback($path, int $steps = null): array
     {
         $migrationFiles = $this->findMigrationFiles($path);
 
@@ -53,33 +63,46 @@ class Migrator
         // Reverse sort migrations
         krsort($migrations);
 
-        if($steps) {
-            $migrations = array_slice($migrations, 0, $steps);
-        }
+        $steps = $steps ?? 1;
+        $migratedFiles = [];
 
-        foreach ($migrations as $migration) {
-            $migrationFile = $migrationFiles[$migration];
-            $migrationFilepath = $migrationFile->getPathname();
+        for ($i = 0; $i < $steps; $i++) {
 
-            // Execute migration
-            $sql = file_get_contents($migrationFilepath);
+            // Get migrations for the last batch
+            $lastBatchMigrations = $this->getLastBatchMigrations();
 
-            if(trim($sql)) {
-                $this->connection->query($sql);  
+            if(empty($lastBatchMigrations)) {
+                break;
             }
 
-            // Delete migration
-            $sql = "DELETE FROM migrations WHERE migration = '{$migration}'";
-            $this->connection->query($sql);
+            foreach ($lastBatchMigrations as $migration) {
+                $migrationFile = $migrationFiles[$migration];
+                $migrationFilepath = $migrationFile->getPathname();
+
+                // Execute migration
+                $sql = file_get_contents($migrationFilepath);
+
+                if (trim($sql)) {
+                    $this->connection->query($sql);
+                }
+
+                // Delete migration
+                $sql = "DELETE FROM migrations WHERE migration = '{$migration}'";
+                $this->connection->query($sql);
+
+                $migratedFiles[] = $migration;
+            }
         }
+
+        return $migratedFiles;
     }
 
     private function getExecutedMigrations()
     {
         $migrations = [];
         $rows = $this->connection->query('SELECT migration FROM migrations')->fetchAll();
-        
-        foreach($rows as $row) {
+
+        foreach ($rows as $row) {
             $migrations[] = $row['migration'];
         }
 
@@ -89,9 +112,9 @@ class Migrator
     private function findMigrationFiles(string $path): array
     {
         $files = (new File)->traverse($path);
-        
-        foreach($files as $index => $file) {
-            if($file->getExtension() !== 'sql') {
+
+        foreach ($files as $index => $file) {
+            if ($file->getExtension() !== 'sql') {
                 unset($files[$index]);
             }
         }
@@ -105,9 +128,32 @@ class Migrator
             CREATE TABLE IF NOT EXISTS migrations (
                 id int NOT NULL AUTO_INCREMENT,
                 migration VARCHAR(255),
+                batch int NOT NULL,
                 executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (id)
             ); 
         ");
+    }
+
+    private function getLastBatch()
+    {
+        $sql = "SELECT MAX(batch) AS batch FROM migrations";
+        $row = $this->connection->query($sql)->fetch();
+
+        return $row['batch'] ?? 0;
+    }
+
+    private function getLastBatchMigrations()
+    {
+        $sql = "SELECT migration FROM migrations WHERE batch = {$this->getLastBatch()} ORDER BY id DESC";
+        $rows = $this->connection->query($sql)->fetchAll();
+
+        $migrations = [];
+
+        foreach ($rows as $row) {
+            $migrations[] = $row['migration'];
+        }
+
+        return $migrations;
     }
 }
