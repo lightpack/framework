@@ -9,8 +9,11 @@ class SeedCommand implements ICommand
 {
     public function run(array $arguments = [])
     {
-        (new DatabaseSeeder)->seed();
+        $confirm = readline('Are you sure you want to continue? (y/n) ');
 
-        fputs(STDOUT, "✔ Database seeded\n\n");
+        if(strtolower($confirm) === 'y') {
+            (new DatabaseSeeder)->seed();
+            fputs(STDOUT, "✔ Database seeded\n\n");
+        }
     }
 }

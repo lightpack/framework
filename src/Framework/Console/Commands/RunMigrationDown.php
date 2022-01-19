@@ -16,19 +16,31 @@ class RunMigrationDown implements ICommand
             fputs(STDOUT, "Running migrations require ./env.php which is missing.\n\n");
             exit;
         }
-        
+
         $config = require DIR_ROOT . '/env.php';
-        
+
         if ('mysql' !== $config['DB_DRIVER']) {
             fputs(STDOUT, "Migrations are supported only for MySQL/MariaDB.\n\n");
             exit;
         }
-        
+
         $migrator = new Migrator($this->getConnection($config));
         $steps = $this->getStepsArgument($arguments);
-        $migrator->rollback(DIR_ROOT . '/database/migrations/down', $steps);
-        
-        fputs(STDOUT, "✓ Migrations rolled back.\n\n");
+        $confirm = $this->promptConfirmation($steps);
+
+        if ($confirm) {
+            $migrations = $migrator->rollback(DIR_ROOT . '/database/migrations/down', $steps);
+
+            if(empty($migrations)) {
+                fputs(STDOUT, "No migrations to rollback.\n\n");
+            } else {
+                fputs(STDOUT, "Rolled back migrations:\n");
+                foreach ($migrations as $migration) {
+                    fputs(STDOUT, "  {$migration}\n");
+                }
+                fputs(STDOUT, "\n");
+            }
+        }
     }
 
     private function getConnection(array $config)
@@ -53,7 +65,7 @@ class RunMigrationDown implements ICommand
     {
         $steps = $arguments[0] ?? null;
 
-        if(null === $steps) {
+        if (null === $steps) {
             return null;
         }
 
@@ -62,5 +74,16 @@ class RunMigrationDown implements ICommand
         $steps = $steps[1] ?? null;
 
         return $steps;
+    }
+
+    private function promptConfirmation($steps): bool
+    {
+        if (null === $steps || 1 === $steps) {
+            fputs(STDOUT, "Are you sure you want to rollback last batch of migrations? [y/N] ");
+        } else {
+            fputs(STDOUT, "Are you sure you want to rollback last {$steps} batch of migrations? [y/N] ");
+        }
+
+        return strtolower(trim(fgets(STDIN))) === 'y';
     }
 }

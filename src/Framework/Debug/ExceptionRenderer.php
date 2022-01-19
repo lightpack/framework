@@ -4,6 +4,7 @@ namespace Lightpack\Debug;
 
 use Error;
 use Exception;
+use Lightpack\Exceptions\HttpException;
 use Throwable;
 
 class ExceptionRenderer
@@ -41,7 +42,7 @@ class ExceptionRenderer
         }
 
         if($this->environment !== 'development') {
-            $this->renderProductionTemplate($exc->getCode());
+            $this->renderProductionTemplate($exc);
         } else {
             $this->renderDevelopmentTemplate($exc, $errorType);
         }
@@ -125,9 +126,9 @@ class ExceptionRenderer
             header("HTTP/1.1 $statusCode", true, $statusCode);
 
             if($this->getRequestFormat() === 'json') {
-                header('Content-Type', 'application/json');
+                header('Content-Type:application/json');
             } else {
-                header('Content-Type', 'text/html');
+                header('Content-Type:text/html');
             }
         }
     }
@@ -142,17 +143,25 @@ class ExceptionRenderer
         exit();
     }
 
-    private function renderProductionTemplate(int $statusCode)
+    private function renderProductionTemplate(Throwable $exc)
     {
-        if(!file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
-            $statusCode = 500;
-            $errorTemplate = __DIR__ . '/templates/' . $this->getRequestFormat() . '/production.php';
-        } else {
-            $errorTemplate = DIR_VIEWS . '/errors/layout.php';
+        $statusCode = $exc instanceof HttpException ? $exc->getCode() : 500;
+        $errorTemplate = __DIR__ . '/templates/' . $this->getRequestFormat() . '/production.php';
+        $message = ($statusCode !== 500) ? $exc->getMessage() : 'We are facing some technical issues. We will be back soon.';
+
+        if('http' == $this->getRequestFormat()) {
+            if(file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
+                $template = $statusCode;
+                $errorTemplate = DIR_VIEWS . '/errors/layout.php';
+            } 
         }
 
         $this->sendHeaders($statusCode);
-        $this->renderTemplate($errorTemplate, ['template' => $statusCode]);
+        $this->renderTemplate($errorTemplate, [
+            'code' => $statusCode, 
+            'message' => $message,
+            'template' => $template ?? null,
+        ]);
     }
 
     private function renderDevelopmentTemplate(Throwable $exc, string $errorType = 'Exception')
@@ -162,9 +171,11 @@ class ExceptionRenderer
         if($errorType === 'Error') {
             $errorType = $this->getErrorType($exc->getCode());
         }
+        
+        $statusCode = $exc instanceof HttpException ? $exc->getCode() : 500;
 
         $data['type'] = $errorType;
-        $data['code'] = $exc->getCode();
+        $data['code'] = $statusCode;
         $data['message'] = $exc->getMessage();
         $data['file'] = $exc->getFile();
         $data['line'] = $exc->getLine();
@@ -174,7 +185,8 @@ class ExceptionRenderer
         $data['code_preview'] = $this->getCodePreview($data['file'], $data['line']);
         $data['ex'] = $exc;
 
-        $this->sendHeaders(500);
+
+        $this->sendHeaders($statusCode);
         $this->renderTemplate($errorTemplate, $data);
     }
 }
