@@ -84,7 +84,7 @@ class Pagination implements JsonSerializable
     public function nextPageUrl()
     {
         $next = $this->currentPage < $this->lastPage ? $this->currentPage + 1 : null;
-        
+
         if($next) {
             $query = $this->getQuery($next);
             return $this->path . '?' . $query;

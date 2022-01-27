@@ -9,6 +9,7 @@ use Lightpack\Pagination\Pagination;
 class Query
 {
     private $table;
+    private $model;
     private $bindings = [];
     private $components = [
         'alias' => null,
@@ -24,8 +25,21 @@ class Query
 
     public function __construct(string $table, Pdo $connection = null)
     {
-        $this->table = $table;
+        if(is_subclass_of($table, Model::class)) {
+            $this->model = $table;
+            $this->table = (new $table)->getTableName();
+        } else {
+            $this->table = $table;
+        }
+
         $this->connection = $connection ?? app('db');
+    }
+
+    public function setModel(string $model)
+    {
+        if(is_subclass_of($model, Model::class)) {
+            $this->model = $model;
+        }
     }
 
     public function insert(array $data)
@@ -266,8 +280,10 @@ class Query
     public function count()
     {
         $this->columns = ['count(*) AS num'];
-        $query = $this->toSql();
+
+        $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
+
         $this->columns = []; // so that pagination query can be reused
 
         return $result->num;
@@ -288,9 +304,14 @@ class Query
 
     public function fetchAll(bool $assoc = false)
     {
-        $query = $this->toSql();
+        $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
+
+        if($this->model) {
+            $result = (new $this->model)->hydrate($result);
+        }
+
         return $result;
     }
 
@@ -313,7 +334,7 @@ class Query
         return $this->fetchOne($assoc);
     }
 
-    public function toSql()
+    public function getCompiledSelect()
     {
         $compiler = new Compiler($this);
         return $compiler->compileSelect();

@@ -194,10 +194,10 @@ class Response
      * This method sets the HTTP response content as JSON.
      * 
      * @access  public
-     * @param  array  $data
+     * @param  mixed  $data
      * @return  self
      */
-    public function json(array $data): self
+    public function json($data): self
     {
         $json = json_encode($data);
 
@@ -207,6 +207,7 @@ class Response
 
         $this->setType('application/json');
         $this->setBody($json);
+
         return $this;
     }
 

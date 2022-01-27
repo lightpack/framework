@@ -56,10 +56,9 @@ class Model implements JsonSerializable
      * @param [int|string] $id
      * @param Pdo $connection
      */
-    public function __construct($id = null, Pdo $connection = null)
+    public function __construct($id = null)
     {
         $this->data = new \stdClass();
-        $this->connection = $connection ?? app('db');
 
         if ($id) {
             $this->find($id);
@@ -118,6 +117,17 @@ class Model implements JsonSerializable
     }
 
     /**
+     * Sets the database connection to be used for querying
+     * the tables.
+     *
+     * @return Pdo $connection
+     */
+    public function getConnection(): Pdo
+    {
+        return $this->connection ?? app('db');
+    }
+
+    /**
      * This method maps 1:1 relationship with the provided model.
      *
      * @param string $model The relating model class name.
@@ -128,7 +138,7 @@ class Model implements JsonSerializable
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
-        $model = $this->connection->model($model);
+        $model = $this->getConnection()->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
@@ -143,7 +153,7 @@ class Model implements JsonSerializable
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
-        $model = $this->connection->model($model);
+        $model = $this->getConnection()->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
@@ -156,7 +166,7 @@ class Model implements JsonSerializable
      */
     public function belongsTo(string $model, string $foreignKey): Query
     {
-        $model = $this->connection->model($model);
+        $model = $this->getConnection()->model($model);
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $model->getPrimaryKey();
         return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
@@ -174,7 +184,7 @@ class Model implements JsonSerializable
     public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Query
     {
         $this->relationType = __FUNCTION__;
-        $model = $this->connection->model($model);
+        $model = $this->getConnection()->model($model);
         return $model
             ->query()
             ->select("$model->table.*")
@@ -191,7 +201,7 @@ class Model implements JsonSerializable
      */
     public function find($id, bool $fail = true): self
     {
-        $this->data = $this->connection->table($this->table)->where($this->primaryKey, '=', $id)->fetchOne();
+        $this->data = $this->query()->where($this->primaryKey, '=', $id)->fetchOne();
 
         if (!$this->data && $fail) {
             throw new RecordNotFoundException(
@@ -232,7 +242,7 @@ class Model implements JsonSerializable
 
         $this->beforeDelete();
 
-        $this->connection->table($this->table)->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
+        $this->query()->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
 
         $this->afterDelete();
     }
@@ -244,7 +254,7 @@ class Model implements JsonSerializable
      */
     public function lastInsertId()
     {
-        return $this->connection->lastInsertId();
+        return $this->getConnection()->lastInsertId();
     }
 
     /**
@@ -275,7 +285,7 @@ class Model implements JsonSerializable
      */
     public function query(): Query
     {
-        return new Query($this->table, $this->connection);
+        return new Query(static::class, $this->getConnection());
     }
 
     /**
@@ -326,14 +336,14 @@ class Model implements JsonSerializable
     private function insert()
     {
         $data = \get_object_vars($this->data);
-        return $this->connection->table($this->table)->insert($data);
+        return $this->query()->insert($data);
     }
 
     private function update()
     {
         $data = \get_object_vars($this->data);
         unset($data[$this->primaryKey]);
-        return $this->connection->table($this->table)->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
+        return $this->query()->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
     }
 
     private function setTimestamps()
@@ -436,13 +446,8 @@ class Model implements JsonSerializable
         return $models;
     }
 
-    public function jsonSerialize(): mixed
+    public function jsonSerialize()
     {
-        return (array) $this->data;
-    }
-
-    public function toArray()
-    {
-        return (array) $this->data;
+        return $this->data;
     }
 }
