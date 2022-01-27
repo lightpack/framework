@@ -97,7 +97,7 @@ class Model
 
         $query = $this->{$key}();
 
-        if ($this->relationType === 'hasMany') {
+        if ($this->relationType === 'hasMany' || $this->relationType === 'pivot') {
             return $this->cachedModels[$key] = $query->all();
         }
 
@@ -172,6 +172,7 @@ class Model
      */
     public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Query
     {
+        $this->relationType = __FUNCTION__;
         $model = $this->connection->model($model);
         return $model
             ->query()
@@ -419,5 +420,18 @@ class Model
         }
 
         return $parents;
+    }
+
+    public function hydrate(array $items): array
+    {
+        $models = [];
+        
+        foreach ($items as $item) {
+            $model = new static();
+            $model->data = (object) $item;
+            $models[$model->data->{$this->primaryKey}] = $model;
+        }
+
+        return $models;
     }
 }

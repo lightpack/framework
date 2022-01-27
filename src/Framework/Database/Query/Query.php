@@ -2,7 +2,9 @@
 
 namespace Lightpack\Database\Query;
 
+use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Pdo;
+use Lightpack\Pagination\Pagination;
 
 class Query
 {
@@ -73,7 +75,7 @@ class Query
         return $this;
     }
 
-    public function where(string $column, string $operator, string $value = null, string $joiner = null): self
+    public function where(string $column, string $operator, string $value = null, string $joiner = 'AND'): self
     {
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
@@ -119,7 +121,7 @@ class Query
         return $this;
     }
 
-    public function whereIn(string $column, array $values, string $joiner = null): self
+    public function whereIn(string $column, array $values, string $joiner = 'AND'): self
     {
         $operator = 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
@@ -139,7 +141,7 @@ class Query
         return $this;
     }
 
-    public function whereNotIn(string $column, array $values, string $joiner = null): self
+    public function whereNotIn(string $column, array $values, string $joiner = 'AND'): self
     {
         $operator = 'NOT IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
@@ -242,16 +244,23 @@ class Query
         return $this;
     }
 
-    public function paginate(int $limit = 10, int $page = null)
+    public function paginate(int $limit = null, int $page = null)
     {
+        $columns = $this->columns;
+        $total = $this->count();
+        $this->columns = $columns;
         $page = $page ?? app('request')->get('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
 
+        $limit = $limit ?: app('request')->get('limit', 10);
+
         $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);
 
-        return $this;
+        $items = $this->fetchAll();
+
+        return new Pagination($total, $limit, $page, $items);
     }
 
     public function count()
@@ -259,7 +268,7 @@ class Query
         $this->columns = ['count(*) AS num'];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
-        $this->resetQuery();
+        $this->columns = []; // so that pagination query can be reused
 
         return $result->num;
     }

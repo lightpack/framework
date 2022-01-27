@@ -125,7 +125,8 @@ class Compiler
             $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . $parameters;
         }
 
-        return $wheres ? 'WHERE ' . trim(implode(' ', $wheres)) : null;
+
+        return $wheres ? 'WHERE ' . ltrim(trim(implode(' ', $wheres), 'AND')) : null;
     }
 
     private function groupBy()

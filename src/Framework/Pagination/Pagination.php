@@ -2,7 +2,9 @@
 
 namespace Lightpack\Pagination;
 
-class Pagination
+use JsonSerializable;
+
+class Pagination implements JsonSerializable
 {
     private $total;
     private $perPage;
@@ -11,13 +13,14 @@ class Pagination
     private $path;
     private $allowedParams = [];
     
-    public function __construct($total, $perPage = 10, $currentPage = null)
+    public function __construct($total, $perPage = 10, $currentPage = null, $items = [])
     {
         $this->total = $total;
         $this->perPage = $perPage;
         $this->lastPage = ceil($this->total / $this->perPage);
         $this->path = app('request')->fullpath();
         $this->setCurrentPage($currentPage);
+        $this->items = $items;
     }
 
     public function links()
@@ -33,7 +36,7 @@ class Pagination
         return $template;
     }
 
-    public function withPath($path) {
+    public function withPath($path) {   
         $this->path = url($path);
         return $this;
     }
@@ -78,6 +81,26 @@ class Pagination
         }
     }
 
+    public function nextPageUrl()
+    {
+        $next = $this->currentPage < $this->lastPage ? $this->currentPage + 1 : null;
+        
+        if($next) {
+            $query = $this->getQuery($next);
+            return $this->path . '?' . $query;
+        }
+    }
+
+    public function prevPageUrl()
+    {
+        $prev = $this->currentPage > 1 ? $this->currentPage - 1 : null;
+        
+        if($prev) {
+            $query = $this->getQuery($prev);
+            return $this->path . '?' . $query;
+        }
+    }
+
     public function only(array $params = [])
     {
         $this->allowedParams = $params;
@@ -106,5 +129,26 @@ class Pagination
         $this->currentPage = $currentPage ?? app('request')->get('page', 1);
         $this->currentPage = (int) $this->currentPage;
         $this->currentPage = $this->currentPage > 0 ? $this->currentPage : 1;
+    }
+
+    public function items()
+    {
+        return $this->items;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'total' => $this->total,
+            'per_page' => $this->perPage,
+            'current_page' => $this->currentPage,
+            'last_page' => $this->lastPage,
+            'path' => $this->path,
+            'links' => [
+                'next' => $this->nextPageUrl(),
+                'prev' => $this->prevPageUrl(),
+            ],
+            'items' => $this->items,
+        ];
     }
 }
