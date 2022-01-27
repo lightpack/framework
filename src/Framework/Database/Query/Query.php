@@ -326,6 +326,12 @@ class Query
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
+
+        if($result && $this->model) {
+            $result = (array) $result;
+            $result = (new $this->model)->hydrateItem($result);
+        }
+
         return $result;
     }
 

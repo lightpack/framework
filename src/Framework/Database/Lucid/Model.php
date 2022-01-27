@@ -446,6 +446,14 @@ class Model implements JsonSerializable
         return $models;
     }
 
+    public function hydrateItem(array $attributes)
+    {
+        $model = new static();
+        $model->data = (object) $attributes;
+        
+        return $model;
+    }
+
     public function jsonSerialize()
     {
         return $this->data;
