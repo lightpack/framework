@@ -266,7 +266,7 @@ class Query
     public function count()
     {
         $this->columns = ['count(*) AS num'];
-        $query = $this->getCompiledSelect();
+        $query = $this->toSql();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->columns = []; // so that pagination query can be reused
 
@@ -288,7 +288,7 @@ class Query
 
     public function fetchAll(bool $assoc = false)
     {
-        $query = $this->getCompiledSelect();
+        $query = $this->toSql();
         $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
         return $result;
@@ -313,7 +313,7 @@ class Query
         return $this->fetchOne($assoc);
     }
 
-    public function getCompiledSelect()
+    public function toSql()
     {
         $compiler = new Compiler($this);
         return $compiler->compileSelect();

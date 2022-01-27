@@ -3,11 +3,12 @@
 namespace Lightpack\Database\Lucid;
 
 use Exception;
+use JsonSerializable;
 use Lightpack\Database\Pdo;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
 
-class Model
+class Model implements JsonSerializable
 {
     /** 
      * @var string Database table name 
@@ -433,5 +434,15 @@ class Model
         }
 
         return $models;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return (array) $this->data;
+    }
+
+    public function toArray()
+    {
+        return (array) $this->data;
     }
 }
