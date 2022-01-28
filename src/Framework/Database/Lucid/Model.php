@@ -387,7 +387,12 @@ class Model implements JsonSerializable
     {
         // First get the parent rows.
         $parents = $parents ?? $this->query()->all();
-        $ids = array_column($parents, $this->primaryKey);
+        
+        $ids = []; 
+        
+        foreach($parents as $parent) {
+            $ids[] = $parent->{$this->primaryKey};
+        }
 
         // Eager load included relations.
         foreach ($this->includes as $include) {
@@ -405,25 +410,25 @@ class Model implements JsonSerializable
             // Fetch all related rows
             $children = $query->whereIn($this->relatingKey, $ids)->all();
 
-            foreach ($parents as $parent) {
+            foreach ($parents as &$parent) {
                 // If the relation hasOne or belongsTo
                 if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
-                    $parent->{$include} = null;
+                    $parent->data->{$include} = null;
                 }
 
                 // If the relation is 1:N
                 if ($this->relationType === 'hasMany') {
-                    $parent->{$include} = [];
+                    $parent->data->{$include} = [];
                 }
 
                 foreach ($children as $child) {
                     if ($child->{$this->relatingKey} === $parent->{$this->primaryKey}) {
                         if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
-                            $parent->{$include} = $child;
+                            $parent->data->{$include} = $child;
                         }
 
                         if ($this->relationType === 'hasMany') {
-                            $parent->{$include}[] = $child;
+                            $parent->data->{$include}[] = $child;
                         }
                     }
                 }
