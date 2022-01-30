@@ -50,6 +50,8 @@ class Model implements JsonSerializable
      */
     protected $cachedModels = [];
 
+    protected $includes;
+
     /**
      * Constructor.
      *
@@ -87,6 +89,10 @@ class Model implements JsonSerializable
      */
     public function __get(string $key)
     {
+        if (property_exists($this->data, $key)) {
+            return $this->data->$key;
+        }
+
         if (!method_exists($this, $key)) {
             return $this->data->$key ?? null;
         }
@@ -169,6 +175,7 @@ class Model implements JsonSerializable
         $model = $this->getConnection()->model($model);
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $model->getPrimaryKey();
+        $this->relatingForeignKey = $foreignKey;
         return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
 
@@ -285,7 +292,7 @@ class Model implements JsonSerializable
      */
     public function query(): Query
     {
-        return new Query(static::class, $this->getConnection());
+        return new Query($this, $this->getConnection());
     }
 
     /**
@@ -373,72 +380,7 @@ class Model implements JsonSerializable
         return $this;
     }
 
-    /**
-     * Eager load all relations.
-     * 
-     * To defer eager loading all relations, pass it an array of pre-fetched parent 
-     * records.
-     *
-     * @param array|null $parents
-     * @return array
-     * 
-     */
-    public function eagerLoad(array &$parents = null): array
-    {
-        // First get the parent rows.
-        $parents = $parents ?? $this->query()->all();
-        
-        $ids = []; 
-        
-        foreach($parents as $parent) {
-            $ids[] = $parent->{$this->primaryKey};
-        }
-
-        // Eager load included relations.
-        foreach ($this->includes as $include) {
-            if (!method_exists($this, $include)) {
-                throw new Exception("Trying to eager load `{$include}` but no relationship has been defined.");
-            }
-
-            // Get query instance on the relationship being resolved
-            $query = $this->{$include}();
-
-            // We need to reset the where clause for current query instance.
-            $query->resetWhere();
-            $query->resetBindings();
-
-            // Fetch all related rows
-            $children = $query->whereIn($this->relatingKey, $ids)->all();
-
-            foreach ($parents as &$parent) {
-                // If the relation hasOne or belongsTo
-                if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
-                    $parent->data->{$include} = null;
-                }
-
-                // If the relation is 1:N
-                if ($this->relationType === 'hasMany') {
-                    $parent->data->{$include} = [];
-                }
-
-                foreach ($children as $child) {
-                    if ($child->{$this->relatingKey} === $parent->{$this->primaryKey}) {
-                        if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
-                            $parent->data->{$include} = $child;
-                        }
-
-                        if ($this->relationType === 'hasMany') {
-                            $parent->data->{$include}[] = $child;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $parents;
-    }
-
-    public function hydrate(array $items): array
+    public function hydrate(array $items)
     {
         $models = [];
         
@@ -446,6 +388,12 @@ class Model implements JsonSerializable
             $model = new static();
             $model->data = (object) $item;
             $models[$model->data->{$this->primaryKey}] = $model;
+        }
+
+        $models = new Collection($models);
+
+        if($this->includes) {
+            $this->eagerLoadRelations($models);
         }
 
         return $models;
@@ -462,5 +410,45 @@ class Model implements JsonSerializable
     public function jsonSerialize()
     {
         return $this->data;
+    }
+
+    public function paginate(int $limit = null, int $page = null)
+    {
+        return $this->query()->paginate($limit, $page);
+    }
+
+    /**
+     * Eager load all relations.
+     * 
+     * @param Collection $models
+     * @return array
+     */
+    protected function eagerLoadRelations($models)
+    {
+        foreach($this->includes as $include) {
+            
+            if(!method_exists($this, $include)) {
+                throw new Exception("Trying to eager load `{$include}` but no relationship has been defined.");
+            }
+            
+            $query = $this->{$include}();
+
+            $query->resetWhere();
+            $query->resetBindings();
+
+            $ids = $models->getByColumn($this->relatingForeignKey);
+
+            if(empty($ids)) {
+                continue;
+            }
+            
+            $children = $query->whereIn($this->relatingKey, $ids)->all();
+            
+            foreach($models as $model) {
+                if($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
+                    $model->data->{$include} = $children->getByKey($model->data->{$this->relatingForeignKey});
+                }
+            }
+        }
     }
 }

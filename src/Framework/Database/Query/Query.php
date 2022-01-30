@@ -23,23 +23,21 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct(string $table, Pdo $connection = null)
+    public function __construct($subject, Pdo $connection = null)
     {
-        if(is_subclass_of($table, Model::class)) {
-            $this->model = $table;
-            $this->table = (new $table)->getTableName();
+        if($subject instanceOf Model) {
+            $this->model = $subject;
+            $this->table = $subject->getTableName();
         } else {
-            $this->table = $table;
+            $this->table = $subject;
         }
 
         $this->connection = $connection ?? app('db');
     }
 
-    public function setModel(string $model)
+    public function setModel(Model $model)
     {
-        if(is_subclass_of($model, Model::class)) {
-            $this->model = $model;
-        }
+        $this->model = $model;
     }
 
     public function insert(array $data)
@@ -309,7 +307,7 @@ class Query
         $this->resetQuery();
 
         if($this->model) {
-            $result = (new $this->model)->hydrate($result);
+            $result = $this->model->hydrate($result ?? []);
         }
 
         return $result;
@@ -329,7 +327,7 @@ class Query
 
         if($result && $this->model) {
             $result = (array) $result;
-            $result = (new $this->model)->hydrateItem($result);
+            $result = $this->model->hydrateItem($result);
         }
 
         return $result;

@@ -2,9 +2,7 @@
 
 namespace Lightpack\Pagination;
 
-use JsonSerializable;
-
-class Pagination implements JsonSerializable
+class Pagination implements \IteratorAggregate, \Countable, \JsonSerializable
 {
     private $total;
     private $perPage;
@@ -56,7 +54,7 @@ class Pagination implements JsonSerializable
         return ($this->currentPage - 1) * $this->perPage;
     }
 
-    public function count()
+    public function lastPage()
     {
         return $this->lastPage;
     }
@@ -134,6 +132,20 @@ class Pagination implements JsonSerializable
     public function items()
     {
         return $this->items;
+    }
+
+    public function getIterator(): \Traversable
+    {
+        if($this->items instanceof \Traversable) {
+            return $this->items->getIterator();
+        }
+
+        return new \ArrayIterator($this->items);
+    }
+
+    public function count(): int
+    {
+        return count($this->items);
     }
 
     public function jsonSerialize()
