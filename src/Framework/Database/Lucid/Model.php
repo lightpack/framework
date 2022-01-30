@@ -412,7 +412,7 @@ class Model implements JsonSerializable
         return $this->data;
     }
 
-    public function paginate(int $limit = null, int $page = null)
+    public function paginate(int $limit = null, int $page = null): Pagination
     {
         return $this->query()->paginate($limit, $page);
     }
@@ -423,7 +423,7 @@ class Model implements JsonSerializable
      * @param Collection $models
      * @return array
      */
-    protected function eagerLoadRelations($models)
+    public function eagerLoadRelations(Collection $models)
     {
         foreach($this->includes as $include) {
             

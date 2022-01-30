@@ -54,7 +54,9 @@ class Collection implements \IteratorAggregate, \Countable, \JsonSerializable
 
         $model = get_class(reset($this->items));
 
-        (new $model)->with(...$relations)->eagerLoad($this->items);
+        $items = new Collection($this->items);
+
+        (new $model)->with(...$relations)->eagerLoadRelations($items);
 
         return $this;
     }

@@ -2,14 +2,14 @@
 
 namespace Lightpack\Pagination;
 
-class Pagination implements \IteratorAggregate, \Countable, \JsonSerializable
+class Pagination
 {
-    private $total;
-    private $perPage;
-    private $currentPage;
-    private $lastPage;
-    private $path;
-    private $allowedParams = [];
+    protected $total;
+    protected $perPage;
+    protected $currentPage;
+    protected $lastPage;
+    protected $path;
+    protected $allowedParams = [];
     
     public function __construct($total, $perPage = 10, $currentPage = null, $items = [])
     {
@@ -106,7 +106,12 @@ class Pagination implements \IteratorAggregate, \Countable, \JsonSerializable
         return $this;
     }
 
-    private function getQuery(int $page): string
+    public function items()
+    {
+        return $this->items;
+    }
+
+    protected function getQuery(int $page): string
     {
         $params = $_GET; 
         $allowedParams = $this->allowedParams;
@@ -122,45 +127,10 @@ class Pagination implements \IteratorAggregate, \Countable, \JsonSerializable
         return http_build_query($params);
     }
 
-    private function setCurrentPage($currentPage = null)
+    protected function setCurrentPage($currentPage = null)
     {
         $this->currentPage = $currentPage ?? app('request')->get('page', 1);
         $this->currentPage = (int) $this->currentPage;
         $this->currentPage = $this->currentPage > 0 ? $this->currentPage : 1;
-    }
-
-    public function items()
-    {
-        return $this->items;
-    }
-
-    public function getIterator(): \Traversable
-    {
-        if($this->items instanceof \Traversable) {
-            return $this->items->getIterator();
-        }
-
-        return new \ArrayIterator($this->items);
-    }
-
-    public function count(): int
-    {
-        return count($this->items);
-    }
-
-    public function jsonSerialize()
-    {
-        return [
-            'total' => $this->total,
-            'per_page' => $this->perPage,
-            'current_page' => $this->currentPage,
-            'last_page' => $this->lastPage,
-            'path' => $this->path,
-            'links' => [
-                'next' => $this->nextPageUrl(),
-                'prev' => $this->prevPageUrl(),
-            ],
-            'items' => $this->items,
-        ];
     }
 }
