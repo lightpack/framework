@@ -46,10 +46,18 @@ class Model implements JsonSerializable
     protected $relatingKey;
 
     /**
+     * @var string The foreign key used to resolve the relation while eager loading.
+     */
+    protected $relatingForeignKey;
+
+    /**
      * @var array Cached models that have already been loaded.
      */
     protected $cachedModels = [];
 
+    /**
+     * @var array Relations to inlcude.
+     */
     protected $includes;
 
     /**
@@ -144,6 +152,7 @@ class Model implements JsonSerializable
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
+        $this->relatingForeignKey = $this->primaryKey;
         $model = $this->getConnection()->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -159,6 +168,7 @@ class Model implements JsonSerializable
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
+        $this->relatingForeignKey = $this->primaryKey;
         $model = $this->getConnection()->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -436,18 +446,32 @@ class Model implements JsonSerializable
             $query->resetWhere();
             $query->resetBindings();
 
-            $ids = $models->getByColumn($this->relatingForeignKey);
+            if($this->relationType === 'hasOne') {
+                $ids = $models->getKeys();
+            } else {
+                $ids = $models->getByColumn($this->relatingForeignKey);
+            }
 
             if(empty($ids)) {
                 continue;
             }
             
             $children = $query->whereIn($this->relatingKey, $ids)->all();
-            
+
             foreach($models as $model) {
-                if($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
+                if($this->relationType === 'hasOne') {
                     $model->data->{$include} = $children->getByKey($model->data->{$this->relatingForeignKey});
+                    continue;
                 }
+
+                if($this->relationType === 'belongsTo') {
+                    $model->data->{$include} = $children->getByKey($model->data->{$this->relatingForeignKey});
+                    continue;
+                } 
+
+                $model->data->{$include}[] = $children->filter(function($child) use ($model) {
+                    return $child->{$this->relatingKey} === $model->data->{$this->relatingForeignKey};
+                });
             }
         }
     }
