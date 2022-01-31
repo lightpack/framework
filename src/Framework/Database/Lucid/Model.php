@@ -40,6 +40,11 @@ class Model implements JsonSerializable
      */
     protected $relationType;
 
+     /**
+     * @var string Model associated with the relation.
+     */
+    protected $relatingModel;
+
     /**
      * @var string The key used to resolve the relation while eager loading.
      */
@@ -59,6 +64,11 @@ class Model implements JsonSerializable
      * @var array Relations to inlcude.
      */
     protected $includes;
+
+    /**
+     * @var array Relations to inlcude.
+     */
+    protected $countIncludes;
 
     /**
      * Constructor.
@@ -153,6 +163,7 @@ class Model implements JsonSerializable
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
         $this->relatingForeignKey = $this->primaryKey;
+        $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -169,6 +180,7 @@ class Model implements JsonSerializable
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
         $this->relatingForeignKey = $this->primaryKey;
+        $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
         return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
@@ -186,6 +198,7 @@ class Model implements JsonSerializable
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $model->getPrimaryKey();
         $this->relatingForeignKey = $foreignKey;
+        $this->relatingModel = $model;
         return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
 
@@ -201,6 +214,7 @@ class Model implements JsonSerializable
     public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Query
     {
         $this->relationType = __FUNCTION__;
+        $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
         return $model
             ->query()
@@ -386,6 +400,15 @@ class Model implements JsonSerializable
     public function with(string ...$includes): self
     {
         $this->includes = $includes;
+        $this->relationsCount = false;
+
+        return $this;
+    }
+
+    public function withCount(string ...$includes): self
+    {
+        $this->countIncludes = $includes;
+        $this->relationsCount = true;
 
         return $this;
     }
@@ -404,6 +427,11 @@ class Model implements JsonSerializable
 
         if($this->includes) {
             $this->eagerLoadRelations($models);
+        }
+
+        if($this->countIncludes)
+        {
+            $this->eagerLoadRelationsCount($models);
         }
 
         return $models;
@@ -474,5 +502,33 @@ class Model implements JsonSerializable
                 });
             }
         }
+    }
+
+    public function eagerLoadRelationsCount(Collection $models)
+    {
+        foreach($this->countIncludes as $include) {
+            $query = $this->{$include}();
+            $query->resetWhere();
+            $query->resetBindings();
+
+            if($this->relationType === 'hasMany') {
+                $table = (new $this->relatingModel)->getTableName();
+
+                $counts = (new Query($table))->whereIn($this->relatingKey, $models->getKeys())->groupCount($this->relatingKey);
+
+                foreach($models as $model) {
+                    foreach($counts as $count) {
+                        if($count->{$this->relatingKey} === $model->id) {
+                            $model->data->{$include . '_count'} = $count->num;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function groupCount(string $column)
+    {
+        return $this->query()->groupCount($column);
     }
 }

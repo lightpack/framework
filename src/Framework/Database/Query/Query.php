@@ -3,8 +3,8 @@
 namespace Lightpack\Database\Query;
 
 use Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\Pagination;
 use Lightpack\Database\Pdo;
-use Lightpack\Pagination\Pagination;
 
 class Query
 {
@@ -273,6 +273,7 @@ class Query
         $items = $this->fetchAll();
 
         return new Pagination($total, $limit, $page, $items);
+        // return $items;
     }
 
     public function count()
@@ -285,6 +286,17 @@ class Query
         $this->columns = []; // so that pagination query can be reused
 
         return $result->num;
+    }
+
+    public function groupCount(string $column)
+    {
+        $this->columns = [$column, 'count(*) AS num'];
+        $this->groupBy($column);
+
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
+
+        return $result;
     }
 
     public function __get(string $key)

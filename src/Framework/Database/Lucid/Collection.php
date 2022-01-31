@@ -2,9 +2,14 @@
 
 namespace Lightpack\Database\Lucid;
 
+use Closure;
+use Countable;
 use Traversable;
+use ArrayIterator;
+use JsonSerializable;
+use IteratorAggregate;
 
-class Collection implements \IteratorAggregate, \Countable, \JsonSerializable
+class Collection implements IteratorAggregate, Countable, JsonSerializable
 {
     protected $items = [];
 
@@ -15,12 +20,17 @@ class Collection implements \IteratorAggregate, \Countable, \JsonSerializable
 
     public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->items);
+        return new ArrayIterator($this->items);
     }
 
     public function count(): int
     {
         return count($this->items);
+    }
+
+    public function getKeys(): array
+    {
+        return array_keys($this->items);
     }
 
     public function getByKey($key)
@@ -41,6 +51,11 @@ class Collection implements \IteratorAggregate, \Countable, \JsonSerializable
         return $data;
     }
 
+    public function filter(Closure $callback): Collection
+	{
+		return new static(array_filter($this->items, $callback));
+	}
+
     public function jsonSerialize()
     {
         return $this->items;
@@ -57,6 +72,21 @@ class Collection implements \IteratorAggregate, \Countable, \JsonSerializable
         $items = new Collection($this->items);
 
         (new $model)->with(...$relations)->eagerLoadRelations($items);
+
+        return $this;
+    }
+
+    public function loadCount(string ...$relations): self
+    {
+        if(empty($relations) || empty($this->items)) {
+            return $this;
+        }
+
+        $model = get_class(reset($this->items));
+
+        $items = new Collection($this->items);
+
+        (new $model)->withCount(...$relations)->eagerLoadRelationsCount($items);
 
         return $this;
     }
