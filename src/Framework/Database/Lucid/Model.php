@@ -2,6 +2,7 @@
 
 namespace Lightpack\Database\Lucid;
 
+use Closure;
 use Exception;
 use JsonSerializable;
 use Lightpack\Database\Pdo;
@@ -61,14 +62,9 @@ class Model implements JsonSerializable
     protected $cachedModels = [];
 
     /**
-     * @var array Relations to inlcude.
+     * @var \Lightpack\Database\Lucid\Builder
      */
-    protected $includes;
-
-    /**
-     * @var array Relations to inlcude.
-     */
-    protected $countIncludes;
+    protected $builder;
 
     /**
      * Constructor.
@@ -165,7 +161,7 @@ class Model implements JsonSerializable
         $this->relatingForeignKey = $this->primaryKey;
         $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
-        return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
+        return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
     /**
@@ -181,8 +177,7 @@ class Model implements JsonSerializable
         $this->relatingKey = $foreignKey;
         $this->relatingForeignKey = $this->primaryKey;
         $this->relatingModel = $model;
-        $model = $this->getConnection()->model($model);
-        return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
+        return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
     /**
@@ -199,7 +194,7 @@ class Model implements JsonSerializable
         $this->relatingKey = $model->getPrimaryKey();
         $this->relatingForeignKey = $foreignKey;
         $this->relatingModel = $model;
-        return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
+        return $model::query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
 
     /**
@@ -265,8 +260,12 @@ class Model implements JsonSerializable
     /**
      * Deletes a model.
      */
-    public function delete()
+    public function delete($id = null)
     {
+        if ($id) {
+            $this->find($id);
+        }
+
         if (!isset($this->data->{$this->primaryKey})) {
             return;
         }
@@ -309,14 +308,9 @@ class Model implements JsonSerializable
         return $this->primaryKey;
     }
 
-    /**
-     * Makes models capable of querying data. 
-     *
-     * @return Query
-     */
-    public function query(): Query
+    public static function query(): Builder
     {
-        return new Query($this, $this->getConnection());
+        return new Builder(new static);
     }
 
     /**
@@ -364,20 +358,20 @@ class Model implements JsonSerializable
         // 
     }
 
-    private function insert()
+    protected function insert()
     {
         $data = \get_object_vars($this->data);
         return $this->query()->insert($data);
     }
 
-    private function update()
+    protected function update()
     {
         $data = \get_object_vars($this->data);
         unset($data[$this->primaryKey]);
         return $this->query()->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
     }
 
-    private function setTimestamps()
+    protected function setTimestamps()
     {
         if (false === $this->timestamps) {
             return;
@@ -391,60 +385,6 @@ class Model implements JsonSerializable
         }
     }
 
-    /**
-     * Set eager loading relationships.
-     *
-     * @param string Any number of relations to eager load.
-     * @return object \Lightpack\Database\Lucid\Model
-     */
-    public function with(string ...$includes): self
-    {
-        $this->includes = $includes;
-        $this->relationsCount = false;
-
-        return $this;
-    }
-
-    public function withCount(string ...$includes): self
-    {
-        $this->countIncludes = $includes;
-        $this->relationsCount = true;
-
-        return $this;
-    }
-
-    public function hydrate(array $items)
-    {
-        $models = [];
-        
-        foreach ($items as $item) {
-            $model = new static();
-            $model->data = (object) $item;
-            $models[$model->data->{$this->primaryKey}] = $model;
-        }
-
-        $models = new Collection($models);
-
-        if($this->includes) {
-            $this->eagerLoadRelations($models);
-        }
-
-        if($this->countIncludes)
-        {
-            $this->eagerLoadRelationsCount($models);
-        }
-
-        return $models;
-    }
-
-    public function hydrateItem(array $attributes)
-    {
-        $model = new static();
-        $model->data = (object) $attributes;
-        
-        return $model;
-    }
-
     public function jsonSerialize()
     {
         return $this->data;
@@ -455,80 +395,54 @@ class Model implements JsonSerializable
         return $this->query()->paginate($limit, $page);
     }
 
-    /**
-     * Eager load all relations.
-     * 
-     * @param Collection $models
-     * @return array
-     */
-    public function eagerLoadRelations(Collection $models)
+    public function groupCount(string $column, ?Closure $constraint)
     {
-        foreach($this->includes as $include) {
-            
-            if(!method_exists($this, $include)) {
-                throw new Exception("Trying to eager load `{$include}` but no relationship has been defined.");
-            }
-            
-            $query = $this->{$include}();
+        $query = $this->query();
 
-            $query->resetWhere();
-            $query->resetBindings();
-
-            if($this->relationType === 'hasOne') {
-                $ids = $models->getKeys();
-            } else {
-                $ids = $models->getByColumn($this->relatingForeignKey);
-            }
-
-            if(empty($ids)) {
-                continue;
-            }
-            
-            $children = $query->whereIn($this->relatingKey, $ids)->all();
-
-            foreach($models as $model) {
-                if($this->relationType === 'hasOne') {
-                    $model->data->{$include} = $children->getByKey($model->data->{$this->relatingForeignKey});
-                    continue;
-                }
-
-                if($this->relationType === 'belongsTo') {
-                    $model->data->{$include} = $children->getByKey($model->data->{$this->relatingForeignKey});
-                    continue;
-                } 
-
-                $model->data->{$include}[] = $children->filter(function($child) use ($model) {
-                    return $child->{$this->relatingKey} === $model->data->{$this->relatingForeignKey};
-                });
-            }
+        if($constraint) {
+            $constraint($query);
         }
+
+        return $query->groupCount($column);
     }
 
-    public function eagerLoadRelationsCount(Collection $models)
+    public function getRelationType()
     {
-        foreach($this->countIncludes as $include) {
-            $query = $this->{$include}();
-            $query->resetWhere();
-            $query->resetBindings();
-
-            if($this->relationType === 'hasMany') {
-                $table = (new $this->relatingModel)->getTableName();
-
-                $counts = (new Query($table))->whereIn($this->relatingKey, $models->getKeys())->groupCount($this->relatingKey);
-
-                foreach($models as $model) {
-                    foreach($counts as $count) {
-                        if($count->{$this->relatingKey} === $model->id) {
-                            $model->data->{$include . '_count'} = $count->num;
-                        }
-                    }
-                }
-            }
-        }
+        return $this->relationType;
     }
 
-    public function groupCount(string $column)
+    public function getRelatingKey()
     {
-        return $this->query()->groupCount($column);
+        return $this->relatingKey;
+    }
+
+    public function getRelatingForeignKey()
+    {
+        return $this->relatingForeignKey;
+    }
+
+    public function getRelatingModel()
+    {
+        return $this->relatingModel;
+    }
+
+    public function getAttributes()
+    {
+        return $this->data;
+    }
+
+    public function getAttribute($key, $default = null)
+    {
+        return $this->data->{$key} ?? $default;
+    }
+
+    public function setAttributes(array $data)
+    {
+        $this->data = (object) $data;
+    }
+
+    public function setAttribute($key, $value)
+    {
+        $this->data->{$key} = $value;
     }
 }

@@ -317,9 +317,10 @@ class Query
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
-
+        
         if($this->model) {
-            $result = $this->model->hydrate($result ?? []);
+            // $result = $this->model->hydrate($result ?? []);
+            return static::hydrate($result);
         }
 
         return $result;
@@ -339,7 +340,7 @@ class Query
 
         if($result && $this->model) {
             $result = (array) $result;
-            $result = $this->model->hydrateItem($result);
+            $result = static::hydrateItem($result);
         }
 
         return $result;
