@@ -2,6 +2,7 @@
 
 namespace Lightpack\Database\Query;
 
+use Closure;
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Lucid\Pagination;
 use Lightpack\Database\Pdo;
@@ -288,8 +289,12 @@ class Query
         return $result->num;
     }
 
-    public function groupCount(string $column)
+    public function groupCount(string $column, ?Closure $callback = null)
     {
+        if($callback) {
+            $callback($this);
+        }
+
         $this->columns = [$column, 'count(*) AS num'];
         $this->groupBy($column);
 

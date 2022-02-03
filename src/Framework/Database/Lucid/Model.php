@@ -390,22 +390,6 @@ class Model implements JsonSerializable
         return $this->data;
     }
 
-    public function paginate(int $limit = null, int $page = null): Pagination
-    {
-        return $this->query()->paginate($limit, $page);
-    }
-
-    public function groupCount(string $column, ?Closure $constraint)
-    {
-        $query = $this->query();
-
-        if($constraint) {
-            $constraint($query);
-        }
-
-        return $query->groupCount($column);
-    }
-
     public function getRelationType()
     {
         return $this->relationType;
