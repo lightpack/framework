@@ -71,7 +71,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
 
         $items = new Collection($this->items);
 
-        (new $model)->with(...$relations)->eagerLoadRelations($items);
+        $model::query()->with(...$relations)->eagerLoadRelations($items);
 
         return $this;
     }
@@ -86,7 +86,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
 
         $items = new Collection($this->items);
 
-        (new $model)->withCount(...$relations)->eagerLoadRelationsCount($items);
+        $model::query()->withCount(...$relations)->eagerLoadRelationsCount($items);
 
         return $this;
     }
