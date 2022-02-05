@@ -35,15 +35,15 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
 
     public function getByKey($key)
     {
-        return $this->items[$key];
+        return $this->items[$key] ?? null;
     }
 
     public function getByColumn(string $column)
     {
         $data = [];
 
-        foreach($this->items as $item) {
-            if($item->$column ?? false) {
+        foreach ($this->items as $item) {
+            if ($item->$column ?? false) {
                 $data[] = $item->$column;
             }
         }
@@ -52,18 +52,18 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
     }
 
     public function filter(Closure $callback): Collection
-	{
-		return new static(array_filter($this->items, $callback));
-	}
+    {
+        return new static(array_filter($this->items, $callback));
+    }
 
     public function jsonSerialize()
     {
-        return $this->items;
+        return array_values($this->items);
     }
 
     public function load(string ...$relations): self
     {
-        if(empty($relations) || empty($this->items)) {
+        if (empty($relations) || empty($this->items)) {
             return $this;
         }
 
@@ -78,7 +78,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
 
     public function loadCount(string ...$relations): self
     {
-        if(empty($relations) || empty($this->items)) {
+        if (empty($relations) || empty($this->items)) {
             return $this;
         }
 
@@ -87,6 +87,35 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         $items = new Collection($this->items);
 
         $model::query()->withCount(...$relations)->eagerLoadRelationsCount($items);
+
+        return $this;
+    }
+
+    public function mapAndCreate(string $field, array $data, string $key = null, array $pluckKeys = [], $default = null): self
+    {
+        array_map(function ($item) use ($field, $data, $key, $pluckKeys) {
+            array_map(function ($value) use ($item, $field, $key, $pluckKeys) {
+                if ($value->$key === $item->id) {
+                    if (!$pluckKeys) {
+                        $item->setAttribute($field, $value);
+                    } else {
+                        $setData = [];
+
+                        foreach ($pluckKeys as $pluckKey) {
+                            $setData[$pluckKey] = $value->$pluckKey;
+                        }
+
+                        $item->setAttribute($field, $setData);
+                    }
+                }
+            }, $data);
+
+            // set the field to empty object in case not found
+            if($item->getAttribute($field) === null) {
+                $item->setAttribute($field, $default ?? new \stdClass);
+            }
+
+        }, $this->items);
 
         return $this;
     }

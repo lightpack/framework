@@ -57,6 +57,11 @@ class Model implements JsonSerializable
     protected $relatingForeignKey;
 
     /**
+     * @var string Pivot table when resolving many-to-many relationship.
+     */
+    protected $pivotTable;
+
+    /**
      * @var array Cached models that have already been loaded.
      */
     protected $cachedModels = [];
@@ -209,7 +214,10 @@ class Model implements JsonSerializable
     public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Query
     {
         $this->relationType = __FUNCTION__;
+        $this->relatingKey = $foreignKey;
+        $this->relatingForeignKey = $foreignKey;
         $this->relatingModel = $model;
+        $this->pivotTable = $pivotTable;
         $model = $this->getConnection()->model($model);
         return $model
             ->query()
@@ -408,6 +416,11 @@ class Model implements JsonSerializable
     public function getRelatingModel()
     {
         return $this->relatingModel;
+    }
+
+    public function getPivotTable()
+    {
+        return $this->pivotTable;
     }
 
     public function getAttributes()
