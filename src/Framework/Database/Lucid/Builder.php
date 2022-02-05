@@ -94,6 +94,35 @@ class Builder extends Query
         }
     }
 
+    public function eagerLoadRelation(Model $model)
+    {
+        foreach($this->includes as $include) {
+            if(!method_exists($this->model, $include)) {
+                throw new \Exception("Trying to eager load `{$include}` but no relationship has been defined.");
+            }
+            
+            $query = $this->model->{$include}();
+
+            $query->resetWhere();
+            $query->resetBindings();
+           
+            if($this->model->getRelationType() === 'pivot') {
+                $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
+            } 
+
+            if($this->model->getRelationType() === 'hasOne' || $this->model->getRelationType() === 'belongsTo') {
+                $id = $model->{$this->model->getRelatingForeignKey()};
+                $children = $query->where($keyName ?? $this->model->getRelatingKey(), '=', $id)->one();
+                $model->setAttribute($include, $children);
+                continue;
+            }
+            
+            $id = $model->{$this->model->getPrimaryKey()};
+            $children = $query->where($keyName ?? $this->model->getRelatingKey(), '=', $id)->all();
+            $model->setAttribute($include, $children);
+        }
+    }
+
     /**
      * Eager load all relations count.
      * 
@@ -152,7 +181,11 @@ class Builder extends Query
     public function hydrateItem(array $attributes)
     {
         $this->model->setAttributes($attributes);
-        
+
+        if($this->includes) {
+            $this->eagerLoadRelation($this->model);
+        }
+
         return $this->model;
     }
 }
