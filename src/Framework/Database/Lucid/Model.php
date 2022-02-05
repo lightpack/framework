@@ -72,6 +72,11 @@ class Model implements JsonSerializable
     protected $builder;
 
     /**
+     * @var array Attributes to be hidden for serialization or array conversion.
+     */
+    protected $hidden = [];
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
@@ -395,6 +400,10 @@ class Model implements JsonSerializable
 
     public function jsonSerialize()
     {
+        array_map(function ($key) {
+            unset($this->data->{$key});
+        }, $this->hidden);
+
         return $this->data;
     }
 
