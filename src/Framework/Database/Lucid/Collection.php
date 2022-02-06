@@ -47,7 +47,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
                 $data[] = $item->$column;
             }
         }
-
+        
         return $data;
     }
 

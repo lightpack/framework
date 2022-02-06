@@ -42,19 +42,21 @@ class Builder extends Query
     }
 
     /**
-     * Eager load all relations.
+     * Eager load all relations for a collection.
      * 
      * @param Collection $models
-     * @return array
      */
     public function eagerLoadRelations(Collection $models)
     {
         foreach($this->includes as $include) {
-            if(!method_exists($this->model, $include)) {
-                throw new \Exception("Trying to eager load `{$include}` but no relationship has been defined.");
+
+            $relation = explode('.', $include)[0];
+
+            if(!method_exists($this->model, $relation)) {
+                throw new \Exception("Trying to eager load `{$relation}` but no relationship has been defined.");
             }
             
-            $query = $this->model->{$include}();
+            $query = $this->model->{$relation}();
 
             $query->resetWhere();
             $query->resetBindings();
@@ -77,23 +79,38 @@ class Builder extends Query
 
             foreach($models as $model) {
                 if($this->model->getRelationType() === 'hasOne') {
-                    $model->setAttribute($include, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
+                    $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
+                    
+                } elseif($this->model->getRelationType() === 'belongsTo') {
+                    $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
                     continue;
+                } else {
+                    $model->setAttribute($relation, $children->filter(function($child) use ($model) {
+                        return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
+                    }));
                 }
-
-                if($this->model->getRelationType() === 'belongsTo') {
-                    $model->setAttribute($include, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
-                    continue;
-                } 
-
-                
-                $model->setAttribute($include, $children->filter(function($child) use ($model) {
-                    return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
-                }));
             }
+
+            // nested relations
+            $relations = substr($include, strlen($relation) + 1);
+
+            if($relations) {
+                // pp($relation);
+                // pp($models->getByColumn($relation));
+                // pp($models->getByColumn($relation));
+                $collection = new Collection($models->getByColumn($relation));
+                $collection->load($relations);
+                // $this->eagerLoadRelations($models->getByColumn($relation));
+            }
+            // pp($relations, $models);
         }
     }
 
+    /**
+     * Eager load all relations for a model.
+     * 
+     * @param Model $models
+     */
     public function eagerLoadRelation(Model $model)
     {
         foreach($this->includes as $include) {
