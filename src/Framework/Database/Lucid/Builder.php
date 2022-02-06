@@ -200,7 +200,8 @@ class Builder extends Query
         $this->model->setAttributes($attributes);
 
         if($this->includes) {
-            $this->eagerLoadRelation($this->model);
+            $collection = new Collection([$this->model]);
+            $collection->load(...$this->includes);
         }
 
         return $this->model;
