@@ -62,6 +62,17 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         return $data;
     }
 
+    public function columnExists(string $column)
+    {
+        foreach($this->items as $item) {
+            if($item->hasAttribute($column)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function filter(Closure $callback): Collection
     {
         return new static(array_filter($this->items, $callback));

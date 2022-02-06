@@ -448,6 +448,11 @@ class Model implements JsonSerializable
         $this->data = (object) $data;
     }
 
+    public function hasAttribute(string $key)
+    {
+        return property_exists($this->data, $key);
+    }
+
     public function setAttribute($key, $value)
     {
         $this->data->{$key} = $value;

@@ -48,62 +48,66 @@ class Builder extends Query
      */
     public function eagerLoadRelations(Collection $models)
     {
-        foreach($this->includes as $include) {
-
+        foreach ($this->includes as $include) {
             $relation = explode('.', $include)[0];
 
-            if(!method_exists($this->model, $relation)) {
-                throw new \Exception("Trying to eager load `{$relation}` but no relationship has been defined.");
-            }
-            
-            $query = $this->model->{$relation}();
-
-            $query->resetWhere();
-            $query->resetBindings();
-            if($this->model->getRelationType() === 'hasOne') {
-                $ids = $models->getKeys();
-                // pp($query->whereIn($this->model->getRelatingKey(), $ids)->all());
-            } elseif($this->model->getRelationType() === 'pivot') {
-                $ids = $models->getKeys();
-                $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
-            } else {
-                $ids = $models->getByColumn($this->model->getRelatingForeignKey());
-                $ids = array_unique($ids);
-            }
-
-            if(empty($ids)) {
-                continue;
-            }
-            
-            $children = $query->whereIn($keyName ?? $this->model->getRelatingKey(), $ids)->all();
-
-            foreach($models as $model) {
-                if($this->model->getRelationType() === 'hasOne') {
-                    // $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
-                    $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
-                    
-                } elseif($this->model->getRelationType() === 'belongsTo') {
-                    $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
-                    continue;
+            // Load relation only if the models has no such relation
+            if(!$models->columnExists($relation)) {
+                if (!method_exists($this->model, $relation)) {
+                    throw new \Exception("Trying to eager load `{$relation}` but no relationship has been defined.");
+                }
+    
+                $query = $this->model->{$relation}();
+    
+                $query->resetWhere();
+                $query->resetBindings();
+    
+                if ($this->model->getRelationType() === 'hasOne') {
+                    $ids = $models->getKeys();
+                } elseif ($this->model->getRelationType() === 'pivot') {
+                    $ids = $models->getKeys();
+                    $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
                 } else {
-                    $model->setAttribute($relation, $children->filter(function($child) use ($model) {
-                        return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
-                    }));
+                    $ids = $models->getByColumn($this->model->getRelatingForeignKey());
+                    $ids = array_unique($ids);
+                }
+    
+                if (empty($ids)) {
+                    continue;
+                }
+    
+                $children = $query->whereIn($keyName ?? $this->model->getRelatingKey(), $ids)->all();
+    
+                foreach ($models as $model) {
+                    if($model->hasAttribute($relation)) {
+                        continue;
+                    }
+    
+                    if ($this->model->getRelationType() === 'hasOne') {
+                        // $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
+                        $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
+                    } elseif ($this->model->getRelationType() === 'belongsTo') {
+                        $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
+                        continue;
+                    } else {
+                        $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
+                            return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
+                        }));
+                    }
                 }
             }
 
-            // nested relations
+            // load nested relations for the models
             $relations = substr($include, strlen($relation) + 1);
 
-            if($relations) {
-                
+            if ($relations) {
                 $items = $models->getByColumn($relation);
 
-                if($items) {
-                    if($items[0] instanceof Collection) {
+                if ($items) {
+                    if ($items[0] instanceof Collection) {
                         $normalizedItems = [];
 
-                        foreach($items as $item) {
+                        foreach ($items as $item) {
                             $normalizedItems += $item->getItems();
                         }
 
@@ -125,27 +129,27 @@ class Builder extends Query
      */
     public function eagerLoadRelation(Model $model)
     {
-        foreach($this->includes as $include) {
-            if(!method_exists($this->model, $include)) {
+        foreach ($this->includes as $include) {
+            if (!method_exists($this->model, $include)) {
                 throw new \Exception("Trying to eager load `{$include}` but no relationship has been defined.");
             }
-            
+
             $query = $this->model->{$include}();
 
             $query->resetWhere();
             $query->resetBindings();
-           
-            if($this->model->getRelationType() === 'pivot') {
-                $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
-            } 
 
-            if($this->model->getRelationType() === 'hasOne' || $this->model->getRelationType() === 'belongsTo') {
+            if ($this->model->getRelationType() === 'pivot') {
+                $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
+            }
+
+            if ($this->model->getRelationType() === 'hasOne' || $this->model->getRelationType() === 'belongsTo') {
                 $id = $model->{$this->model->getRelatingForeignKey()};
                 $children = $query->where($keyName ?? $this->model->getRelatingKey(), '=', $id)->one();
                 $model->setAttribute($include, $children);
                 continue;
             }
-            
+
             $id = $model->{$this->model->getPrimaryKey()};
             $children = $query->where($keyName ?? $this->model->getRelatingKey(), '=', $id)->all();
             $model->setAttribute($include, $children);
@@ -160,19 +164,19 @@ class Builder extends Query
      */
     public function eagerLoadRelationsCount(Collection $models)
     {
-        foreach($this->countIncludes as $include) {
+        foreach ($this->countIncludes as $include) {
             $query = $this->model->{$include}();
             $query->resetWhere();
             $query->resetBindings();
 
-            if($this->model->getRelationType() === 'hasMany') {
+            if ($this->model->getRelationType() === 'hasMany') {
                 $modelClass = $this->model->getRelatingModel();
                 $table = (new $modelClass)->getTableName();
                 $counts = (new Query($table))->whereIn($this->model->getRelatingKey(), $models->getKeys())->groupCount($this->model->getRelatingKey());
 
-                foreach($models as $model) {
-                    foreach($counts as $count) {
-                        if($count->{$this->model->getRelatingKey()} === $model->id) {
+                foreach ($models as $model) {
+                    foreach ($counts as $count) {
+                        if ($count->{$this->model->getRelatingKey()} === $model->id) {
                             $model->{$include . '_count'} = $count->num;
                         }
                     }
@@ -195,12 +199,11 @@ class Builder extends Query
 
         $models = new Collection($models);
 
-        if($this->includes) {
+        if ($this->includes) {
             $this->eagerLoadRelations($models);
         }
 
-        if($this->countIncludes)
-        {
+        if ($this->countIncludes) {
             $this->eagerLoadRelationsCount($models);
         }
 
@@ -211,7 +214,7 @@ class Builder extends Query
     {
         $this->model->setAttributes($attributes);
 
-        if($this->includes) {
+        if ($this->includes) {
             $collection = new Collection([$this->model]);
             $collection->load(...$this->includes);
         }
