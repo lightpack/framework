@@ -168,7 +168,8 @@ class Model implements JsonSerializable
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
-        $this->relatingForeignKey = $this->primaryKey;
+        $this->relatingForeignKey = $foreignKey;
+        // $this->relatingForeignKey = $this->primaryKey;
         $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
         return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});

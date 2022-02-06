@@ -60,9 +60,9 @@ class Builder extends Query
 
             $query->resetWhere();
             $query->resetBindings();
-
             if($this->model->getRelationType() === 'hasOne') {
                 $ids = $models->getKeys();
+                // pp($query->whereIn($this->model->getRelatingKey(), $ids)->all());
             } elseif($this->model->getRelationType() === 'pivot') {
                 $ids = $models->getKeys();
                 $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
@@ -79,7 +79,8 @@ class Builder extends Query
 
             foreach($models as $model) {
                 if($this->model->getRelationType() === 'hasOne') {
-                    $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
+                    // $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
+                    $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
                     
                 } elseif($this->model->getRelationType() === 'belongsTo') {
                     $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
@@ -95,14 +96,25 @@ class Builder extends Query
             $relations = substr($include, strlen($relation) + 1);
 
             if($relations) {
-                // pp($relation);
-                // pp($models->getByColumn($relation));
-                // pp($models->getByColumn($relation));
-                $collection = new Collection($models->getByColumn($relation));
-                $collection->load($relations);
-                // $this->eagerLoadRelations($models->getByColumn($relation));
+                
+                $items = $models->getByColumn($relation);
+
+                if($items) {
+                    if($items[0] instanceof Collection) {
+                        $normalizedItems = [];
+
+                        foreach($items as $item) {
+                            $normalizedItems += $item->getItems();
+                        }
+
+                        $collection = new Collection($normalizedItems);
+                    } else {
+                        $collection = new Collection($items);
+                    }
+
+                    $collection->load($relations);
+                }
             }
-            // pp($relations, $models);
         }
     }
 

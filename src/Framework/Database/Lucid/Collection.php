@@ -38,6 +38,17 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         return $this->items[$key] ?? null;
     }
 
+    public function getItemWherecolumn($column, $value)
+    {
+        foreach($this->items as $item) {
+            if($item->{$column} == $value) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
     public function getByColumn(string $column)
     {
         $data = [];
@@ -68,9 +79,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         }
 
         $model = get_class(reset($this->items));
-
         $items = new Collection($this->items);
-
         $model::query()->with(...$relations)->eagerLoadRelations($items);
 
         return $this;
@@ -118,5 +127,10 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         }, $this->items);
 
         return $this;
+    }
+
+    public function getItems()
+    {
+        return $this->items;
     }
 }
