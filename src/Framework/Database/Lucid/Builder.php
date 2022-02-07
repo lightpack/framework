@@ -215,7 +215,8 @@ class Builder extends Query
         $this->model->setAttributes($attributes);
 
         if ($this->includes) {
-            $collection = new Collection([$this->model]);
+            $id = $this->model->{$this->model->getPrimaryKey()};
+            $collection = new Collection([$id => $this->model]);
             $collection->load(...$this->includes);
         }
 
