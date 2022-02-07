@@ -64,7 +64,6 @@ class Builder extends Query
     
                 if ($this->model->getRelationType() === 'hasOne') {
                     $ids = $models->getKeys();
-                    // pp($ids);
                 } elseif ($this->model->getRelationType() === 'pivot') {
                     $ids = $models->getKeys();
                     $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
@@ -76,23 +75,24 @@ class Builder extends Query
                 if (empty($ids)) {
                     continue;
                 }
-    
+
                 $children = $query->whereIn($keyName ?? $this->model->getRelatingKey(), $ids)->all();
-    
+
                 foreach ($models as $model) {
                     if($model->hasAttribute($relation)) {
                         continue;
                     }
     
                     if ($this->model->getRelationType() === 'hasOne') {
-                        // $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
-                        // $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
                         $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
-                        // $model->setAttribute($relation, $children->getByKey($this->model->getRelatingKey(), $model->{$this->model->getPrimarykey()}));
                     } elseif ($this->model->getRelationType() === 'belongsTo') {
                         $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
                         continue;
-                    } else {
+                    } elseif($this->model->getRelationType() === 'hasMany') {
+                        $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
+                            return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
+                        }));
+                    } else { // pivot table relation
                         $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
                             return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
                         }));

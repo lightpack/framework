@@ -227,7 +227,7 @@ class Model implements JsonSerializable
         $model = $this->getConnection()->model($model);
         return $model
             ->query()
-            ->select("$model->table.*")
+            ->select("$model->table.*", "$pivotTable.$foreignKey")
             ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey")
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
     }
