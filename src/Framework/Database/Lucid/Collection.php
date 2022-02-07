@@ -13,9 +13,20 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
 {
     protected $items = [];
 
+    /**
+     * Populate ietems keyed by model id
+     *
+     * @param \Lightpack\Database\Lucid\Model|\Lightpack\Database\Lucid\Model[] $items
+     */
     public function __construct($items)
     {
-        $this->items = $items;
+        if($items instanceof Model) {
+            $this->items[$items->{$items->getPrimaryKey()}] = $items;
+        } else {
+            foreach($items as $item) {
+                $this->items[$item->{$item->getPrimaryKey()}] = $item;
+            }
+        }
     }
 
     public function getIterator(): Traversable

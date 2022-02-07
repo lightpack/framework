@@ -64,6 +64,7 @@ class Builder extends Query
     
                 if ($this->model->getRelationType() === 'hasOne') {
                     $ids = $models->getKeys();
+                    // pp($ids);
                 } elseif ($this->model->getRelationType() === 'pivot') {
                     $ids = $models->getKeys();
                     $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
@@ -85,7 +86,9 @@ class Builder extends Query
     
                     if ($this->model->getRelationType() === 'hasOne') {
                         // $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
+                        // $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
                         $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
+                        // $model->setAttribute($relation, $children->getByKey($this->model->getRelatingKey(), $model->{$this->model->getPrimarykey()}));
                     } elseif ($this->model->getRelationType() === 'belongsTo') {
                         $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
                         continue;
@@ -193,8 +196,7 @@ class Builder extends Query
         foreach ($items as $item) {
             $model = new $modelClass;
             $model->setAttributes((array) $item);
-            $primaryKey = $model->getPrimaryKey();
-            $models[$model->{$primaryKey}] = $model;
+            $models[] = $model;
         }
 
         $models = new Collection($models);
@@ -215,8 +217,7 @@ class Builder extends Query
         $this->model->setAttributes($attributes);
 
         if ($this->includes) {
-            $id = $this->model->{$this->model->getPrimaryKey()};
-            $collection = new Collection([$id => $this->model]);
+            $collection = new Collection($this->model);
             $collection->load(...$this->includes);
         }
 
