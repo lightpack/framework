@@ -241,7 +241,9 @@ class Model implements JsonSerializable
      */
     public function find($id, bool $fail = true): self
     {
-        $this->data = $this->query()->where($this->primaryKey, '=', $id)->fetchOne();
+        $query = new Query($this->table, $this->getConnection());
+
+        $this->data = $query->where($this->primaryKey, '=', $id)->fetchOne();
 
         if (!$this->data && $fail) {
             throw new RecordNotFoundException(
@@ -456,5 +458,11 @@ class Model implements JsonSerializable
     public function setAttribute($key, $value)
     {
         $this->data->{$key} = $value;
+    }
+
+    public function load(string ...$relations)
+    {
+        $items = new Collection($this);
+        self::query()->with(...$relations)->eagerLoadRelations($items);
     }
 }

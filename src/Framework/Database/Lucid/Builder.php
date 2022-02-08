@@ -50,7 +50,7 @@ class Builder extends Query
     {
         foreach ($this->includes as $include) {
             $relation = explode('.', $include)[0];
-
+            
             // Load relation only if the models has no such relation
             if(!$models->columnExists($relation)) {
                 if (!method_exists($this->model, $relation)) {
