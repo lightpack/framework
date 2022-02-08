@@ -463,6 +463,6 @@ class Model implements JsonSerializable
     public function load(string ...$relations)
     {
         $items = new Collection($this);
-        self::query()->with(...$relations)->eagerLoadRelations($items);
+        $items->load(...$relations);
     }
 }

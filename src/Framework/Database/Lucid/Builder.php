@@ -49,6 +49,7 @@ class Builder extends Query
     public function eagerLoadRelations(Collection $models)
     {
         foreach ($this->includes as $include) {
+
             $relation = explode('.', $include)[0];
             
             // Load relation only if the models has no such relation
@@ -58,16 +59,18 @@ class Builder extends Query
                 }
     
                 $query = $this->model->{$relation}();
-    
+
                 $query->resetWhere();
                 $query->resetBindings();
     
+                $pivotKeyName = null;
+
                 if ($this->model->getRelationType() === 'hasOne') {
                     $ids = $models->getKeys();
                 } elseif ($this->model->getRelationType() === 'pivot') {
                     $ids = $models->getKeys();
-                    $keyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
-                } else {
+                    $pivotKeyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
+                } else { // hasMany and belongsTo
                     $ids = $models->getByColumn($this->model->getRelatingForeignKey());
                     $ids = array_unique($ids);
                 }
@@ -76,7 +79,7 @@ class Builder extends Query
                     continue;
                 }
 
-                $children = $query->whereIn($keyName ?? $this->model->getRelatingKey(), $ids)->all();
+                $children = $query->whereIn($pivotKeyName ?? $this->model->getRelatingKey(), $ids)->all();
 
                 foreach ($models as $model) {
                     if($model->hasAttribute($relation)) {
@@ -102,7 +105,7 @@ class Builder extends Query
 
             // load nested relations for the models
             $relations = substr($include, strlen($relation) + 1);
-
+            
             if ($relations) {
                 $items = $models->getByColumn($relation);
 
