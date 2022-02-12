@@ -232,6 +232,23 @@ class Model implements JsonSerializable
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
     }
 
+    public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
+    {
+        $this->relationType = __FUNCTION__;
+        $this->relatingForeignKey = $through . '.' . $throughKey;
+        $this->relatingModel = $model;
+        $model = $this->getConnection()->model($model);
+        $throughModel = $this->getConnection()->model($through);
+        $this->relatingKey = $throughKey;
+        $throughModelPrimaryKey = $throughModel->getPrimaryKey();
+
+        return $model
+            ->query()
+            ->select("$model->table.*", "$throughModel->table.$throughKey")
+            ->join($throughModel->table, "$model->table.{$foreignKey}", "$throughModel->table.$throughModelPrimaryKey")
+            ->where("$through.$throughKey", '=', $this->{$this->primaryKey});
+    }
+
     /**
      * Find a record by its primary key.
      *

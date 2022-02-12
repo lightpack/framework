@@ -62,7 +62,6 @@ class Builder extends Query
 
                 $query->resetWhere();
                 $query->resetBindings();
-    
                 $pivotKeyName = null;
 
                 if ($this->model->getRelationType() === 'hasOne') {
@@ -70,6 +69,9 @@ class Builder extends Query
                 } elseif ($this->model->getRelationType() === 'pivot') {
                     $ids = $models->getKeys();
                     $pivotKeyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
+                } elseif($this->model->getRelationType() === 'hasManyThrough') {
+                    $ids = $models->getKeys();
+                    $pivotKeyName = $this->model->getRelatingKey();
                 } else { // hasMany and belongsTo
                     $ids = $models->getByColumn($this->model->getRelatingForeignKey());
                     $ids = array_unique($ids);
@@ -92,6 +94,10 @@ class Builder extends Query
                         $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
                         continue;
                     } elseif($this->model->getRelationType() === 'hasMany') {
+                        $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
+                            return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
+                        }));
+                    } elseif($this->model->getRelationType() === 'hasManyThrough') {
                         $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
                             return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
                         }));
