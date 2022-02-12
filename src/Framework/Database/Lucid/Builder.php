@@ -188,7 +188,7 @@ class Builder extends Query
 
                 foreach ($models as $model) {
                     foreach ($counts as $count) {
-                        if ($count->{$this->model->getRelatingKey()} === $model->id) {
+                        if ($count->{$this->model->getRelatingKey()} === $model->{$model->getPrimaryKey()}) {
                             $model->{$include . '_count'} = $count->num;
                         }
                     }
@@ -225,9 +225,14 @@ class Builder extends Query
     {
         $this->model->setAttributes($attributes);
 
+        $collection = new Collection($this->model);
+
         if ($this->includes) {
-            $collection = new Collection($this->model);
-            $collection->load(...$this->includes);
+            $this->eagerLoadRelations($collection);
+        }
+
+        if ($this->countIncludes) {
+            $collection->loadCount(...$this->countIncludes);
         }
 
         return $this->model;
