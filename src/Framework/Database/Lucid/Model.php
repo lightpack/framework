@@ -2,12 +2,14 @@
 
 namespace Lightpack\Database\Lucid;
 
+use Closure;
 use Exception;
+use JsonSerializable;
 use Lightpack\Database\Pdo;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
 
-class Model
+class Model implements JsonSerializable
 {
     /** 
      * @var string Database table name 
@@ -27,7 +29,7 @@ class Model
     /** 
      * @var \Lightpack\Database\Pdo
      */
-    protected $connection;
+    protected static $connection;
 
     /**
      * @var bool Timestamps
@@ -39,10 +41,25 @@ class Model
      */
     protected $relationType;
 
+     /**
+     * @var string Model associated with the relation.
+     */
+    protected $relatingModel;
+
     /**
      * @var string The key used to resolve the relation while eager loading.
      */
     protected $relatingKey;
+
+    /**
+     * @var string The foreign key used to resolve the relation while eager loading.
+     */
+    protected $relatingForeignKey;
+
+    /**
+     * @var string Pivot table when resolving many-to-many relationship.
+     */
+    protected $pivotTable;
 
     /**
      * @var array Cached models that have already been loaded.
@@ -50,15 +67,24 @@ class Model
     protected $cachedModels = [];
 
     /**
+     * @var \Lightpack\Database\Lucid\Builder
+     */
+    protected $builder;
+
+    /**
+     * @var array Attributes to be hidden for serialization or array conversion.
+     */
+    protected $hidden = [];
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
      * @param Pdo $connection
      */
-    public function __construct($id = null, Pdo $connection = null)
+    public function __construct($id = null)
     {
         $this->data = new \stdClass();
-        $this->connection = $connection ?? app('db');
 
         if ($id) {
             $this->find($id);
@@ -87,6 +113,10 @@ class Model
      */
     public function __get(string $key)
     {
+        if (property_exists($this->data, $key)) {
+            return $this->data->$key;
+        }
+
         if (!method_exists($this, $key)) {
             return $this->data->$key ?? null;
         }
@@ -97,7 +127,7 @@ class Model
 
         $query = $this->{$key}();
 
-        if ($this->relationType === 'hasMany') {
+        if ($this->relationType === 'hasMany' || $this->relationType === 'pivot') {
             return $this->cachedModels[$key] = $query->all();
         }
 
@@ -113,7 +143,18 @@ class Model
      */
     public function setConnection(Pdo $connection): void
     {
-        $this->connection = $connection;
+        self::$connection = $connection;
+    }
+
+    /**
+     * Sets the database connection to be used for querying
+     * the tables.
+     *
+     * @return Pdo $connection
+     */
+    public function getConnection(): Pdo
+    {
+        return self::$connection ?? app('db');
     }
 
     /**
@@ -127,8 +168,11 @@ class Model
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
-        $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
+        $this->relatingForeignKey = $foreignKey;
+        // $this->relatingForeignKey = $this->primaryKey;
+        $this->relatingModel = $model;
+        $model = $this->getConnection()->model($model);
+        return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
     /**
@@ -142,8 +186,9 @@ class Model
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
-        $model = $this->connection->model($model);
-        return $model->query()->where($foreignKey, '=', $this->{$this->primaryKey});
+        $this->relatingForeignKey = $this->primaryKey;
+        $this->relatingModel = $model;
+        return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
     /**
@@ -155,10 +200,12 @@ class Model
      */
     public function belongsTo(string $model, string $foreignKey): Query
     {
-        $model = $this->connection->model($model);
+        $model = $this->getConnection()->model($model);
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $model->getPrimaryKey();
-        return $model->query()->where($this->primaryKey, '=', $this->{$foreignKey});
+        $this->relatingForeignKey = $foreignKey;
+        $this->relatingModel = $model;
+        return $model::query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
 
     /**
@@ -172,12 +219,34 @@ class Model
      */
     public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Query
     {
-        $model = $this->connection->model($model);
+        $this->relationType = __FUNCTION__;
+        $this->relatingKey = $foreignKey;
+        $this->relatingForeignKey = $foreignKey;
+        $this->relatingModel = $model;
+        $this->pivotTable = $pivotTable;
+        $model = $this->getConnection()->model($model);
         return $model
             ->query()
-            ->select("$model->table.*")
+            ->select("$model->table.*", "$pivotTable.$foreignKey")
             ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey")
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
+    }
+
+    public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
+    {
+        $this->relationType = __FUNCTION__;
+        $this->relatingForeignKey = $through . '.' . $throughKey;
+        $this->relatingModel = $model;
+        $model = $this->getConnection()->model($model);
+        $throughModel = $this->getConnection()->model($through);
+        $this->relatingKey = $throughKey;
+        $throughModelPrimaryKey = $throughModel->getPrimaryKey();
+
+        return $model
+            ->query()
+            ->select("$model->table.*", "$throughModel->table.$throughKey")
+            ->join($throughModel->table, "$model->table.{$foreignKey}", "$throughModel->table.$throughModelPrimaryKey")
+            ->where("$through.$throughKey", '=', $this->{$this->primaryKey});
     }
 
     /**
@@ -189,7 +258,9 @@ class Model
      */
     public function find($id, bool $fail = true): self
     {
-        $this->data = $this->connection->table($this->table)->where($this->primaryKey, '=', $id)->fetchOne();
+        $query = new Query($this->table, $this->getConnection());
+
+        $this->data = $query->where($this->primaryKey, '=', $id)->fetchOne();
 
         if (!$this->data && $fail) {
             throw new RecordNotFoundException(
@@ -222,15 +293,19 @@ class Model
     /**
      * Deletes a model.
      */
-    public function delete()
+    public function delete($id = null)
     {
+        if ($id) {
+            $this->find($id);
+        }
+
         if (!isset($this->data->{$this->primaryKey})) {
             return;
         }
 
         $this->beforeDelete();
 
-        $this->connection->table($this->table)->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
+        $this->query()->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
 
         $this->afterDelete();
     }
@@ -242,7 +317,7 @@ class Model
      */
     public function lastInsertId()
     {
-        return $this->connection->lastInsertId();
+        return $this->getConnection()->lastInsertId();
     }
 
     /**
@@ -266,14 +341,9 @@ class Model
         return $this->primaryKey;
     }
 
-    /**
-     * Makes models capable of querying data. 
-     *
-     * @return Query
-     */
-    public function query(): Query
+    public static function query(): Builder
     {
-        return new Query($this->table, $this->connection);
+        return new Builder(new static, self::$connection);
     }
 
     /**
@@ -321,20 +391,20 @@ class Model
         // 
     }
 
-    private function insert()
+    protected function insert()
     {
         $data = \get_object_vars($this->data);
-        return $this->connection->table($this->table)->insert($data);
+        return $this->query()->insert($data);
     }
 
-    private function update()
+    protected function update()
     {
         $data = \get_object_vars($this->data);
         unset($data[$this->primaryKey]);
-        return $this->connection->table($this->table)->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
+        return $this->query()->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
     }
 
-    private function setTimestamps()
+    protected function setTimestamps()
     {
         if (false === $this->timestamps) {
             return;
@@ -348,76 +418,68 @@ class Model
         }
     }
 
-    /**
-     * Set eager loading relationships.
-     *
-     * @param string Any number of relations to eager load.
-     * @return object \Lightpack\Database\Lucid\Model
-     */
-    public function with(string ...$includes): self
+    public function jsonSerialize()
     {
-        $this->includes = $includes;
+        array_map(function ($key) {
+            unset($this->data->{$key});
+        }, $this->hidden);
 
-        return $this;
+        return $this->data;
     }
 
-    /**
-     * Eager load all relations.
-     * 
-     * To defer eager loading all relations, pass it an array of pre-fetched parent 
-     * records.
-     *
-     * @param array|null $parents
-     * @return array
-     * 
-     */
-    public function eagerLoad(array &$parents = null): array
+    public function getRelationType()
     {
-        // First get the parent rows.
-        $parents = $parents ?? $this->query()->all();
-        $ids = array_column($parents, $this->primaryKey);
+        return $this->relationType;
+    }
 
-        // Eager load included relations.
-        foreach ($this->includes as $include) {
-            if (!method_exists($this, $include)) {
-                throw new Exception("Trying to eager load `{$include}` but no relationship has been defined.");
-            }
+    public function getRelatingKey()
+    {
+        return $this->relatingKey;
+    }
 
-            // Get query instance on the relationship being resolved
-            $query = $this->{$include}();
+    public function getRelatingForeignKey()
+    {
+        return $this->relatingForeignKey;
+    }
 
-            // We need to reset the where clause for current query instance.
-            $query->resetWhere();
-            $query->resetBindings();
+    public function getRelatingModel()
+    {
+        return $this->relatingModel;
+    }
 
-            // Fetch all related rows
-            $children = $query->whereIn($this->relatingKey, $ids)->all();
+    public function getPivotTable()
+    {
+        return $this->pivotTable;
+    }
 
-            foreach ($parents as $parent) {
-                // If the relation hasOne or belongsTo
-                if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
-                    $parent->{$include} = null;
-                }
+    public function getAttributes()
+    {
+        return $this->data;
+    }
 
-                // If the relation is 1:N
-                if ($this->relationType === 'hasMany') {
-                    $parent->{$include} = [];
-                }
+    public function getAttribute($key, $default = null)
+    {
+        return $this->data->{$key} ?? $default;
+    }
 
-                foreach ($children as $child) {
-                    if ($child->{$this->relatingKey} === $parent->{$this->primaryKey}) {
-                        if ($this->relationType === 'hasOne' || $this->relationType === 'belongsTo') {
-                            $parent->{$include} = $child;
-                        }
+    public function setAttributes(array $data)
+    {
+        $this->data = (object) $data;
+    }
 
-                        if ($this->relationType === 'hasMany') {
-                            $parent->{$include}[] = $child;
-                        }
-                    }
-                }
-            }
-        }
+    public function hasAttribute(string $key)
+    {
+        return property_exists($this->data, $key);
+    }
 
-        return $parents;
+    public function setAttribute($key, $value)
+    {
+        $this->data->{$key} = $value;
+    }
+
+    public function load(string ...$relations)
+    {
+        $items = new Collection($this);
+        $items->load(...$relations);
     }
 }

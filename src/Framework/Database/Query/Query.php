@@ -2,11 +2,15 @@
 
 namespace Lightpack\Database\Query;
 
+use Closure;
+use Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\Pagination;
 use Lightpack\Database\Pdo;
 
 class Query
 {
     private $table;
+    private $model;
     private $bindings = [];
     private $components = [
         'alias' => null,
@@ -20,10 +24,21 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct(string $table, Pdo $connection = null)
+    public function __construct($subject, Pdo $connection = null)
     {
-        $this->table = $table;
+        if($subject instanceOf Model) {
+            $this->model = $subject;
+            $this->table = $subject->getTableName();
+        } else {
+            $this->table = $subject;
+        }
+
         $this->connection = $connection ?? app('db');
+    }
+
+    public function setModel(Model $model)
+    {
+        $this->model = $model;
     }
 
     public function insert(array $data)
@@ -73,7 +88,7 @@ class Query
         return $this;
     }
 
-    public function where(string $column, string $operator, string $value = null, string $joiner = null): self
+    public function where(string $column, string $operator, string $value = null, string $joiner = 'AND'): self
     {
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
@@ -119,7 +134,7 @@ class Query
         return $this;
     }
 
-    public function whereIn(string $column, array $values, string $joiner = null): self
+    public function whereIn(string $column, array $values, string $joiner = 'AND'): self
     {
         $operator = 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
@@ -139,7 +154,7 @@ class Query
         return $this;
     }
 
-    public function whereNotIn(string $column, array $values, string $joiner = null): self
+    public function whereNotIn(string $column, array $values, string $joiner = 'AND'): self
     {
         $operator = 'NOT IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
@@ -242,26 +257,51 @@ class Query
         return $this;
     }
 
-    public function paginate(int $limit = 10, int $page = null)
+    public function paginate(int $limit = null, int $page = null)
     {
+        $columns = $this->columns;
+        $total = $this->count();
+        $this->columns = $columns;
         $page = $page ?? app('request')->get('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
 
+        $limit = $limit ?: app('request')->get('limit', 10);
+
         $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);
 
-        return $this;
+        $items = $this->fetchAll();
+
+        return new Pagination($total, $limit, $page, $items);
+        // return $items;
     }
 
     public function count()
     {
         $this->columns = ['count(*) AS num'];
+
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
-        $this->resetQuery();
+
+        $this->columns = []; // so that pagination query can be reused
 
         return $result->num;
+    }
+
+    public function groupCount(string $column, ?Closure $callback = null)
+    {
+        if($callback) {
+            $callback($this);
+        }
+
+        $this->columns = [$column, 'count(*) AS num'];
+        $this->groupBy($column);
+
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
+
+        return $result;
     }
 
     public function __get(string $key)
@@ -282,6 +322,12 @@ class Query
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
+        
+        if($this->model) {
+            // $result = $this->model->hydrate($result ?? []);
+            return static::hydrate($result);
+        }
+
         return $result;
     }
 
@@ -296,6 +342,12 @@ class Query
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
+
+        if($result && $this->model) {
+            $result = (array) $result;
+            $result = static::hydrateItem($result);
+        }
+
         return $result;
     }
 

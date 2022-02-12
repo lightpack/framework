@@ -4,20 +4,21 @@ namespace Lightpack\Pagination;
 
 class Pagination
 {
-    private $total;
-    private $perPage;
-    private $currentPage;
-    private $lastPage;
-    private $path;
-    private $allowedParams = [];
+    protected $total;
+    protected $perPage;
+    protected $currentPage;
+    protected $lastPage;
+    protected $path;
+    protected $allowedParams = [];
     
-    public function __construct($total, $perPage = 10, $currentPage = null)
+    public function __construct($total, $perPage = 10, $currentPage = null, $items = [])
     {
         $this->total = $total;
         $this->perPage = $perPage;
         $this->lastPage = ceil($this->total / $this->perPage);
         $this->path = app('request')->fullpath();
         $this->setCurrentPage($currentPage);
+        $this->items = $items;
     }
 
     public function links()
@@ -33,7 +34,7 @@ class Pagination
         return $template;
     }
 
-    public function withPath($path) {
+    public function withPath($path) {   
         $this->path = url($path);
         return $this;
     }
@@ -53,7 +54,7 @@ class Pagination
         return ($this->currentPage - 1) * $this->perPage;
     }
 
-    public function count()
+    public function lastPage()
     {
         return $this->lastPage;
     }
@@ -78,6 +79,26 @@ class Pagination
         }
     }
 
+    public function nextPageUrl()
+    {
+        $next = $this->currentPage < $this->lastPage ? $this->currentPage + 1 : null;
+
+        if($next) {
+            $query = $this->getQuery($next);
+            return $this->path . '?' . $query;
+        }
+    }
+
+    public function prevPageUrl()
+    {
+        $prev = $this->currentPage > 1 ? $this->currentPage - 1 : null;
+        
+        if($prev) {
+            $query = $this->getQuery($prev);
+            return $this->path . '?' . $query;
+        }
+    }
+
     public function only(array $params = [])
     {
         $this->allowedParams = $params;
@@ -85,7 +106,12 @@ class Pagination
         return $this;
     }
 
-    private function getQuery(int $page): string
+    public function items()
+    {
+        return $this->items;
+    }
+
+    protected function getQuery(int $page): string
     {
         $params = $_GET; 
         $allowedParams = $this->allowedParams;
@@ -101,7 +127,7 @@ class Pagination
         return http_build_query($params);
     }
 
-    private function setCurrentPage($currentPage = null)
+    protected function setCurrentPage($currentPage = null)
     {
         $this->currentPage = $currentPage ?? app('request')->get('page', 1);
         $this->currentPage = (int) $this->currentPage;

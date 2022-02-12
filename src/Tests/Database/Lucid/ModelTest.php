@@ -95,8 +95,8 @@ final class ModelTest extends TestCase
         }
 
         $this->product->find($product->id);
-        $productOwner = $this->product->owner; 
-        $this->assertTrue(isset($productOwner->id));
+        $productOwner = $this->product->owner;
+        $this->assertNotNull($productOwner->id);
     }
 
     public function testModelHasManyRelation()
@@ -126,7 +126,7 @@ final class ModelTest extends TestCase
         $ownerModel->find($owner->id);
         $ownerProduct = $ownerModel->product;
 
-        $this->assertTrue(isset($ownerProduct->id));
+        $this->assertNotNull($ownerProduct->id);
     }
 }
 
