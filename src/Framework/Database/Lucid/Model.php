@@ -29,7 +29,7 @@ class Model implements JsonSerializable
     /** 
      * @var \Lightpack\Database\Pdo
      */
-    protected $connection;
+    protected static $connection;
 
     /**
      * @var bool Timestamps
@@ -143,7 +143,7 @@ class Model implements JsonSerializable
      */
     public function setConnection(Pdo $connection): void
     {
-        $this->connection = $connection;
+        self::$connection = $connection;
     }
 
     /**
@@ -154,7 +154,7 @@ class Model implements JsonSerializable
      */
     public function getConnection(): Pdo
     {
-        return $this->connection ?? app('db');
+        return self::$connection ?? app('db');
     }
 
     /**
@@ -343,7 +343,7 @@ class Model implements JsonSerializable
 
     public static function query(): Builder
     {
-        return new Builder(new static);
+        return new Builder(new static, self::$connection);
     }
 
     /**
