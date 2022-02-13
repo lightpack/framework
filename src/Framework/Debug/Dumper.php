@@ -20,6 +20,21 @@ class Dumper
             return;
         }
 
+        if('cli' === PHP_SAPI) {
+            $this->dumpCli($dumpFunction, $args);
+        } else {
+            $this->dumpHtml($dumpFunction, $args);
+        }
+    }
+
+    private function dumpCli($dumpFunction, $args)
+    {
+        fwrite(STDERR, "\033[31m");
+        $dumpFunction($args[0]);
+    }
+
+    private function dumpHtml($dumpFunction, $args)
+    {
         $template = __DIR__ . '/templates/http/dumper.php';
 
         $this->render($template, [

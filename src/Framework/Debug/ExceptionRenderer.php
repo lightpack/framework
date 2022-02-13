@@ -41,7 +41,9 @@ class ExceptionRenderer
             \ob_end_clean();
         }
 
-        if($this->environment !== 'development') {
+        if(PHP_SAPI === 'cli') {
+            $this->renderCli($exc, $errorType);
+        }elseif($this->environment !== 'development') {
             $this->renderProductionTemplate($exc);
         } else {
             $this->renderDevelopmentTemplate($exc, $errorType);
@@ -131,6 +133,20 @@ class ExceptionRenderer
                 header('Content-Type:text/html');
             }
         }
+    }
+
+    private function renderCli(Throwable $exc, string $errorType): void
+    {
+        // print in red color in STDERR
+        fwrite(STDERR, "\033[31m");
+        fputs(STDERR, 'Error: ' . $exc->getMessage() . PHP_EOL);
+        fputs(STDERR, 'Line: ' . $exc->getLine() . PHP_EOL);
+        fputs(STDERR, 'Code: ' . $exc->getCode() . PHP_EOL);
+        fputs(STDERR, 'Type: ' . $errorType . PHP_EOL);
+        fputs(STDERR, 'File: ' . $exc->getFile() . PHP_EOL);
+        fwrite(STDERR, PHP_EOL);
+        fputs(STDERR, 'Trace: ' . PHP_EOL);
+        fputs(STDERR, $exc->getTraceAsString() . PHP_EOL);
     }
 
     private function renderTemplate(string $errorTemplate, array $data = [])
