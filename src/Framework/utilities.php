@@ -198,18 +198,6 @@ if (!function_exists('set_env')) {
     }
 }
 
-if (!function_exists('config')) {
-    /**
-     * ------------------------------------------------------------
-     * Gets config data.
-     * ------------------------------------------------------------
-     */
-    function config($key, $default = null)
-    {
-        return app('config')->get($key, $default);
-    }
-}
-
 if (!function_exists('underscore')) {
     /**
      * ------------------------------------------------------------     
@@ -291,5 +279,115 @@ if (!function_exists('pp')) {
         $renderer->printDump($args);
 
         die;
+    }
+}
+
+if (!function_exists('request')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns the current request object.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Http\Request
+     */
+    function request()
+    {
+        return app('request');
+    }
+}
+
+if (!function_exists('response')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns a new instance of response.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Http\Response
+     */
+    function response()
+    {
+        return app('response');
+    }
+}
+
+if (!function_exists('session')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns the session object.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Http\Session
+     */
+    function session()
+    {
+        return app('session');
+    }
+}
+
+if (!function_exists('cookie')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns a new instance of cookie.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Http\Cookie
+     */
+    function cookie()
+    {
+        return app('cookie');
+    }
+}
+
+if (!function_exists('event')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns the event object.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Event\Event
+     */
+    function event()
+    {
+        return app('event');
+    }
+}
+
+if (!function_exists('cache')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns the cache object.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Cache\Cache
+     */
+    function cache()
+    {
+        return app('cache');
+    }
+}
+
+if (!function_exists('logger')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns the logger object.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Logger\Logger
+     */
+    function logger()
+    {
+        return app('logger');
+    }
+}
+
+if (!function_exists('config')) {
+    /**
+     * ------------------------------------------------------------
+     * Gets config data.
+     * ------------------------------------------------------------
+     */
+    function config($key, $default = null)
+    {
+        return app('config')->get($key, $default);
     }
 }
