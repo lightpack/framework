@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'host' => 'localhost',
-    'port' => 3306,
-    'username' => 'root',
-    'password' => '',
-    'database' => 'test_lightpack',
+    'host' => $_ENV['PGSQL_HOST'],
+    'port' => $_ENV['PGSQL_PORT'],
+    'username' => $_ENV['PGSQL_USER'],
+    'password' => $_ENV['PGSQL_PASSWORD'],
+    'database' => $_ENV['PGSQL_DB'],
     'options' => null,
 ];
