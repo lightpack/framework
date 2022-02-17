@@ -7,6 +7,7 @@ namespace Lightpack\Http;
 class Request
 {
     private $files;
+    private $headers;
     private $basepath;
     private static $verbs = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
@@ -14,6 +15,7 @@ class Request
     {
         $this->basepath = $basepath ?? dirname($_SERVER['SCRIPT_NAME']);
         $this->files = new Files($_FILES ?? []);
+        $this->headers = new Header;
     }
 
     public function uri(): string
@@ -189,4 +191,37 @@ class Request
     {
         return self::$verbs;
     }
+
+    public function header(string $key, string $default = null): ?string
+    {
+        return $this->headers->get($key, $default);
+    }
+
+    public function headers(): array
+    {
+        return $this->headers->all();
+    }
+
+    public function hasHeader(string $key): bool
+    {
+        return $this->headers->has($key);
+    }
+
+    /**
+     * Get bearer token from Authorization header.
+     */
+    public function bearerToken(): ?string
+    {
+        $header = $this->header('Authorization');
+
+        if (null === $header) {
+            return null;
+        }
+
+        if (false === strpos($header, 'Bearer ')) {
+            return null;
+        }
+
+        return substr($header, 7);
+    }   
 }
