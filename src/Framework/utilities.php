@@ -380,6 +380,24 @@ if (!function_exists('logger')) {
     }
 }
 
+if (!function_exists('auth')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns the auth object.
+     * ------------------------------------------------------------
+     * 
+     * @return \Lightpack\Auth\Auth
+     */
+    function auth(string $driver = null)
+    {
+        if(!$driver) {
+            return app('auth');
+        }
+
+        return app('auth')->setDriver($driver);
+    }
+}
+
 if (!function_exists('config')) {
     /**
      * ------------------------------------------------------------
