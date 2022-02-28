@@ -3,12 +3,13 @@
 namespace Lightpack\Auth\Identifiers;
 
 use Lightpack\Auth\Identifier;
+use Lightpack\Auth\Identity;
 use Lightpack\Auth\Models\User;
 use Lightpack\Crypto\Password;
 
 class DefaultIdentifier implements Identifier
 {
-    public function findByAuthToken(string $token)
+    public function findByAuthToken(string $token): ?Identity
     {
         $user = User::query()->where('api_token', '=', $token)->one();
 
@@ -16,10 +17,10 @@ class DefaultIdentifier implements Identifier
             return null;
         }
 
-        return $user;
+        return new Identity($user->toArray());
     }
 
-    public function findByRememberToken($id, string $token)
+    public function findByRememberToken($id, string $token): ?Identity
     {
         $user = User::query()->where('id', '=', $id)->one();
 
@@ -31,10 +32,10 @@ class DefaultIdentifier implements Identifier
             return null;
         }
 
-        return $user;
+        return new Identity($user->toArray());
     }
 
-    public function findByCredentials(array $credentials)
+    public function findByCredentials(array $credentials): ?Identity
     {
         $user = User::query()->where('email', '=', $credentials['email'])->one();
 
@@ -46,7 +47,7 @@ class DefaultIdentifier implements Identifier
             return null;
         }
 
-        return $user;
+        return new Identity($user->toArray());
     }
 
     public function updateLogin($id, array $fields)
@@ -58,5 +59,10 @@ class DefaultIdentifier implements Identifier
         }
 
         $user->save();
+    }
+
+    protected function getIdentity(User $user)
+    {
+        return new Identity($user->toArray());
     }
 }

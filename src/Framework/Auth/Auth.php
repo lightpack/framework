@@ -11,7 +11,10 @@ class Auth
     protected $config = [];
     protected $normalizedConfig = [];
     protected $driver;
-    protected static $user;
+
+    /** @var Identity */
+    protected static $identity;
+
     protected static $token;
     protected static $cookie;
     protected static $rememberToken;
@@ -31,6 +34,19 @@ class Auth
     public function token()
     {
         return self::$token;
+    }
+
+    public function viaToken()
+    {
+        $identity = $this->verify('bearer');
+        $success = (bool) $identity;
+
+        if ($identity) {
+            self::$identity = $identity;
+            $this->updateLastLogin();
+        }
+
+        return $success;
     }
 
     public function login()
@@ -63,14 +79,14 @@ class Auth
         }
     }
 
-    public function id()
+    public function id(string $identifierKey = 'id')
     {
-        return session()->get('user_id');
+        return self::$identity->get($identifierKey);
     }
 
     public function user()
     {
-        return self::$user;
+        return self::$identity;
     }
 
     public function redirectLogin()
@@ -98,7 +114,7 @@ class Auth
         $success = (bool) $identity;
 
         if ($identity) {
-            self::$user = $identity;
+            self::$identity = $identity;
             $this->updateLogin();
         }
 
@@ -140,7 +156,7 @@ class Auth
 
     protected function persist()
     {
-        if (!self::$user) {
+        if (!self::$identity) {
             return;
         }
 
@@ -163,7 +179,7 @@ class Auth
         $success = $this->verify('cookie');
 
         if ($success) {
-            self::$user = $success;
+            self::$identity = $success;
 
             $this->persist();
             $this->updateLogin();
@@ -182,12 +198,20 @@ class Auth
         }
 
         $identifier = new $this->normalizedConfig['identifier'];
-        $identifier->updateLogin(self::$user->id, $fields);
+        $identifier->updateLogin(self::$identity->get('id'), $fields);
+    }
+
+    public function updateLastLogin()
+    {
+        $fields['last_login_at'] = date('Y-m-d H:i:s');
+
+        $identifier = new $this->normalizedConfig['identifier'];
+        $identifier->updateLogin(self::$identity->get('id'), $fields);
     }
 
     protected function generateApiToken()
     {
-        $token = self::$user->id. '|' . bin2hex(random_bytes(16));
+        $token = self::$identity->get('id') . '|' . bin2hex(random_bytes(16));
         self::$token = $token;
 
         return $this->token();
@@ -196,7 +220,7 @@ class Auth
     protected function generateRememberToken()
     {
         $rememberToken = bin2hex(random_bytes(16));
-        $cookie = self::$user->id. '|' . $rememberToken;
+        $cookie = self::$identity->get('id'). '|' . $rememberToken;
 
         self::$cookie = $cookie;
         return $rememberToken;
@@ -230,6 +254,6 @@ class Auth
     {
         session()->regenerate();
         session()->set('authenticated', true);
-        session()->set('user', self::$user);
+        session()->set('user', self::$identity);
     }
 }

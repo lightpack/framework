@@ -4,10 +4,11 @@ namespace Lightpack\Auth\Authenticators;
 
 use Lightpack\Auth\Authenticator;
 use Lightpack\Auth\Identifier;
+use Lightpack\Auth\Identity;
 
 class FormAuthenticator implements Authenticator
 {
-    public function verify(Identifier $identifier, array $config)
+    public function verify(Identifier $identifier, array $config): ?Identity
     {
         $credentials = request()->isJson() ? request()->json() : request()->post();
 
@@ -18,14 +19,12 @@ class FormAuthenticator implements Authenticator
         $password = $credentials[$passwordField] ?? null;
 
         if(!$username || !$password) {
-            return false;
+            return null;
         }
 
-        $user = $identifier->findByCredentials([
+        return $identifier->findByCredentials([
             $usernameField => $username,
             $passwordField => $password
         ]);
-
-        return $user ?? false;
     }
 }
