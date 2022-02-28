@@ -60,9 +60,4 @@ class DefaultIdentifier implements Identifier
 
         $user->save();
     }
-
-    protected function getIdentity(User $user)
-    {
-        return new Identity($user->toArray());
-    }
 }

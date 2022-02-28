@@ -36,13 +36,11 @@ class Auth
         return self::$token;
     }
 
-    public function viaToken()
+    public function viaToken(): bool
     {
-        $identity = $this->verify('bearer');
-        $success = (bool) $identity;
+        $success = $this->verify('bearer');
 
-        if ($identity) {
-            self::$identity = $identity;
+        if ($success) {
             $this->updateLastLogin();
         }
 
@@ -84,7 +82,7 @@ class Auth
         return self::$identity->get($identifierKey);
     }
 
-    public function user()
+    public function user(): Identity
     {
         return self::$identity;
     }
@@ -108,13 +106,11 @@ class Auth
         redirect($url);
     }
 
-    public function attempt()
+    public function attempt(): bool
     {
-        $identity = $this->verify('form');
-        $success = (bool) $identity;
+        $success = $this->verify('form');
 
-        if ($identity) {
-            self::$identity = $identity;
+        if ($success) {
             $this->updateLogin();
         }
 
@@ -179,8 +175,6 @@ class Auth
         $success = $this->verify('cookie');
 
         if ($success) {
-            self::$identity = $success;
-
             $this->persist();
             $this->updateLogin();
             $this->redirectLogin();
@@ -238,13 +232,19 @@ class Auth
         return $this;
     }
 
-    public function verify(string $authenticatorType)
+    public function verify(string $authenticatorType): bool
     {
         $authenticator = new self::$authenticators[$authenticatorType];
         $config = $this->getNormalizedConfig();
         $identifier = new $config['identifier'];
         
-        return $authenticator->verify($identifier, $config);
+        $success = $authenticator->verify($identifier, $config);
+
+        if($success) {
+            self::$identity = $authenticator->getIdentity();
+        }
+
+        return $success;
     }
 
     /**

@@ -2,26 +2,27 @@
 
 namespace Lightpack\Auth\Authenticators;
 
-use Lightpack\Auth\Authenticator;
+use Lightpack\Auth\AbstractAuthenticator;
 use Lightpack\Auth\Identifier;
-use Lightpack\Auth\Identity;
 
-class CookieAuthenticator implements Authenticator
+class CookieAuthenticator extends AbstractAuthenticator
 {
-    public function verify(Identifier $identifier, array $config): ?Identity
+    public function verify(Identifier $identifier, array $config): bool
     {
         if (!cookie()->has('remember_me')) {
-            return null;
+            return false;
         }
 
         $cookieFragments =  explode('|', cookie()->get('remember_me'));
 
         if(count($cookieFragments) !== 2) {
-            return null;
+            return false;
         }
 
         list($userId, $cookie) = $cookieFragments;
 
-        return $identifier->findByRememberToken($userId, $cookie);
+        $this->identity = $identifier->findByRememberToken($userId, $cookie);
+
+        return null !== $this->identity;
     }
 }
