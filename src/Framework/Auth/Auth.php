@@ -73,11 +73,6 @@ class Auth
         return $this->manager->getAuthUser();
     }
 
-    public function isGuest(): bool
-    {
-        return !session()->has('authenticated');
-    }
-
     public function isLoggedIn(): bool
     {
         return session()->has('authenticated');
