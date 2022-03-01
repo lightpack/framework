@@ -2,258 +2,118 @@
 
 namespace Lightpack\Auth;
 
-use Lightpack\Auth\Authenticators\BearerAuthenticator;
-use Lightpack\Auth\Authenticators\CookieAuthenticator;
-use Lightpack\Auth\Authenticators\FormAuthenticator;
-
 class Auth
 {
-    protected $config = [];
-    protected $normalizedConfig = [];
-    protected $driver;
-
-    /** @var Identity */
-    protected static $identity;
-
-    protected static $token;
-    protected static $cookie;
-    protected static $rememberToken;
-    protected static $authenticators = [
-        'bearer' => BearerAuthenticator::class,
-        'cookie' => CookieAuthenticator::class,
-        'form' => FormAuthenticator::class,
-    ];
+    /**
+     * @var \Lightpack\Auth\AuthManager
+     */
+    protected $manager;
 
     public function __construct(string $driver, array $config)
     {
-        $this->driver = $driver;
-        $this->config = $config;
-        $this->normalizedConfig = $this->getNormalizedConfig($config);
+        $this->manager = new AuthManager($driver, $config);
     }
 
     public function token()
     {
-        return self::$token;
+        return $this->manager->getAuthToken();
     }
 
-    public function viaToken(): bool
+    public function viaToken(): Result
     {
-        $success = $this->verify('bearer');
+        $result = $this->manager->verify('bearer');
 
-        if ($success) {
-            $this->updateLastLogin();
+        if ($result->isSuccess()) {
+            $this->manager->updateLastLogin();
         }
 
-        return $success;
+        return $result;
     }
 
     public function login()
     {
-        $success = $this->attempt();
+        $result = $this->manager->verify('form');
 
-        if (!$success) {
-            $this->flashError();
-            $this->redirectLoginUrl();
+        if ($result->isSuccess()) {
+            $this->manager->updateLogin();
+        } else {
+            $this->manager->flashError();
+            $this->manager->redirectLoginUrl();
         }
 
-        $this->persist();
-        $this->redirectLogin();
+        $this->manager->persist();
+        $this->manager->redirectLogin();
     }
 
     public function logout()
     {
-        cookie()->delete('remember_me');
+        $this->manager->forgetRememberMeCookie();
+        
         session()->destroy();
 
-        $this->redirectLogout();
+        $this->manager->redirectLogout();
     }
 
     public function recall()
     {
         if (session()->get('authenticated')) {
-            $this->redirectLogin();
+            $this->manager->redirectLogin();
         } else {
-            $this->checkRememberMe();
+            $this->manager->checkRememberMe();
         }
     }
 
-    public function id(string $identifierKey = 'id')
+    public function id()
     {
-        return self::$identity->get($identifierKey);
+        return $this->manager->getAuthId();
     }
 
     public function user(): Identity
     {
-        return self::$identity;
+        return $this->manager->getAuthUser();
     }
 
-    public function redirectLogin()
+    public function isGuest(): bool
     {
-        $url = $this->normalizedConfig['login.redirect'];
-        redirect($url);
+        return !session()->has('authenticated');
     }
 
-    public function redirectLogout()
+    public function isLoggedIn(): bool
     {
-        $url = $this->normalizedConfig['logout.redirect'];
-
-        redirect($url);
+        return session()->has('authenticated');
     }
 
-    public function redirectLoginUrl()
+    public function attempt(): Result
     {
-        $url = $this->normalizedConfig['login.url'];
-        redirect($url);
-    }
-
-    public function attempt(): bool
-    {
-        $success = $this->verify('form');
-
-        if ($success) {
-            $this->updateLogin();
-        }
-
-        return $success;
+        return $this->manager->attempt();
     }
 
     public function setdriver(string $driver): self
     {
-        if($driver !== $this->driver) {
-            $this->normalizedConfig = $this->getNormalizedConfig();
-            $this->driver = $driver;
-        }
+        $this->manager->setdriver($driver);
 
         return $this;
     }
 
-    public function setConfig(array $config)
+    public function setConfig(array $config): self
     {
-        $this->config = $config;
-        $this->normalizedConfig = $this->getNormalizedConfig();
+        $this->manager->setConfig($config);
 
         return $this;
     }
 
-    public function getNormalizedConfig()
+    public function redirectLogin()
     {
-        if (!isset($this->normalizedConfig)) {
-            throw new \Exception("Configuration not found for auth driver: '{$this->driver}'");
-        }
-
-        if($this->driver == 'default') {
-            $config = $this->config['default'];
-        } else {
-            $config = array_merge($this->config['default'], $this->config[$this->driver]);
-        }
-
-        return $config;
+        $this->manager->redirectLogin();
     }
 
-    protected function persist()
+    public function redirectLogout()
     {
-        if (!self::$identity) {
-            return;
-        }
-
-        $this->populateSession();
-
-        if (request()->post('remember_me')) {
-            cookie()->forever('remember_me', self::$cookie);
-        }
+        $this->manager->redirectLogout();
     }
 
-    protected function flashError()
+    public function redirectLoginUrl()
     {
-        $message = $this->normalizedConfig['flash_error'];
-
-        session()->flash('flash_error', $message);
-    }
-
-    protected function checkRememberMe()
-    {
-        $success = $this->verify('cookie');
-
-        if ($success) {
-            $this->persist();
-            $this->updateLogin();
-            $this->redirectLogin();
-        }
-    }
-
-    protected function updateLogin()
-    {
-        $fields['last_login_at'] = date('Y-m-d H:i:s');
-
-        if (request()->post('remember_me')) {
-            $fields['remember_token'] = $this->generateRememberToken();
-        } else {
-            $fields['api_token'] = $this->hashToken($this->generateApiToken());
-        }
-
-        $identifier = new $this->normalizedConfig['identifier'];
-        $identifier->updateLogin(self::$identity->get('id'), $fields);
-    }
-
-    public function updateLastLogin()
-    {
-        $fields['last_login_at'] = date('Y-m-d H:i:s');
-
-        $identifier = new $this->normalizedConfig['identifier'];
-        $identifier->updateLogin(self::$identity->get('id'), $fields);
-    }
-
-    protected function generateApiToken()
-    {
-        $token = self::$identity->get('id') . '|' . bin2hex(random_bytes(16));
-        self::$token = $token;
-
-        return $this->token();
-    }
-
-    protected function generateRememberToken()
-    {
-        $rememberToken = bin2hex(random_bytes(16));
-        $cookie = self::$identity->get('id'). '|' . $rememberToken;
-
-        self::$cookie = $cookie;
-        return $rememberToken;
-    }
-
-    protected function hashToken(string $token): string
-    {
-        return hash_hmac('sha1', $token, '');
-    }
-
-    public function extend(string $type, string $authenticatorClass): self
-    {
-        self::$authenticators[$type] = $authenticatorClass;
-
-        return $this;
-    }
-
-    public function verify(string $authenticatorType): bool
-    {
-        $authenticator = new self::$authenticators[$authenticatorType];
-        $config = $this->getNormalizedConfig();
-        $identifier = new $config['identifier'];
-        
-        $success = $authenticator->verify($identifier, $config);
-
-        if($success) {
-            self::$identity = $authenticator->getIdentity();
-        }
-
-        return $success;
-    }
-
-    /**
-     * Populates new user session.
-     */
-    public function populateSession()
-    {
-        session()->regenerate();
-        session()->set('authenticated', true);
-        session()->set('user', self::$identity);
+        $this->manager->redirectLoginUrl();
     }
 }
