@@ -83,7 +83,7 @@ class Auth
         return $this->manager->attempt();
     }
 
-    public function setdriver(string $driver): self
+    public function setDriver(string $driver): self
     {
         $this->manager->setdriver($driver);
 
@@ -93,6 +93,13 @@ class Auth
     public function setConfig(array $config): self
     {
         $this->manager->setConfig($config);
+
+        return $this;
+    }
+
+    public function extend(string $type, string $authenticatorClass): self
+    {
+        $this->authManager->extend($type, $authenticatorClass);
 
         return $this;
     }

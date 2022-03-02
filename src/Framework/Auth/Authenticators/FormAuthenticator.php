@@ -3,7 +3,6 @@
 namespace Lightpack\Auth\Authenticators;
 
 use Lightpack\Auth\AbstractAuthenticator;
-use Lightpack\Auth\Identifier;
 use Lightpack\Auth\Result;
 
 class FormAuthenticator extends AbstractAuthenticator
@@ -12,20 +11,11 @@ class FormAuthenticator extends AbstractAuthenticator
     {
         $credentials = request()->isJson() ? request()->json() : request()->post();
 
-        $usernameField = $this->config['fields.username'];
-        $passwordField = $this->config['fields.password'];
-
-        $username = $credentials[$usernameField] ?? null;
-        $password = $credentials[$passwordField] ?? null;
-
-        if(!$username || !$password) {
+        if(empty($credentials)) {
             return new Result;
         }
 
-        $identity = $this->identifier->findByCredentials([
-            $usernameField => $username,
-            $passwordField => $password
-        ]);
+        $identity = $this->identifier->findByCredentials($credentials);
 
         return new Result($identity);
     }

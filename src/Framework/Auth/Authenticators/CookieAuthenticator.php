@@ -3,7 +3,6 @@
 namespace Lightpack\Auth\Authenticators;
 
 use Lightpack\Auth\AbstractAuthenticator;
-use Lightpack\Auth\Identifier;
 use Lightpack\Auth\Result;
 
 class CookieAuthenticator extends AbstractAuthenticator
