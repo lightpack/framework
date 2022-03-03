@@ -78,6 +78,11 @@ class Auth
         return session()->has('authenticated');
     }
 
+    public function isGuest(): bool
+    {
+        return !$this->isLoggedIn();
+    }
+
     public function attempt(): Result
     {
         return $this->manager->attempt();
