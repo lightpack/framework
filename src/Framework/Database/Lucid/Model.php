@@ -420,11 +420,11 @@ class Model implements JsonSerializable
 
     public function jsonSerialize()
     {
-        array_map(function ($key) {
-            unset($this->data->{$key});
-        }, $this->hidden);
-
-        return $this->data;
+        $data = \get_object_vars($this->data);
+        
+        return array_filter($data, function ($key) {
+            return !in_array($key, $this->hidden);
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     public function getRelationType()
@@ -481,5 +481,10 @@ class Model implements JsonSerializable
     {
         $items = new Collection($this);
         $items->load(...$relations);
+    }
+
+    public function toArray()
+    {
+        return (array) $this->jsonSerialize();
     }
 }
