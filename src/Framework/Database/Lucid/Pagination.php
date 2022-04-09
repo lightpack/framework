@@ -32,6 +32,13 @@ class Pagination extends BasePagination implements Countable, IteratorAggregate,
         return $this;
     }
 
+    public function loadCount(string ...$relations): self
+    {
+        $this->items->loadCount(...$relations);
+
+        return $this;
+    }
+
     public function jsonSerialize()
     {
         return [
