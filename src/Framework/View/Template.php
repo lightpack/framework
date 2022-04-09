@@ -21,7 +21,7 @@ class Template
         // Queue up the content in buffer.
         ob_start();
         extract($this->data);
-        require_once $file;
+        require $file;
         return ob_get_clean();
         flush();
     }

@@ -224,4 +224,14 @@ class Request
 
         return substr($header, 7);
     }   
+
+    /**
+     * Get refferer from referer header.
+     *
+     * @return string|null
+     */
+    public function referer(): ?string
+    {
+        return $_SERVER['HTTP_REFERER'] ?? null;
+    }
 }

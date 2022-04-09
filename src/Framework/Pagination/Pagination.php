@@ -54,6 +54,11 @@ class Pagination
         return ($this->currentPage - 1) * $this->perPage;
     }
 
+    public function currentPage()
+    {
+        return $this->currentPage;
+    }
+
     public function lastPage()
     {
         return $this->lastPage;
@@ -99,6 +104,12 @@ class Pagination
         }
     }
 
+    public function url(int $page)
+    {
+        $query = $this->getQuery($page);
+        return $this->path . '?' . $query;
+    }
+
     public function only(array $params = [])
     {
         $this->allowedParams = $params;
@@ -109,6 +120,49 @@ class Pagination
     public function items()
     {
         return $this->items;
+    }
+
+    public function hasNextPage()
+    {
+        return $this->currentPage < $this->lastPage;
+    }
+
+    public function hasPreviousPage()
+    {
+        return $this->currentPage > 1;
+    }
+
+    public function hasLinks()
+    {
+        return $this->lastPage > 1;
+    }
+
+    public function getPages()
+    {
+        $pages = [];
+        $start = 1;
+        $end = $this->lastPage;
+
+        if($this->lastPage > 5) {
+            $start = $this->currentPage - 2;
+            $end = $this->currentPage + 2;
+
+            if($start < 1) {
+                $start = 1;
+                $end = 5;
+            }
+
+            if($end > $this->lastPage) {
+                $end = $this->lastPage;
+                $start = $this->lastPage - 4;
+            }
+        }
+
+        for($i = $start; $i <= $end; $i++) {
+            $pages[] = $i;
+        }
+
+        return $pages;
     }
 
     protected function getQuery(int $page): string
