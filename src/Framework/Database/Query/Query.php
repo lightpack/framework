@@ -9,6 +9,7 @@ use Lightpack\Database\Pdo;
 
 class Query
 {
+    private $connection;
     private $table;
     private $model;
     private $bindings = [];
@@ -24,9 +25,9 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct($subject, Pdo $connection = null)
+    public function __construct($subject = null, Pdo $connection = null)
     {
-        if($subject instanceOf Model) {
+        if ($subject instanceof Model) {
             $this->model = $subject;
             $this->table = $subject->getTableName();
         } else {
@@ -39,6 +40,11 @@ class Query
     public function setModel(Model $model)
     {
         $this->model = $model;
+    }
+
+    public function setConnection(Pdo $connection)
+    {
+        $this->connection = $connection;
     }
 
     public function insert(array $data)
@@ -82,6 +88,13 @@ class Query
         return $this;
     }
 
+    public function from(string $table, string $alias = null): self
+    {
+        $this->table = $table;
+        $this->components['alias'] = $alias;
+        return $this;
+    }
+
     public function distinct(): self
     {
         $this->components['distinct'] = true;
@@ -95,6 +108,7 @@ class Query
         if ($operator) {
             $this->bindings[] = $value;
         }
+
         return $this;
     }
 
@@ -213,6 +227,23 @@ class Query
         return $this;
     }
 
+    public function whereExists(Closure $callback): self
+    {
+        $query = new Query();
+        $callback($query);
+        $this->components['where'][] = ['type' => 'where_exists', 'sub_query' => $query->toSql()];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
+        return $this;
+    }
+
+    public function whereNotExists(Closure $callback): self
+    {
+        $query = new Query();
+        $callback($query);
+        $this->components['where'][] = ['type' => 'where_not_exists', 'sub_query' => $query->toSql()];
+        return $this;
+    }
+
     public function join(string $table, string $column1, string $column2, $type = 'INNER')
     {
         $this->components['join'][] = compact('table', 'column1', 'column2', 'type');
@@ -291,7 +322,7 @@ class Query
 
     public function groupCount(string $column, ?Closure $callback = null)
     {
-        if($callback) {
+        if ($callback) {
             $callback($this);
         }
 
@@ -317,13 +348,30 @@ class Query
         return $this->components[$key] ?? null;
     }
 
+    public function __set(string $key, $value)
+    {
+        if ($key === 'bindings') {
+            $this->bindings = $value;
+        }
+
+        if ($key === 'table') {
+            $this->table = $value;
+        }
+
+        if (isset($this->components[$key])) {
+            $this->components[$key] = $value;
+        }
+    }
+
     public function fetchAll(bool $assoc = false)
     {
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
-        
-        if($this->model) {
+        $this->resetBindings();
+        $this->resetWhere();
+
+        if ($this->model) {
             // $result = $this->model->hydrate($result ?? []);
             return static::hydrate($result);
         }
@@ -343,7 +391,7 @@ class Query
         $result = $this->connection->query($query, $this->bindings)->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
         $this->resetQuery();
 
-        if($result && $this->model) {
+        if ($result && $this->model) {
             $result = (array) $result;
             $result = static::hydrateItem($result);
         }
@@ -360,6 +408,11 @@ class Query
     {
         $compiler = new Compiler($this);
         return $compiler->compileSelect();
+    }
+
+    public function toSql()
+    {
+        return $this->getCompiledSelect();
     }
 
     public function resetQuery()

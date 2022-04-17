@@ -343,7 +343,8 @@ class Model implements JsonSerializable
 
     public static function query(): Builder
     {
-        return new Builder(new static, self::$connection);
+        // return new Builder(new static, self::$connection);
+        return new Builder(new static);
     }
 
     /**

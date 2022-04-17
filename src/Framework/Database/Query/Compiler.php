@@ -101,6 +101,18 @@ class Compiler
 
         foreach ($this->query->where as $where) {
             $parameters = $this->parameterize(1);
+
+            // Workaround for where exists queries
+            if (isset($where['type']) && $where['type'] === 'where_exists') {
+                $wheres[] = 'AND EXISTS' . ' ' . '(' . $where['sub_query'] . ')';
+                continue;
+            }
+
+            // Workaround for where not exists queries
+            if (isset($where['type']) && $where['type'] === 'where_not_exists') {
+                $wheres[] = 'NOT EXISTS' . ' ' . '(' . $where['sub_query'] . ')';
+                continue;
+            }
             
             // Workaround for raw where queries
             if (isset($where['type']) && $where['type'] === 'where_raw') {
@@ -125,8 +137,13 @@ class Compiler
             $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . $parameters;
         }
 
+        $wheres = trim(implode(' ', $wheres));
 
-        return $wheres ? 'WHERE ' . ltrim(trim(implode(' ', $wheres), 'AND')) : null;
+        if(strpos($wheres, 'AND') === 0) {
+            $wheres = trim(substr($wheres, 3));
+        }
+
+        return $wheres ? 'WHERE ' . $wheres : null;
     }
 
     private function groupBy()
