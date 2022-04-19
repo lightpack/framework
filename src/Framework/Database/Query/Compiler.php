@@ -90,6 +90,11 @@ class Compiler
         return implode(' ', $joins);
     }
 
+    public function compileWhere()
+    {
+        return $this->where();
+    }
+
     private function where(): string
     {
         if (!$this->query->where) {
@@ -111,6 +116,18 @@ class Compiler
             // Workaround for where not exists queries
             if (isset($where['type']) && $where['type'] === 'where_not_exists') {
                 $wheres[] = 'NOT EXISTS' . ' ' . '(' . $where['sub_query'] . ')';
+                continue;
+            }
+
+            // Workaround for where group logical params
+            if (isset($where['type']) && $where['type'] === 'where_logical_group') {
+                $wheres[] = $where['joiner'] . ' (' . $where['sub_query'] . ')';
+                continue;
+            }
+
+            // Workaround for where sub query
+            if (isset($where['type']) && $where['type'] === 'where_sub_query') {
+                $wheres[] = $where['joiner'] . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . '(' . $where['sub_query'] . ')';
                 continue;
             }
             

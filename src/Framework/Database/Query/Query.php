@@ -101,8 +101,28 @@ class Query
         return $this;
     }
 
-    public function where(string $column, string $operator, string $value = null, string $joiner = 'AND'): self
+    public function where($column, string $operator = null, $value = null, string $joiner = 'AND'): self
     {
+        if ($column instanceof Closure) {
+            $query = new Query();
+            call_user_func($column, $query);
+            $compiler = new Compiler($query);
+            $subQuery = substr($compiler->compileWhere(), 6); // strip WHERE prefix
+            $this->components['where'][] = ['type' => 'where_logical_group', 'sub_query' => $subQuery, 'joiner' => $joiner];
+            $this->bindings = array_merge($this->bindings, $query->bindings);
+            return $this;
+        }
+
+        if ($value instanceof Closure) {
+            $query = new Query();
+            call_user_func($value, $query);
+            $compiler = new Compiler($query);
+            $subQuery = $query->toSql();
+            $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];  
+            $this->bindings = array_merge($this->bindings, $query->bindings);
+            return $this;
+        }
+
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
         if ($operator) {
