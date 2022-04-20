@@ -5,6 +5,8 @@ use PHPUnit\Framework\TestCase;
 final class QueryTest extends TestCase
 {
     private $db;
+
+    /** @var \Lightpack\Database\Query\Query */
     private $query;
 
     public function setUp(): void
@@ -274,11 +276,105 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
     }
 
+    public function testWhereInLogicalGroupingOfParameters()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE (color IN (?, ?) OR color IN (?, ?))';
+        $this->query->where(function($q) {
+            $q->whereIn('color', ['#000', '#FFF'])->orWhereIn('color', ['#000', '#FFF']);
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products WHERE size IN (SELECT id FROM sizes)';
+        $this->query->whereIn('size', function($q) {
+                $q->select('id')->from('sizes');
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3
+        $sql = 'SELECT * FROM products WHERE color IN (?, ?, ?) AND size IN (SELECT id FROM sizes WHERE is_active = ?)';
+        $this->query
+            ->whereIn('color', ['#000', '#FFF', '#CCC'])
+            ->whereIn('size', function($q) {
+                $q->select('id')->from('sizes')->where('is_active', '=', 1);
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 4
+        $sql = 'SELECT * FROM products WHERE color IN (?, ?, ?) OR size IN (SELECT id FROM sizes WHERE is_active = ?)';
+        $this->query
+            ->whereIn('color', ['#000', '#FFF', '#CCC'])
+            ->orWhereIn('size', function($q) {
+                $q->select('id')->from('sizes')->where('is_active', '=', 1);
+            });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 5
+        $sql = 'SELECT * FROM products WHERE color IN (?, ?, ?) AND size IN (SELECT id FROM sizes WHERE is_active = ?) OR size IN (SELECT id FROM sizes WHERE is_active = ?)';
+        $this->query
+            ->whereIn('color', ['#000', '#FFF', '#CCC'])
+            ->whereIn('size', function($q) {
+                $q->select('id')->from('sizes')->where('is_active', '=', 1);
+            })
+            ->orWhereIn('size', function($q) {
+                $q->select('id')->from('sizes')->where('is_active', '=', 1);
+            });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 6
+        $sql = 'SELECT * FROM products WHERE color NOT IN (?, ?, ?) AND size NOT IN (SELECT id FROM sizes WHERE is_active = ?)';
+        $this->query
+            ->whereNotIn('color', ['#000', '#FFF', '#CCC'])
+            ->whereNotIn('size', function($q) {
+                $q->select('id')->from('sizes')->where('is_active', '=', 1);
+            });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 7
+        $sql = 'SELECT * FROM products WHERE color NOT IN (?, ?, ?) OR size NOT IN (SELECT id FROM sizes WHERE is_active = ?)';
+        $this->query
+            ->whereNotIn('color', ['#000', '#FFF', '#CCC'])
+            ->orWhereNotIn('size', function($q) {
+                $q->select('id')->from('sizes')->where('is_active', '=', 1);
+            });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
     public function testWhereColumnMatchesSubQuery()
     {
         // Test 1
         $sql = 'SELECT * FROM products WHERE size IN (SELECT id FROM sizes WHERE size = ?)';
         $this->query->where('size', 'IN', function($q) {
+            $q->from('sizes')->select('id')->where('size', '=', 'XL');
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testWhereExistsSubQuery()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE EXISTS (SELECT id FROM sizes WHERE size = ?)';
+        $this->query->whereExists(function($q) {
+            $q->from('sizes')->select('id')->where('size', '=', 'XL');
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testWhereNotExistsSubQuery()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE NOT EXISTS (SELECT id FROM sizes WHERE size = ?)';
+        $this->query->whereNotExists(function($q) {
             $q->from('sizes')->select('id')->where('size', '=', 'XL');
         });
         $this->assertEquals($sql, $this->query->toSql());

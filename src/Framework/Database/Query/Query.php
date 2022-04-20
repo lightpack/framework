@@ -168,44 +168,51 @@ class Query
         return $this;
     }
 
-    public function whereIn(string $column, array $values, string $joiner = 'AND'): self
+    public function whereIn($column, $values = null, string $joiner = 'AND'): self
     {
+        if($values instanceof Closure) {
+            $this->where($column, 'IN', $values, $joiner);
+            return $this;
+        }
+
         $operator = 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
         $this->bindings = array_merge($this->bindings, $values);
         return $this;
     }
 
-    public function andWhereIn(string $column, array $values): self
-    {
-        $this->whereIn($column, $values, 'AND');
-        return $this;
-    }
+    // public function andWhereIn(string $column, array $values): self
+    // {
+    //     $this->whereIn($column, $values, 'AND');
+    //     return $this;
+    // }
 
-    public function orWhereIn(string $column, array $values): self
+    public function orWhereIn($column, $values): self
     {
         $this->whereIn($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNotIn(string $column, array $values, string $joiner = 'AND'): self
+    public function whereNotIn($column, $values, string $joiner = 'AND'): self
     {
+        if($values instanceof Closure) {
+            $this->where($column, 'NOT IN', $values, $joiner);
+            return $this;
+        }
+
         $operator = 'NOT IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
         $this->bindings = array_merge($this->bindings, $values);
         return $this;
-
-        $this->whereIn($column, $values, 'AND', true);
-        return $this;
     }
 
-    public function andWhereNotIn(string $column, array $values): self
-    {
-        $this->whereNotIn($column, $values, 'AND');
-        return $this;
-    }
+    // public function andWhereNotIn(string $column, array $values): self
+    // {
+    //     $this->whereNotIn($column, $values, 'AND');
+    //     return $this;
+    // }
 
-    public function orWhereNotIn(string $column, array $values): self
+    public function orWhereNotIn($column, $values): self
     {
         $this->whereNotIn($column, $values, 'OR');
         return $this;
@@ -223,17 +230,17 @@ class Query
         return $this;
     }
 
-    public function andWhereNull(string $column): self
-    {
-        $this->andWhere($column, '', 'IS NULL');
-        return $this;
-    }
+    // public function andWhereNull(string $column): self
+    // {
+    //     $this->andWhere($column, '', 'IS NULL');
+    //     return $this;
+    // }
 
-    public function andWhereNotNull(string $column): self
-    {
-        $this->andWhere($column, '', 'IS NOT NULL');
-        return $this;
-    }
+    // public function andWhereNotNull(string $column): self
+    // {
+    //     $this->andWhere($column, '', 'IS NOT NULL');
+    //     return $this;
+    // }
 
     public function orWhereNull(string $column): self
     {
