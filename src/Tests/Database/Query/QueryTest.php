@@ -254,4 +254,34 @@ final class QueryTest extends TestCase
 
         $this->assertEquals($productsCountBeforeDelete - 1, $productsCountAfterDelete);
     }
+
+    public function testWhereLogicalGroupingOfParameters()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE (color = ? OR color = ?)';
+        $this->query->where(function($q) {
+            $q->where('color', '=', '#000')->orWhere('color', '=', '#FFF');
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products WHERE id = ? AND (color = ? OR color = ?)';
+        $this->query->where('id', '=', 1)->where(function($q) {
+            $q->where('color', '=', '#000')->orWhere('color', '=', '#FFF');
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testWhereColumnMatchesSubQuery()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE size IN (SELECT id FROM sizes WHERE size = ?)';
+        $this->query->where('size', 'IN', function($q) {
+            $q->from('sizes')->select('id')->where('size', '=', 'XL');
+        });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
 }
