@@ -104,23 +104,11 @@ class Query
     public function where($column, string $operator = null, $value = null, string $joiner = 'AND'): self
     {
         if ($column instanceof Closure) {
-            $query = new Query();
-            call_user_func($column, $query);
-            $compiler = new Compiler($query);
-            $subQuery = substr($compiler->compileWhere(), 6); // strip WHERE prefix
-            $this->components['where'][] = ['type' => 'where_logical_group', 'sub_query' => $subQuery, 'joiner' => $joiner];
-            $this->bindings = array_merge($this->bindings, $query->bindings);
-            return $this;
+            return $this->whereColumnIsAClosure($column, $joiner);
         }
 
         if ($value instanceof Closure) {
-            $query = new Query();
-            call_user_func($value, $query);
-            $compiler = new Compiler($query);
-            $subQuery = $query->toSql();
-            $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];  
-            $this->bindings = array_merge($this->bindings, $query->bindings);
-            return $this;
+            return $this->whereValueIsAClosure($value, $column, $operator, $joiner);
         }
 
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
@@ -170,7 +158,7 @@ class Query
 
     public function whereIn($column, $values = null, string $joiner = 'AND'): self
     {
-        if($values instanceof Closure) {
+        if ($values instanceof Closure) {
             $this->where($column, 'IN', $values, $joiner);
             return $this;
         }
@@ -181,12 +169,6 @@ class Query
         return $this;
     }
 
-    // public function andWhereIn(string $column, array $values): self
-    // {
-    //     $this->whereIn($column, $values, 'AND');
-    //     return $this;
-    // }
-
     public function orWhereIn($column, $values): self
     {
         $this->whereIn($column, $values, 'OR');
@@ -195,7 +177,7 @@ class Query
 
     public function whereNotIn($column, $values, string $joiner = 'AND'): self
     {
-        if($values instanceof Closure) {
+        if ($values instanceof Closure) {
             $this->where($column, 'NOT IN', $values, $joiner);
             return $this;
         }
@@ -205,12 +187,6 @@ class Query
         $this->bindings = array_merge($this->bindings, $values);
         return $this;
     }
-
-    // public function andWhereNotIn(string $column, array $values): self
-    // {
-    //     $this->whereNotIn($column, $values, 'AND');
-    //     return $this;
-    // }
 
     public function orWhereNotIn($column, $values): self
     {
@@ -229,18 +205,6 @@ class Query
         $this->where($column, '', 'IS NOT NULL');
         return $this;
     }
-
-    // public function andWhereNull(string $column): self
-    // {
-    //     $this->andWhere($column, '', 'IS NULL');
-    //     return $this;
-    // }
-
-    // public function andWhereNotNull(string $column): self
-    // {
-    //     $this->andWhere($column, '', 'IS NOT NULL');
-    //     return $this;
-    // }
 
     public function orWhereNull(string $column): self
     {
@@ -464,5 +428,26 @@ class Query
     public function resetBindings()
     {
         $this->bindings = [];
+    }
+
+    protected function whereColumnIsAClosure(Closure $callback, string $joiner)
+    {
+        $query = new Query();
+        call_user_func($callback, $query);
+        $compiler = new Compiler($query);
+        $subQuery = substr($compiler->compileWhere(), 6); // strip WHERE prefix
+        $this->components['where'][] = ['type' => 'where_logical_group', 'sub_query' => $subQuery, 'joiner' => $joiner];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
+        return $this;
+    }
+
+    protected function whereValueIsAClosure(Closure $callback, string $column, string $operator, string $joiner)
+    {
+        $query = new Query();
+        call_user_func($callback, $query);
+        $subQuery = $query->toSql();
+        $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
+        return $this;
     }
 }
