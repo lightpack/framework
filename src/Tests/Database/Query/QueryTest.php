@@ -434,4 +434,19 @@ final class QueryTest extends TestCase
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
     }
+
+    public function testLimitAndOffsetQueries()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products LIMIT 10';
+        $this->query->limit(10);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products LIMIT 10 OFFSET 20';
+        $this->query->limit(10)->offset(20);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
 }
