@@ -9,11 +9,11 @@ use Lightpack\Database\Pdo;
 
 class Query
 {
-    private $connection;
-    private $table;
-    private $model;
-    private $bindings = [];
-    private $components = [
+    protected $connection;
+    protected $table;
+    protected $model;
+    protected $bindings = [];
+    protected $components = [
         'alias' => null,
         'columns' => [],
         'distinct' => false,
