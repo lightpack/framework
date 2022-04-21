@@ -138,7 +138,7 @@ class Query
         return $this;
     }
 
-    public function orWhere(string $column, string $operator, string $value): self
+    public function orWhere($column, string $operator = null, $value = null): self
     {
         $this->where($column, $operator, $value, 'OR');
         return $this;
@@ -184,25 +184,25 @@ class Query
 
     public function whereNull(string $column): self
     {
-        $this->where($column, '', 'IS NULL');
+        $this->where($column, 'IS NULL');
         return $this;
     }
 
     public function whereNotNull(string $column): self
     {
-        $this->where($column, '', 'IS NOT NULL');
+        $this->where($column, 'IS NOT NULL');
         return $this;
     }
 
     public function orWhereNull(string $column): self
     {
-        $this->orWhere($column, '', 'IS NULL');
+        $this->orWhere($column, 'IS NULL');
         return $this;
     }
 
     public function orWhereNotNull(string $column): self
     {
-        $this->orWhere($column, '', 'IS NOT NULL');
+        $this->orWhere($column, 'IS NOT NULL');
         return $this;
     }
 

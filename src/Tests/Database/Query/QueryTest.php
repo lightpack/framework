@@ -407,4 +407,31 @@ final class QueryTest extends TestCase
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
     }
+
+    public function testWhereNullConditions()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE color IS NULL';
+        $this->query->whereNull('color');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products WHERE color IS NOT NULL';
+        $this->query->whereNotNull('color');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3
+        $sql = 'SELECT * FROM products WHERE color IS NULL OR size IS NULL';
+        $this->query->whereNull('color')->orWhereNull('size');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+        
+        // Test 4
+        $sql = 'SELECT * FROM products WHERE color IS NULL OR size IS NOT NULL';
+        $this->query->whereNull('color')->orWhereNotNull('size');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
 }

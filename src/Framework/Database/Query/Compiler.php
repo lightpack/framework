@@ -137,11 +137,7 @@ class Compiler
                 continue;
             }
 
-            // Workaround for IS NULL and IS NOT NULL conditions.
-            if (!$where['operator'] && isset($where['value'])) {
-                $parameters = $where['value'];
-            }
-
+            // Set parameters for multiple values
             if (isset($where['values'])) {
                 $parameters = $this->parameterize(count($where['values']));
             }
@@ -151,7 +147,22 @@ class Compiler
                 $parameters = '(' . $parameters . ')';
             }
 
-            $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . $parameters;
+            if(!isset($where['value']) && !isset($where['values'])) {
+                $parameters = '';
+            }
+
+            // Finally prepare where clause
+            $whereStatement = strtoupper($where['joiner']) . ' ' . $where['column'];
+
+            if(isset($where['operator'])) {
+                $whereStatement .= ' ' . trim($where['operator']);
+            }
+
+            if($parameters) {
+                $whereStatement .= ' ' . $parameters;
+            }
+
+            $wheres[] = $whereStatement;
         }
 
         $wheres = trim(implode(' ', $wheres));
