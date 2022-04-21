@@ -108,7 +108,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 8
-        $this->query->where('id', '>', 2)->andWhere('color', '=', '#000');
+        $this->query->where('id', '>', 2)->where('color', '=', '#000');
 
         $this->assertEquals(
             'SELECT * FROM products WHERE id > ? AND color = ?',
@@ -118,7 +118,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 9
-        $this->query->where('id', '>', 2)->andWhere('color', '=', '#000')->orWhere('color', '=', '#FFF');
+        $this->query->where('id', '>', 2)->where('color', '=', '#000')->orWhere('color', '=', '#FFF');
 
         $this->assertEquals(
             'SELECT * FROM products WHERE id > ? AND color = ? OR color = ?',
@@ -377,6 +377,33 @@ final class QueryTest extends TestCase
         $this->query->whereNotExists(function($q) {
             $q->from('sizes')->select('id')->where('size', '=', 'XL');
         });
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testWhereRaw()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE color = ? AND size = ?';
+        $this->query->whereRaw('color = ? AND size = ?', ['#000', 'XL']);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products WHERE color = ? AND size = ? AND is_active = 1';
+        $this->query->whereRaw('color = ? AND size = ?', ['#000', 'XL'])->whereRaw('is_active = 1');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3
+        $sql = 'SELECT * FROM products WHERE (color = ? AND size = ?) OR is_active = 1';
+        $this->query->whereRaw('(color = ? AND size = ?)', ['#000', 'XL'])->orWhereRaw('is_active = 1');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 4
+        $sql = "SELECT * FROM products WHERE color = ? OR status = 'active'";
+        $this->query->where('color', '=', '#000')->orWhereRaw("status = 'active'");
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
     }

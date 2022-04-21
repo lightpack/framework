@@ -120,7 +120,7 @@ class Query
         return $this;
     }
 
-    public function whereRaw(string $where, array $values = [], string $joiner = null): self
+    public function whereRaw(string $where, array $values = [], string $joiner = 'AND'): self
     {
         $type = 'where_raw';
 
@@ -132,21 +132,9 @@ class Query
         return $this;
     }
 
-    public function andWhereRaw(string $where, array $values = []): self
-    {
-        $this->whereRaw($where, $values, 'AND');
-        return $this;
-    }
-
     public function orWhereRaw(string $where, array $values = []): self
     {
         $this->whereRaw($where, $values, 'OR');
-        return $this;
-    }
-
-    public function andWhere(string $column, string $operator, string $value): self
-    {
-        $this->where($column, $operator, $value, 'AND');
         return $this;
     }
 
