@@ -449,4 +449,19 @@ final class QueryTest extends TestCase
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
     }
+
+    public function testGroupByQueries()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products GROUP BY color';
+        $this->query->groupBy('color');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products GROUP BY color, size';
+        $this->query->groupBy('color', 'size');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
 }
