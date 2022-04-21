@@ -206,6 +206,16 @@ final class QueryTest extends TestCase
         );
 
         $this->query->resetQuery();
+
+        // Test 18: alias
+        $this->query->alias('p')->join('options AS o', 'p.id', 'o.product_id')->select('p.*', 'o.name AS oname');
+
+        $this->assertEquals(
+            'SELECT p.*, o.name AS oname FROM products AS p INNER JOIN options AS o ON p.id = o.product_id',
+            $this->query->getCompiledSelect()
+        );
+
+        $this->query->resetQuery();
     }
 
     public function testGetMagicMethod()

@@ -72,7 +72,7 @@ class Compiler
 
     private function from(): string
     {
-        return 'FROM ' . $this->query->table . ($this->query->alias ? ' as ' . $this->query->alias : '');
+        return 'FROM ' . $this->query->table . ($this->query->alias ? ' AS ' . $this->query->alias : '');
     }
 
     private function join()
