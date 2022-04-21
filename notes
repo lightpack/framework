@@ -1,8 +1,0 @@
-Schedule:
----------------------------------
-Manipulate task output.
-Run command in foreground/background.
-Limit number of processes running.
-Spawn multiple processes.
-Bypass scheduler when in maintenance mode.
-Error handling
