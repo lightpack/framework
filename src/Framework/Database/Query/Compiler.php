@@ -137,6 +137,14 @@ class Compiler
                 continue;
             }
 
+            // Workaround for where between queries
+            if (isset($where['type']) && ($where['type'] === 'where_between' || $where['type'] === 'where_not_between')) {
+                $parameters = $this->parameterize(2);
+                $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . '?' . ' AND ' . '?';
+                continue;
+            }
+
+
             // Set parameters for multiple values
             if (isset($where['values'])) {
                 $parameters = $this->parameterize(count($where['values']));

@@ -206,6 +206,40 @@ class Query
         return $this;
     }
 
+    public function whereBetween(string $column, array $values, string $joiner = 'AND'): self
+    {
+        if(count($values) !== 2) {
+            throw new \Exception('You must provide two values for the between clause');
+        }
+
+        $operator = 'BETWEEN';
+        $type = 'where_between';
+        $this->components['where'][] = compact('column', 'operator', 'values', 'joiner', 'type');
+        $this->bindings = array_merge($this->bindings, $values);
+        return $this;
+    }
+
+    public function orWhereBetween($column, $values): self
+    {
+        $this->whereBetween($column, $values, 'OR');
+        return $this;
+    }
+
+    public function whereNotBetween($column, $values, string $joiner = 'AND'): self
+    {
+        $operator = 'NOT BETWEEN';
+        $type = 'where_not_between';
+        $this->components['where'][] = compact('column', 'operator', 'values', 'joiner', 'type');
+        $this->bindings = array_merge($this->bindings, $values);
+        return $this;
+    }
+
+    public function orWhereNotBetween($column, $values): self
+    {
+        $this->whereNotBetween($column, $values, 'OR');
+        return $this;
+    }
+
     public function whereExists(Closure $callback): self
     {
         $query = new Query();

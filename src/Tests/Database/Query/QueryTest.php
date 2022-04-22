@@ -474,4 +474,44 @@ final class QueryTest extends TestCase
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
     }
+
+    public function testWhereBetweenConditions()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE price BETWEEN ? AND ?';
+        $this->query->whereBetween('price', [10, 20]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products WHERE price NOT BETWEEN ? AND ?';
+        $this->query->whereNotBetween('price', [10, 20]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3
+        $sql = 'SELECT * FROM products WHERE price BETWEEN ? AND ? OR size BETWEEN ? AND ?';
+        $this->query->whereBetween('price', [10, 20])->orWhereBetween('size', ['M', 'L']);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 4
+        $sql = 'SELECT * FROM products WHERE price NOT BETWEEN ? AND ? OR size NOT BETWEEN ? AND ?';
+        $this->query->whereNotBetween('price', [10, 20])->orWhereNotBetween('size', ['M', 'L']);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 5
+        $sql = 'SELECT * FROM products WHERE price BETWEEN ? AND ? AND size BETWEEN ? AND ?';
+        $this->query->whereBetween('price', [10, 20])->whereBetween('size', ['M', 'L']); 
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 6
+        $sql = 'SELECT * FROM products WHERE price NOT BETWEEN ? AND ? AND size NOT BETWEEN ? AND ?';
+        $this->query->whereNotBetween('price', [10, 20])->whereNotBetween('size', ['M', 'L']);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+    }
 }
