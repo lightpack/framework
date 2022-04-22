@@ -28,14 +28,27 @@ final class QueryTest extends TestCase
 
     public function testSelectFetchAll()
     {
+        // Test 1
         $products = $this->query->select('id', 'name')->fetchAll();
         $this->assertGreaterThan(0, count($products));
+
+        // Test 2
+        $products = $this->query->select('id', 'name')->where('color', '=', 'maroon')->fetchAll();
+        $this->assertEquals(0, count($products));
+        $this->assertIsArray($products);
+        $this->assertEmpty($products);
+        $this->assertNotNull($products);
     }
 
     public function testSelectFetchOne()
     {
+        // Test 1
         $product = $this->query->fetchOne();
         $this->assertTrue(isset($product->id));
+
+        // Test 2
+        $product = $this->query->where('color', '=', 'maroon')->fetchOne();
+        $this->assertFalse($product);
     }
 
     public function testCompiledSelectQuery()
@@ -512,6 +525,5 @@ final class QueryTest extends TestCase
         $this->query->whereNotBetween('price', [10, 20])->whereNotBetween('size', ['M', 'L']);
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
-
     }
 }
