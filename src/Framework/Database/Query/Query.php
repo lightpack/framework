@@ -44,9 +44,19 @@ class Query
         $this->model = $model;
     }
 
+    public function getModel()
+    {
+        return $this->model;
+    }
+
     public function setConnection(Pdo $connection)
     {
         $this->connection = $connection;
+    }
+
+    public function getConnection()
+    {
+        return $this->connection;
     }
 
     public function insert(array $data)

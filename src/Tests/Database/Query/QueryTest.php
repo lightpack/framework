@@ -7,6 +7,7 @@ use Lightpack\Database\Lucid\Collection;
 use Lightpack\Http\Request;
 use Lightpack\Pagination\Pagination as BasePagination;
 use Lightpack\Database\Lucid\Pagination as LucidPagination;
+use Lightpack\Database\Pdo;
 use PHPUnit\Framework\TestCase;
 
 // Initalize container
@@ -591,6 +592,22 @@ final class QueryTest extends TestCase
         $sql = 'SELECT color, COUNT(*) AS num FROM products GROUP BY color';
         $this->query->countBy('color');
         $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testSetModel()
+    {
+        // Test 1
+        $this->query->setModel(new Product);
+        $this->assertInstanceOf(Product::class, $this->query->getModel());
+        $this->query->resetQuery();
+    }
+
+    public function testSetConnection()
+    {
+        // Test 1
+        $this->query->setConnection($this->db);
+        $this->assertInstanceOf(Pdo::class, $this->query->getConnection());
         $this->query->resetQuery();
     }
 }
