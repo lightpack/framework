@@ -1,6 +1,9 @@
 <?php
 
+require __DIR__ . '/../Lucid/Product.php';
+
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\Collection;
 use Lightpack\Http\Request;
 use Lightpack\Pagination\Pagination as BasePagination;
 use Lightpack\Database\Lucid\Pagination as LucidPagination;
@@ -53,6 +56,11 @@ final class QueryTest extends TestCase
         $this->assertIsArray($products);
         $this->assertEmpty($products);
         $this->assertNotNull($products);
+
+        // Test 3
+        $products = Product::query()->fetchAll();
+        $this->assertGreaterThan(0, count($products));
+        $this->assertInstanceOf(Collection::class, $products);
     }
 
     public function testSelectFetchOne()
@@ -60,10 +68,16 @@ final class QueryTest extends TestCase
         // Test 1
         $product = $this->query->fetchOne();
         $this->assertTrue(isset($product->id));
+        $this->query->resetQuery();
 
         // Test 2
         $product = $this->query->where('color', '=', 'maroon')->fetchOne();
         $this->assertFalse($product);
+        $this->query->resetQuery();
+
+        // Test 3
+        $product = Product::query()->fetchOne();
+        $this->assertInstanceOf(Product::class, $product);
     }
 
     public function testCompiledSelectQuery()
@@ -555,7 +569,6 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 2
-        require __DIR__ . '/../Lucid/Product.php';
         $products = Product::query()->paginate(10, 20);
         $this->assertInstanceOf(LucidPagination::class, $products);
     }
