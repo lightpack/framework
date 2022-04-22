@@ -407,7 +407,7 @@ class Query
         }
     }
 
-    public function fetchAll()
+    protected function fetchAll()
     {
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
@@ -427,7 +427,7 @@ class Query
         return $this->fetchAll();
     }
 
-    public function fetchOne()
+    protected function fetchOne()
     {
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
@@ -442,9 +442,21 @@ class Query
         return $result;
     }
 
-    public function one(bool $assoc = false)
+    public function one()
     {
-        return $this->fetchOne($assoc);
+        return $this->fetchOne();
+    }
+
+    public function column(string $column)
+    {
+        $this->columns = [$column];
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetchColumn();
+        $this->resetQuery();
+        $this->resetBindings();
+        $this->resetWhere();
+
+        return $result;
     }
 
     public function getCompiledSelect()

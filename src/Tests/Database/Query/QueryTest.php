@@ -48,7 +48,7 @@ final class QueryTest extends TestCase
     public function testSelectFetchAll()
     {
         // Test 1
-        $products = $this->query->select('id', 'name')->fetchAll();
+        $products = $this->query->select('id', 'name')->all();
         $this->assertGreaterThan(0, count($products));
         $this->query->resetQuery();
 
@@ -58,7 +58,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 2
-        $products = $this->query->select('id', 'name')->where('color', '=', 'maroon')->fetchAll();
+        $products = $this->query->select('id', 'name')->where('color', '=', 'maroon')->all();
         $this->assertEquals(0, count($products));
         $this->assertIsArray($products);
         $this->assertEmpty($products);
@@ -66,7 +66,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 3
-        $products = Product::query()->fetchAll();
+        $products = Product::query()->all();
         $this->assertGreaterThan(0, count($products));
         $this->assertInstanceOf(Collection::class, $products);
     }
@@ -74,7 +74,7 @@ final class QueryTest extends TestCase
     public function testSelectFetchOne()
     {
         // Test 1
-        $product = $this->query->fetchOne();
+        $product = $this->query->one();
         $this->assertTrue(isset($product->id));
         $this->query->resetQuery();
 
@@ -84,13 +84,21 @@ final class QueryTest extends TestCase
          $this->query->resetQuery();
 
         // Test 3
-        $product = $this->query->where('color', '=', 'maroon')->fetchOne();
+        $product = $this->query->where('color', '=', 'maroon')->one();
         $this->assertFalse($product);
         $this->query->resetQuery();
 
         // Test 4
-        $product = Product::query()->fetchOne();
+        $product = Product::query()->one();
         $this->assertInstanceOf(Product::class, $product);
+    }
+
+    public function testSelectFetchColumn()
+    {
+        // Test 1
+        $name = $this->query->column('name');
+        $this->assertIsString($name);
+        $this->query->resetQuery();
     }
 
     public function testCompiledSelectQuery()
@@ -281,7 +289,7 @@ final class QueryTest extends TestCase
 
     public function testInsertMethod()
     {
-        $products = $this->query->fetchAll();
+        $products = $this->query->all();
         $productsCountBeforeInsert = count($products);
 
         $this->query->insert([
@@ -289,7 +297,7 @@ final class QueryTest extends TestCase
             'color' => '#CCC',
         ]);
 
-        $products = $this->query->fetchAll();
+        $products = $this->query->all();
         $productsCountAfterInsert = count($products);
 
         $this->assertEquals($productsCountBeforeInsert + 1, $productsCountAfterInsert);
@@ -298,7 +306,7 @@ final class QueryTest extends TestCase
 
     public function testBulkInsertMethod()
     {
-        $products = $this->query->fetchAll();
+        $products = $this->query->all();
         $productsCountBeforeInsert = count($products);
 
         $this->query->bulkInsert([
@@ -307,7 +315,7 @@ final class QueryTest extends TestCase
             ['name' => 'Product 6', 'color' => '#CCC'],
         ]);
 
-        $products = $this->query->fetchAll();
+        $products = $this->query->all();
         $productsCountAfterInsert = count($products);
 
         $this->assertEquals($productsCountBeforeInsert + 3, $productsCountAfterInsert);
@@ -323,26 +331,26 @@ final class QueryTest extends TestCase
 
     public function testUpdateMethod()
     {
-        $product = $this->query->select('id')->fetchOne();
+        $product = $this->query->select('id')->one();
 
         $this->query->where('id', '=', $product->id)->update(
             ['color' => '#09F']
         );
 
-        $updatedProduct = $this->query->select('color')->where('id', '=', $product->id)->fetchOne();
+        $updatedProduct = $this->query->select('color')->where('id', '=', $product->id)->one();
 
         $this->assertEquals('#09F', $updatedProduct->color);
     }
 
     public function testDeleteMethod()
     {
-        $product = $this->query->orderBy('id', 'DESC')->fetchOne();
-        $products = $this->query->fetchAll();
+        $product = $this->query->orderBy('id', 'DESC')->one();
+        $products = $this->query->all();
         $productsCountBeforeDelete = count($products);
 
         $this->query->where('id', '=', $product->id)->delete();
 
-        $products = $this->query->fetchAll();
+        $products = $this->query->all();
         $productsCountAfterDelete = count($products);
 
         $this->assertEquals($productsCountBeforeDelete - 1, $productsCountAfterDelete);
