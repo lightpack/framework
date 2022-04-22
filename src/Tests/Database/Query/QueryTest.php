@@ -342,6 +342,19 @@ final class QueryTest extends TestCase
         $this->assertEquals('#09F', $updatedProduct->color);
     }
 
+    public function testUpdateWithMultipleWhereMethod()
+    {
+        $product = $this->query->select('id')->one();
+
+        $this->query->where('id', '=', $product->id)->where('name', '=', 'Dummy')->update(
+            ['color' => '#09F']
+        );
+
+        $updatedProduct = $this->query->select('color')->where('id', '=', $product->id)->one();
+
+        $this->assertEquals('#09F', $updatedProduct->color);
+    }
+
     public function testDeleteMethod()
     {
         $product = $this->query->orderBy('id', 'DESC')->one();
@@ -354,6 +367,21 @@ final class QueryTest extends TestCase
         $productsCountAfterDelete = count($products);
 
         $this->assertEquals($productsCountBeforeDelete - 1, $productsCountAfterDelete);
+    }
+
+    public function testDeleteWithMultipleWhereMethod()
+    {
+        $product = $this->query->select('id')->one();
+        $products = $this->query->all();
+        $productsCountBeforeDelete = count($products);
+
+        $this->query->where('id', '=', $product->id)->where('name', '=', 'Foo Bar')->delete();
+
+        $products = $this->query->all();
+        $productsCountAfterDelete = count($products);
+
+        // Because we have no product with name Fo Bar, the count should be the same
+        $this->assertEquals($productsCountBeforeDelete, $productsCountAfterDelete);
     }
 
     public function testWhereLogicalGroupingOfParameters()
