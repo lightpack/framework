@@ -462,6 +462,11 @@ class Query
         $this->bindings = [];
     }
 
+    public function lastInsertId()
+    {
+        return $this->connection->lastInsertId();
+    }
+
     protected function whereColumnIsAClosure(Closure $callback, string $joiner)
     {
         $query = new Query();

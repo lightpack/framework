@@ -293,6 +293,7 @@ final class QueryTest extends TestCase
         $productsCountAfterInsert = count($products);
 
         $this->assertEquals($productsCountBeforeInsert + 1, $productsCountAfterInsert);
+        $this->assertIsNumeric($this->query->lastInsertId());
     }
 
     public function testUpdateMethod()
