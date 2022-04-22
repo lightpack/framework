@@ -380,7 +380,7 @@ final class QueryTest extends TestCase
         $products = $this->query->all();
         $productsCountAfterDelete = count($products);
 
-        // Because we have no product with name Fo Bar, the count should be the same
+        // Because we have no product with name 'Fo Bar', the count should be the same
         $this->assertEquals($productsCountBeforeDelete, $productsCountAfterDelete);
     }
 
