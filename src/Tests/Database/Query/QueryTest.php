@@ -1,6 +1,13 @@
 <?php
 
+use Lightpack\Container\Container;
+use Lightpack\Http\Request;
+use Lightpack\Pagination\Pagination as BasePagination;
+use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use PHPUnit\Framework\TestCase;
+
+// Initalize container
+$container = new Container();
 
 final class QueryTest extends TestCase
 {
@@ -17,6 +24,14 @@ final class QueryTest extends TestCase
         $stmt = $this->db->query($sql);
         $stmt->closeCursor();
         $this->query = new \Lightpack\Database\Query\Query('products', $this->db);
+
+        // Configure container
+        global $container;
+        $container->register('db', function() { return $this->db; });
+        $container->register('request', function() { return new Request(); });
+
+        // Set Request URI
+        $_SERVER['REQUEST_URI'] = '/lightpack';
     }
 
     public function tearDown(): void
@@ -525,5 +540,23 @@ final class QueryTest extends TestCase
         $this->query->whereNotBetween('price', [10, 20])->whereNotBetween('size', ['M', 'L']);
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
+
+        // Test 7: Expect exception when passing in an array with less than 2 values
+        $this->expectException(Exception::class);
+        $this->query->whereBetween('price', [10]);
+        $this->query->resetQuery();
+    }
+
+    public function testPaginateMethod()
+    {
+        // Test 1
+        $this->query->paginate(10, 20);
+        $this->assertInstanceOf(BasePagination::class, $this->query->paginate(10, 20));
+        $this->query->resetQuery();
+
+        // Test 2
+        require __DIR__ . '/../Lucid/Product.php';
+        $products = Product::query()->paginate(10, 20);
+        $this->assertInstanceOf(LucidPagination::class, $products);
     }
 }

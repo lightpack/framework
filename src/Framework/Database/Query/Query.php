@@ -3,8 +3,10 @@
 namespace Lightpack\Database\Query;
 
 use Closure;
+use Lightpack\Database\Lucid\Collection;
 use Lightpack\Database\Lucid\Model;
-use Lightpack\Database\Lucid\Pagination;
+use Lightpack\Pagination\Pagination as BasePagination;
+use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\Pdo;
 
 class Query
@@ -306,19 +308,22 @@ class Query
         $columns = $this->columns;
         $total = $this->count();
         $this->columns = $columns;
-        $page = $page ?? app('request')->get('page');
+        $page = $page ?? request()->get('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
 
-        $limit = $limit ?: app('request')->get('limit', 10);
+        $limit = $limit ?: request()->get('limit', 10);
 
         $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);
 
         $items = $this->fetchAll();
 
-        return new Pagination($total, $limit, $page, $items);
-        // return $items;
+        if($items instanceof Collection) {
+            return new LucidPagination($total, $limit, $page, $items);
+        }
+
+        return new BasePagination($total, $limit, $page, $items);
     }
 
     public function count()
