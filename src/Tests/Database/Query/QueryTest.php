@@ -193,10 +193,10 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 11
-        $this->query->whereIn('id', [23, 24, 25])->orWhereIn('color', ['#000', '#FFF']);
+        $this->query->whereIn('id', [23, 24, 25])->orWhereIn('color', ['#000']);
 
         $this->assertEquals(
-            'SELECT * FROM products WHERE id IN (?, ?, ?) OR color IN (?, ?)',
+            'SELECT * FROM products WHERE id IN (?, ?, ?) OR color IN (?)',
             $this->query->getCompiledSelect()
         );
 
@@ -294,6 +294,31 @@ final class QueryTest extends TestCase
 
         $this->assertEquals($productsCountBeforeInsert + 1, $productsCountAfterInsert);
         $this->assertIsNumeric($this->query->lastInsertId());
+    }
+
+    public function testBulkInsertMethod()
+    {
+        $products = $this->query->fetchAll();
+        $productsCountBeforeInsert = count($products);
+
+        $this->query->bulkInsert([
+            ['name' => 'Product 4', 'color' => '#CCC'],
+            ['name' => 'Product 5', 'color' => '#CCC'],
+            ['name' => 'Product 6', 'color' => '#CCC'],
+        ]);
+
+        $products = $this->query->fetchAll();
+        $productsCountAfterInsert = count($products);
+
+        $this->assertEquals($productsCountBeforeInsert + 3, $productsCountAfterInsert);
+
+        // Test 2: Expect exception if no data is passed
+        $this->expectException(Exception::class);
+        $this->query->bulkInsert([]);
+
+        // Test 3: Expect exception if data is not an array of arrays
+        $this->expectException(Exception::class);
+        $this->query->bulkInsert(['name' => 'Product 4', 'color' => '#CCC']);
     }
 
     public function testUpdateMethod()

@@ -37,6 +37,18 @@ class Compiler
         return "INSERT INTO {$this->query->table} ($columns) VALUES $parameters";
     }
 
+    public function compileBulkInsert(array $columns, array $values)
+    {
+        foreach ($values as $value) {
+            $parameters[] = $this->parameterize(count($value));
+        }
+
+        $columns = implode(', ', $columns);
+        $values = implode(', ', $parameters);
+
+        return "INSERT INTO {$this->query->table} ($columns) VALUES $values";
+    }
+
     public function compileUpdate(array $columns)
     {
         $where = $this->where();

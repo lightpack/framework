@@ -69,6 +69,26 @@ class Query
         return $result;
     }
 
+    public function bulkInsert(array $data)
+    {
+        // verify that data is an array of arrays
+        if (empty($data) || array_values($data) !== $data) {
+            throw new \Exception('bulkInsert() expects an array of arrays');
+        }
+
+        // Loop data to prepare for parameter binding
+        foreach ($data as $row) {
+            $this->bindings = array_merge($this->bindings, array_values($row));
+        }
+
+        $columns = array_keys($data[0]);
+        $compiler = new Compiler($this);
+        $query = $compiler->compileBulkInsert($columns, $data);
+        $result = $this->connection->query($query, $this->bindings);
+        $this->resetQuery();
+        return $result;
+    }
+
     public function update(array $data)
     {
         $compiler = new Compiler($this);
