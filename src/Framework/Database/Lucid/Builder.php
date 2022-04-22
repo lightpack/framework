@@ -184,7 +184,7 @@ class Builder extends Query
             if ($this->model->getRelationType() === 'hasMany') {
                 $modelClass = $this->model->getRelatingModel();
                 $table = (new $modelClass)->getTableName();
-                $counts = (new Query($table))->whereIn($this->model->getRelatingKey(), $models->getKeys())->groupCount($this->model->getRelatingKey());
+                $counts = (new Query($table))->whereIn($this->model->getRelatingKey(), $models->getKeys())->countBy($this->model->getRelatingKey());
 
                 foreach ($models as $model) {
                     foreach ($counts as $count) {

@@ -328,7 +328,7 @@ class Query
 
     public function count()
     {
-        $this->columns = ['count(*) AS num'];
+        $this->columns = ['COUNT(*) AS num'];
 
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -338,13 +338,9 @@ class Query
         return $result->num;
     }
 
-    public function groupCount(string $column, ?Closure $callback = null)
+    public function countBy(string $column)
     {
-        if ($callback) {
-            $callback($this);
-        }
-
-        $this->columns = [$column, 'count(*) AS num'];
+        $this->columns = [$column, 'COUNT(*) AS num'];
         $this->groupBy($column);
 
         $query = $this->getCompiledSelect();

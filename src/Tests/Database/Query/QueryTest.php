@@ -584,4 +584,13 @@ final class QueryTest extends TestCase
         $products = Product::query()->paginate(10, 20);
         $this->assertInstanceOf(LucidPagination::class, $products);
     }
+
+    public function testGroupByCount()
+    {
+        // Test 1
+        $sql = 'SELECT color, COUNT(*) AS num FROM products GROUP BY color';
+        $this->query->countBy('color');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
 }
