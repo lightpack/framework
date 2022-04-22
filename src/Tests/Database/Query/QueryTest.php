@@ -610,4 +610,19 @@ final class QueryTest extends TestCase
         $this->assertInstanceOf(Pdo::class, $this->query->getConnection());
         $this->query->resetQuery();
     }
+
+    public function testMagicSetterMethod()
+    {
+        $this->query->bindings = ['foo' => 'bar'];
+        $this->query->table = 'products';
+        $this->query->columns = ['*'];
+
+        $this->assertEquals(['foo' => 'bar'], $this->query->bindings);
+        $this->assertEquals('products', $this->query->table);
+        $this->assertEquals(['*'], $this->query->columns);
+
+        // It should not set unwanted properties
+        $this->query->foo = 'bar';
+        $this->assertNull($this->query->foo);
+    }
 }
