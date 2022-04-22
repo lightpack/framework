@@ -381,32 +381,31 @@ class Query
         }
     }
 
-    public function fetchAll(bool $assoc = false)
+    public function fetchAll()
     {
         $query = $this->getCompiledSelect();
-        $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
+        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
         $this->resetQuery();
         $this->resetBindings();
         $this->resetWhere();
 
         if ($this->model) {
-            // $result = $this->model->hydrate($result ?? []);
             return static::hydrate($result);
         }
 
         return $result;
     }
 
-    public function all(bool $assoc = false)
+    public function all()
     {
-        return $this->fetchAll($assoc);
+        return $this->fetchAll();
     }
 
-    public function fetchOne(bool $assoc = false)
+    public function fetchOne()
     {
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
-        $result = $this->connection->query($query, $this->bindings)->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
+        $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
 
         if ($result && $this->model) {

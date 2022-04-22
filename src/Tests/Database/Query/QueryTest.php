@@ -49,6 +49,12 @@ final class QueryTest extends TestCase
         // Test 1
         $products = $this->query->select('id', 'name')->fetchAll();
         $this->assertGreaterThan(0, count($products));
+        $this->query->resetQuery();
+
+        // Test 2
+        $products = $this->query->select('id', 'name')->all();
+        $this->assertGreaterThan(0, count($products));
+        $this->query->resetQuery();
 
         // Test 2
         $products = $this->query->select('id', 'name')->where('color', '=', 'maroon')->fetchAll();
@@ -56,6 +62,7 @@ final class QueryTest extends TestCase
         $this->assertIsArray($products);
         $this->assertEmpty($products);
         $this->assertNotNull($products);
+        $this->query->resetQuery();
 
         // Test 3
         $products = Product::query()->fetchAll();
@@ -70,12 +77,17 @@ final class QueryTest extends TestCase
         $this->assertTrue(isset($product->id));
         $this->query->resetQuery();
 
-        // Test 2
+         // Test 2
+         $product = $this->query->one();
+         $this->assertTrue(isset($product->id));
+         $this->query->resetQuery();
+
+        // Test 3
         $product = $this->query->where('color', '=', 'maroon')->fetchOne();
         $this->assertFalse($product);
         $this->query->resetQuery();
 
-        // Test 3
+        // Test 4
         $product = Product::query()->fetchOne();
         $this->assertInstanceOf(Product::class, $product);
     }
