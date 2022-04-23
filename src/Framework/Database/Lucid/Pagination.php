@@ -10,9 +10,10 @@ use Lightpack\Pagination\Pagination as BasePagination;
 
 class Pagination extends BasePagination implements Countable, IteratorAggregate, JsonSerializable
 {
-    public function __construct($total, $perPage = 10, $currentPage = null, Collection $items)
+    public function __construct(Collection $items)
     {
-        parent::__construct($total, $perPage, $currentPage, $items);
+        parent::__construct($items->count());
+        $this->items = $items;
     }
 
     public function getIterator(): Traversable

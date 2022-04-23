@@ -66,7 +66,7 @@ class Pdo
      * aware.
      *
      * @param string $model
-     * @return void
+     * @return Model
      */
     public function model(string $model): Model
     {
