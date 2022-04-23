@@ -100,6 +100,7 @@ class Pdo
      * Prints all the logged queries.
      *
      * @return void
+     * @codeCoverageIgnore
      */
     public function printQueryLogs(): void
     {
