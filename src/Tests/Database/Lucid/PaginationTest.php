@@ -26,6 +26,7 @@ final class PaginationTest extends TestCase
 
         // Configure container
         global $container;
+        $container->register('db', function() { return $this->db; });
         $container->register('request', function() { return new Request(); });
 
         // Set Request URI
@@ -34,7 +35,7 @@ final class PaginationTest extends TestCase
 
     public function testContructor()
     {
-        $pagination = new Pagination($this->productsCollection);
+        $pagination = Product::query()->paginate();
 
         $this->assertEquals($this->productsCollection->count(), $pagination->count());
         $this->assertInstanceOf(Traversable::class, $pagination->items());
@@ -46,7 +47,7 @@ final class PaginationTest extends TestCase
 
     public function testIsJsonSerializable()
     {
-        $pagination = new Pagination($this->productsCollection);
+        $pagination = Product::query()->paginate();
         $json = $pagination->jsonSerialize();
 
         $this->assertArrayHasKey('total', $json);
@@ -77,8 +78,7 @@ final class PaginationTest extends TestCase
         ]);
 
         // Query all products as collection
-        $products = Product::query()->all();
-        $pagination = new Pagination($products);
+        $pagination = Product::query()->paginate();
         $pagination->load('options');
 
         // fetch the last product in collection
@@ -86,7 +86,28 @@ final class PaginationTest extends TestCase
 
         // Assertions
         $this->assertTrue($product->hasAttribute('options'));
-        $this->assertEquals(3, $this->productsCollection->last()->options->count());
+        $this->assertEquals(3, $product->options->count());
+    }
+
+    public function testLoadCountMethod()
+    {
+        // insert options for the latest product
+        $product = $this->db->table('products')->orderBy('id', 'desc')->one();
+        $options = $this->db->table('options')->bulkInsert([
+            ['product_id' => $product->id, 'name' => 'Option 1', 'value' => 'V1'],
+            ['product_id' => $product->id, 'name' => 'Option 2', 'value' => 'V2'],
+            ['product_id' => $product->id, 'name' => 'Option 3', 'value' => 'V3'],
+        ]);
+
+        // Query all products as collection
+        $pagination = Product::query()->paginate();
+        $pagination->loadCount('options');
+
+        // fetch the last product in collection
+        $product = $pagination->items()->last();
+
+        // Assertions
+        $this->assertTrue($product->hasAttribute('options_count'));
         $this->assertEquals(3, $product->options->count());
     }
 }

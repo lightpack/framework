@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../Lucid/Product.php';
+require_once __DIR__ . '/../Lucid/Product.php';
 
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;

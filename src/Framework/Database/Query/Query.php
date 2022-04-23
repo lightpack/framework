@@ -333,6 +333,13 @@ class Query
         return $this;
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param integer|null $limit
+     * @param integer|null $page
+     * @return Lightpack\Pagination\Pagination|Lightpack\Lucid\Pagination\Pagination
+     */
     public function paginate(int $limit = null, int $page = null)
     {
         $columns = $this->columns;
