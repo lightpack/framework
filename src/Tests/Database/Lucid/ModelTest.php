@@ -151,5 +151,77 @@ final class ModelTest extends TestCase
         $product = Product::query()->orderBy('id', 'DESC')->one();
         $this->assertTrue($product->id == $lastInsertId);
     }
+
+    public function testModelToArrayMethod()
+    {
+        $product = product::query()->one();
+        $product->name = 'Dummy Product';
+        $product->color = '#CCC';
+        $product->save();
+        $productArray = $product->toArray();
+
+        $this->assertTrue(is_array($productArray));
+        $this->assertTrue(isset($productArray['id']));
+        $this->assertTrue(isset($productArray['name']));
+        $this->assertTrue(isset($productArray['color']));
+        $this->assertTrue($productArray['id'] == $product->id);
+        $this->assertTrue($productArray['name'] == $product->name);
+        $this->assertTrue($productArray['color'] == $product->color);
+    }
+
+    public function testModelSetAttribute()
+    {
+        $product = new Product();
+        $product->setAttribute('name', 'Dummy Product');
+        $product->setAttribute('color', '#CCC');
+        $product->save();
+
+        $product = Product::query()->orderBy('id', 'DESC')->one();
+
+        $this->assertEquals('Dummy Product', $product->name);
+        $this->assertEquals('#CCC', $product->color);
+    }
+
+    public function testModelGetAttributeMethod()
+    {
+        $product = product::query()->one();
+        $product->name = 'Dummy Product';
+        $product->color = '#CCC';
+        $product->save();
+
+        $this->assertEquals($product->name, $product->getAttribute('name'));
+        $this->assertEquals($product->color, $product->getAttribute('color'));
+        $this->assertEquals($product->name, $product->getAttribute('name', 'default'));
+        $this->assertNull($product->getAttribute('non_existing_attribute'));
+    }
+
+    public function testHasAttributeMethod()
+    {
+        $product = product::query()->one();
+        $product->name = 'Dummy Product';
+        $product->color = '#CCC';
+        $product->save();
+
+        $this->assertTrue($product->hasAttribute('name'));
+        $this->assertTrue($product->hasAttribute('color'));
+        $this->assertFalse($product->hasAttribute('non_existing_attribute'));
+    }
+
+    public function testModelGetAttributesMethod()
+    {
+        $product = product::query()->one();
+        $product->name = 'Dummy Product';
+        $product->color = '#CCC';
+        $product->save();
+        $productAttributes = $product->getAttributes();
+
+        $this->assertTrue(is_object($productAttributes));
+        $this->assertTrue(isset($productAttributes->id));
+        $this->assertTrue(isset($productAttributes->name));
+        $this->assertTrue(isset($productAttributes->color));
+        $this->assertTrue($productAttributes->id == $product->id);
+        $this->assertTrue($productAttributes->name == $product->name);
+        $this->assertTrue($productAttributes->color == $product->color);
+    }
 }
 
