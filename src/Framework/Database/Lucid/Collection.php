@@ -155,4 +155,19 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
     {
         return $this->items;
     }
+
+    public function last()
+    {
+        return end($this->items);
+    }
+
+    public function first()
+    {
+        return reset($this->items);
+    }
+
+    public function isEmpty()
+    {
+        return empty($this->items);
+    }
 }
