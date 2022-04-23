@@ -4,6 +4,7 @@ require_once 'Product.php';
 
 use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
+use Lightpack\Exceptions\RecordNotFoundException;
 
 final class ModelTest extends TestCase
 {
@@ -26,6 +27,12 @@ final class ModelTest extends TestCase
         $sql = "DROP TABLE `products`, `options`, `owners`;";
         $this->db->query($sql);
         $this->db = null;
+    }
+
+    public function testContructorThrowsException()
+    {
+        $this->expectException(RecordNotFoundException::class);
+        new Product('non_existing_id');
     }
     
     public function testModelInstance()
@@ -222,6 +229,19 @@ final class ModelTest extends TestCase
         $this->assertTrue($productAttributes->id == $product->id);
         $this->assertTrue($productAttributes->name == $product->name);
         $this->assertTrue($productAttributes->color == $product->color);
+    }
+
+    public function saveAndRefresh()
+    {
+        $product = new Product();
+        $product->name = 'Dummy Product';
+        $product->color = '#CCC';
+        $product->saveAndRefresh();
+        $latestProduct = Product::query()->orderBy('id', 'DESC')->one();
+
+        $this->assertTrue($product->id == $latestProduct->id);
+        $this->assertTrue($product->name == $latestProduct->name);
+        $this->assertTrue($product->color == $latestProduct->color);
     }
 }
 

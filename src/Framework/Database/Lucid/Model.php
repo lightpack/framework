@@ -291,6 +291,21 @@ class Model implements JsonSerializable
     }
 
     /**
+     * Insert a model and repopulate it with the newly inserted ID.
+     * 
+     * @return void
+     */
+    public function saveAndRefresh(): void
+    {
+        $this->save();
+        $lastInsertId = $this->lastInsertId();
+
+        if ($lastInsertId) {
+            $this->find($lastInsertId);
+        }
+    }
+
+    /**
      * Deletes a model.
      */
     public function delete($id = null)
