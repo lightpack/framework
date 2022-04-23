@@ -114,9 +114,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         }
 
         $model = get_class(reset($this->items));
-
         $items = new Collection($this->items);
-
         $model::query()->withCount(...$relations)->eagerLoadRelationsCount($items);
 
         return $this;
