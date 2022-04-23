@@ -35,14 +35,14 @@ final class ModelTest extends TestCase
 
     public function testModelSaveInsertMethod()
     {
-        $products = $this->db->table('products')->fetchAll();
+        $products = $this->db->table('products')->all();
         $productsCountBeforeSave = count($products);
 
         $this->product->name = 'Dummy Product';
         $this->product->color = '#CCC';
         $this->product->save();
 
-        $products = $this->db->table('products')->fetchAll();
+        $products = $this->db->table('products')->all();
         $productsCountAfterSave = count($products);
 
         $this->assertEquals($productsCountBeforeSave + 1, $productsCountAfterSave);
@@ -50,15 +50,15 @@ final class ModelTest extends TestCase
 
     public function testModelSaveUpdateMethod()
     {
-        $product = $this->db->table('products')->fetchOne();
-        $products = $this->db->table('products')->fetchAll();
+        $product = $this->db->table('products')->one();
+        $products = $this->db->table('products')->all();
         $productsCountBeforeSave = count($products);
 
         $this->product->find($product->id);
         $this->product->name = 'ACME Product';
         $this->product->save();
 
-        $products = $this->db->table('products')->fetchAll();
+        $products = $this->db->table('products')->all();
         $productsCountAfterSave = count($products);
 
         $this->assertEquals($productsCountBeforeSave, $productsCountAfterSave);
@@ -66,15 +66,25 @@ final class ModelTest extends TestCase
 
     public function testModelDeleteMethod()
     {
-        $product = $this->db->table('products')->fetchOne();
-        $products = $this->db->table('products')->fetchAll();
+        $product = $this->db->table('products')->one();
+        $products = $this->db->table('products')->all();
         $productsCountBeforeDelete = count($products);
 
         $this->product->find($product->id);
         $this->product->delete();
 
-        $products = $this->db->table('products')->fetchAll();
+        $products = $this->db->table('products')->all();
         $productsCountAfterDelete = count($products);
+
+        $this->assertEquals($productsCountBeforeDelete - 1, $productsCountAfterDelete);
+    }
+
+    public function testModelDeleteWithIdMethod()
+    {
+        $productsCountBeforeDelete = Product::query()->count();
+        $product = Product::query()->one();
+        (new Product)->delete($product->id);
+        $productsCountAfterDelete = Product::query()->count();
 
         $this->assertEquals($productsCountBeforeDelete - 1, $productsCountAfterDelete);
     }
@@ -87,8 +97,8 @@ final class ModelTest extends TestCase
     public function testModelHasOneRelation()
     {
         $this->db->table('products')->insert(['name' => 'Dummy Product', 'color' => '#CCC']);
-        $product = $this->db->table('products')->orderBy('id', 'DESC')->fetchOne();
-        $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->fetchOne();
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
         
         if(!isset($owner->id)) {
             $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Bob']);
@@ -102,7 +112,7 @@ final class ModelTest extends TestCase
     public function testModelHasManyRelation()
     {
         $this->db->table('products')->insert(['name' => 'Dummy Product', 'color' => '#CCC']);
-        $product = $this->db->table('products')->orderBy('id', 'DESC')->fetchOne();
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => '#000']);
         
@@ -114,12 +124,12 @@ final class ModelTest extends TestCase
     public function testModelBelongsToRelation()
     {
         $this->db->table('products')->insert(['name' => 'Dummy Product', 'color' => '#CCC']);
-        $product = $this->db->table('products')->orderBy('id', 'DESC')->fetchOne();
-        $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->fetchOne();
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
         
         if(!isset($owner->id)) {
             $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Bob']);
-            $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->fetchOne();
+            $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
         }
 
         $ownerModel = $this->db->model(Owner::class);
@@ -127,6 +137,19 @@ final class ModelTest extends TestCase
         $ownerProduct = $ownerModel->product;
 
         $this->assertNotNull($ownerProduct->id);
+    }
+
+    public function testLastInsertId()
+    {
+        $product = new Product();
+        $product->name = 'Dummy Product';
+        $product->color = '#CCC';
+        $product->save();
+        $lastInsertId = $product->lastInsertId();
+        
+        // Fetch the latest product
+        $product = Product::query()->orderBy('id', 'DESC')->one();
+        $this->assertTrue($product->id == $lastInsertId);
     }
 }
 

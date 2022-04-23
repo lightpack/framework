@@ -260,7 +260,7 @@ class Model implements JsonSerializable
     {
         $query = new Query($this->table, $this->getConnection());
 
-        $this->data = $query->where($this->primaryKey, '=', $id)->fetchOne();
+        $this->data = $query->where($this->primaryKey, '=', $id)->one();
 
         if (!$this->data && $fail) {
             throw new RecordNotFoundException(
