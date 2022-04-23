@@ -28,12 +28,6 @@ final class ModelTest extends TestCase
         $this->db->query($sql);
         $this->db = null;
     }
-
-    public function testContructorThrowsException()
-    {
-        $this->expectException(RecordNotFoundException::class);
-        new Product('non_existing_id');
-    }
     
     public function testModelInstance()
     {
@@ -231,7 +225,7 @@ final class ModelTest extends TestCase
         $this->assertTrue($productAttributes->color == $product->color);
     }
 
-    public function saveAndRefresh()
+    public function testSaveAndRefresh()
     {
         $product = new Product();
         $product->name = 'Dummy Product';
@@ -242,6 +236,19 @@ final class ModelTest extends TestCase
         $this->assertTrue($product->id == $latestProduct->id);
         $this->assertTrue($product->name == $latestProduct->name);
         $this->assertTrue($product->color == $latestProduct->color);
+    }
+
+    public function testContructThrowsRecordNotFoundException()
+    {
+        $this->expectException(RecordNotFoundException::class);
+        new Product('non_existing_id');
+    }
+
+    public function testRecordNotFoundException()
+    {
+        $this->expectException(RecordNotFoundException::class);
+        $product = new Product();
+        $product->find(1);
     }
 }
 
