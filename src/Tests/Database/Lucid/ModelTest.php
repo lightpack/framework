@@ -146,7 +146,14 @@ final class ModelTest extends TestCase
         
         $this->product->find($product->id);
         $productOptions = $this->product->options;
+
+        // Assertions
         $this->assertEquals(2, count($productOptions));
+        $this->assertEquals($this->product->getRelationType(), 'hasMany');
+        $this->assertEquals($this->product->getRelatingKey(), 'product_id');
+        $this->assertEquals($this->product->getRelatingForeignKey(), 'id');
+        $this->assertEquals($this->product->getRelatingModel(), Option::class);
+        $this->assertNull($this->product->getPivotTable());
     }
 
     public function testModelBelongsToRelation()
