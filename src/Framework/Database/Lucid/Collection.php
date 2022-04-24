@@ -20,12 +20,12 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
      */
     public function __construct($items)
     {
-        if($items instanceof Model) {
-            $this->items[$items->{$items->getPrimaryKey()}] = $items;
-        } else {
-            foreach($items as $item) {
-                $this->items[$item->{$item->getPrimaryKey()}] = $item;
-            }
+        if ($items instanceof Model) {
+            $items = [$items];
+        }
+        
+        foreach ($items as $item) {
+            $this->items[$item->{$item->getPrimaryKey()}] = $item;
         }
     }
 
@@ -51,8 +51,8 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
 
     public function getItemWherecolumn($column, $value)
     {
-        foreach($this->items as $item) {
-            if($item->{$column} == $value) {
+        foreach ($this->items as $item) {
+            if ($item->{$column} == $value) {
                 return $item;
             }
         }
@@ -69,14 +69,14 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
                 $data[] = $item->$column;
             }
         }
-        
+
         return $data;
     }
 
     public function columnExists(string $column)
     {
-        foreach($this->items as $item) {
-            if($item->hasAttribute($column)) {
+        foreach ($this->items as $item) {
+            if ($item->hasAttribute($column)) {
                 return true;
             }
         }
@@ -140,10 +140,9 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
             }, $data);
 
             // set the field to empty object in case not found
-            if($item->getAttribute($field) === null) {
+            if ($item->getAttribute($field) === null) {
                 $item->setAttribute($field, $default ?? new \stdClass);
             }
-
         }, $this->items);
 
         return $this;

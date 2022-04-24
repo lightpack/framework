@@ -9,7 +9,9 @@ use Lightpack\Exceptions\RecordNotFoundException;
 final class ModelTest extends TestCase
 {
     private $db;
-    private $model;
+    
+    /** @var \Lightpack\Database\Lucid\Model */
+    private $product;
 
     public function setUp(): void
     {
@@ -64,6 +66,25 @@ final class ModelTest extends TestCase
         $this->assertEquals($productsCountBeforeSave, $productsCountAfterSave);
     }
 
+    public function testModelBulkInsertMethod()
+    {
+        $products = $this->db->table('products')->all();
+        $productsCountBeforeSave = count($products);
+
+        $this->product->query()->bulkInsert([
+            ['name' => 'Dummy Product 1', 'color' => '#CCC'],
+            ['name' => 'Dummy Product 2', 'color' => '#CCC'],
+            ['name' => 'Dummy Product 3', 'color' => '#CCC'],
+            ['name' => 'Dummy Product 4', 'color' => '#CCC'],
+            ['name' => 'Dummy Product 5', 'color' => '#CCC'],
+        ]);
+
+        $products = $this->db->table('products')->all();
+        $productsCountAfterSave = count($products);
+
+        $this->assertEquals($productsCountBeforeSave + 5, $productsCountAfterSave);
+    }
+
     public function testModelDeleteMethod()
     {
         $product = $this->db->table('products')->one();
@@ -106,7 +127,14 @@ final class ModelTest extends TestCase
 
         $this->product->find($product->id);
         $productOwner = $this->product->owner;
+        
+        // Assertions
         $this->assertNotNull($productOwner->id);
+        $this->assertEquals($this->product->getRelationType(), 'hasOne');
+        $this->assertEquals($this->product->getRelatingKey(), 'product_id');
+        $this->assertEquals($this->product->getRelatingForeignKey(), 'product_id');
+        $this->assertEquals($this->product->getRelatingModel(), Owner::class);
+        $this->assertNull($this->product->getPivotTable());
     }
 
     public function testModelHasManyRelation()
