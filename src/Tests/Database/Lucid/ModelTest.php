@@ -1,6 +1,9 @@
 <?php
 
+require_once 'Option.php';
 require_once 'Product.php';
+require_once 'Role.php';
+require_once 'User.php';
 
 use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
@@ -25,7 +28,7 @@ final class ModelTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE `products`, `options`, `owners`;";
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -172,6 +175,37 @@ final class ModelTest extends TestCase
         $ownerProduct = $ownerModel->product;
 
         $this->assertNotNull($ownerProduct->id);
+    }
+
+    public function testPivotMethod() // aka many-to-many relation
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+        $this->db->table('roles')->bulkInsert([
+            ['name' => 'admin'],
+            ['name' => 'user'],
+            ['name' => 'guest'],
+        ]);
+        $this->db->table('role_user')->bulkInsert([
+            ['user_id' => 1, 'role_id' => 1],
+            ['user_id' => 1, 'role_id' => 2],
+            ['user_id' => 2, 'role_id' => 2],
+            ['user_id' => 3, 'role_id' => 3],
+        ]);
+
+        $user = $this->db->model(User::class);
+        $user->find(1);
+        $userRoles = $user->roles;
+
+        $this->assertEquals(2, count($userRoles));
+        $this->assertEquals($user->getRelationType(), 'pivot');
+        $this->assertEquals($user->getRelatingKey(), 'user_id');
+        $this->assertEquals($user->getRelatingForeignKey(), 'user_id');
+        $this->assertEquals($user->getRelatingModel(), Role::class);
+        $this->assertEquals($user->getPivotTable(), 'role_user');
     }
 
     public function testLastInsertId()

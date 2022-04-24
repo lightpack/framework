@@ -40,7 +40,11 @@ class Compiler
     public function compileBulkInsert(array $columns, array $values)
     {
         foreach ($values as $value) {
-            $parameters[] = $this->parameterize(count($value));
+            if(count($value) == 1) {
+                $parameters[] = '(' . $this->parameterize(count($value)) . ')';
+            } else {
+                $parameters[] = $this->parameterize(count($value));
+            }
         }
 
         $columns = implode(', ', $columns);
