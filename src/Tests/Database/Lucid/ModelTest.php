@@ -16,14 +16,14 @@ use Lightpack\Exceptions\RecordNotFoundException;
 final class ModelTest extends TestCase
 {
     private $db;
-    
+
     /** @var \Lightpack\Database\Lucid\Model */
     private $product;
 
     public function setUp(): void
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
-        $this->db = new \Lightpack\Database\Adapters\Mysql($config); 
+        $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
         $stmt = $this->db->query($sql);
         $stmt->closeCursor();
@@ -36,7 +36,7 @@ final class ModelTest extends TestCase
         $this->db->query($sql);
         $this->db = null;
     }
-    
+
     public function testModelInstance()
     {
         $this->assertInstanceOf(Model::class, $this->product);
@@ -127,14 +127,14 @@ final class ModelTest extends TestCase
         $this->db->table('products')->insert(['name' => 'Dummy Product', 'color' => '#CCC']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
-        
-        if(!isset($owner->id)) {
+
+        if (!isset($owner->id)) {
             $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Bob']);
         }
 
         $this->product->find($product->id);
         $productOwner = $this->product->owner;
-        
+
         // Assertions
         $this->assertNotNull($productOwner->id);
         $this->assertEquals($this->product->getRelationType(), 'hasOne');
@@ -150,7 +150,7 @@ final class ModelTest extends TestCase
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => '#000']);
-        
+
         $this->product->find($product->id);
         $productOptions = $this->product->options;
 
@@ -168,8 +168,8 @@ final class ModelTest extends TestCase
         $this->db->table('products')->insert(['name' => 'Dummy Product', 'color' => '#CCC']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
-        
-        if(!isset($owner->id)) {
+
+        if (!isset($owner->id)) {
             $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Bob']);
             $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
         }
@@ -311,7 +311,7 @@ final class ModelTest extends TestCase
         $product->color = '#CCC';
         $product->save();
         $lastInsertId = $product->lastInsertId();
-        
+
         // Fetch the latest product
         $product = Product::query()->orderBy('id', 'DESC')->one();
         $this->assertTrue($product->id == $lastInsertId);
@@ -414,5 +414,43 @@ final class ModelTest extends TestCase
         $product = new Product();
         $product->find(1);
     }
-}
 
+    public function testModelsAreCached()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch project 2
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+
+        // Because we have not yet accessed any relation on project 2,
+        $this->assertEmpty($project->getCachedModels());
+
+        // fetch tasks for project 2
+        $project->tasks;
+
+        // Now we have accessed tasks relation on project 2,
+        // so we should have cached the tasks for project 2
+        $this->assertNotEmpty($project->getCachedModels());
+        $this->assertArrayHasKey('tasks', $project->getCachedModels());
+
+        // fetch tasks for project 2 again
+        $project->tasks;
+
+        // Now we have already accessed tasks relation on project 2 again,
+        // so we should have cached the tasks for project 2
+        $this->assertNotEmpty($project->getCachedModels());
+        $this->assertArrayHasKey('tasks', $project->getCachedModels());
+    }
+}

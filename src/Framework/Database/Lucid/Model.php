@@ -509,4 +509,9 @@ class Model implements JsonSerializable
     {
         return (array) $this->jsonSerialize();
     }
+
+    public function getCachedModels()
+    {
+        return $this->cachedModels;
+    }
 }
