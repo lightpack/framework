@@ -254,10 +254,54 @@ final class ModelTest extends TestCase
         ]);
 
         $users = $this->db->model(User::class)->query()->all();
-        
+
         $this->assertEquals(3, count($users));
         $this->assertInstanceOf(Collection::class, $users);
         $this->assertIsArray($users->toArray());
+    }
+
+    public function testLoadMethod()
+    {
+        // test eager load relationship after parent model has been created
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->load('tasks');
+
+        $this->assertEquals(2, count($project->tasks));
+        $this->assertInstanceOf(Collection::class, $project->tasks);
+        $this->assertIsArray($project->tasks->toArray());
+    }
+
+    public function testLoadCountMethod()
+    {
+        // test eager load relationship after parent model has been created
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->loadCount('tasks');
+
+        $this->assertEquals(2, $project->tasks_count);
     }
 
     public function testLastInsertId()

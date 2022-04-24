@@ -499,6 +499,12 @@ class Model implements JsonSerializable
         $items->load(...$relations);
     }
 
+    public function loadCount(string ...$relations)
+    {
+        $items = new Collection($this);
+        $items->loadCount(...$relations);
+    }
+
     public function toArray()
     {
         return (array) $this->jsonSerialize();
