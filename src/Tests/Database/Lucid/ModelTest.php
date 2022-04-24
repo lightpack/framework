@@ -7,11 +7,13 @@ require_once 'User.php';
 require_once 'Project.php';
 require_once 'Task.php';
 require_once 'Comment.php';
+require_once 'Article.php';
 
 use Lightpack\Database\Lucid\Collection;
 use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
 use Lightpack\Exceptions\RecordNotFoundException;
+use Lightpack\Moment\Moment;
 
 final class ModelTest extends TestCase
 {
@@ -32,7 +34,7 @@ final class ModelTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments";
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -452,5 +454,42 @@ final class ModelTest extends TestCase
         // so we should have cached the tasks for project 2
         $this->assertNotEmpty($project->getCachedModels());
         $this->assertArrayHasKey('tasks', $project->getCachedModels());
+    }
+
+    public function testItSetsTimestampAttributes()
+    {
+        $article = new Article();
+        $article->title = 'My Article';
+        $article->saveAndRefresh();
+
+        $this->assertNotNull($article->created_at);
+        $this->assertNull($article->updated_at);
+
+        // update the article
+        $article->title = 'My Article 2';
+        $article->saveAndRefresh();
+
+        $this->assertNotNull($article->created_at);
+        $this->assertNotNull($article->updated_at);
+    }
+
+    public function testItDoesNotSetTimestampAttributesWhenBulkInsert()
+    {
+        // bulk insert articles
+        $this->db->table('articles')->bulkInsert([
+            ['title' => 'Article 1'],
+            ['title' => 'Article 2'],
+            ['title' => 'Article 3'],
+        ]);
+
+        // fetch article 1
+        $article = $this->db->model(Article::class);
+        $article->find(1);
+
+        // It should have created_at and updated_at attributes set null
+        // because we inserted the article without setting these attributes
+        // using bulk insert.
+        $this->assertNull($article->created_at);
+        $this->assertNull($article->updated_at);
     }
 }

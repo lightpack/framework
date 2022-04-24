@@ -92,6 +92,16 @@ CREATE TABLE IF NOT EXISTS `comments` (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- create table articles
+DROP TABLE IF EXISTS `articles`;
+CREATE TABLE IF NOT EXISTS `articles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `created_at` timestamp NULL,
+  `updated_at` timestamp NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 -- insert dummy data for products
 INSERT INTO `products` (`id`, `name`, `color`) VALUES
     (331, 'Dummy Product', '#09F'),
