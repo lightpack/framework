@@ -167,4 +167,11 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
     {
         return empty($this->items);
     }
+
+    public function toArray()
+    {
+        return array_map(function ($item) {
+            return $item->toArray();
+        }, $this->items);
+    }
 }

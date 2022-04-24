@@ -127,7 +127,7 @@ class Model implements JsonSerializable
 
         $query = $this->{$key}();
 
-        if ($this->relationType === 'hasMany' || $this->relationType === 'pivot') {
+        if ($this->relationType === 'hasMany' || $this->relationType === 'pivot' || $this->relationType === 'hasManyThrough') {
             return $this->cachedModels[$key] = $query->all();
         }
 
@@ -235,7 +235,7 @@ class Model implements JsonSerializable
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
     {
         $this->relationType = __FUNCTION__;
-        $this->relatingForeignKey = $through . '.' . $throughKey;
+        $this->relatingForeignKey = $throughKey;
         $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
         $throughModel = $this->getConnection()->model($through);
@@ -246,7 +246,7 @@ class Model implements JsonSerializable
             ->query()
             ->select("$model->table.*", "$throughModel->table.$throughKey")
             ->join($throughModel->table, "$model->table.{$foreignKey}", "$throughModel->table.$throughModelPrimaryKey")
-            ->where("$through.$throughKey", '=', $this->{$this->primaryKey});
+            ->where("$throughModel->table.$throughKey", '=', $this->{$this->primaryKey});
     }
 
     /**

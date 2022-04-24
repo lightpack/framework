@@ -4,7 +4,11 @@ require_once 'Option.php';
 require_once 'Product.php';
 require_once 'Role.php';
 require_once 'User.php';
+require_once 'Project.php';
+require_once 'Task.php';
+require_once 'Comment.php';
 
+use Lightpack\Database\Lucid\Collection;
 use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
 use Lightpack\Exceptions\RecordNotFoundException;
@@ -28,7 +32,7 @@ final class ModelTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role";
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -206,6 +210,54 @@ final class ModelTest extends TestCase
         $this->assertEquals($user->getRelatingForeignKey(), 'user_id');
         $this->assertEquals($user->getRelatingModel(), Role::class);
         $this->assertEquals($user->getPivotTable(), 'role_user');
+    }
+
+    public function testHasManyThrough()
+    {
+        // projects, tasks, and comments table will be used for tests of hasmanyThrough relation
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+        $this->db->table('comments')->bulkInsert([
+            ['task_id' => 1, 'content' => 'Comment 1'],
+            ['task_id' => 2, 'content' => 'Comment 2'],
+            ['task_id' => 2, 'content' => 'Comment 3'],
+        ]);
+
+        // projects have many tasks, and tasks have many comments
+        // so we will test projects have many comments through tasks
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $projectComments = $project->comments;
+
+        $this->assertEquals(2, count($projectComments));
+        $this->assertEquals($project->getRelationType(), 'hasManyThrough');
+        $this->assertEquals($project->getRelatingKey(), 'project_id');
+        $this->assertEquals($project->getRelatingForeignKey(), 'project_id');
+        $this->assertEquals($project->getRelatingModel(), Comment::class);
+        $this->assertNull($project->getPivotTable());
+    }
+
+    public function testModelCollectionToArray()
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+
+        $users = $this->db->model(User::class)->query()->all();
+        
+        $this->assertEquals(3, count($users));
+        $this->assertInstanceOf(Collection::class, $users);
+        $this->assertIsArray($users->toArray());
     }
 
     public function testLastInsertId()
