@@ -2,10 +2,10 @@
 
 namespace Lightpack\Database\Lucid;
 
+use ArrayAccess;
 use Closure;
 use Countable;
 use Traversable;
-use ArrayAccess;
 use ArrayIterator;
 use JsonSerializable;
 use IteratorAggregate;
@@ -24,10 +24,8 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         if ($items instanceof Model) {
             $items = [$items];
         }
-        
-        foreach ($items as $item) {
-            $this->items[$item->{$item->getPrimaryKey()}] = $item;
-        }
+
+        $this->items = $items;
     }
 
     public function getIterator(): Traversable
@@ -42,12 +40,20 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function getKeys(): array
     {
-        return array_keys($this->items);
+        return array_map(function ($item) {
+            return $item->{$item->getPrimaryKey()};
+        }, $this->items);
     }
 
-    public function getByKey($key)
+    public function getByKey($key, $default = null)
     {
-        return $this->items[$key] ?? null;
+        foreach ($this->items as $item) {
+            if ($item->{$item->getPrimaryKey()} == $key) {
+                return $item;
+            }
+        }
+
+        return $default;
     }
 
     public function getItemWherecolumn($column, $value)
@@ -154,16 +160,6 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $this->items;
     }
 
-    public function last()
-    {
-        return end($this->items);
-    }
-
-    public function first()
-    {
-        return reset($this->items);
-    }
-
     public function isEmpty()
     {
         return empty($this->items);
@@ -176,7 +172,6 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         }, $this->items);
     }
 
-    // implement methods for array access
     public function offsetExists($offset): bool
     {
         return isset($this->items[$offset]);

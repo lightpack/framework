@@ -58,11 +58,13 @@ class Builder extends Query
                     throw new \Exception("Trying to eager load `{$relation}` but no relationship has been defined.");
                 }
     
+                $pivotKeyName = null;
                 $query = $this->model->{$relation}();
 
-                $query->resetWhere();
-                $query->resetBindings();
-                $pivotKeyName = null;
+                // if($this->model->getRelationType() !== 'pivot') {
+                    $query->resetWhere();
+                    $query->resetBindings();
+                // }
 
                 if ($this->model->getRelationType() === 'hasOne') {
                     $ids = $models->getKeys();
