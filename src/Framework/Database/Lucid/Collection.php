@@ -5,11 +5,12 @@ namespace Lightpack\Database\Lucid;
 use Closure;
 use Countable;
 use Traversable;
+use ArrayAccess;
 use ArrayIterator;
 use JsonSerializable;
 use IteratorAggregate;
 
-class Collection implements IteratorAggregate, Countable, JsonSerializable
+class Collection implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
     protected $items = [];
 
@@ -173,5 +174,35 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         return array_map(function ($item) {
             return $item->toArray();
         }, $this->items);
+    }
+
+    // implement methods for array access
+    public function offsetExists($offset): bool
+    {
+        return isset($this->items[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->items[$offset];
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        if (is_null($offset)) {
+            $this->items[] = $value;
+        } else {
+            $this->items[$offset] = $value;
+        }
+    }
+
+    public function offsetUnset($offset): void
+    {
+        unset($this->items[$offset]);
+    }
+
+    public function __toString()
+    {
+        return json_encode($this->items);
     }
 }
