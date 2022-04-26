@@ -107,6 +107,11 @@ class Pdo
         pp($this->queryLogs);
     }
 
+    public function clearQueryLogs(): void
+    {
+        $this->queryLogs = [];
+    }
+
     /**
      * Initiates a transaction.
      *
@@ -166,7 +171,7 @@ class Pdo
 
     protected function logQuery($sql, $params)
     {
-        if (false === get_env('APP_DEBUG', false)) {
+        if (!get_env('APP_DEBUG')) {
             return;
         }
 

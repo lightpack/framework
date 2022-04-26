@@ -26,8 +26,6 @@ final class ModelTest extends TestCase
 
     public function setUp(): void
     {
-        // disable query logging
-        set_env('APP_DEBUG', 'false');
         $config = require __DIR__ . '/../tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
@@ -41,7 +39,6 @@ final class ModelTest extends TestCase
         $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers";
         $this->db->query($sql);
         $this->db = null;
-        set_env('APP_DEBUG', 'false');
     }
 
     public function testModelInstance()
@@ -842,6 +839,8 @@ final class ModelTest extends TestCase
         $this->assertEquals(4, $projects[0]->comments->count());
         $this->assertEquals(0, $projects[1]->comments->count());
         $this->assertTrue($projects[0]->hasAttribute('manager'));
+
+        set_env('APP_DEBUG', false);
     }
 
     public function testEagerLoadingBelongsToRelation()
