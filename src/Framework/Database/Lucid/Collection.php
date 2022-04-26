@@ -195,9 +195,4 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     {
         unset($this->items[$offset]);
     }
-
-    public function __toString()
-    {
-        return json_encode($this->items);
-    }
 }

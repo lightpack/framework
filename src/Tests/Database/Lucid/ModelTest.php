@@ -13,6 +13,7 @@ require_once 'Manager.php';
 use Lightpack\Database\Lucid\Collection;
 use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
 use Lightpack\Moment\Moment;
 
@@ -874,5 +875,123 @@ final class ModelTest extends TestCase
         $this->assertEquals('Task 3', $tasks[2]->name);
         $this->assertNotEmpty($tasks[2]->project);
         $this->assertEquals('Project 2', $tasks[2]->project->name);
+    }
+
+    public function testRelationsMethodsReturnQuery()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // bulk insert comments
+        $this->db->table('comments')->bulkInsert([
+            ['content' => 'Comment 1', 'task_id' => 1],
+            ['content' => 'Comment 2', 'task_id' => 1],
+            ['content' => 'Comment 3', 'task_id' => 1],
+            ['content' => 'Comment 4', 'task_id' => 2],
+        ]);
+
+        // fetch all projects
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+
+        // Fetch tasks of the first project as a method
+        $tasksQuery1 = $projects[0]->tasks();
+        $tasks = $tasksQuery1->all();
+
+        // Fetch tasks of the first project as a method
+        $tasksQuery2 = $projects[0]->tasks();
+        $tasksWithComments = $tasksQuery2->with('comments')->all();
+
+        // Assertions
+        $this->assertInstanceOf(Query::class, $tasksQuery1);
+        $this->assertNotEmpty($tasks);
+        $this->assertEquals(2, $tasks->count());
+        $this->assertEquals('Task 1', $tasks[0]->name);
+        $this->assertEquals('Task 2', $tasks[1]->name);
+        $this->assertNotEmpty($tasksWithComments);
+        $this->assertEquals(2, $tasksWithComments->count());
+        $this->assertEquals('Task 1', $tasksWithComments[0]->name);
+        $this->assertEquals('Task 2', $tasksWithComments[1]->name);
+        $this->assertNotEmpty($tasksWithComments[0]->comments);
+        $this->assertEquals(3, $tasksWithComments[0]->comments->count());
+        $this->assertEquals('Comment 1', $tasksWithComments[0]->comments[0]->content);
+    }
+
+    public function testCollectionAccessAsArray()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+
+        // fetch all projects
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals(2, count($projects));
+        $this->assertArrayHasKey(0, $projects);
+        $this->assertArrayHasKey(1, $projects);
+
+        // unset the first project
+        $project1 = $projects[0];
+        unset($projects[0]);
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals(1, count($projects));
+        $this->assertArrayNotHasKey(0, $projects);
+        $this->assertArrayHasKey(1, $projects);
+
+        // unset the second project
+        $secondProject = $projects[1];
+        unset($projects[1]);
+
+        // Assertions
+        $this->assertEmpty($projects);
+        $this->assertTrue($projects->isEmpty());
+        $this->assertEquals(0, $projects->count());
+        $this->assertEquals(0, count($projects));
+        $this->assertArrayNotHasKey(0, $projects);
+        $this->assertArrayNotHasKey(1, $projects);
+
+        // Re-add the second project
+        $projects[] = $secondProject; // this should calls offsetSet() method with null as first parameter
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals(1, count($projects));
+        $this->assertArrayHasKey(2, $projects);
+        $this->assertArrayNotHasKey(0, $projects);
+        $this->assertArrayNotHasKey(1, $projects);
+        $this->assertEquals('Project 2', $projects[2]->name);
+
+        // Re-add the first project
+        $projects[0] = $project1; // this should calls offsetSet() method with 0 as first parameter
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals(2, count($projects));
+        $this->assertArrayHasKey(0, $projects);
+        $this->assertArrayNotHasKey(1, $projects);
+        $this->assertArrayHasKey(2, $projects);
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertEquals('Project 2', $projects[2]->name);
     }
 }
