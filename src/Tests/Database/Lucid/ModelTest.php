@@ -26,6 +26,8 @@ final class ModelTest extends TestCase
 
     public function setUp(): void
     {
+        // disable query logging
+        set_env('APP_DEBUG', 'false');
         $config = require __DIR__ . '/../tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
@@ -39,6 +41,7 @@ final class ModelTest extends TestCase
         $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers";
         $this->db->query($sql);
         $this->db = null;
+        set_env('APP_DEBUG', 'false');
     }
 
     public function testModelInstance()
@@ -785,5 +788,92 @@ final class ModelTest extends TestCase
         $this->assertNotEmpty($firstUser->roles);
         $this->assertEquals(2, $firstUser->roles->count());
         $this->assertNull($nonExistingUser);
+    }
+
+    public function testEagerLoadingNestedRelations()
+    {
+        set_env('APP_DEBUG', true);
+
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // bulk insert comments
+        $this->db->table('comments')->bulkInsert([
+            ['content' => 'Comment 1', 'task_id' => 1],
+            ['content' => 'Comment 2', 'task_id' => 1],
+            ['content' => 'Comment 3', 'task_id' => 1],
+            ['content' => 'Comment 4', 'task_id' => 2],
+        ]);
+
+        // bulk insert managers
+        $this->db->table('managers')->bulkInsert([
+            ['name' => 'Manager 1', 'project_id' => 1],
+            ['name' => 'Manager 2', 'project_id' => 2],
+        ]);
+
+        // fetch all projects with all its tasks and comments
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with('manager', 'comments', 'tasks', 'tasks.comments')->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertNotEmpty($projects[0]->tasks);
+        $this->assertEquals(2, $projects[0]->tasks->count());
+        $this->assertEquals('Task 1', $projects[0]->tasks[0]->name);
+        $this->assertNotEmpty($projects[0]->tasks[0]->comments);
+        $this->assertEquals(3, $projects[0]->tasks[0]->comments->count());
+        $this->assertEquals('Comment 1', $projects[0]->tasks[0]->comments[0]->content);
+        $this->assertEquals('Comment 2', $projects[0]->tasks[0]->comments[1]->content);
+        $this->assertEquals(0, $projects[2]->tasks->count());
+        $this->assertEmpty($projects[2]->tasks);
+        $this->assertEquals(4, $projects[0]->comments->count());
+        $this->assertEquals(0, $projects[1]->comments->count());
+        $this->assertTrue($projects[0]->hasAttribute('manager'));
+    }
+
+    public function testEagerLoadingBelongsToRelation()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch all tasks with all its projects
+        $taskModel = $this->db->model(Task::class);
+        $tasks = $taskModel::query()->with('project')->all();
+
+        // Assertions
+        $this->assertNotEmpty($tasks);
+        $this->assertEquals(3, $tasks->count());
+        $this->assertEquals('Task 1', $tasks[0]->name);
+        $this->assertNotEmpty($tasks[0]->project);
+        $this->assertEquals('Project 1', $tasks[0]->project->name);
+        $this->assertEquals('Task 2', $tasks[1]->name);
+        $this->assertNotEmpty($tasks[1]->project);
+        $this->assertEquals('Project 1', $tasks[1]->project->name);
+        $this->assertEquals('Task 3', $tasks[2]->name);
+        $this->assertNotEmpty($tasks[2]->project);
+        $this->assertEquals('Project 2', $tasks[2]->project->name);
     }
 }

@@ -12,4 +12,9 @@ class Task extends Model
     {
         return $this->hasMany(Comment::class, 'task_id');
     }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
 }

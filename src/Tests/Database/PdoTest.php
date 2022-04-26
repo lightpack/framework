@@ -9,6 +9,8 @@ final class PdoTest extends TestCase
 
     public function setUp(): void
     {
+        // disable query logging
+        set_env('APP_DEBUG', 'false');
         $config = require __DIR__ . '/tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);   
         $sql = file_get_contents(__DIR__ . '/tmp/db.sql');
@@ -21,6 +23,7 @@ final class PdoTest extends TestCase
         $sql = "DROP TABLE `products`, `options`, `owners`;";
         $this->db->query($sql);
         $this->db = null;
+        set_env('APP_DEBUG', 'false');
     }
 
     public function testContructor()
@@ -64,16 +67,23 @@ final class PdoTest extends TestCase
     {
         // Because no query logging happens when not in debug mode
         set_env('APP_DEBUG', true);
-        $this->db->query('SELECT * FROM products');
-        $this->db->query('SELECT * FROM products WHERE color = ?', ['Red']);
+
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->query('SELECT * FROM projects');
+        $this->db->query('SELECT * FROM projects WHERE name = ?', ['Project 1']);
+
         $logs = $this->db->getQueryLogs();
 
+        // Assertions
         $this->assertIsArray($logs);
         $this->assertCount(2, $logs);
         $this->assertArrayHasKey('queries', $logs);
         $this->assertArrayHasKey('bindings', $logs);
-        $this->assertCount(2, $logs['queries']);
-        $this->assertCount(2, $logs['bindings']);
     }
 
     public function testTransaction()

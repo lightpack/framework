@@ -51,19 +51,19 @@ class Builder extends Query
         foreach ($this->includes as $include) {
 
             $relation = explode('.', $include)[0];
-            
+
             // Load relation only if the models has no such relation
-            if(!$models->columnExists($relation)) {
+            if (!$models->columnExists($relation)) {
                 if (!method_exists($this->model, $relation)) {
                     throw new \Exception("Trying to eager load `{$relation}` but no relationship has been defined.");
                 }
-    
+
                 $pivotKeyName = null;
                 $query = $this->model->{$relation}();
 
                 // if($this->model->getRelationType() !== 'pivot') {
-                    $query->resetWhere();
-                    $query->resetBindings();
+                $query->resetWhere();
+                $query->resetBindings();
                 // }
 
                 if ($this->model->getRelationType() === 'hasOne') {
@@ -71,35 +71,27 @@ class Builder extends Query
                 } elseif ($this->model->getRelationType() === 'pivot') {
                     $ids = $models->getKeys();
                     $pivotKeyName = $this->model->getPivotTable() . '.' . $this->model->getRelatingKey();
-                } elseif($this->model->getRelationType() === 'hasManyThrough') {
+                } elseif ($this->model->getRelationType() === 'hasManyThrough') {
                     $ids = $models->getKeys();
                     $pivotKeyName = $this->model->getRelatingKey();
                 } else { // hasMany and belongsTo
                     $ids = $models->getByColumn($this->model->getRelatingForeignKey());
                     $ids = array_unique($ids);
                 }
-    
-                if (empty($ids)) {
-                    continue;
-                }
 
                 $children = $query->whereIn($pivotKeyName ?? $this->model->getRelatingKey(), $ids)->all();
 
                 foreach ($models as $model) {
-                    if($model->hasAttribute($relation)) {
-                        continue;
-                    }
-    
                     if ($this->model->getRelationType() === 'hasOne') {
                         $model->setAttribute($relation, $children->getItemWherecolumn($this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}));
                     } elseif ($this->model->getRelationType() === 'belongsTo') {
                         $model->setAttribute($relation, $children->getByKey($model->{$this->model->getRelatingForeignKey()}));
                         continue;
-                    } elseif($this->model->getRelationType() === 'hasMany') {
+                    } elseif ($this->model->getRelationType() === 'hasMany') {
                         $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
                             return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
                         }));
-                    } elseif($this->model->getRelationType() === 'hasManyThrough') {
+                    } elseif ($this->model->getRelationType() === 'hasManyThrough') {
                         $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
                             return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
                         }));
@@ -113,23 +105,18 @@ class Builder extends Query
 
             // load nested relations for the models
             $relations = substr($include, strlen($relation) + 1);
-            
+
             if ($relations) {
                 $items = $models->getByColumn($relation);
 
                 if ($items) {
-                    if ($items[0] instanceof Collection) {
-                        $normalizedItems = [];
+                    $normalizedItems = [];
 
-                        foreach ($items as $item) {
-                            $normalizedItems += $item->getItems();
-                        }
-
-                        $collection = new Collection($normalizedItems);
-                    } else {
-                        $collection = new Collection($items);
+                    foreach ($items as $item) {
+                        $normalizedItems += $item->getItems();
                     }
 
+                    $collection = new Collection($normalizedItems);
                     $collection->load($relations);
                 }
             }
