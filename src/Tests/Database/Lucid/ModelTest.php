@@ -994,4 +994,29 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 1', $projects[0]->name);
         $this->assertEquals('Project 2', $projects[2]->name);
     }
+
+    public function testEagerLoadingEmptyRelations()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch all projects
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+        $projects->load(); // calling load() without any relation should not throw any exception
+        $projects->loadCount(); // calling loadCount() without any relation should not throw any exception
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+    }
 }
