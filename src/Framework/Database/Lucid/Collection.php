@@ -15,8 +15,6 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     protected $items = [];
 
     /**
-     * Populate ietems keyed by model id
-     *
      * @param \Lightpack\Database\Lucid\Model|\Lightpack\Database\Lucid\Model[] $items
      */
     public function __construct($items)
