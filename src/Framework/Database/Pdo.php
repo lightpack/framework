@@ -66,7 +66,7 @@ class Pdo
      * aware.
      *
      * @param string $model
-     * @return void
+     * @return Model
      */
     public function model(string $model): Model
     {
@@ -100,10 +100,16 @@ class Pdo
      * Prints all the logged queries.
      *
      * @return void
+     * @codeCoverageIgnore
      */
     public function printQueryLogs(): void
     {
         pp($this->queryLogs);
+    }
+
+    public function clearQueryLogs(): void
+    {
+        $this->queryLogs = [];
     }
 
     /**
@@ -165,7 +171,7 @@ class Pdo
 
     protected function logQuery($sql, $params)
     {
-        if (false === get_env('APP_DEBUG', false)) {
+        if (!get_env('APP_DEBUG')) {
             return;
         }
 

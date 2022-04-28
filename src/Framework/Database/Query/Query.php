@@ -3,16 +3,19 @@
 namespace Lightpack\Database\Query;
 
 use Closure;
+use Lightpack\Database\Lucid\Collection;
 use Lightpack\Database\Lucid\Model;
-use Lightpack\Database\Lucid\Pagination;
+use Lightpack\Pagination\Pagination as BasePagination;
+use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\Pdo;
 
 class Query
 {
-    private $table;
-    private $model;
-    private $bindings = [];
-    private $components = [
+    protected $connection;
+    protected $table;
+    protected $model;
+    protected $bindings = [];
+    protected $components = [
         'alias' => null,
         'columns' => [],
         'distinct' => false,
@@ -24,9 +27,9 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct($subject, Pdo $connection = null)
+    public function __construct($subject = null, Pdo $connection = null)
     {
-        if($subject instanceOf Model) {
+        if ($subject instanceof Model) {
             $this->model = $subject;
             $this->table = $subject->getTableName();
         } else {
@@ -41,11 +44,46 @@ class Query
         $this->model = $model;
     }
 
+    public function getModel()
+    {
+        return $this->model;
+    }
+
+    public function setConnection(Pdo $connection)
+    {
+        $this->connection = $connection;
+    }
+
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
     public function insert(array $data)
     {
         $compiler = new Compiler($this);
         $this->bindings = array_values($data);
         $query = $compiler->compileInsert(array_keys($data));
+        $result = $this->connection->query($query, $this->bindings);
+        $this->resetQuery();
+        return $result;
+    }
+
+    public function bulkInsert(array $data)
+    {
+        // verify that data is an array of arrays
+        if (empty($data) || array_values($data) !== $data) {
+            throw new \Exception('bulkInsert() expects an array of arrays');
+        }
+
+        // Loop data to prepare for parameter binding
+        foreach ($data as $row) {
+            $this->bindings = array_merge($this->bindings, array_values($row));
+        }
+
+        $columns = array_keys($data[0]);
+        $compiler = new Compiler($this);
+        $query = $compiler->compileBulkInsert($columns, $data);
         $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
         return $result;
@@ -82,23 +120,39 @@ class Query
         return $this;
     }
 
+    public function from(string $table, string $alias = null): self
+    {
+        $this->table = $table;
+        $this->components['alias'] = $alias;
+        return $this;
+    }
+
     public function distinct(): self
     {
         $this->components['distinct'] = true;
         return $this;
     }
 
-    public function where(string $column, string $operator, string $value = null, string $joiner = 'AND'): self
+    public function where($column, string $operator = null, $value = null, string $joiner = 'AND'): self
     {
+        if ($column instanceof Closure) {
+            return $this->whereColumnIsAClosure($column, $joiner);
+        }
+
+        if ($value instanceof Closure) {
+            return $this->whereValueIsAClosure($value, $column, $operator, $joiner);
+        }
+
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
         if ($operator) {
             $this->bindings[] = $value;
         }
+
         return $this;
     }
 
-    public function whereRaw(string $where, array $values = [], string $joiner = null): self
+    public function whereRaw(string $where, array $values = [], string $joiner = 'AND'): self
     {
         $type = 'where_raw';
 
@@ -110,68 +164,51 @@ class Query
         return $this;
     }
 
-    public function andWhereRaw(string $where, array $values = []): self
-    {
-        $this->whereRaw($where, $values, 'AND');
-        return $this;
-    }
-
     public function orWhereRaw(string $where, array $values = []): self
     {
         $this->whereRaw($where, $values, 'OR');
         return $this;
     }
 
-    public function andWhere(string $column, string $operator, string $value): self
-    {
-        $this->where($column, $operator, $value, 'AND');
-        return $this;
-    }
-
-    public function orWhere(string $column, string $operator, string $value): self
+    public function orWhere($column, string $operator = null, $value = null): self
     {
         $this->where($column, $operator, $value, 'OR');
         return $this;
     }
 
-    public function whereIn(string $column, array $values, string $joiner = 'AND'): self
+    public function whereIn($column, $values = null, string $joiner = 'AND'): self
     {
+        if ($values instanceof Closure) {
+            $this->where($column, 'IN', $values, $joiner);
+            return $this;
+        }
+
         $operator = 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
         $this->bindings = array_merge($this->bindings, $values);
         return $this;
     }
 
-    public function andWhereIn(string $column, array $values): self
-    {
-        $this->whereIn($column, $values, 'AND');
-        return $this;
-    }
-
-    public function orWhereIn(string $column, array $values): self
+    public function orWhereIn($column, $values): self
     {
         $this->whereIn($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNotIn(string $column, array $values, string $joiner = 'AND'): self
+    public function whereNotIn($column, $values, string $joiner = 'AND'): self
     {
+        if ($values instanceof Closure) {
+            $this->where($column, 'NOT IN', $values, $joiner);
+            return $this;
+        }
+
         $operator = 'NOT IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
         $this->bindings = array_merge($this->bindings, $values);
         return $this;
-
-        $this->whereIn($column, $values, 'AND', true);
-        return $this;
     }
 
-    public function andWhereNotIn(string $column, array $values): self
-    {
-        $this->whereNotIn($column, $values, 'AND');
-        return $this;
-    }
-
-    public function orWhereNotIn(string $column, array $values): self
+    public function orWhereNotIn($column, $values): self
     {
         $this->whereNotIn($column, $values, 'OR');
         return $this;
@@ -179,37 +216,76 @@ class Query
 
     public function whereNull(string $column): self
     {
-        $this->where($column, '', 'IS NULL');
+        $this->where($column, 'IS NULL');
         return $this;
     }
 
     public function whereNotNull(string $column): self
     {
-        $this->where($column, '', 'IS NOT NULL');
-        return $this;
-    }
-
-    public function andWhereNull(string $column): self
-    {
-        $this->andWhere($column, '', 'IS NULL');
-        return $this;
-    }
-
-    public function andWhereNotNull(string $column): self
-    {
-        $this->andWhere($column, '', 'IS NOT NULL');
+        $this->where($column, 'IS NOT NULL');
         return $this;
     }
 
     public function orWhereNull(string $column): self
     {
-        $this->orWhere($column, '', 'IS NULL');
+        $this->orWhere($column, 'IS NULL');
         return $this;
     }
 
     public function orWhereNotNull(string $column): self
     {
-        $this->orWhere($column, '', 'IS NOT NULL');
+        $this->orWhere($column, 'IS NOT NULL');
+        return $this;
+    }
+
+    public function whereBetween(string $column, array $values, string $joiner = 'AND'): self
+    {
+        if(count($values) !== 2) {
+            throw new \Exception('You must provide two values for the between clause');
+        }
+
+        $operator = 'BETWEEN';
+        $type = 'where_between';
+        $this->components['where'][] = compact('column', 'operator', 'values', 'joiner', 'type');
+        $this->bindings = array_merge($this->bindings, $values);
+        return $this;
+    }
+
+    public function orWhereBetween($column, $values): self
+    {
+        $this->whereBetween($column, $values, 'OR');
+        return $this;
+    }
+
+    public function whereNotBetween($column, $values, string $joiner = 'AND'): self
+    {
+        $operator = 'NOT BETWEEN';
+        $type = 'where_not_between';
+        $this->components['where'][] = compact('column', 'operator', 'values', 'joiner', 'type');
+        $this->bindings = array_merge($this->bindings, $values);
+        return $this;
+    }
+
+    public function orWhereNotBetween($column, $values): self
+    {
+        $this->whereNotBetween($column, $values, 'OR');
+        return $this;
+    }
+
+    public function whereExists(Closure $callback): self
+    {
+        $query = new Query();
+        $callback($query);
+        $this->components['where'][] = ['type' => 'where_exists', 'sub_query' => $query->toSql()];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
+        return $this;
+    }
+
+    public function whereNotExists(Closure $callback): self
+    {
+        $query = new Query();
+        $callback($query);
+        $this->components['where'][] = ['type' => 'where_not_exists', 'sub_query' => $query->toSql()];
         return $this;
     }
 
@@ -257,29 +333,39 @@ class Query
         return $this;
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param integer|null $limit
+     * @param integer|null $page
+     * @return Lightpack\Pagination\Pagination|Lightpack\Lucid\Pagination\Pagination
+     */
     public function paginate(int $limit = null, int $page = null)
     {
         $columns = $this->columns;
         $total = $this->count();
         $this->columns = $columns;
-        $page = $page ?? app('request')->get('page');
+        $page = $page ?? request()->get('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
 
-        $limit = $limit ?: app('request')->get('limit', 10);
+        $limit = $limit ?: request()->get('limit', 10);
 
         $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);
 
         $items = $this->fetchAll();
 
-        return new Pagination($total, $limit, $page, $items);
-        // return $items;
+        if($items instanceof Collection) {
+            return new LucidPagination($total, $limit, $page, $items);
+        }
+
+        return new BasePagination($total, $limit, $page, $items);
     }
 
     public function count()
     {
-        $this->columns = ['count(*) AS num'];
+        $this->columns = ['COUNT(*) AS num'];
 
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -289,13 +375,9 @@ class Query
         return $result->num;
     }
 
-    public function groupCount(string $column, ?Closure $callback = null)
+    public function countBy(string $column)
     {
-        if($callback) {
-            $callback($this);
-        }
-
-        $this->columns = [$column, 'count(*) AS num'];
+        $this->columns = [$column, 'COUNT(*) AS num'];
         $this->groupBy($column);
 
         $query = $this->getCompiledSelect();
@@ -317,33 +399,49 @@ class Query
         return $this->components[$key] ?? null;
     }
 
-    public function fetchAll(bool $assoc = false)
+    public function __set(string $key, $value)
+    {
+        if ($key === 'bindings') {
+            $this->bindings = $value;
+        }
+
+        if ($key === 'table') {
+            $this->table = $value;
+        }
+
+        if (isset($this->components[$key])) {
+            $this->components[$key] = $value;
+        }
+    }
+
+    protected function fetchAll()
     {
         $query = $this->getCompiledSelect();
-        $result = $this->connection->query($query, $this->bindings)->fetchAll($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
+        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
         $this->resetQuery();
-        
-        if($this->model) {
-            // $result = $this->model->hydrate($result ?? []);
+        $this->resetBindings();
+        $this->resetWhere();
+
+        if ($this->model) {
             return static::hydrate($result);
         }
 
         return $result;
     }
 
-    public function all(bool $assoc = false)
+    public function all()
     {
-        return $this->fetchAll($assoc);
+        return $this->fetchAll();
     }
 
-    public function fetchOne(bool $assoc = false)
+    protected function fetchOne()
     {
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
-        $result = $this->connection->query($query, $this->bindings)->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_OBJ);
+        $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
 
-        if($result && $this->model) {
+        if ($result && $this->model) {
             $result = (array) $result;
             $result = static::hydrateItem($result);
         }
@@ -351,15 +449,32 @@ class Query
         return $result;
     }
 
-    public function one(bool $assoc = false)
+    public function one()
     {
-        return $this->fetchOne($assoc);
+        return $this->fetchOne();
+    }
+
+    public function column(string $column)
+    {
+        $this->columns = [$column];
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetchColumn();
+        $this->resetQuery();
+        $this->resetBindings();
+        $this->resetWhere();
+
+        return $result;
     }
 
     public function getCompiledSelect()
     {
         $compiler = new Compiler($this);
         return $compiler->compileSelect();
+    }
+
+    public function toSql()
+    {
+        return $this->getCompiledSelect();
     }
 
     public function resetQuery()
@@ -384,5 +499,31 @@ class Query
     public function resetBindings()
     {
         $this->bindings = [];
+    }
+
+    public function lastInsertId()
+    {
+        return $this->connection->lastInsertId();
+    }
+
+    protected function whereColumnIsAClosure(Closure $callback, string $joiner)
+    {
+        $query = new Query();
+        call_user_func($callback, $query);
+        $compiler = new Compiler($query);
+        $subQuery = substr($compiler->compileWhere(), 6); // strip WHERE prefix
+        $this->components['where'][] = ['type' => 'where_logical_group', 'sub_query' => $subQuery, 'joiner' => $joiner];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
+        return $this;
+    }
+
+    protected function whereValueIsAClosure(Closure $callback, string $column, string $operator, string $joiner)
+    {
+        $query = new Query();
+        call_user_func($callback, $query);
+        $subQuery = $query->toSql();
+        $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
+        return $this;
     }
 }

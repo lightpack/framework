@@ -19,4 +19,9 @@
         <env name="PGSQL_PASSWORD" value="postgres" />
         <env name="PGSQL_DB" value="test_lightpack" />
     </php>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./src/Framework</directory>
+        </whitelist>
+    </filter>
 </phpunit>

@@ -127,7 +127,7 @@ class Model implements JsonSerializable
 
         $query = $this->{$key}();
 
-        if ($this->relationType === 'hasMany' || $this->relationType === 'pivot') {
+        if ($this->relationType === 'hasMany' || $this->relationType === 'pivot' || $this->relationType === 'hasManyThrough') {
             return $this->cachedModels[$key] = $query->all();
         }
 
@@ -235,7 +235,7 @@ class Model implements JsonSerializable
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
     {
         $this->relationType = __FUNCTION__;
-        $this->relatingForeignKey = $through . '.' . $throughKey;
+        $this->relatingForeignKey = $throughKey;
         $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
         $throughModel = $this->getConnection()->model($through);
@@ -246,7 +246,7 @@ class Model implements JsonSerializable
             ->query()
             ->select("$model->table.*", "$throughModel->table.$throughKey")
             ->join($throughModel->table, "$model->table.{$foreignKey}", "$throughModel->table.$throughModelPrimaryKey")
-            ->where("$through.$throughKey", '=', $this->{$this->primaryKey});
+            ->where("$throughModel->table.$throughKey", '=', $this->{$this->primaryKey});
     }
 
     /**
@@ -260,7 +260,7 @@ class Model implements JsonSerializable
     {
         $query = new Query($this->table, $this->getConnection());
 
-        $this->data = $query->where($this->primaryKey, '=', $id)->fetchOne();
+        $this->data = $query->where($this->primaryKey, '=', $id)->one();
 
         if (!$this->data && $fail) {
             throw new RecordNotFoundException(
@@ -288,6 +288,21 @@ class Model implements JsonSerializable
         }
 
         $this->afterSave();
+    }
+
+    /**
+     * Insert a model and repopulate it with the newly inserted ID.
+     * 
+     * @return void
+     */
+    public function saveAndRefresh(): void
+    {
+        $this->save();
+        $lastInsertId = $this->lastInsertId();
+
+        if ($lastInsertId) {
+            $this->find($lastInsertId);
+        }
     }
 
     /**
@@ -343,7 +358,8 @@ class Model implements JsonSerializable
 
     public static function query(): Builder
     {
-        return new Builder(new static, self::$connection);
+        // return new Builder(new static, self::$connection);
+        return new Builder(new static);
     }
 
     /**
@@ -483,8 +499,19 @@ class Model implements JsonSerializable
         $items->load(...$relations);
     }
 
+    public function loadCount(string ...$relations)
+    {
+        $items = new Collection($this);
+        $items->loadCount(...$relations);
+    }
+
     public function toArray()
     {
         return (array) $this->jsonSerialize();
+    }
+
+    public function getCachedModels()
+    {
+        return $this->cachedModels;
     }
 }

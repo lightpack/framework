@@ -2,6 +2,7 @@
 
 namespace Lightpack\Database\Lucid;
 
+use ArrayAccess;
 use Closure;
 use Countable;
 use Traversable;
@@ -9,24 +10,20 @@ use ArrayIterator;
 use JsonSerializable;
 use IteratorAggregate;
 
-class Collection implements IteratorAggregate, Countable, JsonSerializable
+class Collection implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
     protected $items = [];
 
     /**
-     * Populate ietems keyed by model id
-     *
      * @param \Lightpack\Database\Lucid\Model|\Lightpack\Database\Lucid\Model[] $items
      */
     public function __construct($items)
     {
-        if($items instanceof Model) {
-            $this->items[$items->{$items->getPrimaryKey()}] = $items;
-        } else {
-            foreach($items as $item) {
-                $this->items[$item->{$item->getPrimaryKey()}] = $item;
-            }
+        if ($items instanceof Model) {
+            $items = [$items];
         }
+
+        $this->items = $items;
     }
 
     public function getIterator(): Traversable
@@ -41,18 +38,26 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
 
     public function getKeys(): array
     {
-        return array_keys($this->items);
+        return array_map(function ($item) {
+            return $item->{$item->getPrimaryKey()};
+        }, $this->items);
     }
 
-    public function getByKey($key)
+    public function getByKey($key, $default = null)
     {
-        return $this->items[$key] ?? null;
+        foreach ($this->items as $item) {
+            if ($item->{$item->getPrimaryKey()} == $key) {
+                return $item;
+            }
+        }
+
+        return $default;
     }
 
     public function getItemWherecolumn($column, $value)
     {
-        foreach($this->items as $item) {
-            if($item->{$column} == $value) {
+        foreach ($this->items as $item) {
+            if ($item->{$column} == $value) {
                 return $item;
             }
         }
@@ -69,14 +74,14 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
                 $data[] = $item->$column;
             }
         }
-        
+
         return $data;
     }
 
     public function columnExists(string $column)
     {
-        foreach($this->items as $item) {
-            if($item->hasAttribute($column)) {
+        foreach ($this->items as $item) {
+            if ($item->hasAttribute($column)) {
                 return true;
             }
         }
@@ -114,9 +119,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
         }
 
         $model = get_class(reset($this->items));
-
         $items = new Collection($this->items);
-
         $model::query()->withCount(...$relations)->eagerLoadRelationsCount($items);
 
         return $this;
@@ -142,10 +145,9 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
             }, $data);
 
             // set the field to empty object in case not found
-            if($item->getAttribute($field) === null) {
+            if ($item->getAttribute($field) === null) {
                 $item->setAttribute($field, $default ?? new \stdClass);
             }
-
         }, $this->items);
 
         return $this;
@@ -154,5 +156,41 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable
     public function getItems()
     {
         return $this->items;
+    }
+
+    public function isEmpty()
+    {
+        return empty($this->items);
+    }
+
+    public function toArray()
+    {
+        return array_map(function ($item) {
+            return $item->toArray();
+        }, $this->items);
+    }
+
+    public function offsetExists($offset): bool
+    {
+        return isset($this->items[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->items[$offset];
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        if (is_null($offset)) {
+            $this->items[] = $value;
+        } else {
+            $this->items[$offset] = $value;
+        }
+    }
+
+    public function offsetUnset($offset): void
+    {
+        unset($this->items[$offset]);
     }
 }

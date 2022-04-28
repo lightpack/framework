@@ -5,3 +5,5 @@ storage/*
 composer.phar
 :memory
 .phpunit.result.cache
+code-coverage
+notes.txt
