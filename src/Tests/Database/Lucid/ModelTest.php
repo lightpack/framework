@@ -1078,4 +1078,38 @@ final class ModelTest extends TestCase
         $projectModel = $this->db->model(Project::class);
         $projects = $projectModel::query()->has('categories')->all();
     }
+
+    public function testWhereHas()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch all projects that have atleast one task
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->whereHas('tasks', function($q) {
+            $q->where('name', '=', 'Task 1');
+        })->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals('Project 1', $projects[0]->name);
+
+        // fetch all projects that have no tasks
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->whereHas('tasks', function($q) {
+            $q->where('name', '=', 'Task 4');
+        })->all();
+    }
 }

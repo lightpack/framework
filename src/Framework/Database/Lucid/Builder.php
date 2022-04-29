@@ -41,7 +41,7 @@ class Builder extends Query
         return $this;
     }
     
-    public function has(string $relation, string $operator = null, string $count = null): self
+    public function has(string $relation, string $operator = null, string $count = null, callable $constraint = null): self
     {
         if(!method_exists($this->model, $relation)) {
             throw new \Exception("Relation {$relation} does not exist.");
@@ -54,6 +54,11 @@ class Builder extends Query
         // we will apply count query
         if(!is_null($operator) && !is_null($count)) {
             $query = $this->model->getConnection()->table($relatingTable);
+
+            if($constraint) {
+                $constraint($query);
+            }
+
             $subQuery = function($q) use($relatingTable, $relatingKey) {
                 $q->from($relatingTable)
                 ->select('COUNT(*)')
@@ -65,12 +70,21 @@ class Builder extends Query
         }
 
         // else we will apply 'where exists' clause
-        $subQuery = function($q) use($relatingTable, $relatingKey) {
+        $subQuery = function($q) use($relatingTable, $relatingKey, $constraint) {
             $q->from($relatingTable)
             ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
+
+            if($constraint) {
+                $constraint($q);
+            }
         };
 
         return $this->whereExists($subQuery);
+    }
+
+    public function whereHas(string $relation, callable $constraint): self
+    {
+        return $this->has($relation, null, null, $constraint);
     }
 
     /**
