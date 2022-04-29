@@ -40,6 +40,38 @@ class Builder extends Query
 
         return $this;
     }
+    
+    public function has(string $relation, string $operator = null, string $count = null): self
+    {
+        if(!method_exists($this->model, $relation)) {
+            throw new \Exception("Relation {$relation} does not exist.");
+        }
+        $relationQuery = $this->model->{$relation}();
+        $relatingTable = $relationQuery->table;
+        $relatingKey = $this->model->getRelatingKey();
+        
+
+        // we will apply count query
+        if(!is_null($operator) && !is_null($count)) {
+            $query = $this->model->getConnection()->table($relatingTable);
+            $subQuery = function($q) use($relatingTable, $relatingKey) {
+                $q->from($relatingTable)
+                ->select('COUNT(*)')
+                ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
+            };
+            $subQuery($query);
+
+            return $this->whereRaw('(' . $query->toSql() . ')' . ' ' . $operator . ' ' . '?', [$count]);
+        }
+
+        // else we will apply 'where exists' clause
+        $subQuery = function($q) use($relatingTable, $relatingKey) {
+            $q->from($relatingTable)
+            ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
+        };
+
+        return $this->whereExists($subQuery);
+    }
 
     /**
      * Eager load all relations for a collection.

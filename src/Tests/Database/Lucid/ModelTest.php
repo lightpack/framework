@@ -10,12 +10,16 @@ require_once 'Comment.php';
 require_once 'Article.php';
 require_once 'Manager.php';
 
+use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
 use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
 use Lightpack\Moment\Moment;
+
+// Initalize container
+$container = new Container();
 
 final class ModelTest extends TestCase
 {
@@ -33,6 +37,10 @@ final class ModelTest extends TestCase
         $stmt = $this->db->query($sql);
         $stmt->closeCursor();
         $this->product = $this->db->model(Product::class);
+
+        // Configure container
+        global $container;
+        $container->register('db', function() { return $this->db; });
     }
 
     public function tearDown(): void
@@ -1018,5 +1026,56 @@ final class ModelTest extends TestCase
 
         // Assertions
         $this->assertNotEmpty($projects);
+    }
+
+    public function testHasMethodForRelationshipExistence()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch all projects that have atleast one task
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->has('tasks')->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertEquals('Project 2', $projects[1]->name);
+
+        // fetch all projects that have no tasks
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->has('tasks', '=', 0)->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals('Project 3', $projects[0]->name);
+
+        // fetch all projects that have atleast one task
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->has('tasks', '>', 0)->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertEquals('Project 2', $projects[1]->name);
+
+        // Expect exception when passing non-existing relation
+        $this->expectException(Exception::class);
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->has('categories')->all();
     }
 }
