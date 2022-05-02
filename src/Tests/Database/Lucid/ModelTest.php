@@ -1245,5 +1245,79 @@ final class ModelTest extends TestCase
         $this->assertEquals(1, $projects[0]->tasks_count);
         $this->assertEquals(0, $projects[1]->tasks_count);
         $this->assertEquals(0, $projects[2]->tasks_count);
+
+        // fetch all projects with task and task comments count
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with(['tasks' => function ($q) {
+            $q->withCount('comments');
+        }])->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals(2, $projects[0]->tasks[0]->comments_count);
+        $this->assertEquals(1, $projects[0]->tasks[1]->comments_count);
+        // $this->assertEquals(0, $projects[1]->tasks[0]->comments_count);
+        // $this->assertEquals(0, $projects[2]->tasks[0]->comments_count);
+    }
+
+    public function testEagerLoadWithThrowsException()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch all projects with tasks count
+        $projectModel = $this->db->model(Project::class);
+
+        // Expect exception
+        $this->expectException(Exception::class);
+
+        // try eager loading without specifying relation key
+        $projectModel::query()->with(function ($q) {
+            $q->with(['comments' => function ($q) {
+                $q->where('content', '=', 'Comment 1');
+            }]);
+        })->all();
+    }
+
+    public function testEagerLoadWithCountThrowsException()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch all projects with tasks count
+        $projectModel = $this->db->model(Project::class);
+
+        // Expect exception
+        $this->expectException(Exception::class);
+
+        // try eager loading without specifying relation key
+        $projectModel::query()->withCount(function ($q) {
+            $q->with(['comments' => function ($q) {
+                $q->where('content', '=', 'Comment 1');
+            }]);
+        })->all();
     }
 }
