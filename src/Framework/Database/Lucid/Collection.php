@@ -129,34 +129,6 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $this;
     }
 
-    public function mapAndCreate(string $field, array $data, string $key = null, array $pluckKeys = [], $default = null): self
-    {
-        array_map(function ($item) use ($field, $data, $key, $pluckKeys) {
-            array_map(function ($value) use ($item, $field, $key, $pluckKeys) {
-                if ($value->$key === $item->id) {
-                    if (!$pluckKeys) {
-                        $item->setAttribute($field, $value);
-                    } else {
-                        $setData = [];
-
-                        foreach ($pluckKeys as $pluckKey) {
-                            $setData[$pluckKey] = $value->$pluckKey;
-                        }
-
-                        $item->setAttribute($field, $setData);
-                    }
-                }
-            }, $data);
-
-            // set the field to empty object in case not found
-            if ($item->getAttribute($field) === null) {
-                $item->setAttribute($field, $default ?? new \stdClass);
-            }
-        }, $this->items);
-
-        return $this;
-    }
-
     public function getItems()
     {
         return $this->items;

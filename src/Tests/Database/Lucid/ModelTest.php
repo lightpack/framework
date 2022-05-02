@@ -1413,4 +1413,65 @@ final class ModelTest extends TestCase
             }]);
         })->all();
     }
+
+    public function testModelCastIntoArray()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch first projects with tasks
+        $projectModel = $this->db->model(Project::class);
+        $project = $projectModel::query()->with('tasks')->one();
+        $projectArray = $project->toArray();
+
+        // Assertions
+        $this->assertNotEmpty($project);
+        $this->assertEquals(1, $project->id);
+        $this->assertEquals('Project 1', $project->name);
+        $this->assertCount(2, $project->tasks);
+        $this->assertIsArray($projectArray);
+        $this->assertEquals('Project 1', $projectArray['name']);
+        $this->assertCount(2, $projectArray['tasks']);
+    }
+
+    public function testCollectCastIntoArray()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // fetch all projects with tasks
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with('tasks')->all();
+        $projectsArray = $projects->toArray();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(3, $projects->count());
+        $this->assertIsArray($projectsArray);
+        $this->assertCount(2, $projectsArray[0]['tasks']);
+        $this->assertCount(1, $projectsArray[1]['tasks']);
+        $this->assertCount(0, $projectsArray[2]['tasks']);
+    }
 }
