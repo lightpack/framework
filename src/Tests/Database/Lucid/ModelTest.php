@@ -1209,4 +1209,41 @@ final class ModelTest extends TestCase
         $this->assertEquals(1, $projects[0]->tasks[0]->comments->count());
         // $this->assertEquals(0, $projects[0]->tasks[1]->comments->count());
     }
+
+    public function testEagerLoadCountWithArrayOfRelationConstraints()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // bulk insert comments
+        $this->db->table('comments')->bulkInsert([
+            ['content' => 'Comment 1', 'task_id' => 1],
+            ['content' => 'Comment 2', 'task_id' => 1],
+            ['content' => 'Comment 3', 'task_id' => 2],
+        ]);
+
+        // fetch all projects with tasks count
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->withCount(['tasks' => function ($q) {
+            $q->where('name', '=', 'Task 1');
+        }])->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals(1, $projects[0]->tasks_count);
+        $this->assertEquals(0, $projects[1]->tasks_count);
+        $this->assertEquals(0, $projects[2]->tasks_count);
+    }
 }

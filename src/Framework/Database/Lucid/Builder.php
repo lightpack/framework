@@ -40,9 +40,15 @@ class Builder extends Query
         return $this;
     }
 
-    public function withCount(string ...$includes): self
+    public function withCount(): self
     {
-        $this->countIncludes = $includes;
+        $args = func_get_args();
+
+        if (is_array($args[0])) {
+            $this->countIncludes = $args[0];
+        } else {
+            $this->countIncludes = $args;
+        }
 
         return $this;
     }
@@ -113,7 +119,6 @@ class Builder extends Query
             if (is_string($value)) {
                 $include = $value;
             }
-
 
             $relation = explode('.', $include)[0];
 
@@ -200,16 +205,30 @@ class Builder extends Query
      */
     public function eagerLoadRelationsCount(Collection $models)
     {
-        foreach ($this->countIncludes as $include) {
+        foreach ($this->countIncludes as $key => $value) {
+            if (is_callable($value)) {
+                if (!is_string($key)) {
+                    throw new \Exception("Relation key must be a string.");
+                }
+
+                $constraint = $value;
+                $include = $key;
+            }
+
+            if (is_string($value)) {
+                $include = $value;
+            }
+
             $query = $this->model->{$include}();
             $query->resetWhere();
             $query->resetBindings();
 
             if ($this->model->getRelationType() === 'hasMany') {
-                $modelClass = $this->model->getRelatingModel();
-                $table = (new $modelClass)->getTableName();
-                $connection = $this->model->getConnection();
-                $counts = $connection->table($table)->whereIn($this->model->getRelatingKey(), $models->getKeys())->countBy($this->model->getRelatingKey());
+                if($constraint ?? false) {
+                    $constraint($query);
+                }
+
+                $counts = $query->whereIn($this->model->getRelatingKey(), $models->getKeys())->countBy($this->model->getRelatingKey());
 
                 foreach ($models as $model) {
                     foreach ($counts as $count) {
