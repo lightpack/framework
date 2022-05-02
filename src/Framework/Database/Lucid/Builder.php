@@ -67,18 +67,23 @@ class Builder extends Query
         if (!is_null($operator) && !is_null($count)) {
             $query = $this->model->getConnection()->table($relatingTable);
 
-            if ($constraint) {
-                $constraint($query);
-            }
-
-            $subQuery = function ($q) use ($relatingTable, $relatingKey) {
+            $subQueryCallback = function ($q) use ($relatingTable, $relatingKey) {
                 $q->from($relatingTable)
                     ->select('COUNT(*)')
                     ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
             };
-            $subQuery($query);
 
-            return $this->whereRaw('(' . $query->toSql() . ')' . ' ' . $operator . ' ' . '?', [$count]);
+            $subQueryCallback($query);
+
+            $bindings = [];
+
+            if ($constraint) {
+                $constraint($query);
+                $bindings = $query->bindings;
+            }
+
+            $bindings[] = $count;
+            return $this->whereRaw('(' . $query->toSql() . ')' . ' ' . $operator . ' ' . '?', $bindings);
         }
 
         // else we will apply 'where exists' clause
@@ -94,9 +99,9 @@ class Builder extends Query
         return $this->whereExists($subQuery);
     }
 
-    public function whereHas(string $relation, callable $constraint): self
+    public function whereHas(string $relation, callable $constraint, string $operator = null, string $count = null): self
     {
-        return $this->has($relation, null, null, $constraint);
+        return $this->has($relation, $operator, $count, $constraint);
     }
 
     /**
