@@ -40,7 +40,9 @@ final class ModelTest extends TestCase
 
         // Configure container
         global $container;
-        $container->register('db', function() { return $this->db; });
+        $container->register('db', function () {
+            return $this->db;
+        });
     }
 
     public function tearDown(): void
@@ -1097,7 +1099,7 @@ final class ModelTest extends TestCase
 
         // fetch all projects that have atleast one task
         $projectModel = $this->db->model(Project::class);
-        $projects = $projectModel::query()->whereHas('tasks', function($q) {
+        $projects = $projectModel::query()->whereHas('tasks', function ($q) {
             $q->where('name', '=', 'Task 1');
         })->all();
 
@@ -1108,8 +1110,103 @@ final class ModelTest extends TestCase
 
         // fetch all projects that have no tasks
         $projectModel = $this->db->model(Project::class);
-        $projects = $projectModel::query()->whereHas('tasks', function($q) {
+        $projects = $projectModel::query()->whereHas('tasks', function ($q) {
             $q->where('name', '=', 'Task 4');
         })->all();
+    }
+
+    public function testEagerLoadingWithArrayOfRelations()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // bulk insert comments
+        $this->db->table('comments')->bulkInsert([
+            ['content' => 'Comment 1', 'task_id' => 1],
+            ['content' => 'Comment 2', 'task_id' => 1],
+            ['content' => 'Comment 3', 'task_id' => 2],
+        ]);
+
+        // fetch all projects with tasks and task comments
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with(['tasks.comments'])->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertEquals('Project 3', $projects[2]->name);
+        $this->assertEquals(2, $projects[0]->tasks->count());
+        $this->assertEquals(1, $projects[1]->tasks->count());
+        $this->assertEquals(0, $projects[2]->tasks->count());
+        $this->assertEquals(2, $projects[0]->tasks[0]->comments->count());
+        $this->assertEquals(1, $projects[0]->tasks[1]->comments->count());
+        // $this->assertEquals(0, $projects[1]->tasks[0]->comments->count());
+    }
+
+    public function testEagerLoadingWithArrayOfRelationConstraints()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // bulk insert tasks
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        // bulk insert comments
+        $this->db->table('comments')->bulkInsert([
+            ['content' => 'Comment 1', 'task_id' => 1],
+            ['content' => 'Comment 2', 'task_id' => 1],
+            ['content' => 'Comment 3', 'task_id' => 2],
+        ]);
+
+        // fetch all projects that with tasks
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with(['tasks' => function ($q) {
+            $q->where('name', '=', 'Task 1');
+        }])->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals(1, $projects[0]->tasks->count());
+        $this->assertEquals(0, $projects[1]->tasks->count());
+        $this->assertEquals(0, $projects[2]->tasks->count());
+
+        // fetch all projects that with task and task comments
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with(['tasks' => function ($q) {
+            $q->with(['comments' => function ($q) {
+                $q->where('content', '=', 'Comment 1');
+            }]);
+        }])->all();
+
+        // Assertions
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals(2, $projects[0]->tasks->count());
+        $this->assertEquals(1, $projects[1]->tasks->count());
+        $this->assertEquals(0, $projects[2]->tasks->count());
+        $this->assertEquals(1, $projects[0]->tasks[0]->comments->count());
+        // $this->assertEquals(0, $projects[0]->tasks[1]->comments->count());
     }
 }

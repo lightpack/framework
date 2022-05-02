@@ -27,9 +27,15 @@ class Builder extends Query
         parent::__construct($model, $model->getConnection());
     }
 
-    public function with(string ...$includes): self
+    public function with(): self
     {
-        $this->includes = $includes;
+        $args = func_get_args();
+
+        if (is_array($args[0])) {
+            $this->includes = $args[0];
+        } else {
+            $this->includes = $args;
+        }
 
         return $this;
     }
@@ -40,29 +46,29 @@ class Builder extends Query
 
         return $this;
     }
-    
+
     public function has(string $relation, string $operator = null, string $count = null, callable $constraint = null): self
     {
-        if(!method_exists($this->model, $relation)) {
+        if (!method_exists($this->model, $relation)) {
             throw new \Exception("Relation {$relation} does not exist.");
         }
         $relationQuery = $this->model->{$relation}();
         $relatingTable = $relationQuery->table;
         $relatingKey = $this->model->getRelatingKey();
-        
+
 
         // we will apply count query
-        if(!is_null($operator) && !is_null($count)) {
+        if (!is_null($operator) && !is_null($count)) {
             $query = $this->model->getConnection()->table($relatingTable);
 
-            if($constraint) {
+            if ($constraint) {
                 $constraint($query);
             }
 
-            $subQuery = function($q) use($relatingTable, $relatingKey) {
+            $subQuery = function ($q) use ($relatingTable, $relatingKey) {
                 $q->from($relatingTable)
-                ->select('COUNT(*)')
-                ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
+                    ->select('COUNT(*)')
+                    ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
             };
             $subQuery($query);
 
@@ -70,11 +76,11 @@ class Builder extends Query
         }
 
         // else we will apply 'where exists' clause
-        $subQuery = function($q) use($relatingTable, $relatingKey, $constraint) {
+        $subQuery = function ($q) use ($relatingTable, $relatingKey, $constraint) {
             $q->from($relatingTable)
-            ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
+                ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
 
-            if($constraint) {
+            if ($constraint) {
                 $constraint($q);
             }
         };
@@ -94,7 +100,20 @@ class Builder extends Query
      */
     public function eagerLoadRelations(Collection $models)
     {
-        foreach ($this->includes as $include) {
+        foreach ($this->includes as $key => $value) {
+            if (is_callable($value)) {
+                if (!is_string($key)) {
+                    throw new \Exception("Relation key must be a string.");
+                }
+
+                $constraint = $value;
+                $include = $key;
+            }
+
+            if (is_string($value)) {
+                $include = $value;
+            }
+
 
             $relation = explode('.', $include)[0];
 
@@ -123,6 +142,10 @@ class Builder extends Query
                 } else { // hasMany and belongsTo
                     $ids = $models->getByColumn($this->model->getRelatingForeignKey());
                     $ids = array_unique($ids);
+                }
+
+                if($constraint ?? false) {
+                    $constraint($query);
                 }
 
                 $children = $query->whereIn($pivotKeyName ?? $this->model->getRelatingKey(), $ids)->all();
