@@ -493,14 +493,16 @@ class Model implements JsonSerializable
         $this->data->{$key} = $value;
     }
 
-    public function load(string ...$relations)
+    public function load()
     {
+        $relations = func_get_args();
         $items = new Collection($this);
         $items->load(...$relations);
     }
 
-    public function loadCount(string ...$relations)
+    public function loadCount()
     {
+        $relations = func_get_args();
         $items = new Collection($this);
         $items->loadCount(...$relations);
     }

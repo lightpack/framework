@@ -319,6 +319,56 @@ final class ModelTest extends TestCase
         $this->assertEquals(2, $project->tasks_count);
     }
 
+    public function testLoadMethodWithConstraint()
+    {
+        // test eager load relationship after parent model has been created
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->load(['tasks' => function($q) {
+            $q->where('name', 'LIKE', '%Task%');
+        }]);
+
+       // Assertions
+        $this->assertEquals(2, count($project->tasks));
+        $this->assertInstanceOf(Collection::class, $project->tasks);
+        $this->assertIsArray($project->tasks->toArray());
+    }
+
+    public function testLoadCountMethodWithConstraint()
+    {
+        // test eager load relationship after parent model has been created
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->bulkInsert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->loadCount(['tasks' => function($q) {
+            $q->where('name', 'LIKE', '%Task%');
+        }]);
+
+        // Assertions
+        $this->assertEquals(2, $project->tasks_count);
+    }
+
     public function testLastInsertId()
     {
         $product = new Product();

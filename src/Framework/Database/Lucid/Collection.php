@@ -99,8 +99,10 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return array_values($this->items);
     }
 
-    public function load(string ...$relations): self
+    public function load(): self
     {
+        $relations = func_get_args();
+
         if (empty($relations) || empty($this->items)) {
             return $this;
         }
@@ -112,8 +114,10 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $this;
     }
 
-    public function loadCount(string ...$relations): self
+    public function loadCount(): self
     {
+        $relations = func_get_args();
+
         if (empty($relations) || empty($this->items)) {
             return $this;
         }
