@@ -607,7 +607,7 @@ final class ModelTest extends TestCase
 
         // Assertions
         $this->assertEquals(2, $project2->tasks_count);
-        $this->assertNull($project3->tasks_count);
+        $this->assertEquals(0, $project3->tasks_count);
     }
 
     public function testWithMethodForNestedEagerLoading()
@@ -1246,7 +1246,7 @@ final class ModelTest extends TestCase
         $this->assertEquals(0, $projects[2]->tasks->count());
         $this->assertEquals(2, $projects[0]->tasks[0]->comments->count());
         $this->assertEquals(1, $projects[0]->tasks[1]->comments->count());
-        // $this->assertEquals(0, $projects[1]->tasks[0]->comments->count());
+        $this->assertEquals(0, $projects[1]->tasks[0]->comments->count());
     }
 
     public function testEagerLoadingWithArrayOfRelationConstraints()
@@ -1300,7 +1300,7 @@ final class ModelTest extends TestCase
         $this->assertEquals(1, $projects[1]->tasks->count());
         $this->assertEquals(0, $projects[2]->tasks->count());
         $this->assertEquals(1, $projects[0]->tasks[0]->comments->count());
-        // $this->assertEquals(0, $projects[0]->tasks[1]->comments->count());
+        $this->assertEquals(0, $projects[0]->tasks[1]->comments->count());
     }
 
     public function testEagerLoadCountWithArrayOfRelationConstraints()
@@ -1350,8 +1350,8 @@ final class ModelTest extends TestCase
         $this->assertEquals(3, $projects->count());
         $this->assertEquals(2, $projects[0]->tasks[0]->comments_count);
         $this->assertEquals(1, $projects[0]->tasks[1]->comments_count);
-        // $this->assertEquals(0, $projects[1]->tasks[0]->comments_count);
-        // $this->assertEquals(0, $projects[2]->tasks[0]->comments_count);
+        $this->assertEquals(0, $projects[1]->tasks[0]->comments_count);
+        $this->assertObjectNotHasAttribute('tasks', $projects[2]);
     }
 
     public function testEagerLoadWithThrowsException()

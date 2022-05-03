@@ -91,7 +91,10 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function filter(Closure $callback): Collection
     {
-        return new static(array_filter($this->items, $callback));
+        $items = array_filter($this->items, $callback);
+        $items = array_values($items);
+
+        return new static($items);
     }
 
     public function jsonSerialize()

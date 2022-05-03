@@ -241,6 +241,10 @@ class Builder extends Query
                             $model->{$include . '_count'} = $count->num;
                         }
                     }
+
+                    if (!$model->hasAttribute($include . '_count')) {
+                        $model->{$include . '_count'} = 0;
+                    }
                 }
             }
         }
