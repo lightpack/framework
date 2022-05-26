@@ -8,7 +8,7 @@ use Lightpack\Container\Container;
 
 final class App
 {
-    public static function run(Container $container): void 
+    public static function run(Container $container): Response 
     {
         /**
          * Prepare variables. 
@@ -30,8 +30,8 @@ final class App
         $result = $filter->processBeforeFilters($route);
         
         if($result instanceof Response) {
-            $result->send();
-            return;
+            // $result->send();
+            return $result;
         }
 
         /**
@@ -49,9 +49,6 @@ final class App
         $filter->setResponse($response);
         $response = $filter->processAfterFilters($route);
 
-        /**
-         * Finally send the response.
-         */
-        $response->send();
+        return $response;
     }
 }

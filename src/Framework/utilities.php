@@ -316,7 +316,7 @@ if (!function_exists('session')) {
      * Returns the session object.
      * ------------------------------------------------------------
      * 
-     * @return \Lightpack\Http\Session
+     * @return \Lightpack\Session\Session
      */
     function session()
     {
