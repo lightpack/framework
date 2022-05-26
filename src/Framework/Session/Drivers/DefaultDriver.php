@@ -1,12 +1,14 @@
 <?php
 
-namespace Lightpack\Http;
+namespace Lightpack\Session\Drivers;
 
-class Session
+use Lightpack\Session\DriverInterface;
+
+class DefaultDriver implements DriverInterface
 {
     public function __construct(string $name)
     {
-        if (!isset($_SESSION) || !headers_sent()) {
+        if (!$this->started() || !headers_sent()) {
             ini_set('session.use_only_cookies', TRUE);
             ini_set('session.use_trans_sid', FALSE);
             session_name($name);
@@ -26,13 +28,8 @@ class Session
         if ($key === null) {
             return $_SESSION;
         }
-      
-        return $_SESSION[$key] ?? $default;
-    }
 
-    public function has(string $key): bool
-    {
-        return isset($_SESSION[$key]);
+        return $_SESSION[$key] ?? $default;
     }
 
     public function delete(string $key)
@@ -47,18 +44,6 @@ class Session
         return session_regenerate_id();
     }
 
-    public function flash(string $key, $value = null)
-    {
-        if ($value) {
-            $this->set($key, $value);
-            return;
-        }
-
-        $flash = $this->get($key);
-        $this->delete($key);
-        return $flash;
-    }
-
     public function verifyAgent(): bool
     {
         if ($this->get('user_agent') == $_SERVER['HTTP_USER_AGENT']) {
@@ -66,25 +51,6 @@ class Session
         }
 
         return false;
-    }
-
-    public function token()
-    {
-        $token = bin2hex(openssl_random_pseudo_bytes(8));
-        $_SESSION['csrf_token'] = $token;
-        return $token;
-    }
-
-    public function verifyToken(): bool
-    {
-        if (
-            isset($_SESSION) &&
-            (!isset($_POST['csrf_token']) || ($_POST['csrf_token'] !== $_SESSION['csrf_token']))
-        ) {
-            return false;
-        }
-
-        return true;
     }
 
     public function destroy()
@@ -106,5 +72,10 @@ class Session
         }
 
         session_destroy();
+    }
+
+    public function started(): bool
+    {
+        return session_status() === PHP_SESSION_ACTIVE;
     }
 }

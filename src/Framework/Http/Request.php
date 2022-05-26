@@ -33,6 +33,13 @@ class Request
         return $this->basepath;
     }
 
+    public function setBasePath(string $path): self
+    {
+        $this->basepath = $path;
+        
+        return $this;
+    }
+
     public function fullpath(): string
     {
         $path = explode('?', $_SERVER['REQUEST_URI'])[0];
@@ -86,7 +93,7 @@ class Request
 
     public function body(): string
     {
-        return file_get_contents('php://input') ?? null;
+        return $_SERVER['X_LIGHTPACK_RAW_INPUT'] ?? file_get_contents('php://input');
     }
 
     public function json(): array
