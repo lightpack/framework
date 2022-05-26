@@ -98,6 +98,14 @@ class Response
     }
 
     /**
+     * Return HTTP response headers as string.
+     */
+    public function getHeader(string $name): string
+    {
+        return $this->headers[$name] ?? '';
+    }
+
+    /**
      * Return HTTP response body.
      *
      * @access  public

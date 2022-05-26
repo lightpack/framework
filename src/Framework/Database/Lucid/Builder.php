@@ -27,18 +27,81 @@ class Builder extends Query
         parent::__construct($model, $model->getConnection());
     }
 
-    public function with(string ...$includes): self
+    public function with(): self
     {
-        $this->includes = $includes;
+        $args = func_get_args();
+
+        if (is_array($args[0])) {
+            $this->includes = $args[0];
+        } else {
+            $this->includes = $args;
+        }
 
         return $this;
     }
 
-    public function withCount(string ...$includes): self
+    public function withCount(): self
     {
-        $this->countIncludes = $includes;
+        $args = func_get_args();
+
+        if (is_array($args[0])) {
+            $this->countIncludes = $args[0];
+        } else {
+            $this->countIncludes = $args;
+        }
 
         return $this;
+    }
+
+    public function has(string $relation, string $operator = null, string $count = null, callable $constraint = null): self
+    {
+        if (!method_exists($this->model, $relation)) {
+            throw new \Exception("Relation {$relation} does not exist.");
+        }
+        $relationQuery = $this->model->{$relation}();
+        $relatingTable = $relationQuery->table;
+        $relatingKey = $this->model->getRelatingKey();
+
+
+        // we will apply count query
+        if (!is_null($operator) && !is_null($count)) {
+            $query = $this->model->getConnection()->table($relatingTable);
+
+            $subQueryCallback = function ($q) use ($relatingTable, $relatingKey) {
+                $q->from($relatingTable)
+                    ->select('COUNT(*)')
+                    ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
+            };
+
+            $subQueryCallback($query);
+
+            $bindings = [];
+
+            if ($constraint) {
+                $constraint($query);
+                $bindings = $query->bindings;
+            }
+
+            $bindings[] = $count;
+            return $this->whereRaw('(' . $query->toSql() . ')' . ' ' . $operator . ' ' . '?', $bindings);
+        }
+
+        // else we will apply 'where exists' clause
+        $subQuery = function ($q) use ($relatingTable, $relatingKey, $constraint) {
+            $q->from($relatingTable)
+                ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $relatingKey);
+
+            if ($constraint) {
+                $constraint($q);
+            }
+        };
+
+        return $this->whereExists($subQuery);
+    }
+
+    public function whereHas(string $relation, callable $constraint, string $operator = null, string $count = null): self
+    {
+        return $this->has($relation, $operator, $count, $constraint);
     }
 
     /**
@@ -48,7 +111,19 @@ class Builder extends Query
      */
     public function eagerLoadRelations(Collection $models)
     {
-        foreach ($this->includes as $include) {
+        foreach ($this->includes as $key => $value) {
+            if (is_callable($value)) {
+                if (!is_string($key)) {
+                    throw new \Exception("Relation key must be a string.");
+                }
+
+                $constraint = $value;
+                $include = $key;
+            }
+
+            if (is_string($value)) {
+                $include = $value;
+            }
 
             $relation = explode('.', $include)[0];
 
@@ -77,6 +152,10 @@ class Builder extends Query
                 } else { // hasMany and belongsTo
                     $ids = $models->getByColumn($this->model->getRelatingForeignKey());
                     $ids = array_unique($ids);
+                }
+
+                if($constraint ?? false) {
+                    $constraint($query);
                 }
 
                 $children = $query->whereIn($pivotKeyName ?? $this->model->getRelatingKey(), $ids)->all();
@@ -131,22 +210,40 @@ class Builder extends Query
      */
     public function eagerLoadRelationsCount(Collection $models)
     {
-        foreach ($this->countIncludes as $include) {
+        foreach ($this->countIncludes as $key => $value) {
+            if (is_callable($value)) {
+                if (!is_string($key)) {
+                    throw new \Exception("Relation key must be a string.");
+                }
+
+                $constraint = $value;
+                $include = $key;
+            }
+
+            if (is_string($value)) {
+                $include = $value;
+            }
+
             $query = $this->model->{$include}();
             $query->resetWhere();
             $query->resetBindings();
 
             if ($this->model->getRelationType() === 'hasMany') {
-                $modelClass = $this->model->getRelatingModel();
-                $table = (new $modelClass)->getTableName();
-                $connection = $this->model->getConnection();
-                $counts = $connection->table($table)->whereIn($this->model->getRelatingKey(), $models->getKeys())->countBy($this->model->getRelatingKey());
+                if($constraint ?? false) {
+                    $constraint($query);
+                }
+
+                $counts = $query->whereIn($this->model->getRelatingKey(), $models->getKeys())->countBy($this->model->getRelatingKey());
 
                 foreach ($models as $model) {
                     foreach ($counts as $count) {
                         if ($count->{$this->model->getRelatingKey()} === $model->{$model->getPrimaryKey()}) {
                             $model->{$include . '_count'} = $count->num;
                         }
+                    }
+
+                    if (!$model->hasAttribute($include . '_count')) {
+                        $model->{$include . '_count'} = 0;
                     }
                 }
             }

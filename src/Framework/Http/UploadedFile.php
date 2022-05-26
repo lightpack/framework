@@ -134,7 +134,7 @@ class UploadedFile
 
     public function getError(): string
     {
-        return $this->errors[$this->error] ?? 'Unknown upload error';
+        return $this->error;
     }
 
     public function getTmpName(): string
@@ -159,7 +159,7 @@ class UploadedFile
         }
 
         if ($this->hasError()) {
-            throw new FileUploadException($this->getError());
+            throw new FileUploadException('Uploaded file has error. Error code: ' . $this->error . ' - ' . $this->errors[$this->error]);
         }
 
         if (is_dir($destination)) {
@@ -176,7 +176,13 @@ class UploadedFile
     private function processUpload(string $name, string $destination): void
     {
         $targetPath = rtrim($destination, '\\/') . '/' . $name;
-        $success = move_uploaded_file($this->tmpName, $targetPath);
+
+        // For test purposes.
+        if(isset($_SERVER['X_LIGHTPACK_TEST_UPLOAD'])) {
+            $success = copy($this->tmpName, $targetPath);
+        } else {
+            $success = move_uploaded_file($this->tmpName, $targetPath);
+        }
 
         if (!$success) {
             throw new FileUploadException('Could not upload the file.');

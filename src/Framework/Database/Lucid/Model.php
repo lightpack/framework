@@ -41,7 +41,7 @@ class Model implements JsonSerializable
      */
     protected $relationType;
 
-     /**
+    /**
      * @var string Model associated with the relation.
      */
     protected $relatingModel;
@@ -426,7 +426,7 @@ class Model implements JsonSerializable
             return;
         }
 
-        
+
         if ($this->data->{$this->primaryKey} ?? false) {
             $this->data->updated_at = date('Y-m-d H:i:s');
         } else {
@@ -437,7 +437,7 @@ class Model implements JsonSerializable
     public function jsonSerialize()
     {
         $data = \get_object_vars($this->data);
-        
+
         return array_filter($data, function ($key) {
             return !in_array($key, $this->hidden);
         }, ARRAY_FILTER_USE_KEY);
@@ -493,21 +493,33 @@ class Model implements JsonSerializable
         $this->data->{$key} = $value;
     }
 
-    public function load(string ...$relations)
+    public function load()
     {
+        $relations = func_get_args();
         $items = new Collection($this);
         $items->load(...$relations);
     }
 
-    public function loadCount(string ...$relations)
+    public function loadCount()
     {
+        $relations = func_get_args();
         $items = new Collection($this);
         $items->loadCount(...$relations);
     }
 
     public function toArray()
     {
-        return (array) $this->jsonSerialize();
+        $data = (array) $this->jsonSerialize();
+
+        foreach ($data as $key => $value) {
+            if (is_object($value)) {
+                if($value instanceof Collection || $value instanceof Model) {
+                    $data[$key] = $value->toArray();
+                }
+            }
+        }
+
+        return $data;
     }
 
     public function getCachedModels()
