@@ -2,6 +2,7 @@
 
 namespace Lightpack\Testing\Http;
 
+use Lightpack\Utils\Arr;
 use Lightpack\Exceptions\RouteNotFoundException;
 
 trait AssertionTrait
@@ -24,6 +25,16 @@ trait AssertionTrait
     public function assertResponseJson(array $json)
     {
         $this->assertEquals($json, json_decode($this->response->getBody(), true));
+    }
+
+    public function assertResponseJsonHasKey(string $key)
+    {
+        $this->assertTrue(Arr::has($key, $this->getArrayResponse()));
+    }
+
+    public function assertResponseJsonKeyValue(string $key, $value)
+    {
+        $this->assertSame($value === Arr::get($key, $this->getResponseAray()));
     }
 
     public function assertResponseHasHeader(string $header)
