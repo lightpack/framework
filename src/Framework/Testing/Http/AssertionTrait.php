@@ -34,7 +34,7 @@ trait AssertionTrait
 
     public function assertResponseJsonKeyValue(string $key, $value)
     {
-        $this->assertSame($value === Arr::get($key, $this->getResponseAray()));
+        $this->assertSame($value, Arr::get($key, $this->getArrayResponse()));
     }
 
     public function assertResponseHasHeader(string $header)
