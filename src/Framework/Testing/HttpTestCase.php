@@ -4,6 +4,7 @@ namespace Lightpack\Testing;
 
 use Lightpack\Http\Response;
 use PHPUnit\Framework\TestCase as BaseTestCase;
+use Lightpack\Exceptions\RouteNotFoundException;
 
 class HttpTestCase extends BaseTestCase
 {
@@ -110,7 +111,7 @@ class HttpTestCase extends BaseTestCase
         return json_decode($this->response->getBody(), true);
     }
 
-    public function assertResponseCode(int $code)
+    public function assertResponseStatus(int $code)
     {
         $this->assertEquals($code, $this->response->getCode());
     }
@@ -125,7 +126,7 @@ class HttpTestCase extends BaseTestCase
         $this->assertJson($this->response->getBody());
     }
 
-    public function assertResponseJsonEquals(array $json)
+    public function assertResponseJson(array $json)
     {
         $this->assertEquals($json, json_decode($this->response->getBody(), true));
     }
@@ -135,9 +136,21 @@ class HttpTestCase extends BaseTestCase
         $this->assertTrue($this->response->hasHeader($header));
     }
 
+    public function assertRedirectUrl(string $url)
+    {
+        $this->assertEquals($url, $this->response->getRedirectUrl());
+    }
+
     public function assertResponseHeaderEquals(string $header, string $value)
     {
         $this->assertEquals($value, $this->response->getHeader($header));
+    }
+
+    public function assertRouteNotFound(string $route)
+    {
+        $this->expectException(RouteNotFoundException::class);
+
+        $this->request('GET', $route);
     }
 
     protected function setRequestContentType()
