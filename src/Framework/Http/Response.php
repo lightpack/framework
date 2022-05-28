@@ -40,13 +40,6 @@ class Response
     private $headers;
 
     /**
-     * Redirect URL
-     * 
-     * @var string
-     */
-    private $redirectUrl;
-
-    /**
      * Class contructor
      *
      * @access  public
@@ -112,6 +105,14 @@ class Response
         return $this->headers[$name] ?? '';
     }
 
+    /** 
+     * Check if HTTP response has header.
+     */
+    public function hasHeader(string $name): bool
+    {
+        return isset($this->headers[$name]);
+    }
+
     /**
      * Return HTTP response body.
      *
@@ -121,14 +122,6 @@ class Response
     public function getBody(): string
     {
         return $this->body;
-    }
-
-    /**
-     * Return redirect URL.
-     */
-    public function getRedirectUrl(): string
-    {
-        return $this->redirectUrl;
     }
 
     /**
@@ -321,23 +314,7 @@ class Response
             $this->sendHeaders();
         }
 
-        if (!$this->redirectUrl) {
-            $this->sendContent();
-        }
-    }
-
-    /**
-     * This method redirects response to the specified URL.
-     * 
-     * @access  public
-     * @return  void
-     */
-    public function redirect(string $redirect, int $code = 302): void
-    {
-        $this->redirectUrl = $redirect;
-
-        $this->setCode($code);
-        $this->setHeader('Location', $redirect);
+        $this->sendContent();
     }
 
     /**
