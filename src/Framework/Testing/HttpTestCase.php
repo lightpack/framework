@@ -45,16 +45,6 @@ class HttpTestCase extends BaseTestCase
         return $this->request($method, $route, $params);
     }
 
-    public function makeFile(): HttpTestCase
-    {
-        $_SERVER['X_LIGHTPACK_TEST_UPLOAD'] = true;
-
-        // $this->isJsonRequest = false;
-        $this->isMultipartFormdata = true;
-
-        return $this;
-    }
-
     protected function dispatchAppRequest(string $route): Response
     {
         $this->registerAppRequest();
