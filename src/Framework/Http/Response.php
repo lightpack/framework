@@ -341,6 +341,14 @@ class Response
     }
 
     /**
+     * Check if the header is set in the response.
+     */
+    public function hasHeader(string $name): bool
+    {
+        return isset($this->headers[$name]);
+    }
+
+    /**
      * This method sends all HTTP headers.
      *
      * @access  private
