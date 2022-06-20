@@ -154,6 +154,10 @@ class Builder extends Query
                     $ids = array_unique($ids);
                 }
 
+                if(!$ids) {
+                    continue;
+                }
+
                 if($constraint ?? false) {
                     $constraint($query);
                 }
