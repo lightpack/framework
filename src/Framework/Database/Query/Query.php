@@ -133,6 +133,13 @@ class Query
         return $this;
     }
 
+    /**
+     * This method is used to conditionally build the where clause.
+     * 
+     * @param string|Closure $column
+     * @param string|null $operator
+     * @param mixed $value
+     */
     public function where($column, string $operator = null, $value = null, string $joiner = 'AND'): self
     {
         if ($column instanceof Closure) {
