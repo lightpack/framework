@@ -334,7 +334,7 @@ class Query
     }
 
     /**
-     * Undocumented function
+     * This method paginates the results of the query.
      *
      * @param integer|null $limit
      * @param integer|null $page
