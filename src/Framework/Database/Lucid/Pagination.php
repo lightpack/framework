@@ -2,13 +2,11 @@
 
 namespace Lightpack\Database\Lucid;
 
-use Countable;
 use Traversable;
-use JsonSerializable;
 use IteratorAggregate;
 use Lightpack\Pagination\Pagination as BasePagination;
 
-class Pagination extends BasePagination implements Countable, IteratorAggregate, JsonSerializable
+class Pagination extends BasePagination implements IteratorAggregate
 {
     public function __construct($total, $perPage = 10, $currentPage = null, Collection $items)
     {
@@ -37,21 +35,5 @@ class Pagination extends BasePagination implements Countable, IteratorAggregate,
         $this->items->loadCount(...$relations);
 
         return $this;
-    }
-
-    public function jsonSerialize()
-    {
-        return [
-            'total' => $this->total,
-            'per_page' => $this->perPage,
-            'current_page' => $this->currentPage,
-            'last_page' => $this->lastPage,
-            'path' => $this->path,
-            'links' => [
-                'next' => $this->nextPageUrl(),
-                'prev' => $this->prevPageUrl(),
-            ],
-            'items' => $this->items,
-        ];
     }
 }

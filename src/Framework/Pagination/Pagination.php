@@ -2,7 +2,11 @@
 
 namespace Lightpack\Pagination;
 
-class Pagination
+use ArrayAccess;
+use Countable;
+use JsonSerializable;
+
+class Pagination implements Countable, ArrayAccess, JsonSerializable
 {
     protected $total;
     protected $perPage;
@@ -19,6 +23,35 @@ class Pagination
         $this->path = app('request')->fullpath();
         $this->setCurrentPage($currentPage);
         $this->items = $items;
+    }
+
+    public function count(): int
+    {
+        return count($this->items);
+    }
+
+    public function offsetExists($offset): bool
+    {
+        return isset($this->items[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->items[$offset];
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        if (is_null($offset)) {
+            $this->items[] = $value;
+        } else {
+            $this->items[$offset] = $value;
+        }
+    }
+
+    public function offsetUnset($offset): void
+    {
+        unset($this->items[$offset]);
     }
 
     public function links()
@@ -102,6 +135,22 @@ class Pagination
             $query = $this->getQuery($prev);
             return $this->path . '?' . $query;
         }
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'total' => $this->total,
+            'per_page' => $this->perPage,
+            'current_page' => $this->currentPage,
+            'last_page' => $this->lastPage,
+            'path' => $this->path,
+            'links' => [
+                'next' => $this->nextPageUrl(),
+                'prev' => $this->prevPageUrl(),
+            ],
+            'items' => $this->items,
+        ];
     }
 
     public function url(int $page)

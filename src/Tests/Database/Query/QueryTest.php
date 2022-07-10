@@ -639,8 +639,15 @@ final class QueryTest extends TestCase
     public function testPaginateMethod()
     {
         // Test 1
-        $this->query->paginate(10, 20);
+        $products = $this->query->paginate(10);
+        
         $this->assertInstanceOf(BasePagination::class, $this->query->paginate(10, 20));
+        $this->assertCount(2, $products);
+
+        foreach ($products as $product) {
+            $this->assertIsArray($product);
+        }
+
         $this->query->resetQuery();
 
         // Test 2
