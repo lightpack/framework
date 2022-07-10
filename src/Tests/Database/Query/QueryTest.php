@@ -639,13 +639,23 @@ final class QueryTest extends TestCase
     public function testPaginateMethod()
     {
         // Test 1
-        $this->query->paginate(10, 20);
+        $products = $this->query->paginate(10);
+        
         $this->assertInstanceOf(BasePagination::class, $this->query->paginate(10, 20));
+        $this->assertCount(2, $products);
+
+        foreach ($products as $product) {
+            $this->assertIsArray($product);
+        }
+
         $this->query->resetQuery();
 
         // Test 2
         $products = Product::query()->paginate(10, 20);
         $this->assertInstanceOf(LucidPagination::class, $products);
+
+        // Test 3: BasePagination is iterable
+        // $this->assertInstanceOf(Iterator::class, $products);
     }
 
     public function testGroupByCount()
