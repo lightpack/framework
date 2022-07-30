@@ -562,6 +562,45 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
     }
 
+    public function testWhereBoolean()
+    {
+        // Test 1
+        $sql = 'SELECT * FROM products WHERE published IS TRUE';
+        $this->query->from('products')->whereTrue('published');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2
+        $sql = 'SELECT * FROM products WHERE featured IS FALSE';
+        $this->query->from('products')->whereFalse('featured');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3
+        $sql = 'SELECT * FROM products WHERE published IS TRUE OR featured IS FALSE';
+        $this->query->from('products')->whereTrue('published')->orWhereFalse('featured');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 4
+        $sql = 'SELECT * FROM products WHERE published IS TRUE AND featured IS FALSE';
+        $this->query->from('products')->whereTrue('published')->whereFalse('featured');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 5
+        $sql = 'SELECT * FROM products WHERE published IS TRUE AND featured IS TRUE';
+        $this->query->from('products')->whereTrue('published')->whereTrue('featured');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 6
+        $sql = 'SELECT * FROM products WHERE published IS FALSE OR featured IS TRUE';
+        $this->query->from('products')->whereFalse('published')->orWhereTrue('featured');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
     public function testLimitAndOffsetQueries()
     {
         // Test 1

@@ -152,7 +152,10 @@ class Query
 
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
-        if ($operator) {
+        // Operators that don't require a value
+        $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
+
+        if (!in_array($operator, $operators)) {
             $this->bindings[] = $value;
         }
 
@@ -276,6 +279,30 @@ class Query
     public function orWhereNotBetween($column, $values): self
     {
         $this->whereNotBetween($column, $values, 'OR');
+        return $this;
+    }
+
+    public function whereTrue(string $column): self
+    {
+        $this->where($column, 'IS TRUE');
+        return $this;
+    }
+
+    public function orWhereTrue(string $column): self
+    {
+        $this->orWhere($column, 'IS TRUE');
+        return $this;
+    }
+
+    public function whereFalse(string $column): self
+    {
+        $this->where($column, 'IS FALSE');
+        return $this;
+    }
+
+    public function orWhereFalse(string $column): self
+    {
+        $this->orWhere($column, 'IS FALSE');
         return $this;
     }
 
