@@ -38,7 +38,7 @@ class Auth
             $this->manager->updateLogin();
         } else {
             $this->manager->flashError();
-            $this->manager->redirectLoginUrl();
+            return $this->manager->redirectLoginUrl();
         }
 
         $this->manager->persist();
