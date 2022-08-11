@@ -104,7 +104,7 @@ class Moment
         return $datetime->modify($modifier)->format($format ?? self::$format);
     }
 
-    public static function fromNow(string $datetime): ?string
+    public static function fromNow(string $datetime = 'now'): ?string
     {
         $datetimetime1 = new DateTime();
         $datetimetime2 = new DateTime($datetime);
