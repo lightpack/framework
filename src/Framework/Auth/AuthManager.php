@@ -48,12 +48,14 @@ class AuthManager
 
     public function getAuthId()
     {
-        return self::$identity->get($this->normalizedConfig['fields.id']);
+        $user = $this->getAuthUser();
+
+        return $user->get('id');
     }
 
-    public function getAuthUser(): Identity
+    public function getAuthUser(): ?Identity
     {
-        return self::$identity;
+        return session()->get('user');
     }
 
     public function redirectLogin()
