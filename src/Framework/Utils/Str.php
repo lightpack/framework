@@ -2,7 +2,7 @@
 
 namespace Lightpack\Utils;
 
-class Inflector
+class Str
 {
     protected static $singulars = [
         '/(quiz)zes$/i' => '$1',
@@ -89,6 +89,28 @@ class Inflector
         'data',
     ];
 
+    public static function singularize($string)
+    {
+        if (in_array(strtolower($string), static::$uncountables)) {
+            return $string;
+        }
+
+        foreach (static::$irregulars as $result => $pattern) {
+            $pattern = '/' . $pattern . '$/i';
+            if (preg_match($pattern, $string)) {
+                return preg_replace($pattern, $result, $string);
+            }
+        }
+
+        foreach (static::$singulars as $pattern => $result) {
+            if (preg_match($pattern, $string)) {
+                return preg_replace($pattern, $result, $string);
+            }
+        }
+
+        return $string;
+    }
+    
     public static function pluralize(string $subject): string
     {
         if (in_array(strtolower($subject), static::$uncountables)) {
@@ -111,26 +133,13 @@ class Inflector
         return $subject;
     }
 
-    public static function singularize($string)
+    public static function pluralizeIf($number, $string)
     {
-        if (in_array(strtolower($string), static::$uncountables)) {
+        if ($number == 1) {
             return $string;
         }
 
-        foreach (static::$irregulars as $result => $pattern) {
-            $pattern = '/' . $pattern . '$/i';
-            if (preg_match($pattern, $string)) {
-                return preg_replace($pattern, $result, $string);
-            }
-        }
-
-        foreach (static::$singulars as $pattern => $result) {
-            if (preg_match($pattern, $string)) {
-                return preg_replace($pattern, $result, $string);
-            }
-        }
-
-        return $string;
+        return static::pluralize($string);
     }
 
     public static function camelize($string)
@@ -200,12 +209,56 @@ class Inflector
         return strtolower($string);
     }
 
-    public static function pluralizeIf($number, $string)
+    public static function startsWith($string, $prefix)
     {
-        if ($number == 1) {
-            return $string;
+        return substr($string, 0, strlen($prefix)) == $prefix;
+    }
+
+    public static function endsWith($string, $suffix)
+    {
+        return substr($string, -strlen($suffix)) == $suffix;
+    }
+
+    public static function contains($string, $needle)
+    {
+        return strpos($string, $needle) !== false;
+    }
+
+    public static function random($length = 10)
+    {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
 
-        return static::pluralize($string);
+        return $randomString;
+    }
+
+    public static function randomAlpha($length = 10)
+    {
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+
+        return $randomString;
+    }
+
+    public static function mask($string, $mask = '*', $start = 0)
+    {
+        $length = strlen($string);
+        $masked = substr($string, 0, $start);
+
+        for ($i = $start; $i < $length; $i++) {
+            $masked .= $mask;
+        }
+
+        return $masked;
     }
 }
