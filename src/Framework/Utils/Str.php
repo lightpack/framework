@@ -224,30 +224,13 @@ class Str
         return strpos($string, $needle) !== false;
     }
 
-    public static function random($length = 10)
+    public static function random($length = 16)
     {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $charactersLength = strlen($characters);
-        $randomString = '';
-
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        if($length < 2) {
+            return '';
         }
 
-        return $randomString;
-    }
-
-    public static function randomAlpha($length = 10)
-    {
-        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $charactersLength = strlen($characters);
-        $randomString = '';
-
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[rand(0, $charactersLength - 1)];
-        }
-
-        return $randomString;
+        return bin2hex(random_bytes($length / 2));
     }
 
     public static function mask($string, $mask = '*', $start = 0)

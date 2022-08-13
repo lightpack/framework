@@ -177,13 +177,8 @@ final class StrTest extends TestCase
 
     public function testRandom()
     {
-        $this->assertEquals(10, strlen(Str::random(10)));
-    }
-
-    public function testRandomAlpha()
-    {
-        $this->assertEquals(10, strlen(Str::randomAlpha(10)));
-        $this->assertNotFalse(preg_match('/[a-zA-Z]/', Str::randomAlpha(10)));
+        $this->assertEquals(16, strlen(Str::random(16)));
+        $this->assertEquals(0, strlen(Str::random(1)));
     }
 
     public function testMask()
