@@ -338,6 +338,9 @@ class Response
 
         $this->setCode($code);
         $this->setHeader('Location', $redirect);
+        $this->sendHeaders();
+
+        exit;
     }
 
     /**
