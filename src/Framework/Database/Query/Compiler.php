@@ -29,6 +29,21 @@ class Compiler
         return trim(implode(' ', $sql));
     }
 
+    public function compileCountQuery()
+    {
+        $sql[] = $this->select();
+        $sql[] = $this->columns();
+        $sql[] = $this->from();
+        $sql[] = $this->join();
+        $sql[] = $this->where();
+        $sql[] = $this->groupBy();
+
+        $sql = array_filter($sql, function ($v) {
+            return empty($v) === false;
+        });
+        return trim(implode(' ', $sql));
+    }
+
     public function compileInsert(array $columns)
     {
         $parameters = $this->parameterize(count($columns));
