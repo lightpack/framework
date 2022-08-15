@@ -376,9 +376,9 @@ class Query
      */
     public function paginate(int $limit = null, int $page = null)
     {
-        $total = $this->count();
+        // Preserve the columns because calling count() will reset the columns.
         $columns = $this->columns;
-        $this->columns = $columns;
+        $total = $this->count();
         $page = $page ?? request()->get('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
