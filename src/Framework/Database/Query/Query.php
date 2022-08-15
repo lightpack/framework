@@ -372,7 +372,7 @@ class Query
      *
      * @param integer|null $limit
      * @param integer|null $page
-     * @return Lightpack\Pagination\Pagination|Lightpack\Lucid\Pagination\Pagination
+     * @return \Lightpack\Pagination\Pagination|\Lightpack\Database\Lucid\Pagination
      */
     public function paginate(int $limit = null, int $page = null)
     {

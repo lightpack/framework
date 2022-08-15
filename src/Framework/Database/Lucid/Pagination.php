@@ -36,4 +36,13 @@ class Pagination extends BasePagination implements IteratorAggregate
 
         return $this;
     }
+
+    public function toArray()
+    {
+        $arr = parent::toArray();
+
+        $arr['items'] = $this->items->toArray();
+
+        return $arr;
+    }
 }
