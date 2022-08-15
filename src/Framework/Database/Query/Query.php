@@ -376,8 +376,8 @@ class Query
      */
     public function paginate(int $limit = null, int $page = null)
     {
-        $columns = $this->columns;
         $total = $this->count();
+        $columns = $this->columns;
         $this->columns = $columns;
         $page = $page ?? request()->get('page');
         $page = (int) $page;
@@ -387,6 +387,14 @@ class Query
 
         $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);
+
+        if($total == 0) { // no need to query further
+            if($this->model) {
+               return new LucidPagination($total, $limit, $page, new Collection([]));
+            } else {
+                return new BasePagination($total);
+            }
+        }
 
         $items = $this->fetchAll();
 
@@ -401,7 +409,7 @@ class Query
     {
         $this->columns = ['COUNT(*) AS num'];
 
-        $query = $this->getCompiledSelect();
+        $query = $this->getCompiledCount();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
         $this->columns = []; // so that pagination query can be reused
@@ -504,6 +512,12 @@ class Query
     {
         $compiler = new Compiler($this);
         return $compiler->compileSelect();
+    }
+
+    public function getCompiledCount()
+    {
+        $compiler = new Compiler($this);
+        return $compiler->compileCountQuery();
     }
 
     public function toSql()
