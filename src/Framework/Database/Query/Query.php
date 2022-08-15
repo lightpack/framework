@@ -379,7 +379,6 @@ class Query
         // Preserve the columns because calling count() will reset the columns.
         $columns = $this->columns;
         $total = $this->count();
-        $this->columns = $columns;
         $page = $page ?? request()->get('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
