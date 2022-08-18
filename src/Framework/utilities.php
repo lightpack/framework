@@ -407,3 +407,15 @@ if (!function_exists('config')) {
         return app('config')->get($key, $default);
     }
 }
+
+if (!function_exists('db')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns PDO database connection instance.
+     * ------------------------------------------------------------
+     */
+    function db(): \Lightpack\Database\Pdo
+    {
+        return app('db');
+    }
+}
