@@ -24,4 +24,21 @@ final class ArrTest extends TestCase
         $this->assertEquals(['c' => 'd'], Arr::get('a.b', $array));
         $this->assertEquals('default', Arr::get('a.b.c.d', $array, 'default'));
     }
+
+    public function testArrayFlatten()
+    {
+        $array = [
+            'a' => 'A',
+            'b' => 'B',
+            'ab' => ['AB', 'BA'],
+            'abc' => ['c' => 'ABC'],
+            'd' => ['e' => ['f' => 'D']]
+        ];
+
+        $flattenedArray = Arr::flatten($array);
+
+        // Assertions
+        $this->assertIsArray($flattenedArray);
+        $this->assertEquals(['A', 'B', 'AB', 'BA', 'ABC', 'D'] , $flattenedArray);
+    }
 }

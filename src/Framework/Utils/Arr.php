@@ -52,4 +52,22 @@ class Arr
 
         return $array[array_shift($keys)] ?? $default;
     }
+
+    /**
+     * Flattens a multi-dimensional array into a single dimension.
+     */
+    public static function flatten(array $array): array
+    {
+        $result = [];
+
+        foreach ($array as $value) {
+            if (is_array($value)) {
+                $result = array_merge($result, static::flatten($value));
+            } else {
+                $result[] = $value;
+            }
+        }
+
+        return $result;
+    }
 }
