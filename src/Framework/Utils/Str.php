@@ -4,6 +4,9 @@ namespace Lightpack\Utils;
 
 class Str
 {
+    protected static $singularCache = [];
+    protected static $pluralCache = [];
+
     protected static $singulars = [
         '/(quiz)zes$/i' => '$1',
         '/(matr)ices$/i' => '$1ix',
@@ -89,99 +92,101 @@ class Str
         'data',
     ];
 
-    public static function singularize($string)
+    public static function singularize(string $subject): string
     {
-        if (in_array(strtolower($string), static::$uncountables)) {
-            return $string;
+        if (self::$singularCache[$subject] ?? null) {
+            return self::$singularCache[$subject];
         }
 
-        foreach (static::$irregulars as $result => $pattern) {
-            $pattern = '/' . $pattern . '$/i';
-            if (preg_match($pattern, $string)) {
-                return preg_replace($pattern, $result, $string);
-            }
+        if (in_array($subject, static::$uncountables)) {
+            return self::$singularCache[$subject] = $subject;
+        }
+
+        if (in_array($subject, static::$irregulars)) {
+            return self::$singularCache[$subject] = array_search($subject, static::$irregulars);
         }
 
         foreach (static::$singulars as $pattern => $result) {
-            if (preg_match($pattern, $string)) {
-                return preg_replace($pattern, $result, $string);
-            }
-        }
-
-        return $string;
-    }
-    
-    public static function pluralize(string $subject): string
-    {
-        if (in_array(strtolower($subject), static::$uncountables)) {
-            return $subject;
-        }
-
-        foreach (static::$irregulars as $pattern => $result) {
-            $pattern = '/' . $pattern . '$/i';
             if (preg_match($pattern, $subject)) {
-                return preg_replace($pattern, $result, $subject);
-            }
-        }
-
-        foreach (static::$plurals as $pattern => $result) {
-            if (preg_match($pattern, $subject)) {
-                return preg_replace($pattern, $result, $subject);
+                return self::$singularCache[$subject] = preg_replace($pattern, $result, $subject);
             }
         }
 
         return $subject;
     }
 
-    public static function pluralizeIf($number, $string)
+    public static function pluralize(string $subject): string
     {
-        if ($number == 1) {
-            return $string;
+        if (self::$pluralCache[$subject] ?? null) {
+            return self::$pluralCache[$subject];
         }
 
-        return static::pluralize($string);
+        if (in_array($subject, static::$uncountables)) {
+            return self::$pluralCache[$subject] = $subject;
+        }
+
+        if (array_key_exists($subject, static::$irregulars)) {
+            return self::$pluralCache[$subject] = static::$irregulars[$subject];
+        }
+
+        foreach (static::$plurals as $pattern => $result) {
+            if (preg_match($pattern, $subject)) {
+                return self::$pluralCache[$subject] = preg_replace($pattern, $result, $subject);
+            }
+        }
+
+        return $subject;
     }
 
-    public static function camelize($string)
+    public static function pluralizeIf(int $number, string $subject): string
     {
-        return str_replace(' ', '', ucwords(str_replace('_', ' ', $string)));
+        if ($number == 1) {
+            return $subject;
+        }
+
+        return static::pluralize($subject);
     }
 
-    public static function variable($string)
+    public static function camelize(string $subject): string
     {
-        return lcfirst(static::camelize($string));
+        return str_replace(' ', '', ucwords(str_replace('_', ' ', $subject)));
     }
 
-    public static function underscore($string)
+    public static function variable(string $subject): string
     {
-        $string = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
-
-        return str_replace([' ', '-'], '_', $string);
+        return lcfirst(static::camelize($subject));
     }
 
-    public static function dasherize($string)
+    public static function underscore(string $subject): string
     {
-        $string = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $string));
+        $subject = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $subject));
 
-        return str_replace([' ', '_'], '-', $string);
+        return str_replace([' ', '-'], '_', $subject);
     }
 
-    public static function humanize($string)
+    public static function dasherize(string $subject): string
     {
-        return ucwords(str_replace('_', ' ', $string));
+        $subject = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $subject));
+
+        return str_replace([' ', '_'], '-', $subject);
     }
 
-    public static function tableize($string)
+    public static function humanize(string $subject): string
     {
-        return static::pluralize(static::underscore($string));
+        return ucwords(str_replace('_', ' ', $subject));
     }
 
-    public static function classify($string)
+    public static function tableize(string $subject): string
     {
-        return static::camelize(static::singularize($string));
+        return static::pluralize(static::underscore($subject));
     }
 
-    public static function ordinalize($number)
+    public static function classify(string $subject): string
+    {
+        return static::camelize(static::singularize($subject));
+    }
+
+    public static function ordinalize(int $number): string
     {
         if (in_array(($number % 100), range(11, 13))) {
             return $number . 'th';
@@ -199,44 +204,44 @@ class Str
         }
     }
 
-    public static function slugify($string, $separator = '-')
+    public static function slugify(string $subject, string $separator = '-'): string
     {
-        $string = preg_replace('/[^a-zA-Z0-9]/', ' ', $string);
-        $string = preg_replace('/\s+/', ' ', $string);
-        $string = trim($string);
-        $string = str_replace(' ', $separator, $string);
+        $subject = preg_replace('/[^a-zA-Z0-9]/', ' ', $subject);
+        $subject = preg_replace('/\s+/', ' ', $subject);
+        $subject = trim($subject);
+        $subject = str_replace(' ', $separator, $subject);
 
-        return strtolower($string);
+        return strtolower($subject);
     }
 
-    public static function startsWith($string, $prefix)
+    public static function startsWith(string $subject, string $prefix): bool
     {
-        return substr($string, 0, strlen($prefix)) == $prefix;
+        return substr($subject, 0, strlen($prefix)) == $prefix;
     }
 
-    public static function endsWith($string, $suffix)
+    public static function endsWith(string $subject, string $suffix): bool
     {
-        return substr($string, -strlen($suffix)) == $suffix;
+        return substr($subject, -strlen($suffix)) == $suffix;
     }
 
-    public static function contains($string, $needle)
+    public static function contains(string $subject, string $needle): bool
     {
-        return strpos($string, $needle) !== false;
+        return strpos($subject, $needle) !== false;
     }
 
-    public static function random($length = 16)
+    public static function random(int $length = 16): string
     {
-        if($length < 2) {
+        if ($length < 2) {
             return '';
         }
 
         return bin2hex(random_bytes($length / 2));
     }
 
-    public static function mask($string, $mask = '*', $start = 0)
+    public static function mask(string $subject, string $mask = '*', int $start = 0): string
     {
-        $length = strlen($string);
-        $masked = substr($string, 0, $start);
+        $length = strlen($subject);
+        $masked = substr($subject, 0, $start);
 
         for ($i = $start; $i < $length; $i++) {
             $masked .= $mask;
