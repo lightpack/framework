@@ -97,12 +97,14 @@ final class StrTest extends TestCase
         $this->assertEquals('parent_class', Str::underscore('ParentClass'));
         $this->assertEquals('parent_class', Str::underscore('Parent Class'));
         $this->assertEquals('parent_class', Str::underscore('Parent-Class'));
+        $this->assertEquals('parent_class', Str::underscore('Parent-Class'));
     }
 
     public function testDasherize()
     {
         $this->assertEquals('parent-class', Str::dasherize('parent_class'));
         $this->assertEquals('parent-class', Str::dasherize('parent class'));
+        $this->assertEquals('parent-class', Str::dasherize('Parent Class'));
         $this->assertEquals('lazy-brown-fox', Str::dasherize('lazy Brown fox'));
     }
 
@@ -132,6 +134,15 @@ final class StrTest extends TestCase
         $this->assertEquals('User', Str::classify('user'));
         $this->assertEquals('UserGroup', Str::classify('user_group'));
         $this->assertEquals('UserGroup', Str::classify('user_groups'));
+    }
+
+    public function testForeignKey()
+    {
+        $this->assertEquals('user_id', Str::foreignKey('user'));
+        $this->assertEquals('user_id', Str::foreignKey('users'));
+        $this->assertEquals('user_id', Str::foreignKey('user'));
+        $this->assertEquals('user_group_id', Str::foreignKey('user_group'));
+        $this->assertEquals('user_group_id', Str::foreignKey('user_groups'));
     }
 
     public function testOrdinalize()
