@@ -14,7 +14,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     protected $lastPage;
     protected $path;
     protected $allowedParams = [];
-    
+
     public function __construct($total, $perPage = 10, $currentPage = null, $items = [])
     {
         $this->total = $total;
@@ -56,10 +56,10 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
     public function links()
     {
-        if($this->lastPage <= 1) {
+        if ($this->lastPage <= 1) {
             return '';
         }
-        
+
         $prevLink = $this->prev();
         $nextLink = $this->next();
         $template = "Page {$this->currentPage} of {$this->lastPage} {$prevLink}  {$nextLink}";
@@ -67,7 +67,8 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         return $template;
     }
 
-    public function withPath($path) {   
+    public function withPath($path)
+    {
         $this->path = url($path);
         return $this;
     }
@@ -81,7 +82,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     {
         return $this->perPage;
     }
-    
+
     public function offset()
     {
         return ($this->currentPage - 1) * $this->perPage;
@@ -100,8 +101,8 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     public function next()
     {
         $next = $this->currentPage < $this->lastPage ? $this->currentPage + 1 : null;
-        
-        if($next) {
+
+        if ($next) {
             $query = $this->getQuery($next);
             return "<a href=\"{$this->path}?{$query}\">Next</a>";
         }
@@ -110,8 +111,8 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     public function prev()
     {
         $prev = $this->currentPage > 1 ? $this->currentPage - 1 : null;
-        
-        if($prev) {
+
+        if ($prev) {
             $query = $this->getQuery($prev);
             return "<a href=\"{$this->path}?{$query}\">Prev</a>";
         }
@@ -121,7 +122,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     {
         $next = $this->currentPage < $this->lastPage ? $this->currentPage + 1 : null;
 
-        if($next) {
+        if ($next) {
             $query = $this->getQuery($next);
             return $this->path . '?' . $query;
         }
@@ -130,14 +131,14 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     public function prevPageUrl()
     {
         $prev = $this->currentPage > 1 ? $this->currentPage - 1 : null;
-        
-        if($prev) {
+
+        if ($prev) {
             $query = $this->getQuery($prev);
             return $this->path . '?' . $query;
         }
     }
 
-    public function jsonSerialize()
+    public function toArray()
     {
         return [
             'total' => $this->total,
@@ -151,6 +152,16 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
             ],
             'items' => $this->items,
         ];
+    }
+
+    public function jsonSerialize()
+    {
+        return $this->toArray();
+    }
+
+    public function toJson()
+    {
+        return json_encode($this->toArray());
     }
 
     public function url(int $page)
@@ -192,22 +203,22 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         $start = 1;
         $end = $this->lastPage;
 
-        if($this->lastPage > 5) {
+        if ($this->lastPage > 5) {
             $start = $this->currentPage - 2;
             $end = $this->currentPage + 2;
 
-            if($start < 1) {
+            if ($start < 1) {
                 $start = 1;
                 $end = 5;
             }
 
-            if($end > $this->lastPage) {
+            if ($end > $this->lastPage) {
                 $end = $this->lastPage;
                 $start = $this->lastPage - 4;
             }
         }
 
-        for($i = $start; $i <= $end; $i++) {
+        for ($i = $start; $i <= $end; $i++) {
             $pages[] = $i;
         }
 
@@ -216,7 +227,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
     protected function getQuery(int $page): string
     {
-        $params = $_GET; 
+        $params = $_GET;
         $allowedParams = $this->allowedParams;
 
         if ($allowedParams) {

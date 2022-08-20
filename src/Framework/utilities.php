@@ -37,7 +37,7 @@ if (!function_exists('redirect')) {
     * Redirect to URI.
     * ------------------------------------------------------------
     */
-    function redirect($uri = '', $code = 302)
+    function redirect($uri = '/', $code = 302)
     {
         app('response')->redirect($uri, $code);
     }
@@ -405,5 +405,17 @@ if (!function_exists('config')) {
     function config($key, $default = null)
     {
         return app('config')->get($key, $default);
+    }
+}
+
+if (!function_exists('db')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns PDO database connection instance.
+     * ------------------------------------------------------------
+     */
+    function db(): \Lightpack\Database\Pdo
+    {
+        return app('db');
     }
 }

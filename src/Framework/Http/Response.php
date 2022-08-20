@@ -332,12 +332,19 @@ class Response
      * @access  public
      * @return  void
      */
-    public function redirect(string $redirect, int $code = 302): void
+    public function redirect(string $url = '/', int $code = 302): void
     {
-        $this->redirectUrl = $redirect;
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            $this->redirectUrl = $url;
+        } else {
+            $this->redirectUrl = url($url);
+        }
 
         $this->setCode($code);
-        $this->setHeader('Location', $redirect);
+        $this->setHeader('Location', $this->redirectUrl);
+        $this->sendHeaders();
+
+        exit;
     }
 
     /**
