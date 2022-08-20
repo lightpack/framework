@@ -42,7 +42,7 @@ final class ArrTest extends TestCase
         $this->assertEquals(['A', 'B', 'AB', 'BA', 'ABC', 'D'], $flattenedArray);
     }
 
-    public function testArrayTree()
+    public function testArrayTreeFromArrays()
     {
         // Test 1
         $categories = [
@@ -92,7 +92,7 @@ final class ArrTest extends TestCase
             (object) ['id' => 5, 'parent_id' => null, 'name' => 'Category 5'],
         ];
 
-        $tree = Arr::treeFromObjects($categories);
+        $tree = Arr::tree($categories);
 
         // Assertions
         $this->assertIsArray($tree);
@@ -110,7 +110,7 @@ final class ArrTest extends TestCase
             (object) ['category_id' => 5, 'category_parent_id' => null, 'name' => 'Category 5'],
         ];
 
-        $tree = Arr::treeFromObjects($categories, null, 'category_id', 'category_parent_id');
+        $tree = Arr::tree($categories, null, 'category_id', 'category_parent_id');
 
         // Assertions
         $this->assertIsArray($tree);

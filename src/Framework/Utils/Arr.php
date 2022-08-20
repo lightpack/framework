@@ -72,7 +72,7 @@ class Arr
     }
 
     /**
-     * Build a tree from a flat array. 
+     * Build a tree from a flat array of arrays or objects. 
      * 
      * The tree will contain a 'children' key for each element in the 
      * array. Each child will be grouped by the value of the parent key.
@@ -82,7 +82,13 @@ class Arr
      * @param string $idKey The key name to use for the ID.
      * @param string $parentIdKey The key name to use for the parent ID.
      * 
-     * For example:
+     * @return array The tree.
+     * 
+     * Note: The array to build the tree from can be an array of arrays,
+     * or an array of objects.
+     * 
+     * Example of an array of arrays to build a tree from:
+     * 
      * $categories = [
      *    ['id' => 1, 'parent_id' => null, 'name' => 'Category 1'],
      *    ['id' => 2, 'parent_id' => 1, 'name' => 'Category 2'],
@@ -111,23 +117,12 @@ class Arr
         $result = [];
 
         foreach ($items as $key => $item) {
-            if ($item[$parentIdKey] == $parentId) {
+            if (is_array($item) && $item[$parentIdKey] == $parentId) {
                 $result[$key] = $item;
                 $result[$key]['children'] = self::tree($items, $item[$idKey], $idKey, $parentIdKey);
-            }
-        }
-
-        return $result;
-    }
-
-    public static function treeFromObjects(array $items, $parentId = null, string $idKey = 'id', string $parentKey = 'parent_id'): array
-    {
-        $result = [];
-
-        foreach ($items as $key => $item) {
-            if ($item->{$parentKey} == $parentId) {
+            } elseif (is_object($item) && $item->{$parentIdKey} == $parentId) {
                 $result[$key] = $item;
-                $result[$key]->children = self::treeFromObjects($items, $item->{$idKey}, $idKey, $parentKey);
+                $result[$key]->children = self::tree($items, $item->{$idKey}, $idKey, $parentIdKey);
             }
         }
 
