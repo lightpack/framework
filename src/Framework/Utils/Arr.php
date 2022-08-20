@@ -56,15 +56,15 @@ class Arr
     /**
      * Flattens a multi-dimensional array into a single dimension.
      */
-    public static function flatten(array $array): array
+    public static function flatten(array $items): array
     {
         $result = [];
 
-        foreach ($array as $value) {
-            if (is_array($value)) {
-                $result = array_merge($result, static::flatten($value));
+        foreach ($items as $item) {
+            if (is_array($item)) {
+                $result = array_merge($result, static::flatten($item));
             } else {
-                $result[] = $value;
+                $result[] = $item;
             }
         }
 
