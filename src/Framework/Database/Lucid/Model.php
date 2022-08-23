@@ -126,7 +126,6 @@ class Model implements JsonSerializable
         }
 
         $query = $this->{$key}();
-
         if ($this->relationType === 'hasMany' || $this->relationType === 'pivot' || $this->relationType === 'hasManyThrough') {
             return $this->cachedModels[$key] = $query->all();
         }
@@ -215,9 +214,9 @@ class Model implements JsonSerializable
      * @param string $pivot Name of the pivot table.
      * @param string $foreignKey
      * @param string $associateKey
-     * @return Query
+     * @return Pivot
      */
-    public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Query
+    public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Pivot
     {
         $this->relationType = __FUNCTION__;
         $this->relatingKey = $foreignKey;
@@ -225,11 +224,14 @@ class Model implements JsonSerializable
         $this->relatingModel = $model;
         $this->pivotTable = $pivotTable;
         $model = $this->getConnection()->model($model);
-        return $model
-            ->query()
+        $pivot = new Pivot($model, $this, $pivotTable, $foreignKey, $associateKey);
+
+        $pivot
             ->select("$model->table.*", "$pivotTable.$foreignKey")
             ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey")
             ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
+
+        return $pivot;
     }
 
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query

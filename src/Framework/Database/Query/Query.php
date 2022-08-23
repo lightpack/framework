@@ -61,9 +61,19 @@ class Query
 
     public function insert(array $data)
     {
+        return $this->insertIgnore($data, false);
+    }
+
+    public function insertOrIgnore(array $data)
+    {
+        return $this->insertIgnore($data, true);
+    }
+
+    private function insertIgnore(array $data, bool $ignore)
+    {
         $compiler = new Compiler($this);
         $this->bindings = array_values($data);
-        $query = $compiler->compileInsert(array_keys($data));
+        $query = $compiler->compileInsert(array_keys($data), $ignore);
         $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
         return $result;

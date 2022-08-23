@@ -44,11 +44,13 @@ class Compiler
         return trim(implode(' ', $sql));
     }
 
-    public function compileInsert(array $columns)
+    public function compileInsert(array $columns, bool $ignore = false)
     {
         $parameters = $this->parameterize(count($columns));
         $parameters = count($columns) === 1 ? "($parameters)" : $parameters;
         $columns = implode(', ', $columns);
+
+        // return "INSERT" . ($ignore ? " IGNORE" : "") . " INTO {$this->query->table} ($columns) VALUES $parameters";
         return "INSERT INTO {$this->query->table} ($columns) VALUES $parameters";
     }
 
