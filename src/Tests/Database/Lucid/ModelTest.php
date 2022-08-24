@@ -301,6 +301,43 @@ final class ModelTest extends TestCase
         $this->assertEquals(['user'], $rolesAfter);
     }
 
+    public function testPivotSyncMethod()
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+
+        $this->db->table('roles')->bulkInsert([
+            ['name' => 'admin'],
+            ['name' => 'user'],
+            ['name' => 'guest'],
+        ]);
+        
+        $this->db->table('role_user')->bulkInsert([
+            ['user_id' => 1, 'role_id' => 1],
+            ['user_id' => 1, 'role_id' => 2],
+            ['user_id' => 2, 'role_id' => 2],
+        ]);
+        
+        /** @var User */
+        $user = $this->db->model(User::class);
+        $user->find(1);
+        $userRolesCountBeforeSync = $user->roles->count();
+        $rolesBefore = array_column($user->roles->toArray(), 'name');
+        $user->roles()->sync([1, 3]);
+        $user->load('roles');
+        $userRolesCountAfterSync = $user->roles->count();
+        $rolesAfter = array_column($user->roles->toArray(), 'name');
+        
+        // Assertions
+        $this->assertEquals(2, $userRolesCountBeforeSync);
+        $this->assertEquals(2, $userRolesCountAfterSync);
+        $this->assertEquals(['admin', 'user'], $rolesBefore);
+        $this->assertEquals(['admin', 'guest'], $rolesAfter);
+    }
+
     public function testHasManyThrough()
     {
         // projects, tasks, and comments table will be used for tests of hasmanyThrough relation
