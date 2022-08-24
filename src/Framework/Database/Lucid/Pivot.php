@@ -63,12 +63,17 @@ class Pivot extends Builder
         // Get query builder for pivot table
         $query = new Query($this->pivotTable, $this->getConnection());
 
-        // Insert new pivot rows ignoring existing ones
-        foreach ($ids as $id) {
-            $query->insertIgnore([
+        // Prepare data for pivot table
+        $data = array_map(function ($id) {
+            return [
                 $this->foreignKey => $this->baseModel->id,
                 $this->associateKey => $id,
-            ]);
+            ];
+        }, $ids);
+
+        // Insert new pivot rows ignoring existing ones
+        if ($data) {
+            $query->bulkInsertIgnore($data);
         }
     }
 

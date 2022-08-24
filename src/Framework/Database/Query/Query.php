@@ -61,25 +61,36 @@ class Query
 
     public function insert(array $data)
     {
-        $compiler = new Compiler($this);
-        $this->bindings = array_values($data);
-        $query = $compiler->compileInsert(array_keys($data));
-        $result = $this->connection->query($query, $this->bindings);
-        $this->resetQuery();
-        return $result;
+        return $this->executeInsert($data);
     }
 
     public function insertIgnore(array $data)
     {
+        return $this->executeInsert($data, true);
+    }
+
+    private function executeInsert(array $data, bool $shouldIgnore = false)
+    {
         $compiler = new Compiler($this);
         $this->bindings = array_values($data);
-        $query = $compiler->compileInsertIgnore(array_keys($data));
+        $query = $compiler->compileInsert(array_keys($data), $shouldIgnore);
         $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+
         return $result;
     }
 
     public function bulkInsert(array $data)
+    {
+        return $this->executeBulkInsert($data);
+    }
+
+    public function bulkInsertIgnore(array $data)
+    {
+        return $this->executeBulkInsert($data, true);
+    }
+
+    private function executeBulkInsert(array $data, bool $shouldIgnore = false)
     {
         // verify that data is an array of arrays
         if (empty($data) || array_values($data) !== $data) {
@@ -90,10 +101,9 @@ class Query
         foreach ($data as $row) {
             $this->bindings = array_merge($this->bindings, array_values($row));
         }
-
         $columns = array_keys($data[0]);
         $compiler = new Compiler($this);
-        $query = $compiler->compileBulkInsert($columns, $data);
+        $query = $compiler->compileBulkInsert($columns, $data, $shouldIgnore);
         $result = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
         return $result;
