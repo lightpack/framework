@@ -227,6 +227,39 @@ final class ModelTest extends TestCase
         $this->assertEquals($user->getPivotTable(), 'role_user');
     }
 
+    public function testPivotAttachMethod()
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+
+        $this->db->table('roles')->bulkInsert([
+            ['name' => 'admin'],
+            ['name' => 'user'],
+            ['name' => 'guest'],
+        ]);
+
+        $this->db->table('role_user')->bulkInsert([
+            ['user_id' => 1, 'role_id' => 1],
+            ['user_id' => 1, 'role_id' => 2],
+            ['user_id' => 2, 'role_id' => 2],
+        ]);
+
+        /** @var User */
+        $user = $this->db->model(User::class);
+        $user->find(3);
+        $userRolesCountBeforeAttach = $user->roles->count();
+        $user->roles()->attach(1, 3);
+        $user->load('roles');
+        $userRolesCountAfterAttach = $user->roles->count();
+
+        // Assertions
+        $this->assertEquals(0, $userRolesCountBeforeAttach);
+        $this->assertEquals(2, $userRolesCountAfterAttach);
+    }
+
     public function testHasManyThrough()
     {
         // projects, tasks, and comments table will be used for tests of hasmanyThrough relation
