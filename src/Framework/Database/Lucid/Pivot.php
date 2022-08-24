@@ -11,7 +11,15 @@ class Pivot extends Builder
     private $foreignKey;
     private $associateKey;
 
-    public function __construct(Model $model, Model $baseModel, $pivotTable, $foreignKey, $associateKey)
+    /**
+     * @param Model $model The relating model class name.
+     * @param Model $baseModel The relating model class name.
+     * @param string $pivot Name of the pivot table.
+     * @param string $foreignKey Foreign key of the base model.
+     * @param string $associateKey Associate key of the relating model.
+     * 
+     */
+    public function __construct(Model $model, Model $baseModel, string $pivotTable, string $foreignKey, string $associateKey)
     {
         $this->baseModel = $baseModel;
         $this->pivotTable = $pivotTable;
@@ -21,7 +29,11 @@ class Pivot extends Builder
         parent::__construct($model);
     }
 
-    public function sync(array $ids): self
+    /**
+     * This method will sync records in the pivot table. It will delete 
+     * records that are not in the array and insert new records.
+     */
+    public function sync(array $ids)
     {
         // Get query builder for pivot table
         $query = new Query($this->pivotTable, $this->getConnection());
@@ -41,7 +53,34 @@ class Pivot extends Builder
         if ($data) {
             $query->bulkInsert($data);
         }
+    }
 
-        return $this;
+    /**
+     * This method will add new records in the pivot table.
+     */
+    public function attach(...$ids)
+    {
+        // Get query builder for pivot table
+        $query = new Query($this->pivotTable, $this->getConnection());
+
+        // Insert new pivot rows ignoring existing ones
+        foreach ($ids as $id) {
+            $query->insertIgnore([
+                $this->foreignKey => $this->baseModel->id,
+                $this->associateKey => $id,
+            ]);
+        }
+    }
+
+    /**
+     * This method will remove records in the pivot table.
+     */
+    public function detach(...$ids)
+    {
+        // Get query builder for pivot table
+        $query = new Query($this->pivotTable, $this->getConnection());
+
+        // Delete pivot rows
+        $query->where($this->foreignKey, '=', $this->baseModel->id)->whereIn($this->associateKey, $ids)->delete();
     }
 }

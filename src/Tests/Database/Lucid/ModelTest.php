@@ -1495,6 +1495,7 @@ final class ModelTest extends TestCase
         $projectModel = $this->db->model(Project::class);
         $project = $projectModel::query()->with('tasks')->one();
         $projectJson = json_encode($project);
+        $projectArray = $project->toArray();
 
         // Assertions
         $this->assertNotEmpty($project);
@@ -1502,6 +1503,9 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 1', $project->name);
         $this->assertCount(2, $project->tasks);
         $this->assertIsString($projectJson);
-        $this->assertEquals('{"id":"1","name":"Project 1","tasks":[{"id":"1","name":"Task 1","project_id":"1"},{"id":"2","name":"Task 2","project_id":"1"}]}', $projectJson);
+        $this->assertArrayHasKey('name', $projectArray);
+        $this->assertArrayHasKey('tasks', $projectArray);   
+        $this->assertEquals('Project 1', $projectArray['name']);
+        $this->assertCount(2, $projectArray['tasks']);
     }
 }
