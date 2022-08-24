@@ -733,4 +733,30 @@ final class QueryTest extends TestCase
         $this->query->foo = 'bar';
         $this->assertNull($this->query->foo);
     }
+
+    public function testInsertIgnore()
+    {
+        $product = $this->query->one();
+        $products = $this->query->all();
+        $productsCountBeforeInsert = count($products ?? []);
+
+        // This should not insert a new product
+        $this->query->insertIgnore([
+            'id' => $product->id,
+            'name' => 'Product 4',
+            'color' => '#CCC',
+        ]);
+
+        // This should insert a new product
+        $this->query->insertIgnore([
+            'name' => 'Product 3',
+            'color' => '#CCC',
+        ]);
+
+        $products = $this->query->all();
+        $productsCountAfterInsert = count($products ?? []);
+
+        $this->assertEquals($productsCountBeforeInsert + 1, $productsCountAfterInsert);
+        $this->assertIsNumeric($this->query->lastInsertId());
+    }
 }
