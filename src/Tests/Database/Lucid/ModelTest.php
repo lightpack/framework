@@ -251,13 +251,54 @@ final class ModelTest extends TestCase
         $user = $this->db->model(User::class);
         $user->find(3);
         $userRolesCountBeforeAttach = $user->roles->count();
+        $rolesBefore = array_column($user->roles->toArray(), 'name');
         $user->roles()->attach(1, 3);
         $user->load('roles');
         $userRolesCountAfterAttach = $user->roles->count();
+        $rolesAfter = array_column($user->roles->toArray(), 'name');
 
         // Assertions
         $this->assertEquals(0, $userRolesCountBeforeAttach);
         $this->assertEquals(2, $userRolesCountAfterAttach);
+        $this->assertEquals([], $rolesBefore);
+        $this->assertEquals(['admin', 'guest'], $rolesAfter);
+    }
+
+    public function testPivotDetachMethod()
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+
+        $this->db->table('roles')->bulkInsert([
+            ['name' => 'admin'],
+            ['name' => 'user'],
+            ['name' => 'guest'],
+        ]);
+
+        $this->db->table('role_user')->bulkInsert([
+            ['user_id' => 1, 'role_id' => 1],
+            ['user_id' => 1, 'role_id' => 2],
+            ['user_id' => 2, 'role_id' => 2],
+        ]);
+        
+        /** @var User */
+        $user = $this->db->model(User::class);
+        $user->find(1);
+        $userRolesCountBeforeDetach = $user->roles->count();
+        $rolesBefore = array_column($user->roles->toArray(), 'name');
+        $user->roles()->detach(1);
+        $user->load('roles');
+        $userRolesCountAfterDetach = $user->roles->count();
+        $rolesAfter = array_column($user->roles->toArray(), 'name');
+
+        // Assertions
+        $this->assertEquals(2, $userRolesCountBeforeDetach);
+        $this->assertEquals(1, $userRolesCountAfterDetach);
+        $this->assertEquals(['admin', 'user'], $rolesBefore);
+        $this->assertEquals(['user'], $rolesAfter);
     }
 
     public function testHasManyThrough()
