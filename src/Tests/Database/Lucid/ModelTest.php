@@ -227,6 +227,117 @@ final class ModelTest extends TestCase
         $this->assertEquals($user->getPivotTable(), 'role_user');
     }
 
+    public function testPivotAttachMethod()
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+
+        $this->db->table('roles')->bulkInsert([
+            ['name' => 'admin'],
+            ['name' => 'user'],
+            ['name' => 'guest'],
+        ]);
+
+        $this->db->table('role_user')->bulkInsert([
+            ['user_id' => 1, 'role_id' => 1],
+            ['user_id' => 1, 'role_id' => 2],
+            ['user_id' => 2, 'role_id' => 2],
+        ]);
+
+        /** @var User */
+        $user = $this->db->model(User::class);
+        $user->find(3);
+        $userRolesCountBeforeAttach = $user->roles->count();
+        $rolesBefore = array_column($user->roles->toArray(), 'name');
+        $user->roles()->attach(1, 3);
+        $user->load('roles');
+        $userRolesCountAfterAttach = $user->roles->count();
+        $rolesAfter = array_column($user->roles->toArray(), 'name');
+
+        // Assertions
+        $this->assertEquals(0, $userRolesCountBeforeAttach);
+        $this->assertEquals(2, $userRolesCountAfterAttach);
+        $this->assertEquals([], $rolesBefore);
+        $this->assertEquals(['admin', 'guest'], $rolesAfter);
+    }
+
+    public function testPivotDetachMethod()
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+
+        $this->db->table('roles')->bulkInsert([
+            ['name' => 'admin'],
+            ['name' => 'user'],
+            ['name' => 'guest'],
+        ]);
+
+        $this->db->table('role_user')->bulkInsert([
+            ['user_id' => 1, 'role_id' => 1],
+            ['user_id' => 1, 'role_id' => 2],
+            ['user_id' => 2, 'role_id' => 2],
+        ]);
+        
+        /** @var User */
+        $user = $this->db->model(User::class);
+        $user->find(1);
+        $userRolesCountBeforeDetach = $user->roles->count();
+        $rolesBefore = array_column($user->roles->toArray(), 'name');
+        $user->roles()->detach(1);
+        $user->load('roles');
+        $userRolesCountAfterDetach = $user->roles->count();
+        $rolesAfter = array_column($user->roles->toArray(), 'name');
+
+        // Assertions
+        $this->assertEquals(2, $userRolesCountBeforeDetach);
+        $this->assertEquals(1, $userRolesCountAfterDetach);
+        $this->assertEquals(['admin', 'user'], $rolesBefore);
+        $this->assertEquals(['user'], $rolesAfter);
+    }
+
+    public function testPivotSyncMethod()
+    {
+        $this->db->table('users')->bulkInsert([
+            ['name' => 'Bob'],
+            ['name' => 'John'],
+            ['name' => 'Jane'],
+        ]);
+
+        $this->db->table('roles')->bulkInsert([
+            ['name' => 'admin'],
+            ['name' => 'user'],
+            ['name' => 'guest'],
+        ]);
+        
+        $this->db->table('role_user')->bulkInsert([
+            ['user_id' => 1, 'role_id' => 1],
+            ['user_id' => 1, 'role_id' => 2],
+            ['user_id' => 2, 'role_id' => 2],
+        ]);
+        
+        /** @var User */
+        $user = $this->db->model(User::class);
+        $user->find(1);
+        $userRolesCountBeforeSync = $user->roles->count();
+        $rolesBefore = array_column($user->roles->toArray(), 'name');
+        $user->roles()->sync([1, 3]);
+        $user->load('roles');
+        $userRolesCountAfterSync = $user->roles->count();
+        $rolesAfter = array_column($user->roles->toArray(), 'name');
+        
+        // Assertions
+        $this->assertEquals(2, $userRolesCountBeforeSync);
+        $this->assertEquals(2, $userRolesCountAfterSync);
+        $this->assertEquals(['admin', 'user'], $rolesBefore);
+        $this->assertEquals(['admin', 'guest'], $rolesAfter);
+    }
+
     public function testHasManyThrough()
     {
         // projects, tasks, and comments table will be used for tests of hasmanyThrough relation
@@ -1495,6 +1606,7 @@ final class ModelTest extends TestCase
         $projectModel = $this->db->model(Project::class);
         $project = $projectModel::query()->with('tasks')->one();
         $projectJson = json_encode($project);
+        $projectArray = $project->toArray();
 
         // Assertions
         $this->assertNotEmpty($project);
@@ -1502,6 +1614,9 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 1', $project->name);
         $this->assertCount(2, $project->tasks);
         $this->assertIsString($projectJson);
-        $this->assertEquals('{"id":"1","name":"Project 1","tasks":[{"id":"1","name":"Task 1","project_id":"1"},{"id":"2","name":"Task 2","project_id":"1"}]}', $projectJson);
+        $this->assertArrayHasKey('name', $projectArray);
+        $this->assertArrayHasKey('tasks', $projectArray);   
+        $this->assertEquals('Project 1', $projectArray['name']);
+        $this->assertCount(2, $projectArray['tasks']);
     }
 }

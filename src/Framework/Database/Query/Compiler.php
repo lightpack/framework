@@ -44,15 +44,25 @@ class Compiler
         return trim(implode(' ', $sql));
     }
 
-    public function compileInsert(array $columns)
+    public function compileInsert(array $columns, bool $shouldIgnore = false)
     {
         $parameters = $this->parameterize(count($columns));
         $parameters = count($columns) === 1 ? "($parameters)" : $parameters;
         $columns = implode(', ', $columns);
-        return "INSERT INTO {$this->query->table} ($columns) VALUES $parameters";
+        $ignore = $shouldIgnore ? ' IGNORE ' : ' ';
+
+        return "INSERT" . $ignore . "INTO {$this->query->table} ($columns) VALUES $parameters";
     }
 
-    public function compileBulkInsert(array $columns, array $values)
+    // public function compileInsertIgnore(array $columns)
+    // {
+    //     $parameters = $this->parameterize(count($columns));
+    //     $parameters = count($columns) === 1 ? "($parameters)" : $parameters;
+    //     $columns = implode(', ', $columns);
+    //     return "INSERT IGNORE INTO {$this->query->table} ($columns) VALUES $parameters";
+    // }
+
+    public function compileBulkInsert(array $columns, array $values, bool $shouldIgnore = false)
     {
         foreach ($values as $value) {
             if(count($value) == 1) {
@@ -64,8 +74,9 @@ class Compiler
 
         $columns = implode(', ', $columns);
         $values = implode(', ', $parameters);
+        $ignore = $shouldIgnore ? ' IGNORE ' : ' ';
 
-        return "INSERT INTO {$this->query->table} ($columns) VALUES $values";
+        return "INSERT" . $ignore . "INTO {$this->query->table} ($columns) VALUES $values";
     }
 
     public function compileUpdate(array $columns)
