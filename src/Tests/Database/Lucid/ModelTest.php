@@ -252,7 +252,7 @@ final class ModelTest extends TestCase
         $user->find(3);
         $userRolesCountBeforeAttach = $user->roles->count();
         $rolesBefore = array_column($user->roles->toArray(), 'name');
-        $user->roles()->attach(1, 3);
+        $user->roles()->attach([1, 3]);
         $user->load('roles');
         $userRolesCountAfterAttach = $user->roles->count();
         $rolesAfter = array_column($user->roles->toArray(), 'name');

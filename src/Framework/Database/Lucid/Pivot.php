@@ -57,9 +57,15 @@ class Pivot extends Builder
 
     /**
      * This method will add new records in the pivot table.
+     * 
+     * @param array $ids One or more ids to add.
      */
-    public function attach(...$ids)
+    public function attach($ids)
     {
+        if(!is_array($ids)) {
+            $ids = [$ids];
+        }
+
         // Get query builder for pivot table
         $query = new Query($this->pivotTable, $this->getConnection());
 
@@ -79,9 +85,15 @@ class Pivot extends Builder
 
     /**
      * This method will remove records in the pivot table.
+     * 
+     * @param mixed $ids One or more ids to remove.
      */
-    public function detach(...$ids)
+    public function detach($ids)
     {
+        if(!is_array($ids)) {
+            $ids = [$ids];
+        }
+
         // Get query builder for pivot table
         $query = new Query($this->pivotTable, $this->getConnection());
 
