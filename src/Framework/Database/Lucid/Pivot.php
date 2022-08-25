@@ -13,7 +13,7 @@ class Pivot extends Builder
 
     /**
      * @param Model $model The relating model class name.
-     * @param Model $baseModel The relating model class name.
+     * @param Model $baseModel The base model class name.
      * @param string $pivot Name of the pivot table.
      * @param string $foreignKey Foreign key of the base model.
      * @param string $associateKey Associate key of the relating model.
