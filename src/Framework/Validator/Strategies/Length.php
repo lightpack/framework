@@ -2,14 +2,17 @@
 
 namespace Lightpack\Validator\Strategies;
 
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\IValidationStrategy;
 
 class Length implements IValidationStrategy
 {
     private $_length;
     
-    public function validate($data, $num)
+    public function validate(array $dataSource, string $field, $num)
     {
+        $data = Arr::get($field, $dataSource);
+
         $this->_length = (int) $num;
         
         return mb_strlen($data) === $this->_length;

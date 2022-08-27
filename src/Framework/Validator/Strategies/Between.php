@@ -2,6 +2,7 @@
 
 namespace Lightpack\Validator\Strategies;
 
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\StringTrait;
 use Lightpack\Validator\IValidationStrategy;
 
@@ -12,8 +13,10 @@ class Between implements IValidationStrategy
     private $_min;
     private $_max;
     
-    public function validate($data, $range)
+    public function validate(array $dataSource, string $field, $range)
     {
+        $data = Arr::get($field, $dataSource);
+
         list($this->_min, $this->_max) = $this->explodeString($range, ',');
         
         return ($data >= (int) $this->_min && $data <= (int) $this->_max);

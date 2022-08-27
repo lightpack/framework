@@ -64,7 +64,7 @@ trait StringTrait
     /**
      * Converts a slug URL to friendly text.
      * 
-     * It replaces dashes and underscores with whitespace 
+     * It replaces dots, dashes and underscores with whitespace 
      * character. Then capitalizes the first character.
      * 
      * @param   string  $slug
@@ -72,7 +72,7 @@ trait StringTrait
      */
     protected function humanize(string $slug): string
     {
-        $text = str_replace(['_', '-'], ' ', $slug);
+        $text = str_replace(['.', '_', '-'], ' ', $slug);
         $text = trim($text);
 
         return ucfirst($text);

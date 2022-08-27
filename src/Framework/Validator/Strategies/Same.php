@@ -2,20 +2,24 @@
 
 namespace Lightpack\Validator\Strategies;
 
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\StringTrait;
 use Lightpack\Validator\IValidationStrategy;
 
-class Match implements IValidationStrategy
+class Same implements IValidationStrategy
 {
     
     use StringTrait;
     
     private $_matchTo;
     
-    public function validate($data, $matchString)
+    public function validate(array $dataSource, string $field, $matchString)
     {
-        list($this->_matchTo, $matchValue) = $this->explodeString($matchString, '=');
-        return $data === $matchValue;
+        $data = Arr::get($field, $dataSource);
+
+        $this->_matchTo = $matchString;
+        
+        return $data === $dataSource[$matchString];
     }
     
     public function getErrorMessage($field)
