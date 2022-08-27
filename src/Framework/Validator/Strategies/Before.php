@@ -3,6 +3,7 @@
 namespace Lightpack\Validator\Strategies;
 
 use DateTime;
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\StringTrait;
 use Lightpack\Validator\IValidationStrategy;
 
@@ -16,7 +17,7 @@ class Before implements IValidationStrategy
     
     public function validate(array $dataSource, string $field, $string)
     {
-        $data = $dataSource[$field];
+        $data = Arr::get($field, $dataSource);
 
         list($this->_dateFormat, $this->_beforeDate) = $this->explodeString($this->stringReplace('/', '', $string), ',');
     

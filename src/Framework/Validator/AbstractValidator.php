@@ -2,6 +2,7 @@
 
 namespace Lightpack\Validator;
 
+use Lightpack\Utils\Arr;
 use RuntimeException;
 
 /**
@@ -70,7 +71,7 @@ class AbstractValidator
      * This method has to be called by the extending class to add a rule for a filed.
      *
      * @param  string  $key    The field name or key in the data source to be validated
-     * @param  string  $rules  The string of rules e.g. 'required|alpha|min:3|max:8'
+     * @param  string|array  $rules  The string of rules e.g. 'required|alpha|min:3|max:8'
      * @throws RuntimeException
      */
     protected function addRule($key, $rules)
@@ -120,7 +121,7 @@ class AbstractValidator
             foreach ($values as $value) {
                 if (
                     !in_array('required', $values, true) && // if current field is not required &&
-                    !$this->notEmpty($this->dataSource[$field]) // no data has been provided then
+                    !$this->notEmpty(Arr::get($field, $this->dataSource)) // no data has been provided then
                 ) {
                     continue; // skip the loop
                 }

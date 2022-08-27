@@ -2,13 +2,14 @@
 
 namespace Lightpack\Validator\Strategies;
 
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\IValidationStrategy;
 
 class Callback implements IValidationStrategy
 {
     public function validate(array $dataSource, string $field, $callback)
     {
-        $data = $dataSource[$field];
+        $data = Arr::get($field, $dataSource);
 
         if(is_callable($callback)) {
             return $callback($data);

@@ -2,6 +2,7 @@
 
 namespace Lightpack\Validator\Strategies;
 
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\StringTrait;
 use Lightpack\Validator\IValidationStrategy;
 
@@ -14,7 +15,7 @@ class Same implements IValidationStrategy
     
     public function validate(array $dataSource, string $field, $matchString)
     {
-        $data = $dataSource[$field];
+        $data = Arr::get($field, $dataSource);
 
         $this->_matchTo = $matchString;
         

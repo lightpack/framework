@@ -2,6 +2,7 @@
 
 namespace Lightpack\Validator;
 
+use Lightpack\Utils\Arr;
 use RuntimeException;
 
 /**
@@ -45,12 +46,12 @@ class Validator extends AbstractValidator
      *
      * @access  public
      * @param  string  $key    The name of the data key or field to validate.
-     * @param  string  $rules  The string containing rules piped together
+     * @param  string|array  $rules  The string containing rules piped together
      * @throws RuntimeException
      */
     public function setRule($key, $rules)
     {
-        if (!array_key_exists($key, $this->dataSource)) {
+        if(!Arr::has($key, $this->dataSource)) {
             throw new RuntimeException(sprintf("Invalid key: %s", $key));
         }
 

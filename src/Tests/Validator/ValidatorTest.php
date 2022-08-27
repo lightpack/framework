@@ -88,7 +88,7 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleRequired()
     {
         // Assertion 1
-        $validator = new Validator(['password' => null]);
+        $validator = new Validator(['password' => '']);
         $validator->setRule('password', 'required')->run();
 
         $this->assertTrue($validator->hasErrors());
@@ -356,6 +356,21 @@ final class ValidatorTest extends TestCase
         $validator = new Validator(['phone' => '123-321-4455']);
         $validator->setRule('phone', 'regex:/^\d{3}-\d{3}-\d{4}$/')->run();
 
+        $this->assertFalse($validator->hasErrors());
+    }
+
+    public function testValidationRuleCanValidateNestedFields()
+    {
+        $validator = new Validator(['name' => 'John', 'address' => ['street' => '123 Main St', 'city' => 'Bengaluru', 'state' => 'NY']]);
+        $validator->setRule('name', 'required')->run();
+        $validator->setRule('address.street', 'required')->run();
+        $validator->setRule('address.city', 'required')->run();
+        $validator->setRule('address.state', 'required')->run();
+        $validator->setRule('address.state', [
+            'rules' => 'required|length:2',
+            'error' => 'State must be 2 characters long',
+        ])->run();
+        
         $this->assertFalse($validator->hasErrors());
     }
 

@@ -3,6 +3,7 @@
 namespace Lightpack\Validator\Strategies;
 
 use DateTime;
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\StringTrait;
 use Lightpack\Validator\IValidationStrategy;
 
@@ -16,8 +17,8 @@ class After implements IValidationStrategy
     
     public function validate(array $dataSource, string $field, $string)
     {
-        $data = $dataSource[$field];
-        
+        $data = Arr::get($field, $dataSource);
+
         list($this->_dateFormat, $this->_afterDate) = $this->explodeString($this->stringReplace('/', '', $string), ',');
     
         if(($data = DateTime::createFromFormat($this->_dateFormat, $data)) === false)
