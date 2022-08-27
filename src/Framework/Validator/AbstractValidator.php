@@ -160,11 +160,11 @@ class AbstractValidator
         $strategyInstance = $factoryInstance->getStrategy();
 
         if ($param) {
-            $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $param);
+            $isValidFlag = $strategyInstance->validate($this->dataSource, $field, $param);
         } elseif ($strategy === 'callback') {
-            $isValidFlag = $strategyInstance->validate($this->dataSource[$field], $this->rules[$field]);
+            $isValidFlag = $strategyInstance->validate($this->dataSource, $field, $this->rules[$field]);
         } else {
-            $isValidFlag = $strategyInstance->validate($this->dataSource[$field]);
+            $isValidFlag = $strategyInstance->validate($this->dataSource, $field);
         }
 
         if ($isValidFlag === false) {

@@ -329,17 +329,17 @@ final class ValidatorTest extends TestCase
         $this->assertFalse($validator->hasErrors());
     }
 
-    public function testValidationRuleMatch()
+    public function testValidationRuleSame()
     {
         // Assertion 1
-        $validator = new Validator(['confirm_password' => 'hello']);
-        $validator->setRule('confirm_password', 'match:Password=helloo')->run();
+        $validator = new Validator(['password' => 'hello', 'confirm_password' => 'helloo']);
+        $validator->setRule('confirm_password', 'same:password')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['confirm_password' => 'hello']);
-        $validator->setRule('confirm_password', 'match:password=hello')->run();
+        $validator = new Validator(['password' => 'hello', 'confirm_password' => 'hello']);
+        $validator->setRule('confirm_password', 'same:password')->run();
 
         $this->assertFalse($validator->hasErrors());
     }

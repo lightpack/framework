@@ -6,8 +6,10 @@ use Lightpack\Validator\IValidationStrategy;
 
 class Callback implements IValidationStrategy
 {
-    public function validate($data, $callback)
+    public function validate(array $dataSource, string $field, $callback)
     {
+        $data = $dataSource[$field];
+
         if(is_callable($callback)) {
             return $callback($data);
         }

@@ -7,8 +7,10 @@ use Lightpack\Validator\IValidationStrategy;
 
 class Date implements IValidationStrategy
 {   
-    public function validate($data, $format)
+    public function validate(array $dataSource, string $field, $format)
     {
+        $data = $dataSource[$field];
+
         return (bool) DateTime::createFromFormat($format, $data);
     }
     

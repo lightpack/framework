@@ -12,8 +12,10 @@ class Between implements IValidationStrategy
     private $_min;
     private $_max;
     
-    public function validate($data, $range)
+    public function validate(array $dataSource, string $field, $range)
     {
+        $data = $dataSource[$field];
+
         list($this->_min, $this->_max) = $this->explodeString($range, ',');
         
         return ($data >= (int) $this->_min && $data <= (int) $this->_max);

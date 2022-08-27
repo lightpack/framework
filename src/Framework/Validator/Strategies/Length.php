@@ -8,8 +8,10 @@ class Length implements IValidationStrategy
 {
     private $_length;
     
-    public function validate($data, $num)
+    public function validate(array $dataSource, string $field, $num)
     {
+        $data = $dataSource[$field];
+
         $this->_length = (int) $num;
         
         return mb_strlen($data) === $this->_length;

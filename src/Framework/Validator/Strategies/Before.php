@@ -14,8 +14,10 @@ class Before implements IValidationStrategy
     private $_beforeDate;
     private $_dateFormat;
     
-    public function validate($data, $string)
+    public function validate(array $dataSource, string $field, $string)
     {
+        $data = $dataSource[$field];
+
         list($this->_dateFormat, $this->_beforeDate) = $this->explodeString($this->stringReplace('/', '', $string), ',');
     
         if(($data = DateTime::createFromFormat($this->_dateFormat, $data)) === false)

@@ -14,8 +14,10 @@ class After implements IValidationStrategy
     private $_afterDate;
     private $_dateFormat;
     
-    public function validate($data, $string)
+    public function validate(array $dataSource, string $field, $string)
     {
+        $data = $dataSource[$field];
+        
         list($this->_dateFormat, $this->_afterDate) = $this->explodeString($this->stringReplace('/', '', $string), ',');
     
         if(($data = DateTime::createFromFormat($this->_dateFormat, $data)) === false)

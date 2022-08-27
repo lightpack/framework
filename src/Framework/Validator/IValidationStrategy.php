@@ -11,10 +11,11 @@ interface IValidationStrategy
      * The method to be called to perform validation on data.
      *
      * @access public
-     * @param  string  $data   The actual data to validate.
+     * @param  array  $dataSource   The actual data source.
+     * @param  string  $param  The field label in data source.
      * @param  string  $param  The value to validate against.
      */
-    public function validate($data, $param);
+    public function validate(array $dataSource, string $field, string $param);
 
     /**
      * The method to be called to access the generated error message.

@@ -6,8 +6,10 @@ use Lightpack\Validator\IValidationStrategy;
 
 class Alnum implements IValidationStrategy
 {   
-    public function validate($data, $param = null)
+    public function validate(array $dataSource, string $field, $param = null)
     {
+        $data = $dataSource[$field];
+
         return ctype_alnum($data);
     }
     

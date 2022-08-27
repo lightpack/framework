@@ -6,8 +6,10 @@ use Lightpack\Validator\IValidationStrategy;
 
 class Slug implements IValidationStrategy
 {   
-    public function validate($data, $param = null)
+    public function validate(array $dataSource, string $field, $param = null)
     {
+        $data = $dataSource[$field];
+
         return (bool) preg_match('/^([_-a-zA-Z0-9])+$/i', $data);
     }
     

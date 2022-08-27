@@ -8,8 +8,10 @@ class Url implements IValidationStrategy
 {   
     private $_validUrlPrefixes = array('http://', 'https://', 'ftp://');
     
-    public function validate($data, $param = null)
+    public function validate(array $dataSource, string $field, $param = null)
     {
+        $data = $dataSource[$field];
+
         foreach ($this->_validUrlPrefixes as $prefix) {
             if (strpos($data, $prefix) !== false) {
                 return filter_var($data, FILTER_VALIDATE_URL);

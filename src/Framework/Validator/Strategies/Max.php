@@ -8,8 +8,10 @@ class Max implements IValidationStrategy
 {
     private $_length;
     
-    public function validate($data, $num)
+    public function validate(array $dataSource, string $field, $num)
     {
+        $data = $dataSource[$field];
+
         $this->_length = $num;
         
         return strlen($data) <= $num;  

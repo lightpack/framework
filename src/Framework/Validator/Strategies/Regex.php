@@ -6,8 +6,10 @@ use Lightpack\Validator\IValidationStrategy;
 
 class Regex implements IValidationStrategy
 {   
-    public function validate($data, $regex)
+    public function validate(array $dataSource, string $field, $regex)
     {
+        $data = $dataSource[$field];
+
         return (bool) preg_match($regex, $data);
     }
     
