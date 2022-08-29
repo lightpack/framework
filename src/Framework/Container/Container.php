@@ -112,4 +112,14 @@ class Container
 
         return $instance;
     }
+
+    public function getServices(): array
+    {
+        return $this->services;
+    }
+
+    public function reset(): void
+    {
+        $this->bindings = [];
+    }
 }
