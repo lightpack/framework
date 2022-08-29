@@ -59,7 +59,6 @@ final class ContainerTest extends TestCase
         $this->assertSame($a, $d->a);
         $this->assertSame($b, $d->b);
         $this->assertSame($c, $d->c);
-
         $this->assertCount(4, $this->container->getServices());
     }
 }
