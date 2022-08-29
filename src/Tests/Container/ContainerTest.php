@@ -129,4 +129,45 @@ final class ContainerTest extends TestCase
         $this->assertCount(0, $this->container->getBindings());
         $this->assertCount(0, $this->container->getServices());
     }
+
+    public function testContainerCanResolveMethodCallsForClass()
+    {
+        $this->container->bind(Service::class, ServiceA::class);
+        $this->container->bind(InterfaceFoo::class, FooA::class);
+
+        // Assertions
+        $this->assertCount(2, $this->container->getBindings());
+        $this->assertCount(0, $this->container->getServices());
+
+        // Call method
+        $result = $this->container->call(E::class, 'foo', ['Bar', 'Baz']);
+
+        // Assertions
+        $this->assertEquals([
+            'foo' => 'FooA',
+            'bar' => 'Bar',
+            'baz' => 'Baz',
+        ], $result);
+    }
+
+    public function testContainerCanResolveMethodCallForInstanceObject()
+    {
+        $this->container->bind(Service::class, ServiceA::class);
+        $this->container->bind(InterfaceFoo::class, FooA::class);
+        $e = $this->container->resolve(E::class);
+
+        // Assertions
+        $this->assertCount(2, $this->container->getBindings());
+        $this->assertCount(2, $this->container->getServices());
+
+        // Call method
+        $result = $this->container->call($e, 'foo', ['Bar', 'Baz']);
+
+        // Assertions
+        $this->assertEquals([
+            'foo' => 'FooA',
+            'bar' => 'Bar',
+            'baz' => 'Baz',
+        ], $result);
+    }
 }

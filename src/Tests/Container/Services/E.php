@@ -8,4 +8,13 @@ class E
     {
         $this->service = $service;
     }
+
+    public function foo(InterfaceFoo $foo, $bar, $baz)
+    {
+        return [
+            'foo' => $foo::class,
+            'bar' => $bar,
+            'baz' => $baz,
+        ];
+    }
 }

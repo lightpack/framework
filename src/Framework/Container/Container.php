@@ -153,4 +153,34 @@ class Container
         $this->services = [];
         $this->bindings = [];
     }
+
+    public function call(string|object $instanceName, string $instanceMethod, array $args = [])
+    {
+        // Resolve instance
+        if(is_string($instanceName)) {
+            $instance = $this->resolve($instanceName);
+        } else {
+            $instance = $instanceName;
+        }
+
+        // Get reflection
+        $reflection = new \ReflectionClass($instanceName);
+
+        // Get method parameters
+        $parameters = $reflection->getMethod($instanceMethod)->getParameters();
+
+        // Filter parameters that are scalar
+        $parameters = array_filter($parameters, function ($parameter) {
+            return $parameter->getClass() !== null;
+        });
+
+        // Resolve method parameters
+        $dependencies = $this->resolveParameters($parameters);
+
+        // Merge dependencies with args
+        $dependencies = array_merge($dependencies, $args);
+
+        // Call method
+        return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
+    }
 }
