@@ -171,7 +171,7 @@ class Container
 
         // Filter parameters that are scalar
         $parameters = array_filter($parameters, function ($parameter) {
-            return $parameter->getClass() !== null;
+            return $parameter->getType() && $parameter->getType()->isBuiltin();
         });
 
         // Resolve method parameters
