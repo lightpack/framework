@@ -100,8 +100,10 @@ class Container
 
     protected function resolveParameters(array $parameters): array
     {
+        $parameters = $this->filterNonScalarParameters($parameters);
+        
         return array_map(function ($parameter) {
-            return $this->resolve($parameter->getClass()->getName());
+            return $this->resolve($parameter->getType()->getName());
         }, $parameters);
     }
 
@@ -169,10 +171,8 @@ class Container
         // Get method parameters
         $parameters = $reflection->getMethod($instanceMethod)->getParameters();
 
-        // Filter parameters that are scalar
-        $parameters = array_filter($parameters, function ($parameter) {
-            return $parameter->getType() && !$parameter->getType()->isBuiltin();
-        });
+        // Filter parameters that are non-scalar
+        $parameters = $this->filterNonScalarParameters($parameters);
 
         // Resolve method parameters
         $dependencies = $this->resolveParameters($parameters);
@@ -182,5 +182,12 @@ class Container
 
         // Call method
         return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
+    }
+
+    protected function filterNonscalarParameters(array $parameters): array
+    {
+        return array_filter($parameters, function ($parameter) {
+            return $parameter->getType() && !$parameter->getType()->isBuiltin();
+        });
     }
 }
