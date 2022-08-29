@@ -184,7 +184,7 @@ class Container
         return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
     }
 
-    protected function filterNonscalarParameters(array $parameters): array
+    protected function filterNonScalarParameters(array $parameters): array
     {
         return array_filter($parameters, function ($parameter) {
             return $parameter->getType() && !$parameter->getType()->isBuiltin();
