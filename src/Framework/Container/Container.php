@@ -7,6 +7,7 @@ use Closure;
 class Container
 {
     private $services = [];
+    private $bindings = [];
 
     public function has(string $id): bool
     {
@@ -55,6 +56,11 @@ class Container
         }
     }
 
+    public function bind(string $contract, string $implementation)
+    {
+        $this->bindings[$contract] = $implementation;
+    }
+
     public function resolve(string $id): object
     {
         // If already resolved, return it
@@ -64,6 +70,13 @@ class Container
 
         // Get reflection class
         $reflection = new \ReflectionClass($id);
+
+        // Is it an interface?
+        if ($reflection->isInterface() || $reflection->isAbstract()) {
+            $implementation = $this->bindings[$id];
+
+            return $this->resolve($implementation);
+        }
 
         // Get constructor
         $constructor = $reflection->getConstructor();
@@ -116,6 +129,11 @@ class Container
     public function getServices(): array
     {
         return $this->services;
+    }
+
+    public function getBindings(): array
+    {
+        return $this->bindings;
     }
 
     public function reset(): void

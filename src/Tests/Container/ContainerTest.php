@@ -10,6 +10,10 @@ require 'Services/A.php';
 require 'Services/B.php';
 require 'Services/C.php';
 require 'Services/D.php';
+require 'Services/E.php';
+require 'Services/Service.php';
+require 'Services/ServiceA.php';
+require 'Services/ServiceB.php';
 
 final class ContainerTest extends TestCase
 {
@@ -85,5 +89,15 @@ final class ContainerTest extends TestCase
         $this->assertSame($a, $d->a);
         $this->assertSame($b, $d->b);
         $this->assertSame($c, $d->c);
+    }
+
+    public function testContainerCanResolveAbstractServices()
+    {
+        $this->container->bind(Service::class, ServiceA::class);
+        $e = $this->container->resolve(E::class);
+
+        $this->assertInstanceOf(E::class, $e);
+        $this->assertInstanceOf(ServiceA::class, $e->service);
+        $this->assertCount(1, $this->container->getBindings());
     }
 }
