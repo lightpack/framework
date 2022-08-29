@@ -15,6 +15,9 @@ require 'Services/E.php';
 require 'Services/Service.php';
 require 'Services/ServiceA.php';
 require 'Services/ServiceB.php';
+require 'Services/InterfaceFoo.php';
+require 'Services/FooA.php';
+require 'Services/FooB.php';
 
 final class ContainerTest extends TestCase
 {
@@ -80,13 +83,25 @@ final class ContainerTest extends TestCase
         $this->assertSame($c, $d->c);
     }
 
-    public function testContainerCanResolveAbstractServices()
+    public function testContainerCanResolveAbstractBoundServices()
     {
         $this->container->bind(Service::class, ServiceA::class);
         $e = $this->container->resolve(E::class);
 
         $this->assertInstanceOf(E::class, $e);
         $this->assertInstanceOf(ServiceA::class, $e->service);
+        $this->assertCount(1, $this->container->getBindings());
+    }
+
+    public function testContainerCanResolveInterfaceBoundServices()
+    {
+        $this->container->bind(InterfaceFoo::class, FooA::class);
+        $this->container->bind(InterfaceFoo::class, FooB::class);
+        $foo = $this->container->resolve(InterfaceFoo::class);
+
+        // Assertions
+        $this->assertNotInstanceOf(FooA::class, $foo);
+        $this->assertInstanceOf(FooB::class, $foo);
         $this->assertCount(1, $this->container->getBindings());
     }
 
