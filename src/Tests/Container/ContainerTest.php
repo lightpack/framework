@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
+use Lightpack\Exceptions\BindingNotFoundException;
 use Lightpack\Exceptions\ServiceNotFoundException;
 
 require 'Services/A.php';
@@ -57,18 +58,6 @@ final class ContainerTest extends TestCase
         $this->assertInstanceOf(stdClass::class, $this->container->get('service'));
     }
 
-    public function testContainerCanReset()
-    {
-        $this->container->register('service', function () {
-            return new stdClass();
-        });
-
-        $this->container->reset();
-
-        $this->expectException(ServiceNotFoundException::class);
-        $this->container->get('service');
-    }
-
     public function testContainerCanResolveConcreteServices()
     {
         $a = $this->container->resolve(A::class);
@@ -99,5 +88,30 @@ final class ContainerTest extends TestCase
         $this->assertInstanceOf(E::class, $e);
         $this->assertInstanceOf(ServiceA::class, $e->service);
         $this->assertCount(1, $this->container->getBindings());
+    }
+
+    public function testContainerThrowsBindingNotFoundException()
+    {
+        $this->expectException(BindingNotFoundException::class);
+        $this->container->resolve(Service::class);
+    }
+
+    public function testContainerCanReset()
+    {
+        $this->container->bind(Service::class, ServiceA::class);
+        $this->container->resolve(A::class);
+        $this->container->resolve(B::class);
+        $this->container->resolve(E::class);
+
+        // Assertions
+        $this->assertCount(1, $this->container->getBindings());
+        $this->assertCount(4, $this->container->getServices());
+
+        // Reset container
+        $this->container->reset();
+
+        // Assertions
+        $this->assertCount(0, $this->container->getBindings());
+        $this->assertCount(0, $this->container->getServices());
     }
 }

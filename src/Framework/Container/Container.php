@@ -3,6 +3,7 @@
 namespace Lightpack\Container;
 
 use Closure;
+use Lightpack\Exceptions\BindingNotFoundException;
 
 class Container
 {
@@ -71,11 +72,9 @@ class Container
         // Get reflection class
         $reflection = new \ReflectionClass($id);
 
-        // Is it an interface?
+        // Is it an interface or abstract class?
         if ($reflection->isInterface() || $reflection->isAbstract()) {
-            $implementation = $this->bindings[$id];
-
-            return $this->resolve($implementation);
+            return $this->resolveImplementation($id);
         }
 
         // Get constructor
@@ -126,6 +125,19 @@ class Container
         return $instance;
     }
 
+    protected function resolveImplementation(string $id): object
+    {
+        $implementation = $this->bindings[$id] ?? null;
+
+        if ($implementation == null) {
+            throw new BindingNotFoundException(
+                sprintf('No binding found for `%s`', $id)
+            );
+        }
+
+        return $this->resolve($implementation);
+    }
+
     public function getServices(): array
     {
         return $this->services;
@@ -139,5 +151,6 @@ class Container
     public function reset(): void
     {
         $this->services = [];
+        $this->bindings = [];
     }
 }
