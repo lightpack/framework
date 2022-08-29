@@ -164,14 +164,14 @@ class Container
         }
 
         // Get reflection
-        $reflection = new \ReflectionClass($instanceName);
+        $reflection = new \ReflectionClass($instance);
 
         // Get method parameters
         $parameters = $reflection->getMethod($instanceMethod)->getParameters();
 
         // Filter parameters that are scalar
         $parameters = array_filter($parameters, function ($parameter) {
-            return $parameter->getType() && $parameter->getType()->isBuiltin();
+            return $parameter->getType() && !$parameter->getType()->isBuiltin();
         });
 
         // Resolve method parameters
