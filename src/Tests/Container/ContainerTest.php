@@ -30,4 +30,10 @@ final class ContainerTest extends TestCase
         $this->assertNotSame($this->container->get('service'), $this->container->get('service'));
         $this->assertInstanceOf(stdClass::class, $this->container->get('service'));
     }
+
+    public function testContainerCanResolveService()
+    {
+        $this->container->register('service', function() { return new stdClass(); });
+        $this->assertInstanceOf(stdClass::class, $this->container->resolve('service'));
+    }
 }
