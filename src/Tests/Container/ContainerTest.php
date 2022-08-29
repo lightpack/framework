@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
+use Lightpack\Container\Container;
+use Lightpack\Exceptions\ServiceNotFoundException;
 
 require 'Services/A.php';
 require 'Services/B.php';
@@ -11,10 +13,19 @@ require 'Services/D.php';
 
 final class ContainerTest extends TestCase
 {
+    /** @var Container */
+    private $container;
+
     public function setUp(): void
     {
-        $this->container = new Lightpack\Container\Container();
+        $this->container = new Container();
     }
+
+    public function tearDown(): void
+    {
+        $this->container = null;
+    }
+
     public function testContainerHasMethod()
     {
         $this->container->register('service', function () {
@@ -42,6 +53,18 @@ final class ContainerTest extends TestCase
         $this->assertInstanceOf(stdClass::class, $this->container->get('service'));
     }
 
+    public function testContainerCanReset()
+    {
+        $this->container->register('service', function () {
+            return new stdClass();
+        });
+
+        $this->container->reset();
+
+        $this->expectException(ServiceNotFoundException::class);
+        $this->container->get('service');
+    }
+
     public function testContainerCanResolveConcreteServices()
     {
         $a = $this->container->resolve(A::class);
@@ -49,6 +72,7 @@ final class ContainerTest extends TestCase
         $c = $this->container->resolve(C::class);
         $d = $this->container->resolve(D::class);
 
+        // Assertions
         $this->assertInstanceOf(A::class, $a);
         $this->assertInstanceOf(B::class, $b);
         $this->assertInstanceOf(C::class, $c);
@@ -56,9 +80,10 @@ final class ContainerTest extends TestCase
         $this->assertInstanceOf(A::class, $d->a);
         $this->assertInstanceOf(B::class, $d->b);
         $this->assertInstanceOf(C::class, $d->c);
+        $this->assertCount(4, $this->container->getServices());
+        $this->assertCount(4, $this->container->getServices());
         $this->assertSame($a, $d->a);
         $this->assertSame($b, $d->b);
         $this->assertSame($c, $d->c);
-        $this->assertCount(4, $this->container->getServices());
     }
 }

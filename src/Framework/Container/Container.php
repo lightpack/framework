@@ -120,6 +120,6 @@ class Container
 
     public function reset(): void
     {
-        $this->bindings = [];
+        $this->services = [];
     }
 }
