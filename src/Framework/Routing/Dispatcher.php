@@ -2,25 +2,39 @@
 
 namespace Lightpack\Routing;
 
+use Lightpack\Container\Container;
 use Lightpack\Http\Request ;
 use Lightpack\Routing\Router;
 
 class Dispatcher
 {
+    /** @var Container */
+    private $container;
+
+    /** @var string */
     private $controller;
+
+    /** @var string */
     private $action;
+
+    /** @var array */
     private $params;
+
+    /** @var Request */
     private $request;
+
+    /** @var Router */
     private $router;
 
-    public function __construct(Request $request, Router $router)
+    public function __construct(Container $container)
     {
-        $this->request = $request;
-        $this->router = $router;
-        $this->throwExceptionIfRouteNotFound($router->meta());
-        $this->controller = $router->controller();
-        $this->action = $router->action();
-        $this->params = $router->params();
+        $this->container = $container;
+        $this->request = $container->get('request');
+        $this->router = $container->get('router');
+        $this->throwExceptionIfRouteNotFound($this->router->meta());
+        $this->controller = $this->router->controller();
+        $this->action = $this->router->action();
+        $this->params = $this->router->params();
     }
 
     public function dispatch() 
@@ -37,7 +51,7 @@ class Dispatcher
             );
         }
 
-        return (new $this->controller())->{$this->action}(...$this->params);
+        return $this->container->call($this->controller, $this->action, $this->params);
     }
 
     private function throwExceptionIfRouteNotFound()
