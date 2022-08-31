@@ -7,3 +7,4 @@ composer.phar
 .phpunit.result.cache
 code-coverage
 notes.txt
+composer.lock
