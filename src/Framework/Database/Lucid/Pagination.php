@@ -8,9 +8,9 @@ use Lightpack\Pagination\Pagination as BasePagination;
 
 class Pagination extends BasePagination implements IteratorAggregate
 {
-    public function __construct($total, $perPage = 10, $currentPage = null, Collection $items)
+    public function __construct(Collection $items, $total, $perPage = 10, $currentPage = null)
     {
-        parent::__construct($total, $perPage, $currentPage, $items);
+        parent::__construct($items, $total, $perPage, $currentPage);
     }
 
     public function getIterator(): Traversable
