@@ -436,7 +436,7 @@ class Model implements JsonSerializable
         }
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         $data = \get_object_vars($this->data);
 

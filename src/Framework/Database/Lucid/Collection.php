@@ -97,7 +97,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return new static($items);
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return array_values($this->items);
     }
@@ -154,7 +154,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return isset($this->items[$offset]);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->items[$offset];
     }
