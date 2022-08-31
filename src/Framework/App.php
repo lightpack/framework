@@ -13,10 +13,9 @@ final class App
         /**
          * Prepare variables. 
          */
-        $request = $container->get('request');
         $response = $container->get('response');
         $filter = $container->get('filter');
-        $dispatcher = new Dispatcher($request, $container->get('router'));
+        $dispatcher = new Dispatcher($container);
         $route = $container->get('router')->route();
 
         /**
