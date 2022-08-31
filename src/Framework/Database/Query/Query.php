@@ -411,19 +411,19 @@ class Query
 
         if($total == 0) { // no need to query further
             if($this->model) {
-               return new LucidPagination($total, $limit, $page, new Collection([]));
+               return new LucidPagination(new Collection([]), $total, $limit, $page);
             } else {
-                return new BasePagination($total);
+                return new BasePagination([], $total);
             }
         }
 
         $items = $this->fetchAll();
 
         if($items instanceof Collection) {
-            return new LucidPagination($total, $limit, $page, $items);
+            return new LucidPagination( $items, $total, $limit, $page);
         }
 
-        return new BasePagination($total, $limit, $page, $items);
+        return new BasePagination($items, $total, $limit, $page);
     }
 
     public function count()

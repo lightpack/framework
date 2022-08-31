@@ -15,7 +15,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     protected $path;
     protected $allowedParams = [];
 
-    public function __construct($total, $perPage = 10, $currentPage = null, $items = [])
+    public function __construct($items, $total, $perPage = 10, $currentPage = null)
     {
         $this->total = $total;
         $this->perPage = $perPage;
@@ -35,7 +35,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         return isset($this->items[$offset]);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->items[$offset];
     }
@@ -154,7 +154,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         ];
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return $this->toArray();
     }
