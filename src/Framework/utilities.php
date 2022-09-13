@@ -44,7 +44,7 @@ if (!function_exists('url')) {
 
         $path = implode('/', $fragments);
         $url = trim(request()->basepath(), '/') . '/' . trim($path, '/');
-        $url = get_env('APP_URL') . $url;
+        $url = trim(get_env('APP_URL'), '/') . '/' . trim($url, '/');
 
         return $url . $queryString;
     }
