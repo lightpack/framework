@@ -70,7 +70,7 @@ if (!function_exists('csrf_input')) {
     */
     function csrf_input()
     {
-        return '<input type="hidden" name="csrf_token" value="' . app('session')->token() . '">';
+        return '<input type="hidden" name="csrf_token" value="' . session()->token() . '">';
     }
 }
 
