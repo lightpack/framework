@@ -89,29 +89,6 @@ if (!function_exists('_e')) {
     }
 }
 
-if (!function_exists('slugify')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts an ASCII text to URL friendly slug.
-     * ------------------------------------------------------------      
-     * 
-     * It will replace any non-word character, non-digit 
-     * character, or a non-dash '-' character with empty. 
-     * Also it will replace any number of space character 
-     * with a single dash '-'.
-     */
-    function slugify(string $text)
-    {
-        $text = preg_replace(
-            ['#[^\w\d\s-]+#', '#(\s)+#'],
-            ['', '-'],
-            $text
-        );
-
-        return strtolower(trim($text, ' -'));
-    }
-}
-
 if (!function_exists('asset_url')) {
     /**
      * ------------------------------------------------------------
@@ -129,24 +106,6 @@ if (!function_exists('asset_url')) {
         $url = trim(app('request')->basepath(), '/') . '/' . $type . '/' . $file;
 
         return get_env('ASSET_URL', 'assets') . $url;
-    }
-}
-
-if (!function_exists('humanize')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts a slug URL to friendly text.
-     * ------------------------------------------------------------      
-     * 
-     * It replaces dashes and underscores with whitespace 
-     * character. Then capitalizes the first character.
-     */
-    function humanize(string $slug)
-    {
-        $text = str_replace(['_', '-'], ' ', $slug);
-        $text = trim($text);
-
-        return ucfirst($text);
     }
 }
 
@@ -183,39 +142,6 @@ if (!function_exists('set_env')) {
             $_ENV[$key] = $value;
             $_SERVER[$key] = $value;
         }
-    }
-}
-
-if (!function_exists('underscore')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts a string to underscored, lowercase form.
-     * ------------------------------------------------------------      
-     * 
-     * For example: CustomerOrder => customer_order
-     */
-    function underscore(string $text)
-    {
-        $text = preg_replace('/(?<=\\w)([A-Z])/', '_\\1', $text);
-
-        return strtolower($text);
-    }
-}
-
-if (!function_exists('camelize')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts a string to its camelized form.
-     * ------------------------------------------------------------      
-     * 
-     * For example: product thinker => ProductThinker
-     */
-    function camelize(string $text)
-    {
-        $text = ucwords(str_replace(['_', '-'], ' ', $text));
-        $text = str_replace(' ', '', trim($text));
-
-        return $text;
     }
 }
 
@@ -407,5 +333,17 @@ if (!function_exists('db')) {
     function db(): \Lightpack\Database\Pdo
     {
         return app('db');
+    }
+}
+
+if (!function_exists('template')) {
+    /**
+     * ------------------------------------------------------------
+     * Returns an instance of view template.
+     * ------------------------------------------------------------
+     */
+    function template(): \Lightpack\View\Template
+    {
+        return app('template');
     }
 }
