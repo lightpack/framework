@@ -16,18 +16,37 @@ if (!function_exists('app')) {
 if (!function_exists('url')) {
     /*
     * ------------------------------------------------------------
-    * Creates a URL.
+    * Generates a URL with support for query params.
     * ------------------------------------------------------------
     * 
-    * It takes any number of string texts and concatenates them
-    * to generate the URL.
+    * It takes any number of string texts and concatenates them to
+    * generate the URL. To append query params, pass an array as
+    * key-value pairs, and it will be converted to a query string.
+    *
+    * For example:
+    * url('users', ['sort' => 'asc', 'status' => 'active']);
+    * That  will produce: /users?sort=asc&status=active 
     */
-    function url(string ...$fragments)
+    function url(...$fragments)
     {
-        $path = implode('/', $fragments);
-        $url = trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
+        $queryString = '';
+        $queryParams = end($fragments);
 
-        return get_env('APP_URL') . $url;
+        if (is_array($queryParams) && count($queryParams) > 0) {
+            $queryString = http_build_query($queryParams);
+
+            if (strlen($queryString) > 0) {
+                $queryString = '?' . $queryString;
+            }
+
+            array_pop($fragments);
+        }
+
+        $path = implode('/', $fragments);
+        $url = trim(request()->basepath(), '/') . '/' . trim($path, '/');
+        $url = get_env('APP_URL') . $url;
+
+        return $url . $queryString;
     }
 }
 
@@ -128,35 +147,6 @@ if (!function_exists('humanize')) {
         $text = trim($text);
 
         return ucfirst($text);
-    }
-}
-
-if (!function_exists('query_url')) {
-    /**
-     * ------------------------------------------------------------
-     * Generates URL with support for query params.
-     * ------------------------------------------------------------
-     * 
-     * For example:
-     * 
-     * query_url('users', ['sort' => 'asc', 'status' => 'active']);
-     * 
-     * That  will produce: /users?sort=asc&status=active 
-     */
-    function query_url(...$fragments): string
-    {
-        if (!$fragments) {
-            return url();
-        }
-
-        $params = end($fragments);
-
-        if (is_array($params)) {
-            $query = '?' . http_build_query($params);
-            array_pop($fragments);
-        }
-
-        return trim(url(...$fragments), '/') . $query;
     }
 }
 
@@ -388,7 +378,7 @@ if (!function_exists('auth')) {
      */
     function auth(string $driver = null)
     {
-        if(!$driver) {
+        if (!$driver) {
             return app('auth');
         }
 
