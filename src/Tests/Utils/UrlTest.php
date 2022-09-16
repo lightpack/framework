@@ -31,29 +31,21 @@ final class UrlTest extends TestCase
         $this->assertEquals('/users/profile', $this->url->to('users/profile'));
         $this->assertEquals('/users/profile', $this->url->to('users', 'profile'));
         $this->assertEquals('/users/profile', $this->url->to('users', 'profile'));
+        $this->assertEquals('/users/profile', $this->url->to('/users', ' profile '));
         $this->assertEquals('/users/profile', $this->url->to('users', 'profile', '', null));
+        $this->assertEquals('/?sort=asc&status=active', $this->url->to(['sort' => 'asc', 'status' => 'active']));
+        $this->assertEquals('/users?sort=asc&status=active', $this->url->to('users', ['sort' => 'asc', 'status' => 'active']));
+        $this->assertEquals('/users', $this->url->to('users', ['sort' => '', 'status' => null]));
+        $this->assertEquals('/users?member=gold', $this->url->to('users', ['sort' => '', 'status' => null, 'member' => 'gold']));
     }
 
-    public function testToMethodReturnsUrlWithQueryString(): void
+    public function testUrlAssetMethod()
     {
-        $this->assertEquals(
-            '/?sort=asc&status=active',
-            $this->url->to(['sort' => 'asc', 'status' => 'active'])
-        );
-
-        $this->assertEquals(
-            '/users?sort=asc&status=active',
-            $this->url->to('users', ['sort' => 'asc', 'status' => 'active'])
-        );
-
-        $this->assertEquals(
-            '/users',
-            $this->url->to('users', ['sort' => '', 'status' => null])
-        );
-
-        $this->assertEquals(
-            '/users?member=gold',
-            $this->url->to('users', ['sort' => '', 'status' => null, 'member' => 'gold'])
-        );
+        $this->assertEquals('/assets', $this->url->asset(''));
+        $this->assertEquals('/assets/styles.css', $this->url->asset('styles.css'));
+        $this->assertEquals('/assets/styles.css', $this->url->asset('/styles.css'));
+        $this->assertEquals('/assets/styles.css', $this->url->asset(' styles.css '));
+        $this->assertEquals('/assets/css/styles.css', $this->url->asset('css/styles.css'));
+        $this->assertEquals('/assets/css/styles.css', $this->url->asset('/css/styles.css'));
     }
 }

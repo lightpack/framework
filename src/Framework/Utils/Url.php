@@ -25,12 +25,12 @@ class Url
         }
 
         // Remove empty values from the array.
-        $fragments = array_filter($fragments, function($value) {
+        $fragments = array_filter($fragments, function ($value) {
             return trim($value) ? true : false;
         });
 
-        // Trim slashes from URL fragments
-        array_walk($fragments, fn(&$el) => $el = trim($el, '/'));
+        // Trim whitespace and slashes from URL fragments
+        array_walk($fragments, fn (&$el) => $el = trim($el, '/ '));
 
         return '/' . implode('/', $fragments) . $queryString;
     }
@@ -48,9 +48,11 @@ class Url
      */
     public function asset(string $file): ?string
     {
-        $url = trim($this->request->basepath(), '/') . '/' . trim($file, '/');
+        // trim whitespace and slashes from the file path
+        $file = trim($file, '/ ');
+        $file = $file ? '/' . $file : '';
 
-        return get_env('ASSET_URL', 'assets') . $url;
+        return get_env('ASSET_URL', '/assets') . $file;
     }
 
     /**
@@ -63,7 +65,7 @@ class Url
         }
 
         // Remove empty values from the array.
-        $params = array_filter($params, function($value) {
+        $params = array_filter($params, function ($value) {
             return trim($value) ? true : false;
         });
 
