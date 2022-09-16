@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-use Lightpack\Crypto\Password;
+use Lightpack\Utils\Password;
 use PHPUnit\Framework\TestCase;
 
 final class PasswordTest extends TestCase
 {
     public function testPasswordCanVerifyHash()
     {
-        $verified = Password::verify('lightpack', Password::hash('lightpack'));
+        $password = new Password();
+        $verified = $password->verify('lightpack', $password->hash('lightpack'));
 
         $this->assertTrue($verified);
     }

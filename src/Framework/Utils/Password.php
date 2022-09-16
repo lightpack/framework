@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Crypto;
+namespace Lightpack\Utils;
 
 class Password
 {
@@ -9,7 +9,7 @@ class Password
      * 
      * @param $password User supplied password string.
      */
-    public static function hash(string $password): string
+    public function hash(string $password): string
     {
         return password_hash($password, PASSWORD_DEFAULT);
     }
@@ -21,7 +21,7 @@ class Password
      * @param $password Plain text password.
      * @param $hash Hashed password.
      */
-    public static function verify(string $password, string $hash): bool
+    public function verify(string $password, string $hash): bool
     {
         return password_verify($password, $hash);
     }
