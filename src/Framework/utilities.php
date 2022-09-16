@@ -1,24 +1,26 @@
 <?php
 
 if (!function_exists('app')) {
-    /*
-    * ------------------------------------------------------------
-    * Shortcut to $container->get() method.
-    * ------------------------------------------------------------
-    */
-    function app(string $key)
+    /**
+     * ------------------------------------------------------------
+     * Resolves a binding from IoC container if $key is provided.
+     * Otherwise, returns the IoC container instance.
+     * ------------------------------------------------------------
+     *
+     * @return Lightpack\Container\Container|mixed
+     */
+    function app(string $key = null)
     {
         global $container;
-        return $container ? $container->get($key) : null;
+
+        return $key ? $container->get($key) : $container;
     }
 }
 
 if (!function_exists('redirect')) {
-    /*
-    * ------------------------------------------------------------
-    * Redirect to URI.
-    * ------------------------------------------------------------
-    */
+    /** 
+     * Redirect to URI.
+     */
     function redirect($uri = '/', $code = 302)
     {
         app('response')->redirect($uri, $code);
@@ -26,12 +28,10 @@ if (!function_exists('redirect')) {
 }
 
 if (!function_exists('csrf_input')) {
-    /*
-    * ------------------------------------------------------------
-    * Returns an HTML input for CSRF token.
-    * ------------------------------------------------------------
-    */
-    function csrf_input()
+    /** 
+     * Returns an HTML input for CSRF token.
+     */
+    function csrf_input(): string
     {
         return '<input type="hidden" name="csrf_token" value="' . session()->token() . '">';
     }
@@ -39,14 +39,12 @@ if (!function_exists('csrf_input')) {
 
 if (!function_exists('_e')) {
     /**
-     * ------------------------------------------------------------     
      * HTML characters to entities converter.
-     * ------------------------------------------------------------     
      * 
      * Often used to escape HTML output to protect against 
      * XSS attacks..
      */
-    function _e(string $str)
+    function _e(string $str): string
     {
         return htmlentities($str, ENT_QUOTES, 'UTF-8');
     }
@@ -54,11 +52,9 @@ if (!function_exists('_e')) {
 
 if (!function_exists('get_env')) {
     /**
-     * ------------------------------------------------------------
      * Gets an environment variable.
-     * ------------------------------------------------------------
      */
-    function get_env($key, $default = null)
+    function get_env(string $key, string $default = null): ?string
     {
         if (isset($_ENV[$key])) {
             return $_ENV[$key];
@@ -74,11 +70,9 @@ if (!function_exists('get_env')) {
 
 if (!function_exists('set_env')) {
     /**
-     * ------------------------------------------------------------
      * Sets an environment variable.
-     * ------------------------------------------------------------
      */
-    function set_env($key, $value)
+    function set_env(string $key, string $value): void
     {
         if (get_env($key) === null) {
             putenv("{$key}={$value}");
@@ -90,10 +84,6 @@ if (!function_exists('set_env')) {
 
 if (!function_exists('route')) {
     /**
-     * ------------------------------------------------------------     
-     * Route function.
-     * ------------------------------------------------------------      
-     * 
      * This function returns an instance of route object from
      * the app container.
      * 
@@ -107,12 +97,9 @@ if (!function_exists('route')) {
 
 if (!function_exists('dd')) {
     /**
-     * ------------------------------------------------------------
      * Pretty dump using var_dump()
-     * ------------------------------------------------------------
-     * 
      */
-    function dd(...$args)
+    function dd(...$args): void
     {
         $renderer = new Lightpack\Debug\Dumper;
 
@@ -124,12 +111,9 @@ if (!function_exists('dd')) {
 
 if (!function_exists('pp')) {
     /**
-     * ------------------------------------------------------------
      * Pretty print using print_r()
-     * ------------------------------------------------------------
-     * 
      */
-    function pp(...$args)
+    function pp(...$args): void
     {
         $renderer = new Lightpack\Debug\Dumper;
 
@@ -141,9 +125,7 @@ if (!function_exists('pp')) {
 
 if (!function_exists('request')) {
     /**
-     * ------------------------------------------------------------
      * Returns the current request object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Http\Request
      */
@@ -155,9 +137,7 @@ if (!function_exists('request')) {
 
 if (!function_exists('response')) {
     /**
-     * ------------------------------------------------------------
      * Returns a new instance of response.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Http\Response
      */
@@ -169,9 +149,7 @@ if (!function_exists('response')) {
 
 if (!function_exists('session')) {
     /**
-     * ------------------------------------------------------------
      * Returns the session object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Session\Session
      */
@@ -183,9 +161,7 @@ if (!function_exists('session')) {
 
 if (!function_exists('cookie')) {
     /**
-     * ------------------------------------------------------------
      * Returns a new instance of cookie.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Http\Cookie
      */
@@ -197,9 +173,7 @@ if (!function_exists('cookie')) {
 
 if (!function_exists('event')) {
     /**
-     * ------------------------------------------------------------
      * Returns the event object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Event\Event
      */
@@ -211,9 +185,7 @@ if (!function_exists('event')) {
 
 if (!function_exists('cache')) {
     /**
-     * ------------------------------------------------------------
      * Returns the cache object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Cache\Cache
      */
@@ -225,9 +197,7 @@ if (!function_exists('cache')) {
 
 if (!function_exists('logger')) {
     /**
-     * ------------------------------------------------------------
      * Returns the logger object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Logger\Logger
      */
@@ -239,9 +209,7 @@ if (!function_exists('logger')) {
 
 if (!function_exists('auth')) {
     /**
-     * ------------------------------------------------------------
      * Returns the auth object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Auth\Auth
      */
@@ -257,9 +225,7 @@ if (!function_exists('auth')) {
 
 if (!function_exists('config')) {
     /**
-     * ------------------------------------------------------------
      * Gets config data.
-     * ------------------------------------------------------------
      */
     function config($key, $default = null)
     {
@@ -269,9 +235,7 @@ if (!function_exists('config')) {
 
 if (!function_exists('db')) {
     /**
-     * ------------------------------------------------------------
      * Returns PDO database connection instance.
-     * ------------------------------------------------------------
      */
     function db(): \Lightpack\Database\Pdo
     {
@@ -281,12 +245,58 @@ if (!function_exists('db')) {
 
 if (!function_exists('template')) {
     /**
-     * ------------------------------------------------------------
      * Returns an instance of view template.
-     * ------------------------------------------------------------
      */
     function template(): \Lightpack\View\Template
     {
         return app('template');
+    }
+}
+
+if (!function_exists('url')) {
+    /**
+     * Returns an instance of Url utility.
+     */
+    function url(): \Lightpack\Utils\Url
+    {
+        if(!app()->has('url')) {
+            app()->register('url', function() {
+                return new \Lightpack\Utils\Url;
+            });
+        }
+
+        return app('url');
+    }
+}
+
+if (!function_exists('str')) {
+    /**
+     * Returns an instance of Str utility.
+     */
+    function str(): \Lightpack\Utils\Str
+    {
+        if(!app()->has('str')) {
+            app()->register('str', function() {
+                return new \Lightpack\Utils\Str;
+            });
+        }
+
+        return app('str');
+    }
+}
+
+if (!function_exists('arr')) {
+    /**
+     * Returns an instance of Arr utility.
+     */
+    function arr(): \Lightpack\Utils\Arr
+    {
+        if(!app()->has('arr')) {
+            app()->register('arr', function() {
+                return new \Lightpack\Utils\Arr;
+            });
+        }
+
+        return app('arr');
     }
 }
