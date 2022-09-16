@@ -2,8 +2,20 @@
 
 namespace Lightpack\Utils;
 
+use Lightpack\Http\Request;
+
 class Url
 {
+    /**
+     * @var Request
+     */
+    protected $request;
+
+    public function __construct(Request $request)
+    {   
+        $this->request = $request;
+    }
+
     /**
      * Generate URL with support for query params.
      * 
@@ -15,16 +27,16 @@ class Url
      * Url::to('users', ['sort' => 'asc', 'status' => 'active']);
      * That  will produce: /users?sort=asc&status=active 
      */
-    public static function to(...$fragments): string
+    public function to(...$fragments): string
     {
         if (is_array($params = end($fragments))) {
-            $queryString = self::buildQueryString($params);
+            $queryString = $this->buildQueryString($params);
             array_pop($fragments);
         }
 
         $url = [
             get_env('APP_URL'), 
-            request()->basepath(), 
+            $this->request->basepath(), 
             ...$fragments,
         ];
 
@@ -45,9 +57,9 @@ class Url
      * Url::asset('img/favicon.png');
      * Url::asset('js/scripts.js');
      */
-    public static function asset(string $file): ?string
+    public function asset(string $file): ?string
     {
-        $url = trim(request()->basepath(), '/') . '/' . trim($file, '/');
+        $url = trim($this->request->basepath(), '/') . '/' . trim($file, '/');
 
         return get_env('ASSET_URL', 'assets') . $url;
     }
@@ -55,7 +67,7 @@ class Url
     /**
      * Builds a query string from an array of key-value pairs.
      */
-    protected function buildQueryString(array $params): string
+    protected static function buildQueryString(array $params): string
     {
         if (empty($params)) {
             return '';

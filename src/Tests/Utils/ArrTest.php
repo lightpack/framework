@@ -11,18 +11,18 @@ final class ArrTest extends TestCase
     {
         $array = ['a' => ['b' => ['c' => 'd']]];
 
-        $this->assertTrue(Arr::has('a', $array));
-        $this->assertTrue(Arr::has('a.b', $array));
-        $this->assertTrue(Arr::has('a.b.c', $array));
+        $this->assertTrue((new Arr)->has('a', $array));
+        $this->assertTrue((new Arr)->has('a.b', $array));
+        $this->assertTrue((new Arr)->has('a.b.c', $array));
     }
 
     public function testArrayGetByKey()
     {
         $array = ['a' => ['b' => ['c' => 'd']]];
 
-        $this->assertEquals('d', Arr::get('a.b.c', $array));
-        $this->assertEquals(['c' => 'd'], Arr::get('a.b', $array));
-        $this->assertEquals('default', Arr::get('a.b.c.d', $array, 'default'));
+        $this->assertEquals('d', (new Arr)->get('a.b.c', $array));
+        $this->assertEquals(['c' => 'd'], (new Arr)->get('a.b', $array));
+        $this->assertEquals('default', (new Arr)->get('a.b.c.d', $array, 'default'));
     }
 
     public function testArrayFlatten()
@@ -35,7 +35,7 @@ final class ArrTest extends TestCase
             'd' => ['e' => ['f' => 'D']]
         ];
 
-        $flattenedArray = Arr::flatten($array);
+        $flattenedArray = (new Arr)->flatten($array);
 
         // Assertions
         $this->assertIsArray($flattenedArray);
@@ -53,7 +53,7 @@ final class ArrTest extends TestCase
             ['id' => 5, 'parent_id' => 0, 'name' => 'Category 5'],
         ];
 
-        $tree = Arr::tree($categories);
+        $tree = (new Arr)->tree($categories);
 
         // Assertions
         $this->assertIsArray($tree);
@@ -71,7 +71,7 @@ final class ArrTest extends TestCase
             ['category_id' => 5, 'category_parent_id' => null, 'name' => 'Category 5'],
         ];
 
-        $tree = Arr::tree($categories, null, 'category_id', 'category_parent_id');
+        $tree = (new Arr)->tree($categories, null, 'category_id', 'category_parent_id');
 
         // Assertions
         $this->assertIsArray($tree);
@@ -92,7 +92,7 @@ final class ArrTest extends TestCase
             (object) ['id' => 5, 'parent_id' => null, 'name' => 'Category 5'],
         ];
 
-        $tree = Arr::tree($categories);
+        $tree = (new Arr)->tree($categories);
 
         // Assertions
         $this->assertIsArray($tree);
@@ -110,7 +110,7 @@ final class ArrTest extends TestCase
             (object) ['category_id' => 5, 'category_parent_id' => null, 'name' => 'Category 5'],
         ];
 
-        $tree = Arr::tree($categories, null, 'category_id', 'category_parent_id');
+        $tree = (new Arr)->tree($categories, null, 'category_id', 'category_parent_id');
 
         // Assertions
         $this->assertIsArray($tree);
