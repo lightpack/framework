@@ -2,20 +2,8 @@
 
 namespace Lightpack\Utils;
 
-use Lightpack\Http\Request;
-
 class Url
 {
-    /**
-     * @var Request
-     */
-    protected $request;
-
-    public function __construct(Request $request)
-    {   
-        $this->request = $request;
-    }
-
     /**
      * Generate URL with support for query params.
      * 
@@ -29,21 +17,22 @@ class Url
      */
     public function to(...$fragments): string
     {
+        $queryString = '';
+
         if (is_array($params = end($fragments))) {
             $queryString = $this->buildQueryString($params);
             array_pop($fragments);
         }
 
-        $url = [
-            get_env('APP_URL'), 
-            $this->request->basepath(), 
-            ...$fragments,
-        ];
+        // Remove empty values from the array.
+        $fragments = array_filter($fragments, function($value) {
+            return trim($value) ? true : false;
+        });
 
         // Trim slashes from URL fragments
-        array_walk($url, fn(&$el) => $el = trim($el, '/'));
+        array_walk($fragments, fn(&$el) => $el = trim($el, '/'));
 
-        return implode('/', $url) . ($queryString ?? '');
+        return '/' . implode('/', $fragments) . $queryString;
     }
 
     /**
@@ -72,6 +61,11 @@ class Url
         if (empty($params)) {
             return '';
         }
+
+        // Remove empty values from the array.
+        $params = array_filter($params, function($value) {
+            return trim($value) ? true : false;
+        });
 
         $queryString = http_build_query($params);
 
