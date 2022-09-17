@@ -9,7 +9,6 @@ use Lightpack\Validator\RuleInterface;
 class Same implements RuleInterface
 {
     
-    use StringTrait;
     
     private $_matchTo;
     

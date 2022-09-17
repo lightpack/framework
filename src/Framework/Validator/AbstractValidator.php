@@ -4,10 +4,11 @@ namespace Lightpack\Validator;
 
 use RuntimeException;
 use Lightpack\Utils\Arr;
+use Lightpack\Utils\Str;
 
 class AbstractValidator
 {
-    use StringTrait;
+    // use StringTrait;
 
     /**
      * Holds the input data for validation.
@@ -53,8 +54,8 @@ class AbstractValidator
      */
     protected function addRule($key, $rules)
     {
-        if ($this->isString($rules) && $this->notEmpty($rules)) {
-            $this->rules[$key] =  $this->explodeString($rules, '|');
+        if (is_string($rules) && trim($rules)) {
+            $this->rules[$key] =  str_getcsv($rules, '|');
             return;
         }
 
@@ -62,7 +63,7 @@ class AbstractValidator
             if(is_callable($rules['rules'])) {
                 $this->rules[$key] =  $rules['rules'];
             } else {
-                $this->rules[$key] =  $this->explodeString($rules['rules'], '|');
+                $this->rules[$key] =  str_getcsv($rules['rules'], '|');
             }
 
             $this->customErrors[$key] = $rules['error'] ?? null;
@@ -98,7 +99,7 @@ class AbstractValidator
             foreach ($values as $value) {
                 if (
                     !in_array('required', $values, true) && // if current field is not required &&
-                    !$this->notEmpty((new Arr)->get($field, $this->dataSource)) // no data has been provided then
+                    is_null((new Arr)->get($field, $this->dataSource)) // no data has been provided then
                 ) {
                     continue; // skip the loop
                 }
@@ -106,7 +107,7 @@ class AbstractValidator
                 $continue = true;
 
                 if (strpos($value, ':') !== false) {
-                    list($rule, $param) = $this->explodeString($value, ':');
+                    list($rule, $param) = str_getcsv($value, ':');
                     $continue = $this->validate($field, $rule, $param);
                 } else {
                     $rule = $value;
@@ -133,7 +134,7 @@ class AbstractValidator
     private function validate($field, $rule, $param = null)
     {
         $isValidFlag = true; // we are optimistic
-        $factoryInstance = new ValidatorFactory($rule);
+        $factoryInstance = new RuleFactory($rule);
         $ruleInstance = $factoryInstance->getRule();
 
         if ($param) {
@@ -145,7 +146,7 @@ class AbstractValidator
         }
 
         if ($isValidFlag === false) {
-            $label = $this->customLabels[$field] ?? $this->humanize($field);
+            $label = $this->customLabels[$field] ?? (new Str)->humanize($field);
             $this->errors[$field] = $this->customErrors[$field] ?? $ruleInstance->getErrorMessage($label);
         }
 

@@ -2,14 +2,11 @@
 
 namespace Lightpack\Validator\Rules;
 
-
-use Lightpack\Validator\StringTrait;use Lightpack\Utils\Arr;
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\RuleInterface;
 
 class Between implements RuleInterface
 {
-    use StringTrait;
-    
     private $_min;
     private $_max;
     
@@ -17,7 +14,7 @@ class Between implements RuleInterface
     {
         $data = (new Arr)->get($field, $dataSource);
 
-        list($this->_min, $this->_max) = $this->explodeString($range, ',');
+        list($this->_min, $this->_max) = str_getcsv($range, ',');
         
         return ($data >= (int) $this->_min && $data <= (int) $this->_max);
     }

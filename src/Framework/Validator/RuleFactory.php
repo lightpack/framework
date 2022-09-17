@@ -10,7 +10,7 @@ use ReflectionException;
  * A factory for generating rules objects within 
  * Lightpack\Validator\Rules namespace.
  */
-class ValidatorFactory
+class RuleFactory
 {
     /**
      * Holds an instance of strategy class.

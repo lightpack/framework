@@ -4,13 +4,11 @@ namespace Lightpack\Validator\Rules;
 
 use DateTime;
 
-use Lightpack\Validator\StringTrait;use Lightpack\Utils\Arr;
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\RuleInterface;
 
 class Before implements RuleInterface
 {
-    use StringTrait;
-    
     private $_errorType = 'date';
     private $_beforeDate;
     private $_dateFormat;
@@ -19,7 +17,7 @@ class Before implements RuleInterface
     {
         $data = (new Arr)->get($field, $dataSource);
 
-        list($this->_dateFormat, $this->_beforeDate) = $this->explodeString($this->stringReplace('/', '', $string), ',');
+        list($this->_dateFormat, $this->_beforeDate) = str_getcsv(str_replace('/', '', $string), ',');
     
         if(($data = DateTime::createFromFormat($this->_dateFormat, $data)) === false)
 		{

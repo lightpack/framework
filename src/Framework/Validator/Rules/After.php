@@ -9,7 +9,6 @@ use Lightpack\Validator\RuleInterface;
 
 class After implements RuleInterface
 {
-    use StringTrait;
     
     private $_errorType = 'date';
     private $_afterDate;
@@ -19,7 +18,7 @@ class After implements RuleInterface
     {
         $data = (new Arr)->get($field, $dataSource);
 
-        list($this->_dateFormat, $this->_afterDate) = $this->explodeString($this->stringReplace('/', '', $string), ',');
+        list($this->_dateFormat, $this->_afterDate) = str_getcsv(str_replace('/', '', $string), ',');
     
         if(($data = DateTime::createFromFormat($this->_dateFormat, $data)) === false)
 		{
