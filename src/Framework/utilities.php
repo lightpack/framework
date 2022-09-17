@@ -259,7 +259,7 @@ if (!function_exists('url')) {
      */
     function url(): \Lightpack\Utils\Url
     {
-        if(!app()->has('url')) {
+        if (!app()->has('url')) {
             return app()->instance('url', new \Lightpack\Utils\Url);
         }
 
@@ -273,7 +273,7 @@ if (!function_exists('str')) {
      */
     function str(): \Lightpack\Utils\Str
     {
-        if(!app()->has('str')) {
+        if (!app()->has('str')) {
             return app()->instance('str', new \Lightpack\Utils\Str);
         }
 
@@ -287,7 +287,7 @@ if (!function_exists('arr')) {
      */
     function arr(): \Lightpack\Utils\Arr
     {
-        if(!app()->has('arr')) {
+        if (!app()->has('arr')) {
             return app()->instance('arr', new \Lightpack\Utils\Arr);
         }
 
@@ -301,10 +301,24 @@ if (!function_exists('moment')) {
      */
     function moment(): \Lightpack\Utils\Moment
     {
-        if(!app()->has('moment')) {
+        if (!app()->has('moment')) {
             return app()->instance('moment', new \Lightpack\Utils\Moment);
         }
 
         return app('moment');
+    }
+}
+
+if (!function_exists('password')) {
+    /**
+     * Returns an instance of Password utility.
+     */
+    function password(): \Lightpack\Utils\Password
+    {
+        if (!app()->has('password')) {
+            return app()->instance('password', new \Lightpack\Utils\Password);
+        }
+
+        return app('password');
     }
 }
