@@ -45,14 +45,6 @@ class AbstractValidator
     protected $customLabels = [];
 
     /**
-     * @param   array $dataSource  Array to validate
-     */
-    protected function __construct(array $dataSource)
-    {
-        $this->dataSource = $dataSource;
-    }
-
-    /**
      * This method has to be called by the extending class to add a rule for a filed.
      *
      * @param  string  $key    The field name or key in the data source to be validated

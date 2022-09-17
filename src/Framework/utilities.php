@@ -322,3 +322,23 @@ if (!function_exists('password')) {
         return app('password');
     }
 }
+
+if (!function_exists('validator')) {
+    /**
+     * Returns an instance of validator.
+     */
+    function validator(array $input = [], array $rules = []): \Lightpack\Validator\Validator
+    {
+        $validator = new \Lightpack\Validator\Validator();
+
+        if ($input) {
+            $validator->setInput($input);
+        }
+
+        if ($rules) {
+            $validator->setRules($rules);
+        }
+
+        return $validator;
+    }
+}

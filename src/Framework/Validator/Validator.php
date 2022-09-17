@@ -2,17 +2,16 @@
 
 namespace Lightpack\Validator;
 
-use RuntimeException;
-use Lightpack\Utils\Arr;
-
 class Validator extends AbstractValidator
 {
     /**
      * @param   array  $dataSource  Array to validate.
      */
-    public function __construct(array $dataSource)
+    public function setInput(array $dataSource): self
     {
-        parent::__construct($dataSource);
+        $this->dataSource = $dataSource;
+
+        return $this;
     }
 
     /**
@@ -30,14 +29,9 @@ class Validator extends AbstractValidator
      *
      * @param  string  $key    The name of the data key or field to validate.
      * @param  string|array|callable  $rules  The rules to apply to the data key.
-     * @throws RuntimeException
      */
     public function setRule($key, $rules)
     {
-        if(!(new Arr)->has($key, $this->dataSource)) {
-            throw new RuntimeException(sprintf("Invalid key: %s", $key));
-        }
-
         $this->addRule($key, $rules);
 
         return $this;
@@ -65,7 +59,7 @@ class Validator extends AbstractValidator
      *      ],
      * ]);
      */
-    public function setRules(array $config)
+    public function setRules(array $config): self
     {
         foreach ($config as $key => $rules) {
             $this->setRule($key, $rules);
@@ -81,13 +75,15 @@ class Validator extends AbstractValidator
      *
      * @access  public
      */
-    public function run()
+    public function run(): self
     {
         $this->processRules();
         return $this;
     }
 
     /**
+     * Check if validation has errors.
+     * 
      * This method confirms the state of overall validation. Call this method to
      * ensure that the data source passes all the validation rules imposed.
      *
@@ -96,6 +92,8 @@ class Validator extends AbstractValidator
      */
     public function hasErrors()
     {
+        $this->processRules();
+
         return empty($this->errors) === false;
     }
 
