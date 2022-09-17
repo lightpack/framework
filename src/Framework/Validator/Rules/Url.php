@@ -1,17 +1,17 @@
 <?php
 
-namespace Lightpack\Validator\Strategies;
+namespace Lightpack\Validator\Rules;
 
 use Lightpack\Utils\Arr;
-use Lightpack\Validator\IValidationStrategy;
+use Lightpack\Validator\RuleInterface;
 
-class Url implements IValidationStrategy
+class Url implements RuleInterface
 {   
     private $_validUrlPrefixes = array('http://', 'https://', 'ftp://');
     
     public function validate(array $dataSource, string $field, $param = null)
     {
-        $data = Arr::get($field, $dataSource);
+        $data = (new Arr)->get($field, $dataSource);
 
         foreach ($this->_validUrlPrefixes as $prefix) {
             if (strpos($data, $prefix) !== false) {

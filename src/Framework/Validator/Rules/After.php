@@ -1,13 +1,13 @@
 <?php
 
-namespace Lightpack\Validator\Strategies;
+namespace Lightpack\Validator\Rules;
 
 use DateTime;
-use Lightpack\Utils\Arr;
-use Lightpack\Validator\StringTrait;
-use Lightpack\Validator\IValidationStrategy;
 
-class After implements IValidationStrategy
+use Lightpack\Validator\StringTrait;use Lightpack\Utils\Arr;
+use Lightpack\Validator\RuleInterface;
+
+class After implements RuleInterface
 {
     use StringTrait;
     
@@ -17,7 +17,7 @@ class After implements IValidationStrategy
     
     public function validate(array $dataSource, string $field, $string)
     {
-        $data = Arr::get($field, $dataSource);
+        $data = (new Arr)->get($field, $dataSource);
 
         list($this->_dateFormat, $this->_afterDate) = $this->explodeString($this->stringReplace('/', '', $string), ',');
     

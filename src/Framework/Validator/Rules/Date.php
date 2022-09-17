@@ -1,16 +1,16 @@
 <?php
 
-namespace Lightpack\Validator\Strategies;
+namespace Lightpack\Validator\Rules;
 
 use DateTime;
 use Lightpack\Utils\Arr;
-use Lightpack\Validator\IValidationStrategy;
+use Lightpack\Validator\RuleInterface;
 
-class Date implements IValidationStrategy
+class Date implements RuleInterface
 {   
     public function validate(array $dataSource, string $field, $format)
     {
-        $data = Arr::get($field, $dataSource);
+        $data = (new Arr)->get($field, $dataSource);
 
         return (bool) DateTime::createFromFormat($format, $data);
     }

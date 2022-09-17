@@ -2,29 +2,13 @@
 
 namespace Lightpack\Validator;
 
-use Lightpack\Utils\Arr;
 use RuntimeException;
+use Lightpack\Utils\Arr;
 
-/**
- * This is the main class to be exposed to the end user. It extends the core
- * functionalities from Lightpack\Validator\AbstractClass.
- *
- * Method Prototypes:
- * 
- * void      public   function    __construct(array $dataSource);
- * void      public   function    setRule(string $key, string $rules);
- * void      public   function    run(void);
- * boolean   public   function    hasErrors(void);
- * string    public   function    getError(string $field);
- * array     public   function    getErrors(void);
- */
 class Validator extends AbstractValidator
 {
     /**
-     * Class constructor.
-     *
-     * @access  public
-     * @param   array  $dataSource  Array to validate
+     * @param   array  $dataSource  Array to validate.
      */
     public function __construct(array $dataSource)
     {
@@ -36,7 +20,7 @@ class Validator extends AbstractValidator
      * an example, to validate field "username" with rules required, alpha, min,
      * and max, we could do it like:
      *
-     * $validatorInstance->setRule('username', 'required|alpha|min:5|max:12');
+     * $validator->setRule('username', 'required|alpha|min:5|max:12');
      *
      * The rules are piped together and are processed in the order specified in the
      * rules string.
@@ -44,14 +28,13 @@ class Validator extends AbstractValidator
      * The key to validate is stored in the rules array only if it is a valid key
      * i.e. it has to be present as a key in the array of data to be validated.
      *
-     * @access  public
      * @param  string  $key    The name of the data key or field to validate.
-     * @param  string|array  $rules  The string containing rules piped together
+     * @param  string|array|callable  $rules  The rules to apply to the data key.
      * @throws RuntimeException
      */
     public function setRule($key, $rules)
     {
-        if(!Arr::has($key, $this->dataSource)) {
+        if(!(new Arr)->has($key, $this->dataSource)) {
             throw new RuntimeException(sprintf("Invalid key: %s", $key));
         }
 

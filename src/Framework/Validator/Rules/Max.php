@@ -1,17 +1,17 @@
 <?php
 
-namespace Lightpack\Validator\Strategies;
+namespace Lightpack\Validator\Rules;
 
 use Lightpack\Utils\Arr;
-use Lightpack\Validator\IValidationStrategy;
+use Lightpack\Validator\RuleInterface;
 
-class Max implements IValidationStrategy
+class Max implements RuleInterface
 {
     private $_length;
     
     public function validate(array $dataSource, string $field, $num)
     {
-        $data = Arr::get($field, $dataSource);
+        $data = (new Arr)->get($field, $dataSource);
 
         $this->_length = $num;
         

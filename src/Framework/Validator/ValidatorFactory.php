@@ -7,57 +7,52 @@ use RuntimeException;
 use ReflectionException;
 
 /**
- * A factory for generating strategy classes within Lightpack\Validator\Strategies
- * folder.
- *
- * Method Prototypes:
- *
- * void    public   function   __construct(string $strategy);
- * object  public   function   getStrategy(void);
+ * A factory for generating rules objects within 
+ * Lightpack\Validator\Rules namespace.
  */
 class ValidatorFactory
 {
     /**
      * Holds an instance of strategy class.
      *
-     * @var object
+     * @var RuleInterface
      */
-    private $strategyInstance = null;
+    private $rule = null;
 
     /**
      * Class constructor.
      *
      * @access  public
-     * @param   string  $strategy  The name of strategy to be produced.
+     * @param   string  $rule  The name of rule to be produced.
      * @throws  RuntimeException
      * @todo    Cache reflected objects for future references
      */
-    public function __construct($strategy)
+    public function __construct($rule)
     {
-        $strategy = ucfirst($strategy);
+        $rule = ucfirst($rule);
 
         try {
-            $reflectStrategy = new ReflectionClass("Lightpack\Validator\Strategies\\$strategy");
+            $reflection = new ReflectionClass("Lightpack\Validator\Rules\\$rule");
         } catch (ReflectionException $e) {
-            throw new RuntimeException(sprintf("No class exists for rule: %s", $strategy));
+            throw new RuntimeException(sprintf("No class exists for rule: %s", $rule));
         }
 
-        if (!$reflectStrategy->implementsInterface('Lightpack\Validator\IValidationStrategy')) {
-            throw new RuntimeException(sprintf("The class defined for rule: %s must implement interface: IValidationStrategy", $strategy));
+        if (!$reflection->implementsInterface('Lightpack\Validator\RuleInterface')) {
+            throw new RuntimeException(sprintf("The class defined for rule: %s must implement interface: RuleInterface", $rule));
         }
 
-        // things are fine, let us produce our strategy instance
-        $this->strategyInstance = $reflectStrategy->newInstance();
+        // things are fine, let us produce our rule instance
+        $this->rule = $reflection->newInstance();
     }
 
     /**
      * This method is called to get the instance.
      *
      * @access  public
-     * @return  object  The strategy object.
+     * @return  object  The rule object.
      */
-    public function getStrategy()
+    public function getRule()
     {
-        return $this->strategyInstance;
+        return $this->rule;
     }
 }

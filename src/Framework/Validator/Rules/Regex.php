@@ -1,15 +1,15 @@
 <?php
 
-namespace Lightpack\Validator\Strategies;
+namespace Lightpack\Validator\Rules;
 
 use Lightpack\Utils\Arr;
-use Lightpack\Validator\IValidationStrategy;
+use Lightpack\Validator\RuleInterface;
 
-class Regex implements IValidationStrategy
+class Regex implements RuleInterface
 {   
     public function validate(array $dataSource, string $field, $regex)
     {
-        $data = Arr::get($field, $dataSource);
+        $data = (new Arr)->get($field, $dataSource);
 
         return (bool) preg_match($regex, $data);
     }
