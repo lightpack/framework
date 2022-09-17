@@ -294,3 +294,17 @@ if (!function_exists('arr')) {
         return app('arr');
     }
 }
+
+if (!function_exists('moment')) {
+    /**
+     * Returns an instance of Moment utility.
+     */
+    function moment(): \Lightpack\Utils\Moment
+    {
+        if(!app()->has('moment')) {
+            return app()->instance('moment', new \Lightpack\Utils\Moment);
+        }
+
+        return app('moment');
+    }
+}
