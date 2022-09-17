@@ -7,8 +7,8 @@ use Lightpack\Exceptions\BindingNotFoundException;
 
 class Container
 {
-    private $services = [];
-    private $bindings = [];
+    protected $services = [];
+    protected $bindings = [];
 
     public function has(string $id): bool
     {
@@ -82,7 +82,7 @@ class Container
 
         // If no constructor, return new instance
         if ($constructor == null) {
-            return $this->registerInstance($id, new $id);
+            return $this->instance($id, new $id);
         }
 
         // Get constructor parameters
@@ -95,13 +95,13 @@ class Container
         $instance = $reflection->newInstanceArgs($dependencies);
 
         // Register instance
-        return $this->registerInstance($id, $instance);
+        return $this->instance($id, $instance);
     }
 
     protected function resolveParameters(array $parameters): array
     {
         $parameters = $this->filterNonScalarParameters($parameters);
-        
+
         return array_map(function ($parameter) {
             return $this->resolve($parameter->getType()->getName());
         }, $parameters);
@@ -118,7 +118,15 @@ class Container
         return $this->resolve($type->getName());
     }
 
-    protected function registerInstance(string $id, object $instance): object
+    /**
+     * Bind an instance to the container.
+     * 
+     * @param string $id Alias for the instance
+     * @param object $instance Instance to be bound
+     * 
+     * @return object 
+     */
+    public function instance(string $id, object $instance): object
     {
         $this->register($id, function () use ($instance) {
             return $instance;
@@ -159,7 +167,7 @@ class Container
     public function call(string|object $instanceName, string $instanceMethod, array $args = [])
     {
         // Resolve instance
-        if(is_string($instanceName)) {
+        if (is_string($instanceName)) {
             $instance = $this->resolve($instanceName);
         } else {
             $instance = $instanceName;

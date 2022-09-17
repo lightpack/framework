@@ -260,9 +260,7 @@ if (!function_exists('url')) {
     function url(): \Lightpack\Utils\Url
     {
         if(!app()->has('url')) {
-            app()->register('url', function() {
-                return new \Lightpack\Utils\Url;
-            });
+            return app()->instance('url', new \Lightpack\Utils\Url);
         }
 
         return app('url');
@@ -276,9 +274,7 @@ if (!function_exists('str')) {
     function str(): \Lightpack\Utils\Str
     {
         if(!app()->has('str')) {
-            app()->register('str', function() {
-                return new \Lightpack\Utils\Str;
-            });
+            return app()->instance('str', new \Lightpack\Utils\Str);
         }
 
         return app('str');
@@ -292,9 +288,7 @@ if (!function_exists('arr')) {
     function arr(): \Lightpack\Utils\Arr
     {
         if(!app()->has('arr')) {
-            app()->register('arr', function() {
-                return new \Lightpack\Utils\Arr;
-            });
+            return app()->instance('arr', new \Lightpack\Utils\Arr);
         }
 
         return app('arr');
