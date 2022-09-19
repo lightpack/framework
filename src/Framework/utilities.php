@@ -72,7 +72,7 @@ if (!function_exists('set_env')) {
     /**
      * Sets an environment variable.
      */
-    function set_env(string $key, string $value): void
+    function set_env(string $key, ?string $value): void
     {
         if (get_env($key) === null) {
             putenv("{$key}={$value}");
