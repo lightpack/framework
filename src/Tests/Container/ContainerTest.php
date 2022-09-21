@@ -7,17 +7,19 @@ use Lightpack\Container\Container;
 use Lightpack\Exceptions\BindingNotFoundException;
 use Lightpack\Exceptions\ServiceNotFoundException;
 
-require 'Services/A.php';
-require 'Services/B.php';
-require 'Services/C.php';
-require 'Services/D.php';
-require 'Services/E.php';
-require 'Services/Service.php';
-require 'Services/ServiceA.php';
-require 'Services/ServiceB.php';
-require 'Services/InterfaceFoo.php';
-require 'Services/FooA.php';
-require 'Services/FooB.php';
+require 'classes/A.php';
+require 'classes/B.php';
+require 'classes/C.php';
+require 'classes/D.php';
+require 'classes/E.php';
+require 'classes/Service.php';
+require 'classes/ServiceA.php';
+require 'classes/ServiceB.php';
+require 'classes/InterfaceFoo.php';
+require 'classes/InterfaceBar.php';
+require 'classes/FooA.php';
+require 'classes/FooB.php';
+require 'classes/X.php';
 
 final class ContainerTest extends TestCase
 {
@@ -169,5 +171,61 @@ final class ContainerTest extends TestCase
             'bar' => 'Bar',
             'baz' => 'Baz',
         ], $result);
+    }
+
+    public function testContainerReturnsSameInstanceWhenResolvedWithAlias()
+    {
+        $this->container->register('service', function() {
+            return new ServiceA();
+        });
+
+        $this->container->alias(Service::class, 'service');
+
+        // Assertions
+        $this->assertCount(0, $this->container->getBindings());
+        $this->assertCount(1, $this->container->getServices());
+
+        // Resolve
+        $service = $this->container->resolve(Service::class);
+        $serviceAlias = $this->container->resolve('service');
+
+        // Assertions
+        $this->assertInstanceOf(ServiceA::class, $service);
+        $this->assertInstanceOf(ServiceA::class, $serviceAlias);
+        $this->assertSame($service, $serviceAlias);
+        $this->assertTrue($service === $serviceAlias);
+    }
+
+    public function testContainerCanAliasMultipleInterfacesWithSameInstance()
+    {
+        $this->container->instance('x', new X());
+        $this->container->alias(InterfaceFoo::class, 'x');
+        $this->container->alias(InterfaceBar::class, 'x');
+
+        // Assertions
+        $this->assertCount(0, $this->container->getBindings());
+        $this->assertCount(1, $this->container->getServices());
+
+        // Resolve
+        $foo = $this->container->resolve(InterfaceFoo::class);
+        $bar = $this->container->resolve(InterfaceBar::class);
+
+        // Assertions
+        $this->assertInstanceOf(X::class, $foo);
+        $this->assertInstanceOf(X::class, $bar);
+        $this->assertSame($foo, $bar);
+    }
+
+    public function testContainerThrowsServiceNotFoundException()
+    {
+        $this->container->bind(Service::class, ServiceA::class);
+        $this->container->alias(Service::class, 'service');
+
+        // Assertions
+        $this->assertCount(1, $this->container->getBindings());
+        $this->assertCount(0, $this->container->getServices());
+
+        $this->expectException(ServiceNotFoundException::class);
+        $this->container->resolve(Service::class);
     }
 }

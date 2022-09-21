@@ -7,6 +7,7 @@ use Lightpack\Exceptions\BindingNotFoundException;
 
 class Container
 {
+    protected $aliases = [];
     protected $services = [];
     protected $bindings = [];
 
@@ -64,11 +65,24 @@ class Container
 
     public function resolve(string $id): object
     {
-        // If already resolved, return it
         if ($this->has($id)) {
             return $this->get($id);
         }
 
+        if (!array_key_exists($id, $this->aliases)) {
+            return $this->resolveWithReflection($id);
+        }
+
+        // It is a type and has alias
+        $alias = $this->aliases[$id];
+
+        $this->throwExceptionIfServiceNotFound($alias);
+
+        return $this->resolve($this->aliases[$id]);
+    }
+
+    protected function resolveWithReflection(string $id): object
+    {
         // Get reflection class
         $reflection = new \ReflectionClass($id);
 
@@ -197,5 +211,27 @@ class Container
         return array_filter($parameters, function ($parameter) {
             return $parameter->getType() && !$parameter->getType()->isBuiltin();
         });
+    }
+
+    /**
+     * Register an alias for a service.
+     * 
+     * Multiple interfaces, abstracts, or concrete classes can be 
+     * aliased against a single alias key.
+     * 
+     * @param string $alias Alias for the service.
+     * @param string $type Service class name.
+     * 
+     * @return void
+     * 
+     * Example:
+     * 
+     * $container->alias(InterfaceFoo::class, 'x');
+     * $container->alias(InterfaceBar::class, 'y');
+     * $container->alias(X::class, 'x');
+     */
+    public function alias(string $type, string $alias): void
+    {
+        $this->aliases[$type] = $alias;
     }
 }
