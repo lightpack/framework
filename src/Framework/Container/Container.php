@@ -11,11 +11,24 @@ class Container
     protected $services = [];
     protected $bindings = [];
 
+    /**
+     * Check if a service is registered.
+     *
+     * @param string $id The service id.
+     * @return bool
+     */
     public function has(string $id): bool
     {
         return array_key_exists($id, $this->services);
     }
 
+    /**
+     * Get a service from the container. 
+     * 
+     * @param string $id
+     * @return mixed
+     * @throws ServiceNotFoundException
+     */
     public function get(string $id): ?object
     {
         $this->throwExceptionIfServiceNotFound($id);
@@ -28,11 +41,33 @@ class Container
         return $service;
     }
 
+    /**
+     * Register a service in the container. 
+     * 
+     * This method will return a new instance of the service every 
+     * time it is called. Also, the service creation will be 
+     * deferred until it is requested for the first time.
+     * 
+     * @param string $id
+     * @param Closure $service
+     * @return void
+     */
     public function factory(string $id, callable $cb): void
     {
         $this->services[$id] = $cb;
     }
 
+    /**
+     * Register a service in the container. 
+     * 
+     * This method will register the service as a singleton. Also the 
+     * service creation will be deferred until it is requested.
+     * 
+     * @param string $id The service id.
+     * @param callable $cb The service callback.
+     * 
+     * @return void
+     */
     public function register(string $id, callable $cb): void
     {
         $this->services[$id] = function () use ($cb) {
