@@ -15,21 +15,31 @@ class SessionProvider implements ProviderInterface
         $container->register('session', function ($container) {
             return new Session($this->getDriver());
         });
+
+        $container->alias(Session::class, 'session');
+    }
+
+    protected function getDriverClassname(): string
+    {
+        $sessionDriver = get_env('SESSION_DRIVER', 'default');
+
+        if ($sessionDriver === 'default') {
+            return DefaultDriver::class;
+        }
+
+        if ($sessionDriver === 'array') {
+            return ArrayDriver::class;
+        }
+
+        throw new \Exception('Session driver not found');
     }
 
     protected function getDriver(): DriverInterface
     {
-        $sessionName = get_env('SESSION_DRIVER', 'default');
-        $sessionDriver = get_env('SESSION_DRIVER', 'default');
+        $sessionName = get_env('SESSION_NAME', 'lightpack_session');
 
-        if ($sessionDriver === 'default') {
-            return new DefaultDriver($sessionName);
-        }
+        $driver = $this->getDriverClassname();
 
-        if ($sessionDriver === 'array') {
-            return new ArrayDriver($sessionName);
-        }
-
-        throw new \Exception('Session driver not found');
+        return new $driver($sessionName);
     }
 }
