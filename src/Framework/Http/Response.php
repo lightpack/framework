@@ -2,6 +2,8 @@
 
 namespace Lightpack\Http;
 
+use Lightpack\Utils\Url;
+
 class Response
 {
     /**
@@ -9,55 +11,61 @@ class Response
      *
      * @var string
      */
-    private $type;
+    protected $type;
 
     /**
      * Represents HTTTP response body
      *
      * @var string
      */
-    private $body;
+    protected $body;
 
     /**
      * Represents HTTP response status code
      *
      * @var int
      */
-    private $code;
+    protected $code;
 
     /**
      * Represents HTTP response status message
      *
      * @var string
      */
-    private $message;
+    protected $message;
 
     /**
      * Represents HTTP response headers.
      * 
      * @var array
      */
-    private $headers;
+    protected $headers;
 
     /**
      * Redirect URL
      * 
      * @var string
      */
-    private $redirectUrl;
+    protected $redirectUrl;
+
+    /**
+     * @var \Lightpack\Utils\Url
+     */
+    protected $url;
 
     /**
      * Class contructor
      *
      * @access  public
      */
-    public function __construct()
+    public function __construct(Url $url)
     {
         $this->code    = 200;
         $this->type    = 'text/html';
         $this->message = 'OK';
         $this->headers = [];
         $this->body    = '';
+        $this->url     = $url;
     }
 
     /**
@@ -337,7 +345,7 @@ class Response
         if (filter_var($url, FILTER_VALIDATE_URL)) {
             $this->redirectUrl = $url;
         } else {
-            $this->redirectUrl = url($url);
+            $this->redirectUrl = $this->url->to($url);
         }
 
         $this->setCode($code);

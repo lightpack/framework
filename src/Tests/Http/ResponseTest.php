@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
 final class ResponseTest extends TestCase
@@ -10,7 +11,7 @@ final class ResponseTest extends TestCase
 
     public function setUp(): void
     {
-        $this->response = new \Lightpack\Http\Response();
+        $this->response = new \Lightpack\Http\Response(new Url);
     }
     
     public function testResponseSetCodeMethod()

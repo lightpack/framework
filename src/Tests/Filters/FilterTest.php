@@ -1,5 +1,6 @@
 <?php
 
+use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
 require 'MockFilter.php';
@@ -11,7 +12,7 @@ final class FilterTest extends TestCase
     public function setUp(): void
     {
         $this->request = new \Lightpack\Http\Request();
-        $this->response = new \Lightpack\Http\Response();
+        $this->response = new \Lightpack\Http\Response(new Url);
         $this->filter = new \Lightpack\Filters\Filter($this->request, $this->response);
         $this->mockFilter = new MockFilter();
     }

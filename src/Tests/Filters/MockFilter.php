@@ -3,6 +3,7 @@
 use \Lightpack\Http\Request;
 use \Lightpack\Http\Response;
 use \Lightpack\Filters\IFilter;
+use Lightpack\Utils\Url;
 
 class MockFilter implements IFilter
 {
@@ -13,7 +14,7 @@ class MockFilter implements IFilter
         }
 
         if($request->isGet()) {
-            return new Response();
+            return new Response(new Url);
         }
     }
 
