@@ -16,6 +16,6 @@ class Email implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s is invalid", $field);
+        return sprintf("The %s is an invalid email address.", $field);
     }
 }

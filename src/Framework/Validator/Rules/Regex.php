@@ -16,6 +16,6 @@ class Regex implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s is invalid", $field);
+        return sprintf("The %s is invalid.", $field);
     }
 }

@@ -4,7 +4,6 @@ namespace Lightpack\Validator;
 
 use RuntimeException;
 use Lightpack\Utils\Arr;
-use Lightpack\Utils\Str;
 
 class AbstractValidator
 {
@@ -146,7 +145,7 @@ class AbstractValidator
         }
 
         if ($isValidFlag === false) {
-            $label = $this->customLabels[$field] ?? (new Str)->humanize($field);
+            $label = $this->customLabels[$field] ?? $field;
             $this->errors[$field] = $this->customErrors[$field] ?? $ruleInstance->getErrorMessage($label);
         }
 

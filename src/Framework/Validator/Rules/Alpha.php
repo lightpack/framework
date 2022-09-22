@@ -16,6 +16,6 @@ class Alpha implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s must contain only alphabets", $field);
+        return sprintf("The %s must contain only alphabets.", $field);
     }
 }

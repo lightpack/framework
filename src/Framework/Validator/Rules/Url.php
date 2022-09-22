@@ -24,6 +24,6 @@ class Url implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s appears to be invalid", $field);
+        return sprintf("The %s appears to be an invalid URL.", $field);
     }
 }

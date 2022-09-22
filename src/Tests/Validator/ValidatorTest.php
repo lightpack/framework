@@ -442,14 +442,17 @@ final class ValidatorTest extends TestCase
 
     public function testValidationRuleCanSetCallbackErrors()
     {
-        $data = ['age' => 23];
+        $data = ['age' => 23, 'email' => 'example.com'];
         $validator = new Validator();
-        $validator->setInput($data)->setRule('age', function ($data) {
+        $validator->setInput($data);
+        $validator->setRule('email', 'required|email');
+        $validator->setRule('age', function ($data) {
             return 23 !== $data;
         })->run();
 
         $this->assertTrue($validator->hasErrors());
-        $this->assertEquals($validator->getError('age'), 'Age is invalid');
+        $this->assertEquals($validator->getError('age'), 'The age is invalid.');
+        $this->assertEquals($validator->getError('email'), 'The email is an invalid email address.');
     }
 
     public function testValidationRuleCanSetCustomCallbackErrors()
@@ -469,17 +472,25 @@ final class ValidatorTest extends TestCase
 
     public function testValidationRuleCanSetCustomCallbackLabels()
     {
-        $data = ['age' => 17];
+        $data = ['age' => 17, 'home_address' => ''];
         $validator = new Validator();
-        $validator->setInput($data)->setRule('age', [
-            'label' => 'Your age',
-            'rules' => function ($data) {
-                return $data >= 18;
-            }
-        ])->run();
+        $validator
+            ->setInput($data)
+            ->setRule('age', [
+                'error' => 'You must be above 18',
+                'rules' => function ($data) {
+                    return $data >= 18;
+                }
+            ])
+            ->setRule('home_address', [
+                'label' => 'home address',
+                'rules' => 'required',
+            ])
+            ->run();
 
         $this->assertTrue($validator->hasErrors());
-        $this->assertEquals($validator->getError('age'), 'Your age is invalid');
+        $this->assertEquals($validator->getError('age'), 'You must be above 18');
+        $this->assertEquals($validator->getError('home_address'), 'The home address is required.');
     }
 
     public function testValidationRuleCanSetMultipleCallbacksTogether()
@@ -503,8 +514,8 @@ final class ValidatorTest extends TestCase
         ])->run();
 
         $this->assertTrue($validator->hasErrors());
-        $this->assertEquals($validator->getError('age1'), 'Age1 is invalid');
+        $this->assertEquals($validator->getError('age1'), 'The age1 is invalid.');
         $this->assertEmpty($validator->getError('age2'));
-        $this->assertEquals($validator->getError('age3'), "Grandpa's age is invalid");
+        $this->assertEquals($validator->getError('age3'), "The Grandpa's age is invalid.");
     }
 }

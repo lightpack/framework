@@ -31,9 +31,9 @@ class Before implements RuleInterface
     public function getErrorMessage($field)
     {
         if($this->_errorType === 'format') {
-            $message = sprintf("%s must match format: %s", $field, $this->_dateFormat);
+            $message = sprintf("The %s must match format: %s.", $field, $this->_dateFormat);
         } else {
-            $message = sprintf("%s must be before %s", $field, $this->_beforeDate);
+            $message = sprintf("The %s must be before %s.", $field, $this->_beforeDate);
         }
         return $message;
     }

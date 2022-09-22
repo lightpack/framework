@@ -20,6 +20,6 @@ class Max implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s must be <= %s", $field, $this->_length);
+        return sprintf("The %s must be <= %s.", $field, $this->_length);
     }
 }

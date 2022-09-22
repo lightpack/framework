@@ -16,6 +16,6 @@ class Required implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s is required", $field);
+        return sprintf("The %s is required.", $field);
     }
 }

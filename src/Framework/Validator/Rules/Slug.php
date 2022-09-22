@@ -16,6 +16,6 @@ class Slug implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s must contain only dashes, underscores, and alphanumeric characters", $field);
+        return sprintf("The %s must contain only dashes, underscores, and alphanumeric characters.", $field);
     }
 }

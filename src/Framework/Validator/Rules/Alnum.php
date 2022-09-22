@@ -16,6 +16,6 @@ class Alnum implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s must contain only alphabets and numbers", $field);
+        return sprintf("The %s must contain only alphabets and numbers.", $field);
     }
 }

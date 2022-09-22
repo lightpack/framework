@@ -4,7 +4,7 @@ namespace Lightpack\Validator\Rules;
 
 use DateTime;
 
-use Lightpack\Validator\StringTrait;use Lightpack\Utils\Arr;
+use Lightpack\Utils\Arr;
 use Lightpack\Validator\RuleInterface;
 
 class After implements RuleInterface
@@ -32,9 +32,9 @@ class After implements RuleInterface
     public function getErrorMessage($field)
     {
         if($this->_errorType === 'format') {
-            $message = sprintf("%s must match format: %s", $field, $this->_dateFormat);
+            $message = sprintf("The %s must match format: %s.", $field, $this->_dateFormat);
         } else {
-            $message = sprintf("%s must be after %s", $field, $this->_afterDate);
+            $message = sprintf("The %s must be after %s.", $field, $this->_afterDate);
         }
         return $message;
     }

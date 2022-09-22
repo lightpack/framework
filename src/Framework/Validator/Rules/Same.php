@@ -23,6 +23,6 @@ class Same implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s mismatch", $this->_matchTo);
+        return sprintf("The %s mismatch.", $this->_matchTo);
     }
 }

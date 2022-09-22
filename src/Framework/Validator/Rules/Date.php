@@ -17,6 +17,6 @@ class Date implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s format mismatch", $field);
+        return sprintf("The %s format mismatch.", $field);
     }
 }

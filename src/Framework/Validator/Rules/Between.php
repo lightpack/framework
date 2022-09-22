@@ -21,6 +21,6 @@ class Between implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s must be between %s and %s", $field, $this->_min, $this->_max);
+        return sprintf("The %s must be between %s and %s.", $field, $this->_min, $this->_max);
     }
 }

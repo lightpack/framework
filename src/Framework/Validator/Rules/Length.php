@@ -20,6 +20,6 @@ class Length implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("%s must have length %s", $field, $this->_length);
+        return sprintf("The %s must have length %s.", $field, $this->_length);
     }
 }
