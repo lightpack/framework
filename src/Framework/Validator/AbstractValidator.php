@@ -98,7 +98,7 @@ class AbstractValidator
             foreach ($values as $value) {
                 if (
                     !in_array('required', $values, true) && // if current field is not required &&
-                    is_null((new Arr)->get($field, $this->dataSource)) // no data has been provided then
+                    empty((new Arr)->get($field, $this->dataSource)) // no data has been provided then
                 ) {
                     continue; // skip the loop
                 }
