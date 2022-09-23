@@ -12,5 +12,7 @@ class EventProvider implements ProviderInterface
         $container->register('event', function ($container) {
             return new Event();
         });
+
+        $container->alias(Event::class, 'event');
     }
 }
