@@ -2,10 +2,13 @@
 
 namespace Lightpack\Event;
 
+use Lightpack\Container\Container;
+
 class Event
 {
-    private $subscribers = [];
-    private $data;
+    protected $subscribers = [];
+
+    public function __construct(private Container $container) {}
 
     public function subscribe(string $eventName, string $eventSubscriber): void
     {
@@ -25,14 +28,12 @@ class Event
         }
     }
 
-    public function notify(string $eventName)
+    public function fire(string $event, mixed $data = null): void
     {
-        $this->throwExceptionIfEventNotFound($eventName);
+        $this->throwExceptionIfEventNotFound($event);
         
-        foreach ($this->subscribers[$eventName] as $eventSubscriber) {
-            $subscriberInstance = new $eventSubscriber;
-            $this->throwExceptionIfHandlerMethodNotFound($eventSubscriber, $subscriberInstance);
-            $subscriberInstance->handle();
+        foreach ($this->subscribers[$event] as $subscriber) {
+            $this->container->call($subscriber, 'handler', $data);
         }
     }
 
@@ -41,36 +42,13 @@ class Event
         return $this->subscribers;
     }
 
-    public function setData($data = null)
-    {
-        $this->data = $data;
-        return $this;
-    }
-
-    public function getData()
-    {
-        return $this->data;
-    }
-
-    private function throwExceptionIfEventNotFound(string $eventName): void
+    protected function throwExceptionIfEventNotFound(string $eventName): void
     {
         if (!isset($this->subscribers[$eventName])) {
             throw new \Lightpack\Exceptions\EventNotFoundException(
                 sprintf(
                     'Event `%s` is not registered',
                     $eventName
-                )
-            );
-        }
-    }
-    
-    private function throwExceptionIfHandlerMethodNotFound(string $subscriber, object $instance): void
-    {
-        if(!method_exists($instance, 'handle')) {
-            throw new \Lightpack\Exceptions\EventHandlerMethodNotFoundException(
-                sprintf(
-                    'Event subscriber `%s` has not implemented handle() method.',
-                    $subscriber
                 )
             );
         }

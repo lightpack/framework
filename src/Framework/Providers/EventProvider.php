@@ -10,7 +10,7 @@ class EventProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->register('event', function ($container) {
-            return new Event();
+            return new Event($container);
         });
 
         $container->alias(Event::class, 'event');
