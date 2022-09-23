@@ -8,22 +8,22 @@ class Event
 {
     protected $subscribers = [];
 
-    public function __construct(private Container $container) {}
+    public function __construct(protected Container $container) {}
 
-    public function subscribe(string $eventName, string $eventSubscriber): void
+    public function subscribe(string $event, string $subscriber): void
     {
-        $this->subscribers[$eventName][] = $eventSubscriber;
+        $this->subscribers[$event][] = $subscriber;
     }
 
-    public function unsubscribe(string $eventSubscriber): void
+    public function unsubscribe(string $subscriber): void
     {
-        $eventNames = array_keys($this->subscribers);
+        $events = array_keys($this->subscribers);
 
-        foreach ($eventNames as $eventName) {
-            $key = array_search($eventSubscriber, $this->subscribers[$eventName]);
+        foreach ($events as $event) {
+            $key = array_search($subscriber, $this->subscribers[$event]);
 
             if ($key !== false) {
-                unset($this->subscribers[$eventName][$key]);
+                unset($this->subscribers[$event][$key]);
             }
         }
     }
@@ -33,7 +33,7 @@ class Event
         $this->throwExceptionIfEventNotFound($event);
         
         foreach ($this->subscribers[$event] as $subscriber) {
-            $this->container->call($subscriber, 'handler', $data);
+            $this->container->call($subscriber, 'handle', [$data]);
         }
     }
 
@@ -42,13 +42,13 @@ class Event
         return $this->subscribers;
     }
 
-    protected function throwExceptionIfEventNotFound(string $eventName): void
+    protected function throwExceptionIfEventNotFound(string $event): void
     {
-        if (!isset($this->subscribers[$eventName])) {
+        if (!isset($this->subscribers[$event])) {
             throw new \Lightpack\Exceptions\EventNotFoundException(
                 sprintf(
                     'Event `%s` is not registered',
-                    $eventName
+                    $event
                 )
             );
         }

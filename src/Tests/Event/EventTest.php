@@ -69,7 +69,7 @@ final class EventTest extends TestCase
     {
         $mockEvent = $this->getMockBuilder(\stdClass::class)->getMock();
         $this->event->subscribe('event', get_class($mockEvent));
-        $this->expectException(\TypeError::class);
+        $this->expectException(ReflectionException::class);
         $this->event->fire('event');
     }
 }
