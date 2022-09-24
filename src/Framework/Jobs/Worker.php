@@ -3,6 +3,8 @@
 namespace Lightpack\Jobs;
 
 use Exception;
+use Lightpack\Container\Container;
+use Throwable;
 
 class Worker
 {
@@ -20,11 +22,17 @@ class Worker
      */
     private $jobEngine;
 
+    /**
+     * @var \Lightpack\Container\Container
+     */
+    private $container;
+
 
     public function __construct(array $options = [])
     {
         $this->jobEngine = Connection::getJobEngine();
         $this->sleepInterval = $options['sleep'] ?? 5;
+        $this->container = Container::getInstance();
     }
 
     /**
@@ -55,11 +63,14 @@ class Worker
     protected function dispatchJob($job)
     {
         try {
-            $jobHandler = new $job->name;
-            $jobHandler->execute($job->payload);
+            $jobHandler = $this->container->resolve($job->name);
+            $jobHandler->setPayload($job->payload);
+
+            $this->container->call($job->name, 'run');
             $this->jobEngine->deleteJob($job);
+
             fputs(STDOUT, "✔ Job processed successfully: {$job->id}\n");
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->jobEngine->markFailedJob($job);
             fputs(STDERR, "✖ Error dispatching job: {$job->id} - " . $e->getMessage() . "\n");
         }

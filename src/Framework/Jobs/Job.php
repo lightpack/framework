@@ -2,7 +2,7 @@
 
 namespace Lightpack\Jobs;
 
-abstract class Job
+class Job
 {
     /**
      * Delay dispatching the job.
@@ -12,12 +12,27 @@ abstract class Job
     protected $delay = 'now';
 
     /**
-     * Execute the job passing it the payload.
+     * @var array   Payload data.
+     */
+    protected array $payload = [];
+
+    /**
+     * Dispatch the job.
      *
      * @param array $payload
-     * @return void
+     * @return self
      */
-    abstract public function execute(array $payload);
+    public function setPayload(array $payload): self
+    {
+        $this->payload = $payload;
+
+        return $this;
+    }
+
+    public function getPayload(): array
+    {
+        return $this->payload;
+    }
 
     /**
      * Dispatch the job into the queue.
