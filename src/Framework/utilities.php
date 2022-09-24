@@ -11,7 +11,7 @@ if (!function_exists('app')) {
      */
     function app(string $key = null)
     {
-        global $container;
+        $container = \Lightpack\Container\Container::getInstance();
 
         return $key ? $container->get($key) : $container;
     }
