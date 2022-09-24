@@ -15,5 +15,7 @@ class RouterProvider implements ProviderInterface
                 $container->get('route')
             );
         });
+
+        $container->alias(Router::class, 'router');
     }
 }

@@ -12,5 +12,7 @@ class RequestProvider implements ProviderInterface
         $container->register('request', function ($container) {
             return new Request();
         });
+
+        $container->alias(Request::class, 'request');
     }
 }

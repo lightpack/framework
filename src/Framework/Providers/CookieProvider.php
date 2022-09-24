@@ -14,5 +14,7 @@ class CookieProvider implements ProviderInterface
                 $container->get('config')->get('cookie.secret')
             );
         });
+
+        $container->alias(Cookie::class, 'cookie');
     }
 }
