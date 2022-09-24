@@ -11,7 +11,7 @@ class Required implements RuleInterface
     {
         $data = (new Arr)->get($field, $dataSource);
 
-        return trim($data) !== '';
+        return !is_null($data) && trim($data) !== '';
     }
     
     public function getErrorMessage($field)

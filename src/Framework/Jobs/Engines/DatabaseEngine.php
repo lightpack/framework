@@ -3,7 +3,7 @@
 namespace Lightpack\Jobs\Engines;
 
 use Lightpack\Jobs\BaseEngine;
-use Lightpack\Moment\Moment;
+use Lightpack\Utils\Moment;
 
 class DatabaseEngine extends BaseEngine
 {
@@ -13,7 +13,7 @@ class DatabaseEngine extends BaseEngine
         app('db')->table('jobs')->insert([
             'name' => $jobHandler,
             'payload' => json_encode($payload),
-            'scheduled_at' => Moment::travel($delay),
+            'scheduled_at' => (new Moment)->travel($delay),
             'status' => 'new'
         ]);
     }
