@@ -53,19 +53,15 @@ class Handler
 
     public function handleException(Throwable $exc)
     {
-        if ($exc instanceof Error) {
-            if ($exc instanceof ParseError) {
-                $this->handleError(E_PARSE, "Parse error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
-            } elseif ($exc instanceof TypeError) {
-                $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
-            } else {
-                $this->handleError(E_ERROR, "Fatal error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
-            }
-
-            return;
+        if ($exc instanceof ParseError) {
+            return $this->handleError(E_PARSE, "Parse error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
+        } 
+        
+        if ($exc instanceof TypeError) {
+            return $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
         }
 
-        $this->exceptionRenderer->render($exc);
+        $this->handleError(E_ERROR, "Fatal error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
     }
 
     private function log($exc)
