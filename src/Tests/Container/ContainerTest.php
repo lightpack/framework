@@ -28,11 +28,12 @@ final class ContainerTest extends TestCase
 
     public function setUp(): void
     {
-        $this->container = new Container();
+        $this->container = Container::getInstance();
     }
 
     public function tearDown(): void
     {
+        Container::destroy();
         $this->container = null;
     }
 
@@ -79,7 +80,7 @@ final class ContainerTest extends TestCase
         $this->assertInstanceOf(B::class, $d->b);
         $this->assertInstanceOf(C::class, $d->c);
         $this->assertCount(4, $this->container->getServices());
-        $this->assertCount(4, $this->container->getServices());
+        $this->assertCount(0, $this->container->getBindings());
         $this->assertSame($a, $d->a);
         $this->assertSame($b, $d->b);
         $this->assertSame($c, $d->c);

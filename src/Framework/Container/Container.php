@@ -11,6 +11,33 @@ class Container
     protected $services = [];
     protected $bindings = [];
 
+    protected static $instance;
+
+    /**
+     * Get the instance of the container. If the instance does not exist, 
+     * create a new instance. This makes the container a singleton.
+     *
+     * @return Container
+     */
+    public static function getInstance(): Container
+    {
+        if (is_null(self::$instance)) {
+            self::$instance = new static();
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Destroy the container instance.
+     *
+     * @return void
+     */
+    public static function destroy()
+    {
+        static::$instance = null;
+    }
+
     /**
      * Check if a service is registered.
      *
@@ -211,6 +238,7 @@ class Container
     {
         $this->services = [];
         $this->bindings = [];
+        $this->aliases = [];
     }
 
     public function call(string|object $instanceName, string $instanceMethod, array $args = [])
