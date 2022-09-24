@@ -10,9 +10,6 @@ use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\Pdo;
 use PHPUnit\Framework\TestCase;
 
-// Initalize container
-$container = new Container();
-
 final class QueryTest extends TestCase
 {
     private $db;
@@ -30,7 +27,7 @@ final class QueryTest extends TestCase
         $this->query = new \Lightpack\Database\Query\Query('products', $this->db);
 
         // Configure container
-        global $container;
+        $container = Container::getInstance();
         $container->register('db', function() { return $this->db; });
         $container->register('request', function() { return new Request(); });
 

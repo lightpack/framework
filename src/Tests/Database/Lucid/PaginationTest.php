@@ -12,9 +12,6 @@ use Lightpack\Database\Lucid\Pagination;
 use Lightpack\Http\Request;
 use PHPUnit\Framework\TestCase;
 
-// Initalize container
-$container = new Container();
-
 final class PaginationTest extends TestCase
 {
     public function setUp(): void
@@ -27,7 +24,8 @@ final class PaginationTest extends TestCase
         $this->productsCollection = $this->db->model(Product::class)->query()->all();
 
         // Configure container
-        global $container;
+        $container = Container::getInstance();
+        
         $container->register('db', function () {
             return $this->db;
         });

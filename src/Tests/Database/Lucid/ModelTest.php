@@ -18,9 +18,6 @@ use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
 use Lightpack\Moment\Moment;
 
-// Initalize container
-$container = new Container();
-
 final class ModelTest extends TestCase
 {
     /** @var \Lightpack\Database\Pdo */
@@ -39,7 +36,8 @@ final class ModelTest extends TestCase
         $this->product = $this->db->model(Product::class);
 
         // Configure container
-        global $container;
+        $container = Container::getInstance();
+
         $container->register('db', function () {
             return $this->db;
         });
