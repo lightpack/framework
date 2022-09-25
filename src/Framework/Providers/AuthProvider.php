@@ -14,5 +14,7 @@ class AuthProvider implements ProviderInterface
         
             return new Auth('default', $config);
         });
+
+        $container->alias(Auth::class, 'auth');
     }
 }
