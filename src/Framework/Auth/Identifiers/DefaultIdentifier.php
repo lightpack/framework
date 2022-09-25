@@ -5,7 +5,7 @@ namespace Lightpack\Auth\Identifiers;
 use Lightpack\Auth\Identifier;
 use Lightpack\Auth\Identity;
 use Lightpack\Auth\Models\User;
-use Lightpack\Crypto\Password;
+use Lightpack\Utils\Password;
 
 class DefaultIdentifier implements Identifier
 {
@@ -43,7 +43,7 @@ class DefaultIdentifier implements Identifier
             return null;
         }
 
-        if (!Password::verify($credentials['password'], $user->password)) {
+        if (!(new Password)->verify($credentials['password'], $user->password)) {
             return null;
         }
 
