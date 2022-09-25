@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Cache\Drivers\File;
+use Lightpack\Cache\Drivers\FileDriver;
 
-final class FileTest extends TestCase
+final class FileDriverTest extends TestCase
 {
     private $cacheDir;
 
@@ -23,13 +23,13 @@ final class FileTest extends TestCase
 
     public function testConstructor(): void
     {
-        $cache = new File($this->cacheDir);
+        $cache = new FileDriver($this->cacheDir);
         $this->assertTrue(file_exists($this->cacheDir));
     }
 
     public function testCanStoreItem()
     {
-        $cache = new File($this->cacheDir);
+        $cache = new FileDriver($this->cacheDir);
         $cache->set('name', 'Lightpack', time() + (5 * 60));
 
         $this->assertTrue($cache->has('name'));
@@ -38,7 +38,7 @@ final class FileTest extends TestCase
 
     public function testCanDeleteItem()
     {
-        $cache = new File($this->cacheDir);
+        $cache = new FileDriver($this->cacheDir);
         $cache->set('name', 'Lightpack', time() + (5 * 60));
 
         $this->assertTrue($cache->has('name'));
@@ -48,7 +48,7 @@ final class FileTest extends TestCase
 
     public function testCanFlushItems()
     {
-        $cache = new File($this->cacheDir);
+        $cache = new FileDriver($this->cacheDir);
         $cache->set('key1', 'value1', time() + (5 * 60));
         $cache->set('key2', 'value2', time() + (5 * 60));
 

@@ -3,9 +3,8 @@
 namespace Lightpack\Cache\Drivers;
 
 use Lightpack\Cache\DriverInterface;
-use RuntimeException;
 
-class File implements DriverInterface
+class FileDriver implements DriverInterface
 {
     private $path;
 
