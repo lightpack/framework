@@ -20,7 +20,7 @@ use Lightpack\Moment\Moment;
 
 final class ModelTest extends TestCase
 {
-    /** @var \Lightpack\Database\Pdo */
+    /** @var \Lightpack\Database\DB */
     private $db;
 
     /** @var \Lightpack\Database\Lucid\Model */

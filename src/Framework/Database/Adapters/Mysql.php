@@ -2,9 +2,9 @@
 
 namespace Lightpack\Database\Adapters;
 
-use Lightpack\Database\Pdo;
+use Lightpack\Database\DB;
 
-class Mysql extends Pdo
+class Mysql extends DB
 {
     public function __construct(array $args)
     {

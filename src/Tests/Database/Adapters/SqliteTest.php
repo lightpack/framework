@@ -10,7 +10,7 @@ final class SqliteTest extends TestCase
     {
         $config = ['database' => ':memory'];
         $connection = new \Lightpack\Database\Adapters\Sqlite($config);
-        $this->assertInstanceOf(\Lightpack\Database\Pdo::class, $connection);
+        $this->assertInstanceOf(\Lightpack\Database\DB::class, $connection);
     }
 
     public function testDatabaseFileNotFoundException()

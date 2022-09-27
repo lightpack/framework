@@ -6,7 +6,7 @@ use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use PDOStatement;
 
-class Pdo
+class DB
 {
     protected $statement;
     protected $connection;

@@ -7,7 +7,7 @@ use Lightpack\Database\Lucid\Collection;
 use Lightpack\Http\Request;
 use Lightpack\Pagination\Pagination as BasePagination;
 use Lightpack\Database\Lucid\Pagination as LucidPagination;
-use Lightpack\Database\Pdo;
+use Lightpack\Database\DB;
 use PHPUnit\Framework\TestCase;
 
 final class QueryTest extends TestCase
@@ -712,7 +712,7 @@ final class QueryTest extends TestCase
     {
         // Test 1
         $this->query->setConnection($this->db);
-        $this->assertInstanceOf(Pdo::class, $this->query->getConnection());
+        $this->assertInstanceOf(DB::class, $this->query->getConnection());
         $this->query->resetQuery();
     }
 

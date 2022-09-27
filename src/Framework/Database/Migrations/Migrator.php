@@ -2,17 +2,17 @@
 
 namespace Lightpack\Database\Migrations;
 
-use Lightpack\Database\Pdo;
+use Lightpack\Database\DB;
 use Lightpack\File\File;
 
 class Migrator
 {
     /**
-     * @var \Lightpack\Database\Pdo
+     * @var \Lightpack\Database\DB
      */
     private $connection;
 
-    public function __construct(Pdo $connection)
+    public function __construct(DB $connection)
     {
         $this->connection = $connection;
         $this->createMigrationsTable();

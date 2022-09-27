@@ -23,6 +23,6 @@ final class PgsqlTest extends TestCase
     public function testCanCreateConnectionInstance()
     {
         $connection = new \Lightpack\Database\Adapters\Pgsql($this->config);
-        $this->assertInstanceOf(\Lightpack\Database\Pdo::class, $connection);
+        $this->assertInstanceOf(\Lightpack\Database\DB::class, $connection);
     }
 }

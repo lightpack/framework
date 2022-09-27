@@ -6,6 +6,7 @@ use Exception;
 use Lightpack\Container\Container;
 use Lightpack\Database\Adapters\Mysql;
 use Lightpack\Database\Adapters\Sqlite;
+use Lightpack\Database\DB;
 
 class DatabaseProvider implements ProviderInterface
 {
@@ -24,6 +25,8 @@ class DatabaseProvider implements ProviderInterface
 
             $this->throwException($config);
         });
+
+        $container->alias(DB::class, 'db');
     }
 
     protected function sqlite($config)

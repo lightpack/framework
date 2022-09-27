@@ -5,7 +5,7 @@ namespace Lightpack\Database\Lucid;
 use Closure;
 use Exception;
 use JsonSerializable;
-use Lightpack\Database\Pdo;
+use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
 
@@ -27,7 +27,7 @@ class Model implements JsonSerializable
     protected $data;
 
     /** 
-     * @var \Lightpack\Database\Pdo
+     * @var \Lightpack\Database\DB
      */
     protected static $connection;
 
@@ -80,7 +80,7 @@ class Model implements JsonSerializable
      * Constructor.
      *
      * @param [int|string] $id
-     * @param Pdo $connection
+     * @param DB $connection
      */
     public function __construct($id = null)
     {
@@ -137,10 +137,10 @@ class Model implements JsonSerializable
      * Sets the database connection to be used for querying
      * the tables.
      *
-     * @param Pdo $connection
+     * @param DB $connection
      * @return void
      */
-    public function setConnection(Pdo $connection): void
+    public function setConnection(DB $connection): void
     {
         self::$connection = $connection;
     }
@@ -149,9 +149,9 @@ class Model implements JsonSerializable
      * Sets the database connection to be used for querying
      * the tables.
      *
-     * @return Pdo $connection
+     * @return DB $connection
      */
-    public function getConnection(): Pdo
+    public function getConnection(): DB
     {
         return self::$connection ?? app('db');
     }

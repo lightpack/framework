@@ -2,9 +2,9 @@
 
 namespace Lightpack\Database\Adapters;
 
-use Lightpack\Database\Pdo;
+use Lightpack\Database\DB;
 
-class Sqlite extends Pdo
+class Sqlite extends DB
 {
     public function __construct(array $args)
     {

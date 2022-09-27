@@ -3,7 +3,7 @@
 use Lightpack\Database\Lucid\Model;
 use PHPUnit\Framework\TestCase;
 
-final class PdoTest extends TestCase
+final class DBTest extends TestCase
 {
     private $db;
 

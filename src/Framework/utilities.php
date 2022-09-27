@@ -237,7 +237,7 @@ if (!function_exists('db')) {
     /**
      * Returns PDO database connection instance.
      */
-    function db(): \Lightpack\Database\Pdo
+    function db(): \Lightpack\Database\DB
     {
         return app('db');
     }
