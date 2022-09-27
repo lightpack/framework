@@ -7,7 +7,6 @@ use Lightpack\Utils\Moment;
 
 class DatabaseEngine extends BaseEngine
 {
-    /** @inheritDoc */
     public function addJob(string $jobHandler, array $payload, string $delay)
     {
         app('db')->table('jobs')->insert([
@@ -18,7 +17,6 @@ class DatabaseEngine extends BaseEngine
         ]);
     }
 
-    /** @inheritDoc */
     public function fetchNextJob()
     {
         $job = $this->findNextQueuedJob();
@@ -30,13 +28,11 @@ class DatabaseEngine extends BaseEngine
         return $job;
     }
 
-    /** @inheritDoc */
     public function deleteJob($job)
     {
         app('db')->query("DELETE FROM jobs WHERE id = {$job->id}");
     }
 
-    /** @inheritDoc */
     public function markFailedJob($job)
     {
         app('db')->query("UPDATE jobs SET status = 'failed' WHERE id = {$job->id}");
