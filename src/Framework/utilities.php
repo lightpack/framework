@@ -13,7 +13,15 @@ if (!function_exists('app')) {
     {
         $container = \Lightpack\Container\Container::getInstance();
 
-        return $key ? $container->get($key) : $container;
+        if(null === $key) {
+            return $container;
+        }
+
+        if($container->has($key)) {
+            return $container->get($key);
+        }
+
+        return $container->resolve($key);
     }
 }
 
