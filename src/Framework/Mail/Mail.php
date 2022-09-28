@@ -128,6 +128,27 @@ abstract class Mail extends PHPMailer
         return $this;
     }
 
+    public function textView(string $template): self
+    {
+        $this->textView = $template;
+
+        return $this;
+    }
+
+    public function htmlView(string $template): self
+    {
+        $this->htmlView = $template;
+
+        return $this;
+    }
+
+    public function data(array $data): self
+    {
+        $this->data = $data;
+
+        return $this;
+    }
+
     public function send()
     {
         $this->setBody();
