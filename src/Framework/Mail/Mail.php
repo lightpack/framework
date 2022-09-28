@@ -18,7 +18,6 @@ abstract class Mail extends PHPMailer
     public function __construct()
     {
         $this->isSMTP();
-        $this->SMTPDebug    = get_env('APP_DEBUG') ? SMTP::DEBUG_SERVER : SMTP::DEBUG_OFF;
         $this->SMTPAuth     = true;
         $this->Host         = get_env('MAIL_HOST');
         $this->Port         = get_env('MAIL_PORT');
