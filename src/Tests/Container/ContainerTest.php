@@ -219,14 +219,7 @@ final class ContainerTest extends TestCase
 
     public function testContainerThrowsServiceNotFoundException()
     {
-        $this->container->bind(Service::class, ServiceA::class);
-        $this->container->alias(Service::class, 'service');
-
-        // Assertions
-        $this->assertCount(1, $this->container->getBindings());
-        $this->assertCount(0, $this->container->getServices());
-
         $this->expectException(ServiceNotFoundException::class);
-        $this->container->resolve(Service::class);
+        $this->container->alias(Service::class, 'service');
     }
 }

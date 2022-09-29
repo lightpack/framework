@@ -295,6 +295,9 @@ class Container
      */
     public function alias(string $type, string $alias): void
     {
+        // Make sure that the alias has been registered
+        $this->throwExceptionIfServiceNotFound($alias);
+        
         $this->aliases[$type] = $alias;
     }
 }
