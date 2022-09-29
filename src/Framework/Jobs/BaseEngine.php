@@ -15,7 +15,8 @@ abstract class BaseEngine
     abstract public function addJob(
         string $jobHandler,
         array $payload,
-        string $delay
+        string $delay,
+        string $queue
     );
 
     /**

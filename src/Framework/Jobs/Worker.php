@@ -16,6 +16,13 @@ class Worker
     private $sleepInterval;
 
     /**
+     * @var array
+     * 
+     * List of queues to process.
+     */
+    private $queues = [];
+
+    /**
      * Job engine used to work with persisted jobs.
      *
      * @var \Lightpack\Jobs\BaseEngine
@@ -32,6 +39,7 @@ class Worker
     {
         $this->jobEngine = Connection::getJobEngine();
         $this->sleepInterval = $options['sleep'] ?? 5;
+        $this->queues = $options['queues'] ?? ['default'];
         $this->container = Container::getInstance();
     }
 
@@ -43,14 +51,18 @@ class Worker
     public function run()
     {
         while (true) {
-            $nextJob = $this->jobEngine->fetchNextJob();
-
-            if ($nextJob) {
-                $this->dispatchJob($nextJob);
-                continue;
+            foreach ($this->queues as $queue) {
+                $this->processQueue($queue);
             }
 
-            $this->sleep();
+            sleep($this->sleepInterval);
+        }
+    }
+
+    protected function processQueue(?string $queue = null)
+    {
+        while ($job = $this->jobEngine->fetchNextJob($queue)) {
+            $this->dispatchJob($job);
         }
     }
 
@@ -63,10 +75,10 @@ class Worker
     protected function dispatchJob($job)
     {
         try {
-            $jobHandler = $this->container->resolve($job->name);
+            $jobHandler = $this->container->resolve($job->handler);
             $jobHandler->setPayload($job->payload);
 
-            $this->container->call($job->name, 'run');
+            $this->container->call($job->handler, 'run');
             $this->jobEngine->deleteJob($job);
 
             fputs(STDOUT, "✔ Job processed successfully: {$job->id}\n");

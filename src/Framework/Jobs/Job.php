@@ -5,6 +5,11 @@ namespace Lightpack\Jobs;
 class Job
 {
     /**
+     * @var string  The name of the queue to which the job will be dispatched.
+     */
+    protected $queue = 'default';
+
+    /**
      * Delay dispatching the job.
      *
      * @var string 'strtotime' compatible string.
@@ -47,7 +52,8 @@ class Job
         $jobEngine->addJob(
             static::class,
             $payload,
-            $this->delay
+            $this->delay,
+            $this->queue
         );
     }
 }

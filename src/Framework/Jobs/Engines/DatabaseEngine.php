@@ -7,19 +7,20 @@ use Lightpack\Utils\Moment;
 
 class DatabaseEngine extends BaseEngine
 {
-    public function addJob(string $jobHandler, array $payload, string $delay)
+    public function addJob(string $jobHandler, array $payload, string $delay, string $queue)
     {
         app('db')->table('jobs')->insert([
-            'name' => $jobHandler,
+            'handler' => $jobHandler,
             'payload' => json_encode($payload),
             'scheduled_at' => (new Moment)->travel($delay),
-            'status' => 'new'
+            'status' => 'new',
+            'queue' => $queue,
         ]);
     }
 
-    public function fetchNextJob()
+    public function fetchNextJob(?string $queue = null)
     {
-        $job = $this->findNextQueuedJob();
+        $job = $this->findNextQueuedJob($queue);
 
         if ($job) {
             $this->deserializePayload($job);
@@ -43,15 +44,17 @@ class DatabaseEngine extends BaseEngine
      *
      * @return object|null
      */
-    private function findNextQueuedJob()
+    private function findNextQueuedJob(string $queue = null)
     {
         $now = date('Y-m-d H:i:s');
 
         app('db')->begin();
 
+        $whereQueue = $queue ? "AND queue = '{$queue}'" : '';
+
         // Selectively lock the row exclusively for update
         $job = app('db')
-            ->query("SELECT * FROM jobs WHERE status = 'new' AND scheduled_at <= '{$now}' ORDER BY id ASC LIMIT 1 FOR UPDATE")
+            ->query("SELECT * FROM jobs WHERE status = 'new' AND scheduled_at <= '{$now}' {$whereQueue} ORDER BY id ASC LIMIT 1 FOR UPDATE")
             ->fetch(\PDO::FETCH_OBJ);
 
         // If job found, update its status to 'queued'
