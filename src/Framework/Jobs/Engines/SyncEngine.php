@@ -3,10 +3,11 @@
 namespace Lightpack\Jobs\Engines;
 
 use Lightpack\Jobs\BaseEngine;
+use Throwable;
 
 class SyncEngine extends BaseEngine
 {
-    public function addJob(string $jobHandler, array $payload, string $delay)
+    public function addJob(string $jobHandler, array $payload, string $delay, string $queue)
     {
         /** @var \Lightpack\Jobs\Job $job */
         $job = app($jobHandler);
@@ -15,7 +16,7 @@ class SyncEngine extends BaseEngine
         app()->call($job, 'run');
     }  
 
-    public function fetchNextJob()
+    public function fetchNextJob(?string $queue = null)
     {
         // Do nothing
     }
@@ -25,7 +26,7 @@ class SyncEngine extends BaseEngine
         // Do nothing
     }
 
-    public function markFailedJob($job)
+    public function markFailedJob($job, Throwable $e)
     {
         // Do nothing
     }

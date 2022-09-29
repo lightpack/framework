@@ -83,7 +83,7 @@ class Worker
 
             fputs(STDOUT, "✔ Job processed successfully: {$job->id}\n");
         } catch (Throwable $e) {
-            $this->jobEngine->markFailedJob($job);
+            $this->jobEngine->markFailedJob($job, $e);
             fputs(STDERR, "✖ Error dispatching job: {$job->id} - " . $e->getMessage() . "\n");
         }
     }

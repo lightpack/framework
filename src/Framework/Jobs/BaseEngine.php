@@ -2,6 +2,8 @@
 
 namespace Lightpack\Jobs;
 
+use Throwable;
+
 abstract class BaseEngine
 {
     /**
@@ -24,7 +26,7 @@ abstract class BaseEngine
      *
      * @return object|null
      */
-    abstract public function fetchNextJob();
+    abstract public function fetchNextJob(?string $queue = null);
 
     /**
      * Delete the provided job.
@@ -40,7 +42,7 @@ abstract class BaseEngine
      * @param object $job
      * @return void
      */
-    abstract public function markFailedJob($job);
+    abstract public function markFailedJob($job, Throwable $e);
 
     /**
      * Deserialize the job payload as an array.
