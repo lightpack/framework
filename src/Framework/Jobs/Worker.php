@@ -81,7 +81,7 @@ class Worker
             $this->container->call($job->handler, 'run');
             $this->jobEngine->deleteJob($job);
 
-            fputs(STDOUT, "✔ Job processed successfully: {$job->id}\n");
+            fputs(STDOUT, "\033[0;32m✔ Successfully\033[0m processed job ID: {$job->id}\n");
         } catch (Throwable $e) {
             if($jobHandler->maxAttempts() > $job->attempts + 1) {
                 $this->jobEngine->release($job, $jobHandler->retryAfter());
@@ -89,7 +89,7 @@ class Worker
                 $this->jobEngine->markFailedJob($job, $e);
             }
 
-            fputs(STDERR, "✖ Error dispatching job: {$job->id}\n");
+            fputs(STDERR, "\033[0;31m✖ Error\033[0m dispatching job ID: {$job->id}\n");
         }
     }
 
