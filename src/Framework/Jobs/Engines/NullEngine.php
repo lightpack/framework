@@ -26,4 +26,9 @@ class NullEngine extends BaseEngine
     {
         // Do nothing
     }
+
+    public function release($job, string $delay = 'now')
+    {
+        // Do nothing
+    }
 }

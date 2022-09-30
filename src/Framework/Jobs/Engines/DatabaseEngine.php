@@ -16,6 +16,7 @@ class DatabaseEngine extends BaseEngine
             'scheduled_at' => (new Moment)->travel($delay),
             'status' => 'new',
             'queue' => $queue,
+            'attempts' => 0,
         ]);
     }
 
@@ -37,10 +38,23 @@ class DatabaseEngine extends BaseEngine
 
     public function markFailedJob($job, Throwable $e)
     {
-        db()->query("UPDATE jobs SET `status` = :status, `exception` = :exception, `failed_at` = :failed_at WHERE `id` = {$job->id}", [
+        db()->query("UPDATE jobs SET `status` = :status, `exception` = :exception, `failed_at` = :failed_at WHERE `id` = :id", [
             'status' => 'failed',
             'exception' => (string) $e,
             'failed_at' => (new Moment)->now(),
+            'id' => $job->id,
+        ]);
+    }
+
+    public function release($job, string $delay = 'now')
+    {
+        db()->query("UPDATE jobs SET `status` = :status, `exception` = :exception, `failed_at` = :failed_at, `scheduled_at` = :scheduled_at, `attempts` = :attempts WHERE `id` = :id", [
+            'status' => 'new',
+            'exception' => null,
+            'failed_at' => null,
+            'scheduled_at' => (new Moment)->travel($delay),
+            'attempts' => $job->attempts + 1,
+            'id' => $job->id,
         ]);
     }
 
@@ -64,7 +78,11 @@ class DatabaseEngine extends BaseEngine
 
         // If job found, update its status to 'queued'
         if ($job) {
-            db()->query("UPDATE jobs SET status = 'queued' WHERE id = {$job->id}");
+            db()->query("UPDATE jobs SET `status` = :status, `attempts` = :attempts WHERE id = :id", [
+                'status' => 'queued',
+                'attempts' => $job->attempts + 1,
+                'id' => $job->id,
+            ]);
         }
 
         db()->commit();

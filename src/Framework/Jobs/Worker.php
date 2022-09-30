@@ -74,17 +74,22 @@ class Worker
      */
     protected function dispatchJob($job)
     {
-        try {
-            $jobHandler = $this->container->resolve($job->handler);
-            $jobHandler->setPayload($job->payload);
+        $jobHandler = $this->container->resolve($job->handler);
+        $jobHandler->setPayload($job->payload);
 
+        try {
             $this->container->call($job->handler, 'run');
             $this->jobEngine->deleteJob($job);
 
             fputs(STDOUT, "✔ Job processed successfully: {$job->id}\n");
         } catch (Throwable $e) {
-            $this->jobEngine->markFailedJob($job, $e);
-            fputs(STDERR, "✖ Error dispatching job: {$job->id} - " . $e->getMessage() . "\n");
+            if($jobHandler->maxAttempts() > $job->attempts + 1) {
+                $this->jobEngine->release($job, $jobHandler->retryAfter());
+            } else {
+                $this->jobEngine->markFailedJob($job, $e);
+            }
+
+            fputs(STDERR, "✖ Error dispatching job: {$job->id}\n");
         }
     }
 

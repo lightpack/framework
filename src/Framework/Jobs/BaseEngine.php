@@ -44,6 +44,8 @@ abstract class BaseEngine
      */
     abstract public function markFailedJob($job, Throwable $e);
 
+    abstract public function release($job, string $delay = 'now');
+
     /**
      * Deserialize the job payload as an array.
      *

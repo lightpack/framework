@@ -22,6 +22,16 @@ class Job
     protected array $payload = [];
 
     /**
+     * The number of times the job may be attempted.
+     */
+    protected $attempts = 1;
+
+    /**
+     * Retry after when the job fails.
+     */
+    protected $retryAfter = 'now';
+
+    /**
      * Dispatch the job.
      *
      * @param array $payload
@@ -55,5 +65,15 @@ class Job
             $this->delay,
             $this->queue
         );
+    }
+
+    public function maxAttempts(): int
+    {
+        return $this->attempts;
+    }
+
+    public function retryAfter(): string
+    {
+        return $this->retryAfter;
     }
 }
