@@ -2,13 +2,13 @@
 
 namespace Lightpack\Jobs\Engines;
 
-use Lightpack\Jobs\BaseEngine;
-use Lightpack\Utils\Moment;
 use Throwable;
+use Lightpack\Utils\Moment;
+use Lightpack\Jobs\BaseEngine;
 
 class DatabaseEngine extends BaseEngine
 {
-    public function addJob(string $jobHandler, array $payload, string $delay, string $queue)
+    public function addJob(string $jobHandler, array $payload, string $delay, string $queue): void
     {
         db()->table('jobs')->insert([
             'handler' => $jobHandler,
@@ -31,12 +31,12 @@ class DatabaseEngine extends BaseEngine
         return $job;
     }
 
-    public function deleteJob($job)
+    public function deleteJob($job): void
     {
         db()->query("DELETE FROM jobs WHERE id = {$job->id}");
     }
 
-    public function markFailedJob($job, Throwable $e)
+    public function markFailedJob($job, Throwable $e): void
     {
         db()->query("UPDATE jobs SET `status` = :status, `exception` = :exception, `failed_at` = :failed_at WHERE `id` = :id", [
             'status' => 'failed',
@@ -46,7 +46,7 @@ class DatabaseEngine extends BaseEngine
         ]);
     }
 
-    public function release($job, string $delay = 'now')
+    public function release($job, string $delay = 'now'): void
     {
         db()->query("UPDATE jobs SET `status` = :status, `exception` = :exception, `failed_at` = :failed_at, `scheduled_at` = :scheduled_at, `attempts` = :attempts WHERE `id` = :id", [
             'status' => 'new',
@@ -59,7 +59,7 @@ class DatabaseEngine extends BaseEngine
     }
 
     /**
-     * Finds a job for update with status 'new'. 
+     * Find the next queued job.
      *
      * @return object|null
      */

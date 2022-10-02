@@ -7,7 +7,7 @@ use Throwable;
 
 class SyncEngine extends BaseEngine
 {
-    public function addJob(string $jobHandler, array $payload, string $delay, string $queue)
+    public function addJob(string $jobHandler, array $payload, string $delay, string $queue): void
     {
         /** @var \Lightpack\Jobs\Job $job */
         $job = app($jobHandler);
@@ -21,17 +21,17 @@ class SyncEngine extends BaseEngine
         // Do nothing
     }
 
-    public function deleteJob($job)
+    public function deleteJob($job): void
     {
         // Do nothing
     }
 
-    public function markFailedJob($job, Throwable $e)
+    public function markFailedJob($job, Throwable $e): void
     {
         // Do nothing
     }
 
-    public function release($job, string $delay = 'now')
+    public function release($job, string $delay = 'now'): void
     {
         // Do nothing
     }

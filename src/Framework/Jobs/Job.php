@@ -10,7 +10,8 @@ class Job
     protected $queue = 'default';
 
     /**
-     * Delay dispatching the job.
+     * Delay dispatching the job by the specified interval. By default, 
+     * the job will be dispatched immediately.
      *
      * @var string 'strtotime' compatible string.
      */
@@ -27,7 +28,10 @@ class Job
     protected $attempts = 1;
 
     /**
-     * Retry after when the job fails.
+     * Retry after specified interval when the job fails. By default, 
+     * the job will be retried immediately.
+     * 
+     * @var string 'strtotime' compatible string.
      */
     protected $retryAfter = 'now';
 
@@ -75,5 +79,20 @@ class Job
     public function retryAfter(): string
     {
         return $this->retryAfter;
+    }
+
+    protected function onSuccess()
+    {
+        // Do something when the job is successful.
+    }
+
+    protected function onFailure()
+    {
+        // Do something when the job fails.
+    }
+
+    protected function onRetry()
+    {
+        // Do something when the job is retried.
     }
 }
