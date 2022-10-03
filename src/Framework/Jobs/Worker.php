@@ -2,9 +2,8 @@
 
 namespace Lightpack\Jobs;
 
-use Exception;
-use Lightpack\Container\Container;
 use Throwable;
+use Lightpack\Container\Container;
 
 class Worker
 {
@@ -34,12 +33,18 @@ class Worker
      */
     private Container $container;
 
+    /**
+     * @var bool
+     */
+    private bool $running = true;
+
     public function __construct(array $options = [])
     {
         $this->jobEngine = Connection::getJobEngine();
         $this->sleepInterval = $options['sleep'] ?? 5;
         $this->queues = $options['queues'] ?? ['default'];
         $this->container = Container::getInstance();
+        $this->registerSignalHandlers();
     }
 
     /**
@@ -49,7 +54,7 @@ class Worker
      */
     public function run()
     {
-        while (true) {
+        while ($this->running) {
             foreach ($this->queues as $queue) {
                 $this->processQueue($queue);
             }
@@ -60,7 +65,7 @@ class Worker
 
     protected function processQueue(?string $queue = null)
     {
-        while ($job = $this->jobEngine->fetchNextJob($queue)) {
+        while ($this->running && $job = $this->jobEngine->fetchNextJob($queue)) {
             $this->dispatchJob($job);
         }
     }
@@ -85,7 +90,7 @@ class Worker
         } catch (Throwable $e) {
             $jobHandler->setException($e);
 
-            if($jobHandler->maxAttempts() > $job->attempts + 1) {
+            if ($jobHandler->maxAttempts() > $job->attempts + 1) {
                 $this->jobEngine->release($job, $jobHandler->retryAfter());
             } else {
                 $this->jobEngine->markFailedJob($job, $e);
@@ -134,5 +139,32 @@ class Worker
         $status .= "\033[34m" . ' #ID: ' . $job->id . "\033[0m" . PHP_EOL;
 
         fputs(STDERR, $status);
+    }
+
+    protected function shouldRegisterSignalHandlers()
+    {
+        return extension_loaded('pcntl');
+    }
+
+    protected function registerSignalHandlers()
+    {
+        if (false === $this->shouldRegisterSignalHandlers()) {
+            fputs(STDERR, "pcntl extension is not loaded. Signal handlers will not be registered." . PHP_EOL);
+
+            return;
+        }
+
+        fputs(STDOUT, "\033[32m Registering signal handlers... \033[0m" . PHP_EOL);
+
+        pcntl_async_signals(true);
+        pcntl_signal(SIGTERM, fn () => $this->stopRunning());
+        pcntl_signal(SIGINT, fn () => $this->stopRunning());
+    }
+
+    protected function stopRunning()
+    {
+        fputs(STDOUT, "\033[33m [STOPPING] Trying to stop the workers... \033[0m" . PHP_EOL);
+
+        $this->running = false;
     }
 }

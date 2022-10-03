@@ -73,7 +73,7 @@ class DatabaseEngine extends BaseEngine
 
         // Selectively lock the row exclusively for update
         $job = db()
-            ->query("SELECT * FROM jobs WHERE status = 'new' AND scheduled_at <= '{$now}' {$whereQueue} ORDER BY id ASC LIMIT 1 FOR UPDATE")
+            ->query("SELECT * FROM jobs WHERE status = 'new' AND scheduled_at <= '{$now}' {$whereQueue} ORDER BY id ASC LIMIT 1 FOR UPDATE SKIP LOCKED")
             ->fetch(\PDO::FETCH_OBJ);
 
         // If job found, update its status to 'queued'
