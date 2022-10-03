@@ -2,6 +2,8 @@
 
 namespace Lightpack\Jobs;
 
+use Throwable;
+
 class Job
 {
     /**
@@ -36,6 +38,11 @@ class Job
     protected $retryAfter = 'now';
 
     /**
+     * The exception thrown by the job when it fails.
+     */
+    protected ?Throwable $exception = null;
+
+    /**
      * Dispatch the job.
      *
      * @param array $payload
@@ -54,6 +61,24 @@ class Job
     }
 
     /**
+     * This method sets the exception thrown by the job when it fails.
+     */
+    public function setException(Throwable $exception): self
+    {
+        $this->exception = $exception;
+
+        return $this;
+    }
+
+    /**
+     * This method returns the exception thrown by the job when it fails.
+     */
+    public function getException(): Throwable
+    {
+        return $this->exception;
+    }
+
+    /**
      * Dispatch the job into the queue.
      *
      * @param array $payload
@@ -61,11 +86,13 @@ class Job
      */
     public function dispatch(array $payload = [])
     {
+        $this->setPayload($payload);
+        
         $jobEngine = Connection::getJobEngine();
 
         $jobEngine->addJob(
             static::class,
-            $payload,
+            $this->payload,
             $this->delay,
             $this->queue
         );
@@ -79,20 +106,5 @@ class Job
     public function retryAfter(): string
     {
         return $this->retryAfter;
-    }
-
-    protected function onSuccess()
-    {
-        // Do something when the job is successful.
-    }
-
-    protected function onFailure()
-    {
-        // Do something when the job fails.
-    }
-
-    protected function onRetry()
-    {
-        // Do something when the job is retried.
     }
 }

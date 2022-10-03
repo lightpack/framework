@@ -269,6 +269,18 @@ class Container
         return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
     }
 
+    /**
+     * Call a method on an object or class only if the method exists.
+     */
+    public function callIf(string|object $instanceName, string $instanceMethod, array $args = [])
+    {
+        if (method_exists($instanceName, $instanceMethod)) {
+            return $this->call($instanceName, $instanceMethod, $args);
+        }
+
+        return null;
+    }
+
     protected function filterNonScalarParameters(array $parameters): array
     {
         return array_filter($parameters, function ($parameter) {
