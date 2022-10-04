@@ -9,10 +9,11 @@ class ProcessJobs implements ICommand
 {
     public function run(array $arguments = [])
     {
-        $queues = $this->parseQueueArgument($arguments) ?? ['default'];
-        $sleep = $this->parseSleepArgument($arguments) ?? 5;
+        $queues = $this->parseQueueArgument($arguments) ?? ['default']; // 'default' queue
+        $sleep = $this->parseSleepArgument($arguments) ?? 5; // seconds
+        $cooldown = $this->parseCooldownArgument($arguments) ?? 60; // 1 minute
 
-        $worker = new Worker(['sleep' => $sleep, 'queues' => $queues]);
+        $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
 
         $worker->run();
     }
@@ -35,6 +36,19 @@ class ProcessJobs implements ICommand
     {
         foreach($args as $arg) {
             if(strpos($arg, '--sleep') === 0) {
+                $fragments = explode('=', $arg);
+
+                if(isset($fragments[1])) {
+                    return (int) $fragments[1];
+                }
+            }
+        }
+    }
+
+    private function parseCooldownArgument($args)
+    {
+        foreach($args as $arg) {
+            if(strpos($arg, '--cooldown') === 0) {
                 $fragments = explode('=', $arg);
 
                 if(isset($fragments[1])) {

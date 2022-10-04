@@ -12,38 +12,54 @@ class Worker
      * 
      * Number of seconds the worker should sleep before checking for new jobs.
      */
-    private int $sleepInterval;
+    protected int $sleepInterval;
 
     /**
      * @var array
      * 
      * List of queues to process.
      */
-    private array  $queues = [];
+    protected array  $queues = [];
+
+    /**
+     * @var int
+     * 
+     * Max number of seconds after which the worker should stop processing jobs.
+     */
+    protected int $cooldown;
+
+    /**
+     * @var int
+     * 
+     * Start time of the worker.
+     */
+    protected $startTime;
 
     /**
      * Job engine used to work with persisted jobs.
      *
      * @var \Lightpack\Jobs\BaseEngine
      */
-    private BaseEngine $jobEngine;
+    protected BaseEngine $jobEngine;
 
     /**
      * @var \Lightpack\Container\Container
      */
-    private Container $container;
+    protected Container $container;
 
     /**
      * @var bool
      */
-    private bool $running = true;
+    protected bool $running = true;
 
     public function __construct(array $options = [])
     {
         $this->jobEngine = Connection::getJobEngine();
         $this->sleepInterval = $options['sleep'] ?? 5;
         $this->queues = $options['queues'] ?? ['default'];
+        $this->cooldown = $options['cooldown'] ?? 60 * 60; // 1 hour
         $this->container = Container::getInstance();
+        $this->startTime = time();
         $this->registerSignalHandlers();
     }
 
@@ -54,6 +70,8 @@ class Worker
      */
     public function run()
     {
+        $this->startTime = time();
+
         while ($this->running) {
             foreach ($this->queues as $queue) {
                 $this->processQueue($queue);
@@ -67,6 +85,10 @@ class Worker
     {
         while ($this->running && $job = $this->jobEngine->fetchNextJob($queue)) {
             $this->dispatchJob($job);
+
+            if($this->shouldCooldown()) {
+                $this->pleaseCooldown();
+            }
         }
     }
 
@@ -149,7 +171,7 @@ class Worker
     protected function registerSignalHandlers()
     {
         if (false === $this->shouldRegisterSignalHandlers()) {
-            fputs(STDERR, "pcntl extension is not loaded. Signal handlers will not be registered." . PHP_EOL);
+            fputs(STDERR, "\033[31m pcntl extension is not loaded. Signal handlers will not be registered. \033[0m" . PHP_EOL);
 
             return;
         }
@@ -163,8 +185,21 @@ class Worker
 
     protected function stopRunning()
     {
-        fputs(STDOUT, "\033[33m [STOPPING] Trying to stop the workers... \033[0m" . PHP_EOL);
+        fputs(STDOUT, "\033[31m Interrupt signal received, stopping the worker... \033[0m" . PHP_EOL);
 
         $this->running = false;
+    }
+
+    protected function pleaseCooldown()
+    {
+        fputs(STDERR, "\033[32m Cooldown reached, stopping the worker... \033[0m" . PHP_EOL);
+        fputs(STDERR, "\033[34m" . ' Worker ran for ' . (time() - $this->startTime) . ' seconds. ' . "\033[0m" . PHP_EOL);
+
+        $this->running = false;
+    }
+
+    protected function shouldCooldown()
+    {
+        return time() - $this->startTime > $this->cooldown;
     }
 }
