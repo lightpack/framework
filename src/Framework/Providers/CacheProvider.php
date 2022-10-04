@@ -6,6 +6,7 @@ use Lightpack\Cache\Cache;
 use Lightpack\Cache\DriverInterface;
 use Lightpack\Cache\Drivers\FileDriver;
 use Lightpack\Cache\Drivers\NullDriver;
+use Lightpack\Cache\Drivers\ArrayDriver;
 use Lightpack\Container\Container;
 
 class CacheProvider implements ProviderInterface
@@ -27,6 +28,10 @@ class CacheProvider implements ProviderInterface
 
         if ($cacheDriver === 'null') {
             return new NullDriver;
+        }
+
+        if($cacheDriver === 'array') {
+            return new ArrayDriver;
         }
 
         if ($cacheDriver === 'file') {
