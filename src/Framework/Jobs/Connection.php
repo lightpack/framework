@@ -8,17 +8,28 @@ use Lightpack\Jobs\Engines\DatabaseEngine;
 
 class Connection
 {
+    protected static $engine;
+
     public static function getJobEngine(): BaseEngine
+    {
+        if(!self::$engine) {
+            self::setJobEngine();
+        }
+
+        return self::$engine;
+    }
+
+    private static function setJobEngine()
     {
         $engineType = get_env('JOB_ENGINE', 'sync');
 
         switch ($engineType) {
             case 'null':
-                return new NullEngine;
+                return self::$engine = new NullEngine;
             case 'sync':
-                return new SyncEngine;
+                return self::$engine = new SyncEngine;
             case 'database':
-                return new DatabaseEngine;
+                return self::$engine = new DatabaseEngine;
             default:
                 fputs(STDERR, "Unsupported job engine type: {$engineType}");
                 exit(1);
