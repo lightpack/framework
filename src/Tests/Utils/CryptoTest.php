@@ -9,19 +9,19 @@ class CryptoTest extends TestCase
 {
     public function testItCanEncryptAndDecrypt()
     {
-        $crypto = new Crypto();
-        $encrypted = $crypto->encrypt('Hello World', 'secret');
-        $this->assertEquals('Hello World', $crypto->decrypt($encrypted, 'secret'));
+        $crypto = new Crypto('secret');
+        $encrypted = $crypto->encrypt('Hello World');
+        $this->assertEquals('Hello World', $crypto->decrypt($encrypted));
     }
 
     public function testItGeneratesDifferentEncryptedValues()
     {
-        $crypto = new Crypto();
-        $encrypted1 = $crypto->encrypt('Hello World', 'secret');
-        $encrypted2 = $crypto->encrypt('Hello World', 'secret');
+        $crypto = new Crypto('secret');
+        $encrypted1 = $crypto->encrypt('Hello World');
+        $encrypted2 = $crypto->encrypt('Hello World');
         
         $this->assertNotEquals($encrypted1, $encrypted2);
-        $this->assertEquals('Hello World', $crypto->decrypt($encrypted1, 'secret'));
-        $this->assertEquals('Hello World', $crypto->decrypt($encrypted2, 'secret'));
+        $this->assertEquals('Hello World', $crypto->decrypt($encrypted1));
+        $this->assertEquals('Hello World', $crypto->decrypt($encrypted2));
     }
 }
