@@ -331,6 +331,16 @@ if (!function_exists('password')) {
     }
 }
 
+if (!function_exists('crypto')) {
+    /**
+     * Returns an instance of Crypto utility.
+     */
+    function crypto(): \Lightpack\Utils\Crypto
+    {
+        return app('crypto');
+    }
+}
+
 if (!function_exists('validator')) {
     /**
      * Returns an instance of validator.
