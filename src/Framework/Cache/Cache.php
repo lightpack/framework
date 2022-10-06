@@ -21,9 +21,9 @@ class Cache
         return $this->driver->get($key);
     }
 
-    public function set(string $key, $value, int $minutes)
+    public function set(string $key, $value, int $seconds = 0)
     {
-        $ttl = time() + ($minutes * 60);
+        $ttl = time() + ($seconds * 60);
         return $this->driver->set($key, $value, $ttl);
     }
 
@@ -41,5 +41,17 @@ class Cache
     public function flush()
     {
         return $this->driver->flush();
+    }
+
+    public function remember(string $key, int $seconds, callable $callback)
+    {
+        if ($this->has($key)) {
+            return $this->get($key);
+        }
+
+        $value = $callback();
+        $this->set($key, $value, $seconds);
+
+        return $value;
     }
 }

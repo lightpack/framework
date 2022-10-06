@@ -75,4 +75,17 @@ final class CacheTest extends TestCase
         $this->assertFalse($cache->has('key1'));
         $this->assertFalse($cache->has('key2'));
     }
+
+    public function testCacheRememberItem()
+    {
+        $fileStorage = new FileDriver($this->cacheDir);
+        $cache = new Cache($fileStorage);
+
+        $value = $cache->remember('key', 5, function () {
+            return 'value';
+        });
+
+        $this->assertTrue($cache->has('key'));
+        $this->assertTrue($value === 'value');
+    }
 }
