@@ -54,4 +54,16 @@ class Cache
 
         return $value;
     }
+
+    public function rememberForever(string $key, callable $callback)
+    {
+        if ($this->has($key)) {
+            return $this->get($key);
+        }
+
+        $value = $callback();
+        $this->forever($key, $value);
+
+        return $value;
+    }
 }
