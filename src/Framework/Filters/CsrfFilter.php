@@ -9,7 +9,7 @@ use Lightpack\Exceptions\InvalidCsrfTokenException;
 
 class CsrfFilter implements IFilter
 {
-    public function before(Request $request)
+    public function before(Request $request, array $params = [])
     {
         if(request()->isPost()) {
             if(session()->verifyToken() === false) {
@@ -18,7 +18,7 @@ class CsrfFilter implements IFilter
         }
     }
 
-    public function after(Request $request, Response $response): Response
+    public function after(Request $request, Response $response, array $params = []): Response
     {
         return $response;
     } 

@@ -12,6 +12,7 @@ class FilterProvider implements ProviderInterface
     {
         $container->register('filter', function ($container) {
             return new Filter(
+                $container,
                 $container->get('request'),
                 $container->get('response')
             );

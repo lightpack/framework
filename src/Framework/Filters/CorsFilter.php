@@ -8,7 +8,7 @@ use Lightpack\Filters\IFilter;
 
 class CorsFilter implements IFilter
 {
-    public function before(Request $request)
+    public function before(Request $request, array $params = [])
     {
         if (request()->method() === 'OPTIONS') {
             return response()
@@ -19,7 +19,7 @@ class CorsFilter implements IFilter
         }
     }
 
-    public function after(Request $request, Response $response): Response
+    public function after(Request $request, Response $response, array $params = []): Response
     {
         return $response->setHeaders(config('cors.headers'));
     }

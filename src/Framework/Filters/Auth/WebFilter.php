@@ -8,14 +8,14 @@ use Lightpack\Filters\IFilter;
 
 class WebFilter implements IFilter
 {
-    public function before(Request $request)
+    public function before(Request $request, array $params = [])
     {
         if(auth()->isGuest()) {
             auth()->redirectLoginUrl();
         }
     }
 
-    public function after(Request $request, Response $response): Response
+    public function after(Request $request, Response $response, array $params = []): Response
     {
         return $response;
     }

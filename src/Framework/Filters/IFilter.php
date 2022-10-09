@@ -7,6 +7,6 @@ use Lightpack\Http\Response;
 
 interface IFilter
 {
-    public function before(Request $request);
-    public function after(Request $request, Response $response): Response; 
+    public function before(Request $request, array $params = []);
+    public function after(Request $request, Response $response, array $params = []): Response;
 }

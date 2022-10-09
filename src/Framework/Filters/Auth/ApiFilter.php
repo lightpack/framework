@@ -8,7 +8,7 @@ use Lightpack\Filters\IFilter;
 
 class ApiFilter implements IFilter
 {
-    public function before(Request $request)
+    public function before(Request $request, array $params = [])
     {
         $result = auth()->viaToken();
 
@@ -19,7 +19,7 @@ class ApiFilter implements IFilter
         }
     }
 
-    public function after(Request $request, Response $response): Response
+    public function after(Request $request, Response $response, array $params = []): Response
     {
         return $response;
     }

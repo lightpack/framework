@@ -107,13 +107,17 @@ final class App
         $router = $container->get('router');
 
         foreach ($routeFilters as $filterAlias) {
-            if (!array_key_exists($filterAlias, $filtersConfig)) {
+            // if $filterAlias has ':' then it is a filter with parameters.
+            [$filterName, $params] = explode(':', $filterAlias) + [1 => []];
+            $params = !empty($params) ? explode(',', $params) : [];
+
+            if (!array_key_exists($filterName, $filtersConfig)) {
                 throw new FilterNotFoundException(
-                    "No filter class registered for: {$filterAlias}"
+                    "No filter class registered for: {$filterName}"
                 );
             }
 
-            $filter->register($router->route(), new $filtersConfig[$filterAlias]);
+            $filter->register($router->route(), $filtersConfig[$filterName], $params);
         }
     }
 }
