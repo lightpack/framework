@@ -1,5 +1,6 @@
 <?php
 
+use Lightpack\Container\Container;
 use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
@@ -13,14 +14,13 @@ final class FilterTest extends TestCase
     {
         $this->request = new \Lightpack\Http\Request();
         $this->response = new \Lightpack\Http\Response(new Url);
-        $this->filter = new \Lightpack\Filters\Filter($this->request, $this->response);
-        $this->mockFilter = new MockFilter();
+        $this->filter = new \Lightpack\Filters\Filter(Container::getInstance(), $this->request, $this->response);
     }
 
     public function testFilterBeforeMethod()
     {
         $_SERVER['REQUEST_METHOD'] = 'post';
-        $this->filter->register('/users', $this->mockFilter);
+        $this->filter->register('/users', MockFilter::class);
         $result = $this->filter->processBeforeFilters('/users');
         $this->assertTrue($this->request->post('framework') == 'Lightpack');
     }
@@ -28,7 +28,7 @@ final class FilterTest extends TestCase
     public function testFilterBeforeMethodReturnsResponse()
     {
         $_SERVER['REQUEST_METHOD'] = 'get';
-        $this->filter->register('/users', $this->mockFilter);
+        $this->filter->register('/users', MockFilter::class);
         $result = $this->filter->processBeforeFilters('/users');
         $this->assertInstanceOf(\Lightpack\Http\Response::class, $result);
     }
@@ -36,7 +36,7 @@ final class FilterTest extends TestCase
     public function testFilterAfterMethod()
     {
         $_SERVER['REQUEST_METHOD'] = 'get';
-        $this->filter->register('/users', $this->mockFilter);
+        $this->filter->register('/users', MockFilter::class);
         $result = $this->filter->processAfterFilters('/users');
         $this->assertInstanceOf(\Lightpack\Http\Response::class, $result);
         $this->assertTrue($result->getBody() == 'hello');

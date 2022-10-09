@@ -1,18 +1,22 @@
 <?php
 
-namespace Lightpack\Filters\Auth;
+namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
 use Lightpack\Filters\IFilter;
 
-class ApiFilter implements IFilter
+class AuthFilter implements IFilter
 {
     public function before(Request $request, array $params = [])
     {
-        $result = auth()->viaToken();
+        $type = $params[0] ?? 'web';
 
-        if(!$result->isSuccess()) {
+        if('web' === $type && auth()->isGuest()) {
+            return auth()->redirectLoginUrl();
+        }
+
+        if('api' === $type && false === auth()->viaToken()->isSuccess()) {
             return response()->setCode(401)->json([
                 'error' => 'Unauthorized',
             ]);
