@@ -109,7 +109,9 @@ final class App
         foreach ($routeFilters as $filterAlias) {
             // if $filterAlias has ':' then it is a filter with parameters.
             [$filterName, $params] = explode(':', $filterAlias) + [1 => []];
+            $filterName = trim($filterName);
             $params = !empty($params) ? explode(',', $params) : [];
+            $params = array_map('trim', $params);
 
             if (!array_key_exists($filterName, $filtersConfig)) {
                 throw new FilterNotFoundException(
