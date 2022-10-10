@@ -13,11 +13,12 @@ final class App
 {
     public static function bootProviders(array $providers = [])
     {
+        $container = Container::getInstance();
         $providers = self::getFrameworkProviders() + $providers;
 
         foreach ($providers as $provider) {
-            $provider = new $provider();
-            $provider->register(Container::getInstance());
+            $provider = $container->resolve($provider);
+            $provider->register($container);
         }
     }
 
