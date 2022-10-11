@@ -96,6 +96,7 @@ final class App
             \Lightpack\Providers\TemplateProvider::class,
             \Lightpack\Providers\AuthProvider::class,
             \Lightpack\Providers\CryptoProvider::class,
+            \Lightpack\Providers\ScheduleProvider::class,
         ];
     }
 

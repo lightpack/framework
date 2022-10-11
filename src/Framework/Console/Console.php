@@ -20,6 +20,7 @@ use Lightpack\Console\Commands\ProcessJobs;
 use Lightpack\Console\Commands\CreateMail;
 use Lightpack\Console\Commands\CreateSeeder;
 use Lightpack\Console\Commands\SeedCommand;
+use Lightpack\Console\Commands\ScheduleEvents;
 
 class Console
 {
@@ -42,6 +43,7 @@ class Console
         'create:mail' => CreateMail::class,
         'create:seeder' => CreateSeeder::class,
         'db:seed' => SeedCommand::class,
+        'schedule:events' => ScheduleEvents::class,
     ];
 
     public static function register(string $command, ICommand $handler)

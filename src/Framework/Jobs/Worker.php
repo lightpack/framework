@@ -176,11 +176,13 @@ class Worker
             return;
         }
 
-        fputs(STDOUT, "\033[32m Registering signal handlers... \033[0m" . PHP_EOL);
+        fputs(STDOUT, "\033[34m [Info]\033[m Registering signal handlers." . PHP_EOL);
 
         pcntl_async_signals(true);
         pcntl_signal(SIGTERM, fn () => $this->stopRunning());
         pcntl_signal(SIGINT, fn () => $this->stopRunning());
+
+        fputs(STDOUT, "\033[34m [Info]\033[m Signal handlers registered." . PHP_EOL);
     }
 
     protected function stopRunning()

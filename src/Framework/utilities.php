@@ -13,11 +13,11 @@ if (!function_exists('app')) {
     {
         $container = \Lightpack\Container\Container::getInstance();
 
-        if(null === $key) {
+        if (null === $key) {
             return $container;
         }
 
-        if($container->has($key)) {
+        if ($container->has($key)) {
             return $container->get($key);
         }
 
@@ -358,5 +358,15 @@ if (!function_exists('validator')) {
         }
 
         return $validator;
+    }
+}
+
+if (!function_exists('schedule')) {
+    /**
+     * Returns the task scheduler instance.
+     */
+    function schedule(): \Lightpack\Schedule\Schedule
+    {
+        return app('schedule');
     }
 }
