@@ -11,7 +11,11 @@ use Lightpack\Routing\Route;
 class Router
 {
     private $route;
-    private $routeMeta = [];
+
+    /**
+     * @var RouteDefinition
+     */
+    private $routeDefinition;
 
     public function __construct(Request $request, Route $route)
     {
@@ -19,52 +23,20 @@ class Router
         $this->parse($request->path());
     }
 
-    public function controller(): string
+    public function hasRouteDefinition(): bool
     {
-        return $this->routeMeta['controller'];
+        return $this->routeDefinition !== null;
     }
 
-    public function action(): string
+    public function getRouteDefinition(): RouteDefinition
     {
-        return $this->routeMeta['action'];
+        return $this->routeDefinition;
     }
 
-    public function params(): array
+    private function parse(string $path): void
     {
-        return $this->routeMeta['params'];
-    }
-    
-    public function path(): string
-    {
-        return $this->routeMeta['path'];
-    }
-
-    public function route(): string
-    {
-        return $this->routeMeta['route'];
-    }
-
-    public function filters(): array
-    {
-        return $this->routeMeta['filters'];
-    }
-
-    public function method(): string
-    {
-        return $this->routeMeta['method'];
-    }
-
-    public function meta(): array
-    {
-        return $this->routeMeta;
-    }
-
-    public function parse(string $path): void
-    {
-        $routeMeta = [];
-
-        if ($this->route->matches($path, $routeMeta)) {
-            $this->routeMeta = $routeMeta;
+        if ($routeDefinition = $this->route->matches($path)) {
+            $this->routeDefinition = $routeDefinition;
         }
     }
 }

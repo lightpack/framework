@@ -53,7 +53,7 @@ final class App
         $response = $container->get('response');
         $filter = $container->get('filter');
         $dispatcher = new Dispatcher($container);
-        $route = $container->get('router')->route();
+        $route = $container->get('router')->getRouteDefinition()->getRoute();
 
         self::bootFilters();
 
@@ -104,7 +104,7 @@ final class App
     {
         $container = Container::getInstance();
         $filtersConfig = $container->get('config')->get('filters');
-        $routeFilters = $container->get('router')->filters();
+        $routeFilters = $container->get('router')->getRouteDefinition()->getFilters();
         $filter = $container->get('filter');
         $router = $container->get('router');
 
@@ -121,7 +121,7 @@ final class App
                 );
             }
 
-            $filter->register($router->route(), $filtersConfig[$filterName], $params);
+            $filter->register($router->getRouteDefinition()->getRoute(), $filtersConfig[$filterName], $params);
         }
     }
 }
