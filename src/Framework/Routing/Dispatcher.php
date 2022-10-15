@@ -17,8 +17,8 @@ class Dispatcher
     /** @var Router */
     private Router $router;
 
-    /** @var RouteDefinition */
-    private RouteDefinition $routeDefinition;
+    /** @var Route */
+    private Route $route;
 
     public function __construct(Container $container)
     {
@@ -26,14 +26,14 @@ class Dispatcher
         $this->request = $container->get('request');
         $this->router = $container->get('router');
         $this->throwExceptionIfRouteNotFound();
-        $this->routeDefinition = $this->router->getRouteDefinition();
+        $this->route = $this->router->getRoute();
     }
 
     public function dispatch()
     {
-        $controller = $this->routeDefinition->getController();
-        $action = $this->routeDefinition->getAction();
-        $params = $this->routeDefinition->getParams();
+        $controller = $this->route->getController();
+        $action = $this->route->getAction();
+        $params = $this->route->getParams();
 
         if (!\class_exists($controller)) {
             throw new \Lightpack\Exceptions\ControllerNotFoundException(
@@ -52,7 +52,7 @@ class Dispatcher
 
     private function throwExceptionIfRouteNotFound()
     {
-        if (!$this->router->hasRouteDefinition()) {
+        if (!$this->router->hasRoute()) {
             throw new \Lightpack\Exceptions\RouteNotFoundException(
                 sprintf(
                     "No route registered for request: %s %s",

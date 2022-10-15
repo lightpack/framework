@@ -4,146 +4,140 @@ namespace Lightpack\Routing;
 
 class Route
 {
-    private $routes = [
-        'GET' => [],
-        'POST' => [],
-        'PUT' => [],
-        'PATCH' => [],
-        'DELETE' => [],
-        'OPTIONS' => [],
-    ];
-    private $placeholders = [
-        ':any' => '(.*)',
-        ':seg' => '([^/]+)',
-        ':num' => '([0-9]+)',
-        ':slug' => '([a-zA-Z0-9-]+)',
-        ':alpha' => '([a-zA-Z]+)',
-        ':alnum' => '([a-zA-Z0-9]+)',
-    ];
-    private $options = [
-        'prefix' => '',
-        'filters' => [],
-    ];
-    private $request;
+    private string $controller;
+    private string $action;
+    private array $filters = [];
+    private array $params = [];
+    private string $path;
+    private string $routeUri;
 
-    public function __construct(\Lightpack\Http\Request $request)
+    /**
+     * @var string HTTP method
+     */
+    private string $verb;
+
+    /**
+     * @var string $controller Controller class name.
+     */
+    public function setController(string $controller): self
     {
-        $this->request = $request;
+        $this->controller = $controller;
+        return $this;
     }
 
-    public function get(string $path, string $controller, string $action = 'index'): RouteDefinition
+    /**
+     * @return string Controller class name.
+     */
+    public function getController(): string
     {
-        return $this->add('GET', $this->options['prefix'] . $path, $controller, $action);
+        return $this->controller;
     }
 
-    public function post(string $path, string $controller, string $action = 'index'): RouteDefinition
+    /**
+     * @param string $action The controller action to execute.
+     * @return Route
+     */
+    public function setAction(string $action): self
     {
-        return $this->add('POST', $this->options['prefix'] . $path, $controller, $action);
+        $this->action = $action;
+        return $this;
     }
 
-    public function put(string $path, string $controller, string $action = 'index'): RouteDefinition
+    /**
+     * @return string The controller action to execute.
+     */
+    public function getAction(): string
     {
-        return $this->add('PUT', $this->options['prefix'] . $path, $controller, $action);
+        return $this->action;
     }
 
-    public function patch(string $path, string $controller, string $action = 'index'): RouteDefinition
+    /**
+     * @param array $filters Array of route filters.
+     * @return Route
+     */
+    public function setFilters(array $filters): self
     {
-        return $this->add('PATCH', $this->options['prefix'] . $path, $controller, $action);
+        $this->filters = array_merge($this->filters, $filters);
+        $this->filters = array_unique($this->filters);
+        
+        return $this;
     }
 
-    public function delete(string $path, string $controller, string $action = 'index'): RouteDefinition
+    /**
+     * @return array Array of route filters.
+     */
+    public function getFilters(): array
     {
-        return $this->add('DELETE', $this->options['prefix'] . $path, $controller, $action);
+        return $this->filters;
     }
 
-    public function options(string $path, string $controller, string $action = 'index'): RouteDefinition
+    /**
+     * @param array $params Array of matched route parameters
+     * @return Route
+     */
+    public function setParams(array $params): self
     {
-        return $this->add('OPTIONS', $this->options['prefix'] . $path, $controller, $action);
+        $this->params = $params;
+        return $this;
     }
 
-    public function paths(string $method): array
+    /**
+     * @return array $params Array of matched route parameters
+     */
+    public function getParams(): array
     {
-        return $this->routes[$method] ?? [];
+        return $this->params;
     }
 
-    public function group(array $options, callable $callback): void
+    /**
+     * @param string $path The request path to match against.
+     * @return Route
+     */
+    public function setPath(string $path): self
     {
-        $oldOptions = $this->options;
-        $this->options = \array_merge($oldOptions, $options);
-        $this->options['prefix'] = $oldOptions['prefix'] . $this->options['prefix'];
-        $callback($this);
-        $this->options = $oldOptions;
+        $this->path = $path;
+        return $this;
     }
 
-    public function map(array $verbs, string $route, string $controller, string $action = 'index', array $filters = []): void
+    /**
+     * @return string The request path to match against.
+     */
+    public function getPath(): string
     {
-        foreach ($verbs as $verb) {
-            if (false === \array_key_exists($verb, $this->routes)) {
-                throw new \Exception('Unsupported HTTP request method: ' . $verb);
-            }
-
-            $this->{$verb}($route, $controller, $action, $filters);
-        }
+        return $this->path;
     }
 
-    public function any(string $path, string $controller, string $action = 'index', array $filters = []): void
+    /**
+     * @param string $route The route URI pattern.
+     */
+    public function setRouteUri(string $routeUri): self
     {
-        $verbs = \array_keys($this->routes);
-
-        foreach ($verbs as $verb) {
-            $this->{$verb}($path, $controller, $action, $filters);
-        }
+        $this->routeUri = $routeUri;
+        return $this;
     }
 
-    public function matches(string $path): false|RouteDefinition
+    /**
+     * @return string The route URI pattern.
+     */
+    public function getRouteUri(): string
     {
-        $routes = $this->getRoutesForCurrentRequest();
-
-        foreach ($routes as $route) {
-            if (preg_match('@^' . $this->regex($route) . '$@', $path, $matches)) {
-                \array_shift($matches);
-
-                /** @var RouteDefinition */
-                $routeDefinition = $this->routes[$this->request->method()][$route];
-                $routeDefinition->setParams($matches);
-                $routeDefinition->setPath($path);
-                $routeDefinition->setRoute($route);
-                $routeDefinition->setVerb($this->request->method());
-
-                return $routeDefinition;
-            }
-        }
-
-        return false;
+        return $this->routeUri;
     }
 
-    private function add(string $method, string $path, string $controller, string $action): RouteDefinition
+    /**
+     * @param string $verb HTTP method.
+     */
+    public function setVerb(string $verb): self
     {
-
-        if (trim($path) === '') {
-            throw new \Exception('Empty route path');
-        }
-
-        $route = new RouteDefinition();
-        $route->setController($controller)->setAction($action);
-        $this->routes[$method][$path] = $route;
-
-        return $route;
+        $this->verb = $verb;
+        return $this;
     }
 
-    private function regex(string $path): string
+    /**
+     * @return string HTTP method.
+     */
+    public function getVerb(): string
     {
-        $search = \array_keys($this->placeholders);
-        $replace = \array_values($this->placeholders);
-
-        return str_replace($search, $replace, $path);
-    }
-
-    private function getRoutesForCurrentRequest()
-    {
-        $requestMethod = $this->request->method();
-        $requestMethod = trim($requestMethod);
-        $routes = $this->routes[$requestMethod] ?? [];
-        return \array_keys($routes);
+        return $this->verb;
     }
 }

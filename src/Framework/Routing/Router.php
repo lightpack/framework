@@ -3,40 +3,42 @@
 namespace Lightpack\Routing;
 
 use Lightpack\Http\Request;
-use Lightpack\Routing\Route;
 
 /**
  * Responsible to determine the correct controller/action to execute.
  */
 class Router
 {
-    private $route;
+    /**
+     * @var RouteRegistry
+     */
+    private $routeRegistry;
 
     /**
-     * @var RouteDefinition
+     * @var Route
      */
-    private $routeDefinition;
+    private $route;
 
-    public function __construct(Request $request, Route $route)
+    public function __construct(Request $request, RouteRegistry $routeRegistry)
     {
-        $this->route = $route;
+        $this->routeRegistry = $routeRegistry;
         $this->parse($request->path());
     }
 
-    public function hasRouteDefinition(): bool
+    public function hasRoute(): bool
     {
-        return $this->routeDefinition !== null;
+        return $this->route !== null;
     }
 
-    public function getRouteDefinition(): RouteDefinition
+    public function getRoute(): Route
     {
-        return $this->routeDefinition;
+        return $this->route;
     }
 
-    private function parse(string $path): void
+    public function parse(string $path): void
     {
-        if ($routeDefinition = $this->route->matches($path)) {
-            $this->routeDefinition = $routeDefinition;
+        if ($route = $this->routeRegistry->matches($path)) {
+            $this->route = $route;
         }
     }
 }

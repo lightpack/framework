@@ -8,6 +8,16 @@ final class RouterTest extends TestCase
 {
     private const HTTP_GET = 'GET';
 
+    /**
+     * @var \Lightpack\Routing\Router
+     */
+    private $router;
+
+    /**
+     * @var \Lightpack\Routing\RouteRegistry
+     */
+    private $routeRegistry;
+
     public function setUp(): void
     {
         $basepath = '/lightpack';
@@ -15,30 +25,30 @@ final class RouterTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
 
         $request = new \Lightpack\Http\Request($basepath);
-        $this->route = new \Lightpack\Routing\Route($request);
-        $this->router = new \Lightpack\Routing\Router($request, $this->route);
+        $this->routeRegistry = new \Lightpack\Routing\RouteRegistry($request);
+        $this->router = new \Lightpack\Routing\Router($request, $this->routeRegistry);
     }
 
     public function testRouterCanParseUrl()
     {
-        $this->route->get('/users/:num/role/:alpha/:any', 'UserController', 'index');
+        $this->routeRegistry->get('/users/:num/role/:alpha/:any', 'UserController', 'index');
         $this->router->parse('/users/23/role/admin/hello/world');
 
         $this->assertEquals(
             'UserController',
-            $this->router->controller(),
+            $this->router->getRoute()->getController(),
             'Router should parse controller: UserController'
         );
 
         $this->assertEquals(
             'index',
-            $this->router->action(),
+            $this->router->getRoute()->getAction(),
             'Router should parse action: index'
         );
 
         $this->assertSame(
             ['23', 'admin', 'hello/world'],
-            $this->router->params(),
+            $this->router->getRoute()->getParams(),
             'Router should parse params correctly'
         );
     }
@@ -57,7 +67,7 @@ final class RouterTest extends TestCase
             '/news/way2go/id-23' => ['GET', '/news/:alnum/:any', 'News', 'handle', ['way2go', 'id-23']],
         ];
 
-        foreach($routes as $path => $config) {
+        foreach ($routes as $path => $config) {
             // Prepare data
             $method = $config[0];
             $route = $config[1];
@@ -67,25 +77,35 @@ final class RouterTest extends TestCase
             $method = self::HTTP_GET;
 
             // Initialize setup
-            $this->route->{$method}($route, $controller, $action);
+            $this->routeRegistry->{$method}($route, $controller, $action);
             $this->router->parse($path);
 
             // Assertions
-            $this->assertEquals($path, $this->router->path(), "Router should parse path: {$path}");
-            $this->assertEquals($route, $this->router->route(), "Router should parse route: {$route}");
-            $this->assertEquals($controller, $this->router->controller(), "Router should parse controller: {$controller}");
-            $this->assertEquals($action, $this->router->action(), "Router should parse action: {$action}");
-            $this->assertEquals($params, $this->router->params(), "Router should parse params correctly");
-            $this->assertEquals($method, $this->router->method(), "Router should parse method: {$method}");
+            $this->assertEquals($path, $this->router->getRoute()->getPath(), "Router should parse path: {$path}");
+            $this->assertEquals($route, $this->router->getRoute()->getRouteUri(), "Router should parse route uri: {$route}");
+            $this->assertEquals($controller, $this->router->getRoute()->getController(), "Router should parse controller: {$controller}");
+            $this->assertEquals($action, $this->router->getRoute()->getAction(), "Router should parse action: {$action}");
+            $this->assertEquals($params, $this->router->getRoute()->getParams(), "Router should parse params correctly");
+            $this->assertEquals($method, $this->router->getRoute()->getVerb(), "Router should parse method: {$method}");
         }
     }
 
     public function testRouterCanParseUrlMeta()
     {
-        $this->route->get('/news/:num/author/:slug', 'News', 'index', ['auth', 'csrf']);
+        $this->routeRegistry->get('/news/:num/author/:slug', 'News', 'index')->setFilters(['auth', 'csrf']);
         $this->router->parse('/news/23/author/bob');
-        
-        $actual = $this->router->meta();
+
+        $route = $this->router->getRoute();
+        $actual = [
+            'method' => $route->getVerb(),
+            'controller' => $route->getController(),
+            'action' => $route->getAction(),
+            'route' => $route->getRouteUri(),
+            'path' => $route->getPath(),
+            'params' => $route->getParams(),
+            'filters' => $route->getFilters(),
+        ];
+
         $meta = [
             'method' => 'GET',
             'controller' => 'News',
@@ -96,7 +116,7 @@ final class RouterTest extends TestCase
             'filters' => ['auth', 'csrf']
         ];
 
-        foreach($meta as $key => $value) {
+        foreach ($meta as $key => $value) {
             $this->assertTrue(isset($actual[$key]), "Router should have parsed meta key: {$key}");
             $this->assertEquals($value, $actual[$key], "Router should have parsed correctly meta value for key: {$key}");
         }
@@ -104,39 +124,40 @@ final class RouterTest extends TestCase
 
     public function testRouterCanParseBadUrlMeta()
     {
-        $this->route->get('/news/:slug', 'News', 'index');
+        $this->routeRegistry->get('/news/:slug', 'News', 'index');
         $this->router->parse('/news//23');
-        
-        // should be []
-        $this->assertEmpty($this->router->meta(), "Router should have an empty route meta for bad url requests");
+
+        // should be false
+        $this->assertFalse($this->router->hasRoute(), "Router should have returned fale for bad url requests");
     }
 
     public function testRouterCanParseRegexUrl()
     {
-        $this->route->get('/news/([0-9]+)/slug/([a-zA-Z]+)', 'News', 'index');
+        $this->routeRegistry->get('/news/([0-9]+)/slug/([a-zA-Z]+)', 'News', 'index');
         $this->router->parse('/news/23/slug/politics');
 
-        $this->assertEquals(['23', 'politics'], $this->router->params());
+        $this->assertEquals(['23', 'politics'], $this->router->getRoute()->getParams());
     }
 
     public function testRouterCanParseComplexUrl()
     {
-        $this->route->get('/news/id-([0-9]+)/slug/political-([a-zA-Z]+)', 'News', 'index');
+        $this->routeRegistry->get('/news/id-([0-9]+)/slug/political-([a-zA-Z]+)', 'News', 'index');
         $this->router->parse('/news/id-23/slug/political-agenda');
-        $this->assertEquals(['23', 'agenda'], $this->router->params());
+        $this->assertEquals(['23', 'agenda'], $this->router->getRoute()->getParams());
     }
 
-    public function testRouterCanParseGroupOptions() {
-        $this->route->group(
-            ['prefix' => '/admin', 'filters' => ['auth', 'csrf']], 
-            function($route) {
-                $route->get('/users/:num','UserController', 'index');
+    public function testRouterCanParseGroupOptions()
+    {
+        $this->routeRegistry->group(
+            ['prefix' => '/admin', 'filters' => ['auth', 'csrf', 'honeypot']],
+            function ($route) {
+                $route->get('/users/:num', 'UserController', 'index')->setFilters(['honeypot']);
             }
         );
 
         $this->router->parse('/admin/users/23');
 
         // tests
-        $this->assertEquals(['auth', 'csrf'], $this->router->filters());
+        $this->assertEquals(['auth', 'csrf', 'honeypot'], $this->router->getRoute()->getFilters());
     }
 }

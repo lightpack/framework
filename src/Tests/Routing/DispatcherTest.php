@@ -22,7 +22,7 @@ final class DispatcherTest extends TestCase
         });
 
         $this->container->register('route', function($container) {
-            return new \Lightpack\Routing\Route($container->get('request'));
+            return new \Lightpack\Routing\RouteRegistry($container->get('request'));
         });
 
         $this->container->register('router', function($container) {
