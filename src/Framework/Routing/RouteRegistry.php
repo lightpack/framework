@@ -20,10 +20,14 @@ class RouteRegistry
         ':alpha' => '([a-zA-Z]+)',
         ':alnum' => '([a-zA-Z0-9]+)',
     ];
+
     private $options = [
         'prefix' => '',
         'filter' => [],
     ];
+
+    private $names = [];
+
     private $request;
 
     public function __construct(\Lightpack\Http\Request $request)
@@ -107,14 +111,26 @@ class RouteRegistry
                 $route = $this->routes[$this->request->method()][$routeUri];
                 $route->setParams($matches);
                 $route->setPath($path);
-                $route->setUri($routeUri);
-                $route->setVerb($this->request->method());
 
                 return $route;
             }
         }
 
         return false;
+    }
+
+    public function getByName(string $name): ?Route
+    {
+        return $this->names[$name] ?? null;
+    }
+
+    public function bootRouteNames(): void
+    {
+        foreach ($this->routes as $routes) {
+            foreach ($routes as $route) {
+                $this->setRouteName($route);
+            }
+        }
     }
 
     private function add(string $method, string $uri, string $controller, string $action): Route
@@ -125,7 +141,7 @@ class RouteRegistry
         }
 
         $route = new Route();
-        $route->setController($controller)->setAction($action)->filter($this->options['filter']);
+        $route->setController($controller)->setAction($action)->filter($this->options['filter'])->setUri($uri)->setVerb($method);
         $this->routes[$method][$uri] = $route;
 
         return $route;
@@ -145,5 +161,20 @@ class RouteRegistry
         $requestMethod = trim($requestMethod);
         $routes = $this->routes[$requestMethod] ?? [];
         return \array_keys($routes);
+    }
+
+    private function setRouteName(Route $route): void
+    {
+        if(false === $route->hasName()) {
+            return;
+        }
+
+        $name = $route->getName();
+
+        if (isset($this->names[$name])) {
+            throw new \Exception('Duplicate route name: ' . $name);
+        }
+
+        $this->names[$name] = $route;
     }
 }

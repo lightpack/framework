@@ -2,6 +2,8 @@
 
 namespace Lightpack\Utils;
 
+use Lightpack\Container\Container;
+
 class Url
 {
     /**
@@ -15,24 +17,24 @@ class Url
      * Url::to('users', ['sort' => 'asc', 'status' => 'active']);
      * That  will produce: /users?sort=asc&status=active 
      */
-    public function to(...$fragments): string
+    public function to(...$params): string
     {
         $queryString = '';
 
-        if (is_array($params = end($fragments))) {
-            $queryString = $this->buildQueryString($params);
-            array_pop($fragments);
+        if (is_array($queryParams = end($params))) {
+            $queryString = $this->buildQueryString($queryParams);
+            array_pop($params);
         }
 
         // Remove empty values from the array.
-        $fragments = array_filter($fragments, function ($value) {
+        $params = array_filter($params, function ($value) {
             return trim($value) ? true : false;
         });
 
-        // Trim whitespace and slashes from URL fragments
-        array_walk($fragments, fn (&$el) => $el = trim($el, '/ '));
+        // Trim whitespace and slashes from URL params
+        array_walk($params, fn (&$el) => $el = trim($el, '/ '));
 
-        return '/' . implode('/', $fragments) . $queryString;
+        return '/' . implode('/', $params) . $queryString;
     }
 
     /**
@@ -53,6 +55,37 @@ class Url
         $file = $file ? '/' . $file : '';
 
         return get_env('ASSET_URL', '/assets') . $file;
+    }
+
+    public function route(string $routeName, ...$params)
+    {
+        if(is_array(end($params))) {
+            $queryParams = array_pop($params);
+        }
+
+        /** @var \Lightpack\Routing\Route */
+        $route = Container::getInstance()->get('route')->getByName($routeName);
+
+        if (!$route) {
+            throw new \Exception("Route with name '$routeName' not found.");
+        }
+
+        $uri = explode('/', trim($route->getUri(), '/ '));
+        $uriPatterns = array_filter($uri, fn($val) => strpos($val, ':') === 0);
+
+        if (count($uriPatterns) !== count($params)) {
+            throw new \Exception("Invalid number of parameters for route '$routeName'. Expected " . count($uriPatterns) . " but got " . count($params));
+        }
+
+        foreach($uri as $key => $value) {
+            if(strpos($value, ':') === 0) {
+                $uri[$key] = array_shift($params);
+            }
+        }
+
+        $uri[] = $queryParams ?? [];
+
+        return $this->to(...$uri);
     }
 
     /**

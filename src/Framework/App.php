@@ -53,12 +53,13 @@ final class App
         $response = $container->get('response');
         $filter = $container->get('filter');
         $dispatcher = new Dispatcher($container);
-        $route = $container->get('router')->getRouteDefinition()->getRoute();
+        $routeUri = $container->get('router')->getRoute()->getUri();
+        $container->get('route')->bootRouteNames();
 
         self::bootFilters();
 
         // Process before filters.
-        $result = $filter->processBeforeFilters($route);
+        $result = $filter->processBeforeFilters($routeUri);
 
         if ($result instanceof Response) {
             return $result;
@@ -73,7 +74,7 @@ final class App
 
         // Process after filters.
         $filter->setResponse($response);
-        $response = $filter->processAfterFilters($route);
+        $response = $filter->processAfterFilters($routeUri);
 
         return $response;
     }

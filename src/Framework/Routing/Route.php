@@ -144,4 +144,20 @@ class Route
     {
         return $this->verb;
     }
+
+    public function name(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function hasName(): bool
+    {
+        return isset($this->name);
+    }
 }

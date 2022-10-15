@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Lightpack\Container\Container;
+use Lightpack\Http\Request;
+use Lightpack\Routing\RouteRegistry;
 use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
@@ -47,5 +50,34 @@ final class UrlTest extends TestCase
         $this->assertEquals('/assets/styles.css', $this->url->asset(' styles.css '));
         $this->assertEquals('/assets/css/styles.css', $this->url->asset('css/styles.css'));
         $this->assertEquals('/assets/css/styles.css', $this->url->asset('/css/styles.css'));
+    }
+
+    public function testUrlRouteMethod()
+    {
+        $testRoutes = [
+            ['name' => 'foo', 'uri' => '/foo', 'params' => [], 'expected' => '/foo'],
+            ['name' => 'foo.num', 'uri' => '/foo/:num', 'params' => [23], 'expected' => '/foo/23'],
+            ['name' => 'foo.num.bar', 'uri' => '/foo/:num/bar', 'params' => [23], 'expected' => '/foo/23/bar'],
+            ['name' => 'foo.num.bar.baz', 'uri' => '/foo/:num/bar/:slug', 'params' => [23, 'baz'], 'expected' => '/foo/23/bar/baz'],
+            ['name' => 'foo.num.bar.baz', 'uri' => '/foo/:num/bar/:slug', 'params' => [23, 'baz', ['p' => 1, 'r' => 2]], 'expected' => '/foo/23/bar/baz?p=1&r=2'],
+        ];
+
+        // Add routes
+        $routeRegistery = new RouteRegistry(new Request());
+        $routeRegistery->get('/foo', 'DummyController')->name('foo');
+        $routeRegistery->get('/foo/:num', 'DummyController')->name('foo.num');
+        $routeRegistery->get('/foo/:num/bar', 'DummyController')->name('foo.num.bar');
+        $routeRegistery->get('/foo/:num/bar/:slug', 'DummyController')->name('foo.num.bar.baz');
+        $routeRegistery->bootRouteNames();
+
+        // Set container
+        Container::getInstance()->instance('route', $routeRegistery);
+
+        // Test routes
+        $this->assertEquals('/foo', $this->url->route('foo'));
+        $this->assertEquals('/foo/23', $this->url->route('foo.num', 23));
+        $this->assertEquals('/foo/23/bar', $this->url->route('foo.num.bar', 23));
+        $this->assertEquals('/foo/23/bar/baz', $this->url->route('foo.num.bar.baz', 23, 'baz'));
+        $this->assertEquals('/foo/23/bar/baz?p=1&r=2', $this->url->route('foo.num.bar.baz', 23, 'baz', ['p' => 1, 'r' => 2]));
     }
 }

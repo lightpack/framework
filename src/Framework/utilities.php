@@ -31,7 +31,7 @@ if (!function_exists('redirect')) {
      */
     function redirect($uri = '/', $code = 302)
     {
-        app('response')->redirect($uri, $code);
+        response()->redirect($uri, $code);
     }
 }
 
