@@ -92,7 +92,7 @@ final class RouterTest extends TestCase
 
     public function testRouterCanParseUrlMeta()
     {
-        $this->routeRegistry->get('/news/:num/author/:slug', 'News', 'index')->setFilters(['auth', 'csrf']);
+        $this->routeRegistry->get('/news/:num/author/:slug', 'News', 'index')->filter(['auth', 'csrf']);
         $this->router->parse('/news/23/author/bob');
 
         $route = $this->router->getRoute();
@@ -149,9 +149,9 @@ final class RouterTest extends TestCase
     public function testRouterCanParseGroupOptions()
     {
         $this->routeRegistry->group(
-            ['prefix' => '/admin', 'filters' => ['auth', 'csrf', 'honeypot']],
+            ['prefix' => '/admin', 'filter' => 'auth'],
             function ($route) {
-                $route->get('/users/:num', 'UserController', 'index')->setFilters(['honeypot']);
+                $route->get('/users/:num', 'UserController', 'index')->filter(['csrf', 'honeypot']);
             }
         );
 

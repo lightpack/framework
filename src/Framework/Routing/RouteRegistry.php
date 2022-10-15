@@ -22,7 +22,7 @@ class RouteRegistry
     ];
     private $options = [
         'prefix' => '',
-        'filters' => [],
+        'filter' => [],
     ];
     private $request;
 
@@ -125,7 +125,7 @@ class RouteRegistry
         }
 
         $route = new Route();
-        $route->setController($controller)->setAction($action)->setFilters($this->options['filters']);
+        $route->setController($controller)->setAction($action)->filter($this->options['filter']);
         $this->routes[$method][$uri] = $route;
 
         return $route;

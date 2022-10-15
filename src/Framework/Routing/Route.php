@@ -55,11 +55,15 @@ class Route
      * @param array $filters Array of route filters.
      * @return Route
      */
-    public function setFilters(array $filters): self
+    public function filter(string|array $filter): self
     {
-        $this->filters = array_merge($this->filters, $filters);
+        if (is_string($filter)) {
+            $filter = [$filter];
+        }
+
+        $this->filters = array_merge($this->filters, $filter);
         $this->filters = array_unique($this->filters);
-        
+
         return $this;
     }
 
