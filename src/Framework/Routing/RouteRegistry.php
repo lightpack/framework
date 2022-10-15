@@ -31,34 +31,34 @@ class RouteRegistry
         $this->request = $request;
     }
 
-    public function get(string $path, string $controller, string $action = 'index'): Route
+    public function get(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('GET', $this->options['prefix'] . $path, $controller, $action);
+        return $this->add('GET', $this->options['prefix'] . $uri, $controller, $action);
     }
 
-    public function post(string $path, string $controller, string $action = 'index'): Route
+    public function post(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('POST', $this->options['prefix'] . $path, $controller, $action);
+        return $this->add('POST', $this->options['prefix'] . $uri, $controller, $action);
     }
 
-    public function put(string $path, string $controller, string $action = 'index'): Route
+    public function put(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('PUT', $this->options['prefix'] . $path, $controller, $action);
+        return $this->add('PUT', $this->options['prefix'] . $uri, $controller, $action);
     }
 
-    public function patch(string $path, string $controller, string $action = 'index'): Route
+    public function patch(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('PATCH', $this->options['prefix'] . $path, $controller, $action);
+        return $this->add('PATCH', $this->options['prefix'] . $uri, $controller, $action);
     }
 
-    public function delete(string $path, string $controller, string $action = 'index'): Route
+    public function delete(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('DELETE', $this->options['prefix'] . $path, $controller, $action);
+        return $this->add('DELETE', $this->options['prefix'] . $uri, $controller, $action);
     }
 
-    public function options(string $path, string $controller, string $action = 'index'): Route
+    public function options(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('OPTIONS', $this->options['prefix'] . $path, $controller, $action);
+        return $this->add('OPTIONS', $this->options['prefix'] . $uri, $controller, $action);
     }
 
     public function paths(string $method): array
@@ -75,23 +75,23 @@ class RouteRegistry
         $this->options = $oldOptions;
     }
 
-    public function map(array $verbs, string $route, string $controller, string $action = 'index', array $filters = []): void
+    public function map(array $verbs, string $route, string $controller, string $action = 'index'): void
     {
         foreach ($verbs as $verb) {
             if (false === \array_key_exists($verb, $this->routes)) {
                 throw new \Exception('Unsupported HTTP request method: ' . $verb);
             }
 
-            $this->{$verb}($route, $controller, $action, $filters);
+            $this->{$verb}($route, $controller, $action);
         }
     }
 
-    public function any(string $path, string $controller, string $action = 'index', array $filters = []): void
+    public function any(string $uri, string $controller, string $action = 'index'): void
     {
         $verbs = \array_keys($this->routes);
 
         foreach ($verbs as $verb) {
-            $this->{$verb}($path, $controller, $action, $filters);
+            $this->{$verb}($uri, $controller, $action);
         }
     }
 
@@ -117,16 +117,16 @@ class RouteRegistry
         return false;
     }
 
-    private function add(string $method, string $path, string $controller, string $action): Route
+    private function add(string $method, string $uri, string $controller, string $action): Route
     {
 
-        if (trim($path) === '') {
+        if (trim($uri) === '') {
             throw new \Exception('Empty route path');
         }
 
         $route = new Route();
         $route->setController($controller)->setAction($action)->setFilters($this->options['filters']);
-        $this->routes[$method][$path] = $route;
+        $this->routes[$method][$uri] = $route;
 
         return $route;
     }
