@@ -95,7 +95,7 @@ if (!function_exists('route')) {
      * This function returns an instance of route object from
      * the app container.
      * 
-     * @return \Lightpack\Routing\Route
+     * @return \Lightpack\Routing\RouteRegistry
      */
     function route()
     {

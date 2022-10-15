@@ -105,7 +105,7 @@ final class App
     {
         $container = Container::getInstance();
         $filtersConfig = $container->get('config')->get('filters');
-        $routeFilters = $container->get('router')->getRouteDefinition()->getFilters();
+        $routeFilters = $container->get('router')->getRoute()->getFilters();
         $filter = $container->get('filter');
         $router = $container->get('router');
 
@@ -122,7 +122,7 @@ final class App
                 );
             }
 
-            $filter->register($router->getRouteDefinition()->getRoute(), $filtersConfig[$filterName], $params);
+            $filter->register($router->getRoute()->getUri(), $filtersConfig[$filterName], $params);
         }
     }
 }
