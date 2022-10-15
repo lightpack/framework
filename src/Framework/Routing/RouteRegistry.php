@@ -107,7 +107,7 @@ class RouteRegistry
                 $route = $this->routes[$this->request->method()][$routeUri];
                 $route->setParams($matches);
                 $route->setPath($path);
-                $route->setRouteUri($routeUri);
+                $route->setUri($routeUri);
                 $route->setVerb($this->request->method());
 
                 return $route;

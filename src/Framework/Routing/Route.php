@@ -9,7 +9,7 @@ class Route
     private array $filters = [];
     private array $params = [];
     private string $path;
-    private string $routeUri;
+    private string $uri;
 
     /**
      * @var string HTTP method
@@ -110,18 +110,18 @@ class Route
     /**
      * @param string $route The route URI pattern.
      */
-    public function setRouteUri(string $routeUri): self
+    public function setUri(string $uri): self
     {
-        $this->routeUri = $routeUri;
+        $this->uri = $uri;
         return $this;
     }
 
     /**
      * @return string The route URI pattern.
      */
-    public function getRouteUri(): string
+    public function getUri(): string
     {
-        return $this->routeUri;
+        return $this->uri;
     }
 
     /**

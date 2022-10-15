@@ -82,7 +82,7 @@ final class RouterTest extends TestCase
 
             // Assertions
             $this->assertEquals($path, $this->router->getRoute()->getPath(), "Router should parse path: {$path}");
-            $this->assertEquals($route, $this->router->getRoute()->getRouteUri(), "Router should parse route uri: {$route}");
+            $this->assertEquals($route, $this->router->getRoute()->getUri(), "Router should parse route uri: {$route}");
             $this->assertEquals($controller, $this->router->getRoute()->getController(), "Router should parse controller: {$controller}");
             $this->assertEquals($action, $this->router->getRoute()->getAction(), "Router should parse action: {$action}");
             $this->assertEquals($params, $this->router->getRoute()->getParams(), "Router should parse params correctly");
@@ -100,7 +100,7 @@ final class RouterTest extends TestCase
             'method' => $route->getVerb(),
             'controller' => $route->getController(),
             'action' => $route->getAction(),
-            'route' => $route->getRouteUri(),
+            'route' => $route->getUri(),
             'path' => $route->getPath(),
             'params' => $route->getParams(),
             'filters' => $route->getFilters(),
