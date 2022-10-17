@@ -27,11 +27,18 @@ if (!function_exists('app')) {
 
 if (!function_exists('redirect')) {
     /** 
-     * Redirect to URI.
+     * Redirects to the given URI. If URI is not provided, returns the 
+     * redirect instance.
+     * 
+     * @return void|Lightpack\Http\Redirect
      */
-    function redirect(): \Lightpack\Http\Redirect
+    function redirect(?string $url = '/', int $statusCode = 302, array $headers = []): mixed
     {
-        return app('redirect');
+        if(is_null($url)) {
+            return app('redirect');
+        }
+
+        app('redirect')->to($url, $statusCode, $headers);
     }
 }
 
