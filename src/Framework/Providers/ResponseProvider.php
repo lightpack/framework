@@ -18,11 +18,7 @@ class ResponseProvider implements ProviderInterface
         $container->register('redirect', function ($container) {
             $redirect = new Redirect();
 
-            $redirect->boot(
-                $container->get('request'),
-                $container->get('session'),
-                $container->get('url')
-            );
+            $container->call($redirect, 'boot');
 
             return $redirect;
         });

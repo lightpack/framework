@@ -22,6 +22,8 @@ class SessionProvider implements ProviderInterface
             if($request->isGet()) {
                 $session->set('_previous_url', $request->fullUrl());
             }
+
+            return $session;
         });
 
         $container->alias(Session::class, 'session');
