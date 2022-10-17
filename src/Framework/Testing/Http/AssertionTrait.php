@@ -29,12 +29,12 @@ trait AssertionTrait
 
     public function assertResponseJsonHasKey(string $key)
     {
-        $this->assertTrue(Arr::has($key, $this->getArrayResponse()));
+        $this->assertTrue((new Arr)->has($key, $this->getArrayResponse()));
     }
 
     public function assertResponseJsonKeyValue(string $key, $value)
     {
-        $this->assertSame($value, Arr::get($key, $this->getArrayResponse()));
+        $this->assertSame($value, (new Arr)->get($key, $this->getArrayResponse()));
     }
 
     public function assertResponseHasHeader(string $header)

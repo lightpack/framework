@@ -49,6 +49,11 @@ class Redirect extends Response
         return $this->to($url, $statusCode, $headers);
     }
 
+    public function refresh(int $statusCode = 302, array $headers = []): self
+    {
+        return $this->to($this->request->fullUrl(), $statusCode, $headers);
+    }
+
     public function boot(Request $request, Session $session, Url $url)
     {
         $this->request = $request;
