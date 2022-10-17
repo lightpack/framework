@@ -28,5 +28,6 @@ class ResponseProvider implements ProviderInterface
         });
 
         $container->alias(Response::class, 'response');
+        $container->alias(Redirect::class, 'redirect');
     }
 }
