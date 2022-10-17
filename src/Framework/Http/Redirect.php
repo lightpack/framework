@@ -16,42 +16,41 @@ class Redirect extends Response
     /** @var \Lightpack\Utils\Url */
     protected $url;
 
-    public function to(string $url, int $statusCode = 302, array $headers = []): self
+    public function to(string $url, int $statusCode = 302, array $headers = []): void
     {
-        $this->setRedirectUrl($url);
-        $this->setCode($statusCode);
-        $this->setHeaders($headers);
-        $this->setHeader('Location', $url);
-
-        return $this;
+        $this->setRedirectUrl($url)
+            ->setCode($statusCode)
+            ->setHeaders($headers)
+            ->setHeader('Location', $url)
+            ->send();
     }
 
-    public function route(string $name, array $params = [], int $statusCode = 302, array $headers = []): self
+    public function route(string $name, array $params = [], int $statusCode = 302, array $headers = []): void
     {
         $url = $this->url->route($name, ...$params);
 
-        return $this->to($url, $statusCode, $headers);
+        $this->to($url, $statusCode, $headers);
     }
 
-    public function back(int $statusCode = 302, array $headers = []): self
+    public function back(int $statusCode = 302, array $headers = []): void
     {
         $url = $this->session->get('_previous_url', '/');
 
-        return $this->to($url, $statusCode, $headers);
+        $this->to($url, $statusCode, $headers);
     }
 
-    public function intended(int $statusCode = 302, array $headers = []): self
+    public function intended(int $statusCode = 302, array $headers = []): void
     {
         $url = $this->session->get('_intended_url', '/');
 
         $this->session->delete('_intended_url');
 
-        return $this->to($url, $statusCode, $headers);
+        $this->to($url, $statusCode, $headers);
     }
 
-    public function refresh(int $statusCode = 302, array $headers = []): self
+    public function refresh(int $statusCode = 302, array $headers = []): void
     {
-        return $this->to($this->request->fullUrl(), $statusCode, $headers);
+        $this->to($this->request->fullUrl(), $statusCode, $headers);
     }
 
     public function boot(Request $request, Session $session, Url $url)

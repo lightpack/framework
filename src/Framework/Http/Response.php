@@ -328,6 +328,8 @@ class Response
         if (!$this->redirectUrl) {
             $this->sendContent();
         }
+
+        exit;
     }
 
     /**
