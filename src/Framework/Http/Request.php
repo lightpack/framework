@@ -41,7 +41,7 @@ class Request
     public function fullpath(): string
     {
         $path = explode('?', $_SERVER['REQUEST_URI'])[0];
-
+        
         return '/' . trim($path, '/');
     }
 
@@ -64,6 +64,16 @@ class Request
         }
 
         return $segments[$index] ?? null;
+    }
+
+    public function url(): string
+    {
+        return $this->scheme() . '://' . $this->host() . $this->fullpath();
+    }
+
+    public function fullUrl(): string
+    {
+        return $this->scheme() . '://' . $this->host() . $this->uri();
     }
 
     public function get(?string $key = null, $default = null)

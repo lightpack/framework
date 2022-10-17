@@ -29,9 +29,9 @@ if (!function_exists('redirect')) {
     /** 
      * Redirect to URI.
      */
-    function redirect($uri = '/', $code = 302)
+    function redirect(): \Lightpack\Http\Redirect
     {
-        response()->redirect($uri, $code);
+        return app('redirect');
     }
 }
 
@@ -41,7 +41,7 @@ if (!function_exists('csrf_input')) {
      */
     function csrf_input(): string
     {
-        return '<input type="hidden" name="csrf_token" value="' . session()->token() . '">';
+        return '<input type="hidden" name="_token" value="' . session()->token() . '">';
     }
 }
 

@@ -13,7 +13,15 @@ class SessionProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->register('session', function ($container) {
-            return new Session($this->getDriver());
+
+            /** @var \Lightpack\Http\Request */
+            $request = $container->get('request');
+
+            $session = new Session($this->getDriver());
+
+            if($request->isGet()) {
+                $session->set('_previous_url', $request->fullUrl());
+            }
         });
 
         $container->alias(Session::class, 'session');

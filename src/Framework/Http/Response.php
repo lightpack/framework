@@ -11,62 +11,42 @@ class Response
      *
      * @var string
      */
-    protected $type;
+    protected $type = 'text/html';
 
     /**
      * Represents HTTTP response body
      *
      * @var string
      */
-    protected $body;
+    protected $body = '';
 
     /**
      * Represents HTTP response status code
      *
      * @var int
      */
-    protected $code;
+    protected $code = 200;
 
     /**
      * Represents HTTP response status message
      *
      * @var string
      */
-    protected $message;
+    protected $message = 'OK';
 
     /**
      * Represents HTTP response headers.
      * 
      * @var array
      */
-    protected $headers;
+    protected $headers = [];
 
     /**
-     * Redirect URL
+     * Represents HTTP response redirect url.
      * 
      * @var string
      */
-    protected $redirectUrl;
-
-    /**
-     * @var \Lightpack\Utils\Url
-     */
-    protected $url;
-
-    /**
-     * Class contructor
-     *
-     * @access  public
-     */
-    public function __construct(Url $url)
-    {
-        $this->code    = 200;
-        $this->type    = 'text/html';
-        $this->message = 'OK';
-        $this->headers = [];
-        $this->body    = '';
-        $this->url     = $url;
-    }
+    protected $redirectUrl = '';
 
     /**
      * Return HTTP response status code.
@@ -129,14 +109,6 @@ class Response
     public function getBody(): string
     {
         return $this->body;
-    }
-
-    /**
-     * Return redirect URL.
-     */
-    public function getRedirectUrl(): string
-    {
-        return $this->redirectUrl;
     }
 
     /**
@@ -219,6 +191,30 @@ class Response
     {
         $this->body = $body;
         return $this;
+    }
+
+    /**
+     * This method sets the HTTP response redirect url.
+     *
+     * @access  public
+     * @param  string  $url
+     * @return  self
+     */
+    public function setRedirectUrl(string $url): self
+    {
+        $this->redirectUrl = $url;
+        return $this;
+    }
+
+    /**
+     * This method returns the HTTP response redirect url.
+     *
+     * @access  public
+     * @return  string
+     */
+    public function getRedirectUrl(): string
+    {
+        return $this->redirectUrl;
     }
 
     /**
@@ -332,27 +328,6 @@ class Response
         if (!$this->redirectUrl) {
             $this->sendContent();
         }
-    }
-
-    /**
-     * This method redirects response to the specified URL.
-     * 
-     * @access  public
-     * @return  void
-     */
-    public function redirect(string $url = '/', int $code = 302): void
-    {
-        if (filter_var($url, FILTER_VALIDATE_URL)) {
-            $this->redirectUrl = $url;
-        } else {
-            $this->redirectUrl = $this->url->to($url);
-        }
-
-        $this->setCode($code);
-        $this->setHeader('Location', $this->redirectUrl);
-        $this->sendHeaders();
-
-        exit;
     }
 
     /**
