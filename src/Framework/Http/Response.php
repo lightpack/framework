@@ -51,7 +51,6 @@ class Response
     /**
      * Return HTTP response status code.
      *
-     * @access  public
      * @return int  $code
      */
     public function getCode(): int
@@ -62,7 +61,6 @@ class Response
     /**
      * Return HTTP response content type.
      *
-     * @access  public
      * @return string  $type
      */
     public function getType(): string
@@ -73,7 +71,6 @@ class Response
     /**
      * Return HTTP response status message.
      *
-     * @access  public
      * @return string  $message
      */
     public function getMessage(): string
@@ -84,7 +81,6 @@ class Response
     /**
      * Return HTTP response headers.
      *
-     * @access  public
      * @return array  $headers
      */
     public function getHeaders(): array
@@ -103,7 +99,6 @@ class Response
     /**
      * Return HTTP response body.
      *
-     * @access  public
      * @return string  $body
      */
     public function getBody(): string
@@ -114,7 +109,6 @@ class Response
     /**
      * This method sets the HTTP response code.
      *
-     * @access  public
      * @param  int  $code 
      * @return  self
      */
@@ -127,7 +121,6 @@ class Response
     /**
      * This method sets a response header.
      *
-     * @access  public
      * @param  string  $name  
      * @param  string  $value  
      * @return  self
@@ -141,7 +134,6 @@ class Response
     /**
      * This method sets multiple response headers.
      *
-     * @access  public
      * @param  array  $headers  An array of $name => $value header pairs.
      * @return  self
      */
@@ -157,7 +149,6 @@ class Response
     /**
      * This method sets the HTTP response message supplied by the client.
      *
-     * @access  public
      * @param  string  $message 
      * @return  self
      */
@@ -170,7 +161,6 @@ class Response
     /**
      * This method sets the HTTP response content type.
      *
-     * @access  public
      * @param  string  $message 
      * @return  self
      */
@@ -183,7 +173,6 @@ class Response
     /**
      * This method sets the HTTP response content.
      *
-     * @access  public
      * @param  string  $body
      * @return  self
      */
@@ -196,7 +185,6 @@ class Response
     /**
      * This method sets the HTTP response redirect url.
      *
-     * @access  public
      * @param  string  $url
      * @return  self
      */
@@ -209,7 +197,6 @@ class Response
     /**
      * This method returns the HTTP response redirect url.
      *
-     * @access  public
      * @return  string
      */
     public function getRedirectUrl(): string
@@ -220,7 +207,6 @@ class Response
     /**
      * This method sets the HTTP response content as JSON.
      * 
-     * @access  public
      * @param  mixed  $data
      * @return  self
      */
@@ -241,13 +227,25 @@ class Response
     /**
      * This method sets the HTTP response content as JSON.
      * 
-     * @access  public
      * @param  string  $data    XML formatted string.
      * @return  self
      */
     public function xml(string $data): self
     {
         $this->setType('text/xml');
+        $this->setBody($data);
+        return $this;
+    }
+
+    /**
+     * This method sets the HTTP response content as Text.
+     * 
+     * @param  string  $data    Text formatted string.
+     * @return  self
+     */
+    public function text(string $data): self
+    {
+        $this->setType('text/plain');
         $this->setBody($data);
         return $this;
     }
@@ -301,7 +299,6 @@ class Response
     /**
      * This method sets the HTTP response content as HTML.
      * 
-     * @access  public
      * @param  string  $data    XML formatted string.
      * @return  self
      */
@@ -316,7 +313,6 @@ class Response
     /**
      * This method sends the response to the client.
      * 
-     * @access  public
      * @return  void
      */
     public function send(): void

@@ -2,6 +2,7 @@
 
 namespace Lightpack\Auth;
 
+use Lightpack\Http\Redirect;
 use Lightpack\Auth\Authenticators\BearerAuthenticator;
 use Lightpack\Auth\Authenticators\CookieAuthenticator;
 use Lightpack\Auth\Authenticators\FormAuthenticator;
@@ -58,23 +59,24 @@ class AuthManager
         return session()->get('user');
     }
 
-    public function redirectLogin()
+    public function redirectLogin(): Redirect
     {
         $url = $this->normalizedConfig['login.redirect'];
-        redirect($url);
+        return redirect($url);
     }
 
-    public function redirectLogout()
+    public function redirectLogout(): Redirect
     {
         $url = $this->normalizedConfig['logout.redirect'];
 
-        redirect($url);
+        return redirect($url);
     }
 
-    public function redirectLoginUrl()
+    public function redirectLoginUrl(): Redirect
     {
         $url = $this->normalizedConfig['login.url'];
-        redirect($url);
+        
+        return redirect($url);
     }
 
     public function attempt(): Result

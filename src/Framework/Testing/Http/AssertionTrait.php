@@ -3,6 +3,7 @@
 namespace Lightpack\Testing\Http;
 
 use Lightpack\Utils\Arr;
+use Lightpack\Http\Redirect;
 use Lightpack\Exceptions\RouteNotFoundException;
 
 trait AssertionTrait
@@ -40,6 +41,11 @@ trait AssertionTrait
     public function assertResponseHasHeader(string $header)
     {
         $this->assertTrue($this->response->hasHeader($header));
+    }
+
+    public function assertResponseIsRedirect()
+    {
+        $this->assertInstanceof(Redirect::class, $this->response);
     }
 
     public function assertRedirectUrl(string $url)

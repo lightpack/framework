@@ -42,7 +42,7 @@ class Auth
         }
 
         $this->manager->persist();
-        $this->manager->redirectLogin();
+        return $this->manager->redirectLogin();
     }
 
     public function logout()
@@ -51,13 +51,13 @@ class Auth
         
         session()->destroy();
 
-        $this->manager->redirectLogout();
+        return $this->manager->redirectLogout();
     }
 
     public function recall()
     {
         if (session()->get('authenticated')) {
-            $this->manager->redirectLogin();
+            return $this->manager->redirectLogin();
         } else {
             $this->manager->checkRememberMe();
         }
@@ -111,16 +111,16 @@ class Auth
 
     public function redirectLogin()
     {
-        $this->manager->redirectLogin();
+        return $this->manager->redirectLogin();
     }
 
     public function redirectLogout()
     {
-        $this->manager->redirectLogout();
+        return $this->manager->redirectLogout();
     }
 
     public function redirectLoginUrl()
     {
-        $this->manager->redirectLoginUrl();
+        return $this->manager->redirectLoginUrl();
     }
 }

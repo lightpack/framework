@@ -115,4 +115,12 @@ final class ResponseTest extends TestCase
         $this->assertEquals('text/xml', $this->response->getType());
         $this->assertEquals($data, $this->response->getBody());
     }
+
+    public function testResponseTextMethod()
+    {
+        $data = 'text-string';
+        $this->response->text($data);
+        $this->assertEquals('text/plain', $this->response->getType());
+        $this->assertEquals($data, $this->response->getBody());
+    }
 }

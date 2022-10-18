@@ -2,6 +2,7 @@
 
 namespace Lightpack;
 
+use JsonSerializable;
 use Lightpack\Http\Response;
 use Lightpack\Routing\Dispatcher;
 use Lightpack\Container\Container;
@@ -66,11 +67,7 @@ final class App
         }
 
         // Dispatch app request.
-        $result = $dispatcher->dispatch();
-
-        if ($result instanceof Response) {
-            $response = $result;
-        }
+        $response = self::prepareResponse($dispatcher->dispatch());
 
         // Process after filters.
         $filter->setResponse($response);
@@ -124,5 +121,30 @@ final class App
 
             $filter->register($router->getRoute()->getUri(), $filtersConfig[$filterName], $params);
         }
+    }
+
+    private static function prepareResponse(mixed $response): Response
+    {
+        if ($response instanceof Response) {
+            return $response;
+        }
+
+        if (is_string($response)) {
+            return (new Response)->setBody($response);
+        }
+
+        if (is_array($response)) {
+            return (new Response)->json($response);
+        }
+
+        if ($response instanceof \stdClass) {
+            return (new Response)->json((array) $response);
+        }
+
+        if ($response instanceof JsonSerializable) {
+            return (new Response)->json($response);
+        }
+
+        return (new Response);
     }
 }

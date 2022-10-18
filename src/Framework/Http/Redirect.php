@@ -16,47 +16,51 @@ class Redirect extends Response
     /** @var \Lightpack\Utils\Url */
     protected $url;
 
-    public function to(string $url, int $statusCode = 302, array $headers = []): void
+    public function to(string $url, int $statusCode = 302, array $headers = []): self
     {
-        $this->setRedirectUrl($url)
+        return $this->setRedirectUrl($url)
             ->setCode($statusCode)
             ->setHeaders($headers)
-            ->setHeader('Location', $url)
-            ->send();
+            ->setHeader('Location', $url);
     }
 
-    public function route(string $name, array $params = [], int $statusCode = 302, array $headers = []): void
+    public function route(string $name, array $params = [], int $statusCode = 302, array $headers = []): self
     {
         $url = $this->url->route($name, ...$params);
 
-        $this->to($url, $statusCode, $headers);
+        return $this->to($url, $statusCode, $headers);
     }
 
-    public function back(int $statusCode = 302, array $headers = []): void
+    public function back(int $statusCode = 302, array $headers = []): self
     {
         $url = $this->session->get('_previous_url', '/');
 
-        $this->to($url, $statusCode, $headers);
+        return $this->to($url, $statusCode, $headers);
     }
 
-    public function intended(int $statusCode = 302, array $headers = []): void
+    public function intended(int $statusCode = 302, array $headers = []): self
     {
         $url = $this->session->get('_intended_url', '/');
 
         $this->session->delete('_intended_url');
 
-        $this->to($url, $statusCode, $headers);
+        return $this->to($url, $statusCode, $headers);
     }
 
-    public function refresh(int $statusCode = 302, array $headers = []): void
+    public function refresh(int $statusCode = 302, array $headers = []): self
     {
-        $this->to($this->request->fullUrl(), $statusCode, $headers);
+        return $this->to($this->request->fullUrl(), $statusCode, $headers);
     }
 
-    public function boot(Request $request, Session $session, Url $url)
+    /**
+     * @internal This method is for internal use only.
+     */
+    public function boot(Request $request, Session $session, Url $url): self
     {
         $this->request = $request;
         $this->session = $session;
         $this->url = $url;
+
+        return $this;
     }
 }
