@@ -16,14 +16,14 @@ final class ResponseTest extends TestCase
     
     public function testResponseSetCodeMethod()
     {
-        $this->assertSame($this->response,  $this->response->setCode(200));
+        $this->assertSame($this->response,  $this->response->setStatus(200));
     }
 
-    public function testResponseGetCodeMethod()
+    public function testResponseGetStatusMethod()
     {
-        $this->assertEquals(200, $this->response->getCode());
-        $this->response->setCode(302);
-        $this->assertEquals(302, $this->response->getCode());
+        $this->assertEquals(200, $this->response->getStatus());
+        $this->response->setStatus(302);
+        $this->assertEquals(302, $this->response->getStatus());
     }
     
     public function testResponseSetMessageMethod()
