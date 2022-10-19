@@ -12,7 +12,7 @@ class CorsFilter implements IFilter
     {
         if (request()->method() === 'OPTIONS') {
             return response()
-                ->setCode(204)
+                ->setStatus(204)
                 ->setMessage('No Content')
                 ->setType('text/plain')
                 ->setHeaders(config('cors.headers'));

@@ -19,7 +19,7 @@ class Redirect extends Response
     public function to(string $url, int $statusCode = 302, array $headers = []): self
     {
         return $this->setRedirectUrl($url)
-            ->setCode($statusCode)
+            ->setStatus($statusCode)
             ->setHeaders($headers)
             ->setHeader('Location', $url);
     }

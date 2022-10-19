@@ -17,7 +17,7 @@ class AuthFilter implements IFilter
         }
 
         if('api' === $type && false === auth()->viaToken()->isSuccess()) {
-            return response()->setCode(401)->json([
+            return response()->setStatus(401)->json([
                 'error' => 'Unauthorized',
             ]);
         }

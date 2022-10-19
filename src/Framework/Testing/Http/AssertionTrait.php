@@ -10,7 +10,7 @@ trait AssertionTrait
 {
     public function assertResponseStatus(int $code)
     {
-        $this->assertEquals($code, $this->response->getCode());
+        $this->assertEquals($code, $this->response->getStatus());
     }
 
     public function assertResponseBody(string $body)

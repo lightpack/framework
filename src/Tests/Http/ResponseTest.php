@@ -14,7 +14,7 @@ final class ResponseTest extends TestCase
         $this->response = new \Lightpack\Http\Response(new Url);
     }
     
-    public function testResponseSetCodeMethod()
+    public function testResponseSetStatusMethod()
     {
         $this->assertSame($this->response,  $this->response->setStatus(200));
     }
