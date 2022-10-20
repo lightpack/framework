@@ -73,13 +73,11 @@ final class RequestTest extends TestCase
 
     public function testRequestQueryString()
     {
+        $_GET = ['status' => 1, 'level' => 3];
         $request = new Request($this->basepath);
 
-        $this->assertSame(
-            $this->query,
-            $request->query(),
-            "Request query should be {$this->query}"
-        );
+        $this->assertIsArray($request->query());
+        $this->assertEquals(['status' => 1, 'level' => 3], $request->query());
     }
 
     public function testRequestGetParams()

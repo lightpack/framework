@@ -40,9 +40,9 @@ class Request
         return $_SERVER['REQUEST_URI'];
     }
 
-    public function query(): string
+    public function query(string $key = null, $default = null)
     {
-        return explode('?', $this->uri())[1] ?? '';
+        return $this->queryData($key, $default);
     }
 
     public function basepath(): string
@@ -122,7 +122,10 @@ class Request
         return $this->rawBody[$key] ?? $default;
     }
 
-    public function input(?string $key = null, $default = null)
+    /**
+     * Return HTTP request input data from get, post, put, patch, delete requests.
+     */
+    public function input(?string $key = null, $default = null): mixed
     {
         if($this->isJson()) {
             return $this->json($key, $default);
