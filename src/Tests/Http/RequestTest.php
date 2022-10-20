@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Lightpack\Exceptions\InvalidHttpMethodException;
+use Lightpack\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 final class RequestTest extends TestCase
@@ -11,11 +13,11 @@ final class RequestTest extends TestCase
     private $fullpath;
     private $path;
     private $query;
-    private $request;
 
     public function setUp(): void
     {
         $basepath = '/lightpack';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = $basepath . '/users/23?status=1&level=3';
 
         $this->uri = $_SERVER['REQUEST_URI'];
@@ -23,50 +25,59 @@ final class RequestTest extends TestCase
         $this->fullpath = explode('?', $this->uri)[0];
         $this->path = substr($this->fullpath, strlen($this->basepath));
         $this->query = explode('?', $this->uri)[1] ?? '';
-        $this->request = new \Lightpack\Http\Request($this->basepath);
     }
 
     public function testRequestPath()
     {
+        $request = new Request($this->basepath);
+
         $this->assertSame(
             $this->path,
-            $this->request->path(),
+            $request->path(),
             "Request path should be {$this->path}"
         );
     }
 
     public function testRequestBasePath()
     {
+        $request = new Request($this->basepath);
+
         $this->assertSame(
             $this->basepath,
-            $this->request->basepath(),
+            $request->basepath(),
             "Basepath should be {$this->basepath}"
         );
     }
 
     public function testRequestFullPath()
     {
+        $request = new Request($this->basepath);
+        
         $this->assertSame(
             $this->fullpath,
-            $this->request->fullpath(),
+            $request->fullpath(),
             "Full request path should be {$this->fullpath}"
         );
     }
 
     public function testRequestUrl()
     {
+        $request = new Request($this->basepath);
+
         $this->assertSame(
             $this->uri,
-            $this->request->uri(),
+            $request->uri(),
             "Request URI should be {$this->uri}"
         );
     }
 
     public function testRequestQueryString()
     {
+        $request = new Request($this->basepath);
+
         $this->assertSame(
             $this->query,
-            $this->request->query(),
+            $request->query(),
             "Request query should be {$this->query}"
         );
     }
@@ -77,23 +88,23 @@ final class RequestTest extends TestCase
 
         $this->assertSame(
             $_GET['name'],
-            $this->request->get('name'),
+            (new Request)->input('name'),
             "GET[name] should be {$_GET['name']}"
         );
 
         $this->assertSame(
             'Mumbai',
-            $this->request->get('city', 'Mumbai'),
+            (new Request)->input('city', 'Mumbai'),
             'GET[city] should be Mumbai'
         );
 
         $this->assertSame(
             null,
-            $this->request->get('foo'),
+            (new Request)->input('foo'),
             'GET[foo] should be null'
         );
 
-        $this->assertEquals($_GET, $this->request->get());
+        $this->assertEquals($_GET, (new Request)->input());
     }
 
     public function testRequestPostParams()
@@ -102,23 +113,23 @@ final class RequestTest extends TestCase
 
         $this->assertSame(
             $_POST['name'],
-            $this->request->post('name'),
+            (new Request)->input('name'),
             "POST[name] should be {$_POST['name']}"
         );
 
         $this->assertSame(
             'Mumbai',
-            $this->request->post('city', 'Mumbai'),
+            (new Request)->input('city', 'Mumbai'),
             'POST[city] should be Mumbai'
         );
 
         $this->assertSame(
             null,
-            $this->request->post('foo'),
+            (new Request)->input('foo'),
             'POST[foo] should be null'
         );
 
-        $this->assertEquals($_POST, $this->request->post());
+        $this->assertEquals($_POST, (new Request)->input());
     }
 
     public function testRequestMethod()
@@ -127,7 +138,7 @@ final class RequestTest extends TestCase
 
         $this->assertSame(
             'GET',
-            $this->request->method(),
+            (new Request)->method(),
             'Request method should be GET'
         );
     }
@@ -137,7 +148,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
         $this->assertTrue(
-            $this->request->isGet(),
+            (new Request)->isGet(),
             'Request method should be GET'
         );
     }
@@ -147,7 +158,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'POST';
 
         $this->assertTrue(
-            $this->request->isPost(),
+            (new Request)->isPost(),
             'Request method should be POST'
         );
     }
@@ -157,7 +168,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'PUT';
 
         $this->assertTrue(
-            $this->request->isPut(),
+            (new Request)->isPut(),
             'Request method should be PUT'
         );
     }
@@ -167,7 +178,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'PATCH';
 
         $this->assertTrue(
-            $this->request->isPatch(),
+            (new Request)->isPatch(),
             'Request method should be PATCH'
         );
     }
@@ -177,64 +188,63 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'DELETE';
 
         $this->assertTrue(
-            $this->request->isDelete(),
+            (new Request)->isDelete(),
             'Request method should be DELETE'
         );
     }
 
     public function testRequestIsValid()
     {
-        foreach($this->request->verbs() as $verb) {
-            $_SERVER['REQUEST_METHOD'] = $verb;
-            $this->assertTrue($this->request->isValid());
-        }
-
+        $this->expectException(InvalidHttpMethodException::class);
+        
         $_SERVER['REQUEST_METHOD'] = 'GETPOST';
-        $this->assertFalse($this->request->isValid());
+        $request = new Request();
     }
 
     public function testRequestIsAjax()
     {
         $_SERVER['X-Requested-With']= 'XMLHttpRequest';
-        $this->assertTrue($this->request->isAjax());
+        $this->assertTrue((new Request)->isAjax());
     }
 
     public function testRequestIsJson()
     {
         $_SERVER['CONTENT_TYPE'] = 'application/json';
-        $this->assertTrue($this->request->isJson());
+        $this->assertTrue((new Request)->isJson());
 
         $_SERVER['CONTENT_TYPE'] = 'application/xml';
-        $this->assertFalse($this->request->isJson());
+        $this->assertFalse((new Request)->isJson());
     }
 
     public function testRequestIsSecure()
     {
         $_SERVER['HTTPS'] = 'on';
-        $this->assertTrue($this->request->isSecure());
+        $this->assertTrue((new Request)->isSecure());
     }
 
     public function testRequestScheme()
     {
         $_SERVER['HTTPS'] = 'off';
-        $this->assertEquals('http', $this->request->scheme());
+        $this->assertEquals('http', (new Request)->scheme());
     }
 
     public function testRequestHost()
     {
         $_SERVER['HTTP_HOST'] = 'example.com';
-        $this->assertEquals('example.com', $this->request->host());
+        $this->assertEquals('example.com', (new Request)->host());
     }
 
     public function testRequestProtocol()
     {
-        $this->assertEquals('HTTP/1.1', $this->request->protocol());
+        $this->assertEquals('HTTP/1.1', (new Request)->protocol());
     }
 
     public function testRequestSegments()
     {
-        $this->assertEquals(['users', 23], $this->request->segments());
-        $this->assertEquals('users', $this->request->segments(0));
-        $this->assertEquals(23, $this->request->segments(1));
+        $request = new Request($this->basepath);
+
+        $this->assertEquals(['users', 23], $request->segments());
+        $this->assertEquals('users', $request->segments(0));
+        $this->assertEquals(23, $request->segments(1));
     }
 }

@@ -2,18 +2,37 @@
 
 namespace Lightpack\Http;
 
+use Lightpack\Exceptions\InvalidHttpMethodException;
+
 class Request
 {
-    private $files;
-    private $headers;
-    private $basepath;
-    private static $verbs = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+    private Files $files;
+    private Header $headers;
+    private string $basepath;
+    private string $method;
+    private array $jsonBody;
+    private string $rawBody;
+    private string $parsedBody;
+    private bool $isSpoofed = false;
+    private static array $verbs = [
+        'GET', 
+        'POST', 
+        'PUT', 
+        'PATCH', 
+        'DELETE',
+        'HEAD',
+        'OPTIONS',
+        'CONNECT',
+        'TRACE',
+        'PURGE',
+    ];
 
     public function __construct(string $basepath = null)
     {
         $this->basepath = $basepath ?? dirname($_SERVER['SCRIPT_NAME']);
         $this->files = new Files($_FILES ?? []);
         $this->headers = new Header;
+        $this->setMethod();
     }
 
     public function uri(): string
@@ -76,43 +95,64 @@ class Request
         return $this->scheme() . '://' . $this->host() . $this->uri();
     }
 
-    public function get(?string $key = null, $default = null)
-    {
-        if(null === $key) {
-            return $_GET;
-        }
-
-        return $_GET[$key] ?? $default;
-    }
-
-    public function post(?string $key = null, $default = null)
-    {
-        if(null === $key) {
-            return $_POST;
-        }
-
-        return $_POST[$key] ?? $default;
-    }
-
     public function method(): string
     {
-        return strtoupper($_SERVER['REQUEST_METHOD']);
+        return $this->method;
     }
 
-    public function body(): string
+    public function getRawBody(): string
     {
-        return $_SERVER['X_LIGHTPACK_RAW_INPUT'] ?? file_get_contents('php://input');
-    }
-
-    public function json(): array
-    {
-        $json = json_decode($this->body(), true);
-
-        if($json === null) {
-            throw new \RuntimeException('Error decoding request body as JSON');
+        if(empty($this->rawBody)) {
+            $this->parseBody();
         }
 
-        return $json;
+        return $this->rawBody;
+    }
+
+    public function getParsedBody(?string $key = null, $default = null): string
+    {
+        if(empty($this->parsedBody)) {
+            parse_str($this->getRawBody(), $this->parsedBody);
+        }
+
+        if(null === $key) {
+            return $this->parsedBody;
+        }
+
+        return $this->rawBody[$key] ?? $default;
+    }
+
+    public function input(?string $key = null, $default = null)
+    {
+        if($this->isJson()) {
+            return $this->json($key, $default);
+        }
+
+        if($this->isSpoofed()) {
+            return $this->postData($key, $default);
+        }
+
+        match($this->method) {
+            'GET' => $value = $this->queryData($key, $default),
+            'POST' => $value = $this->postData($key, $default),
+            'PUT', 'PATCH', 'DELETE' => $value = $this->getParsedBody($key, $default),
+        };
+
+        // Always fallback to $_GET
+        return $value ?? $this->queryData($key, $default);
+    }
+
+    public function json(?string $key = null, $default = null): array
+    {
+        if(empty($this->jsonBody)) {
+            $this->parseJson();
+        }
+
+        if(null === $key) {
+            return $this->jsonBody;
+        }
+
+        return $this->jsonBody[$key] ?? $default;
     }
 
     public function files()
@@ -132,32 +172,32 @@ class Request
 
     public function isGet(): bool
     {
-        return $this->method() === 'GET';
+        return $this->method === 'GET';
     }
 
     public function isPost(): bool
     {
-        return $this->method() === 'POST';
+        return $this->method === 'POST';
     }
 
     public function isPut()
     {
-        return $this->method() === 'PUT';
+        return $this->method === 'PUT';
     }
 
     public function isPatch()
     {
-        return $this->method() === 'PATCH';
+        return $this->method === 'PATCH';
     }
 
     public function isDelete()
     {
-        return $this->method() === 'DELETE';
+        return $this->method === 'DELETE';
     }
 
-    public function isValid()
+    public function isSpoofed(): bool
     {
-        return in_array($this->method(), self::$verbs);
+        return $this->isSpoofed;
     }
 
     public function isAjax()
@@ -248,5 +288,65 @@ class Request
     public function referer(): ?string
     {
         return $_SERVER['HTTP_REFERER'] ?? null;
+    }
+
+    public function setMethod(string $method = null): self
+    {
+        $method = $method ?? ($_SERVER['REQUEST_METHOD'] ?? 'GET');
+        $method = strtoupper($method);
+
+        if('POST' === $method) {
+            // has it been spoofed?
+            $method = strtoupper($_POST['_method'] ?? $method);
+            $this->isSpoofed = isset($_POST['_method']);
+        }
+
+        if(! in_array($method, self::$verbs)) {
+            throw new InvalidHttpMethodException('Invalid HTTP request method ' . $method);
+        }
+
+        $this->method = $method;
+
+        return $this;
+    }
+
+    private function parseBody()
+    {
+         $rawBody = $_SERVER['X_LIGHTPACK_RAW_INPUT'] ?? file_get_contents('php://input');
+
+        if (empty($rawBody)) {
+            return;
+        }
+
+        $this->rawBody = $rawBody;
+    }
+
+    private function parseJson()
+    {
+        $json = json_decode($this->getRawBody(), true);
+
+        if($json === null) {
+            throw new \RuntimeException('Error decoding request body as JSON');
+        }
+
+        $this->jsonBody = $json;
+    }
+
+    private function queryData(string $key = null, $default = null)
+    {
+        if(null === $key) {
+            return $_GET;
+        }
+
+        return $_GET[$key] ?? $default;
+    }
+
+    private function postData(string $key = null, $default = null)
+    {
+        if(null === $key) {
+            return $_POST;
+        }
+
+        return $_POST[$key] ?? $default;
     }
 }

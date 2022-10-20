@@ -400,11 +400,11 @@ class Query
         $columns = $this->columns;
         $total = $this->count();
         $this->columns = $columns;
-        $page = $page ?? request()->get('page');
+        $page = $page ?? request()->input('page');
         $page = (int) $page;
         $page = $page > 0 ? $page : 1;
 
-        $limit = $limit ?: request()->get('limit', 10);
+        $limit = $limit ?: request()->input('limit', 10);
 
         $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);

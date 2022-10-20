@@ -9,7 +9,7 @@ class FormAuthenticator extends AbstractAuthenticator
 {
     public function verify(): Result
     {
-        $credentials = request()->isJson() ? request()->json() : request()->post();
+        $credentials = request()->input();
 
         if(empty($credentials)) {
             return new Result;

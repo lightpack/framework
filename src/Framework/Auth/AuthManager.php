@@ -133,7 +133,7 @@ class AuthManager
 
         $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
 
-        if (request()->post($rememberTokenField)) {
+        if (request()->input($rememberTokenField)) {
             cookie()->forever($rememberTokenField, self::$identity->get($rememberTokenField));
         }
     }
@@ -165,7 +165,7 @@ class AuthManager
 
         $fields[$lastLoginField] = date('Y-m-d H:i:s');
 
-        if (request()->post($rememberTokenField)) {
+        if (request()->input($rememberTokenField)) {
             $fields[$rememberTokenField] = $this->generateRememberToken();
         } else {
             $fields[$apiTokenField] = $this->hashToken($this->generateApiToken());
