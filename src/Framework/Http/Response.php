@@ -224,6 +224,8 @@ class Response
 
         $this->setBody(file_get_contents($path));
         $this->setHeaders($headers);
+
+        return $this;
     }
 
     /**
