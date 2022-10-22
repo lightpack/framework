@@ -242,7 +242,7 @@ class Request
 
     public function format()
     {
-        return $_SERVER['CONTENT_TYPE'] ?? null;
+        return $_SERVER['CONTENT_TYPE'] ?? '';
     }
 
     public function verbs()

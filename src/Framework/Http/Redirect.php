@@ -18,6 +18,10 @@ class Redirect extends Response
 
     public function to(string $url, int $statusCode = 302, array $headers = []): self
     {
+        if(filter_var($url, FILTER_VALIDATE_URL) === false) {
+            $url = $this->url->to($url);
+        }
+
         return $this->setRedirectUrl($url)
             ->setStatus($statusCode)
             ->setHeaders($headers)

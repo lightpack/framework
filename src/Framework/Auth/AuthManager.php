@@ -68,7 +68,7 @@ class AuthManager
     public function redirectLogout(): Redirect
     {
         $url = $this->normalizedConfig['logout.redirect'];
-
+        
         return redirect($url);
     }
 
