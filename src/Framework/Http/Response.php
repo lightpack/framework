@@ -286,11 +286,11 @@ class Response
      */
     private function sendHeaders(): void
     {
-        header(sprintf("HTTP/1.1 %s %s", $this->code, $this->message));
+        header(sprintf("HTTP/1.1 %s %s", $this->status, $this->message));
         header(sprintf("Content-Type: %s; charset=UTF-8", $this->type));
 
         foreach ($this->headers as $name => $value) {
-            header(sprintf("%s: %s", $name, $value), true, $this->getStatus());
+            header(sprintf("%s: %s", $name, $value), true, $this->status);
         }
     }
 
