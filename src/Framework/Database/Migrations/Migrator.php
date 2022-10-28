@@ -3,6 +3,7 @@
 namespace Lightpack\Database\Migrations;
 
 use Lightpack\Database\DB;
+use Lightpack\Database\Schema\Schema;
 use Lightpack\File\File;
 
 class Migrator
@@ -35,11 +36,12 @@ class Migrator
             $migrationFilepath = $migrationFile->getPathname();
 
             // Execute migration
-            $sql = file_get_contents($migrationFilepath);
+            $migrationClass = require $migrationFilepath;
+            $migrationClass = new $migrationClass();
+            $migrationClass->boot(new Schema($this->connection));
+            $sql = $migrationClass->up();
 
-            if (trim($sql)) {
-                $this->connection->query($sql);
-            }
+            $sql && $this->connection->query($sql);
 
             // Record migration
             $sql = "INSERT INTO migrations (migration, batch) VALUES ('{$migration}', {$nextBatch});";
@@ -80,11 +82,12 @@ class Migrator
                 $migrationFilepath = $migrationFile->getPathname();
 
                 // Execute migration
-                $sql = file_get_contents($migrationFilepath);
+                $migrationClass = require $migrationFilepath;
+                $migrationClass = new $migrationClass();
+                $migrationClass->boot(new Schema($this->connection));
+                $sql = $migrationClass->down();
 
-                if (trim($sql)) {
-                    $this->connection->query($sql);
-                }
+                $sql && $this->connection->query($sql);
 
                 // Delete migration
                 $sql = "DELETE FROM migrations WHERE migration = '{$migration}'";
@@ -114,7 +117,7 @@ class Migrator
         $files = (new File)->traverse($path);
 
         foreach ($files as $index => $file) {
-            if ($file->getExtension() !== 'sql') {
+            if ($file->getExtension() !== 'php') {
                 unset($files[$index]);
             }
         }

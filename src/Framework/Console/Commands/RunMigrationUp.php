@@ -26,7 +26,7 @@ class RunMigrationUp implements ICommand
 
         $migrator = new Migrator($this->getConnection($config));
 
-        $migrator->run(DIR_ROOT . '/database/migrations/up');
+        $migrator->run(DIR_ROOT . '/database/migrations');
         
         fputs(STDOUT, "✓ Migrations created.\n\n");
     }
