@@ -5,6 +5,7 @@ namespace Lightpack\Database\Schema;
 use Lightpack\Database\Schema\Compilers\AddColumn;
 use Lightpack\Database\Schema\Compilers\DropColumn;
 use Lightpack\Database\Schema\Compilers\ModifyColumn;
+use Lightpack\Database\Schema\Compilers\RenameColumn;
 use Lightpack\Utils\Str;
 
 class Table
@@ -51,11 +52,6 @@ class Table
     public function getName()
     {
         return $this->tableName;
-    }
-
-    public function renameColumn(string $oldName, string $newName): void
-    {
-        $this->renameColumns[$oldName] = $newName;
     }
 
     public function getRenameColumns(): array
@@ -231,6 +227,23 @@ class Table
     public function modifyColumn(): string
     {
         $sql = (new ModifyColumn)->compile($this);
+
+        return $sql;
+    }
+
+    /**
+     * Rename a column.
+     *
+     * @param string $table
+     * @param string $oldColumn
+     * @param string $newColumn
+     * @return void
+     */
+    public function renameColumn(string $oldName, string $newName): string
+    {
+        $this->renameColumns[$oldName] = $newName;
+
+        $sql = (new RenameColumn)->compile($this);
 
         return $sql;
     }
