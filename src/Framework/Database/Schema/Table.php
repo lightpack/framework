@@ -98,7 +98,7 @@ class Table
         return $column;
     }
 
-    public function decimal(string $column, int $precision = 8, int $scale = 2): Column
+    public function decimal(string $column, int $precision = 10, int $scale = 2): Column
     {
         $column = new Column($column);
 
