@@ -7,7 +7,7 @@ use Lightpack\Database\Schema\Table;
 
 final class SchemaTest extends TestCase
 {
-    /** @var \Lightpack\Database\Pdo */
+    /** @var \Lightpack\Database\DB */
     private $connection;
 
     /** @var \Lightpack\Database\Schema\Schema */
@@ -32,14 +32,13 @@ final class SchemaTest extends TestCase
 
     public function testSchemaCanCreateTable()
     {
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
 
         $table->id();
         $table->title(125);
         $table->email(125)->nullable();
 
-        $sql = $this->schema->createTable($table);
-        $this->connection->query($sql);
+        $this->schema->createTable($table);
 
         $this->assertTrue(in_array('products', $this->schema->inspectTables()));
     }
@@ -47,16 +46,14 @@ final class SchemaTest extends TestCase
     public function testSchemaCanAlterTableAddColumn()
     {
         // Create products table
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
-        $sql = $this->schema->createTable($table);
-        $this->connection->query($sql);
+        $this->schema->createTable($table);
 
         // Add new column
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
         $table->column('description')->type('text');
-        $sql = $table->addColumn();
-        $this->connection->query($sql);
+        $table->addColumn();
 
         $this->assertTrue(in_array('description', $this->schema->inspectColumns('products')));
     }
@@ -64,20 +61,17 @@ final class SchemaTest extends TestCase
     public function testSchemaCanAlterTableModifyColumn()
     {
         // First drop the table if exists
-        $sql = $this->schema->dropTable('products');
-        $this->connection->query($sql);
+        $this->schema->dropTable('products');
 
         // First create the table
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
         $table->column('description')->type('text');
-        $sql = $this->schema->createTable($table);
-        $this->connection->query($sql);
+        $this->schema->createTable($table);
 
         // Now lets modify the description column
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
         $table->column('description')->type('varchar')->length(150);
-        $sql = $table->modifyColumn();
-        $this->connection->query($sql);
+        $table->modifyColumn();
 
         // If column modified successfully, we should get its type 
         $descriptionColumnInfo = $this->schema->inspectColumn('products', 'description');
@@ -88,14 +82,12 @@ final class SchemaTest extends TestCase
     public function testSchemaCanTruncateTable()
     {
         // Create products table
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
-        $sql = $this->schema->createTable($table);
-        $this->connection->query($sql);
+        $this->schema->createTable($table);
 
         // Truncate the table
-        $sql = $this->schema->truncateTable('products');
-        $this->connection->query($sql);
+        $this->schema->truncateTable('products');
 
         $count = $this->connection->query("SELECT COUNT(*) AS count FROM products")->fetch();
 
@@ -105,14 +97,12 @@ final class SchemaTest extends TestCase
     public function testSchemaCanDropTable()
     {
         // Create products table
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
-        $sql = $this->schema->createTable($table);
-        $this->connection->query($sql);
+        $this->schema->createTable($table);
 
         // Drop the table
-        $sql = $this->schema->dropTable('products');
-        $this->connection->query($sql);
+        $this->schema->dropTable('products');
 
         $this->assertFalse(in_array('products', $this->schema->inspectTables()));
     }
@@ -120,20 +110,18 @@ final class SchemaTest extends TestCase
     public function testSchemaCanAddForeignKey()
     {
         // Create categories table
-        $table = new Table('categories');
+        $table = new Table('categories', $this->connection);
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
         $table->column('title')->type('varchar')->length(55);
-        $sql = $this->schema->createTable($table);
-        $this->connection->query($sql);
+        $this->schema->createTable($table);
 
         // Create products table
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
         $table->column('category_id')->type('int');
         $table->column('title')->type('varchar')->length(55);
         $table->foreignKey('category_id')->references('id')->on('categories');
-        $sql = $this->schema->createTable($table);
-        $this->connection->query($sql);
+        $this->schema->createTable($table);
 
         $this->assertTrue(in_array('products', $this->schema->inspectTables()));
     }

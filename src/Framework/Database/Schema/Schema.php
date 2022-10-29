@@ -17,41 +17,32 @@ class Schema
 
     /**
      * Create a new table.
-     *
-     * @param Table $table
-     * @return void
      */
-    public function createTable(Table $table): string
+    public function createTable(Table $table): void
     {
         $sql = (new CreateTable)->compile($table);
 
-        return $sql;
+        $this->connection->query($sql);
     }
 
     /**
      * Drop a table.
-     *
-     * @param string $table
-     * @return void
      */
-    public function dropTable(string $table): string
+    public function dropTable(string $table): void
     {
         $sql = (new DropTable)->compile($table);
 
-        return $sql;
+        $this->connection->query($sql);
     }
 
     /**
      * Truncate a table.
-     *
-     * @param string $table
-     * @return void
      */
-    public function truncateTable(string $table): string
+    public function truncateTable(string $table): void
     {
         $sql = (new TruncateTable)->compile($table);
 
-        return $sql;
+        $this->connection->query($sql);
     }
 
     /**

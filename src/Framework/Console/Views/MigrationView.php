@@ -13,14 +13,14 @@ use Lightpack\Database\Migrations\Migration;
 
 return new class extends Migration
 {
-    public function up(): string
+    public function up(): void
     {
-        return '';
+        // ...
     }
 
-    public function down(): string
+    public function down(): void
     {
-        return '';
+        // ...
     }
 };
 TEMPLATE;

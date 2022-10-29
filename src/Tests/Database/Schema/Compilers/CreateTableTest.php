@@ -9,9 +9,24 @@ use PHPUnit\Framework\TestCase;
 
 final class CreateTableTest extends TestCase
 {
+    /** @var \Lightpack\Database\DB */
+    private $connection;
+
+    public function setUp(): void
+    {
+        $config = require __DIR__ . '/../../tmp/mysql.config.php';
+
+        $this->connection = new Lightpack\Database\Adapters\Mysql($config);
+    }
+
+    public function tearDown(): void
+    {
+        $this->connection = null;
+    }
+
     public function testCompilerCanCreateTable(): void
     {
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
 
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
         
@@ -24,7 +39,7 @@ final class CreateTableTest extends TestCase
 
     public function testCompilerCanAddForeignKey(): void
     {
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
 
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
         $table->column('category_id')->type('int');
@@ -41,11 +56,7 @@ final class CreateTableTest extends TestCase
 
     public function testCompilerCanRenameColumnSql()
     {
-        $table = new Table('products');
-
-        $table->renameColumn('title', 'heading');
-        
-        $sql = (new RenameColumn)->compile($table);
+        $sql = (new RenameColumn)->compile('products', 'title', 'heading');
 
         $expected = 'ALTER TABLE products RENAME COLUMN title TO heading;';
 
@@ -54,7 +65,7 @@ final class CreateTableTest extends TestCase
 
     public function testcompilerCanChangeColumnSql()
     {
-        $table = new Table('products');
+        $table = new Table('products', $this->connection);
 
         $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
         

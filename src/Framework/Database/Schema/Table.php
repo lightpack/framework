@@ -2,6 +2,7 @@
 
 namespace Lightpack\Database\Schema;
 
+use Lightpack\Database\DB;
 use Lightpack\Database\Schema\Compilers\AddColumn;
 use Lightpack\Database\Schema\Compilers\DropColumn;
 use Lightpack\Database\Schema\Compilers\ModifyColumn;
@@ -10,24 +11,17 @@ use Lightpack\Utils\Str;
 
 class Table
 {
-    private $tableName;
-    private $renameColumns = [];
+    private string $tableName;
+    private ColumnCollection $tableColumns;
+    private ForeignKeyCollection $tableKeys;
+    private DB $connection;
 
-    /**
-     * @var ColumnCollection
-     */
-    private $tableColumns;
-
-    /**
-     * @var ForeignKeyCollection
-     */
-    private $tableKeys;
-
-    public function __construct(string $tableName)
+    public function __construct(string $tableName, DB $connection)
     {
         $this->tableName = $tableName;
         $this->tableColumns = new ColumnCollection();
         $this->tableKeys = new ForeignKeyCollection();
+        $this->connection = $connection;
     }
 
     public function column(string $column): Column
@@ -54,11 +48,6 @@ class Table
         return $this->tableName;
     }
 
-    public function getRenameColumns(): array
-    {
-        return $this->renameColumns;
-    }
-
     public function id(string $name = 'id'): Column
     {
         $column = new Column($name);
@@ -70,7 +59,7 @@ class Table
         return $column;
     }
 
-    public function string(string $name, int $length = 255): Column
+    public function varchar(string $name, int $length = 255): Column
     {
         $column = new Column($name);
 
@@ -192,64 +181,47 @@ class Table
     }
 
     /**
-     * Alter table add columns.
-     *
-     * @param Table $table
-     * @return void
+     * Add one or more columns to the table.
      */
-    public function addColumn(): string
+    public function addColumn(): void
     {
         $sql = (new AddColumn)->compile($this);
 
-        return $sql;
+        $this->connection->query($sql);
     }
 
     /**
-     * Drop columns in a table.
-     *
-     * @param string $table
-     * @param string ...$columns
-     * @return void
+     * Drop one or more columns in a table.
      */
-    public function dropColumn(string ...$columns): string
+    public function dropColumn(string ...$column): void
     {
-        $sql = (new DropColumn)->compile($this->getName(), ...$columns);
+        $sql = (new DropColumn)->compile($this->getName(), ...$column);
 
-        return $sql;
+        $this->connection->query($sql);
     }
 
     /**
-     * Modify a column.
-     *
-     * @param Table $table
-     * @return void
+     * Modify one or more columns in a table.
      */
-    public function modifyColumn(): string
+    public function modifyColumn(): void
     {
         $sql = (new ModifyColumn)->compile($this);
 
-        return $sql;
+        $this->connection->query($sql);
     }
 
     /**
      * Rename a column.
-     *
-     * @param string $table
-     * @param string $oldColumn
-     * @param string $newColumn
-     * @return void
      */
-    public function renameColumn(string $oldName, string $newName): string
+    public function renameColumn(string $oldName, string $newName): void
     {
-        $this->renameColumns[$oldName] = $newName;
+        $sql = (new RenameColumn)->compile($this->getName(), $oldName, $newName);
 
-        $sql = (new RenameColumn)->compile($this);
-
-        return $sql;
+        $this->connection->query($sql);
     }
 
     /**
-     * Set a string column automagically.
+     * Set a datetime or varchar based string column automagically.
      * 
      * For example: 
      * $table->email(125); // Sets the column type to VARCHAR and the column length to 125.
@@ -263,6 +235,6 @@ class Table
 
         // otherwise, set the column type to VARCHAR
         $length = $arguments[0] ?? 255;
-        return $this->string($name, (int) $length);
+        return $this->varchar($name, (int) $length);
     }
 }

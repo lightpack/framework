@@ -13,9 +13,16 @@ class Migrator
      */
     private $connection;
 
+    /**
+     * @var \Lightpack\Database\Schema\Schema
+     */
+    private $schema;
+
     public function __construct(DB $connection)
     {
         $this->connection = $connection;
+        $this->schema = new Schema($connection);
+
         $this->createMigrationsTable();
     }
 
@@ -38,7 +45,7 @@ class Migrator
             // Execute migration
             $migrationClass = require $migrationFilepath;
             $migrationClass = new $migrationClass();
-            $migrationClass->boot(new Schema($this->connection));
+            $migrationClass->boot($this->schema, $this->connection);
             $sql = $migrationClass->up();
 
             $sql && $this->connection->query($sql);
@@ -84,7 +91,7 @@ class Migrator
                 // Execute migration
                 $migrationClass = require $migrationFilepath;
                 $migrationClass = new $migrationClass();
-                $migrationClass->boot(new Schema($this->connection));
+                $migrationClass->boot($this->schema, $this->connection);
                 $sql = $migrationClass->down();
 
                 $sql && $this->connection->query($sql);

@@ -2,7 +2,9 @@
 
 namespace Lightpack\Database\Migrations;
 
+use Lightpack\Database\DB;
 use Lightpack\Database\Schema\Schema;
+use Lightpack\Database\Schema\Table;
 
 abstract class Migration
 {
@@ -11,11 +13,31 @@ abstract class Migration
      */
     protected $schema;
 
-    public function boot(Schema $schema)
+    /**
+     * @var \Lightpack\Database\DB
+     */
+    protected $connection;
+
+    abstract public function up(): void;
+    
+    abstract public function down(): void;
+
+    /**
+     * Get a new table instance.
+     */
+    protected function table(string $table): Table
     {
-        $this->schema = $schema;
+        return new Table($table, $this->connection);
     }
 
-    abstract public function up(): string;
-    abstract public function down(): string;
+    /**
+     * Boot migration.
+     * 
+     * @internal This method is called by the migration runner.
+     */
+    public function boot(Schema $schema, DB $connection): void
+    {
+        $this->schema = $schema;
+        $this->connection = $connection;
+    }
 }

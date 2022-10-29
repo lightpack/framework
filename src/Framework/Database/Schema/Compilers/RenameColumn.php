@@ -2,18 +2,10 @@
 
 namespace Lightpack\Database\Schema\Compilers;
 
-use Lightpack\Database\Schema\Table;
-
 class RenameColumn
 {
-    public function compile(Table $table)
+    public function compile(string $table, string $oldColumn, string $newColumn): string
     {
-        $statements = [];
-
-        foreach ($table->getRenameColumns() as $oldName => $newName) {
-            $statements[] = "ALTER TABLE {$table->getName()} RENAME COLUMN {$oldName} TO {$newName};";
-        }
-
-        return implode(' ', $statements);
+        return "ALTER TABLE {$table} RENAME COLUMN {$oldColumn} TO {$newColumn};";
     }
 }
