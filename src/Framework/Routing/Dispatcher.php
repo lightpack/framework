@@ -47,7 +47,7 @@ class Dispatcher
             );
         }
 
-        return $this->container->call($controller, $action, $params);
+        return $this->container->call($controller, $action, array_values($params));
     }
 
     private function throwExceptionIfRouteNotFound()
