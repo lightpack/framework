@@ -10,6 +10,7 @@ class Route
     private array $params = [];
     private string $path;
     private string $uri;
+    private array $pattern = [];
 
     /**
      * @var string HTTP method
@@ -159,5 +160,16 @@ class Route
     public function hasName(): bool
     {
         return isset($this->name);
+    }
+
+    public function pattern(array $pattern): self
+    {
+        $this->pattern = $pattern;
+        return $this;
+    }
+
+    public function getPattern(): array
+    {
+        return $this->pattern;
     }
 }

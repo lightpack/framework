@@ -7,6 +7,7 @@ use Throwable;
 use TypeError;
 use ParseError;
 use ErrorException;
+use Exception;
 use Psr\Log\LoggerInterface;
 use Lightpack\Debug\ExceptionRenderer;
 
@@ -33,8 +34,7 @@ class Handler
             $line
         );
 
-        $this->log($exc);
-        $this->exceptionRenderer->render($exc, 'Error');
+        $this->logAndRenderException($exc);
     }
 
     public function handleShutdown()
@@ -61,11 +61,17 @@ class Handler
             return $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
         }
 
+        if($exc instanceof Exception)
+        {
+            return $this->logAndRenderException($exc, 'Exception');
+        }
+
         $this->handleError(E_ERROR, "Fatal error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
     }
 
-    private function log($exc)
+    private function logAndRenderException(Throwable $exc, $type = 'Error')
     {
         $this->logger->error($exc);
+        $this->exceptionRenderer->render($exc, $type);
     }
 }
