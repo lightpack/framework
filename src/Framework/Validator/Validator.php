@@ -2,6 +2,8 @@
 
 namespace Lightpack\Validator;
 
+use Lightpack\Exceptions\ValidationException;
+
 class Validator extends AbstractValidator
 {
     /**
@@ -69,16 +71,28 @@ class Validator extends AbstractValidator
     }
 
     /**
-     * This is the method to be called when all the rules have been set. 
-     * It simply delegates the task to a protected method inherited from 
-     * the base class.
-     *
-     * @access  public
+     * Runs the validation rules against the data source.
      */
     public function run(): self
     {
         $this->processRules();
+
         return $this;
+    }
+
+    /**
+     * Runs the validation rules against the data source. If there are any errors,
+     * it throws a ValidationException.
+     *
+     * @throws ValidationException
+     */
+    public function validate(): void
+    {
+        $this->run();
+
+        if ($this->hasErrors()) {
+            throw new ValidationException($this);
+        }
     }
 
     /**

@@ -134,8 +134,8 @@ final class RouteRegistryTest extends TestCase
         );
 
         $this->expectException('\\Exception');
-        $routeRegistry->map(['get'], '/users', 'UserController', 'index');
-        $this->fail('Unsupported HTTP request method: ' . 'get');
+        $routeRegistry->map(['getty'], '/users', 'UserController', 'index');
+        $this->fail('Unsupported HTTP request method: ' . 'getty');
     }
 
     public function testRouteShouldMapAnyAllowedVerb()

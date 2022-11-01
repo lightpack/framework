@@ -352,19 +352,9 @@ if (!function_exists('validator')) {
     /**
      * Returns an instance of validator.
      */
-    function validator(array $input = [], array $rules = []): \Lightpack\Validator\Validator
+    function validator(): \Lightpack\Validator\Validator
     {
-        $validator = new \Lightpack\Validator\Validator();
-
-        if ($input) {
-            $validator->setInput($input);
-        }
-
-        if ($rules) {
-            $validator->setRules($rules);
-        }
-
-        return $validator;
+        return app('validator');
     }
 }
 
@@ -380,7 +370,7 @@ if (!function_exists('schedule')) {
 
 if(!function_exists('old')) {
     /**
-     * Returns the old input value flashed in session.
+     * View helper that returns the old input value flashed in session.
      */
     function input(string $key, string $default = '', bool $escape = true): string
     {
@@ -398,7 +388,7 @@ if(!function_exists('old')) {
 
 if (!function_exists('error')) {
     /**
-     * Returns the request validation errors flashed in session.
+     * View helper that returns the validation error flashed in session.
      */
     function error(string $key): string
     {
