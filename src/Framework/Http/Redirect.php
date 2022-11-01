@@ -59,7 +59,7 @@ class Redirect extends Response
     /**
      * @internal This method is for internal use only.
      */
-    public function boot(Request $request, Session $session, Url $url): self
+    public function __boot(Request $request, Session $session, Url $url): self
     {
         $this->request = $request;
         $this->session = $session;

@@ -102,6 +102,8 @@ class Container
 
             if ($instance == null) {
                 $instance = $cb($this);
+
+                $this->callIf($instance, '__boot');
             }
 
             return $instance;
@@ -133,7 +135,9 @@ class Container
 
         if (!array_key_exists($id, $this->aliases)) {
             $resolvedInstance = $this->resolveWithReflection($id);
+
             $this->callIf($resolvedInstance, '__boot');
+            
             return $resolvedInstance;
         }
 
