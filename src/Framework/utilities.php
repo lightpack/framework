@@ -377,3 +377,37 @@ if (!function_exists('schedule')) {
         return app('schedule');
     }
 }
+
+if(!function_exists('old')) {
+    /**
+     * Returns the old input value flashed in session.
+     */
+    function input(string $key, string $default = '', bool $escape = true): string
+    {
+        static $oldInput;
+
+        if(!isset($oldInput)) {
+            $oldInput = session()->flash('_old_input', []);
+        }
+
+        $value = $oldInput[$key] ?? $default;
+
+        return $escape ? _e($value) : $value;
+    }
+}
+
+if (!function_exists('error')) {
+    /**
+     * Returns the request validation errors flashed in session.
+     */
+    function error(string $key): string
+    {
+        static $errors;
+
+        if(!isset($errors)) {
+            $errors = app('session')->flash('_validation_errors', []);
+        }
+
+        return $errors[$key] ?? '';
+    }
+}
