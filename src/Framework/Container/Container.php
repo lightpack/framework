@@ -132,7 +132,9 @@ class Container
         }
 
         if (!array_key_exists($id, $this->aliases)) {
-            return $this->resolveWithReflection($id);
+            $resolvedInstance = $this->resolveWithReflection($id);
+            $this->callIf($resolvedInstance, '__boot');
+            return $resolvedInstance;
         }
 
         // It is a type and has alias

@@ -2,14 +2,15 @@
 
 namespace Lightpack\Debug;
 
-use Error;
 use Throwable;
 use TypeError;
 use ParseError;
 use ErrorException;
 use Exception;
+use Lightpack\Container\Container;
 use Psr\Log\LoggerInterface;
 use Lightpack\Debug\ExceptionRenderer;
+use Lightpack\Exceptions\FormRequestValidationException;
 
 class Handler
 {
@@ -61,6 +62,10 @@ class Handler
             return $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
         }
 
+        if($exc instanceof FormRequestValidationException) {
+            return $this->handleFormRequestValidationException($exc);
+        }
+
         if($exc instanceof Exception)
         {
             return $this->logAndRenderException($exc, 'Exception');
@@ -73,5 +78,10 @@ class Handler
     {
         $this->logger->error($exc);
         $this->exceptionRenderer->render($exc, $type);
+    }
+
+    private function handleFormRequestValidationException()
+    {
+        Container::getInstance()->get('redirect')->back()->send();
     }
 }
