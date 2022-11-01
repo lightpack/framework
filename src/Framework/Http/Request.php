@@ -11,9 +11,9 @@ class Request
     private Header $headers;
     private string $basepath;
     private string $method;
-    private array $jsonBody;
-    private string $rawBody;
-    private string $parsedBody;
+    private ?array $jsonBody = null;
+    private ?string $rawBody = null;
+    private ?string $parsedBody = null;
     private bool $isSpoofed = false;
     private Route $route;
     private static array $verbs = [
@@ -104,11 +104,11 @@ class Request
 
     public function getRawBody(): string
     {
-        if(empty($this->rawBody)) {
+        if(null === $this->rawBody) {
             $this->parseBody();
         }
 
-        return $this->rawBody;
+        return $this->rawBody ?? '';
     }
 
     public function getParsedBody(?string $key = null, $default = null): string
@@ -121,7 +121,7 @@ class Request
             return $this->parsedBody;
         }
 
-        return $this->rawBody[$key] ?? $default;
+        return $this->parsedBody[$key] ?? $default;
     }
 
     /**
@@ -147,9 +147,9 @@ class Request
         return $value ?? $this->queryData($key, $default);
     }
 
-    public function json(?string $key = null, $default = null): array
+    public function json(?string $key = null, $default = null): ?array
     {
-        if(empty($this->jsonBody)) {
+        if(null === $this->jsonBody) {
             $this->parseJson();
         }
 
@@ -337,16 +337,18 @@ class Request
     {
          $rawBody = $_SERVER['X_LIGHTPACK_RAW_INPUT'] ?? file_get_contents('php://input');
 
-        if (empty($rawBody)) {
-            return;
-        }
-
-        $this->rawBody = $rawBody;
+        $this->rawBody = $rawBody ?: '';
     }
 
     private function parseJson()
     {
-        $json = json_decode($this->getRawBody(), true);
+        $rawBody = $this->getRawBody();
+
+        if(empty($rawBody)) {
+            return $this->jsonBody = [];
+        }
+
+        $json = json_decode($rawBody, true);
 
         if($json === null) {
             throw new \RuntimeException('Error decoding request body as JSON');

@@ -84,8 +84,8 @@ class Handler
         /** @var \Lightpack\Container\Container $container */
         $container = Container::getInstance();
 
-        // For ajax or json requests, return json response.
-        if ($container->get('request')->isJson() || $container->get('request')->isAjax()) {
+        // For json requests, return json response.
+        if ($container->get('request')->isJson()) {
             $container->get('response')
                 ->setStatus(422)
                 ->setMessage('Unprocessable Entity')
