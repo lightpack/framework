@@ -27,6 +27,7 @@ class Dispatcher
         $this->router = $container->get('router');
         $this->throwExceptionIfRouteNotFound();
         $this->route = $this->router->getRoute();
+        $this->request->setRoute($this->route);
     }
 
     public function dispatch()

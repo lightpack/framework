@@ -264,7 +264,7 @@ class Container
 
         // Merge dependencies with args
         $dependencies = array_merge($dependencies, $args);
-
+        
         // Call method
         return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
     }

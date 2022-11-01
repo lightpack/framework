@@ -3,6 +3,7 @@
 namespace Lightpack\Http;
 
 use Lightpack\Exceptions\InvalidHttpMethodException;
+use Lightpack\Routing\Route;
 
 class Request
 {
@@ -14,6 +15,7 @@ class Request
     private string $rawBody;
     private string $parsedBody;
     private bool $isSpoofed = false;
+    private Route $route;
     private static array $verbs = [
         'GET', 
         'POST', 
@@ -311,6 +313,24 @@ class Request
         $this->method = $method;
 
         return $this;
+    }
+
+    /** 
+     * Set the resolved route instance for the current request.
+     */
+    public function setRoute(Route $route): self
+    {
+        $this->route = $route;
+
+        return $this;
+    }
+
+    /**
+     * Get the resolved route instance for the current request.
+     */
+    public function route(): ?Route
+    {
+        return $this->route;
     }
 
     private function parseBody()
