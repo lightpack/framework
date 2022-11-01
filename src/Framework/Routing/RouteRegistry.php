@@ -82,7 +82,7 @@ class RouteRegistry
     public function map(array $verbs, string $route, string $controller, string $action = 'index'): void
     {
         foreach ($verbs as $verb) {
-            if (false === \array_key_exists($verb, $this->routes)) {
+            if (false === \array_key_exists(strtoupper($verb), $this->routes)) {
                 throw new \Exception('Unsupported HTTP request method: ' . $verb);
             }
 
