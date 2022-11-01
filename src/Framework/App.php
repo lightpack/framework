@@ -15,7 +15,7 @@ final class App
     public static function bootProviders(array $providers = [])
     {
         $container = Container::getInstance();
-        $providers = self::getFrameworkProviders() + $providers;
+        $providers = array_merge(self::getFrameworkProviders(), $providers);
 
         foreach ($providers as $provider) {
             $provider = $container->resolve($provider);
