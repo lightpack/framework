@@ -375,12 +375,14 @@ if(!function_exists('old')) {
     function input(string $key, string $default = '', bool $escape = true): string
     {
         static $oldInput;
-
+        
         if(!isset($oldInput)) {
-            $oldInput = session()->flash('_old_input', []);
+            $oldInput = session()->flash('_old_input') ?? [];
         }
 
-        $value = $oldInput[$key] ?? $default;
+        $arr = new \Lightpack\Utils\Arr;
+        
+        $value = $arr->get($key, $oldInput, $default);
 
         return $escape ? _e($value) : $value;
     }
@@ -395,9 +397,9 @@ if (!function_exists('error')) {
         static $errors;
 
         if(!isset($errors)) {
-            $errors = app('session')->flash('_validation_errors', []);
+            $errors = app('session')->flash('_validation_errors') ?? [];
         }
-
+       
         return $errors[$key] ?? '';
     }
 }
