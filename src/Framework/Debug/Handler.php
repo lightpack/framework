@@ -10,7 +10,7 @@ use Exception;
 use Lightpack\Container\Container;
 use Psr\Log\LoggerInterface;
 use Lightpack\Debug\ExceptionRenderer;
-use Lightpack\Exceptions\FormRequestValidationException;
+use Lightpack\Exceptions\ValidationException;
 
 class Handler
 {
@@ -56,18 +56,17 @@ class Handler
     {
         if ($exc instanceof ParseError) {
             return $this->handleError(E_PARSE, "Parse error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
-        } 
-        
+        }
+
         if ($exc instanceof TypeError) {
             return $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
         }
 
-        if($exc instanceof FormRequestValidationException) {
+        if ($exc instanceof ValidationException) {
             return $this->handleFormRequestValidationException($exc);
         }
 
-        if($exc instanceof Exception)
-        {
+        if ($exc instanceof Exception) {
             return $this->logAndRenderException($exc, 'Exception');
         }
 
@@ -80,8 +79,26 @@ class Handler
         $this->exceptionRenderer->render($exc, $type);
     }
 
-    private function handleFormRequestValidationException()
+    private function handleFormRequestValidationException(ValidationException $exc)
     {
-        Container::getInstance()->get('redirect')->back()->send();
+        /** @var \Lightpack\Container\Container $container */
+        $container = Container::getInstance();
+
+        // For ajax requests, return json response.
+        if ($container->get('request')->isAjax()) {
+            $container->get('response')
+                ->setStatus(422)
+                ->setMessage('Unprocessable Entity')
+                ->json([
+                    'success' => false,
+                    'message' => $exc->getMessage(),
+                    'errors' => $exc->getErrors(),
+                ])->send();
+        }
+
+        // Redirect to previous page with errors and old input.
+        $container->get('session')->flash('_old_input', $container->get('request')->input());
+        $container->get('session')->flash('_validation_errors', $exc->getErrors());
+        $container->get('redirect')->back()->send();
     }
 }
