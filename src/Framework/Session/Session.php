@@ -77,4 +77,14 @@ class Session
         $this->driver->delete($key);
         return $flash;
     }
+
+    public function hasInvalidToken(): bool
+    {
+        return !$this->verifyToken();
+    }
+
+    public function hasInvalidAgent(): bool
+    {
+        return !$this->verifyAgent();
+    }
 }

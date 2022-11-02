@@ -219,7 +219,7 @@ class Str
      * string with the first character of each word capitalized. This
      * is specially useful for headlines and titles.
      * 
-     * For example: titleize('lazy brown fox') returns 'Lazy Brown Fox'.
+     * For example: humanize('lazy brown fox') returns 'Lazy Brown Fox'.
      */
     public function humanize(string $subject): string
     {
@@ -286,7 +286,7 @@ class Str
      * This method will return the slug form of the passed string useful
      * for human friendly URLs.
      * 
-     * For example: slug('Lazy Brown Fox') returns 'lazy-brown-fox'.
+     * For example: slugify('Lazy Brown Fox') returns 'lazy-brown-fox'.
      */
     public function slugify(string $subject, string $separator = '-'): string
     {
