@@ -4,6 +4,7 @@ namespace Lightpack\Console\Commands;
 
 use Lightpack\Console\ICommand;
 use Lightpack\Console\Views\ModelView;
+use Lightpack\Utils\Str;
 
 class CreateModel implements ICommand
 {
@@ -75,6 +76,6 @@ class CreateModel implements ICommand
     {
         $text = str_replace('Model', '', $text);
 
-        return underscore($text);
+        return (new Str)->underscore($text);
     }
 }
