@@ -29,7 +29,7 @@ class RunMigrationDown implements ICommand
         $confirm = $this->promptConfirmation($steps);
 
         if ($confirm) {
-            $migrations = $migrator->rollback(DIR_ROOT . '/database/migrations/down', $steps);
+            $migrations = $migrator->rollback(DIR_ROOT . '/database/migrations', $steps);
 
             if(empty($migrations)) {
                 fputs(STDOUT, "No migrations to rollback.\n\n");

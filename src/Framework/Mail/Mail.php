@@ -5,20 +5,18 @@ namespace Lightpack\Mail;
 use Exception as GlobalException;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
 
 abstract class Mail extends PHPMailer
 {
     protected $textView;
     protected $htmlView;
-    protected $data = [];
+    protected $viewData = [];
 
-    abstract public function execute(array $payload = []);
+    abstract public function dispatch(array $payload = []);
 
     public function __construct()
     {
         $this->isSMTP();
-        $this->SMTPDebug    = get_env('APP_DEBUG') ? SMTP::DEBUG_SERVER : SMTP::DEBUG_OFF;
         $this->SMTPAuth     = true;
         $this->Host         = get_env('MAIL_HOST');
         $this->Port         = get_env('MAIL_PORT');
@@ -50,13 +48,13 @@ abstract class Mail extends PHPMailer
 
     public function replyTo($address, string $name = ''): self
     {
-        if(is_array($address)) {
+        if (is_array($address)) {
             $this->setAddresses($address, 'reply_to');
 
             return $this;
         }
 
-        if(is_string($address)) {
+        if (is_string($address)) {
             $this->addReplyTo($address, $name);
         }
 
@@ -65,13 +63,13 @@ abstract class Mail extends PHPMailer
 
     public function cc($address, string $name = ''): self
     {
-        if(is_array($address)) {
+        if (is_array($address)) {
             $this->setAddresses($address, 'cc');
 
             return $this;
         }
 
-        if(is_string($address)) {
+        if (is_string($address)) {
             $this->addCC($address, $name);
         }
 
@@ -80,13 +78,13 @@ abstract class Mail extends PHPMailer
 
     public function bcc($address, string $name = ''): self
     {
-        if(is_array($address)) {
+        if (is_array($address)) {
             $this->setAddresses($address, 'bcc');
 
             return $this;
         }
 
-        if(is_string($address)) {
+        if (is_string($address)) {
             $this->addBCC($address, $name);
         }
 
@@ -95,13 +93,13 @@ abstract class Mail extends PHPMailer
 
     public function attach($path, string $name = ''): self
     {
-        if(is_array($path)) {
+        if (is_array($path)) {
             $this->setAttachments($path);
 
             return $this;
         }
 
-        if(is_string($path)) {
+        if (is_string($path)) {
             $this->addAttachment($path, $name);
         }
 
@@ -129,6 +127,27 @@ abstract class Mail extends PHPMailer
         return $this;
     }
 
+    public function textView(string $template): self
+    {
+        $this->textView = $template;
+
+        return $this;
+    }
+
+    public function htmlView(string $template): self
+    {
+        $this->htmlView = $template;
+
+        return $this;
+    }
+
+    public function viewData(array $data): self
+    {
+        $this->viewData = $data;
+
+        return $this;
+    }
+
     public function send()
     {
         $this->setBody();
@@ -142,21 +161,21 @@ abstract class Mail extends PHPMailer
 
     private function setBody()
     {
-        if($this->htmlView) {
-            $this->Body = app('template')->setData($this->data)->render($this->htmlView);
+        if ($this->htmlView) {
+            $this->Body = app('template')->setData($this->viewData)->render($this->htmlView);
         }
 
-        if($this->textView) {
-            $this->AltBody = app('template')->setData($this->data)->render($this->textView);
+        if ($this->textView) {
+            $this->AltBody = app('template')->setData($this->viewData)->render($this->textView);
         }
     }
 
     private function setAddresses(array $addresses, string $type)
     {
-        foreach($addresses as $key => $value) {
+        foreach ($addresses as $key => $value) {
             list($email, $name) = $this->normalizeAddress($key, $value);
 
-            switch($type) {
+            switch ($type) {
                 case 'cc':
                     $this->addCC($email, $name);
                     break;
@@ -172,7 +191,7 @@ abstract class Mail extends PHPMailer
 
     private function normalizeAddress($key, $value): array
     {
-        if(is_int($key)) {
+        if (is_int($key)) {
             return [$value, ''];
         }
 
@@ -181,8 +200,8 @@ abstract class Mail extends PHPMailer
 
     private function setAttachments(array $paths)
     {
-        foreach($paths as $key => $value) {
-            if(is_int($key)) {
+        foreach ($paths as $key => $value) {
+            if (is_int($key)) {
                 list($path, $name) = [$value, ''];
             } else {
                 list($path, $name) = [$key, $value];

@@ -9,10 +9,10 @@ class Arr
      * 
      * For example:
      * $array = ['a' => ['b' => ['c' => 'd']]];
-     * Arr::hasKey('a.b.c', $array) === true;
+     * (new Arr)->hasKey('a.b.c', $array) === true;
      */
 
-    public static function has(string $key, array $array): bool
+    public function has(string $key, array $array): bool
     {
         $keys = explode('.', $key);
 
@@ -34,9 +34,9 @@ class Arr
      * 
      * For example:
      * $array = ['a' => ['b' => ['c' => 'd']]];
-     * Arr::get('a.b.c', $array) === 'd';
+     * (new Arr)->get('a.b.c', $array) === 'd';
      */
-    public static function get(string $key, array $array, $default = null)
+    public function get(string $key, array $array, $default = null)
     {
         $keys = explode('.', $key);
 
@@ -56,13 +56,13 @@ class Arr
     /**
      * Flattens a multi-dimensional array into a single dimension.
      */
-    public static function flatten(array $items): array
+    public function flatten(array $items): array
     {
         $result = [];
 
         foreach ($items as $item) {
             if (is_array($item)) {
-                $result = array_merge($result, static::flatten($item));
+                $result = array_merge($result, $this->flatten($item));
             } else {
                 $result[] = $item;
             }
@@ -97,7 +97,7 @@ class Arr
      *    ['id' => 5, 'parent_id' => null, 'name' => 'Category 5'],
      * ];
      * 
-     * $tree = Arr::tree($categories);
+     * $tree = (new Arr)->tree($categories);
      * 
      * Another example: In case you want to use a different key name for 
      * the ID and the parent ID, you can do:
@@ -110,19 +110,19 @@ class Arr
      *    ['category_id' => 5, 'category_parent_id' => null, 'name' => 'Category 5'],
      * ];
      * 
-     * $tree = Arr::tree($categories, null, 'category_id', 'category_parent_id');
+     * $tree = (new Arr)->tree($categories, null, 'category_id', 'category_parent_id');
      */
-    public static function tree(array $items, $parentId = null, string $idKey = 'id', string $parentIdKey = 'parent_id'): array
+    public function tree(array $items, $parentId = null, string $idKey = 'id', string $parentIdKey = 'parent_id'): array
     {
         $result = [];
 
         foreach ($items as $key => $item) {
             if (is_array($item) && $item[$parentIdKey] == $parentId) {
                 $result[$key] = $item;
-                $result[$key]['children'] = self::tree($items, $item[$idKey], $idKey, $parentIdKey);
+                $result[$key]['children'] = $this->tree($items, $item[$idKey], $idKey, $parentIdKey);
             } elseif (is_object($item) && $item->{$parentIdKey} == $parentId) {
                 $result[$key] = $item;
-                $result[$key]->children = self::tree($items, $item->{$idKey}, $idKey, $parentIdKey);
+                $result[$key]->children = $this->tree($items, $item->{$idKey}, $idKey, $parentIdKey);
             }
         }
 

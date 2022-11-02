@@ -3,68 +3,42 @@
 namespace Lightpack\Routing;
 
 use Lightpack\Http\Request;
-use Lightpack\Routing\Route;
 
 /**
  * Responsible to determine the correct controller/action to execute.
  */
 class Router
 {
-    private $route;
-    private $routeMeta = [];
+    /**
+     * @var RouteRegistry
+     */
+    private $routeRegistry;
 
-    public function __construct(Request $request, Route $route)
+    /**
+     * @var Route
+     */
+    private $route;
+
+    public function __construct(Request $request, RouteRegistry $routeRegistry)
     {
-        $this->route = $route;
+        $this->routeRegistry = $routeRegistry;
         $this->parse($request->path());
     }
 
-    public function controller(): string
+    public function hasRoute(): bool
     {
-        return $this->routeMeta['controller'];
+        return $this->route !== null;
     }
 
-    public function action(): string
+    public function getRoute(): Route
     {
-        return $this->routeMeta['action'];
-    }
-
-    public function params(): array
-    {
-        return $this->routeMeta['params'];
-    }
-    
-    public function path(): string
-    {
-        return $this->routeMeta['path'];
-    }
-
-    public function route(): string
-    {
-        return $this->routeMeta['route'];
-    }
-
-    public function filters(): array
-    {
-        return $this->routeMeta['filters'];
-    }
-
-    public function method(): string
-    {
-        return $this->routeMeta['method'];
-    }
-
-    public function meta(): array
-    {
-        return $this->routeMeta;
+        return $this->route;
     }
 
     public function parse(string $path): void
     {
-        $routeMeta = [];
-
-        if ($this->route->matches($path, $routeMeta)) {
-            $this->routeMeta = $routeMeta;
+        if ($route = $this->routeRegistry->matches($path)) {
+            $this->route = $route;
         }
     }
 }

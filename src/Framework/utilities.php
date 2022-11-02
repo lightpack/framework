@@ -1,172 +1,75 @@
 <?php
 
 if (!function_exists('app')) {
-    /*
-    * ------------------------------------------------------------
-    * Shortcut to $container->get() method.
-    * ------------------------------------------------------------
-    */
-    function app(string $key)
+    /**
+     * ------------------------------------------------------------
+     * Resolves a binding from IoC container if $key is provided.
+     * Otherwise, returns the IoC container instance.
+     * ------------------------------------------------------------
+     *
+     * @return Lightpack\Container\Container|mixed
+     */
+    function app(string $key = null)
     {
-        global $container;
-        return $container ? $container->get($key) : null;
-    }
-}
+        $container = \Lightpack\Container\Container::getInstance();
 
-if (!function_exists('url')) {
-    /*
-    * ------------------------------------------------------------
-    * Creates a URL.
-    * ------------------------------------------------------------
-    * 
-    * It takes any number of string texts and concatenates them
-    * to generate the URL.
-    */
-    function url(string ...$fragments)
-    {
-        $path = implode('/', $fragments);
-        $url = trim(app('request')->basepath(), '/') . '/' . trim($path, '/');
+        if (null === $key) {
+            return $container;
+        }
 
-        return get_env('APP_URL') . $url;
+        if ($container->has($key)) {
+            return $container->get($key);
+        }
+
+        return $container->resolve($key);
     }
 }
 
 if (!function_exists('redirect')) {
-    /*
-    * ------------------------------------------------------------
-    * Redirect to URI.
-    * ------------------------------------------------------------
-    */
-    function redirect($uri = '/', $code = 302)
+    /** 
+     * Redirects to the given URI. If URI is not provided, returns the 
+     * redirect instance.
+     * 
+     * @return Lightpack\Http\Redirect
+     */
+    function redirect(string $url = null, int $statusCode = 302, array $headers = []): mixed
     {
-        app('response')->redirect($uri, $code);
+        if(is_null($url)) {
+            return app('redirect');
+        }
+
+        return app('redirect')->to($url, $statusCode, $headers);
     }
 }
 
 if (!function_exists('csrf_input')) {
-    /*
-    * ------------------------------------------------------------
-    * Returns an HTML input for CSRF token.
-    * ------------------------------------------------------------
-    */
-    function csrf_input()
+    /** 
+     * Returns an HTML input for CSRF token.
+     */
+    function csrf_input(): string
     {
-        return '<input type="hidden" name="csrf_token" value="' . app('session')->token() . '">';
+        return '<input type="hidden" name="_token" value="' . session()->token() . '">';
     }
 }
 
 if (!function_exists('_e')) {
     /**
-     * ------------------------------------------------------------     
      * HTML characters to entities converter.
-     * ------------------------------------------------------------     
      * 
      * Often used to escape HTML output to protect against 
      * XSS attacks..
      */
-    function _e(string $str)
+    function _e(string $str): string
     {
         return htmlentities($str, ENT_QUOTES, 'UTF-8');
     }
 }
 
-if (!function_exists('slugify')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts an ASCII text to URL friendly slug.
-     * ------------------------------------------------------------      
-     * 
-     * It will replace any non-word character, non-digit 
-     * character, or a non-dash '-' character with empty. 
-     * Also it will replace any number of space character 
-     * with a single dash '-'.
-     */
-    function slugify(string $text)
-    {
-        $text = preg_replace(
-            ['#[^\w\d\s-]+#', '#(\s)+#'],
-            ['', '-'],
-            $text
-        );
-
-        return strtolower(trim($text, ' -'));
-    }
-}
-
-if (!function_exists('asset_url')) {
-    /**
-     * ------------------------------------------------------------
-     * Generates URL for assets in /public/assets folder.
-     * ------------------------------------------------------------
-     * 
-     * Usage: 
-     * 
-     * asset_url('css', 'styles.css');
-     * asset_url('img', 'favicon.png');
-     * asset_url('js', 'scripts.js');
-     */
-    function asset_url(string $type, string $file): ?string
-    {
-        $url = trim(app('request')->basepath(), '/') . '/' . $type . '/' . $file;
-
-        return get_env('ASSET_URL', 'assets') . $url;
-    }
-}
-
-if (!function_exists('humanize')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts a slug URL to friendly text.
-     * ------------------------------------------------------------      
-     * 
-     * It replaces dashes and underscores with whitespace 
-     * character. Then capitalizes the first character.
-     */
-    function humanize(string $slug)
-    {
-        $text = str_replace(['_', '-'], ' ', $slug);
-        $text = trim($text);
-
-        return ucfirst($text);
-    }
-}
-
-if (!function_exists('query_url')) {
-    /**
-     * ------------------------------------------------------------
-     * Generates URL with support for query params.
-     * ------------------------------------------------------------
-     * 
-     * For example:
-     * 
-     * query_url('users', ['sort' => 'asc', 'status' => 'active']);
-     * 
-     * That  will produce: /users?sort=asc&status=active 
-     */
-    function query_url(...$fragments): string
-    {
-        if (!$fragments) {
-            return url();
-        }
-
-        $params = end($fragments);
-
-        if (is_array($params)) {
-            $query = '?' . http_build_query($params);
-            array_pop($fragments);
-        }
-
-        return trim(url(...$fragments), '/') . $query;
-    }
-}
-
 if (!function_exists('get_env')) {
     /**
-     * ------------------------------------------------------------
      * Gets an environment variable.
-     * ------------------------------------------------------------
      */
-    function get_env($key, $default = null)
+    function get_env(string $key, string $default = null): ?string
     {
         if (isset($_ENV[$key])) {
             return $_ENV[$key];
@@ -182,11 +85,9 @@ if (!function_exists('get_env')) {
 
 if (!function_exists('set_env')) {
     /**
-     * ------------------------------------------------------------
      * Sets an environment variable.
-     * ------------------------------------------------------------
      */
-    function set_env($key, $value)
+    function set_env(string $key, ?string $value): void
     {
         if (get_env($key) === null) {
             putenv("{$key}={$value}");
@@ -196,49 +97,12 @@ if (!function_exists('set_env')) {
     }
 }
 
-if (!function_exists('underscore')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts a string to underscored, lowercase form.
-     * ------------------------------------------------------------      
-     * 
-     * For example: CustomerOrder => customer_order
-     */
-    function underscore(string $text)
-    {
-        $text = preg_replace('/(?<=\\w)([A-Z])/', '_\\1', $text);
-
-        return strtolower($text);
-    }
-}
-
-if (!function_exists('camelize')) {
-    /**
-     * ------------------------------------------------------------     
-     * Converts a string to its camelized form.
-     * ------------------------------------------------------------      
-     * 
-     * For example: product thinker => ProductThinker
-     */
-    function camelize(string $text)
-    {
-        $text = ucwords(str_replace(['_', '-'], ' ', $text));
-        $text = str_replace(' ', '', trim($text));
-
-        return $text;
-    }
-}
-
 if (!function_exists('route')) {
     /**
-     * ------------------------------------------------------------     
-     * Route function.
-     * ------------------------------------------------------------      
-     * 
      * This function returns an instance of route object from
      * the app container.
      * 
-     * @return \Lightpack\Routing\Route
+     * @return \Lightpack\Routing\RouteRegistry
      */
     function route()
     {
@@ -248,12 +112,9 @@ if (!function_exists('route')) {
 
 if (!function_exists('dd')) {
     /**
-     * ------------------------------------------------------------
      * Pretty dump using var_dump()
-     * ------------------------------------------------------------
-     * 
      */
-    function dd(...$args)
+    function dd(...$args): void
     {
         $renderer = new Lightpack\Debug\Dumper;
 
@@ -265,12 +126,9 @@ if (!function_exists('dd')) {
 
 if (!function_exists('pp')) {
     /**
-     * ------------------------------------------------------------
      * Pretty print using print_r()
-     * ------------------------------------------------------------
-     * 
      */
-    function pp(...$args)
+    function pp(...$args): void
     {
         $renderer = new Lightpack\Debug\Dumper;
 
@@ -282,9 +140,7 @@ if (!function_exists('pp')) {
 
 if (!function_exists('request')) {
     /**
-     * ------------------------------------------------------------
      * Returns the current request object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Http\Request
      */
@@ -296,9 +152,7 @@ if (!function_exists('request')) {
 
 if (!function_exists('response')) {
     /**
-     * ------------------------------------------------------------
      * Returns a new instance of response.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Http\Response
      */
@@ -310,9 +164,7 @@ if (!function_exists('response')) {
 
 if (!function_exists('session')) {
     /**
-     * ------------------------------------------------------------
      * Returns the session object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Session\Session
      */
@@ -324,9 +176,7 @@ if (!function_exists('session')) {
 
 if (!function_exists('cookie')) {
     /**
-     * ------------------------------------------------------------
      * Returns a new instance of cookie.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Http\Cookie
      */
@@ -338,9 +188,7 @@ if (!function_exists('cookie')) {
 
 if (!function_exists('event')) {
     /**
-     * ------------------------------------------------------------
      * Returns the event object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Event\Event
      */
@@ -352,9 +200,7 @@ if (!function_exists('event')) {
 
 if (!function_exists('cache')) {
     /**
-     * ------------------------------------------------------------
      * Returns the cache object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Cache\Cache
      */
@@ -366,9 +212,7 @@ if (!function_exists('cache')) {
 
 if (!function_exists('logger')) {
     /**
-     * ------------------------------------------------------------
      * Returns the logger object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Logger\Logger
      */
@@ -380,15 +224,13 @@ if (!function_exists('logger')) {
 
 if (!function_exists('auth')) {
     /**
-     * ------------------------------------------------------------
      * Returns the auth object.
-     * ------------------------------------------------------------
      * 
      * @return \Lightpack\Auth\Auth
      */
     function auth(string $driver = null)
     {
-        if(!$driver) {
+        if (!$driver) {
             return app('auth');
         }
 
@@ -398,9 +240,7 @@ if (!function_exists('auth')) {
 
 if (!function_exists('config')) {
     /**
-     * ------------------------------------------------------------
      * Gets config data.
-     * ------------------------------------------------------------
      */
     function config($key, $default = null)
     {
@@ -410,12 +250,156 @@ if (!function_exists('config')) {
 
 if (!function_exists('db')) {
     /**
-     * ------------------------------------------------------------
      * Returns PDO database connection instance.
-     * ------------------------------------------------------------
      */
-    function db(): \Lightpack\Database\Pdo
+    function db(): \Lightpack\Database\DB
     {
         return app('db');
+    }
+}
+
+if (!function_exists('template')) {
+    /**
+     * Returns an instance of view template.
+     */
+    function template(): \Lightpack\View\Template
+    {
+        return app('template');
+    }
+}
+
+if (!function_exists('url')) {
+    /**
+     * Returns an instance of Url utility.
+     */
+    function url(): \Lightpack\Utils\Url
+    {
+        if (false === app()->has('url')) {
+            return app()->instance('url', new \Lightpack\Utils\Url);
+        }
+
+        return app('url');
+    }
+}
+
+if (!function_exists('str')) {
+    /**
+     * Returns an instance of Str utility.
+     */
+    function str(): \Lightpack\Utils\Str
+    {
+        if (false === app()->has('str')) {
+            return app()->instance('str', new \Lightpack\Utils\Str);
+        }
+
+        return app('str');
+    }
+}
+
+if (!function_exists('arr')) {
+    /**
+     * Returns an instance of Arr utility.
+     */
+    function arr(): \Lightpack\Utils\Arr
+    {
+        if (false === app()->has('arr')) {
+            return app()->instance('arr', new \Lightpack\Utils\Arr);
+        }
+
+        return app('arr');
+    }
+}
+
+if (!function_exists('moment')) {
+    /**
+     * Returns an instance of Moment utility.
+     */
+    function moment(): \Lightpack\Utils\Moment
+    {
+        if (false === app()->has('moment')) {
+            return app()->instance('moment', new \Lightpack\Utils\Moment);
+        }
+
+        return app('moment');
+    }
+}
+
+if (!function_exists('password')) {
+    /**
+     * Returns an instance of Password utility.
+     */
+    function password(): \Lightpack\Utils\Password
+    {
+        if (false === app()->has('password')) {
+            return app()->instance('password', new \Lightpack\Utils\Password);
+        }
+
+        return app('password');
+    }
+}
+
+if (!function_exists('crypto')) {
+    /**
+     * Returns an instance of Crypto utility.
+     */
+    function crypto(): \Lightpack\Utils\Crypto
+    {
+        return app('crypto');
+    }
+}
+
+if (!function_exists('validator')) {
+    /**
+     * Returns an instance of validator.
+     */
+    function validator(): \Lightpack\Validator\Validator
+    {
+        return app('validator');
+    }
+}
+
+if (!function_exists('schedule')) {
+    /**
+     * Returns the task scheduler instance.
+     */
+    function schedule(): \Lightpack\Schedule\Schedule
+    {
+        return app('schedule');
+    }
+}
+
+if(!function_exists('old')) {
+    /**
+     * View helper that returns the old input value flashed in session.
+     */
+    function input(string $key, string $default = '', bool $escape = true): string
+    {
+        static $oldInput;
+        
+        if(!isset($oldInput)) {
+            $oldInput = session()->flash('_old_input') ?? [];
+        }
+
+        $arr = new \Lightpack\Utils\Arr;
+        
+        $value = $arr->get($key, $oldInput, $default);
+
+        return $escape ? _e($value) : $value;
+    }
+}
+
+if (!function_exists('error')) {
+    /**
+     * View helper that returns the validation error flashed in session.
+     */
+    function error(string $key): string
+    {
+        static $errors;
+
+        if(!isset($errors)) {
+            $errors = app('session')->flash('_validation_errors') ?? [];
+        }
+       
+        return $errors[$key] ?? '';
     }
 }

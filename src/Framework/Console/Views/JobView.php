@@ -15,8 +15,7 @@ use Lightpack\Jobs\Job;
 
 class __JOB_NAME__ extends Job
 {
-    /** @inheritDoc */
-    public function execute(array $payload)
+    public function run()
     {
         // ...
     }

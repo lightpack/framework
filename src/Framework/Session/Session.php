@@ -48,18 +48,18 @@ class Session
     {
         $token = bin2hex(openssl_random_pseudo_bytes(8));
 
-        $this->set('csrf_token', $token);
+        $this->set('_token', $token);
 
         return $token;
     }
 
     public function verifyToken(): bool
     {
-        if (!$this->driver->started() || !isset($_POST['csrf_token'])) {
+        if (!$this->driver->started() || !isset($_POST['_token'])) {
             return false;
         }
 
-        if ($this->get('csrf_token') !== $_POST['csrf_token']) {
+        if ($this->get('_token') !== $_POST['_token']) {
             return false;
         }
 
@@ -76,5 +76,15 @@ class Session
         $flash = $this->driver->get($key);
         $this->driver->delete($key);
         return $flash;
+    }
+
+    public function hasInvalidToken(): bool
+    {
+        return !$this->verifyToken();
+    }
+
+    public function hasInvalidAgent(): bool
+    {
+        return !$this->verifyAgent();
     }
 }

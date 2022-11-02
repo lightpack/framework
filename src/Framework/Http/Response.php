@@ -6,76 +6,44 @@ class Response
 {
     /**
      * Represents HTTP Content-Type
-     *
-     * @var string
      */
-    private $type;
+    protected string $type = 'text/html';
 
     /**
      * Represents HTTTP response body
-     *
-     * @var string
      */
-    private $body;
+    protected string $body = '';
 
     /**
      * Represents HTTP response status code
-     *
-     * @var int
      */
-    private $code;
+    protected int $status = 200;
 
     /**
      * Represents HTTP response status message
-     *
-     * @var string
      */
-    private $message;
+    protected string $message = 'OK';
 
     /**
      * Represents HTTP response headers.
-     * 
-     * @var array
      */
-    private $headers;
+    protected array $headers = [];
 
     /**
-     * Redirect URL
-     * 
-     * @var string
+     * Represents HTTP response redirect url.
      */
-    private $redirectUrl;
-
-    /**
-     * Class contructor
-     *
-     * @access  public
-     */
-    public function __construct()
-    {
-        $this->code    = 200;
-        $this->type    = 'text/html';
-        $this->message = 'OK';
-        $this->headers = [];
-        $this->body    = '';
-    }
+    protected string $redirectUrl = '';
 
     /**
      * Return HTTP response status code.
-     *
-     * @access  public
-     * @return int  $code
      */
-    public function getCode(): int
+    public function getStatus(): int
     {
-        return $this->code;
+        return $this->status;
     }
 
     /**
      * Return HTTP response content type.
-     *
-     * @access  public
-     * @return string  $type
      */
     public function getType(): string
     {
@@ -84,9 +52,6 @@ class Response
 
     /**
      * Return HTTP response status message.
-     *
-     * @access  public
-     * @return string  $message
      */
     public function getMessage(): string
     {
@@ -95,9 +60,6 @@ class Response
 
     /**
      * Return HTTP response headers.
-     *
-     * @access  public
-     * @return array  $headers
      */
     public function getHeaders(): array
     {
@@ -105,7 +67,7 @@ class Response
     }
 
     /**
-     * Return HTTP response headers as string.
+     * Return HTTP response header by name.
      */
     public function getHeader(string $name): string
     {
@@ -114,9 +76,6 @@ class Response
 
     /**
      * Return HTTP response body.
-     *
-     * @access  public
-     * @return string  $body
      */
     public function getBody(): string
     {
@@ -124,33 +83,16 @@ class Response
     }
 
     /**
-     * Return redirect URL.
+     * This method sets the HTTP response status code.
      */
-    public function getRedirectUrl(): string
+    public function setStatus(int $status): self
     {
-        return $this->redirectUrl;
-    }
-
-    /**
-     * This method sets the HTTP response code.
-     *
-     * @access  public
-     * @param  int  $code 
-     * @return  self
-     */
-    public function setCode(int $code): self
-    {
-        $this->code = $code;
+        $this->status = $status;
         return $this;
     }
 
     /**
      * This method sets a response header.
-     *
-     * @access  public
-     * @param  string  $name  
-     * @param  string  $value  
-     * @return  self
      */
     public function setHeader(string $name, string $value): self
     {
@@ -161,9 +103,7 @@ class Response
     /**
      * This method sets multiple response headers.
      *
-     * @access  public
      * @param  array  $headers  An array of $name => $value header pairs.
-     * @return  self
      */
     public function setHeaders(array $headers): self
     {
@@ -176,10 +116,6 @@ class Response
 
     /**
      * This method sets the HTTP response message supplied by the client.
-     *
-     * @access  public
-     * @param  string  $message 
-     * @return  self
      */
     public function setMessage(string $message): self
     {
@@ -189,10 +125,6 @@ class Response
 
     /**
      * This method sets the HTTP response content type.
-     *
-     * @access  public
-     * @param  string  $message 
-     * @return  self
      */
     public function setType(string $type): self
     {
@@ -202,10 +134,6 @@ class Response
 
     /**
      * This method sets the HTTP response content.
-     *
-     * @access  public
-     * @param  string  $body
-     * @return  self
      */
     public function setBody(string $body): self
     {
@@ -214,11 +142,26 @@ class Response
     }
 
     /**
+     * This method sets the HTTP response redirect url.
+     */
+    public function setRedirectUrl(string $url): self
+    {
+        $this->redirectUrl = $url;
+        return $this;
+    }
+
+    /**
+     * This method returns the HTTP response redirect url.
+     */
+    public function getRedirectUrl(): string
+    {
+        return $this->redirectUrl;
+    }
+
+    /**
      * This method sets the HTTP response content as JSON.
      * 
-     * @access  public
-     * @param  mixed  $data
-     * @return  self
+     * @param  mixed  $data The data to be encoded as JSON.
      */
     public function json($data): self
     {
@@ -237,13 +180,23 @@ class Response
     /**
      * This method sets the HTTP response content as JSON.
      * 
-     * @access  public
      * @param  string  $data    XML formatted string.
-     * @return  self
      */
     public function xml(string $data): self
     {
         $this->setType('text/xml');
+        $this->setBody($data);
+        return $this;
+    }
+
+    /**
+     * This method sets the HTTP response content as plain text.
+     * 
+     * @param  string  $data    Text content.
+     */
+    public function text(string $data): self
+    {
+        $this->setType('text/plain');
         $this->setBody($data);
         return $this;
     }
@@ -254,9 +207,8 @@ class Response
      * @param string $path  The path of file to download.
      * @param string $name  Custom name for downloaded file.
      * @param array $headers  Additional headers for download response.
-     * @return void
      */
-    public function download(string $path, string $name = null, array $headers = [])
+    public function download(string $path, string $name = null, array $headers = []): self
     {
         $name = $name ?? basename($path);
 
@@ -272,7 +224,8 @@ class Response
 
         $this->setBody(file_get_contents($path));
         $this->setHeaders($headers);
-        $this->send();
+
+        return $this;
     }
 
     /**
@@ -281,9 +234,8 @@ class Response
      * @param string $path  The path of file to download.
      * @param string $name  Custom name for downloaded file.
      * @param array $headers  Additional headers for download response.
-     * @return void
      */
-    public function file(string $path, string $name = null, array $headers = [])
+    public function file(string $path, string $name = null, array $headers = []): self
     {
         $name = $name ?? basename($path);
 
@@ -291,17 +243,13 @@ class Response
             'Content-Disposition' => 'inline; filename=' . $name
         ], $headers);
 
-        $this->download($path, $name, $headers);
+        return $this->download($path, $name, $headers);
     }
 
     /**
      * This method sets the HTTP response content as HTML.
-     * 
-     * @access  public
-     * @param  string  $data    XML formatted string.
-     * @return  self
      */
-    public function render(string $file, array $data = []): self
+    public function view(string $file, array $data = []): self
     {
         $template = app('template')->setData($data)->render($file);
 
@@ -311,9 +259,6 @@ class Response
 
     /**
      * This method sends the response to the client.
-     * 
-     * @access  public
-     * @return  void
      */
     public function send(): void
     {
@@ -324,25 +269,6 @@ class Response
         if (!$this->redirectUrl) {
             $this->sendContent();
         }
-    }
-
-    /**
-     * This method redirects response to the specified URL.
-     * 
-     * @access  public
-     * @return  void
-     */
-    public function redirect(string $url = '/', int $code = 302): void
-    {
-        if (filter_var($url, FILTER_VALIDATE_URL)) {
-            $this->redirectUrl = $url;
-        } else {
-            $this->redirectUrl = url($url);
-        }
-
-        $this->setCode($code);
-        $this->setHeader('Location', $this->redirectUrl);
-        $this->sendHeaders();
 
         exit;
     }
@@ -357,25 +283,19 @@ class Response
 
     /**
      * This method sends all HTTP headers.
-     *
-     * @access  private
-     * @return  void
      */
     private function sendHeaders(): void
     {
-        header(sprintf("HTTP/1.1 %s %s", $this->code, $this->message));
+        header(sprintf("HTTP/1.1 %s %s", $this->status, $this->message));
         header(sprintf("Content-Type: %s; charset=UTF-8", $this->type));
 
         foreach ($this->headers as $name => $value) {
-            header(sprintf("%s: %s", $name, $value), true, $this->getCode());
+            header(sprintf("%s: %s", $name, $value), true, $this->status);
         }
     }
 
     /**
      * This method outputs the HTTP response body.
-     *
-     * @access  private
-     * @return  void
      */
     private function sendContent(): void
     {

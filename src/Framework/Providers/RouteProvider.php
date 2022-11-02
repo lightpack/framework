@@ -2,17 +2,19 @@
 
 namespace Lightpack\Providers;
 
-use Lightpack\Routing\Route;
 use Lightpack\Container\Container;
+use Lightpack\Routing\RouteRegistry;
 
 class RouteProvider implements ProviderInterface
 {
     public function register(Container $container)
     {
         $container->register('route', function ($container) {
-            return new Route(
+            return new RouteRegistry(
                 $container->get('request')
             );
         });
+
+        $container->alias(RouteRegistry::class, 'route');
     }
 }

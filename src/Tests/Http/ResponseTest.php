@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
 final class ResponseTest extends TestCase
@@ -10,19 +11,19 @@ final class ResponseTest extends TestCase
 
     public function setUp(): void
     {
-        $this->response = new \Lightpack\Http\Response();
+        $this->response = new \Lightpack\Http\Response(new Url);
     }
     
-    public function testResponseSetCodeMethod()
+    public function testResponseSetStatusMethod()
     {
-        $this->assertSame($this->response,  $this->response->setCode(200));
+        $this->assertSame($this->response,  $this->response->setStatus(200));
     }
 
-    public function testResponseGetCodeMethod()
+    public function testResponseGetStatusMethod()
     {
-        $this->assertEquals(200, $this->response->getCode());
-        $this->response->setCode(302);
-        $this->assertEquals(302, $this->response->getCode());
+        $this->assertEquals(200, $this->response->getStatus());
+        $this->response->setStatus(302);
+        $this->assertEquals(302, $this->response->getStatus());
     }
     
     public function testResponseSetMessageMethod()
@@ -112,6 +113,14 @@ final class ResponseTest extends TestCase
         $data = 'xml-string';
         $this->response->xml($data);
         $this->assertEquals('text/xml', $this->response->getType());
+        $this->assertEquals($data, $this->response->getBody());
+    }
+
+    public function testResponseTextMethod()
+    {
+        $data = 'text-string';
+        $this->response->text($data);
+        $this->assertEquals('text/plain', $this->response->getType());
         $this->assertEquals($data, $this->response->getBody());
     }
 }

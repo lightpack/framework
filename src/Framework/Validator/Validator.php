@@ -2,33 +2,18 @@
 
 namespace Lightpack\Validator;
 
-use Lightpack\Utils\Arr;
-use RuntimeException;
+use Lightpack\Exceptions\ValidationException;
 
-/**
- * This is the main class to be exposed to the end user. It extends the core
- * functionalities from Lightpack\Validator\AbstractClass.
- *
- * Method Prototypes:
- * 
- * void      public   function    __construct(array $dataSource);
- * void      public   function    setRule(string $key, string $rules);
- * void      public   function    run(void);
- * boolean   public   function    hasErrors(void);
- * string    public   function    getError(string $field);
- * array     public   function    getErrors(void);
- */
 class Validator extends AbstractValidator
 {
     /**
-     * Class constructor.
-     *
-     * @access  public
-     * @param   array  $dataSource  Array to validate
+     * @param   array  $dataSource  Array to validate.
      */
-    public function __construct(array $dataSource)
+    public function setInput(array $dataSource): self
     {
-        parent::__construct($dataSource);
+        $this->dataSource = $dataSource;
+
+        return $this;
     }
 
     /**
@@ -36,7 +21,7 @@ class Validator extends AbstractValidator
      * an example, to validate field "username" with rules required, alpha, min,
      * and max, we could do it like:
      *
-     * $validatorInstance->setRule('username', 'required|alpha|min:5|max:12');
+     * $validator->setRule('username', 'required|alpha|min:5|max:12');
      *
      * The rules are piped together and are processed in the order specified in the
      * rules string.
@@ -44,17 +29,11 @@ class Validator extends AbstractValidator
      * The key to validate is stored in the rules array only if it is a valid key
      * i.e. it has to be present as a key in the array of data to be validated.
      *
-     * @access  public
      * @param  string  $key    The name of the data key or field to validate.
-     * @param  string|array  $rules  The string containing rules piped together
-     * @throws RuntimeException
+     * @param  string|array|callable  $rules  The rules to apply to the data key.
      */
     public function setRule($key, $rules)
     {
-        if(!Arr::has($key, $this->dataSource)) {
-            throw new RuntimeException(sprintf("Invalid key: %s", $key));
-        }
-
         $this->addRule($key, $rules);
 
         return $this;
@@ -82,7 +61,7 @@ class Validator extends AbstractValidator
      *      ],
      * ]);
      */
-    public function setRules(array $config)
+    public function setRules(array $config): self
     {
         foreach ($config as $key => $rules) {
             $this->setRule($key, $rules);
@@ -92,19 +71,33 @@ class Validator extends AbstractValidator
     }
 
     /**
-     * This is the method to be called when all the rules have been set. 
-     * It simply delegates the task to a protected method inherited from 
-     * the base class.
-     *
-     * @access  public
+     * Runs the validation rules against the data source.
      */
-    public function run()
+    public function run(): self
     {
         $this->processRules();
+
         return $this;
     }
 
     /**
+     * Runs the validation rules against the data source. If there are any errors,
+     * it throws a ValidationException.
+     *
+     * @throws ValidationException
+     */
+    public function validate(): void
+    {
+        $this->run();
+
+        if ($this->hasErrors()) {
+            throw new ValidationException($this);
+        }
+    }
+
+    /**
+     * Check if validation has errors.
+     * 
      * This method confirms the state of overall validation. Call this method to
      * ensure that the data source passes all the validation rules imposed.
      *
@@ -113,6 +106,8 @@ class Validator extends AbstractValidator
      */
     public function hasErrors()
     {
+        $this->processRules();
+
         return empty($this->errors) === false;
     }
 

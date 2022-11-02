@@ -4,137 +4,172 @@ namespace Lightpack\Routing;
 
 class Route
 {
-    private $routes = [
-        'GET' => [],
-        'POST' => [],
-        'PUT' => [],
-        'PATCH' => [],
-        'DELETE' => [],
-        'OPTIONS' => [],
-    ];
-    private $placeholders = [
-        ':any' => '(.*)',
-        ':seg' => '([^/]+)',
-        ':num' => '([0-9]+)',
-        ':slug' => '([a-zA-Z0-9-]+)',
-        ':alpha' => '([a-zA-Z]+)',
-        ':alnum' => '([a-zA-Z0-9]+)',
-    ];
-    private $options = [
-        'prefix' => '',
-        'filters' => [],
-    ];
-    private $request;
+    private string $controller;
+    private string $action;
+    private array $filters = [];
+    private array $params = [];
+    private string $path;
+    private string $uri;
+    private array $pattern = [];
 
-    public function __construct(\Lightpack\Http\Request $request)
+    /**
+     * @var string HTTP method
+     */
+    private string $verb;
+
+    /**
+     * @var string $controller Controller class name.
+     */
+    public function setController(string $controller): self
     {
-        $this->request = $request;
+        $this->controller = $controller;
+        return $this;
     }
 
-    public function get(string $path, string $controller, string $action = 'index', array $filters = []): void
+    /**
+     * @return string Controller class name.
+     */
+    public function getController(): string
     {
-        $this->add('GET', $this->options['prefix'] . $path, $controller, $action, $filters);
+        return $this->controller;
     }
 
-    public function post(string $path, string $controller, string $action = 'index', array $filters = []): void
+    /**
+     * @param string $action The controller action to execute.
+     * @return Route
+     */
+    public function setAction(string $action): self
     {
-        $this->add('POST', $this->options['prefix'] . $path, $controller, $action, $filters);
+        $this->action = $action;
+        return $this;
     }
 
-    public function put(string $path, string $controller, string $action = 'index', array $filters = []): void
+    /**
+     * @return string The controller action to execute.
+     */
+    public function getAction(): string
     {
-        $this->add('PUT', $this->options['prefix'] . $path, $controller, $action, $filters);
+        return $this->action;
     }
 
-    public function patch(string $path, string $controller, string $action = 'index', array $filters = []): void
+    /**
+     * @param array $filters Array of route filters.
+     * @return Route
+     */
+    public function filter(string|array $filter): self
     {
-        $this->add('PATCH', $this->options['prefix'] . $path, $controller, $action, $filters);
-    }
-
-    public function delete(string $path, string $controller, string $action = 'index', array $filters = []): void
-    {
-        $this->add('DELETE', $this->options['prefix'] . $path, $controller, $action, $filters);
-    }
-
-    public function options(string $path, string $controller, string $action = 'index', array $filters = []): void
-    {
-        $this->add('OPTIONS', $this->options['prefix'] . $path, $controller, $action, $filters);
-    }
-
-    public function paths(string $method): array
-    {
-        return $this->routes[$method] ?? [];
-    }
-
-    public function group(array $options, callable $callback): void {
-        $oldOptions = $this->options;
-        $this->options = \array_merge($oldOptions, $options);
-        $this->options['prefix'] = $oldOptions['prefix'] . $this->options['prefix'];
-        $callback($this);
-        $this->options = $oldOptions;
-    }
-
-    public function map(array $verbs, string $route, string $controller, string $action = 'index', array $filters = []): void {
-        foreach($verbs as $verb) {
-            if(false === \array_key_exists($verb, $this->routes)) {
-                throw new \Exception('Unsupported HTTP request method: ' . $verb);
-            }
-            
-            $this->{$verb}($route, $controller, $action, $filters);
-        }
-    }
-
-    public function any(string $path, string $controller, string $action = 'index', array $filters = []): void {
-        $verbs = \array_keys($this->routes);
-
-        foreach($verbs as $verb) {
-            $this->{$verb}($path, $controller, $action, $filters);
-        }
-    }
-
-    public function matches(string $path, array &$meta = []): bool
-    {
-        $routes = $this->getRoutesForCurrentRequest();
-
-        foreach ($routes as $route) {
-            if (preg_match('@^' . $this->regex($route) . '$@', $path, $matches)) {
-                \array_shift($matches);
-                $meta = $this->routes[$this->request->method()][$route];
-                $meta['params'] = $matches;
-                $meta['method'] = $this->request->method();
-                $meta['route'] = $route;
-                $meta['path'] = $path;
-
-                return true;
-            }
+        if (is_string($filter)) {
+            $filter = [$filter];
         }
 
-        return false;
+        $this->filters = array_merge($this->filters, $filter);
+        $this->filters = array_unique($this->filters);
+
+        return $this;
     }
 
-    private function add(string $method, string $path, string $controller, string $action, array $filters = []): void
+    /**
+     * @return array Array of route filters.
+     */
+    public function getFilters(): array
     {
-        
-        if (trim($path) === '') {
-            throw new \Exception('Empty route path');
-        }
-        
-        $this->routes[$method][$path] = ['controller' => $controller, 'action' => $action];
-        $this->routes[$method][$path]['filters'] = array_unique(array_merge($this->options['filters'], $filters));
+        return $this->filters;
     }
 
-    private function regex(string $path): string
+    /**
+     * @param array $params Array of matched route parameters
+     * @return Route
+     */
+    public function setParams(array $params): self
     {
-        $search = \array_keys($this->placeholders);
-        $replace = \array_values($this->placeholders);
-
-        return str_replace($search, $replace, $path);
+        $this->params = $params;
+        return $this;
     }
 
-    private function getRoutesForCurrentRequest()
+    /**
+     * @return array $params Array of matched route parameters
+     */
+    public function getParams(): array
     {
-        $requestMethod = $this->request->method();
-        $routes = $this->routes[$requestMethod] ?? [];
-        return \array_keys($routes);
+        return $this->params;
+    }
+
+    /**
+     * @param string $path The request path to match against.
+     * @return Route
+     */
+    public function setPath(string $path): self
+    {
+        $this->path = $path;
+        return $this;
+    }
+
+    /**
+     * @return string The request path to match against.
+     */
+    public function getPath(): string
+    {
+        return $this->path;
+    }
+
+    /**
+     * @param string $route The route URI pattern.
+     */
+    public function setUri(string $uri): self
+    {
+        $this->uri = $uri;
+        return $this;
+    }
+
+    /**
+     * @return string The route URI pattern.
+     */
+    public function getUri(): string
+    {
+        return $this->uri;
+    }
+
+    /**
+     * @param string $verb HTTP method.
+     */
+    public function setVerb(string $verb): self
+    {
+        $this->verb = $verb;
+        return $this;
+    }
+
+    /**
+     * @return string HTTP method.
+     */
+    public function getVerb(): string
+    {
+        return $this->verb;
+    }
+
+    public function name(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function hasName(): bool
+    {
+        return isset($this->name);
+    }
+
+    public function pattern(array $pattern): self
+    {
+        $this->pattern = $pattern;
+        return $this;
+    }
+
+    public function getPattern(): array
+    {
+        return $this->pattern;
     }
 }

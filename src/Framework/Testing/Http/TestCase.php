@@ -16,6 +16,7 @@ class TestCase extends BaseTestCase
     protected $response;
 
     protected $isJsonRequest = false;
+    
     protected $isMultipartFormdata = false;
 
     public function request(string $method, string $route, array $params = []): Response

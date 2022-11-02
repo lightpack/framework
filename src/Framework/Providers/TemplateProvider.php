@@ -12,5 +12,7 @@ class TemplateProvider implements ProviderInterface
         $container->register('template', function ($container) {
             return new Template();
         });
+
+        $container->alias(Template::class, 'template');
     }
 }

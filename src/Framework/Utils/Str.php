@@ -102,7 +102,7 @@ class Str
     /**
      * This method returns the singular form of the passed string.
      */
-    public static function singularize(string $subject): string
+    public function singularize(string $subject): string
     {
         if (self::$singularCache[$subject] ?? null) {
             return self::$singularCache[$subject];
@@ -128,7 +128,7 @@ class Str
     /**
      * This method returns the plural form of the passed string.
      */
-    public static function pluralize(string $subject): string
+    public function pluralize(string $subject): string
     {
         if (self::$pluralCache[$subject] ?? null) {
             return self::$pluralCache[$subject];
@@ -157,7 +157,7 @@ class Str
      * 
      * For example: pluralizeIf(2, 'role') returns 'roles',
      */
-    public static function pluralizeIf(int $number, string $subject): string
+    public function pluralizeIf(int $number, string $subject): string
     {
         if ($number == 1) {
             return $subject;
@@ -171,7 +171,7 @@ class Str
      * 
      * For example: camelize('parent class') returns 'ParentClass'.
      */
-    public static function camelize(string $subject): string
+    public function camelize(string $subject): string
     {
         return str_replace(' ', '', ucwords(str_replace('_', ' ', $subject)));
     }
@@ -183,7 +183,7 @@ class Str
      * 
      * For example: variable('ParentClass') returns 'parentClass'.
      */
-    public static function variable(string $subject): string
+    public function variable(string $subject): string
     {
         return lcfirst(static::camelize($subject));
     }
@@ -194,7 +194,7 @@ class Str
      * 
      * For example: underscore('ParentClass') returns 'parent_class'.
      */
-    public static function underscore(string $subject): string
+    public function underscore(string $subject): string
     {
         $subject = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $subject));
 
@@ -207,7 +207,7 @@ class Str
      * 
      * For example: dasherize('Parent Class') returns 'parent-class'.
      */
-    public static function dasherize(string $subject): string
+    public function dasherize(string $subject): string
     {
         $subject = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $subject));
 
@@ -219,9 +219,9 @@ class Str
      * string with the first character of each word capitalized. This
      * is specially useful for headlines and titles.
      * 
-     * For example: titleize('lazy brown fox') returns 'Lazy Brown Fox'.
+     * For example: humanize('lazy brown fox') returns 'Lazy Brown Fox'.
      */
-    public static function humanize(string $subject): string
+    public function humanize(string $subject): string
     {
         return ucwords(str_replace('_', ' ', $subject));
     }
@@ -232,7 +232,7 @@ class Str
      * 
      * For example: tableize('User') returns 'users'.
      */
-    public static function tableize(string $subject): string
+    public function tableize(string $subject): string
     {
         return static::pluralize(static::underscore($subject));
     }
@@ -243,7 +243,7 @@ class Str
      * 
      * For example: classify('users') returns 'User'.
      */
-    public static function classify(string $subject): string
+    public function classify(string $subject): string
     {
         return static::camelize(static::singularize($subject));
     }
@@ -254,7 +254,7 @@ class Str
      * 
      * For example: foreignKey('User') returns 'user_id'.
      */
-    public static function foreignKey(string $subject): string
+    public function foreignKey(string $subject): string
     {
         return static::underscore(static::singularize($subject)) . '_id';
     }
@@ -264,7 +264,7 @@ class Str
      * 
      * For example: ordinalize(1) returns '1st'.
      */
-    public static function ordinalize(int $number): string
+    public function ordinalize(int $number): string
     {
         if (in_array(($number % 100), range(11, 13))) {
             return $number . 'th';
@@ -286,9 +286,9 @@ class Str
      * This method will return the slug form of the passed string useful
      * for human friendly URLs.
      * 
-     * For example: slug('Lazy Brown Fox') returns 'lazy-brown-fox'.
+     * For example: slugify('Lazy Brown Fox') returns 'lazy-brown-fox'.
      */
-    public static function slugify(string $subject, string $separator = '-'): string
+    public function slugify(string $subject, string $separator = '-'): string
     {
         $subject = preg_replace('/[^a-zA-Z0-9]/', ' ', $subject);
         $subject = preg_replace('/\s+/', ' ', $subject);
@@ -304,7 +304,7 @@ class Str
      * 
      * For example: startsWith('/admin/products/23', '/admin') returns true.
      */
-    public static function startsWith(string $subject, string $prefix): bool
+    public function startsWith(string $subject, string $prefix): bool
     {
         return substr($subject, 0, strlen($prefix)) == $prefix;
     }
@@ -315,7 +315,7 @@ class Str
      * 
      * For example: endsWith('/admin/products/23', '23') returns true.
      */
-    public static function endsWith(string $subject, string $suffix): bool
+    public function endsWith(string $subject, string $suffix): bool
     {
         return substr($subject, -strlen($suffix)) == $suffix;
     }
@@ -326,7 +326,7 @@ class Str
      * 
      * For example: contains('/admin/products/23', 'products') returns true.
      */
-    public static function contains(string $subject, string $needle): bool
+    public function contains(string $subject, string $needle): bool
     {
         return strpos($subject, $needle) !== false;
     }
@@ -334,7 +334,7 @@ class Str
     /**
      * This method will generate a random string of the passed length.
      */
-    public static function random(int $length = 16): string
+    public function random(int $length = 16): string
     {
         if ($length < 2) {
             return '';
@@ -350,7 +350,7 @@ class Str
      * 
      * For example: mask('MYSECRET', '*', 2) returns 'MY****'.
      */
-    public static function mask(string $subject, string $mask = '*', int $start = 0): string
+    public function mask(string $subject, string $mask = '*', int $start = 0): string
     {
         $length = strlen($subject);
         $masked = substr($subject, 0, $start);

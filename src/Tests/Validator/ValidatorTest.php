@@ -19,8 +19,8 @@ final class ValidatorTest extends TestCase
             'email' => 'required|email'
         ];
 
-        $validator = new Validator($data);
-        $validator->setrules($rules)->run();
+        $validator = new Validator();
+        $validator->setInput($data)->setrules($rules)->run();
 
         $this->assertTrue($validator->hasErrors());
     }
@@ -37,8 +37,8 @@ final class ValidatorTest extends TestCase
             'email' => 'required|email'
         ];
 
-        $validator = new Validator($data);
-        $validator->setrules($rules)->run();
+        $validator = new Validator();
+        $validator->setInput($data)->setrules($rules)->run();
 
         $this->assertTrue($validator->hasErrors());
     }
@@ -48,8 +48,8 @@ final class ValidatorTest extends TestCase
         $data = ['password'  => 'hello', 'email' => 'hello@example.com'];
         $rules = ['password' => 'min:6', 'email' => 'email'];
 
-        $validator = new Validator($data);
-        $validator->setRules($rules)->run();
+        $validator = new Validator();
+        $validator->setInput($data)->setRules($rules)->run();
 
         $this->assertCount(1, $validator->getErrors());
         $this->assertTrue($validator->getError('email') === '');
@@ -58,13 +58,16 @@ final class ValidatorTest extends TestCase
 
     public function testCanSetRulesIndividually()
     {
-        $validator = new Validator([
+        $data = [
             'phone' => '091234521',
             'fname' => 'Bob123',
             'lname' => 'Williams'
-        ]);
+        ];
+
+        $validator = new Validator();
 
         $validator
+            ->setInput($data)
             ->setRule('phone', 'required|length:10')
             ->setRule('fname', [
                 'rules' => 'required|alpha',
@@ -88,14 +91,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleRequired()
     {
         // Assertion 1
-        $validator = new Validator(['password' => '']);
-        $validator->setRule('password', 'required')->run();
+        $data = ['password' => ''];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('password', 'required')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['password' => 'hello']);
-        $validator->setRule('password', 'required')->run();
+        $data = ['password' => 'hello'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('password', 'required')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -103,14 +108,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleAlpha()
     {
         // Assertion 1
-        $validator = new Validator(['name' => 'Bob123']);
-        $validator->setRule('name', 'alpha')->run();
+        $data = ['name' => 'Bob123'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'alpha')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['name' => 'Bob']);
-        $validator->setRule('name', 'alpha')->run();
+        $data = ['name' => 'Bob'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'alpha')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -118,14 +125,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleAlnum()
     {
         // Assertion 1
-        $validator = new Validator(['name' => '@Bob123']);
-        $validator->setRule('name', 'alnum')->run();
+        $data = ['name' => '@Bob123'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'alnum')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['name' => 'Bob123']);
-        $validator->setRule('name', 'alnum')->run();
+        $data = ['name' => 'Bob123'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'alnum')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -133,14 +142,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleEmail()
     {
         // Assertion 1
-        $validator = new Validator(['email' => 'hello@example']);
-        $validator->setRule('email', 'email')->run();
+        $data = ['email' => 'hello@example'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('email', 'email')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['email' => 'hello@example.co.in']);
-        $validator->setRule('email', 'email')->run();
+        $data = ['email' => 'hello@example.co.in'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('email', 'email')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -148,14 +159,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleSlug()
     {
         // Assertion 1
-        $validator = new Validator(['slug' => 'hello%world']);
-        $validator->setRule('slug', 'slug')->run();
+        $data = ['slug' => 'hello%world'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('slug', 'slug')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['slug' => 'hello-world']);
-        $validator->setRule('slug', 'slug')->run();
+        $data = ['slug' => 'hello-world'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('slug', 'slug')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -163,30 +176,35 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleUrl()
     {
         // Assertion 1
-        $validator = new Validator(['url' => 'http://example:8080']);
-        $validator->setRule('url', 'url')->run();
+        $data = ['url' => 'http://example:8080'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('url', 'url')->run();
 
         // Assertion 2
-        $validator = new Validator(['url' => 'http://example']);
-        $validator->setRule('url', 'url')->run();
+        $data = ['url' => 'http://example'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('url', 'url')->run();
 
         $this->assertFalse($validator->hasErrors());
 
         // Assertion 3
-        $validator = new Validator(['url' => 'http://example.com']);
-        $validator->setRule('url', 'url')->run();
+        $data = ['url' => 'http://example.com'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('url', 'url')->run();
 
         $this->assertFalse($validator->hasErrors());
 
         // Assertion 4
-        $validator = new Validator(['url' => 'http://123.example.com']);
-        $validator->setRule('url', 'url')->run();
+        $data = ['url' => 'http://123.example.com'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('url', 'url')->run();
 
         $this->assertFalse($validator->hasErrors());
 
         // Assertion 5
-        $validator = new Validator(['url' => 'http//example.com']);
-        $validator->setRule('url', 'url')->run();
+        $data = ['url' => 'http//example.com'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('url', 'url')->run();
 
         $this->assertTrue($validator->hasErrors());
     }
@@ -194,20 +212,23 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleIpAdress()
     {
         // Assertion 1
-        $validator = new Validator(['ip' => '0.0.0.0']);
-        $validator->setRule('ip', 'ip')->run();
+        $data = ['ip' => '0.0.0.0'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('ip', 'ip')->run();
 
         $this->assertFalse($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['ip' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334']);
-        $validator->setRule('ip', 'ip')->run();
+        $data = ['ip' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('ip', 'ip')->run();
 
         $this->assertFalse($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['ip' => '192.254.254.XX']);
-        $validator->setRule('ip', 'ip')->run();
+        $data = ['ip' => '192.254.254.XX'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('ip', 'ip')->run();
 
         $this->assertTrue($validator->hasErrors());
     }
@@ -215,14 +236,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleLength()
     {
         // Assertion 1
-        $validator = new Validator(['name' => 'Bruce']);
-        $validator->setRule('name', 'length:6')->run();
+        $data = ['name' => 'Bruce'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'length:6')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['name' => 'Bruce']);
-        $validator->setRule('name', 'length:5')->run();
+        $data = ['name' => 'Bruce'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'length:5')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -230,14 +253,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleMin()
     {
         // Assertion 1
-        $validator = new Validator(['name' => 'Bruce']);
-        $validator->setRule('name', 'min:6')->run();
+        $data = ['name' => 'Bruce'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'min:6')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['name' => 'Bruce']);
-        $validator->setRule('name', 'min:5')->run();
+        $data = ['name' => 'Bruce'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'min:5')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -245,14 +270,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleMax()
     {
         // Assertion 1
-        $validator = new Validator(['name' => 'Bruce']);
-        $validator->setRule('name', 'max:4')->run();
+        $data = ['name' => 'Bruce'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'max:4')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['name' => 'Bob']);
-        $validator->setRule('name', 'max:3')->run();
+        $data = ['name' => 'Bob'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'max:3')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -260,14 +287,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleBetween()
     {
         // Assertion 1
-        $validator = new Validator(['age' => 23]);
-        $validator->setRule('age', 'between:4,8')->run();
+        $data = ['age' => 23];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('age', 'between:4,8')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['age' => 23]);
-        $validator->setRule('age', 'between:18,30')->run();
+        $data = ['age' => 23];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('age', 'between:18,30')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -275,14 +304,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleDate()
     {
         // Assertion 1
-        $validator = new Validator(['date' => '19-01-2021']);
-        $validator->setRule('date', 'date:d-m-y')->run();
+        $data = ['date' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date', 'date:d-m-y')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['date' => '19-01-2021']);
-        $validator->setRule('date', 'date:d-m-Y')->run();
+        $data = ['date' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date', 'date:d-m-Y')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -290,20 +321,23 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleBefore()
     {
         // Assertion 1
-        $validator = new Validator(['date_before' => '19-01-2021']);
-        $validator->setRule('date_before', 'before:/d-m-y,12-01-2021/')->run();
+        $data = ['date_before' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date_before', 'before:/d-m-y,12-01-2021/')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['date_before' => '19-01-2021']);
-        $validator->setRule('date_before', 'before:/d-m-Y,12-01-2021/')->run();
+        $data = ['date_before' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date_before', 'before:/d-m-Y,12-01-2021/')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 3
-        $validator = new Validator(['date_before' => '19-01-2021']);
-        $validator->setRule('date_before', 'before:d-m-Y,12-09-2021')->run();
+        $data = ['date_before' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date_before', 'before:d-m-Y,12-09-2021')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -311,20 +345,23 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleAfter()
     {
         // Assertion 1
-        $validator = new Validator(['date_after' => '19-01-2021']);
-        $validator->setRule('date_after', 'after:/d-m-y,18-01-2021/')->run();
+        $data = ['date_after' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date_after', 'after:/d-m-y,18-01-2021/')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['date_after' => '19-01-2021']);
-        $validator->setRule('date_after', 'after:/d-m-Y,19-01-2021/')->run();
+        $data = ['date_after' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date_after', 'after:/d-m-Y,19-01-2021/')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 3
-        $validator = new Validator(['date_after' => '19-01-2021']);
-        $validator->setRule('date_after', 'after:d-m-Y,12-01-2021')->run();
+        $data = ['date_after' => '19-01-2021'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('date_after', 'after:d-m-Y,12-01-2021')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -332,14 +369,16 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleSame()
     {
         // Assertion 1
-        $validator = new Validator(['password' => 'hello', 'confirm_password' => 'helloo']);
-        $validator->setRule('confirm_password', 'same:password')->run();
+        $data = ['password' => 'hello', 'confirm_password' => 'helloo'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('confirm_password', 'same:password')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['password' => 'hello', 'confirm_password' => 'hello']);
-        $validator->setRule('confirm_password', 'same:password')->run();
+        $data = ['password' => 'hello', 'confirm_password' => 'hello'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('confirm_password', 'same:password')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
@@ -347,22 +386,25 @@ final class ValidatorTest extends TestCase
     public function testValidationRuleRegex()
     {
         // Assertion 1
-        $validator = new Validator(['phone' => '123-321-445']);
-        $validator->setRule('phone', 'regex:/^\d{3}-\d{3}-\d{4}$/')->run();
+        $data = ['phone' => '123-321-445'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('phone', 'regex:/^\d{3}-\d{3}-\d{4}$/')->run();
 
         $this->assertTrue($validator->hasErrors());
 
         // Assertion 2
-        $validator = new Validator(['phone' => '123-321-4455']);
-        $validator->setRule('phone', 'regex:/^\d{3}-\d{3}-\d{4}$/')->run();
+        $data = ['phone' => '123-321-4455'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('phone', 'regex:/^\d{3}-\d{3}-\d{4}$/')->run();
 
         $this->assertFalse($validator->hasErrors());
     }
 
     public function testValidationRuleCanValidateNestedFields()
     {
-        $validator = new Validator(['name' => 'John', 'address' => ['street' => '123 Main St', 'city' => 'Bengaluru', 'state' => 'NY']]);
-        $validator->setRule('name', 'required')->run();
+        $data = ['name' => 'John', 'address' => ['street' => '123 Main St', 'city' => 'Bengaluru', 'state' => 'NY']];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('name', 'required')->run();
         $validator->setRule('address.street', 'required')->run();
         $validator->setRule('address.city', 'required')->run();
         $validator->setRule('address.state', 'required')->run();
@@ -376,8 +418,9 @@ final class ValidatorTest extends TestCase
 
     public function testValidationRuleCanUseCallback()
     {
-        $validator = new Validator(['framework' => 'Lightpack']);
-        $validator->setRule('framework', function ($data) {
+        $data = ['framework' => 'Lightpack'];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('framework', function ($data) {
             return 'Lightpack' === $data;
         })->run();
 
@@ -386,8 +429,9 @@ final class ValidatorTest extends TestCase
 
     public function testValidationRuleCanSetCallback()
     {
-        $validator = new Validator(['framework' => 'Lightpack']);
-        $validator->setRules([
+        $data = ['framework' => 'Lightpack'];
+        $validator = new Validator();
+        $validator->setInput($data)->setInput($data)->setRules([
             'framework' => function ($data) {
                 return 'Lightpack' === $data;
             }
@@ -398,19 +442,24 @@ final class ValidatorTest extends TestCase
 
     public function testValidationRuleCanSetCallbackErrors()
     {
-        $validator = new Validator(['age' => 23]);
+        $data = ['age' => 23, 'email' => 'example.com'];
+        $validator = new Validator();
+        $validator->setInput($data);
+        $validator->setRule('email', 'required|email');
         $validator->setRule('age', function ($data) {
             return 23 !== $data;
         })->run();
 
         $this->assertTrue($validator->hasErrors());
-        $this->assertEquals($validator->getError('age'), 'Age is invalid');
+        $this->assertEquals($validator->getError('age'), 'The age is invalid.');
+        $this->assertEquals($validator->getError('email'), 'The email is an invalid email address.');
     }
 
     public function testValidationRuleCanSetCustomCallbackErrors()
     {
-        $validator = new Validator(['age' => 17]);
-        $validator->setRule('age', [
+        $data = ['age' => 17];
+        $validator = new Validator();
+        $validator->setInput($data)->setRule('age', [
             'error' => 'You must be above 18',
             'rules' => function ($data) {
                 return $data >= 18;
@@ -423,23 +472,33 @@ final class ValidatorTest extends TestCase
 
     public function testValidationRuleCanSetCustomCallbackLabels()
     {
-        $validator = new Validator(['age' => 17]);
-        $validator->setRule('age', [
-            'label' => 'Your age',
-            'rules' => function ($data) {
-                return $data >= 18;
-            }
-        ])->run();
+        $data = ['age' => 17, 'home_address' => ''];
+        $validator = new Validator();
+        $validator
+            ->setInput($data)
+            ->setRule('age', [
+                'error' => 'You must be above 18',
+                'rules' => function ($data) {
+                    return $data >= 18;
+                }
+            ])
+            ->setRule('home_address', [
+                'label' => 'home address',
+                'rules' => 'required',
+            ])
+            ->run();
 
         $this->assertTrue($validator->hasErrors());
-        $this->assertEquals($validator->getError('age'), 'Your age is invalid');
+        $this->assertEquals($validator->getError('age'), 'You must be above 18');
+        $this->assertEquals($validator->getError('home_address'), 'The home address is required.');
     }
 
     public function testValidationRuleCanSetMultipleCallbacksTogether()
     {
-        $validator = new Validator(['age1' => 17, 'age2' => 23, 'age3' => 49]);
+        $data = ['age1' => 17, 'age2' => 23, 'age3' => 49];
+        $validator = new Validator();
 
-        $validator->setRules([
+        $validator->setInput($data)->setRules([
             'age1' => function ($data) {
                 return $data >= 23;
             },
@@ -455,8 +514,8 @@ final class ValidatorTest extends TestCase
         ])->run();
 
         $this->assertTrue($validator->hasErrors());
-        $this->assertEquals($validator->getError('age1'), 'Age1 is invalid');
+        $this->assertEquals($validator->getError('age1'), 'The age1 is invalid.');
         $this->assertEmpty($validator->getError('age2'));
-        $this->assertEquals($validator->getError('age3'), "Grandpa's age is invalid");
+        $this->assertEquals($validator->getError('age3'), "The Grandpa's age is invalid.");
     }
 }

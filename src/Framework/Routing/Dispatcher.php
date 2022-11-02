@@ -3,64 +3,61 @@
 namespace Lightpack\Routing;
 
 use Lightpack\Container\Container;
-use Lightpack\Http\Request ;
+use Lightpack\Http\Request;
 use Lightpack\Routing\Router;
 
 class Dispatcher
 {
     /** @var Container */
-    private $container;
-
-    /** @var string */
-    private $controller;
-
-    /** @var string */
-    private $action;
-
-    /** @var array */
-    private $params;
+    private Container $container;
 
     /** @var Request */
-    private $request;
+    private Request $request;
 
     /** @var Router */
-    private $router;
+    private Router $router;
+
+    /** @var Route */
+    private Route $route;
 
     public function __construct(Container $container)
     {
         $this->container = $container;
         $this->request = $container->get('request');
         $this->router = $container->get('router');
-        $this->throwExceptionIfRouteNotFound($this->router->meta());
-        $this->controller = $this->router->controller();
-        $this->action = $this->router->action();
-        $this->params = $this->router->params();
+        $this->throwExceptionIfRouteNotFound();
+        $this->route = $this->router->getRoute();
+        $this->request->setRoute($this->route);
     }
 
-    public function dispatch() 
+    public function dispatch()
     {
-        if(! \class_exists($this->controller)) {
+        $controller = $this->route->getController();
+        $action = $this->route->getAction();
+        $params = $this->route->getParams();
+
+        if (!\class_exists($controller)) {
             throw new \Lightpack\Exceptions\ControllerNotFoundException(
-                sprintf("Controller Not Found Exception: %s", $this->controller)
+                sprintf("Controller Not Found Exception: %s", $controller)
             );
         }
 
-        if(! \method_exists($this->controller, $this->action)) {
+        if (!\method_exists($controller, $action)) {
             throw new \Lightpack\Exceptions\ActionNotFoundException(
-                sprintf("Action Not Found Exception: %s@%s", $this->controller, $this->action)
+                sprintf("Action Not Found Exception: %s@%s", $controller, $action)
             );
         }
 
-        return $this->container->call($this->controller, $this->action, $this->params);
+        return $this->container->call($controller, $action, array_values($params));
     }
 
     private function throwExceptionIfRouteNotFound()
     {
-        if(!$this->router->meta()) {
+        if (!$this->router->hasRoute()) {
             throw new \Lightpack\Exceptions\RouteNotFoundException(
                 sprintf(
-                    "No route registered for request: %s %s", 
-                    $this->request->method(), 
+                    "No route registered for request: %s %s",
+                    $this->request->method(),
                     $this->request->path()
                 )
             );

@@ -2,37 +2,38 @@
 
 namespace Lightpack\Event;
 
+use Lightpack\Container\Container;
+
 class Event
 {
-    private $subscribers = [];
-    private $data;
+    protected $subscribers = [];
 
-    public function subscribe(string $eventName, string $eventSubscriber): void
+    public function __construct(protected Container $container) {}
+
+    public function subscribe(string $event, string $subscriber): void
     {
-        $this->subscribers[$eventName][] = $eventSubscriber;
+        $this->subscribers[$event][] = $subscriber;
     }
 
-    public function unsubscribe(string $eventSubscriber): void
+    public function unsubscribe(string $subscriber): void
     {
-        $eventNames = array_keys($this->subscribers);
+        $events = array_keys($this->subscribers);
 
-        foreach ($eventNames as $eventName) {
-            $key = array_search($eventSubscriber, $this->subscribers[$eventName]);
+        foreach ($events as $event) {
+            $key = array_search($subscriber, $this->subscribers[$event]);
 
             if ($key !== false) {
-                unset($this->subscribers[$eventName][$key]);
+                unset($this->subscribers[$event][$key]);
             }
         }
     }
 
-    public function notify(string $eventName)
+    public function fire(string $event, mixed $data = null): void
     {
-        $this->throwExceptionIfEventNotFound($eventName);
+        $this->throwExceptionIfEventNotFound($event);
         
-        foreach ($this->subscribers[$eventName] as $eventSubscriber) {
-            $subscriberInstance = new $eventSubscriber;
-            $this->throwExceptionIfHandlerMethodNotFound($eventSubscriber, $subscriberInstance);
-            $subscriberInstance->handle();
+        foreach ($this->subscribers[$event] as $subscriber) {
+            $this->container->call($subscriber, 'handle', [$data]);
         }
     }
 
@@ -41,36 +42,13 @@ class Event
         return $this->subscribers;
     }
 
-    public function setData($data = null)
+    protected function throwExceptionIfEventNotFound(string $event): void
     {
-        $this->data = $data;
-        return $this;
-    }
-
-    public function getData()
-    {
-        return $this->data;
-    }
-
-    private function throwExceptionIfEventNotFound(string $eventName): void
-    {
-        if (!isset($this->subscribers[$eventName])) {
+        if (!isset($this->subscribers[$event])) {
             throw new \Lightpack\Exceptions\EventNotFoundException(
                 sprintf(
                     'Event `%s` is not registered',
-                    $eventName
-                )
-            );
-        }
-    }
-    
-    private function throwExceptionIfHandlerMethodNotFound(string $subscriber, object $instance): void
-    {
-        if(!method_exists($instance, 'handle')) {
-            throw new \Lightpack\Exceptions\EventHandlerMethodNotFoundException(
-                sprintf(
-                    'Event subscriber `%s` has not implemented handle() method.',
-                    $subscriber
+                    $event
                 )
             );
         }

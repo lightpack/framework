@@ -15,7 +15,7 @@ use Lightpack\Mail\Mail;
 
 class __MAIL_NAME__ extends Mail
 {
-    public function execute(array $payload = [])
+    public function dispatch(array $payload = [])
     {
         // ...
     }

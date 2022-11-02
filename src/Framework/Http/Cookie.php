@@ -20,7 +20,7 @@ class Cookie
      * @todo Constructor should accept an options parameter to be
      * configurable.
      */
-    public function __construct(string $secret = null)
+    public function __construct(string $secret = '')
     {
         $this->secret = $secret;
     }
@@ -28,7 +28,7 @@ class Cookie
     public function set(string $key, string $value, int $expire = 0, array $options = []): bool {
         $value = $this->hash($value) . ':' . $value;
         $path = $options['path'] ?? '/';
-        $domain = $options['domain'] ?? null;
+        $domain = $options['domain'] ?? '';
         $secure = $options['secure'] ?? false;
         $httpOnly = $options['http_only'] ?? true;
 

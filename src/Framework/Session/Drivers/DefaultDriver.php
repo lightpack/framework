@@ -15,7 +15,7 @@ class DefaultDriver implements DriverInterface
             session_start();
         }
 
-        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP';
     }
 
     public function set(string $key, $value)

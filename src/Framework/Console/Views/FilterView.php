@@ -17,12 +17,12 @@ use Lightpack\Filters\IFilter;
 
 class __FILTER_NAME__ implements IFilter
 {
-    public function before(Request $request)
+    public function before(Request $request, array $params = [])
     {
-       
+        // ...
     }
 
-    public function after(Request $request, Response $response): Response
+    public function after(Request $request, Response $response, array $params = []): Response
     {
         return $response;
     }

@@ -12,5 +12,7 @@ class ConfigProvider implements ProviderInterface
         $container->register('config', function ($container) {
             return new Config();
         });
+
+        $container->alias(Config::class, 'config');
     }
 }
