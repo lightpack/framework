@@ -28,7 +28,7 @@ class Url
 
         // Remove empty values from the array.
         $params = array_filter($params, function ($value) {
-            return trim($value) ? true : false;
+            return $value && trim($value) ? true : false;
         });
 
         // Trim whitespace and slashes from URL params
@@ -99,7 +99,7 @@ class Url
 
         // Remove empty values from the array.
         $params = array_filter($params, function ($value) {
-            return trim($value) ? true : false;
+            return $value && trim($value) ? true : false;
         });
 
         $queryString = http_build_query($params);
