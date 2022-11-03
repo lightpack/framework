@@ -32,13 +32,9 @@ if (!function_exists('redirect')) {
      * 
      * @return Lightpack\Http\Redirect
      */
-    function redirect(string $url = null, int $statusCode = 302, array $headers = []): mixed
+    function redirect()
     {
-        if(is_null($url)) {
-            return app('redirect');
-        }
-
-        return app('redirect')->to($url, $statusCode, $headers);
+        return app('redirect');
     }
 }
 
