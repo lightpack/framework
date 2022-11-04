@@ -28,7 +28,7 @@ final class CreateTableTest extends TestCase
     {
         $table = new Table('products', $this->connection);
 
-        $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
+        $table->column('id')->type('int')->increments()->primary();
         
         $sql = (new CreateTable)->compile($table);
         
@@ -41,7 +41,7 @@ final class CreateTableTest extends TestCase
     {
         $table = new Table('products', $this->connection);
 
-        $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
+        $table->column('id')->type('int')->increments()->primary();
         $table->column('category_id')->type('int');
         $table->column('title')->type('varchar')->length(55);
         $table->column('description')->type('varchar')->length(55)->nullable();

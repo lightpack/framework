@@ -35,8 +35,8 @@ final class SchemaTest extends TestCase
         $table = new Table('products', $this->connection);
 
         $table->id();
-        $table->title(125);
-        $table->email(125)->nullable();
+        $table->varchar('title', 125);
+        $table->varchar('email', 125)->nullable();
 
         $this->schema->createTable($table);
 
@@ -47,7 +47,7 @@ final class SchemaTest extends TestCase
     {
         // Create products table
         $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
+        $table->column('id')->type('int')->increments();
         $this->schema->createTable($table);
 
         // Add new column
@@ -83,7 +83,7 @@ final class SchemaTest extends TestCase
     {
         // Create products table
         $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
+        $table->column('id')->type('int')->increments();
         $this->schema->createTable($table);
 
         // Truncate the table
@@ -98,7 +98,7 @@ final class SchemaTest extends TestCase
     {
         // Create products table
         $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
+        $table->column('id')->type('int')->increments();
         $this->schema->createTable($table);
 
         // Drop the table
@@ -111,13 +111,13 @@ final class SchemaTest extends TestCase
     {
         // Create categories table
         $table = new Table('categories', $this->connection);
-        $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
+        $table->column('id')->type('int')->increments();
         $table->column('title')->type('varchar')->length(55);
         $this->schema->createTable($table);
 
         // Create products table
         $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments()->index(Column::INDEX_PRIMARY);
+        $table->column('id')->type('int')->increments();
         $table->column('category_id')->type('int');
         $table->column('title')->type('varchar')->length(55);
         $table->foreignKey('category_id')->references('id')->on('categories');

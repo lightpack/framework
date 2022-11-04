@@ -4,11 +4,11 @@ namespace Lightpack\Database\Schema;
 
 class ForeignKey
 {
-    private $foreignKey;
-    private $parentTable;
-    private $parentColumn = 'id';
-    private $updateAction;
-    private $deleteAction;
+    private ?string $foreignKey;
+    private string $parentTable;
+    private string $parentColumn = 'id';
+    private string $updateAction;
+    private string $deleteAction;
 
     public const ACTION_CASCADE = 'CASCADE';
     public const ACTION_RESTRICT = 'RESTRICT';

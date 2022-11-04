@@ -21,7 +21,7 @@ class Schema
     public function createTable(Table $table): void
     {
         $sql = (new CreateTable)->compile($table);
-
+        
         $this->connection->query($sql);
     }
 

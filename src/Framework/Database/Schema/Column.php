@@ -63,12 +63,35 @@ class Column
         return $this;
     }
 
-    public function index(string $indexType, string $indexName = null): self
+    public function unique(string $indexName = null): self
     {
-        $this->columnIndexType = strtoupper($indexType);
+        $this->columnIndexType = self::INDEX_UNIQUE;
 
         if ($indexName) {
             $this->columnIndexName = $indexName;
+        } else {
+            $this->columnIndexName = $this->columnName . '_unique';
+        }
+
+        return $this;
+    }
+
+    public function primary(): self
+    {
+        $this->columnIndexType = self::INDEX_PRIMARY;
+
+
+        return $this;
+    }
+
+    public function index(string $indexName = null): self
+    {
+        $this->columnIndexType = self::INDEX_INDEX;
+
+        if ($indexName) {
+            $this->columnIndexName = $indexName;
+        } else {
+            $this->columnIndexName = $this->columnName . '_index';
         }
 
         return $this;
@@ -76,6 +99,7 @@ class Column
 
     public function increments(): self
     {
+        $this->primary();
         $this->columnIncrements = true;
 
         return $this;
@@ -88,7 +112,7 @@ class Column
         return $this;
     }
 
-    public function default(string $value): self
+    public function default(bool|string $value): self
     {
         $this->columnDefaultValue = $value;
 
@@ -135,13 +159,17 @@ class Column
         }
 
         if (isset($this->columnDefaultValue)) {
-            if ($this->columnDefaultValue !== 'NULL' && $this->columnDefaultValue !== 'CURRENT_TIMESTAMP') {
-                $default = "'{$this->columnDefaultValue}'";
+            if(is_bool($this->columnDefaultValue)) {
+                $column .= " DEFAULT " . ($this->columnDefaultValue ? '1' : '0');
             } else {
-                $default = "{$this->columnDefaultValue}";
+                if ($this->columnDefaultValue !== 'NULL' && $this->columnDefaultValue !== 'CURRENT_TIMESTAMP') {
+                    $default = "'{$this->columnDefaultValue}'";
+                } else {
+                    $default = "{$this->columnDefaultValue}";
+                }
+    
+                $column .= " DEFAULT {$default}";
             }
-
-            $column .= " DEFAULT {$default}";
         }
 
         return $column;

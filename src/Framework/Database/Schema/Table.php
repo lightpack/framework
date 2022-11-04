@@ -52,7 +52,7 @@ class Table
     {
         $column = new Column($name);
 
-        $column->type('BIGINT')->attribute('UNSIGNED')->increments()->index(Column::INDEX_PRIMARY);
+        $column->type('BIGINT')->attribute('UNSIGNED')->increments();
 
         $this->tableColumns->add($column);
 
@@ -71,12 +71,22 @@ class Table
         return $column;
     }
 
+    public function text(string $name): Column
+    {
+        $column = new Column($name);
+
+        $column->type('TEXT');
+
+        $this->tableColumns->add($column);
+
+        return $column;
+    }
+
     public function boolean(string $column, bool $default = false): Column
     {
         $column = new Column($column);
 
-        $column->type('BOOLEAN');
-        $column->default($default);
+        $column->type('tinyint')->default($default ? 1 : 0);
 
         $this->tableColumns->add($column);
 
@@ -105,7 +115,7 @@ class Table
         return $column;
     }
 
-    public function created_at(): Column
+    public function createdAt(): Column
     {
         $column = new Column('created_at');
 
@@ -117,7 +127,7 @@ class Table
         return $column;
     }
 
-    public function updated_at(): Column
+    public function updatedAt(): Column
     {
         $column = new Column('updated_at');
 
@@ -129,7 +139,7 @@ class Table
         return $column;
     }
 
-    public function deleted_at(): Column
+    public function deletedAt(): Column
     {
         $column = new Column('deleted_at');
 
@@ -169,10 +179,9 @@ class Table
     public function foreignKey(string $column): ForeignKey
     {
         $parentTable = explode('_', $column)[0];
-        $parentTable = (new Str)->tableize($column);
+        $parentTable = (new Str)->tableize($parentTable);
 
         $foreign = new ForeignKey($column);
-
         $foreign->references('id')->on($parentTable);
 
         $this->tableKeys->add($foreign);
@@ -218,23 +227,5 @@ class Table
         $sql = (new RenameColumn)->compile($this->getName(), $oldName, $newName);
 
         $this->connection->query($sql);
-    }
-
-    /**
-     * Set a datetime or varchar based string column automagically.
-     * 
-     * For example: 
-     * $table->email(125); // Sets the column type to VARCHAR and the column length to 125.
-     */
-    public function __call($name, $arguments): Column
-    {
-        // if column ends with '_at', set the column type to DATETIME
-        if (substr($name, -3) === '_at') {
-            return $this->datetime($name);
-        }
-
-        // otherwise, set the column type to VARCHAR
-        $length = $arguments[0] ?? 255;
-        return $this->varchar($name, (int) $length);
     }
 }
