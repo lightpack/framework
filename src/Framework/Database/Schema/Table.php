@@ -151,6 +151,16 @@ class Table
         return $column;
     }
 
+
+    /**
+     * This method will add 'created_at' and 'updated_at' columns to the table.
+     */
+    public function timestamps(): void
+    {
+        $this->createdAt();
+        $this->updatedAt();
+    }
+
     public function datetime(string $column): Column
     {
         $column = new Column($column);

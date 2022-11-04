@@ -32,9 +32,9 @@ class Migrator
         $allMigrations = array_keys($migrationFiles);
         $executedMigrations = $this->getExecutedMigrations();
         $migrationsToRun = array_diff($allMigrations, $executedMigrations);
-
+        
         ksort($migrationsToRun);
-
+        
         // Get next migration batch
         $nextBatch = $this->getLastBatch() + 1;
 
