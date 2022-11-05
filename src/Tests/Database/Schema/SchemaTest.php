@@ -52,8 +52,9 @@ final class SchemaTest extends TestCase
 
         // Add new column
         $table = new Table('products', $this->connection);
-        $table->column('description')->type('text');
-        $table->addColumn();
+        $table->alterContext()->add(function(Table $table) {
+            $table->column('description')->type('text');
+        });
 
         $this->assertTrue(in_array('description', $this->schema->inspectColumns('products')));
     }
@@ -70,8 +71,10 @@ final class SchemaTest extends TestCase
 
         // Now lets modify the description column
         $table = new Table('products', $this->connection);
-        $table->column('description')->type('varchar')->length(150);
-        $table->modifyColumn();
+
+        $table->alterContext()->modify(function(Table $table) {
+            $table->column('description')->type('varchar')->length(150);
+        });
 
         // If column modified successfully, we should get its type 
         $descriptionColumnInfo = $this->schema->inspectColumn('products', 'description');

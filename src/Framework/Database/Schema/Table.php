@@ -209,13 +209,6 @@ class Table
         return $foreign;
     }
 
-    public function dropForeignKey(string $constraintName): void
-    {
-        $sql = (new AlterTable)->compileDropForeignKey($this->tableName, $constraintName);
-
-        $this->connection->query($sql);
-    }
-
     /**
      * Add one or more columns to the table.
      */
@@ -371,6 +364,10 @@ class Table
         return $this->collation;
     }
 
+    /**
+     * Set context to 'create' mode which will help to determine if current 
+     * table column, index or key is being added.
+     */
     public function createContext(): self
     {
         $this->context = self::CONTEXT_CREATE;
@@ -378,6 +375,10 @@ class Table
         return $this;
     }
 
+    /**
+     * Set context to 'create' mode which will help to determine if current 
+     * table column, index or key is being modified.
+     */
     public function alterContext(): self
     {
         $this->context = self::CONTEXT_ALTER;

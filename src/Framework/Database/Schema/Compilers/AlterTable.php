@@ -70,7 +70,7 @@ class AlterTable
     /**
      * @todo: test if this works.
      */
-    public function compilePrimaryKey(string $table, string|array $columns, ?string $indexName = null): string
+    private function compilePrimaryKey(string $table, string|array $columns, ?string $indexName = null): string
     {
         $sql = "ALTER TABLE {$table} ADD ";
         $sql .= (new IndexKey)->compile($columns, 'PRIMARY', $indexName);
@@ -81,7 +81,7 @@ class AlterTable
     /**
      * @todo: test if this works.
      */
-    public function compileDropPrimaryKey(string $table): string
+    private function compileDropPrimaryKey(string $table): string
     {
         $sql = "ALTER TABLE {$table} DROP PRIMARY KEY";
 
@@ -91,7 +91,7 @@ class AlterTable
     /**
      * @todo: test if this works.
      */
-    public function compileForeignKey(string $table, string $column, string $referenceTable, string $referenceColumn, ?string $constraintName = null): string
+    private function compileForeignKey(string $table, string $column, string $referenceTable, string $referenceColumn, ?string $constraintName = null): string
     {
         $sql = "ALTER TABLE {$table} ADD ";
         $sql .= (new ForeignKey)->compile($column, $referenceTable, $referenceColumn, $constraintName);
@@ -102,7 +102,7 @@ class AlterTable
     /**
      * @todo: test if this works.
      */
-    public function compileDropForeignKey(string $table, string $constraintName): string
+    private function compileDropForeignKey(string $table, string $constraintName): string
     {
         $sql = "ALTER TABLE {$table} DROP FOREIGN KEY {$constraintName}";
 
@@ -112,7 +112,7 @@ class AlterTable
     /**
      * @todo: test if this works.
      */
-    public function compileRename(string $table, string $newName): string
+    private function compileRename(string $table, string $newName): string
     {
         $sql = "ALTER TABLE {$table} RENAME TO {$newName}";
 
@@ -122,7 +122,7 @@ class AlterTable
     /**
      * @todo: test if this works.
      */
-    public function compileRenameColumn(string $table, string $column, string $newName): string
+    private function compileRenameColumn(string $table, string $column, string $newName): string
     {
         $sql = "ALTER TABLE {$table} CHANGE {$column} {$newName}";
 
