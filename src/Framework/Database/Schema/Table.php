@@ -17,6 +17,9 @@ class Table
     private ForeignKeyCollection $tableKeys;
     private DB $connection;
     private array $indexes = [];
+    private string $engine = 'InnoDB';
+    private string $charset = 'utf8mb4';
+    private string $collation = 'utf8mb4_unicode_ci';
 
     public function __construct(string $tableName, DB $connection)
     {
@@ -264,5 +267,41 @@ class Table
     public function getIndexes(): array
     {
         return $this->indexes;
+    }
+
+    public function engine(string $engine): self
+    {
+        $this->engine = $engine;
+
+        return $this;
+    }
+
+    public function getEngine(): string
+    {
+        return $this->engine;
+    }
+
+    public function charset(string $charset): self
+    {
+        $this->charset = $charset;
+
+        return $this;
+    }
+
+    public function getCharset(): string
+    {
+        return $this->charset;
+    }
+
+    public function collation(string $collation): self
+    {
+        $this->collation = $collation;
+
+        return $this;
+    }
+
+    public function getCollation(): string
+    {
+        return $this->collation;
     }
 }
