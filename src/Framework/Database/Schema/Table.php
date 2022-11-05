@@ -5,6 +5,7 @@ namespace Lightpack\Database\Schema;
 use Lightpack\Database\DB;
 use Lightpack\Database\Schema\Compilers\AddColumn;
 use Lightpack\Database\Schema\Compilers\DropColumn;
+use Lightpack\Database\Schema\Compilers\IndexKey;
 use Lightpack\Database\Schema\Compilers\ModifyColumn;
 use Lightpack\Database\Schema\Compilers\RenameColumn;
 use Lightpack\Utils\Str;
@@ -15,6 +16,7 @@ class Table
     private ColumnCollection $tableColumns;
     private ForeignKeyCollection $tableKeys;
     private DB $connection;
+    private array $indexes = [];
 
     public function __construct(string $tableName, DB $connection)
     {
@@ -237,5 +239,30 @@ class Table
         $sql = (new RenameColumn)->compile($this->getName(), $oldName, $newName);
 
         $this->connection->query($sql);
+    }
+
+    public function unique(string|array $columns, string $indexName = null): void
+    {
+        $this->indexes[] = (new IndexKey)->compile($columns, 'UNIQUE', $indexName);
+    }
+
+    public function index(string|array $columns, string $indexName = null): void
+    {
+        $this->indexes[] = (new IndexKey)->compile($columns, 'INDEX', $indexName);
+    }
+
+    public function fulltext(string|array $columns, string $indexName = null): void
+    {
+        $this->indexes[] = (new IndexKey)->compile($columns, 'FULLTEXT', $indexName);
+    }
+
+    public function spatial(string|array $columns, string $indexName = null): void
+    {
+        $this->indexes[] = (new IndexKey)->compile($columns, 'SPATIAL', $indexName);
+    }
+
+    public function getIndexes(): array
+    {
+        return $this->indexes;
     }
 }
