@@ -58,6 +58,11 @@ abstract class Migration
         $this->schema->truncateTable($table);
     }
 
+    protected function alter(string $table): Table
+    {
+        return $this->schema->alterTable($table);
+    }
+
     /**
      * Execute a raw SQL query.
      */

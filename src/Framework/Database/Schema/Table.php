@@ -4,6 +4,7 @@ namespace Lightpack\Database\Schema;
 
 use Lightpack\Database\DB;
 use Lightpack\Database\Schema\Compilers\AddColumn;
+use Lightpack\Database\Schema\Compilers\AlterTable;
 use Lightpack\Database\Schema\Compilers\DropColumn;
 use Lightpack\Database\Schema\Compilers\IndexKey;
 use Lightpack\Database\Schema\Compilers\ModifyColumn;
@@ -12,6 +13,9 @@ use Lightpack\Utils\Str;
 
 class Table
 {
+    private const CONTEXT_CREATE = 'create';
+    private const CONTEXT_ALTER = 'alter';
+    private string $context = self::CONTEXT_CREATE;
     private string $tableName;
     private ColumnCollection $tableColumns;
     private ForeignKeyCollection $tableKeys;
@@ -176,7 +180,10 @@ class Table
         return $column;
     }
 
-    public function parent(string $parentTable): ForeignKey
+    /**
+     * @todo: Do we need this method?
+     */
+    private function parent(string $parentTable): ForeignKey
     {
         $key = (new Str)->foreignKey($parentTable);
 
@@ -202,12 +209,33 @@ class Table
         return $foreign;
     }
 
+    public function dropForeignKey(string $constraintName): void
+    {
+        $sql = (new AlterTable)->compileDropForeignKey($this->tableName, $constraintName);
+
+        $this->connection->query($sql);
+    }
+
     /**
      * Add one or more columns to the table.
      */
-    public function addColumn(): void
+    public function add(callable $callback): void
     {
+        $callback($this);
+
         $sql = (new AddColumn)->compile($this);
+
+        $this->connection->query($sql);
+    }
+
+    /**
+     * Modify one or more columns in a table.
+     */
+    public function modify(callable $callback): void
+    {
+        $callback($this);
+
+        $sql = (new ModifyColumn)->compile($this);
 
         $this->connection->query($sql);
     }
@@ -223,16 +251,6 @@ class Table
     }
 
     /**
-     * Modify one or more columns in a table.
-     */
-    public function modifyColumn(): void
-    {
-        $sql = (new ModifyColumn)->compile($this);
-
-        $this->connection->query($sql);
-    }
-
-    /**
      * Rename a column.
      */
     public function renameColumn(string $oldName, string $newName): void
@@ -242,24 +260,74 @@ class Table
         $this->connection->query($sql);
     }
 
+    /**
+     * Add unique index to one or more columns.
+     * 
+     * NOTE: You should remove duplicate values from the columns before 
+     * adding unique index otherwise it may result in "mysql error 1062".
+     */
     public function unique(string|array $columns, string $indexName = null): void
     {
-        $this->indexes[] = (new IndexKey)->compile($columns, 'UNIQUE', $indexName);
+        if($this->altering()) {
+            $this->addUniqueIndex($columns, $indexName);
+        } else {
+            $this->indexes[] = (new IndexKey)->compile($columns, 'UNIQUE', $indexName);
+        }
+    }
+
+    public function dropUnique(string $indexName): void
+    {
+        $sql = (new AlterTable)->compileDropUnique($this->getName(), $indexName);
+
+        $this->connection->query($sql);
     }
 
     public function index(string|array $columns, string $indexName = null): void
     {
-        $this->indexes[] = (new IndexKey)->compile($columns, 'INDEX', $indexName);
+        if($this->altering()) {
+            $this->addIndex($columns, $indexName);
+        } else {
+            $this->indexes[] = (new IndexKey)->compile($columns, 'INDEX', $indexName);
+        }
+    }
+
+    public function dropIndex(string $indexName): void
+    {
+        $sql = (new AlterTable)->compileDropIndex($this->getName(), $indexName);
+
+        $this->connection->query($sql);
     }
 
     public function fulltext(string|array $columns, string $indexName = null): void
     {
-        $this->indexes[] = (new IndexKey)->compile($columns, 'FULLTEXT', $indexName);
+        if($this->altering()) {
+            $this->addFulltextIndex($columns, $indexName);
+        } else {
+            $this->indexes[] = (new IndexKey)->compile($columns, 'FULLTEXT', $indexName);
+        }
+    }
+
+    public function dropFulltext(string $indexName): void
+    {
+        $sql = (new AlterTable)->compileDropFulltext($this->getName(), $indexName);
+
+        $this->connection->query($sql);
     }
 
     public function spatial(string|array $columns, string $indexName = null): void
     {
-        $this->indexes[] = (new IndexKey)->compile($columns, 'SPATIAL', $indexName);
+        if($this->altering()) {
+            $this->addSpatialIndex($columns, $indexName);
+        } else {
+            $this->indexes[] = (new IndexKey)->compile($columns, 'SPATIAL', $indexName);
+        }
+    }
+
+    public function dropSpatial(string $indexName): void
+    {
+        $sql = (new AlterTable)->compileDropSpatial($this->getName(), $indexName);
+
+        $this->connection->query($sql);
     }
 
     public function getIndexes(): array
@@ -301,5 +369,58 @@ class Table
     public function getCollation(): string
     {
         return $this->collation;
+    }
+
+    public function createContext(): self
+    {
+        $this->context = self::CONTEXT_CREATE;
+
+        return $this;
+    }
+
+    public function alterContext(): self
+    {
+        $this->context = self::CONTEXT_ALTER;
+
+        return $this;
+    }
+
+    private function creating(): bool
+    {
+        return $this->context === self::CONTEXT_CREATE;
+    }
+
+    private function altering(): bool
+    {
+        return $this->context === self::CONTEXT_ALTER;
+    }
+
+    private function addUniqueIndex(string|array $columns, string $indexName = null): void
+    {
+
+        $sql = (new AlterTable)->compileUnique($this->getName(), $columns, $indexName);
+
+        $this->connection->query($sql);
+    }
+
+    private function addIndex(string|array $columns, string $indexName = null): void
+    {
+        $sql = (new AlterTable)->compileIndex($this->getName(), $columns, $indexName);
+
+        $this->connection->query($sql);
+    }
+
+    private function addFulltextIndex(string|array $columns, string $indexName = null): void
+    {
+        $sql = (new AlterTable)->compileFulltext($this->getName(), $columns, $indexName);
+
+        $this->connection->query($sql);
+    }
+
+    private function addSpatialIndex(string|array $columns, string $indexName = null): void
+    {
+        $sql = (new AlterTable)->compileSpatial($this->getName(), $columns, $indexName);
+
+        $this->connection->query($sql);
     }
 }

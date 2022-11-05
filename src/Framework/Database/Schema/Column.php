@@ -56,9 +56,9 @@ class Column
         return $this;
     }
 
-    public function nullable(): self
+    public function nullable(bool $columnIsNullable = true): self
     {
-        $this->columnIsNullable = true;
+        $this->columnIsNullable = $columnIsNullable;
 
         return $this;
     }

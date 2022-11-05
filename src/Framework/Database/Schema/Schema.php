@@ -45,6 +45,13 @@ class Schema
         $this->connection->query($sql);
     }
 
+    public function alterTable(string $table): Table
+    {
+        $table = new Table($table, $this->connection);
+        
+        return $table->alterContext();
+    }
+
     /**
      * Inspect the list of tables in the database.
      */
