@@ -136,8 +136,7 @@ class Table
     {
         $column = new Column('updated_at');
 
-        $column->type('DATETIME');
-        $column->attribute('ON UPDATE CURRENT_TIMESTAMP');
+        $column->type('DATETIME')->nullable()->attribute('ON UPDATE CURRENT_TIMESTAMP');
 
         $this->tableColumns->add($column);
 
@@ -148,8 +147,7 @@ class Table
     {
         $column = new Column('deleted_at');
 
-        $column->type('DATETIME');
-        $column->nullable();
+        $column->type('DATETIME')->nullable();
 
         $this->tableColumns->add($column);
 
