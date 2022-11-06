@@ -62,21 +62,21 @@ class AuthManager
     public function redirectLogin(): Redirect
     {
         $url = $this->normalizedConfig['login.redirect'];
-        return redirect($url);
+        return redirect()->to($url);
     }
 
     public function redirectLogout(): Redirect
     {
         $url = $this->normalizedConfig['logout.redirect'];
         
-        return redirect($url);
+        return redirect()->to($url);
     }
 
     public function redirectLoginUrl(): Redirect
     {
         $url = $this->normalizedConfig['login.url'];
         
-        return redirect($url);
+        return redirect()->to($url);
     }
 
     public function attempt(): Result
