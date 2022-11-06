@@ -198,7 +198,8 @@ class Table
 
     public function foreignKey(string $column): ForeignKey
     {
-        $parentTable = explode('_', $column)[0];
+        // Extract _id from the column name
+        $parentTable = substr($column, 0, -3);
         $parentTable = (new Str)->tableize($parentTable);
 
         $foreign = new ForeignKey($column);
