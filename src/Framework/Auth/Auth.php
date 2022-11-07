@@ -68,7 +68,7 @@ class Auth
         return $this->manager->getAuthId();
     }
 
-    public function user(): Identity
+    public function user(): ?Identity
     {
         return $this->manager->getAuthUser();
     }

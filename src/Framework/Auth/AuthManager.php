@@ -56,7 +56,13 @@ class AuthManager
 
     public function getAuthUser(): ?Identity
     {
-        return session()->get('user');
+        if(session()->has('user')) {
+            return session()->get('user');
+        }
+
+        $this->checkRememberMe();
+
+        return self::$identity;
     }
 
     public function redirectLogin(): Redirect
