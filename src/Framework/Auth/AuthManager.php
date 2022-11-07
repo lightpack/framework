@@ -51,7 +51,7 @@ class AuthManager
     {
         $user = $this->getAuthUser();
 
-        return $user->get('id');
+        return $user ? $user->get('id') : null;
     }
 
     public function getAuthUser(): ?Identity

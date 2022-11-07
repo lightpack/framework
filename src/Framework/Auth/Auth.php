@@ -79,7 +79,7 @@ class Auth
     }
 
     public function isGuest(): bool
-    {
+    {    
         return !$this->isLoggedIn();
     }
 
