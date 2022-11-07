@@ -4,7 +4,7 @@ namespace Lightpack\Database\Schema\Compilers;
 
 class IndexKey
 {
-    public function compile(string|array $columns, string $indexType, ?string $indexName): string
+    public function compile(string|array $columns, string $indexType, ?string $indexName = null): string
     {
         $columns = (array) $columns;
 
@@ -15,6 +15,10 @@ class IndexKey
         $columns = implode(', ', $columns);
 
         $sql = "{$indexType} KEY {$indexName} ({$columns})";
+
+        if($indexType === 'PRIMARY') {
+            $sql = "{$indexType} KEY ({$columns})";
+        }
 
         return $sql;
     }

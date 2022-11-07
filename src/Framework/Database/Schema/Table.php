@@ -254,6 +254,15 @@ class Table
         $this->connection->query($sql);
     }
 
+    public function primary(string|array $columns): void
+    {
+        if($this->altering()) {
+            $this->addPrimaryIndex($columns);
+        } else {
+            $this->indexes[] = (new IndexKey)->compile($columns, 'PRIMARY');
+        }
+    }
+
     /**
      * Add unique index to one or more columns.
      * 
@@ -395,6 +404,13 @@ class Table
     private function altering(): bool
     {
         return $this->context === self::CONTEXT_ALTER;
+    }
+
+    private function addPrimaryIndex(string|array $columns): void
+    {
+        $sql = (new AlterTable)->compilePrimary($this->getName(), $columns);
+
+        $this->connection->query($sql);
     }
 
     private function addUniqueIndex(string|array $columns, string $indexName = null): void

@@ -6,6 +6,21 @@ use Lightpack\Database\Schema\ForeignKey;
 
 class AlterTable
 {
+    public function compilePrimary(string $table, string|array $columns): string
+    {
+        $sql = "ALTER TABLE {$table} ADD ";
+        $sql .= (new IndexKey)->compile($columns, 'PRIMARY');
+
+        return $sql;
+    }
+
+    public function dropPrimary(string $table): string
+    {
+        $sql = "ALTER TABLE {$table} DROP PRIMARY KEY";
+
+        return $sql;
+    }
+
     public function compileUnique(string $table, string|array $columns, ?string $indexName = null): string
     {
         $sql = "ALTER TABLE {$table} ADD ";
