@@ -152,8 +152,10 @@ class AuthManager
         if ($result->isSuccess()) {
             $this->persist();
             $this->updateLogin();
-            $this->redirectLogin();
+            return $this->redirectLogin();
         }
+
+        return $this->redirectLoginUrl();
     }
 
     public function updateLogin()

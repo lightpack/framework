@@ -13,7 +13,7 @@ class AuthFilter implements IFilter
         $type = $params[0] ?? 'web';
 
         if('web' === $type && auth()->isGuest()) {
-            return auth()->redirectLoginUrl();
+            return auth()->recall();
         }
 
         if('api' === $type && false === auth()->viaToken()->isSuccess()) {

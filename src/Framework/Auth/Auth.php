@@ -59,7 +59,7 @@ class Auth
         if (session()->get('authenticated')) {
             return $this->manager->redirectLogin();
         } else {
-            $this->manager->checkRememberMe();
+            return $this->manager->checkRememberMe();
         }
     }
 
