@@ -263,6 +263,13 @@ class Table
         }
     }
 
+    public function dropPrimary(): void
+    {
+        $sql = (new AlterTable)->compileDropPrimary($this->getName());
+
+        $this->connection->query($sql);
+    }
+
     /**
      * Add unique index to one or more columns.
      * 

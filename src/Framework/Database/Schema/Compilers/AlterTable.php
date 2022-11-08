@@ -14,7 +14,7 @@ class AlterTable
         return $sql;
     }
 
-    public function dropPrimary(string $table): string
+    public function compileDropPrimary(string $table): string
     {
         $sql = "ALTER TABLE {$table} DROP PRIMARY KEY";
 
@@ -78,27 +78,6 @@ class AlterTable
     public function compileDropSpatial(string $table, string $indexName): string
     {
         $sql = "ALTER TABLE {$table} DROP INDEX {$indexName}";
-
-        return $sql;
-    }
-
-    /**
-     * @todo: test if this works.
-     */
-    private function compilePrimaryKey(string $table, string|array $columns, ?string $indexName = null): string
-    {
-        $sql = "ALTER TABLE {$table} ADD ";
-        $sql .= (new IndexKey)->compile($columns, 'PRIMARY', $indexName);
-
-        return $sql;
-    }
-
-    /**
-     * @todo: test if this works.
-     */
-    private function compileDropPrimaryKey(string $table): string
-    {
-        $sql = "ALTER TABLE {$table} DROP PRIMARY KEY";
 
         return $sql;
     }
