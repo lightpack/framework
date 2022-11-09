@@ -28,6 +28,6 @@ class CreateMigration implements ICommand
         $template = MigrationView::getTemplate();
 
         file_put_contents($migrationFilepath, $template);
-        fputs(STDOUT, "✓ Migration created in ./database/migrations directory.\n\n");
+        fputs(STDOUT, "✓ Migration created in {$migrationFilepath}\n\n");
     }
 }

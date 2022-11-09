@@ -76,6 +76,6 @@ class CreateModel implements ICommand
     {
         $text = str_replace('Model', '', $text);
 
-        return (new Str)->underscore($text);
+        return (new Str)->tableize($text);
     }
 }

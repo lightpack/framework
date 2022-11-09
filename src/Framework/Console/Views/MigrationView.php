@@ -9,6 +9,7 @@ class MigrationView
         return <<<'TEMPLATE'
 <?php
 
+use Lightpack\Database\Schema\Table;
 use Lightpack\Database\Migrations\Migration;
 
 return new class extends Migration
