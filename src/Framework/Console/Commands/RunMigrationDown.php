@@ -29,14 +29,20 @@ class RunMigrationDown implements ICommand
         $confirm = $this->promptConfirmation($steps);
 
         if ($confirm) {
-            $migrations = $migrator->rollback(DIR_ROOT . '/database/migrations', $steps);
+            if('all' === $steps) {
+                $migrations = $migrator->rollbackAll(DIR_ROOT . '/database/migrations');
+            } else {
+                $migrations = $migrator->rollback(DIR_ROOT . '/database/migrations', $steps);
+            }
 
-            if(empty($migrations)) {
-                fputs(STDOUT, "No migrations to rollback.\n\n");
+            fputs(STDOUT, "\n");
+
+            if (empty($migrations)) {
+                fputs(STDOUT, "✓ No migrations to rollback.\n");
             } else {
                 fputs(STDOUT, "Rolled back migrations:\n");
                 foreach ($migrations as $migration) {
-                    fputs(STDOUT, "  {$migration}\n");
+                    fputs(STDOUT, "✓ {$migration}\n");
                 }
                 fputs(STDOUT, "\n");
             }
@@ -69,6 +75,10 @@ class RunMigrationDown implements ICommand
             return null;
         }
 
+        if ('--all' === $steps) {
+            return 'all';
+        }
+
         $steps = explode('=', $steps);
 
         $steps = $steps[1] ?? null;
@@ -76,12 +86,16 @@ class RunMigrationDown implements ICommand
         return $steps;
     }
 
-    private function promptConfirmation($steps): bool
+    private function promptConfirmation(string|int $steps = null): bool
     {
-        if (null === $steps || 1 === $steps) {
-            fputs(STDOUT, "Are you sure you want to rollback last batch of migrations? [y/N] ");
+        fputs(STDOUT, "\n");
+
+        if ('all' === $steps) {
+            fputs(STDOUT, "Are you sure you want to rollback all the migrations? [y/N]: ");
+        } else if (null === $steps || 1 === $steps) {
+            fputs(STDOUT, "Are you sure you want to rollback last batch of migrations? [y/N]: ");
         } else {
-            fputs(STDOUT, "Are you sure you want to rollback last {$steps} batch of migrations? [y/N] ");
+            fputs(STDOUT, "Are you sure you want to rollback last {$steps} batch of migrations? [y/N]: ");
         }
 
         return strtolower(trim(fgets(STDIN))) === 'y';
