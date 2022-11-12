@@ -16,44 +16,49 @@ class Redirect extends Response
     /** @var \Lightpack\Utils\Url */
     protected $url;
 
-    public function to(string $url, int $statusCode = 302, array $headers = []): self
+    public function to(...$params): self
     {
-        if(filter_var($url, FILTER_VALIDATE_URL) === false) {
-            $url = $this->url->to($url);
-        }
+        $url = $this->url->to(...$params);
 
         return $this->setRedirectUrl($url)
-            ->setStatus($statusCode)
-            ->setHeaders($headers)
+            ->setStatus(302)
             ->setHeader('Location', $url);
     }
 
-    public function route(string $name, array $params = [], int $statusCode = 302, array $headers = []): self
+    public function route(string $name, ...$params): self
     {
         $url = $this->url->route($name, ...$params);
 
-        return $this->to($url, $statusCode, $headers);
+        return $this->setRedirectUrl($url)
+            ->setStatus(302)
+            ->setHeader('Location', $url);
     }
 
-    public function back(int $statusCode = 302, array $headers = []): self
+    public function back(): self
     {
         $url = $this->session->get('_previous_url', '/');
 
-        return $this->to($url, $statusCode, $headers);
+        return $this->setRedirectUrl($url)
+            ->setStatus(302)
+            ->setHeader('Location', $url);
     }
 
-    public function intended(int $statusCode = 302, array $headers = []): self
+    public function intended(): self
     {
         $url = $this->session->get('_intended_url', '/');
 
         $this->session->delete('_intended_url');
 
-        return $this->to($url, $statusCode, $headers);
+        return $this->setRedirectUrl($url)
+            ->setStatus(302)
+            ->setHeader('Location', $url);
     }
 
-    public function refresh(int $statusCode = 302, array $headers = []): self
+    public function refresh(): self
     {
-        return $this->to($this->request->fullUrl(), $statusCode, $headers);
+        return $this->setRedirectUrl($this->request->fullUrl())
+            ->setStatus(302)
+            ->setHeader('Location', $this->request->fullUrl());
     }
 
     /**
