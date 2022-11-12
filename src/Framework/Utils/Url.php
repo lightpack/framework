@@ -34,7 +34,13 @@ class Url
         // Trim whitespace and slashes from URL params
         array_walk($params, fn (&$el) => $el = trim($el, '/ '));
 
-        return '/' . implode('/', $params) . $queryString;
+        $url = '/' . implode('/', $params) . $queryString;
+        
+        if(get_env('APP_URL')) {
+            $url = rtrim(get_env('APP_URL'), '/') . $url;
+        }
+
+        return rtrim($url, '/') ?: '/';
     }
 
     /**
@@ -54,7 +60,11 @@ class Url
         $file = trim($file, '/ ');
         $file = $file ? '/' . $file : '';
 
-        return get_env('ASSET_URL', '/assets') . $file;
+        if(get_env('ASSET_URL')) {
+            return rtrim(get_env('ASSET_URL'), '/') . $file;
+        }
+
+        return '/assets' . $file;
     }
 
     public function route(string $routeName, ...$params)
