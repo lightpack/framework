@@ -56,7 +56,7 @@ class AuthManager
 
     public function getAuthUser(): ?Identity
     {
-        if(session()->has('user')) {
+        if (session()->has('user')) {
             return session()->get('user');
         }
 
@@ -67,6 +67,10 @@ class AuthManager
 
     public function redirectLogin(): Redirect
     {
+        if (session()->has('_intended_url')) {
+            return redirect()->intended();
+        }
+
         $url = $this->normalizedConfig['login.redirect'];
         return redirect()->to($url);
     }
@@ -74,14 +78,14 @@ class AuthManager
     public function redirectLogout(): Redirect
     {
         $url = $this->normalizedConfig['logout.redirect'];
-        
+
         return redirect()->to($url);
     }
 
     public function redirectLoginUrl(): Redirect
     {
         $url = $this->normalizedConfig['login.url'];
-        
+
         return redirect()->to($url);
     }
 
@@ -98,7 +102,7 @@ class AuthManager
 
     public function setdriver(string $driver): self
     {
-        if($driver !== $this->driver) {
+        if ($driver !== $this->driver) {
             $this->driver = $driver;
             $this->normalizedConfig = $this->getNormalizedConfig();
         }
@@ -120,7 +124,7 @@ class AuthManager
             throw new \Exception("Configuration not found for auth driver: '{$this->driver}'");
         }
 
-        if($this->driver == 'default') {
+        if ($this->driver == 'default') {
             $config = $this->config['default'];
         } else {
             $config = array_merge($this->config['default'], $this->config[$this->driver]);
@@ -206,7 +210,7 @@ class AuthManager
     protected function generateRememberToken()
     {
         $rememberToken = bin2hex(random_bytes(16));
-        $cookie = self::$identity->get($this->normalizedConfig['fields.id']). '|' . $rememberToken;
+        $cookie = self::$identity->get($this->normalizedConfig['fields.id']) . '|' . $rememberToken;
 
         self::$identity->set($this->normalizedConfig['fields.remember_token'], $cookie);
 
@@ -230,7 +234,7 @@ class AuthManager
         /** @var \Lightpack\Auth\Result */
         $result = $this->getAuthenticator($authenticatorType)->verify();
 
-        if($result->isSuccess()) {
+        if ($result->isSuccess()) {
             self::$identity = $result->getIdentity();
         }
 

@@ -48,7 +48,7 @@ class Auth
     public function logout()
     {
         $this->manager->forgetRememberMeCookie();
-        
+
         session()->destroy();
 
         return $this->manager->redirectLogout();
@@ -79,8 +79,14 @@ class Auth
     }
 
     public function isGuest(): bool
-    {    
-        return !$this->isLoggedIn();
+    {
+        $isGuest = !$this->isLoggedIn();
+
+        if ($isGuest) {
+            session()->set('_intended_url', request()->fullUrl());
+        }
+
+        return $isGuest;
     }
 
     public function attempt(): Result
