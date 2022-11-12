@@ -22,6 +22,7 @@ class Redirect extends Response
 
         return $this->setRedirectUrl($url)
             ->setStatus(302)
+            ->setMessage('Found')
             ->setHeader('Location', $url);
     }
 
@@ -31,6 +32,7 @@ class Redirect extends Response
 
         return $this->setRedirectUrl($url)
             ->setStatus(302)
+            ->setMessage('Found')
             ->setHeader('Location', $url);
     }
 
@@ -40,6 +42,7 @@ class Redirect extends Response
 
         return $this->setRedirectUrl($url)
             ->setStatus(302)
+            ->setMessage('Found')
             ->setHeader('Location', $url);
     }
 
@@ -51,6 +54,7 @@ class Redirect extends Response
 
         return $this->setRedirectUrl($url)
             ->setStatus(302)
+            ->setMessage('Found')
             ->setHeader('Location', $url);
     }
 
@@ -58,6 +62,7 @@ class Redirect extends Response
     {
         return $this->setRedirectUrl($this->request->fullUrl())
             ->setStatus(302)
+            ->setMessage('Found')
             ->setHeader('Location', $this->request->fullUrl());
     }
 
