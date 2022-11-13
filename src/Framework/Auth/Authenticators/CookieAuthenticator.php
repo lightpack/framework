@@ -15,7 +15,7 @@ class CookieAuthenticator extends AbstractAuthenticator
             return new Result;
         }
 
-        $cookieFragments =  explode('|', cookie()->get($rememberTokenField));
+        $cookieFragments =  explode('|', cookie()->get($rememberTokenField) ?? '');
 
         if(count($cookieFragments) !== 2) {
             return new Result;
