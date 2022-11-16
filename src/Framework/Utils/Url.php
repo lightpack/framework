@@ -19,6 +19,11 @@ class Url
      */
     public function to(...$params): string
     {
+        // If absolute URL, return it.
+        if (filter_var($params[0], FILTER_VALIDATE_URL)) {
+            return $params[0];
+        }
+
         $queryString = '';
 
         if (is_array($queryParams = end($params))) {
