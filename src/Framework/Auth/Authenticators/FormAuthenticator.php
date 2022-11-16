@@ -3,20 +3,18 @@
 namespace Lightpack\Auth\Authenticators;
 
 use Lightpack\Auth\AbstractAuthenticator;
-use Lightpack\Auth\Result;
+use Lightpack\Auth\Identity;
 
 class FormAuthenticator extends AbstractAuthenticator
 {
-    public function verify(): Result
+    public function verify(): ?Identity
     {
         $credentials = request()->input();
 
-        if(empty($credentials)) {
-            return new Result;
+        if (empty($credentials)) {
+            return null;
         }
 
-        $identity = $this->identifier->findByCredentials($credentials);
-
-        return new Result($identity);
+        return $this->identifier->findByCredentials($credentials);
     }
 }

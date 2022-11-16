@@ -27,7 +27,6 @@ final class UrlTest extends TestCase
 
     public function testUrlToMethod()
     {
-        $this->assertEquals('/', $this->url->to());
         $this->assertEquals('/', $this->url->to('/'));
         $this->assertEquals('/', $this->url->to('//'));
         $this->assertEquals('/users', $this->url->to('users'));

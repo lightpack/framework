@@ -19,6 +19,11 @@ class Url
      */
     public function to(...$params): string
     {
+        // If absolute URL, return it.
+        if (filter_var($params[0], FILTER_VALIDATE_URL)) {
+            return $params[0];
+        }
+
         $queryString = '';
 
         if (is_array($queryParams = end($params))) {
@@ -28,13 +33,19 @@ class Url
 
         // Remove empty values from the array.
         $params = array_filter($params, function ($value) {
-            return trim($value) ? true : false;
+            return $value && trim($value) ? true : false;
         });
 
         // Trim whitespace and slashes from URL params
         array_walk($params, fn (&$el) => $el = trim($el, '/ '));
 
-        return '/' . implode('/', $params) . $queryString;
+        $url = '/' . implode('/', $params) . $queryString;
+        
+        if(get_env('APP_URL')) {
+            $url = rtrim(get_env('APP_URL'), '/') . $url;
+        }
+
+        return rtrim($url, '/') ?: '/';
     }
 
     /**
@@ -54,7 +65,11 @@ class Url
         $file = trim($file, '/ ');
         $file = $file ? '/' . $file : '';
 
-        return get_env('ASSET_URL', '/assets') . $file;
+        if(get_env('ASSET_URL')) {
+            return rtrim(get_env('ASSET_URL'), '/') . $file;
+        }
+
+        return '/assets' . $file;
     }
 
     public function route(string $routeName, ...$params)
@@ -99,7 +114,7 @@ class Url
 
         // Remove empty values from the array.
         $params = array_filter($params, function ($value) {
-            return trim($value) ? true : false;
+            return $value && trim($value) ? true : false;
         });
 
         $queryString = http_build_query($params);

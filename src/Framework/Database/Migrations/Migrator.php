@@ -26,15 +26,16 @@ class Migrator
         $this->createMigrationsTable();
     }
 
-    public function run(string $path)
+    public function run(string $path): array
     {
         $migrationFiles = $this->findMigrationFiles($path);
         $allMigrations = array_keys($migrationFiles);
         $executedMigrations = $this->getExecutedMigrations();
         $migrationsToRun = array_diff($allMigrations, $executedMigrations);
+        $migratedFiles = [];
 
         ksort($migrationsToRun);
-
+        
         // Get next migration batch
         $nextBatch = $this->getLastBatch() + 1;
 
@@ -53,7 +54,11 @@ class Migrator
             // Record migration
             $sql = "INSERT INTO migrations (migration, batch) VALUES ('{$migration}', {$nextBatch});";
             $this->connection->query($sql);
+
+            $migratedFiles[] = $migration;
         }
+
+        return $migratedFiles;
     }
 
     /**
@@ -63,7 +68,7 @@ class Migrator
      * @param integer|null $steps No. of batches to rollback.
      * @return array Array of rolled back migratins.
      */
-    public function rollback($path, int $steps = null): array
+    public function rollback(string $path, int $steps = null): array
     {
         $migrationFiles = $this->findMigrationFiles($path);
 
@@ -105,6 +110,11 @@ class Migrator
         }
 
         return $migratedFiles;
+    }
+
+    public function rollbackAll(string $path): array
+    {
+        return $this->rollback($path, 999999);
     }
 
     private function getExecutedMigrations()

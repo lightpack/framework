@@ -24,4 +24,12 @@ class CryptoTest extends TestCase
         $this->assertEquals('Hello World', $crypto->decrypt($encrypted1));
         $this->assertEquals('Hello World', $crypto->decrypt($encrypted2));
     }
+
+    public function testItCanGenerateToken()
+    {
+        $crypto = new Crypto('secret');
+        $token = $crypto->token();
+        $this->assertIsString($token);
+        $this->assertEquals(64, strlen($token));
+    }
 }

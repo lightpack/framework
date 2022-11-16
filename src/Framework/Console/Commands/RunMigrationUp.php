@@ -24,11 +24,30 @@ class RunMigrationUp implements ICommand
             exit;
         }
 
+        $confirm = $this->promptConfirmation();
+
+        if(false === $confirm) {
+            fputs(STDOUT, "\n✓ Migration cancelled.\n");
+            exit;
+        }
+
         $migrator = new Migrator($this->getConnection($config));
 
-        $migrator->run(DIR_ROOT . '/database/migrations');
+        $migrations = $migrator->run(DIR_ROOT . '/database/migrations');
         
-        fputs(STDOUT, "✓ Migrations created.\n\n");
+        fputs(STDOUT, "\n");
+
+        if(empty($migrations)) {
+            fputs(STDOUT, "✓ Migrations already up-to-date.\n\n");
+        } else {
+            fputs(STDOUT, "Migrations:\n");
+
+            foreach ($migrations as $migration) {
+                fputs(STDOUT, "✓ {$migration}\n");
+            }
+
+            fputs(STDOUT, "\n");
+        }
     }
 
     private function getConnection(array $config)
@@ -47,5 +66,15 @@ class RunMigrationUp implements ICommand
                 fputs(STDOUT, "Invalid database driver found in ./env.php\n\n");
                 exit;
         }
+    }
+
+    private function promptConfirmation(): bool
+    {
+        if ('production' === strtolower(get_env('APP_ENV'))) {
+            fputs(STDOUT, "\n[Production] Are you sure you want to migrate? [y/N]: ");
+            return strtolower(trim(fgets(STDIN))) === 'y';
+        } 
+
+        return true;
     }
 }

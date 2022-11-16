@@ -25,9 +25,50 @@ abstract class Migration
     /**
      * Get a new table instance.
      */
-    protected function table(string $table): Table
+    private function table(string $table): Table
     {
         return new Table($table, $this->connection);
+    }
+
+    /**
+     * Create a new table.
+     */
+    protected function create(string $table, callable $callback): void
+    {
+        $table = $this->table($table);
+
+        $callback($table);
+
+        $this->schema->createTable($table);
+    }
+
+    /**
+     * Drop a table.
+     */
+    protected function drop(string $table): void
+    {
+        $this->schema->dropTable($table);
+    }
+
+    /**
+     * Truncate a table.
+     */
+    protected function truncate(string $table): void
+    {
+        $this->schema->truncateTable($table);
+    }
+
+    protected function alter(string $table): Table
+    {
+        return $this->schema->alterTable($table);
+    }
+
+    /**
+     * Execute a raw SQL query.
+     */
+    protected function execute(string $sql): void
+    {
+        $this->connection->query($sql);
     }
 
     /**

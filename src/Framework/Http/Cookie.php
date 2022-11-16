@@ -63,7 +63,7 @@ class Cookie
     {
         if($_COOKIE[$key] ?? null) {
             unset($_COOKIE[$key]);
-            return setcookie($key, '', time() - 3600, '/', null, false, true);
+            return $this->set($key, '', time() - 3600);
         }
 
         return false;

@@ -29,6 +29,8 @@ abstract class Mail extends PHPMailer
             get_env('MAIL_FROM_NAME')
         );
 
+        $this->isHTML(true);
+
         parent::__construct(true);
     }
 

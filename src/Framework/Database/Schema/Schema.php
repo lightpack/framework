@@ -21,7 +21,7 @@ class Schema
     public function createTable(Table $table): void
     {
         $sql = (new CreateTable)->compile($table);
-
+        
         $this->connection->query($sql);
     }
 
@@ -43,6 +43,13 @@ class Schema
         $sql = (new TruncateTable)->compile($table);
 
         $this->connection->query($sql);
+    }
+
+    public function alterTable(string $table): Table
+    {
+        $table = new Table($table, $this->connection);
+        
+        return $table->alterContext();
     }
 
     /**

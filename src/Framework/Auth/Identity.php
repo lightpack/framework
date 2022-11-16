@@ -2,27 +2,32 @@
 
 namespace Lightpack\Auth;
 
-class Identity
+interface Identity
 {
-    protected $attributes;
+    /**
+     * Get the unique identifier for the user.
+     *
+     * @return null|int|string
+     */
+    public function getId(): mixed;
 
-    public function __construct(array $attributes)
-    {
-        $this->attributes = $attributes;
-    }
+    /**
+     * Get the API auth token for the user.
+     */
+    public function getAuthToken(): ?string;
 
-    public function get($key, $default = null)
-    {
-        return $this->attributes[$key] ?? $default;
-    }
+    /**
+     * Set the API auth token for the user.
+     */
+    public function setAuthToken(string $token): void;
 
-    public function set($key, $value)
-    {
-        $this->attributes[$key] = $value;
-    }
+    /**
+     * Get the remember token for the user.
+     */
+    public function getRememberToken(): ?string;
 
-    public function toArray(): array
-    {
-        return $this->attributes;
-    }
+    /**
+     * Set the remember token for the user.
+     */
+    public function setRememberToken(string $token): void;
 }

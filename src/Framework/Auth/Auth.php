@@ -19,22 +19,22 @@ class Auth
         return $this->manager->getAuthToken();
     }
 
-    public function viaToken(): Result
+    public function viaToken(): ?Identity
     {
-        $result = $this->manager->verify('bearer');
+        $identity = $this->manager->verify('bearer');
 
-        if ($result->isSuccess()) {
+        if ($identity) {
             $this->manager->updateLastLogin();
         }
 
-        return $result;
+        return $identity;
     }
 
     public function login()
     {
-        $result = $this->manager->verify('form');
+        $identity = $this->manager->verify('form');
 
-        if ($result->isSuccess()) {
+        if ($identity) {
             $this->manager->updateLogin();
         } else {
             $this->manager->flashError();
@@ -48,7 +48,7 @@ class Auth
     public function logout()
     {
         $this->manager->forgetRememberMeCookie();
-        
+
         session()->destroy();
 
         return $this->manager->redirectLogout();
@@ -56,10 +56,10 @@ class Auth
 
     public function recall()
     {
-        if (session()->get('authenticated')) {
+        if (session()->get('_logged_in')) {
             return $this->manager->redirectLogin();
         } else {
-            $this->manager->checkRememberMe();
+            return $this->manager->checkRememberMe();
         }
     }
 
@@ -68,22 +68,28 @@ class Auth
         return $this->manager->getAuthId();
     }
 
-    public function user(): Identity
+    public function user(): ?Identity
     {
         return $this->manager->getAuthUser();
     }
 
     public function isLoggedIn(): bool
     {
-        return session()->has('authenticated');
+        return session()->get('_logged_in', false);
     }
 
     public function isGuest(): bool
     {
-        return !$this->isLoggedIn();
+        $isGuest = !$this->isLoggedIn();
+
+        if ($isGuest) {
+            session()->set('_intended_url', request()->fullUrl());
+        }
+
+        return $isGuest;
     }
 
-    public function attempt(): Result
+    public function attempt(): ?Identity
     {
         return $this->manager->attempt();
     }
