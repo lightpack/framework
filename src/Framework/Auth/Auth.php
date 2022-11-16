@@ -19,22 +19,22 @@ class Auth
         return $this->manager->getAuthToken();
     }
 
-    public function viaToken(): Result
+    public function viaToken(): ?Identity
     {
-        $result = $this->manager->verify('bearer');
+        $identity = $this->manager->verify('bearer');
 
-        if ($result->isSuccess()) {
+        if ($identity) {
             $this->manager->updateLastLogin();
         }
 
-        return $result;
+        return $identity;
     }
 
     public function login()
     {
-        $result = $this->manager->verify('form');
+        $identity = $this->manager->verify('form');
 
-        if ($result->isSuccess()) {
+        if ($identity) {
             $this->manager->updateLogin();
         } else {
             $this->manager->flashError();
@@ -56,7 +56,7 @@ class Auth
 
     public function recall()
     {
-        if (session()->get('authenticated')) {
+        if (session()->get('_logged_in')) {
             return $this->manager->redirectLogin();
         } else {
             return $this->manager->checkRememberMe();
@@ -75,7 +75,7 @@ class Auth
 
     public function isLoggedIn(): bool
     {
-        return session()->has('authenticated');
+        return session()->get('_logged_in', false);
     }
 
     public function isGuest(): bool
@@ -89,7 +89,7 @@ class Auth
         return $isGuest;
     }
 
-    public function attempt(): Result
+    public function attempt(): ?Identity
     {
         return $this->manager->attempt();
     }

@@ -38,5 +38,5 @@ abstract class AbstractAuthenticator
         return $this;
     }
 
-    abstract public function verify(): Result;
+    abstract public function verify(): ?Identity;
 }

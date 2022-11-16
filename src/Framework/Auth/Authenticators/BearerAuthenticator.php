@@ -3,20 +3,20 @@
 namespace Lightpack\Auth\Authenticators;
 
 use Lightpack\Auth\AbstractAuthenticator;
-use Lightpack\Auth\Result;
+use Lightpack\Auth\Identity;
 
 class BearerAuthenticator extends AbstractAuthenticator
 {
-    public function verify(): Result
+    public function verify(): ?Identity
     {
-       $token = app('request')->bearerToken();
-        
-        if(null === $token) {
-            return new Result;
+        $token = request()->bearerToken();
+
+        if (null === $token) {
+            return null;
         }
 
         $tokenHash = hash_hmac('sha1', $token, '');
 
-        return new Result($this->identifier->findByAuthToken($tokenHash));
+        return $this->identifier->findByAuthToken($tokenHash);
     }
 }

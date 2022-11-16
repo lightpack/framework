@@ -33,34 +33,38 @@ class AuthManager
 
     public function getAuthToken()
     {
-        return self::$identity ? self::$identity->get($this->normalizedConfig['fields.api_token']) : null;
+        if(self::$identity) {
+            return self::$identity->getAuthToken();
+        }
     }
 
-    public function viaToken(): Result
+    public function viaToken(): ?Identity
     {
-        $result = $this->verify('bearer');
+        $identity = $this->verify('bearer');
 
-        if ($result->isSuccess()) {
+        if ($identity) {
+            self::$identity = $identity;
+
             $this->updateLastLogin();
         }
 
-        return $result;
+        return $identity;
     }
 
     public function getAuthId()
     {
         $user = $this->getAuthUser();
 
-        return $user ? $user->get('id') : null;
+        if ($user) {
+            return $user->getId();
+        }
     }
 
     public function getAuthUser(): ?Identity
     {
-        if (session()->has('user')) {
-            return session()->get('user');
+        if(!self::$identity) {
+            $this->checkRememberMe();
         }
-
-        $this->checkRememberMe();
 
         return self::$identity;
     }
@@ -89,15 +93,17 @@ class AuthManager
         return redirect()->to($url);
     }
 
-    public function attempt(): Result
+    public function attempt(): ?Identity
     {
-        $result = $this->verify('form');
+        $identity = $this->verify('form');
 
-        if ($result->isSuccess()) {
+        if ($identity) {
+            self::$identity = $identity;
+
             $this->updateLogin();
         }
 
-        return $result;
+        return $identity;
     }
 
     public function setdriver(string $driver): self
@@ -144,7 +150,7 @@ class AuthManager
         $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
 
         if (request()->input($rememberTokenField)) {
-            cookie()->forever($rememberTokenField, self::$identity->get($rememberTokenField));
+            cookie()->forever($rememberTokenField, self::$identity->getRememberToken());
         }
     }
 
@@ -157,11 +163,14 @@ class AuthManager
 
     public function checkRememberMe()
     {
-        $result = $this->verify('cookie');
+        $identity = $this->verify('cookie');
 
-        if ($result->isSuccess()) {
+        if ($identity) {
+            self::$identity = $identity;
+
             $this->persist();
             $this->updateLogin();
+
             return $this->redirectLogin();
         }
 
@@ -170,7 +179,6 @@ class AuthManager
 
     public function updateLogin()
     {
-        $idField = $this->normalizedConfig['fields.id'];
         $apiTokenField = $this->normalizedConfig['fields.api_token'];
         $lastLoginField = $this->normalizedConfig['fields.last_login_at'];
         $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
@@ -183,9 +191,10 @@ class AuthManager
             $fields[$apiTokenField] = $this->hashToken($this->generateApiToken());
         }
 
-        $identifier = new $this->normalizedConfig['identifier'];
+        /** @var Identifier */
+        $identifier = $this->getIdentifier();
 
-        $identifier->updateLogin(self::$identity->get($idField), $fields);
+        $identifier->updateLogin(self::$identity->getId(), $fields);
     }
 
     public function updateLastLogin()
@@ -194,15 +203,16 @@ class AuthManager
 
         $fields[$lastLoginField] = date('Y-m-d H:i:s');
 
-        $identifier = new $this->normalizedConfig['identifier'];
-        $identifier->updateLogin(self::$identity->get($this->normalizedConfig['fields.id']), $fields);
+        $identifier = $this->getIdentifier();
+        
+        $identifier->updateLogin(self::$identity->getId(), $fields);
     }
 
     protected function generateApiToken()
     {
-        $token = self::$identity->get($this->normalizedConfig['fields.id']) . '|' . bin2hex(random_bytes(16));
+        $token = self::$identity->getId() . '|' . bin2hex(random_bytes(16));
 
-        self::$identity->set($this->normalizedConfig['fields.api_token'], $token);
+        self::$identity->setAuthToken($token);
 
         return $token;
     }
@@ -210,9 +220,10 @@ class AuthManager
     protected function generateRememberToken()
     {
         $rememberToken = bin2hex(random_bytes(16));
-        $cookie = self::$identity->get($this->normalizedConfig['fields.id']) . '|' . $rememberToken;
 
-        self::$identity->set($this->normalizedConfig['fields.remember_token'], $cookie);
+        $cookie = self::$identity->getId() . '|' . $rememberToken;
+
+        self::$identity->setRememberToken($cookie);
 
         return $rememberToken;
     }
@@ -229,16 +240,15 @@ class AuthManager
         return $this;
     }
 
-    public function verify(string $authenticatorType): Result
+    public function verify(string $authenticatorType): ?Identity
     {
-        /** @var \Lightpack\Auth\Result */
-        $result = $this->getAuthenticator($authenticatorType)->verify();
+        $identity = $this->getAuthenticator($authenticatorType)->verify();
 
-        if ($result->isSuccess()) {
-            self::$identity = $result->getIdentity();
+        if($identity) {
+            self::$identity = $identity;
         }
 
-        return $result;
+        return $identity;
     }
 
     /**
@@ -247,14 +257,13 @@ class AuthManager
     public function populateSession()
     {
         session()->regenerate();
-        session()->set('authenticated', true);
-        session()->set('user', self::$identity);
+        session()->set('_logged_in', true);
     }
 
     public function forgetRememberMeCookie()
     {
         $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
-
+        
         cookie()->delete($rememberTokenField);
     }
 
@@ -264,10 +273,22 @@ class AuthManager
             throw new \Exception("Authenticator not found for auth driver: '{$authenticatorType}'");
         }
 
-        $identifier = new $this->normalizedConfig['identifier'];
+        $identifier = $this->getIdentifier();
         $config = $this->normalizedConfig;
         $authenticatorClass = self::$authenticators[$authenticatorType];
 
         return new $authenticatorClass($identifier, $config);
+    }
+
+    protected function getIdentifier(): Identifier
+    {
+        if('default' === $this->driver) {
+            $identifier = $this->normalizedConfig['identifier'];
+            $model = $this->normalizedConfig['model'];
+
+            return new $identifier(new $model);
+        }
+
+        throw new \Exception("Auth identifier not found for driver: '{$this->driver}'");
     }
 }

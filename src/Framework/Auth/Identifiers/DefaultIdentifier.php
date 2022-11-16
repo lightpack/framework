@@ -4,25 +4,29 @@ namespace Lightpack\Auth\Identifiers;
 
 use Lightpack\Auth\Identifier;
 use Lightpack\Auth\Identity;
-use Lightpack\Auth\Models\User;
-use Lightpack\Utils\Password;
+use Lightpack\Auth\Models\AuthUser;
 
 class DefaultIdentifier implements Identifier
 {
+    public function __construct(protected AuthUser $user)
+    {
+        // ...
+    }
+
     public function findByAuthToken(string $token): ?Identity
     {
-        $user = User::query()->where('api_token', '=', $token)->one();
+        $user = $this->user->query()->where('api_token', '=', $token)->one();
 
         if (!$user) {
             return null;
         }
 
-        return new Identity($user->toArray());
+        return $user;
     }
 
     public function findByRememberToken($id, string $token): ?Identity
     {
-        $user = User::query()->where('id', '=', $id)->one();
+        $user = $this->user->query()->where('id', '=', $id)->one();
 
         if (!$user) {
             return null;
@@ -32,27 +36,27 @@ class DefaultIdentifier implements Identifier
             return null;
         }
 
-        return new Identity($user->toArray());
+        return $user;
     }
 
     public function findByCredentials(array $credentials): ?Identity
     {
-        $user = User::query()->where('email', '=', $credentials['email'])->one();
+        $user = $this->user->query()->where('email', '=', $credentials['email'])->one();
 
         if (!$user) {
             return null;
         }
 
-        if (!(new Password)->verify($credentials['password'], $user->password)) {
+        if (!password()->verify($credentials['password'], $user->password)) {
             return null;
         }
 
-        return new Identity($user->toArray());
+        return $user;
     }
 
     public function updateLogin($id, array $fields)
     {
-        $user = new User($id);
+        $user = $this->user->find($id);
 
         foreach ($fields as $key => $value) {
             $user->$key = $value;
