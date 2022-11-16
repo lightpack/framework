@@ -13,6 +13,17 @@ class DefaultIdentifier implements Identifier
         // ...
     }
 
+    public function findById($id): ?Identity
+    {
+        $user = $this->user->find($id);
+
+        if (!$user) {
+            return null;
+        }
+
+        return $user;
+    }
+
     public function findByAuthToken(string $token): ?Identity
     {
         $user = $this->user->query()->where('api_token', '=', $token)->one();

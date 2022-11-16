@@ -63,6 +63,10 @@ class AuthManager
     public function getAuthUser(): ?Identity
     {
         if(!self::$identity) {
+            if(session()->get('_logged_in')) {
+                return self::$identity = $this->getIdentifier()->findById(session()->get('_auth_id'));
+            }
+
             $this->checkRememberMe();
         }
 
@@ -258,6 +262,7 @@ class AuthManager
     {
         session()->regenerate();
         session()->set('_logged_in', true);
+        session()->set('_auth_id', self::$identity->getId());
     }
 
     public function forgetRememberMeCookie()

@@ -16,7 +16,7 @@ class AuthFilter implements IFilter
             return auth()->recall();
         }
 
-        if('api' === $type && false === auth()->viaToken()->isSuccess()) {
+        if('api' === $type && null === auth()->viaToken() ) {
             return response()->setStatus(401)->json([
                 'error' => 'Unauthorized',
             ]);
