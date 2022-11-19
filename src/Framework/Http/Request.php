@@ -147,7 +147,7 @@ class Request
         return $value ?? $this->queryData($key, $default);
     }
 
-    public function json(?string $key = null, $default = null): ?array
+    public function json(?string $key = null, $default = null): mixed
     {
         if(null === $this->jsonBody) {
             $this->parseJson();
