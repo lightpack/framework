@@ -119,4 +119,61 @@ final class ArrTest extends TestCase
         $this->assertCount(2, $tree[0]->children);
         $this->assertCount(1, $tree[0]->children[1]->children);
     }
+
+    public function testArrayRandomMethod()
+    {
+        $items = ['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D', 'e' => 'E', 'f' => 'F'];
+
+        // Test 1
+        $randomItem = (new Arr)->random($items);
+
+        // Assertions
+        $this->assertIsNotArray($randomItem);
+        $this->assertTrue(in_array($randomItem, $items));
+
+        // Test 2
+        $randomItems = (new Arr)->random($items, 2);
+
+        // Assertions
+        $this->assertIsArray($randomItems);
+        $this->assertCount(2, $randomItems);
+
+        // Test 3
+        try {
+            $randomItems = (new Arr)->random($items, 10);
+        } catch(\Error $e) {
+            $this->assertInstanceOf(\ValueError::class, $e);
+            $this->assertEquals('You cannot request more than 6 items.', $e->getMessage());
+        }
+        
+        // Test 4
+        try {
+            $randomItems = (new Arr)->random([]);
+        } catch(\Error $e) {
+            $this->assertInstanceOf(\ValueError::class, $e);
+            $this->assertEquals('You cannot pass an empty array of items.', $e->getMessage());
+        }
+
+        // Test 5
+        try {
+            $randomItems = (new Arr)->random($items, 0);
+        } catch(\Error $e) {
+            $this->assertInstanceOf(\ValueError::class, $e);
+            $this->assertEquals('You cannot request less than 1 item.', $e->getMessage());
+        }
+
+        // Test 6
+        $randomItems = (new Arr)->random($items, 3, true);
+
+        $this->assertIsArray($randomItems);
+        $this->assertCount(3, $randomItems);
+        $this->assertIsString(array_rand($randomItems));
+        $this->assertIsNotNumeric(array_rand($randomItems));
+
+         // Test 6
+         $randomItems = (new Arr)->random($items, 3);
+
+         $this->assertIsNumeric(array_rand($randomItems));
+         $this->assertIsNotString(array_rand($randomItems));
+    }
 }

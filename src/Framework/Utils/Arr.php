@@ -2,6 +2,9 @@
 
 namespace Lightpack\Utils;
 
+use InvalidArgumentException;
+use ValueError;
+
 class Arr
 {
     /**
@@ -127,5 +130,47 @@ class Arr
         }
 
         return $result;
+    }
+
+    /**
+     * Get one or more random items from an array.
+     * 
+     * @param array $items The source array.
+     * @param int $number Number of items to pick.
+     * @param bool $preserveKeys Preserve item keys in the fetched random items.
+     * 
+     * @return mixed One or more array items. If an empty array is passed, it return boolean FALSE.
+     */
+    public function random(array $items, int $number = 1, bool $preserveKeys = false): mixed {
+        $itemsCount = count($items);
+
+        if(empty($items)) {
+            throw new ValueError("You cannot pass an empty array of items.");
+        }
+
+        if($number > $itemsCount) {
+            throw new ValueError("You cannot request more than {$itemsCount} items.");
+        }
+
+        if($number < 1) {
+            throw new ValueError("You cannot request less than 1 item.");
+        }
+
+        if($number == 1) {
+            return $items[array_rand($items)];
+        }
+
+        $randomItems = [];
+        $randomKeys = array_rand($items, $number);
+
+        foreach($randomKeys as $key) {
+            if($preserveKeys) {
+                $randomItems[$key] = $items[$key];
+            } else {
+                $randomItems[] = $items[$key];
+            }
+        }
+
+        return $randomItems;
     }
 }
