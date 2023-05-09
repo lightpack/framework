@@ -214,6 +214,10 @@ class Builder extends Query
      */
     public function eagerLoadRelationsCount(Collection $models)
     {
+        if($models->isEmpty()) {
+            return;
+        }
+
         foreach ($this->countIncludes as $key => $value) {
             if (is_callable($value)) {
                 if (!is_string($key)) {

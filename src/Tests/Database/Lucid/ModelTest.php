@@ -688,6 +688,12 @@ final class ModelTest extends TestCase
         $this->assertNotEmpty($project->tasks);
         $this->assertEquals(2, $project->tasks->count());
         // $this->assertEquals('Task 2', $project->tasks[2]->name);
+
+        // Test with() for empty parent records.
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with('tasks')->where('id', '=', 999)->all();
+        
+        $this->assertTrue($projects->isEmpty());
     }
 
     public function testWithCountMethodForEagerLoading()
@@ -717,6 +723,12 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertEquals(2, $project2->tasks_count);
         $this->assertEquals(0, $project3->tasks_count);
+
+        // Test withCount() for empty parent records.
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->withCount('tasks')->where('id', '=', 999)->all();
+
+        $this->assertTrue($projects->isEmpty());
     }
 
     public function testWithMethodForNestedEagerLoading()
