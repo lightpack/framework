@@ -192,8 +192,8 @@ class Compiler
                 $parameters = $this->parameterize(count($where['values']));
             }
 
-            // Workaround for IN conditions
-            if($where['operator'] === 'IN' && count($where['values']) === 1) {
+            // Workaround for IN/NOT IN conditions
+            if(($where['operator'] === 'IN' || $where['operator'] === 'NOT IN') && count($where['values']) === 1) {
                 $parameters = '(' . $parameters . ')';
             }
 
