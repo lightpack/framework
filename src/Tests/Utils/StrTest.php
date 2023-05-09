@@ -134,6 +134,7 @@ final class StrTest extends TestCase
         $this->assertEquals('User', (new Str)->classify('user'));
         $this->assertEquals('UserGroup', (new Str)->classify('user_group'));
         $this->assertEquals('UserGroup', (new Str)->classify('user_groups'));
+        $this->assertEquals('UserGroup', (new Str)->classify('user groups'));
     }
 
     public function testForeignKey()
@@ -166,6 +167,7 @@ final class StrTest extends TestCase
         $this->assertEquals('simple-blog', (new Str)->slugify('simple blog'));
         $this->assertEquals('this-is-blog-id-123', (new Str)->slugify('This is blog_id 123'));
         $this->assertEquals('what-is-seo', (new Str)->slugify('What is SEO?'));
+        $this->assertEquals('learn-c-programming', (new Str)->slugify('Learn C++ Programming'));
     }
 
     public function testStartsWith()
