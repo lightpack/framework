@@ -1680,4 +1680,58 @@ final class ModelTest extends TestCase
         $this->assertEquals([1,2,3], $projects->getKeys());
         $this->assertEquals([1,3], $filteredProjects->getKeys());
     }
+
+    public function testModelCloneMethod()
+    {
+        // bulk insert articles
+        $this->db->table('articles')->bulkInsert([
+            ['title' => 'Article 1', 'created_at' => date("Y-m-d", time()), 'updated_at' => date("Y-m-d", time())],
+            ['title' => 'Article 2', 'created_at' => date("Y-m-d", time()), 'updated_at' => date("Y-m-d", time())],
+            ['title' => 'Article 3', 'created_at' => date("Y-m-d", time()), 'updated_at' => date("Y-m-d", time())],
+        ]);
+
+        // fetch article 3
+        $article = $this->db->model(Article::class);
+        $article->find(3);
+
+        // Test 1: Clone without exclude argument
+        $clone = $article->clone();
+
+        // Assertions
+        $this->assertNull($clone->id);
+        $this->assertNull($clone->created_at);
+        $this->assertNull($clone->updated_at);
+        $this->assertNotNull($clone->title);
+        $this->assertNotNull($clone->status);
+        $this->assertEquals('Article 3', $clone->title);
+
+        // Test 2: Clone with exclude argument
+        $clone = $article->clone(['status']);
+
+        // Assertions
+        $this->assertNull($clone->id);
+        $this->assertNull($clone->status);
+        $this->assertNotNull($clone->title);
+        $this->assertEquals('Article 3', $clone->title);
+        $this->assertNull($clone->status);
+
+        // Test 3: It successfully inserts the clone
+        $clone = $article->clone();
+        $clone->status = 'published';
+        $clone->saveAndRefresh();
+
+        // Assertions
+        $this->assertEquals(4, $clone->id);
+        $this->assertEquals($article->title, $clone->title);
+        $this->assertEquals('published', $clone->status);
+        $this->assertNull($clone->updated_at);
+        $this->assertNotNull($clone->created_at);
+
+        // Test 5: It throws exception if cloned from a non-existing model
+        try {
+            $clone = (new Article)->clone();
+        } catch(\Exception $e) {
+            $this->assertEquals('You cannot clone a non-existing model instance.', $e->getMessage());
+        }
+    }
 }

@@ -528,4 +528,30 @@ class Model implements JsonSerializable
     {
         return $this->cachedModels;
     }
+
+    /**
+     * Clone the model creating a new instance without actually saving into database.
+     * Note that the cloned model excludes the primary_key, and created_at, update_at 
+     * timestamp fields.
+     * 
+     * @param array $exclude An array of keys to exclude while cloning.
+     */
+    public function clone(array $exclude = []): self
+    {
+        if(!property_exists($this->data, $this->primaryKey)) {
+            throw new \Exception('You cannot clone a non-existing model instance.');
+        }
+
+        $instance = new static;
+        $exclude = array_merge($exclude, [$this->primaryKey, 'created_at', 'updated_at']);
+        $data = \get_object_vars($this->data);
+
+        foreach($data as $key => $value) {
+            if(!in_array($key, $exclude)) {
+                $instance->setAttribute($key, $value);
+            }
+        }
+
+        return $instance;
+    }
 }
