@@ -1629,4 +1629,32 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 1', $projectArray['name']);
         $this->assertCount(2, $projectArray['tasks']);
     }
+
+    public function testModelCollectionExcludeMethod()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+            ['name' => 'Project 4'],
+        ]);
+
+        // fetch first all projects
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+
+        $this->assertCount(4, $projects);
+        $this->assertEquals([1,2,3,4], $projects->getKeys());
+
+        // lets exclude product ID: 2
+        $projects->exclude(2);
+        $this->assertCount(3, $projects);
+        $this->assertEquals([1,3,4], $projects->getKeys());
+
+        // lets exclude product IDs: 1,4
+        $projects->exclude([1,4]);
+        $this->assertCount(1, $projects);
+        $this->assertEquals([3], $projects->getKeys());
+    }
 }

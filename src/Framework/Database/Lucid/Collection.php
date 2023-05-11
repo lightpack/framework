@@ -38,9 +38,11 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function getKeys(): array
     {
-        return array_map(function ($item) {
-            return $item->{$item->getPrimaryKey()};
-        }, $this->items);
+        foreach($this->items as $item) {
+            $keys[] = $item->{$item->getPrimaryKey()};
+        }
+
+        return $keys ?? [];
     }
 
     public function getByKey($key, $default = null)
@@ -140,6 +142,26 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     public function isEmpty()
     {
         return empty($this->items);
+    }
+
+    public function isNotEmpty()
+    {
+        return $this->isEmpty() === false;
+    }
+
+    public function exclude($keys)
+    {
+        if(!is_array($keys)) {
+            $keys = [$keys];
+        }
+
+        foreach($keys as $key) {
+            foreach($this->items as $index => $item) {
+                if ($item->{$item->getPrimaryKey()} == $key) {
+                    unset($this->items[$index]);
+                }
+            }
+        }
     }
 
     public function toArray()
