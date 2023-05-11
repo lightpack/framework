@@ -1657,4 +1657,27 @@ final class ModelTest extends TestCase
         $this->assertCount(1, $projects);
         $this->assertEquals([3], $projects->getKeys());
     }
+
+    public function testModelCollectionFilterMethod()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->bulkInsert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+
+        // fetch first all projects
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();   
+
+        // filter out projects having name 'Project 2'
+        $filteredProjects = $projects->filter(fn($project) => $project->name !== 'Project 2');
+
+        // Assertions
+        $this->assertCount(3, $projects);
+        $this->assertCount(2, $filteredProjects);
+        $this->assertEquals([1,2,3], $projects->getKeys());
+        $this->assertEquals([1,3], $filteredProjects->getKeys());
+    }
 }
