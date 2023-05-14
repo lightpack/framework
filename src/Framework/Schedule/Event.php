@@ -5,15 +5,26 @@ namespace Lightpack\Schedule;
 class Event
 {
     private string $cronExpression;
+    private Cron $cron;
 
     public function __construct(private string $type, private string $name)
     {
-        // ...
+        $this->cronExpression = '* * * * *';
+        $this->cron = new Cron($this->cronExpression);
+    }
+
+    /**
+     * Set a new cron instance useful for setting mock Cron instance while testing.
+     */
+    public function setCronInstance(Cron $cron) 
+    {
+        $this->cron = $cron;
     }
 
     public function cron(string $expression): self
     {
         $this->cronExpression = $expression;
+        $this->cron = new Cron($this->cronExpression);
 
         return $this;
     }
@@ -35,9 +46,7 @@ class Event
 
     public function isDue(): bool
     {
-        $cron = new Cron($this->cronExpression);
-
-        return $cron->isDue(new \DateTime());
+        return $this->cron->isDue(new \DateTime());
     }
 
     /**
@@ -48,15 +57,18 @@ class Event
      */
     public function isDueAt(\DateTime $dateTime): bool
     {
-        $cron = new Cron($this->cronExpression);
-
-        return $cron->isDue($dateTime);
+        return $this->cron->isDue($dateTime);
     }
 
     public function nextDueAt(): ?\DateTime
     {
         $cron = new Cron($this->cronExpression);
 
-        return $cron->nextDueAt(new \DateTime());
+        return $this->cron->nextDueAt(new \DateTime());
+    }
+
+    public function previousDueAt(): ?\DateTime
+    {
+        return $this->cron->previousDueAt(new \DateTime());
     }
 }
