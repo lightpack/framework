@@ -35,6 +35,28 @@ class Event
 
     public function isDue(): bool
     {
-        return Cron::isDue($this->cronExpression);
+        $cron = new Cron($this->cronExpression);
+
+        return $cron->isDue(new \DateTime());
+    }
+
+    /**
+     * Check if the event is due at a specific date and time.
+     *
+     * @param \DateTime $dateTime The date and time to check the due status.
+     * @return bool True if the event is due at the specified date and time, false otherwise.
+     */
+    public function isDueAt(\DateTime $dateTime): bool
+    {
+        $cron = new Cron($this->cronExpression);
+
+        return $cron->isDue($dateTime);
+    }
+
+    public function nextDueAt(): ?\DateTime
+    {
+        $cron = new Cron($this->cronExpression);
+
+        return $cron->nextDueAt(new \DateTime());
     }
 }

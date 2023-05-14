@@ -4,25 +4,12 @@ namespace Lightpack\Schedule;
 
 class Cron
 {
-    /** @var string */
-    protected $minutes;
+    protected string $minutes;
+    protected string $hours;
+    protected string $days;
+    protected string $months;
+    protected string $weekdays;
 
-    /** @var string */
-    protected $hours;
-
-    /** @var string */
-    protected $days;
-
-    /** @var string */
-    protected $months;
-
-    /** @var string */
-    protected $weekdays;
-
-    /**
-     * @var string $cronTime Cron time expression.
-     * Example: '* * * * *'
-     */
     public function __construct(string $cronExpression)
     {
         $cronParts = explode(' ', $cronExpression);
@@ -38,40 +25,78 @@ class Cron
         $this->weekdays = $cronParts[4];
     }
 
-    public function minuteIsDue()
+    public function minuteIsDue(\DateTime $currentDateTime): bool
     {
-        return $this->checkIfDue($this->minutes, date('i'));
+        return $this->checkIfDue($this->minutes, (int) $currentDateTime->format('i'));
     }
 
-    public function hourIsDue()
+    public function hourIsDue(\DateTime $currentDateTime): bool
     {
-        return $this->checkIfDue($this->hours, date('H'));
+        return $this->checkIfDue($this->hours, (int) $currentDateTime->format('H'));
     }
 
-    public function dayIsDue()
+    public function dayIsDue(\DateTime $currentDateTime): bool
     {
-        return $this->checkIfDue($this->days, date('j'));
+        return $this->checkIfDue($this->days, (int) $currentDateTime->format('j'));
     }
 
-    public function monthIsDue()
+    public function monthIsDue(\DateTime $currentDateTime): bool
     {
-        return $this->checkIfDue($this->months, date('n'));
+        return $this->checkIfDue($this->months, (int) $currentDateTime->format('n'));
     }
 
-    public function weekdayIsDue()
+    public function weekdayIsDue(\DateTime $currentDateTime): bool
     {
-        return $this->checkIfDue($this->weekdays, date('w'));
+        return $this->checkIfDue($this->weekdays, (int)$currentDateTime->format('w'));
     }
 
-    public static function isDue(string $cronExpression)
+    public function isDue(\DateTime $currentDateTime): bool
     {
-        $cron = new self($cronExpression);
+        return $this->minuteIsDue($currentDateTime)
+            && $this->hourIsDue($currentDateTime)
+            && $this->dayIsDue($currentDateTime)
+            && $this->monthIsDue($currentDateTime)
+            && $this->weekdayIsDue($currentDateTime);
+    }
 
-        return $cron->minuteIsDue()
-            && $cron->hourIsDue()
-            && $cron->dayIsDue()
-            && $cron->monthIsDue()
-            && $cron->weekdayIsDue();
+    public function nextDueAt(\DateTime $currentDateTime): \DateTime
+    {
+        $interval = '+1 minute';
+        $dueDateTime = clone $currentDateTime;
+        $dueDateTime->modify($interval);
+
+        $maxIterations = 1440; // Maximum number of minutes in a day
+
+        while ($maxIterations > 0) {
+            if ($this->isDue($dueDateTime)) {
+                return $dueDateTime;
+            }
+
+            $dueDateTime->modify($interval);
+            $maxIterations--;
+        }
+
+        throw new \Exception('Unable to determine the due date within a reasonable number of iterations');
+    }
+
+    public function previousDueAt(\DateTime $currentDateTime): \DateTime
+    {
+        $previousDateTime = clone $currentDateTime;
+        $previousDateTime->modify('-1 minute'); // Start from the current date/time
+
+        while (true) {
+            if (
+                $this->minuteIsDue($previousDateTime) &&
+                $this->hourIsDue($previousDateTime) &&
+                $this->dayIsDue($previousDateTime) &&
+                $this->monthIsDue($previousDateTime) &&
+                $this->weekdayIsDue($previousDateTime)
+            ) {
+                return $previousDateTime;
+            }
+
+            $previousDateTime->modify('-1 minute');
+        }
     }
 
     protected function checkIfDue($expression, $current)
@@ -80,20 +105,20 @@ class Cron
             return true;
         }
 
-        if ($expression === $current) {
+        if ($expression == $current) {
             return true;
         }
 
         if (strpos($expression, '-') !== false) {
-            $parts = explode('-', $expression);
-            if ($current >= $parts[0] && $current <= $parts[1]) {
+            [$start, $end] = explode('-', $expression);
+            if ((int)$current >= (int)$start && (int)$current <= (int)$end) {
                 return true;
             }
         }
 
         if (strpos($expression, '/') !== false) {
             $parts = explode('/', $expression);
-            if ($current % $parts[1] === 0) {
+            if ((int)$current % (int)$parts[1] === 0) {
                 return true;
             }
         }
@@ -101,7 +126,7 @@ class Cron
         if (strpos($expression, ',') !== false) {
             $parts = explode(',', $expression);
             foreach ($parts as $part) {
-                if ($part === $current) {
+                if ((int)$part === (int)$current) {
                     return true;
                 }
             }
