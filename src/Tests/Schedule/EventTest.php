@@ -4,7 +4,10 @@ use Lightpack\Schedule\Event;
 use Lightpack\Schedule\Cron;
 use PHPUnit\Framework\TestCase;
 
-class EventTest extends TestCase
+/**
+ * Note: I had to name this class as ScheduleEventTest because there is already a class named EventTest already declared.
+ */
+class ScheduleEventTest extends TestCase
 {
     public function testConstructor()
     {
@@ -93,5 +96,30 @@ class EventTest extends TestCase
 
         $this->assertInstanceOf(DateTime::class, $nextDueAt);
         $this->assertEquals($nextDueDateTime, $nextDueAt);
+    }
+
+    public function testPreviousDueAt()
+    {
+        // Mock the Cron class
+        $cron = $this->getMockBuilder(Cron::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Set up the Cron mock to return a DateTime object
+        $nextDueDateTime = new DateTime('-1 minute');
+        $cron->expects($this->once())
+            ->method('previousDueAt')
+            ->willReturn($nextDueDateTime);
+
+        $event = new Event('job', 'MyJob');
+        $event->cron('* * * * *');
+
+        // Set the mock Cron instance
+        $event->setCronInstance($cron);
+
+        $previousdueAt = $event->previousdueAt();
+
+        $this->assertInstanceOf(DateTime::class, $previousdueAt);
+        $this->assertEquals($nextDueDateTime, $previousdueAt);
     }
 }
