@@ -18,7 +18,7 @@ class Color
     
     const HORIZONTAL_PADDING = '  '; // Adjust the horizontal padding as needed
     const VERTICAL_PADDING = "\n";   // Adjust the vertical padding as needed
-    const RESET_LABEL = '<reset>';   // Adjust the reset label as needed
+    const RESET_LABEL = '<RESET>';   // Adjust the reset label as needed
 
     public static function format($string)
     {
@@ -33,5 +33,53 @@ class Color
         $string = str_replace(self::RESET_LABEL, self::RESET . self::BG_RESET, $string);
 
         return $string;
+    }
+
+    public static function info(string $text)
+    {
+        return Color::format("<BLUE>{$text}<RESET>");
+    }
+
+    public static function success(string $text)
+    {
+        return Color::format("<GREEN>{$text}<RESET>");
+    }
+
+    public static function error(string $text)
+    {
+        return Color::format("<RED>{$text}<RESET>");
+    }
+
+    public static function warning(string $text)
+    {
+        return Color::format("<YELLOW>{$text}<RESET>");
+    }
+
+    public static function infoLabel(?string $text = null)
+    {
+        $text = $text ?? ' INFO ';
+
+        return Color::format("<BG_BLUE>{$text}<BG_RESET>");
+    }
+
+    public static function successLabel(?string $text = null)
+    {
+        $text = $text ?? ' SUCCESS ';
+
+        return Color::format("<BG_GREEN>{$text}<BG_RESET>");
+    }
+
+    public static function errorLabel(?string $text = null)
+    {
+        $text = $text ?? ' ERROR ';
+
+        return Color::format("<BG_RED>{$text}<BG_RESET>");
+    }
+
+    public static function warningLabel(?string $text = null)
+    {
+        $text = $text ?? ' WARNING ';
+
+        return Color::format("<BG_YELLOW>{$text}<BG_RESET>");
     }
 }
