@@ -16,8 +16,6 @@ class Color
     const BG_BLUE = "\033[44m";
     const BG_RESET = "\033[49m";
     
-    const HORIZONTAL_PADDING = '  '; // Adjust the horizontal padding as needed
-    const VERTICAL_PADDING = "\n";   // Adjust the vertical padding as needed
     const RESET_LABEL = '<RESET>';   // Adjust the reset label as needed
 
     public static function format($string)
