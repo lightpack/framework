@@ -4,19 +4,19 @@ namespace Lightpack\Console;
 
 class Prompt
 {
-    public static function ask(string $question, $default = null): string
+    public function ask(string $question, $default = null): string
     {
-        self::writePrompt($question, $default);
-        return self::readInput();
+        $this->writePrompt($question, $default);
+        return $this->readInput();
     }
 
-    public static function askHidden(string $question): string
+    public function askHidden(string $question): string
     {
-        self::writePrompt($question);
+        $this->writePrompt($question);
 
         $sttyMode = shell_exec('stty -g');
         shell_exec('stty -echo');
-        $input = self::readInput();
+        $input = $this->readInput();
         shell_exec('stty ' . $sttyMode);
 
         echo PHP_EOL;
@@ -24,10 +24,10 @@ class Prompt
         return trim($input);
     }
 
-    public static function confirm(string $question, bool $default = false): bool
+    public function confirm(string $question, bool $default = false): bool
     {
         $prompt = $default ? '[Y/n]' : '[y/N]';
-        $response = strtolower(self::ask($question . ' ' . $prompt));
+        $response = strtolower($this->ask($question . ' ' . $prompt));
 
         if ($default) {
             return $response !== 'n';
@@ -36,19 +36,19 @@ class Prompt
         return $response === 'y';
     }
 
-    public static function chooseMultiple(
+    public function chooseMultiple(
         string $question,
         array $options,
         $default = null,
         bool $canSelectMultiple = true
     ): array {
-        self::writePrompt($question, $default);
+        $this->writePrompt($question, $default);
 
         $optionKeys = array_keys($options);
         $selectedOptions = [];
 
         while (true) {
-            $input = self::readInput();
+            $input = $this->readInput();
 
             if ($input === '' && $default !== null) {
                 return (array) $default;
@@ -70,10 +70,10 @@ class Prompt
         }
     }
 
-    public static function askWithValidation(string $question, callable $validator, $default = null)
+    public function askWithValidation(string $question, callable $validator, $default = null)
     {
         while (true) {
-            $response = self::ask($question, $default);
+            $response = $this->ask($question, $default);
 
             if ($validator($response)) {
                 return $response;
@@ -83,14 +83,14 @@ class Prompt
         }
     }
 
-    public static function chooseFromList(string $question, array $options, $default = null): ?string
+    public function chooseFromList(string $question, array $options, $default = null): ?string
     {
-        self::writePrompt($question, $default);
+        $this->writePrompt($question, $default);
 
         $optionKeys = array_keys($options);
 
         while (true) {
-            $input = self::readInput();
+            $input = $this->readInput();
 
             if ($input === '' && $default !== null) {
                 return $default;
@@ -106,16 +106,16 @@ class Prompt
         }
     }
 
-    public static function chooseFromListWithIndex(string $question, array $options, $default = null): ?string
+    public function chooseFromListWithIndex(string $question, array $options, $default = null): ?string
     {
-        self::writePrompt($question, $default);
+        $this->writePrompt($question, $default);
 
         foreach ($options as $index => $option) {
             echo "[" . $index . "] " . $option . PHP_EOL;
         }
 
         while (true) {
-            $input = self::readInput();
+            $input = $this->readInput();
 
             if ($input === '' && $default !== null) {
                 return $default;
@@ -129,7 +129,7 @@ class Prompt
         }
     }
 
-    private static function writePrompt(string $question, $default = null)
+    private function writePrompt(string $question, $default = null)
     {
         echo $question . ' ';
 
@@ -138,7 +138,7 @@ class Prompt
         }
     }
 
-    private static function readInput(): string
+    private function readInput(): string
     {
         $handle = fopen("php://stdin", "r");
         $line = fgets($handle);
