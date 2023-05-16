@@ -18,7 +18,7 @@ class Color
     
     const RESET_LABEL = '<RESET>';   // Adjust the reset label as needed
 
-    public static function format($string)
+    public function format($string)
     {
         $string = preg_replace_callback('/<(\w+)>/', function ($matches) {
             $label = strtoupper($matches[1]);
@@ -33,48 +33,48 @@ class Color
         return $string;
     }
 
-    public static function info(string $text)
+    public function info(string $text)
     {
         return Color::format("<BLUE>{$text}<RESET>");
     }
 
-    public static function success(string $text)
+    public function success(string $text)
     {
         return Color::format("<GREEN>{$text}<RESET>");
     }
 
-    public static function error(string $text)
+    public function error(string $text)
     {
         return Color::format("<RED>{$text}<RESET>");
     }
 
-    public static function warning(string $text)
+    public function warning(string $text)
     {
         return Color::format("<YELLOW>{$text}<RESET>");
     }
 
-    public static function infoLabel(?string $text = null)
+    public function infoLabel(?string $text = null)
     {
         $text = $text ?? ' INFO ';
 
         return Color::format("<BG_BLUE>{$text}<BG_RESET>");
     }
 
-    public static function successLabel(?string $text = null)
+    public function successLabel(?string $text = null)
     {
         $text = $text ?? ' SUCCESS ';
 
         return Color::format("<BG_GREEN>{$text}<BG_RESET>");
     }
 
-    public static function errorLabel(?string $text = null)
+    public function errorLabel(?string $text = null)
     {
         $text = $text ?? ' ERROR ';
 
         return Color::format("<BG_RED>{$text}<BG_RESET>");
     }
 
-    public static function warningLabel(?string $text = null)
+    public function warningLabel(?string $text = null)
     {
         $text = $text ?? ' WARNING ';
 
