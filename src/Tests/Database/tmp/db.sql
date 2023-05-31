@@ -106,6 +106,7 @@ DROP TABLE IF EXISTS `articles`;
 CREATE TABLE IF NOT EXISTS `articles` (
   `id` int NOT NULL AUTO_INCREMENT,
   `title` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `status` varchar(255) COLLATE utf8_unicode_ci DEFAULT 'draft',
   `created_at` timestamp NULL,
   `updated_at` timestamp NULL,
   PRIMARY KEY (id)

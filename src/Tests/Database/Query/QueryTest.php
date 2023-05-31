@@ -197,6 +197,16 @@ final class QueryTest extends TestCase
 
         $this->query->resetQuery();
 
+        // Test whereIn() for a single id
+        $this->query->whereIn('id', [23]);
+
+        $this->assertEquals(
+            'SELECT * FROM products WHERE id IN (?)',
+            $this->query->getCompiledSelect()
+        );
+
+        $this->query->resetQuery();
+
         // Test 11
         $this->query->whereIn('id', [23, 24, 25])->orWhereIn('color', ['#000']);
 
@@ -212,6 +222,16 @@ final class QueryTest extends TestCase
 
         $this->assertEquals(
             'SELECT * FROM products WHERE id NOT IN (?, ?, ?)',
+            $this->query->getCompiledSelect()
+        );
+
+        $this->query->resetQuery();
+
+        // Test whereNotIn() for a single id
+        $this->query->whereNotIn('id', [23]);
+
+        $this->assertEquals(
+            'SELECT * FROM products WHERE id NOT IN (?)',
             $this->query->getCompiledSelect()
         );
 

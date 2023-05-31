@@ -19,6 +19,7 @@ use Lightpack\Console\Commands\CreateRequest;
 use Lightpack\Console\Commands\ProcessJobs;
 use Lightpack\Console\Commands\CreateMail;
 use Lightpack\Console\Commands\CreateSeeder;
+use Lightpack\Console\Commands\GenerateAppKey;
 use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ScheduleEvents;
 
@@ -44,6 +45,7 @@ class Console
         'create:seeder' => CreateSeeder::class,
         'db:seed' => SeedCommand::class,
         'schedule:events' => ScheduleEvents::class,
+        'app:key' => GenerateAppKey::class,
     ];
 
     public static function register(string $command, ICommand $handler)
