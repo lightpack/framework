@@ -77,6 +77,11 @@ class Model implements JsonSerializable
     protected $hidden = [];
 
     /**
+     * @var boolean Is the relation getting eagerloaded.
+     */
+    protected $isEagerLoading = false;
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
@@ -156,6 +161,11 @@ class Model implements JsonSerializable
         return self::$connection ?? app('db');
     }
 
+    public function setEagerLoading(bool $flag)
+    {
+        $this->isEagerLoading = $flag;
+    }
+
     /**
      * This method maps 1:1 relationship with the provided model.
      *
@@ -171,6 +181,11 @@ class Model implements JsonSerializable
         // $this->relatingForeignKey = $this->primaryKey;
         $this->relatingModel = $model;
         $model = $this->getConnection()->model($model);
+
+        if($this->isEagerLoading) {
+            return $model::query();
+        }
+
         return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
@@ -187,6 +202,11 @@ class Model implements JsonSerializable
         $this->relatingKey = $foreignKey;
         $this->relatingForeignKey = $this->primaryKey;
         $this->relatingModel = $model;
+
+        if($this->isEagerLoading) {
+            return $model::query();
+        }
+
         return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
     }
 
@@ -204,6 +224,11 @@ class Model implements JsonSerializable
         $this->relatingKey = $model->getPrimaryKey();
         $this->relatingForeignKey = $foreignKey;
         $this->relatingModel = $model;
+
+        if($this->isEagerLoading) {
+            return $model::query();
+        }
+
         return $model::query()->where($this->primaryKey, '=', $this->{$foreignKey});
     }
 
@@ -228,10 +253,13 @@ class Model implements JsonSerializable
 
         $pivot
             ->select("$model->table.*", "$pivotTable.$foreignKey")
-            ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey")
-            ->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
+            ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey");
 
-        return $pivot;
+        if($this->isEagerLoading) {
+            return $pivot;
+        }
+
+        return $pivot->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
     }
 
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
@@ -244,11 +272,16 @@ class Model implements JsonSerializable
         $this->relatingKey = $throughKey;
         $throughModelPrimaryKey = $throughModel->getPrimaryKey();
 
-        return $model
+        $query = $model
             ->query()
             ->select("$model->table.*", "$throughModel->table.$throughKey")
-            ->join($throughModel->table, "$model->table.{$foreignKey}", "$throughModel->table.$throughModelPrimaryKey")
-            ->where("$throughModel->table.$throughKey", '=', $this->{$this->primaryKey});
+            ->join($throughModel->table, "$model->table.{$foreignKey}", "$throughModel->table.$throughModelPrimaryKey");
+            
+        if($this->isEagerLoading) {
+            return $query;
+        }
+
+        return $query->where("$throughModel->table.$throughKey", '=', $this->{$this->primaryKey});
     }
 
     /**
