@@ -11,7 +11,7 @@ class Str
      */
     public function camelize(string $subject): string
     {
-        return str_replace(' ', '', ucwords(str_replace('_', ' ', $subject)));
+        return str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $subject)));
     }
 
     /**
@@ -54,14 +54,24 @@ class Str
 
     /**
      * This method will return the human readable version of the passed 
-     * string with the first character of each word capitalized. This
-     * is specially useful for headlines and titles.
+     * string with the first word capitalized.
      * 
      * For example: humanize('lazy brown fox') returns 'Lazy Brown Fox'.
      */
     public function humanize(string $subject): string
     {
-        return ucwords(str_replace('_', ' ', $subject));
+        return ucfirst(str_replace(['_', '-'], ' ', $subject));
+    }
+
+    /**
+     * This method will capitalize the the first character of each word. 
+     * This is specially useful for headlines and titles.
+     * 
+     * For example: headline('lazy brown fox') returns 'Lazy brown fox'.
+     */
+    public function headline(string $subject): string
+    {
+        return ucwords(str_replace(['_', '-'], ' ', $subject));
     }
 
     /**

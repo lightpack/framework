@@ -12,12 +12,16 @@ final class StrTest extends TestCase
         $this->assertEquals('ParentClass', (new Str)->camelize('parent_class'));
         $this->assertEquals('ParentClass', (new Str)->camelize('parent class'));
         $this->assertEquals('LazyBrownFox', (new Str)->camelize('lazy Brown fox'));
+        $this->assertEquals('LazyBrownFox', (new Str)->camelize('lazy-brown-fox'));
+        $this->assertEquals('LazyBrownFox', (new Str)->camelize('lazy_brown_fox'));
     }
 
     public function testVariable()
     {
         $this->assertEquals('parentClass', (new Str)->variable('ParentClass'));
         $this->assertEquals('lazyBrownFox', (new Str)->variable('Lazy Brown Fox'));
+        $this->assertEquals('lazyBrownFox', (new Str)->variable('lazy-brown-fox'));
+        $this->assertEquals('lazyBrownFox', (new Str)->variable('lazy_brown_fox'));
     }
 
     public function testUnderscore()
@@ -26,6 +30,7 @@ final class StrTest extends TestCase
         $this->assertEquals('parent_class', (new Str)->underscore('Parent Class'));
         $this->assertEquals('parent_class', (new Str)->underscore('Parent-Class'));
         $this->assertEquals('parent_class', (new Str)->underscore('Parent-Class'));
+        $this->assertEquals('parent_class', (new Str)->underscore('Parent_Class'));
     }
 
     public function testDasherize()
@@ -34,13 +39,23 @@ final class StrTest extends TestCase
         $this->assertEquals('parent-class', (new Str)->dasherize('parent class'));
         $this->assertEquals('parent-class', (new Str)->dasherize('Parent Class'));
         $this->assertEquals('lazy-brown-fox', (new Str)->dasherize('lazy Brown fox'));
+        $this->assertEquals('lazy-brown-fox', (new Str)->dasherize('lazy-brown-fox'));
     }
 
     public function testHumanize()
     {
-        $this->assertEquals('Parent Class', (new Str)->humanize('parent_class'));
-        $this->assertEquals('Parent Class', (new Str)->humanize('parent class'));
-        $this->assertEquals('Lazy Brown Fox', (new Str)->humanize('lazy_brown_fox'));
+        $this->assertEquals('Parent class', (new Str)->humanize('parent_class'));
+        $this->assertEquals('Parent class', (new Str)->humanize('parent class'));
+        $this->assertEquals('Lazy brown fox', (new Str)->humanize('lazy_brown_fox'));
+        $this->assertEquals('Lazy brown fox', (new Str)->humanize('lazy brown-fox'));
+    }
+
+    public function testHeadline()
+    {
+        $this->assertEquals('Parent Class', (new Str)->headline('parent_class'));
+        $this->assertEquals('Parent Class', (new Str)->headline('parent class'));
+        $this->assertEquals('Lazy Brown Fox', (new Str)->headline('lazy_brown_fox'));
+        $this->assertEquals('Lazy Brown Fox', (new Str)->headline('lazy brown-fox'));
     }
 
     public function testTableize()
