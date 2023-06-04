@@ -7,6 +7,21 @@ use PHPUnit\Framework\TestCase;
 
 final class StrTest extends TestCase
 {
+    public function testSingularize()
+    {
+        $this->assertEquals('quiz', (new Str)->singularize('quizzes'));
+    }
+
+    public function testPluralize()
+    {
+        $this->assertEquals('quizzes', (new Str)->pluralize('quiz'));
+    }
+
+    public function testPluralizeIf()
+    {
+        $this->assertEquals('role', (new Str)->pluralizeIf(1, 'role'));
+    }
+
     public function testCamelize()
     {
         $this->assertEquals('ParentClass', (new Str)->camelize('parent_class'));

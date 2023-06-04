@@ -5,6 +5,33 @@ namespace Lightpack\Utils;
 class Str
 {
     /**
+     * This method returns the singular form of the passed string.
+     */
+    public function singularize(string $subject): string
+    {
+        return (new Inflector)->singularize($subject);
+    }
+
+    /**
+     * This method returns the plural form of the passed string.
+     */
+    public function pluralize(string $subject): string
+    {
+        return (new Inflector)->pluralize($subject);
+    }
+
+    /**
+     * This method returns the plural form of the passed string only if
+     * the passed $number > 1. 
+     * 
+     * For example: pluralizeIf(2, 'role') returns 'roles',
+     */
+    public function pluralizeIf(int $number, string $subject): string
+    {
+        return (new Inflector)->pluralizeIf($number, $subject);
+    }
+
+    /**
      * This method will return the camel-cased version of the passed string.
      * 
      * For example: camelize('parent class') returns 'ParentClass'.
