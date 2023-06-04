@@ -141,30 +141,31 @@ class Arr
      * 
      * @return mixed One or more array items. If an empty array is passed, it return boolean FALSE.
      */
-    public function random(array $items, int $number = 1, bool $preserveKeys = false): mixed {
+    public function random(array $items, int $number = 1, bool $preserveKeys = false): mixed
+    {
         $itemsCount = count($items);
 
-        if(empty($items)) {
+        if (empty($items)) {
             throw new ValueError("You cannot pass an empty array of items.");
         }
 
-        if($number > $itemsCount) {
+        if ($number > $itemsCount) {
             throw new ValueError("You cannot request more than {$itemsCount} items.");
         }
 
-        if($number < 1) {
+        if ($number < 1) {
             throw new ValueError("You cannot request less than 1 item.");
         }
 
-        if($number == 1) {
+        if ($number == 1) {
             return $items[array_rand($items)];
         }
 
         $randomItems = [];
         $randomKeys = array_rand($items, $number);
 
-        foreach($randomKeys as $key) {
-            if($preserveKeys) {
+        foreach ($randomKeys as $key) {
+            if ($preserveKeys) {
                 $randomItems[$key] = $items[$key];
             } else {
                 $randomItems[] = $items[$key];
@@ -172,5 +173,32 @@ class Arr
         }
 
         return $randomItems;
+    }
+
+    /**
+     * Groups the items of an array by a given key.
+     *
+     * @param string $key The key by which to group the items.
+     * @param array $items The array or collection of items to be grouped.
+     * @param bool $preserveKeys (optional) Whether to preserve the keys of the grouped items. Defaults to false.
+     * @return array The grouped array with keys representing the grouping criteria and values representing the grouped items.
+     */
+    function groupBy(string $key, array $items, bool $preserveKeys = false)
+    {
+        $grouped = [];
+
+        foreach ($items as $index => $item) {
+            if (array_key_exists($key, $item)) {
+                $groupKey = $item[$key];
+
+                if ($preserveKeys) {
+                    $grouped[$groupKey][$index] = $item;
+                } else {
+                    $grouped[$groupKey][] = $item;
+                }
+            }
+        }
+
+        return $grouped;
     }
 }
