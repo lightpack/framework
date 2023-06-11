@@ -368,7 +368,7 @@ if(!function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
-    function input(string $key, string $default = '', bool $escape = true): string
+    function old(string $key, string $default = '', bool $escape = true): string
     {
         static $oldInput;
         
