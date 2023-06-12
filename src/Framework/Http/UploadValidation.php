@@ -7,24 +7,44 @@ class UploadValidation
     private array $errors;
     private array $rules;
 
-    public function __construct(array $rules = [])
+    public function __construct(?string $rules = null)
     {
-        $this->setRules($rules);
+        if($rules) {
+            $this->setRules($rules);
+        }
     }
 
-    public function setRules(array $rules)
+    public function setRules(string $rules)
     {
+        $rulePairs = explode('|', $rules);
+        $parsedRules = [];
+
+        foreach ($rulePairs as $rulePair) {
+            if (strpos($rulePair, ':') !== false) {
+                $parts = explode(':', $rulePair, 2);
+    
+                if (count($parts) !== 2) {
+                    throw new \InvalidArgumentException("Invalid rule format: $rulePair");
+                }
+    
+                [$rule, $value] = $parts;
+                $parsedRules[$rule] = $value;
+            } else {
+                $parsedRules[$rulePair] = null;
+            }
+        }
+
         $this->rules = [
-            'mimes' => $rules['mimes'] ?? null,
-            'min_size' => $rules['min_size'] ?? null,
-            'max_size' => $rules['max_size'] ?? null,
-            'width' => $rules['width'] ?? null,
-            'height' => $rules['height'] ?? null,
-            'min_width' => $rules['min_width'] ?? null,
-            'max_width' => $rules['max_width'] ?? null,
-            'min_height' => $rules['min_height'] ?? null,
-            'max_height' => $rules['max_height'] ?? null,
-            'extensions' => $rules['extensions'] ?? null,
+            'mimes' => $parsedRules['mimes'] ?? null,
+            'min_size' => $parsedRules['min_size'] ?? null,
+            'max_size' => $parsedRules['max_size'] ?? null,
+            'width' => $parsedRules['width'] ?? null,
+            'height' => $parsedRules['height'] ?? null,
+            'min_width' => $parsedRules['min_width'] ?? null,
+            'max_width' => $parsedRules['max_width'] ?? null,
+            'min_height' => $parsedRules['min_height'] ?? null,
+            'max_height' => $parsedRules['max_height'] ?? null,
+            'extensions' => $parsedRules['extensions'] ?? null,
         ];
     }
 
@@ -68,7 +88,7 @@ class UploadValidation
         return $this;
     }
 
-    public function validateMinSize($value, string $unit = 'bytes'): self
+    public function validateMinSize($value, string $unit = 'kb'): self
     {
         $minSize = $this->rules['min_size'];
 
@@ -85,7 +105,7 @@ class UploadValidation
         return $this;
     }
 
-    public function validateMaxSize($value, string $unit = 'bytes'): self
+    public function validateMaxSize($value, string $unit = 'kb'): self
     {
         $maxSize = $this->rules['max_size'];
 

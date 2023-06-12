@@ -12,7 +12,10 @@ class Upload implements RuleInterface
     {
         $upload = (new Arr)->get($field, $dataSource);
 
-        if(in_array('nullable', $rules) && request()->files()->isEmpty($field)) {
+        $xplodedRules = explode('|', $rules);
+
+        // check if not required
+        if(!in_array('required', $xplodedRules) && request()->files()->isEmpty($field)) {
             return true;
         }
 

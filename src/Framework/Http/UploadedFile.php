@@ -31,10 +31,10 @@ class UploadedFile
         $this->type = $file['type'];
         $this->error = $file['error'];
         $this->tmpName = $file['tmp_name'];
-        $this->validation = new UploadValidation([]);
+        $this->validation = new UploadValidation();
     }
 
-    public function setRules(array $rules): self
+    public function setRules(string $rules): self
     {
         $this->validation->setRules($rules);
 
