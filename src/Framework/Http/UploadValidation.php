@@ -9,7 +9,7 @@ class UploadValidation
 
     public function __construct(?string $rules = null)
     {
-        if($rules) {
+        if ($rules) {
             $this->setRules($rules);
         }
     }
@@ -22,11 +22,11 @@ class UploadValidation
         foreach ($rulePairs as $rulePair) {
             if (strpos($rulePair, ':') !== false) {
                 $parts = explode(':', $rulePair, 2);
-    
+
                 if (count($parts) !== 2) {
                     throw new \InvalidArgumentException("Invalid rule format: $rulePair");
                 }
-    
+
                 [$rule, $value] = $parts;
                 $parsedRules[$rule] = $value;
             } else {
@@ -246,7 +246,7 @@ class UploadValidation
         $step = 1024;
         $i = 0;
 
-        while (($value / $step) > 0.9) {
+        while (($value / $step) >= 1) {
             $value /= $step;
             $i++;
         }
