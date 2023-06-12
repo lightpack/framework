@@ -4,6 +4,7 @@ namespace Lightpack\Validator\Rules;
 
 use Lightpack\Http\UploadedFile;
 use Lightpack\Utils\Arr;
+use Lightpack\Utils\Str;
 use Lightpack\Validator\RuleInterface;
 
 class Upload implements RuleInterface
@@ -19,6 +20,9 @@ class Upload implements RuleInterface
         // check if not required
         if(!in_array('required', $xplodedRules) && request()->files()->isEmpty($field)) {
             return true;
+        } elseif(request()->files()->isEmpty($field)) {
+            $this->errorMessage = sprintf("You are required to upload %s.", str_replace(['_', '-'], ' ', $field));
+            return false;
         }
 
         if($upload instanceof UploadedFile) {
