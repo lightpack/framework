@@ -17,7 +17,7 @@ class Files
         }
     }
 
-    public function get(string $key = null)
+    public function get(?string $key = null)
     {
         if ($key === null) {
             return $this->files;

@@ -41,7 +41,12 @@ class UploadedFile
         return $this;
     }
 
-    public function failsValidation(): bool
+    public function passedValidation(): bool
+    {
+        return $this->failedValidation() === false;
+    }
+
+    public function failedValidation(): bool
     {
         $this->validation->validateMimes($this->getType());
         $this->validation->validateExtensions($this->getExtension());
@@ -154,7 +159,7 @@ class UploadedFile
 
     public function move(string $destination, string $name = null): void
     {
-        if($this->failsValidation()) {
+        if($this->failedValidation()) {
             throw new FileUploadException('Uploaded file fails validation rules.');
         }
 

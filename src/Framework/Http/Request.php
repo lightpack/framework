@@ -165,7 +165,17 @@ class Request
         return $this->files;
     }
 
-    public function file(string $key)
+    /**
+     * Get the value of a file or files associated with a given key.
+     * 
+     * It returns null if the key is not found, an UploadedFile if the
+     * key has a single file, or an array of UploadedFile objects if
+     * the key has multiple files.
+     *
+     * @param string|null $key The key to retrieve the file(s) for. If null, returns all files.
+     * @return null|UploadedFile|UploadedFile[] 
+     */
+    public function file(?string $key = null)
     {
         return $this->files->get($key);
     }
