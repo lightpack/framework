@@ -13,7 +13,7 @@ class ValidationProvider implements ProviderInterface
             $data = $container->get('request')->input();
             $data = array_merge($data, $container->get('request')->files()->get());
 
-            return (new Validator)->setInput($container->get('request')->input());
+            return (new Validator)->setInput($data);
         });
 
         $container->alias(Validator::class, 'validator');
