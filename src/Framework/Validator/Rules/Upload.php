@@ -8,6 +8,8 @@ use Lightpack\Validator\RuleInterface;
 
 class Upload implements RuleInterface
 {   
+    protected string $errorMessage;
+
     public function validate(array $dataSource, string $field, $rules = null)
     {
         $upload = (new Arr)->get($field, $dataSource);
@@ -20,12 +22,12 @@ class Upload implements RuleInterface
         }
 
         if($upload instanceof UploadedFile) {
-            return $upload->setRules($rules)->passedValidation();
+            return $this->processValidation($upload, $rules);
         }
 
         if(is_array($upload)) {
             foreach($upload as $file) {
-                if(false == $file->setRules($rules)->passedValidation()){
+                if(false == $this->processValidation($file, $rules)){
                     return false;
                 }
             }
@@ -38,6 +40,21 @@ class Upload implements RuleInterface
     
     public function getErrorMessage($field)
     {
-        return sprintf("The %s appears to be an invalid upload.", $field);
+        return $this->errorMessage;
+    }
+
+    private function processValidation(UploadedFile $file, string $rules): bool
+    {
+        $failed = $file->setRules($rules)->failedValidation();
+
+        if($failed) {
+            $errors = $file->getValidationErrors();
+
+            $this->errorMessage = reset($errors);
+
+            return false;
+        }
+
+        return true;
     }
 }
