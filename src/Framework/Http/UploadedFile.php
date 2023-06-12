@@ -114,7 +114,7 @@ class UploadedFile
 
     public function getRules()
     {
-        return $this->rules;
+        return $this->validation->getRules();
     }
 
     public function getName(): string
