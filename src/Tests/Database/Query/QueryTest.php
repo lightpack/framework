@@ -63,6 +63,14 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 3
+        $products = $this->query->select('id', 'name')->where('color', 'maroon')->all();
+        $this->assertEquals(0, count($products));
+        $this->assertIsArray($products);
+        $this->assertEmpty($products);
+        $this->assertNotNull($products);
+        $this->query->resetQuery();
+
+        // Test 4
         $products = Product::query()->all();
         $this->assertGreaterThan(0, count($products));
         $this->assertInstanceOf(Collection::class, $products);

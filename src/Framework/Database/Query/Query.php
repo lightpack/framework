@@ -160,7 +160,7 @@ class Query
      * @param string|null $operator
      * @param mixed $value
      */
-    public function where($column, string $operator = null, $value = null, string $joiner = 'AND'): self
+    public function where($column, string $operator = '=', $value = null, string $joiner = 'AND'): self
     {
         if ($column instanceof Closure) {
             return $this->whereColumnIsAClosure($column, $joiner);
@@ -169,15 +169,20 @@ class Query
         if ($value instanceof Closure) {
             return $this->whereValueIsAClosure($value, $column, $operator, $joiner);
         }
-
-        $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
-
+        
         // Operators that don't require a value
         $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
-
+        
         if (!in_array($operator, $operators)) {
+            if($value == null) {
+                $value = $operator;
+                $operator = '=';
+            }
+            
             $this->bindings[] = $value;
         }
+        
+        $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
         return $this;
     }
