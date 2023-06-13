@@ -14,9 +14,9 @@ class UploadValidation
         }
     }
 
-    public function setRules(string $rules)
+    public function setRules(string $rules): void
     {
-        if(empty($rules)) {
+        if (empty($rules)) {
             return;
         }
 
@@ -24,18 +24,8 @@ class UploadValidation
         $parsedRules = [];
 
         foreach ($rulePairs as $rulePair) {
-            if (strpos($rulePair, ':') !== false) {
-                $parts = explode(':', $rulePair, 2);
-
-                if (count($parts) !== 2) {
-                    throw new \InvalidArgumentException("Invalid rule format: $rulePair");
-                }
-
-                [$rule, $value] = $parts;
-                $parsedRules[$rule] = $value;
-            } else {
-                $parsedRules[$rulePair] = null;
-            }
+            [$rule, $value] = array_pad(explode(':', $rulePair, 2), 2, null);
+            $parsedRules[$rule] = $value;
         }
 
         $this->rules = [
@@ -57,19 +47,13 @@ class UploadValidation
     {
         return $this->rules;
     }
+
     public function validateMimes(string $value): self
     {
         $mimes = $this->rules['mimes'] ?? null;
 
-        if (!$mimes) {
-            return $this;
-        }
-
-        $mimes = explode(',', $mimes);
-        $value = trim($value);
-
-        if (!in_array($value, $mimes)) {
-            $this->errors['mimes'] = 'Uploaded file must be one of ' . implode(', ', $mimes);
+        if ($mimes && !in_array($value, explode(',', $mimes))) {
+            $this->errors['mimes'] = 'Uploaded file must be one of ' . implode(', ', explode(',', $mimes));
         }
 
         return $this;
@@ -79,15 +63,8 @@ class UploadValidation
     {
         $extensions = $this->rules['extensions'] ?? null;
 
-        if (!$extensions) {
-            return $this;
-        }
-
-        $extensions = explode(',', $extensions);
-        $value = trim($value);
-
-        if (!in_array($value, $extensions)) {
-            $this->errors['extensions'] = 'Uploaded file type must be one of ' . implode(', ', $extensions);
+        if ($extensions && !in_array($value, explode(',', $extensions))) {
+            $this->errors['extensions'] = 'Uploaded file type must be one of ' . implode(', ', explode(',', $extensions));
         }
 
         return $this;
@@ -97,13 +74,7 @@ class UploadValidation
     {
         $minSize = $this->rules['min_size'] ?? null;
 
-        if (!$minSize) {
-            return $this;
-        }
-
-        $minSize = $this->formatSize($minSize, $unit);
-
-        if ($value < $minSize) {
+        if ($minSize && $value < $this->formatSize($minSize, $unit)) {
             $this->errors['min_size'] = "File size must be at least {$this->formatSizeForDisplay($minSize)}";
         }
 
@@ -114,13 +85,7 @@ class UploadValidation
     {
         $maxSize = $this->rules['max_size'] ?? null;
 
-        if (!$maxSize) {
-            return $this;
-        }
-
-        $maxSize = $this->formatSize($maxSize, $unit);
-
-        if ($value > $maxSize) {
+        if ($maxSize && $value > $this->formatSize($maxSize, $unit)) {
             $this->errors['max_size'] = "File size must be smaller than {$this->formatSizeForDisplay($maxSize)}";
         }
 
@@ -131,12 +96,8 @@ class UploadValidation
     {
         $minWidth = $this->rules['min_width'] ?? null;
 
-        if (!$minWidth) {
-            return $this;
-        }
-
-        if ($value < $minWidth) {
-            $this->errors['min_width'] = "Image width must be atleast {$value}px";
+        if ($minWidth && $value < $minWidth) {
+            $this->errors['min_width'] = "Image width must be at least {$value}px";
         }
 
         return $this;
@@ -146,11 +107,7 @@ class UploadValidation
     {
         $maxWidth = $this->rules['max_width'] ?? null;
 
-        if (!$maxWidth) {
-            return $this;
-        }
-
-        if ($value > $maxWidth) {
+        if ($maxWidth && $value > $maxWidth) {
             $this->errors['max_width'] = "Image width must be smaller than {$value}px";
         }
 
@@ -161,12 +118,8 @@ class UploadValidation
     {
         $minHeight = $this->rules['min_height'] ?? null;
 
-        if (!$minHeight) {
-            return $this;
-        }
-
-        if ($value < $minHeight) {
-            $this->errors['min_height'] = "Image height must be atleast {$value}px";
+        if ($minHeight && $value < $minHeight) {
+            $this->errors['min_height'] = "Image height must be at least {$value}px";
         }
 
         return $this;
@@ -176,11 +129,7 @@ class UploadValidation
     {
         $maxHeight = $this->rules['max_height'] ?? null;
 
-        if (!$maxHeight) {
-            return $this;
-        }
-
-        if ($value > $maxHeight) {
+        if ($maxHeight && $value > $maxHeight) {
             $this->errors['max_height'] = "Image height must be smaller than {$value}px";
         }
 
@@ -191,11 +140,7 @@ class UploadValidation
     {
         $width = $this->rules['width'] ?? null;
 
-        if (!$width) {
-            return $this;
-        }
-
-        if ($value !== $width) {
+        if ($width && $value !== $width) {
             $this->errors['width'] = "Image width must be exactly {$value}px";
         }
 
@@ -206,11 +151,7 @@ class UploadValidation
     {
         $height = $this->rules['height'] ?? null;
 
-        if (!$height) {
-            return $this;
-        }
-
-        if ($value !== $height) {
+        if ($height && $value !== $height) {
             $this->errors['height'] = "Image height must be exactly {$value}px";
         }
 
@@ -221,42 +162,38 @@ class UploadValidation
     {
         $ratio = $this->rules['ratio'] ?? null;
 
-        if (empty($ratio)) {
-            return $this;
-        }
+        if ($ratio) {
+            [$numerator, $denominator] = explode('/', $ratio);
 
-        [$numerator, $denominator] = explode('/', $ratio);
+            if ($denominator !== '0') {
+                $expectedRatio = $numerator / $denominator;
+                $calculatedRatio = $width / $height;
 
-        if ($denominator == 0) {
-            return $this;
-        }
-
-        $expectedRatio = $numerator / $denominator;
-        $calculatedRatio = $width / $height;
-
-        if ($calculatedRatio !== $expectedRatio) {
-            $this->errors['ratio'] = "Image ratio must be {$ratio}";
+                if ($calculatedRatio !== $expectedRatio) {
+                    $this->errors['ratio'] = "Image ratio must be {$ratio}";
+                }
+            }
         }
 
         return $this;
     }
 
-    public function hasError()
+    public function hasError(): bool
     {
         return !empty($this->errors);
     }
 
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }
 
-    public function getError(string $key)
+    public function getError(string $key): ?string
     {
         return $this->errors[$key] ?? null;
     }
 
-    private function formatSize($value, string $unit)
+    private function formatSize($value, string $unit): int
     {
         $unit = strtolower($unit);
         $units = [
@@ -269,7 +206,7 @@ class UploadValidation
         return $value * $units[$unit];
     }
 
-    private function formatSizeForDisplay($value)
+    private function formatSizeForDisplay($value): string
     {
         $units = ['bytes', 'KB', 'MB', 'GB'];
         $step = 1024;
