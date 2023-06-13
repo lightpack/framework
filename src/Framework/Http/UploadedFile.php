@@ -54,6 +54,7 @@ class UploadedFile
         $this->validation->validateMaxWidth($this->getWidth());
         $this->validation->validateMinHeight($this->getHeight());
         $this->validation->validateMaxHeight($this->getHeight());
+        $this->validation->validateRatio($this->getWidth(), $this->getHeight());
         $this->validation->validateWidth($this->getWidth());
         $this->validation->validateHeight($this->getHeight());
         $this->validation->validateMinSize($this->getSize());

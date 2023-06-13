@@ -4,8 +4,8 @@ namespace Lightpack\Http;
 
 class UploadValidation
 {
-    private array $errors;
-    private array $rules;
+    private array $errors = [];
+    private array $rules = [];
 
     public function __construct(?string $rules = null)
     {
@@ -16,6 +16,10 @@ class UploadValidation
 
     public function setRules(string $rules)
     {
+        if(empty($rules)) {
+            return;
+        }
+
         $rulePairs = explode('|', $rules);
         $parsedRules = [];
 
@@ -38,6 +42,7 @@ class UploadValidation
             'mimes' => $parsedRules['mimes'] ?? null,
             'min_size' => $parsedRules['min_size'] ?? null,
             'max_size' => $parsedRules['max_size'] ?? null,
+            'ratio' => $parsedRules['ratio'] ?? null,
             'width' => $parsedRules['width'] ?? null,
             'height' => $parsedRules['height'] ?? null,
             'min_width' => $parsedRules['min_width'] ?? null,
@@ -54,7 +59,7 @@ class UploadValidation
     }
     public function validateMimes(string $value): self
     {
-        $mimes = $this->rules['mimes'];
+        $mimes = $this->rules['mimes'] ?? null;
 
         if (!$mimes) {
             return $this;
@@ -72,7 +77,7 @@ class UploadValidation
 
     public function validateExtensions(string $value): self
     {
-        $extensions = $this->rules['extensions'];
+        $extensions = $this->rules['extensions'] ?? null;
 
         if (!$extensions) {
             return $this;
@@ -90,7 +95,7 @@ class UploadValidation
 
     public function validateMinSize($value, string $unit = 'kb'): self
     {
-        $minSize = $this->rules['min_size'];
+        $minSize = $this->rules['min_size'] ?? null;
 
         if (!$minSize) {
             return $this;
@@ -107,7 +112,7 @@ class UploadValidation
 
     public function validateMaxSize($value, string $unit = 'kb'): self
     {
-        $maxSize = $this->rules['max_size'];
+        $maxSize = $this->rules['max_size'] ?? null;
 
         if (!$maxSize) {
             return $this;
@@ -124,7 +129,7 @@ class UploadValidation
 
     public function validateMinWidth(int $value): self
     {
-        $minWidth = $this->rules['min_width'];
+        $minWidth = $this->rules['min_width'] ?? null;
 
         if (!$minWidth) {
             return $this;
@@ -139,7 +144,7 @@ class UploadValidation
 
     public function validateMaxWidth(int $value): self
     {
-        $maxWidth = $this->rules['max_width'];
+        $maxWidth = $this->rules['max_width'] ?? null;
 
         if (!$maxWidth) {
             return $this;
@@ -154,7 +159,7 @@ class UploadValidation
 
     public function validateMinHeight(int $value): self
     {
-        $minHeight = $this->rules['min_height'];
+        $minHeight = $this->rules['min_height'] ?? null;
 
         if (!$minHeight) {
             return $this;
@@ -169,7 +174,7 @@ class UploadValidation
 
     public function validateMaxHeight(int $value): self
     {
-        $maxHeight = $this->rules['max_height'];
+        $maxHeight = $this->rules['max_height'] ?? null;
 
         if (!$maxHeight) {
             return $this;
@@ -184,7 +189,7 @@ class UploadValidation
 
     public function validateWidth(int $value): self
     {
-        $width = $this->rules['width'];
+        $width = $this->rules['width'] ?? null;
 
         if (!$width) {
             return $this;
@@ -199,7 +204,7 @@ class UploadValidation
 
     public function validateHeight(int $value): self
     {
-        $height = $this->rules['height'];
+        $height = $this->rules['height'] ?? null;
 
         if (!$height) {
             return $this;
@@ -207,6 +212,30 @@ class UploadValidation
 
         if ($value !== $height) {
             $this->errors['height'] = "Image height must be exactly {$value}px";
+        }
+
+        return $this;
+    }
+
+    public function validateRatio(float $width, float $height): self
+    {
+        $ratio = $this->rules['ratio'] ?? null;
+
+        if (empty($ratio)) {
+            return $this;
+        }
+
+        [$numerator, $denominator] = explode('/', $ratio);
+
+        if ($denominator == 0) {
+            return $this;
+        }
+
+        $expectedRatio = $numerator / $denominator;
+        $calculatedRatio = $width / $height;
+
+        if ($calculatedRatio !== $expectedRatio) {
+            $this->errors['ratio'] = "Image ratio must be {$ratio}";
         }
 
         return $this;

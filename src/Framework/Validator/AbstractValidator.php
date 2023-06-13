@@ -2,7 +2,6 @@
 
 namespace Lightpack\Validator;
 
-use Lightpack\Http\UploadValidation;
 use RuntimeException;
 use Lightpack\Utils\Arr;
 
@@ -77,7 +76,7 @@ class AbstractValidator
             return;
         }
 
-        if(is_array($rules) && isset($rules['upload'])) {
+        if(is_array($rules) && isset($rules['file'])) {
             $this->rules[$key] = $rules;
             return;
         }
@@ -96,8 +95,8 @@ class AbstractValidator
 
         foreach ($this->rules as $field => $values) {
             // Rules for file uploads
-            if(is_array($values) && isset($values['upload'])) {
-                $this->validate($field, 'upload', $values['upload']);
+            if(is_array($values) && isset($values['file'])) {
+                $this->validate($field, 'upload', $values['file']);
                 continue;
             }
 
