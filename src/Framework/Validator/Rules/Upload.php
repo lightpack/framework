@@ -16,11 +16,12 @@ class Upload implements RuleInterface
 
         $explodedRules = explode('|', $rules);
 
-        // check if not required
-        if (!in_array('required', $explodedRules) && request()->files()->isEmpty($field)) {
+        if (!$this->isRequired($explodedRules) && !$this->hasUploadedFile($field)) {
             return true;
-        } elseif (request()->files()->isEmpty($field)) {
-            $this->errorMessage = sprintf("You are required to upload %s.", str_replace(['_', '-'], ' ', $field));
+        }
+
+        if (!$this->hasUploadedFile($field)) {
+            $this->errorMessage = sprintf("You are required to upload %s.", $this->getFieldDisplayName($field));
             return false;
         }
 
@@ -29,24 +30,20 @@ class Upload implements RuleInterface
         }
 
         if (is_array($upload)) {
-            // Check max_items rule
             $maxItemsRule = $this->getMaxItemsRule($explodedRules);
-
             if ($maxItemsRule && count($upload) > $maxItemsRule) {
-                $this->errorMessage = sprintf("You can upload a maximum of %d files for %s.", $maxItemsRule, str_replace(['_', '-'], ' ', $field));
+                $this->errorMessage = sprintf("You can upload a maximum of %d files for %s.", $maxItemsRule, $this->getFieldDisplayName($field));
                 return false;
             }
 
-            // Check min_items rule
             $minItemsRule = $this->getMinItemsRule($explodedRules);
-
             if ($minItemsRule && count($upload) < $minItemsRule) {
-                $this->errorMessage = sprintf("You need to upload at least %d files for %s.", $minItemsRule, str_replace(['_', '-'], ' ', $field));
+                $this->errorMessage = sprintf("You need to upload at least %d files for %s.", $minItemsRule, $this->getFieldDisplayName($field));
                 return false;
             }
 
             foreach ($upload as $file) {
-                if (false == $this->processValidation($file, $rules)) {
+                if (!$this->processValidation($file, $rules)) {
                     return false;
                 }
             }
@@ -68,9 +65,7 @@ class Upload implements RuleInterface
 
         if ($failed) {
             $errors = $file->getValidationErrors();
-
             $this->errorMessage = implode(' ', $errors); // Store all errors
-
             return false;
         }
 
@@ -97,5 +92,20 @@ class Upload implements RuleInterface
         }
 
         return null;
+    }
+
+    private function isRequired(array $rules): bool
+    {
+        return in_array('required', $rules);
+    }
+
+    private function hasUploadedFile(string $field): bool
+    {
+        return !request()->files()->isEmpty($field);
+    }
+
+    private function getFieldDisplayName(string $field): string
+    {
+        return str_replace(['_', '-'], ' ', $field);
     }
 }
