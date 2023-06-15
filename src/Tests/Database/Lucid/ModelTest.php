@@ -91,7 +91,7 @@ final class ModelTest extends TestCase
         $products = $this->db->table('products')->all();
         $productsCountBeforeSave = count($products);
 
-        $this->product->query()->bulkInsert([
+        $this->product->query()->insert([
             ['name' => 'Dummy Product 1', 'color' => '#CCC'],
             ['name' => 'Dummy Product 2', 'color' => '#CCC'],
             ['name' => 'Dummy Product 3', 'color' => '#CCC'],
@@ -196,17 +196,17 @@ final class ModelTest extends TestCase
 
     public function testPivotMethod() // aka many-to-many relation
     {
-        $this->db->table('users')->bulkInsert([
+        $this->db->table('users')->insert([
             ['name' => 'Bob'],
             ['name' => 'John'],
             ['name' => 'Jane'],
         ]);
-        $this->db->table('roles')->bulkInsert([
+        $this->db->table('roles')->insert([
             ['name' => 'admin'],
             ['name' => 'user'],
             ['name' => 'guest'],
         ]);
-        $this->db->table('role_user')->bulkInsert([
+        $this->db->table('role_user')->insert([
             ['user_id' => 1, 'role_id' => 1],
             ['user_id' => 1, 'role_id' => 2],
             ['user_id' => 2, 'role_id' => 2],
@@ -227,19 +227,19 @@ final class ModelTest extends TestCase
 
     public function testPivotAttachMethod()
     {
-        $this->db->table('users')->bulkInsert([
+        $this->db->table('users')->insert([
             ['name' => 'Bob'],
             ['name' => 'John'],
             ['name' => 'Jane'],
         ]);
 
-        $this->db->table('roles')->bulkInsert([
+        $this->db->table('roles')->insert([
             ['name' => 'admin'],
             ['name' => 'user'],
             ['name' => 'guest'],
         ]);
 
-        $this->db->table('role_user')->bulkInsert([
+        $this->db->table('role_user')->insert([
             ['user_id' => 1, 'role_id' => 1],
             ['user_id' => 1, 'role_id' => 2],
             ['user_id' => 2, 'role_id' => 2],
@@ -264,19 +264,19 @@ final class ModelTest extends TestCase
 
     public function testPivotDetachMethod()
     {
-        $this->db->table('users')->bulkInsert([
+        $this->db->table('users')->insert([
             ['name' => 'Bob'],
             ['name' => 'John'],
             ['name' => 'Jane'],
         ]);
 
-        $this->db->table('roles')->bulkInsert([
+        $this->db->table('roles')->insert([
             ['name' => 'admin'],
             ['name' => 'user'],
             ['name' => 'guest'],
         ]);
 
-        $this->db->table('role_user')->bulkInsert([
+        $this->db->table('role_user')->insert([
             ['user_id' => 1, 'role_id' => 1],
             ['user_id' => 1, 'role_id' => 2],
             ['user_id' => 2, 'role_id' => 2],
@@ -301,19 +301,19 @@ final class ModelTest extends TestCase
 
     public function testPivotSyncMethod()
     {
-        $this->db->table('users')->bulkInsert([
+        $this->db->table('users')->insert([
             ['name' => 'Bob'],
             ['name' => 'John'],
             ['name' => 'Jane'],
         ]);
 
-        $this->db->table('roles')->bulkInsert([
+        $this->db->table('roles')->insert([
             ['name' => 'admin'],
             ['name' => 'user'],
             ['name' => 'guest'],
         ]);
         
-        $this->db->table('role_user')->bulkInsert([
+        $this->db->table('role_user')->insert([
             ['user_id' => 1, 'role_id' => 1],
             ['user_id' => 1, 'role_id' => 2],
             ['user_id' => 2, 'role_id' => 2],
@@ -339,17 +339,17 @@ final class ModelTest extends TestCase
     public function testHasManyThrough()
     {
         // projects, tasks, and comments table will be used for tests of hasmanyThrough relation
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['task_id' => 1, 'content' => 'Comment 1'],
             ['task_id' => 2, 'content' => 'Comment 2'],
             ['task_id' => 2, 'content' => 'Comment 3'],
@@ -371,7 +371,7 @@ final class ModelTest extends TestCase
 
     public function testModelCollectionToArray()
     {
-        $this->db->table('users')->bulkInsert([
+        $this->db->table('users')->insert([
             ['name' => 'Bob'],
             ['name' => 'John'],
             ['name' => 'Jane'],
@@ -387,12 +387,12 @@ final class ModelTest extends TestCase
     public function testLoadMethod()
     {
         // test eager load relationship after parent model has been created
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -410,12 +410,12 @@ final class ModelTest extends TestCase
     public function testLoadCountMethod()
     {
         // test eager load relationship after parent model has been created
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -431,12 +431,12 @@ final class ModelTest extends TestCase
     public function testLoadMethodWithConstraint()
     {
         // test eager load relationship after parent model has been created
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -457,12 +457,12 @@ final class ModelTest extends TestCase
     public function testLoadCountMethodWithConstraint()
     {
         // test eager load relationship after parent model has been created
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -592,13 +592,13 @@ final class ModelTest extends TestCase
     public function testModelsAreCached()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -645,10 +645,10 @@ final class ModelTest extends TestCase
         $this->assertNotNull($article->updated_at);
     }
 
-    public function testItDoesNotSetTimestampAttributesWhenBulkInsert()
+    public function testItDoesNotSetTimestampAttributesWheninsert()
     {
         // bulk insert articles
-        $this->db->table('articles')->bulkInsert([
+        $this->db->table('articles')->insert([
             ['title' => 'Article 1'],
             ['title' => 'Article 2'],
             ['title' => 'Article 3'],
@@ -668,13 +668,13 @@ final class ModelTest extends TestCase
     public function testWithMethodForEagerLoading()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -699,14 +699,14 @@ final class ModelTest extends TestCase
     public function testWithCountMethodForEagerLoading()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -734,20 +734,20 @@ final class ModelTest extends TestCase
     public function testWithMethodForNestedEagerLoading()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
         // bulk insert comments
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['content' => 'Comment 1', 'task_id' => 1],
             ['content' => 'Comment 2', 'task_id' => 2],
             ['content' => 'Comment 3', 'task_id' => 2],
@@ -768,13 +768,13 @@ final class ModelTest extends TestCase
     public function testWithMethodForEagerLoadingAll()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -796,13 +796,13 @@ final class ModelTest extends TestCase
     public function testWithCountMethodForEagerLoadingAll()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -822,13 +822,13 @@ final class ModelTest extends TestCase
     public function testWithAndWithCountMethodBoth()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -851,20 +851,20 @@ final class ModelTest extends TestCase
     public function testWithAndWithCountMethodForHasManyThroughRelations()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
         // bulk insert comments
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['content' => 'Comment 1', 'task_id' => 1],
             ['content' => 'Comment 2', 'task_id' => 2],
             ['content' => 'Comment 3', 'task_id' => 2],
@@ -893,13 +893,13 @@ final class ModelTest extends TestCase
     public function testEagerLoadHasOneRelation()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert managers
-        $this->db->table('managers')->bulkInsert([
+        $this->db->table('managers')->insert([
             ['name' => 'Manager 1', 'project_id' => 1],
             ['name' => 'Manager 2', 'project_id' => 2],
         ]);
@@ -919,7 +919,7 @@ final class ModelTest extends TestCase
     public function testEagerLoadForEmptyRelation()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
@@ -938,17 +938,17 @@ final class ModelTest extends TestCase
     public function testEagerLoadForManyToManyRelation()
     {
         // use pivot tables users, roles, role_user
-        $this->db->table('users')->bulkInsert([
+        $this->db->table('users')->insert([
             ['name' => 'User 1'],
             ['name' => 'User 2'],
         ]);
 
-        $this->db->table('roles')->bulkInsert([
+        $this->db->table('roles')->insert([
             ['name' => 'Role 1'],
             ['name' => 'Role 2'],
         ]);
 
-        $this->db->table('role_user')->bulkInsert([
+        $this->db->table('role_user')->insert([
             ['user_id' => 1, 'role_id' => 1],
             ['user_id' => 1, 'role_id' => 2],
             ['user_id' => 2, 'role_id' => 1],
@@ -974,21 +974,21 @@ final class ModelTest extends TestCase
         set_env('APP_DEBUG', true);
 
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
         // bulk insert comments
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['content' => 'Comment 1', 'task_id' => 1],
             ['content' => 'Comment 2', 'task_id' => 1],
             ['content' => 'Comment 3', 'task_id' => 1],
@@ -996,7 +996,7 @@ final class ModelTest extends TestCase
         ]);
 
         // bulk insert managers
-        $this->db->table('managers')->bulkInsert([
+        $this->db->table('managers')->insert([
             ['name' => 'Manager 1', 'project_id' => 1],
             ['name' => 'Manager 2', 'project_id' => 2],
         ]);
@@ -1028,13 +1028,13 @@ final class ModelTest extends TestCase
     public function testEagerLoadingBelongsToRelation()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1061,20 +1061,20 @@ final class ModelTest extends TestCase
     public function testRelationsMethodsReturnQuery()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
         // bulk insert comments
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['content' => 'Comment 1', 'task_id' => 1],
             ['content' => 'Comment 2', 'task_id' => 1],
             ['content' => 'Comment 3', 'task_id' => 1],
@@ -1111,7 +1111,7 @@ final class ModelTest extends TestCase
     public function testCollectionAccessAsArray()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
@@ -1179,13 +1179,13 @@ final class ModelTest extends TestCase
     public function testEagerLoadingEmptyRelations()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1204,14 +1204,14 @@ final class ModelTest extends TestCase
     public function testHasMethodForRelationshipExistence()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1255,14 +1255,14 @@ final class ModelTest extends TestCase
     public function testHasMethodWithConstraints()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1283,14 +1283,14 @@ final class ModelTest extends TestCase
     public function testWhereHas()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1332,21 +1332,21 @@ final class ModelTest extends TestCase
     public function testEagerLoadingWithArrayOfRelations()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
         // bulk insert comments
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['content' => 'Comment 1', 'task_id' => 1],
             ['content' => 'Comment 2', 'task_id' => 1],
             ['content' => 'Comment 3', 'task_id' => 2],
@@ -1373,21 +1373,21 @@ final class ModelTest extends TestCase
     public function testEagerLoadingWithArrayOfRelationConstraints()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
         // bulk insert comments
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['content' => 'Comment 1', 'task_id' => 1],
             ['content' => 'Comment 2', 'task_id' => 1],
             ['content' => 'Comment 3', 'task_id' => 2],
@@ -1427,21 +1427,21 @@ final class ModelTest extends TestCase
     public function testEagerLoadCountWithArrayOfRelationConstraints()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
         // bulk insert comments
-        $this->db->table('comments')->bulkInsert([
+        $this->db->table('comments')->insert([
             ['content' => 'Comment 1', 'task_id' => 1],
             ['content' => 'Comment 2', 'task_id' => 1],
             ['content' => 'Comment 3', 'task_id' => 2],
@@ -1478,14 +1478,14 @@ final class ModelTest extends TestCase
     public function testEagerLoadWithThrowsException()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1508,14 +1508,14 @@ final class ModelTest extends TestCase
     public function testEagerLoadWithCountThrowsException()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1538,14 +1538,14 @@ final class ModelTest extends TestCase
     public function testModelCastIntoArray()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1569,14 +1569,14 @@ final class ModelTest extends TestCase
     public function testCollectCastIntoArray()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1599,14 +1599,14 @@ final class ModelTest extends TestCase
     public function testModelJsonSerializeMethod()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],
@@ -1633,7 +1633,7 @@ final class ModelTest extends TestCase
     public function testModelCollectionExcludeMethod()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
@@ -1661,7 +1661,7 @@ final class ModelTest extends TestCase
     public function testModelCollectionFilterMethod()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
@@ -1684,7 +1684,7 @@ final class ModelTest extends TestCase
     public function testModelCloneMethod()
     {
         // bulk insert articles
-        $this->db->table('articles')->bulkInsert([
+        $this->db->table('articles')->insert([
             ['title' => 'Article 1', 'created_at' => date("Y-m-d", time()), 'updated_at' => date("Y-m-d", time())],
             ['title' => 'Article 2', 'created_at' => date("Y-m-d", time()), 'updated_at' => date("Y-m-d", time())],
             ['title' => 'Article 3', 'created_at' => date("Y-m-d", time()), 'updated_at' => date("Y-m-d", time())],
@@ -1732,6 +1732,36 @@ final class ModelTest extends TestCase
             $clone = (new Article)->clone();
         } catch(\Exception $e) {
             $this->assertEquals('You cannot clone a non-existing model instance.', $e->getMessage());
+        }
+    }
+
+    public function testQueryChunkMethodOnModel()
+    {
+        // Make sure we have no records
+        (new Product)->query()->delete();
+
+        foreach(range(1, 25) as $item) {
+            $records[] = ['name' => 'Product name', 'color' => '#CCC'];
+        }
+
+        (new Product)->query()->insert($records);
+
+        // Process chunk query
+        $chunkedRecords = [];
+
+        (new Product)->query()->chunk(5, function($records) use (&$chunkedRecords) {
+            if(count($chunkedRecords) == 4) {
+                return false;
+            }
+
+            $chunkedRecords[] = $records;
+        });
+
+        // Assertions
+        $this->assertCount(4, $chunkedRecords);
+
+        foreach($chunkedRecords as $records) {
+            $this->assertCount(5, $records);
         }
     }
 }

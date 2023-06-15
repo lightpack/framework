@@ -9,6 +9,8 @@ use Lightpack\Pagination\Pagination as BasePagination;
 use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\DB;
 
+use function PHPUnit\Framework\callback;
+
 class Query
 {
     protected $connection;
@@ -71,30 +73,17 @@ class Query
 
     private function executeInsert(array $data, bool $shouldIgnore = false)
     {
-        $compiler = new Compiler($this);
-        $this->bindings = array_values($data);
-        $query = $compiler->compileInsert(array_keys($data), $shouldIgnore);
-        $result = $this->connection->query($query, $this->bindings);
-        $this->resetQuery();
-
-        return $result;
-    }
-
-    public function bulkInsert(array $data)
-    {
-        return $this->executeBulkInsert($data);
-    }
-
-    public function bulkInsertIgnore(array $data)
-    {
-        return $this->executeBulkInsert($data, true);
+        return $this->executeBulkInsert($data, $shouldIgnore);
     }
 
     private function executeBulkInsert(array $data, bool $shouldIgnore = false)
     {
-        // verify that data is an array of arrays
-        if (empty($data) || array_values($data) !== $data) {
-            throw new \Exception('bulkInsert() expects an array of arrays');
+        if (empty($data)) {
+            return;
+        }
+
+        if(! is_array(reset($data))) {
+            $data = [$data];
         }
 
         // Loop data to prepare for parameter binding
@@ -105,6 +94,7 @@ class Query
         $compiler = new Compiler($this);
         $query = $compiler->compileBulkInsert($columns, $data, $shouldIgnore);
         $result = $this->connection->query($query, $this->bindings);
+
         $this->resetQuery();
         return $result;
     }
@@ -532,6 +522,19 @@ class Query
         $this->resetWhere();
 
         return $result;
+    }
+
+    public function chunk(int $chunkSize, callable $callback)
+    {
+        $records = $this->limit($chunkSize)->offset($page = 1)->all();
+
+        while(count($records) > 0) {
+            if(false === call_user_func($callback, $records)) {
+                return;
+            }
+
+            $records = $this->limit($chunkSize)->offset(++$page)->all();
+        }
     }
 
     public function getCompiledSelect()
