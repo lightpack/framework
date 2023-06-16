@@ -362,6 +362,21 @@ class Request
         return !$this->hasValidSignature($ignoredParameters);
     }
 
+    public function subdomain(): ?string
+    {
+        $host = $this->host();
+        $parts = explode('.', $host);
+
+        // Check if the host consists of at least two parts (subdomain.domain)
+        if (count($parts) >= 2) {
+            // Remove the last part (domain) and return the remaining subdomain
+            array_pop($parts);
+            return implode('.', $parts);
+        }
+
+        return null;
+    }
+
     private function parseBody()
     {
         $rawBody = $_SERVER['X_LIGHTPACK_RAW_INPUT'] ?? file_get_contents('php://input');
