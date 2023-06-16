@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Lightpack\Container\Container;
 use Lightpack\Http\Request;
 use Lightpack\Routing\RouteRegistry;
+use Lightpack\Utils\Crypto;
 use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
@@ -78,5 +79,61 @@ final class UrlTest extends TestCase
         $this->assertEquals('/foo/23/bar', $this->url->route('foo.num.bar', 23));
         $this->assertEquals('/foo/23/bar/baz', $this->url->route('foo.num.bar.baz', 23, 'baz'));
         $this->assertEquals('/foo/23/bar/baz?p=1&r=2', $this->url->route('foo.num.bar.baz', 23, 'baz', ['p' => 1, 'r' => 2]));
+    }
+
+    public function testUrlSignMethod()
+    {
+        $url = 'https://example.com';
+
+        // Set up the Crypto class mock
+        $cryptoMock = $this->getMockBuilder(Crypto::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $cryptoMock->expects($this->once())
+            ->method('hash')
+            ->willReturn('encryptedSignature');
+
+        // Set the Container 
+        Container::getInstance()->instance('crypto', $cryptoMock);
+
+        // Generate the signed URL
+        $signedUrl = $this->url->sign(3600, 'users', ['sort' => 'asc', 'status' => 'active']);
+
+        // Verify the generated URL
+        $this->assertStringContainsString('/users?sort=asc&status=active', $signedUrl);
+        $this->assertStringContainsString('&signature=encryptedSignature', $signedUrl);
+        $this->assertStringMatchesFormat('%s&expires=%s', $signedUrl);
+    }
+
+    /**
+     * Verify the integrity and expiration of a signed URL.
+     *
+     * @param string $url The signed URL to verify.
+     * @param array $ignoredParameters The optional array of query parameters to ignore during verification.
+     * @return bool True if the URL is valid and has not been tampered with or expired, false otherwise.
+     */
+    public function testUrlVerifyMethod()
+    {
+        $expires = time() + 3600;
+        $url = 'https://example.com/users?sort=asc&status=active&signature=encryptedSignature&expires=' . $expires;
+        $invalidUrl = 'https://example.com/users?sort=asc&status=active&signature=encryptedSignature&expires=' . time() - 1;
+        $plainUrl = 'https://example.com/users';
+
+        // Set up the Crypto class mock
+        $cryptoMock = $this->getMockBuilder(Crypto::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $cryptoMock
+            ->method('hash')
+            ->willReturn('encryptedSignature');
+
+        // Set the Container 
+        Container::getInstance()->instance('crypto', $cryptoMock);
+
+        // Assertions
+        $this->assertTrue($this->url->verify($url));
+        $this->assertTrue($this->url->verify($url, ['sort']));
+        $this->assertFalse($this->url->verify($invalidUrl));
+        $this->assertFalse($this->url->verify($plainUrl));
     }
 }
