@@ -4,7 +4,7 @@ namespace Lightpack\Http;
 
 class Files
 {
-    private $files;
+    private array $files = [];
 
     public function __construct(array $files = [])
     {
