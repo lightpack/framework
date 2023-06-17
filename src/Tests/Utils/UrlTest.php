@@ -75,15 +75,21 @@ final class UrlTest extends TestCase
 
         // Test routes
         $this->assertEquals('/foo', $this->url->route('foo'));
-        $this->assertEquals('/foo/23', $this->url->route('foo.num', 23));
-        $this->assertEquals('/foo/23/bar', $this->url->route('foo.num.bar', 23));
-        $this->assertEquals('/foo/23/bar/baz', $this->url->route('foo.num.bar.baz', 23, 'baz'));
-        $this->assertEquals('/foo/23/bar/baz?p=1&r=2', $this->url->route('foo.num.bar.baz', 23, 'baz', ['p' => 1, 'r' => 2]));
+        $this->assertEquals('/foo/23', $this->url->route('foo.num', ['num' => 23]));
+        $this->assertEquals('/foo/23/bar', $this->url->route('foo.num.bar', ['num' => 23]));
+        $this->assertEquals('/foo/23/bar/baz', $this->url->route('foo.num.bar.baz', ['num' => 23, 'slug' => 'baz']));
+        $this->assertEquals('/foo/23/bar/baz?p=1&r=2', $this->url->route('foo.num.bar.baz', ['num' => 23, 'slug' => 'baz', 'p' => 1, 'r' => 2]));
     }
 
     public function testUrlSignMethod()
     {
         $url = 'https://example.com';
+
+        // Add routes
+        $routeRegistery = new RouteRegistry(new Request());
+        $routeRegistery->get('/users', 'DummyController')->name('users');
+        $routeRegistery->bootRouteNames();
+        Container::getInstance()->instance('route', $routeRegistery);
 
         // Set up the Crypto class mock
         $cryptoMock = $this->getMockBuilder(Crypto::class)
@@ -97,7 +103,7 @@ final class UrlTest extends TestCase
         Container::getInstance()->instance('crypto', $cryptoMock);
 
         // Generate the signed URL
-        $signedUrl = $this->url->sign(3600, 'users', ['sort' => 'asc', 'status' => 'active']);
+        $signedUrl = $this->url->sign('users', ['sort' => 'asc', 'status' => 'active'], 3600);
 
         // Verify the generated URL
         $this->assertStringContainsString('/users?sort=asc&status=active', $signedUrl);
