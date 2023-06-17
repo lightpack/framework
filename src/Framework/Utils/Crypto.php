@@ -43,4 +43,12 @@ class Crypto
     {
         return hash_hmac('sha256', bin2hex(random_bytes(16)), $this->key);
     }
+
+    /**
+     * Generates a hash value for a string using the SHA-256 algorithm.
+     */
+    public function hash(string $value): string
+    {
+        return hash_hmac('sha256', $value, $this->key);
+    }
 }

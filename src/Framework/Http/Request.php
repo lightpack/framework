@@ -3,7 +3,9 @@
 namespace Lightpack\Http;
 
 use Lightpack\Exceptions\InvalidHttpMethodException;
+use Lightpack\Exceptions\InvalidUrlSignatureException;
 use Lightpack\Routing\Route;
+use Lightpack\Utils\Url;
 
 class Request
 {
@@ -17,10 +19,10 @@ class Request
     private bool $isSpoofed = false;
     private Route $route;
     private static array $verbs = [
-        'GET', 
-        'POST', 
-        'PUT', 
-        'PATCH', 
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
         'DELETE',
         'HEAD',
         'OPTIONS',
@@ -55,14 +57,14 @@ class Request
     public function setBasePath(string $path): self
     {
         $this->basepath = $path;
-        
+
         return $this;
     }
 
     public function fullpath(): string
     {
         $path = explode('?', $_SERVER['REQUEST_URI'])[0];
-        
+
         return '/' . trim($path, '/');
     }
 
@@ -80,7 +82,7 @@ class Request
     {
         $segments = explode('/', trim($this->path(), '/'));
 
-        if($index === null) {
+        if ($index === null) {
             return $segments;
         }
 
@@ -104,7 +106,7 @@ class Request
 
     public function getRawBody(): string
     {
-        if(null === $this->rawBody) {
+        if (null === $this->rawBody) {
             $this->parseBody();
         }
 
@@ -113,11 +115,11 @@ class Request
 
     public function getParsedBody(?string $key = null, $default = null): string
     {
-        if(empty($this->parsedBody)) {
+        if (empty($this->parsedBody)) {
             parse_str($this->getRawBody(), $this->parsedBody);
         }
 
-        if(null === $key) {
+        if (null === $key) {
             return $this->parsedBody;
         }
 
@@ -129,15 +131,15 @@ class Request
      */
     public function input(?string $key = null, $default = null): mixed
     {
-        if($this->isJson()) {
+        if ($this->isJson()) {
             return $this->json($key, $default);
         }
 
-        if($this->isSpoofed()) {
+        if ($this->isSpoofed()) {
             return $this->postData($key, $default);
         }
 
-        match($this->method) {
+        match ($this->method) {
             'GET' => $value = $this->queryData($key, $default),
             'POST' => $value = $this->postData($key, $default),
             'PUT', 'PATCH', 'DELETE' => $value = $this->getParsedBody($key, $default),
@@ -149,11 +151,11 @@ class Request
 
     public function json(?string $key = null, $default = null): mixed
     {
-        if(null === $this->jsonBody) {
+        if (null === $this->jsonBody) {
             $this->parseJson();
         }
 
-        if(null === $key) {
+        if (null === $key) {
             return $this->jsonBody;
         }
 
@@ -233,9 +235,9 @@ class Request
     public function scheme()
     {
         if (
-            (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on') || 
-            (isset($_SERVER['SERVER_PORT']) && ($_SERVER['SERVER_PORT'] == '443'))) 
-        {
+            (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on') ||
+            (isset($_SERVER['SERVER_PORT']) && ($_SERVER['SERVER_PORT'] == '443'))
+        ) {
             return 'https';
         }
 
@@ -293,7 +295,7 @@ class Request
         }
 
         return substr($header, 7);
-    }   
+    }
 
     /**
      * Get refferer from referer header.
@@ -310,13 +312,13 @@ class Request
         $method = $method ?? ($_SERVER['REQUEST_METHOD'] ?? 'GET');
         $method = strtoupper($method);
 
-        if('POST' === $method) {
+        if ('POST' === $method) {
             // has it been spoofed?
             $method = strtoupper($_POST['_method'] ?? $method);
             $this->isSpoofed = isset($_POST['_method']);
         }
 
-        if(! in_array($method, self::$verbs)) {
+        if (!in_array($method, self::$verbs)) {
             throw new InvalidHttpMethodException('Invalid HTTP request method ' . $method);
         }
 
@@ -343,9 +345,26 @@ class Request
         return $this->route;
     }
 
+    public function validateUrlSignature(array $ignoredParameters = [])
+    {
+        if ($this->hasInValidSignature($ignoredParameters)) {
+            throw new InvalidUrlSignatureException;
+        }
+    }
+
+    public function hasValidSignature(array $ignoredParameters = []): bool
+    {
+        return (new Url)->verify($this->fullUrl(), $ignoredParameters);
+    }
+
+    public function hasInValidSignature(array $ignoredParameters = []): bool
+    {
+        return !$this->hasValidSignature($ignoredParameters);
+    }
+
     private function parseBody()
     {
-         $rawBody = $_SERVER['X_LIGHTPACK_RAW_INPUT'] ?? file_get_contents('php://input');
+        $rawBody = $_SERVER['X_LIGHTPACK_RAW_INPUT'] ?? file_get_contents('php://input');
 
         $this->rawBody = $rawBody ?: '';
     }
@@ -354,13 +373,13 @@ class Request
     {
         $rawBody = $this->getRawBody();
 
-        if(empty($rawBody)) {
+        if (empty($rawBody)) {
             return $this->jsonBody = [];
         }
 
         $json = json_decode($rawBody, true);
 
-        if($json === null) {
+        if ($json === null) {
             throw new \RuntimeException('Error decoding request body as JSON');
         }
 
@@ -369,7 +388,7 @@ class Request
 
     private function queryData(string $key = null, $default = null)
     {
-        if(null === $key) {
+        if (null === $key) {
             return $_GET;
         }
 
@@ -378,7 +397,7 @@ class Request
 
     private function postData(string $key = null, $default = null)
     {
-        if(null === $key) {
+        if (null === $key) {
             return $_POST;
         }
 
