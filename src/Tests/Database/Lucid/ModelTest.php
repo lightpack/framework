@@ -563,19 +563,6 @@ final class ModelTest extends TestCase
         $this->assertTrue($productAttributes->color == $product->color);
     }
 
-    public function testSaveAndRefresh()
-    {
-        $product = new Product();
-        $product->name = 'Dummy Product';
-        $product->color = '#CCC';
-        $product->saveAndRefresh();
-        $latestProduct = Product::query()->orderBy('id', 'DESC')->one();
-
-        $this->assertTrue($product->id == $latestProduct->id);
-        $this->assertTrue($product->name == $latestProduct->name);
-        $this->assertTrue($product->color == $latestProduct->color);
-    }
-
     public function testContructThrowsRecordNotFoundException()
     {
         $this->expectException(RecordNotFoundException::class);
@@ -632,14 +619,14 @@ final class ModelTest extends TestCase
     {
         $article = new Article();
         $article->title = 'My Article';
-        $article->saveAndRefresh();
+        $article->save();
 
         $this->assertNotNull($article->created_at);
         $this->assertNull($article->updated_at);
 
         // update the article
         $article->title = 'My Article 2';
-        $article->saveAndRefresh();
+        $article->save();
 
         $this->assertNotNull($article->created_at);
         $this->assertNotNull($article->updated_at);
@@ -1718,7 +1705,7 @@ final class ModelTest extends TestCase
         // Test 3: It successfully inserts the clone
         $clone = $article->clone();
         $clone->status = 'published';
-        $clone->saveAndRefresh();
+        $clone->save();
 
         // Assertions
         $this->assertEquals(4, $clone->id);
