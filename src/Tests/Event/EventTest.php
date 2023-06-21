@@ -69,7 +69,7 @@ final class EventTest extends TestCase
     {
         $mockEvent = $this->getMockBuilder(\stdClass::class)->getMock();
         $this->event->subscribe('event', get_class($mockEvent));
-        $this->expectException(ReflectionException::class);
+        $this->expectException(\Lightpack\Exceptions\EventHandlerMethodNotFoundException::class);
         $this->event->fire('event');
     }
 }

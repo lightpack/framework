@@ -134,12 +134,9 @@ class Builder extends Query
                 }
 
                 $pivotKeyName = null;
+                
+                $this->model->setEagerLoading(true);
                 $query = $this->model->{$relation}();
-
-                // if($this->model->getRelationType() !== 'pivot') {
-                $query->resetWhere();
-                $query->resetBindings();
-                // }
 
                 if ($this->model->getRelationType() === 'hasOne') {
                     $ids = $models->getKeys();
@@ -163,6 +160,7 @@ class Builder extends Query
                 }
 
                 $children = $query->whereIn($pivotKeyName ?? $this->model->getRelatingKey(), $ids)->all();
+                $this->model->setEagerLoading(false);
 
                 foreach ($models as $model) {
                     if ($this->model->getRelationType() === 'hasOne') {
@@ -232,9 +230,10 @@ class Builder extends Query
                 $include = $value;
             }
 
+            $this->model->setEagerLoading(true);
             $query = $this->model->{$include}();
-            $query->resetWhere();
-            $query->resetBindings();
+            // $query->resetWhere();
+            // $query->resetBindings();
 
             if ($this->model->getRelationType() === 'hasMany') {
                 if($constraint ?? false) {
@@ -242,6 +241,7 @@ class Builder extends Query
                 }
 
                 $counts = $query->whereIn($this->model->getRelatingKey(), $models->getKeys())->countBy($this->model->getRelatingKey());
+                $this->model->setEagerLoading(false);
 
                 foreach ($models as $model) {
                     foreach ($counts as $count) {

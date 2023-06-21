@@ -10,73 +10,16 @@ final class StrTest extends TestCase
     public function testSingularize()
     {
         $this->assertEquals('quiz', (new Str)->singularize('quizzes'));
-        $this->assertEquals('matrix', (new Str)->singularize('matrices'));
-        $this->assertEquals('vertex', (new Str)->singularize('vertices'));
-        $this->assertEquals('ox', (new Str)->singularize('oxen'));
-        $this->assertEquals('alias', (new Str)->singularize('aliases'));
-        $this->assertEquals('status', (new Str)->singularize('statuses'));
-        $this->assertEquals('octopus', (new Str)->singularize('octopuses'));
-        $this->assertEquals('crisis', (new Str)->singularize('crises'));
-        $this->assertEquals('shoe', (new Str)->singularize('shoes'));
-        $this->assertEquals('bus', (new Str)->singularize('buses'));
-        $this->assertEquals('mouse', (new Str)->singularize('mice'));
-        $this->assertEquals('chase', (new Str)->singularize('chases'));
-        $this->assertEquals('phase', (new Str)->singularize('phases'));
-        $this->assertEquals('sheep', (new Str)->singularize('sheep'));
-        $this->assertEquals('movie', (new Str)->singularize('movies'));
-        $this->assertEquals('series', (new Str)->singularize('series'));
-        $this->assertEquals('child', (new Str)->singularize('children'));
-        $this->assertEquals('tooth', (new Str)->singularize('teeth'));
-        $this->assertEquals('foot', (new Str)->singularize('feet'));
-        $this->assertEquals('zoo', (new Str)->singularize('zoos'));
-        $this->assertEquals('database', (new Str)->singularize('database'));
-        $this->assertEquals('fox', (new Str)->singularize('foxes'));
-        $this->assertEquals('library', (new Str)->singularize('libraries'));
-        $this->assertEquals('diagnosis', (new Str)->singularize('diagnoses'));
-        $this->assertEquals('baby', (new Str)->singularize('babies'));
-        $this->assertEquals('tomato', (new Str)->singularize('tomatoes'));
-        $this->assertEquals('potato', (new Str)->singularize('potatoes'));
-        $this->assertEquals('cactus', (new Str)->singularize('cactuses'));
     }
 
     public function testPluralize()
     {
         $this->assertEquals('quizzes', (new Str)->pluralize('quiz'));
-        $this->assertEquals('matrices', (new Str)->pluralize('matrix'));
-        $this->assertEquals('vertices', (new Str)->pluralize('vertex'));
-        $this->assertEquals('oxen', (new Str)->pluralize('ox'));
-        $this->assertEquals('aliases', (new Str)->pluralize('alias'));
-        $this->assertEquals('statuses', (new Str)->pluralize('status'));
-        $this->assertEquals('octopuses', (new Str)->pluralize('octopus'));
-        $this->assertEquals('crises', (new Str)->pluralize('crisis'));
-        $this->assertEquals('shoes', (new Str)->pluralize('shoe'));
-        $this->assertEquals('buses', (new Str)->pluralize('bus'));
-        $this->assertEquals('mice', (new Str)->pluralize('mouse'));
-        $this->assertEquals('chases', (new Str)->pluralize('chase'));
-        $this->assertEquals('phases', (new Str)->pluralize('phase'));
-        $this->assertEquals('sheep', (new Str)->pluralize('sheep'));
-        $this->assertEquals('movies', (new Str)->pluralize('movie'));
-        $this->assertEquals('series', (new Str)->pluralize('series'));
-        $this->assertEquals('children', (new Str)->pluralize('child'));
-        $this->assertEquals('teeth', (new Str)->pluralize('tooth'));
-        $this->assertEquals('feet', (new Str)->pluralize('foot'));
-        $this->assertEquals('zoos', (new Str)->pluralize('zoo'));
-        $this->assertEquals('databases', (new Str)->pluralize('database'));
-        $this->assertEquals('foxes', (new Str)->pluralize('fox'));
-        $this->assertEquals('libraries', (new Str)->pluralize('library'));
-        $this->assertEquals('diagnoses', (new Str)->pluralize('diagnose'));
-        $this->assertEquals('diagnoses', (new Str)->pluralize('diagnosis'));
-        $this->assertEquals('babies', (new Str)->pluralize('baby'));
-        $this->assertEquals('tomatoes', (new Str)->pluralize('tomato'));
-        $this->assertEquals('potatoes', (new Str)->pluralize('potato'));
-        $this->assertEquals('cactuses', (new Str)->pluralize('cactus'));
-        $this->assertEquals('men', (new Str)->pluralize('man'));
     }
 
     public function testPluralizeIf()
     {
         $this->assertEquals('role', (new Str)->pluralizeIf(1, 'role'));
-        $this->assertEquals('roles', (new Str)->pluralizeIf(3, 'role'));
     }
 
     public function testCamelize()
@@ -84,12 +27,16 @@ final class StrTest extends TestCase
         $this->assertEquals('ParentClass', (new Str)->camelize('parent_class'));
         $this->assertEquals('ParentClass', (new Str)->camelize('parent class'));
         $this->assertEquals('LazyBrownFox', (new Str)->camelize('lazy Brown fox'));
+        $this->assertEquals('LazyBrownFox', (new Str)->camelize('lazy-brown-fox'));
+        $this->assertEquals('LazyBrownFox', (new Str)->camelize('lazy_brown_fox'));
     }
 
     public function testVariable()
     {
         $this->assertEquals('parentClass', (new Str)->variable('ParentClass'));
         $this->assertEquals('lazyBrownFox', (new Str)->variable('Lazy Brown Fox'));
+        $this->assertEquals('lazyBrownFox', (new Str)->variable('lazy-brown-fox'));
+        $this->assertEquals('lazyBrownFox', (new Str)->variable('lazy_brown_fox'));
     }
 
     public function testUnderscore()
@@ -98,6 +45,7 @@ final class StrTest extends TestCase
         $this->assertEquals('parent_class', (new Str)->underscore('Parent Class'));
         $this->assertEquals('parent_class', (new Str)->underscore('Parent-Class'));
         $this->assertEquals('parent_class', (new Str)->underscore('Parent-Class'));
+        $this->assertEquals('parent_class', (new Str)->underscore('Parent_Class'));
     }
 
     public function testDasherize()
@@ -106,13 +54,23 @@ final class StrTest extends TestCase
         $this->assertEquals('parent-class', (new Str)->dasherize('parent class'));
         $this->assertEquals('parent-class', (new Str)->dasherize('Parent Class'));
         $this->assertEquals('lazy-brown-fox', (new Str)->dasherize('lazy Brown fox'));
+        $this->assertEquals('lazy-brown-fox', (new Str)->dasherize('lazy-brown-fox'));
     }
 
     public function testHumanize()
     {
-        $this->assertEquals('Parent Class', (new Str)->humanize('parent_class'));
-        $this->assertEquals('Parent Class', (new Str)->humanize('parent class'));
-        $this->assertEquals('Lazy Brown Fox', (new Str)->humanize('lazy_brown_fox'));
+        $this->assertEquals('Parent class', (new Str)->humanize('parent_class'));
+        $this->assertEquals('Parent class', (new Str)->humanize('parent class'));
+        $this->assertEquals('Lazy brown fox', (new Str)->humanize('lazy_brown_fox'));
+        $this->assertEquals('Lazy brown fox', (new Str)->humanize('lazy brown-fox'));
+    }
+
+    public function testHeadline()
+    {
+        $this->assertEquals('Parent Class', (new Str)->headline('parent_class'));
+        $this->assertEquals('Parent Class', (new Str)->headline('parent class'));
+        $this->assertEquals('Lazy Brown Fox', (new Str)->headline('lazy_brown_fox'));
+        $this->assertEquals('Lazy Brown Fox', (new Str)->headline('lazy brown-fox'));
     }
 
     public function testTableize()

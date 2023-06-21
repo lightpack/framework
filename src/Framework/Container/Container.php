@@ -137,7 +137,7 @@ class Container
             $resolvedInstance = $this->resolveWithReflection($id);
 
             $this->callIf($resolvedInstance, '__boot');
-            
+
             return $resolvedInstance;
         }
 
@@ -262,15 +262,25 @@ class Container
         // Get method parameters
         $parameters = $reflection->getMethod($instanceMethod)->getParameters();
 
+        // Filter parameters that are scalar
+        $scalarParameters = $this->filterScalarParameters($parameters);
+
         // Filter parameters that are non-scalar
-        $parameters = $this->filterNonScalarParameters($parameters);
+        $nonScalarParameters = $this->filterNonScalarParameters($parameters);
 
         // Resolve method parameters
-        $dependencies = $this->resolveParameters($parameters);
+        $dependencies = $this->resolveParameters($nonScalarParameters);
+
+        // Prepare method's scalar arguments
+        $arguments = [];
+
+        foreach ($scalarParameters as $parameter) {
+            $arguments[$parameter->getName()] = $args[$parameter->getName()];
+        }
 
         // Merge dependencies with args
-        $dependencies = array_merge($dependencies, $args);
-        
+        $dependencies = array_merge($dependencies, $arguments);
+
         // Call method
         return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
     }
@@ -285,6 +295,17 @@ class Container
         }
 
         return null;
+    }
+
+    protected function filterScalarParameters(array $parameters): array
+    {
+        return array_filter($parameters, function ($parameter) {
+            if (empty($parameter->getType()) || $parameter->getType()->isBuiltin()) {
+                return true;
+            }
+
+            return $parameter->getType() && $parameter->getType()->isBuiltin();
+        });
     }
 
     protected function filterNonScalarParameters(array $parameters): array
@@ -315,7 +336,7 @@ class Container
     {
         // Make sure that the alias has been registered
         $this->throwExceptionIfServiceNotFound($alias);
-        
+
         $this->aliases[$type] = $alias;
     }
 }

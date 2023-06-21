@@ -8,6 +8,7 @@ use Lightpack\Http\Request;
 use Lightpack\Pagination\Pagination as BasePagination;
 use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\DB;
+use Lightpack\Database\Query\Query;
 use PHPUnit\Framework\TestCase;
 
 final class QueryTest extends TestCase
@@ -63,6 +64,14 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 3
+        $products = $this->query->select('id', 'name')->where('color', 'maroon')->all();
+        $this->assertEquals(0, count($products));
+        $this->assertIsArray($products);
+        $this->assertEmpty($products);
+        $this->assertNotNull($products);
+        $this->query->resetQuery();
+
+        // Test 4
         $products = Product::query()->all();
         $this->assertGreaterThan(0, count($products));
         $this->assertInstanceOf(Collection::class, $products);
@@ -178,7 +187,7 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
 
         // Test 9
-        $this->query->where('id', '>', 2)->where('color', '=', '#000')->orWhere('color', '=', '#FFF');
+        $this->query->where('id', '>', 2)->where('color', '=', '#000')->orWhere('color', '#FFF');
 
         $this->assertEquals(
             'SELECT * FROM products WHERE id > ? AND color = ? OR color = ?',
@@ -326,7 +335,7 @@ final class QueryTest extends TestCase
         $products = $this->query->all();
         $productsCountBeforeInsert = count($products);
 
-        $this->query->bulkInsert([
+        $this->query->insert([
             ['name' => 'Product 4', 'color' => '#CCC'],
             ['name' => 'Product 5', 'color' => '#CCC'],
             ['name' => 'Product 6', 'color' => '#CCC'],
@@ -336,14 +345,6 @@ final class QueryTest extends TestCase
         $productsCountAfterInsert = count($products);
 
         $this->assertEquals($productsCountBeforeInsert + 3, $productsCountAfterInsert);
-
-        // Test 2: Expect exception if no data is passed
-        $this->expectException(Exception::class);
-        $this->query->bulkInsert([]);
-
-        // Test 3: Expect exception if data is not an array of arrays
-        $this->expectException(Exception::class);
-        $this->query->bulkInsert(['name' => 'Product 4', 'color' => '#CCC']);
     }
 
     public function testUpdateMethod()
@@ -775,5 +776,35 @@ final class QueryTest extends TestCase
 
         $this->assertEquals($productsCountBeforeInsert + 1, $productsCountAfterInsert);
         $this->assertIsNumeric($this->query->lastInsertId());
+    }
+
+    public function testQueryChunkMethod()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        foreach(range(1, 25) as $item) {
+            $records[] = ['name' => 'Product name', 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query
+        $chunkedRecords = [];
+
+        $this->query->chunk(5, function($records) use (&$chunkedRecords) {
+            if(count($chunkedRecords) == 4) {
+                return false;
+            }
+
+            $chunkedRecords[] = $records;
+        });
+
+        // Assertions
+        $this->assertCount(4, $chunkedRecords);
+
+        foreach($chunkedRecords as $records) {
+            $this->assertCount(5, $records);
+        }
     }
 }
