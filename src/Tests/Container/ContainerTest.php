@@ -143,7 +143,7 @@ final class ContainerTest extends TestCase
         $this->assertCount(0, $this->container->getServices());
 
         // Call method
-        $result = $this->container->call(E::class, 'foo', ['Bar', 'Baz']);
+        $result = $this->container->call(E::class, 'foo', ['bar' => 'Bar', 'baz' => 'Baz']);
 
         // Assertions
         $this->assertEquals([
@@ -164,7 +164,7 @@ final class ContainerTest extends TestCase
         $this->assertCount(2, $this->container->getServices());
 
         // Call method
-        $result = $this->container->call($e, 'foo', ['Bar', 'Baz']);
+        $result = $this->container->call($e, 'foo', ['bar' => 'Bar', 'baz' => 'Baz']);
 
         // Assertions
         $this->assertEquals([

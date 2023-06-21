@@ -51,7 +51,7 @@ class Pivot extends Builder
 
         // Insert new pivot rows
         if ($data) {
-            $query->bulkInsert($data);
+            $query->insert($data);
         }
     }
 
@@ -79,7 +79,7 @@ class Pivot extends Builder
 
         // Insert new pivot rows ignoring existing ones
         if ($data) {
-            $query->bulkInsertIgnore($data);
+            $query->insertIgnore($data);
         }
     }
 

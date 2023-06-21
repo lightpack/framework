@@ -74,7 +74,7 @@ class File
     public function rename(string $old, string $new): bool
     {
         if($this->copy($old, $new)) {
-            @unlink($old);
+            return @unlink($old);
         }
 
         return false;

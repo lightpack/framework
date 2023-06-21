@@ -4,75 +4,89 @@ namespace Lightpack\Http;
 
 class UploadValidation
 {
-    private $errors;
-    private $rules;
+    private array $errors = [];
+    private array $rules = [];
 
-    public function __construct(array $rules = [])
+    public function __construct(?string $rules = null)
     {
-        $this->errors = [];
-        $this->setRules($rules);
+        if ($rules) {
+            $this->setRules($rules);
+        }
     }
 
-    public function setRules(array $rules)
+    public function setRules(string $rules): void
     {
+        if (empty($rules)) {
+            return;
+        }
+
+        $rulePairs = explode('|', $rules);
+        $parsedRules = [];
+
+        foreach ($rulePairs as $rulePair) {
+            [$rule, $value] = array_pad(explode(':', $rulePair, 2), 2, null);
+            $parsedRules[$rule] = $value;
+        }
+
         $this->rules = [
-            'mimes' => $rules['mimes'] ?? null,
-            'min_size' => $rules['min_size'] ?? null,
-            'max_size' => $rules['max_size'] ?? null,
-            'width' => $rules['width'] ?? null,
-            'height' => $rules['height'] ?? null,
-            'min_width' => $rules['min_width'] ?? null,
-            'max_width' => $rules['max_width'] ?? null,
-            'min_height' => $rules['min_height'] ?? null,
-            'max_height' => $rules['max_height'] ?? null,
-            'extensions' => $rules['extensions'] ?? null,
+            'mimes' => $parsedRules['mimes'] ?? null,
+            'min_size' => $parsedRules['min_size'] ?? null,
+            'max_size' => $parsedRules['max_size'] ?? null,
+            'ratio' => $parsedRules['ratio'] ?? null,
+            'width' => $parsedRules['width'] ?? null,
+            'height' => $parsedRules['height'] ?? null,
+            'min_width' => $parsedRules['min_width'] ?? null,
+            'max_width' => $parsedRules['max_width'] ?? null,
+            'min_height' => $parsedRules['min_height'] ?? null,
+            'max_height' => $parsedRules['max_height'] ?? null,
+            'extensions' => $parsedRules['extensions'] ?? null,
         ];
+    }
+
+    public function getRules(): array
+    {
+        return $this->rules;
     }
 
     public function validateMimes(string $value): self
     {
-        $mimes = $this->rules['mimes'];
+        $mimes = $this->rules['mimes'] ?? null;
 
-        if(!$mimes) {
-            return $this;
-        }
-
-        if (!is_array($mimes) || !in_array($value, $mimes)) {
-            $this->errors['mimes'] = 'Uploaded file must be one of ' . implode(', ', $mimes);;
+        if ($mimes && !in_array($value, explode(',', $mimes))) {
+            $this->errors['mimes'] = 'Uploaded file must be one of ' . implode(', ', explode(',', $mimes));
         }
 
         return $this;
     }
 
-    public function validateMinSize(int $value): self
+    public function validateExtensions(string $value): self
     {
-        $minSize = $this->rules['min_size'];
+        $extensions = $this->rules['extensions'] ?? null;
 
-        if(!$minSize) {
-            return $this;
-        }
-
-        $valueInBytes = $this->toBytes($value);
-
-        if ($valueInBytes < $minSize) {
-            $this->errors['min_size'] = "File size must be atleast {$value}";
+        if ($extensions && !in_array($value, explode(',', $extensions))) {
+            $this->errors['extensions'] = 'Uploaded file type must be one of ' . implode(', ', explode(',', $extensions));
         }
 
         return $this;
     }
 
-    public function validateMaxSize(int $value): self
+    public function validateMinSize($value, string $unit = 'kb'): self
     {
-        $maxSize = $this->rules['max_size'];
+        $minSize = $this->rules['min_size'] ?? null;
 
-        if(!$maxSize) {
-            return $this;
+        if ($minSize && $value < $this->formatSize($minSize, $unit)) {
+            $this->errors['min_size'] = "File size must be at least {$this->formatSizeForDisplay($minSize)}";
         }
 
-        $valueInBytes = $this->toBytes($value);
+        return $this;
+    }
 
-        if ($valueInBytes > $maxSize) {
-            $this->errors['max_size'] = "File size must be smaller than {$value}";
+    public function validateMaxSize($value, string $unit = 'kb'): self
+    {
+        $maxSize = $this->rules['max_size'] ?? null;
+
+        if ($maxSize && $value > $this->formatSize($maxSize, $unit)) {
+            $this->errors['max_size'] = "File size must be smaller than {$this->formatSizeForDisplay($maxSize)}";
         }
 
         return $this;
@@ -80,14 +94,10 @@ class UploadValidation
 
     public function validateMinWidth(int $value): self
     {
-        $minWidth = $this->rules['min_width'];
+        $minWidth = $this->rules['min_width'] ?? null;
 
-        if(!$minWidth) {
-            return $this;
-        }
-
-        if ($value < $minWidth) {
-            $this->errors['min_width'] = "Image width must be atleast {$value}px";
+        if ($minWidth && $value < $minWidth) {
+            $this->errors['min_width'] = "Image width must be at least {$value}px";
         }
 
         return $this;
@@ -95,13 +105,9 @@ class UploadValidation
 
     public function validateMaxWidth(int $value): self
     {
-        $maxWidth = $this->rules['max_width'];
+        $maxWidth = $this->rules['max_width'] ?? null;
 
-        if(!$maxWidth) {
-            return $this;
-        }
-
-        if ($value > $maxWidth) {
+        if ($maxWidth && $value > $maxWidth) {
             $this->errors['max_width'] = "Image width must be smaller than {$value}px";
         }
 
@@ -110,14 +116,10 @@ class UploadValidation
 
     public function validateMinHeight(int $value): self
     {
-        $minHeight = $this->rules['min_height'];
+        $minHeight = $this->rules['min_height'] ?? null;
 
-        if(!$minHeight) {
-            return $this;
-        }
-
-        if ($value < $minHeight) {
-            $this->errors['min_height'] = "Image height must be atleast {$value}px";
+        if ($minHeight && $value < $minHeight) {
+            $this->errors['min_height'] = "Image height must be at least {$value}px";
         }
 
         return $this;
@@ -125,13 +127,9 @@ class UploadValidation
 
     public function validateMaxHeight(int $value): self
     {
-        $maxHeight = $this->rules['max_height'];
+        $maxHeight = $this->rules['max_height'] ?? null;
 
-        if(!$maxHeight) {
-            return $this;
-        }
-
-        if ($value > $maxHeight) {
+        if ($maxHeight && $value > $maxHeight) {
             $this->errors['max_height'] = "Image height must be smaller than {$value}px";
         }
 
@@ -140,13 +138,9 @@ class UploadValidation
 
     public function validateWidth(int $value): self
     {
-        $width = $this->rules['width'];
+        $width = $this->rules['width'] ?? null;
 
-        if(!$width) {
-            return $this;
-        }
-
-        if ($value !== $width) {
+        if ($width && $value !== $width) {
             $this->errors['width'] = "Image width must be exactly {$value}px";
         }
 
@@ -155,59 +149,74 @@ class UploadValidation
 
     public function validateHeight(int $value): self
     {
-        $height = $this->rules['height'];
+        $height = $this->rules['height'] ?? null;
 
-        if(!$height) {
-            return $this;
-        }
-
-        if ($value !== $height) {
+        if ($height && $value !== $height) {
             $this->errors['height'] = "Image height must be exactly {$value}px";
         }
 
         return $this;
     }
 
-    public function validateExtensions(string $value): self
+    public function validateRatio(float $width, float $height): self
     {
-        $extensions = $this->rules['extensions'];
+        $ratio = $this->rules['ratio'] ?? null;
 
-        if(!$extensions) {
-            return $this;
-        }
+        if ($ratio) {
+            [$numerator, $denominator] = explode('/', $ratio);
 
-        if (!is_array($extensions) || !in_array($value, $extensions)) {
-            $this->errors['extensions'] = 'Uploaded file type must be one of ' . implode(', ', $extensions);
+            if ($denominator !== '0') {
+                $expectedRatio = $numerator / $denominator;
+                $calculatedRatio = $width / $height;
+
+                if ($calculatedRatio !== $expectedRatio) {
+                    $this->errors['ratio'] = "Image ratio must be {$ratio}";
+                }
+            }
         }
 
         return $this;
     }
 
-    public function hasError()
+    public function hasError(): bool
     {
         return !empty($this->errors);
     }
 
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }
 
-    public function getError(string $key)
+    public function getError(string $key): ?string
     {
         return $this->errors[$key] ?? null;
     }
 
-    private function toBytes(string $value)
+    private function formatSize($value, string $unit): int
     {
-        $units = ['b' => 1, 'kb' => 1024, 'mb' => 1048576, 'gb' => 1073741824];
-        $unit = strtolower(substr($value, -1));
-        $value = (int) $value;
-
-        if(!isset($units[$unit])) {
-            return $value;
-        }
+        $unit = strtolower($unit);
+        $units = [
+            'bytes' => 1,
+            'kb' => 1024,
+            'mb' => 1048576,
+            'gb' => 1073741824,
+        ];
 
         return $value * $units[$unit];
+    }
+
+    private function formatSizeForDisplay($value): string
+    {
+        $units = ['bytes', 'KB', 'MB', 'GB'];
+        $step = 1024;
+        $i = 0;
+
+        while (($value / $step) >= 1) {
+            $value /= $step;
+            $i++;
+        }
+
+        return round($value, 2) . ' ' . $units[$i];
     }
 }

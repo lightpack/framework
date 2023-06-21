@@ -320,24 +320,10 @@ class Model implements JsonSerializable
             $this->update();
         } else {
             $this->insert();
+            $this->{$this->primaryKey} = $this->lastInsertId();
         }
 
         $this->afterSave();
-    }
-
-    /**
-     * Insert a model and repopulate it with the newly inserted ID.
-     * 
-     * @return void
-     */
-    public function saveAndRefresh(): void
-    {
-        $this->save();
-        $lastInsertId = $this->lastInsertId();
-
-        if ($lastInsertId) {
-            $this->find($lastInsertId);
-        }
     }
 
     /**
