@@ -143,4 +143,36 @@ class OutputTest extends TestCase
 
         $this->assertEquals($expected, $actual);
     }
+
+    public function testPadMethod()
+    {
+        $output = new Output();
+
+        // Test case 1
+        $repeat = str_repeat('.', 20 - strlen('Hello'));
+        $expected = PHP_EOL . "Hello{$repeat} World" . PHP_EOL;
+        ob_start();
+        $output->pad('Hello', 'World');
+        $actual = ob_get_clean();
+
+        $this->assertEquals($expected, $actual);
+
+        // Test case 2
+        $repeat = str_repeat('.', 20 - strlen('Hello'));
+        $expected = PHP_EOL . "Hello{$repeat} World" . PHP_EOL;
+        ob_start();
+        $output->pad('Hello', 'World', 20);
+        $actual = ob_get_clean();
+
+        $this->assertEquals($expected, $actual);
+
+        // Test case 3
+        $repeat = str_repeat('.', 5 - strlen('Hello'));
+        $expected = PHP_EOL . 'Hello World' . PHP_EOL;
+        ob_start();
+        $output->pad('Hello', 'World', 5);
+        $actual = ob_get_clean();
+
+        $this->assertEquals($expected, $actual);
+    }
 }

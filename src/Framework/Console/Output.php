@@ -64,4 +64,12 @@ class Output
 
         echo (new Color)->format("<BG_YELLOW>{$text}</BG_YELLOW>");
     }
+
+    public function pad(string $leftText, string $rightText, int $length = 20, string $character = '.')
+    {
+        $paddingLength = max(0, $length - strlen($leftText));
+        $padding = str_repeat($character, $paddingLength);
+
+        echo "\n{$leftText}{$padding} {$rightText}\n";
+    }
 }
