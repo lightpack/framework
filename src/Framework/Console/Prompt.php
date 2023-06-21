@@ -10,7 +10,7 @@ class Prompt
         return trim($this->readInput());
     }
 
-    public function askHidden(string $question): string
+    public function secret(string $question): string
     {
         $this->writePrompt($question);
 
@@ -49,7 +49,7 @@ class Prompt
         }
     }
 
-    public function chooseMultiple(string $question, array $options, bool $canSelectMultiple = false): ?array
+    public function choice(string $question, array $options, bool $canSelectMultiple = false): ?array
     {
         $optionKeys = array_keys($options);
         $this->writePrompt($question . PHP_EOL);
