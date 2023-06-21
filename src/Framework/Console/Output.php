@@ -4,6 +4,11 @@ namespace Lightpack\Console;
 
 class Output
 {
+    public function line(string $text)
+    {
+        echo "\n{$text}\n";
+    }
+
     public function info(string $text)
     {
         echo "\n";

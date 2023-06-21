@@ -5,6 +5,17 @@ use Lightpack\Console\Output;
 
 class OutputTest extends TestCase
 {
+    public function testLineMethod()
+    {
+        $expected = "\nHello\n";
+
+        ob_start();
+        (new Output)->line('Hello');
+        $actual = ob_get_clean();
+
+        $this->assertEquals($expected, $actual);
+    }
+
     public function testErrorMethod()
     {
         $expected = "\n\033[0;31mHello\033[0m\n";
