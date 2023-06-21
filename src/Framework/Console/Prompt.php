@@ -4,10 +4,10 @@ namespace Lightpack\Console;
 
 class Prompt
 {
-    public function ask(string $question, $default = null): string
+    public function ask(string $question): string
     {
-        $this->writePrompt($question, $default);
-        return $this->readInput();
+        $this->writePrompt($question);
+        return trim($this->readInput());
     }
 
     public function askHidden(string $question): string
@@ -36,26 +36,38 @@ class Prompt
         return $response === 'y';
     }
 
-    public function chooseMultiple(
-        string $question,
-        array $options,
-        $default = null,
-        bool $canSelectMultiple = true
-    ): array {
-        $this->writePrompt($question, $default);
-
-        $optionKeys = array_keys($options);
-        $selectedOptions = [];
-
+    public function askWithValidation(string $question, callable $validator, ?string $errorMessage = null)
+    {
         while (true) {
-            $input = $this->readInput();
+            $response = $this->ask($question);
 
-            if ($input === '' && $default !== null) {
-                return (array) $default;
+            if ($validator($response)) {
+                return $response;
             }
 
+            echo PHP_EOL . ($errorMessage ?? "Invalid input. Please try again.") . "\n\n";
+        }
+    }
+
+    public function chooseMultiple(string $question, array $options, bool $canSelectMultiple = false): ?array
+    {
+        $optionKeys = array_keys($options);
+        $this->writePrompt($question . PHP_EOL);
+
+        echo PHP_EOL;
+
+        foreach ($options as $index => $option) {
+            echo "[" . $index . "] " . $option . PHP_EOL;
+        }
+
+        echo PHP_EOL;
+
+        while (true) {
+            $input = trim($this->readInput());
+
             if ($canSelectMultiple) {
-                $selectedOptions = array_unique(array_merge($selectedOptions, explode(',', $input)));
+                $selectedOptions = array_unique(explode(',', $input));
+                $selectedOptions = array_map(fn($item) => trim($item), $selectedOptions);
             } else {
                 $selectedOptions = [$input];
             }
@@ -66,76 +78,13 @@ class Prompt
                 return $selectedOptions;
             }
 
-            echo 'Invalid option(s): ' . implode(', ', $invalidOptions) . '. Please try again: ';
-        }
-    }
-
-    public function askWithValidation(string $question, callable $validator, $default = null)
-    {
-        while (true) {
-            $response = $this->ask($question, $default);
-
-            if ($validator($response)) {
-                return $response;
-            }
-
-            echo "Invalid input. Please try again." . PHP_EOL;
-        }
-    }
-
-    public function chooseFromList(string $question, array $options, $default = null): ?string
-    {
-        $this->writePrompt($question, $default);
-
-        $optionKeys = array_keys($options);
-
-        while (true) {
-            $input = $this->readInput();
-
-            if ($input === '' && $default !== null) {
-                return $default;
-            }
-
-            if (
-                in_array($input, $optionKeys, true)
-            ) {
-                return $input;
-            }
-
             echo "Invalid option. Please try again: ";
         }
     }
 
-    public function chooseFromListWithIndex(string $question, array $options, $default = null): ?string
-    {
-        $this->writePrompt($question, $default);
-
-        foreach ($options as $index => $option) {
-            echo "[" . $index . "] " . $option . PHP_EOL;
-        }
-
-        while (true) {
-            $input = $this->readInput();
-
-            if ($input === '' && $default !== null) {
-                return $default;
-            }
-
-            if (isset($options[$input])) {
-                return $input;
-            }
-
-            echo "Invalid option. Please try again: ";
-        }
-    }
-
-    private function writePrompt(string $question, $default = null)
+    private function writePrompt(string $question)
     {
         echo $question . ' ';
-
-        if ($default !== null) {
-            echo "[$default] ";
-        }
     }
 
     private function readInput(): string
