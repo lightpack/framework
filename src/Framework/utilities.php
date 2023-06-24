@@ -368,7 +368,7 @@ if(!function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
-    function old(string $key, string $default = '', bool $escape = true): string
+    function old(string $key, ?string $default = '', bool $escape = true): string
     {
         static $oldInput;
         
@@ -379,6 +379,10 @@ if(!function_exists('old')) {
         $arr = new \Lightpack\Utils\Arr;
         
         $value = $arr->get($key, $oldInput, $default);
+
+        if(is_null($value)) {
+            return '';
+        }
 
         return $escape ? _e($value) : $value;
     }

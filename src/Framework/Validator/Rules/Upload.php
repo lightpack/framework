@@ -8,7 +8,7 @@ use Lightpack\Validator\RuleInterface;
 
 class Upload implements RuleInterface
 {
-    protected string $errorMessage;
+    protected string $errorMessage = '';
 
     public function validate(array $dataSource, string $field, $rules = null)
     {
