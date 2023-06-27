@@ -53,7 +53,7 @@ class Files
     public function isNotEmpty(string $key): bool
     {
         $file = $this->get($key);
-        
+
         if ($file instanceof UploadedFile) {
             return $file->getError() != UPLOAD_ERR_NO_FILE;
         }
@@ -64,9 +64,11 @@ class Files
                     return false;
                 }
             }
+
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     private function populateUploadedFiles(array $files)

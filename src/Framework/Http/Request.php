@@ -219,7 +219,8 @@ class Request
 
     public function isAjax()
     {
-        return ($_SERVER['X-Requested-With'] ?? null)  === 'XMLHttpRequest';
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strcasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'xmlhttprequest') == 0;
     }
 
     public function isJson()

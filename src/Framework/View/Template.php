@@ -9,7 +9,7 @@ class Template
 
     public function setData(array $data = []): self
     {
-        $this->data = $data;
+        $this->data = array_merge($this->data, $data);
         return $this;
     }
 
