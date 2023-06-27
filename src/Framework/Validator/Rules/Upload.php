@@ -65,7 +65,7 @@ class Upload implements RuleInterface
 
         if ($failed) {
             $errors = $file->getValidationErrors();
-            $this->errorMessage = implode(' ', $errors); // Store all errors
+            $this->errorMessage = reset($errors);
             return false;
         }
 
