@@ -70,7 +70,7 @@ class UploadValidation
         return $this;
     }
 
-    public function validateMinSize($value, string $unit = 'kb'): self
+    public function validateMinSize($value, string $unit = 'bytes'): self
     {
         $minSize = $this->rules['min_size'] ?? null;
 
@@ -81,7 +81,7 @@ class UploadValidation
         return $this;
     }
 
-    public function validateMaxSize($value, string $unit = 'kb'): self
+    public function validateMaxSize($value, string $unit = 'bytes'): self
     {
         $maxSize = $this->rules['max_size'] ?? null;
 
@@ -217,6 +217,8 @@ class UploadValidation
             $i++;
         }
 
-        return round($value, 2) . ' ' . $units[$i];
+        $value = (int) ceil($value);
+
+        return $value . ' ' . $units[$i];
     }
 }
