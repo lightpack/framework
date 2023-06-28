@@ -74,6 +74,12 @@ class UploadValidation
     {
         $minSize = $this->rules['min_size'] ?? null;
 
+        if (is_null($minSize)) {
+            return $this;
+        }
+
+        $minSize = $this->parseSize($minSize);
+
         if ($minSize && $value < $this->formatSize($minSize, $unit)) {
             $this->errors['min_size'] = "File size must be at least {$this->formatSizeForDisplay($minSize)}";
         }
@@ -84,6 +90,12 @@ class UploadValidation
     public function validateMaxSize($value, string $unit = 'bytes'): self
     {
         $maxSize = $this->rules['max_size'] ?? null;
+
+        if (is_null($maxSize)) {
+            return $this;
+        }
+
+        $maxSize = $this->parseSize($maxSize);
 
         if ($maxSize && $value > $this->formatSize($maxSize, $unit)) {
             $this->errors['max_size'] = "File size must be smaller than {$this->formatSizeForDisplay($maxSize)}";
@@ -220,5 +232,22 @@ class UploadValidation
         $value = (int) ceil($value);
 
         return $value . ' ' . $units[$i];
+    }
+
+    private function parseSize($value): int
+    {
+        $unit = strtolower(substr($value, -2));
+
+        if (!in_array($unit, ['kb', 'mb', 'gb'])) {
+            return (int) $value;
+        }
+
+        $units = [
+            'kb' => 1024,
+            'mb' => 1048576,
+            'gb' => 1073741824,
+        ];
+
+        return (int) $value * $units[$unit];
     }
 }
