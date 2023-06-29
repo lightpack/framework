@@ -9,8 +9,6 @@ use Lightpack\Pagination\Pagination as BasePagination;
 use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\DB;
 
-use function PHPUnit\Framework\callback;
-
 class Query
 {
     protected $connection;
