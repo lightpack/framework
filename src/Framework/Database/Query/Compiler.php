@@ -110,7 +110,7 @@ class Compiler
         }
 
         $columns = array_map(function ($column) {
-            if(strpos($column, 'COUNT') === 0) {
+            if (strpos($column, 'COUNT') === 0) {
                 return $column;
             }
 
@@ -297,59 +297,41 @@ class Compiler
 
     private function wrapTable(string $table): string
     {
-        $parts = explode(' AS ', $table);
-        $wrappedParts = [];
-        
-        if(count($parts) == 2) {
-            foreach ($parts as $part) {
-                $wrappedParts[] = '`' . str_replace('`', '``', $part) . '`';
-            }
-        
-            return implode(' AS ', $wrappedParts);
+        if (strpos(strtolower($table), ' as ') !== false) {
+            $parts = explode(' ', $table);
+            return $this->wrap($parts[0]) . ' AS ' . $this->wrap($parts[2]);
         }
 
-        return '`' . str_replace('`', '``', $table) . '`';
+        return $this->wrap($table);
     }
 
     private function wrapColumn(string $column): string
-{
-    $parts = explode(' as ', strtolower($column));
+    {
+        if (strpos(strtolower($column), ' as ') !== false) {
+            $parts = explode(' ', $column);
 
-    foreach ($parts as &$part) {
-        $part = trim($part);
-        if ($part !== '*') {
-            $segments = explode('.', $part);
-            foreach ($segments as &$segment) {
-                if($segment == '*') {
-                    continue;
-                }
-                $segment = '`' . str_replace('`', '``', $segment) . '`';
+            foreach ($parts as &$part) {
+                $part = $this->wrap($part);
             }
-            $part = implode('.', $segments);
-        }
-    }
 
-    return implode(' AS ', $parts);
-}
-
-    private function wrap(string $key): string
-    {
-        $parts = explode(' ', $key);
-        $name = $parts[0];
-        $alias = isset($parts[1]) ? $parts[1] : null;
-
-        $wrappedName = $this->wrapKey($name);
-
-        if ($alias !== null) {
-            $wrappedAlias = $this->wrapKey($alias);
-            $wrappedName .= ' AS ' . $wrappedAlias;
+            return $parts[0] . ' AS ' . $parts[2];
         }
 
-        return $wrappedName;
+        return $this->wrap($column);
     }
 
-    private function wrapKey(string $key): string
+    private function wrap(string $value): string
     {
-        return '`' . str_replace('`', '``', $key) . '`';
+        if ('*' === $value) {
+            return $value;
+        }
+
+        $segments = explode('.', $value);
+
+        if (count($segments) == 2) {
+            return $this->wrap($segments[0]) . '.' . $this->wrap($segments[1]);
+        }
+
+        return '`' . str_replace('`', '``', $value) . '`';
     }
 }
