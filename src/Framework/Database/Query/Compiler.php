@@ -65,7 +65,7 @@ class Compiler
     public function compileBulkInsert(array $columns, array $values, bool $shouldIgnore = false)
     {
         foreach ($values as $value) {
-            if(count($value) == 1) {
+            if (count($value) == 1) {
                 $parameters[] = '(' . $this->parameterize(count($value)) . ')';
             } else {
                 $parameters[] = $this->parameterize(count($value));
@@ -109,12 +109,22 @@ class Compiler
             return '*';
         }
 
-        return implode(', ', $this->query->columns);
+        $columns = array_map(function ($column) {
+            if(strpos($column, 'COUNT') === 0) {
+                return $column;
+            }
+
+            return $this->wrapColumn($column);
+        }, $this->query->columns);
+
+        return implode(', ', $columns);
     }
 
     private function from(): string
     {
-        return 'FROM ' . $this->query->table . ($this->query->alias ? ' AS ' . $this->query->alias : '');
+        $table = $this->query->table . ($this->query->alias ? ' AS ' . $this->query->alias : '');
+
+        return 'FROM ' . $this->wrapTable($table);
     }
 
     private function join()
@@ -126,7 +136,7 @@ class Compiler
         $joins = [];
 
         foreach ($this->query->join as $join) {
-            $joins[] = strtoupper($join['type']) . ' JOIN ' . $join['table'] . ' ON ' . $join['column1'] . ' = ' . $join['column2'];
+            $joins[] = strtoupper($join['type']) . ' JOIN ' . $this->wrapTable($join['table']) . ' ON ' . $this->wrapColumn($join['column1']) . ' = ' . $this->wrapColumn($join['column2']);
         }
 
         return implode(' ', $joins);
@@ -169,10 +179,10 @@ class Compiler
 
             // Workaround for where sub query
             if (isset($where['type']) && $where['type'] === 'where_sub_query') {
-                $wheres[] = $where['joiner'] . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . '(' . $where['sub_query'] . ')';
+                $wheres[] = $where['joiner'] . ' ' . $this->wrap($where['column']) . ' ' . $where['operator'] . ' ' . '(' . $where['sub_query'] . ')';
                 continue;
             }
-            
+
             // Workaround for raw where queries
             if (isset($where['type']) && $where['type'] === 'where_raw') {
                 $wheres[] = strtoupper($where['joiner']) . ' ' . $where['where'];
@@ -182,7 +192,7 @@ class Compiler
             // Workaround for where between queries
             if (isset($where['type']) && ($where['type'] === 'where_between' || $where['type'] === 'where_not_between')) {
                 $parameters = $this->parameterize(2);
-                $wheres[] = strtoupper($where['joiner']) . ' ' . $where['column'] . ' ' . $where['operator'] . ' ' . '?' . ' AND ' . '?';
+                $wheres[] = strtoupper($where['joiner']) . ' ' . $this->wrap($where['column']) . ' ' . $where['operator'] . ' ' . '?' . ' AND ' . '?';
                 continue;
             }
 
@@ -193,22 +203,22 @@ class Compiler
             }
 
             // Workaround for IN/NOT IN conditions
-            if(($where['operator'] === 'IN' || $where['operator'] === 'NOT IN') && count($where['values']) === 1) {
+            if (($where['operator'] === 'IN' || $where['operator'] === 'NOT IN') && count($where['values']) === 1) {
                 $parameters = '(' . $parameters . ')';
             }
 
-            if(!isset($where['value']) && !isset($where['values'])) {
+            if (!isset($where['value']) && !isset($where['values'])) {
                 $parameters = '';
             }
 
             // Finally prepare where clause
-            $whereStatement = strtoupper($where['joiner']) . ' ' . $where['column'];
+            $whereStatement = strtoupper($where['joiner']) . ' ' . $this->wrapColumn($where['column']);
 
-            if(isset($where['operator'])) {
+            if (isset($where['operator'])) {
                 $whereStatement .= ' ' . trim($where['operator']);
             }
 
-            if($parameters) {
+            if ($parameters) {
                 $whereStatement .= ' ' . $parameters;
             }
 
@@ -217,7 +227,7 @@ class Compiler
 
         $wheres = trim(implode(' ', $wheres));
 
-        if(strpos($wheres, 'AND') === 0) {
+        if (strpos($wheres, 'AND') === 0) {
             $wheres = trim(substr($wheres, 3));
         }
 
@@ -230,7 +240,11 @@ class Compiler
             return '';
         }
 
-        return 'GROUP BY ' . implode(', ', $this->query->group);
+        $columns = array_map(function ($column) {
+            return $this->wrapColumn($column);
+        }, $this->query->group);
+
+        return 'GROUP BY ' . implode(', ', $columns);
     }
 
     private function orderBy()
@@ -242,7 +256,10 @@ class Compiler
         $orders = [];
 
         foreach ($this->query->order as $order) {
-            $orders[] = $order['column'] . ' ' . $order['sort'];
+            $column = $this->wrapColumn($order['column']);
+            $sort = $order['sort'];
+
+            $orders[] = $column . ' ' . $sort;
         }
 
         return 'ORDER BY ' . implode(', ', $orders);
@@ -276,5 +293,63 @@ class Compiler
         }
 
         return $parameters;
+    }
+
+    private function wrapTable(string $table): string
+    {
+        $parts = explode(' AS ', $table);
+        $wrappedParts = [];
+        
+        if(count($parts) == 2) {
+            foreach ($parts as $part) {
+                $wrappedParts[] = '`' . str_replace('`', '``', $part) . '`';
+            }
+        
+            return implode(' AS ', $wrappedParts);
+        }
+
+        return '`' . str_replace('`', '``', $table) . '`';
+    }
+
+    private function wrapColumn(string $column): string
+{
+    $parts = explode(' as ', strtolower($column));
+
+    foreach ($parts as &$part) {
+        $part = trim($part);
+        if ($part !== '*') {
+            $segments = explode('.', $part);
+            foreach ($segments as &$segment) {
+                if($segment == '*') {
+                    continue;
+                }
+                $segment = '`' . str_replace('`', '``', $segment) . '`';
+            }
+            $part = implode('.', $segments);
+        }
+    }
+
+    return implode(' AS ', $parts);
+}
+
+    private function wrap(string $key): string
+    {
+        $parts = explode(' ', $key);
+        $name = $parts[0];
+        $alias = isset($parts[1]) ? $parts[1] : null;
+
+        $wrappedName = $this->wrapKey($name);
+
+        if ($alias !== null) {
+            $wrappedAlias = $this->wrapKey($alias);
+            $wrappedName .= ' AS ' . $wrappedAlias;
+        }
+
+        return $wrappedName;
+    }
+
+    private function wrapKey(string $key): string
+    {
+        return '`' . str_replace('`', '``', $key) . '`';
     }
 }
