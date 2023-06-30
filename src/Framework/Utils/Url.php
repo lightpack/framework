@@ -41,7 +41,7 @@ class Url
 
         $url = '/' . implode('/', $params) . $queryString;
 
-        return $this->generateFullUrl($url);
+        return $url;
     }
 
     /**
@@ -65,7 +65,7 @@ class Url
             return rtrim(get_env('ASSET_URL'), '/') . $file;
         }
 
-        return $this->generateFullUrl('/assets' . $file);
+        return '/assets' . $file;
     }
 
     public function route(string $routeName, array $params = [])
@@ -186,12 +186,5 @@ class Url
         }
 
         return true; // URL is valid and correct
-    }
-
-    protected function generateFullUrl(string $url): string
-    {
-        $request = Container::getInstance()->get('request');
-
-        return $request->scheme()  . '://' . $request->host() . ':' . $request->port() .  '/' . trim($url, '/');
     }
 }

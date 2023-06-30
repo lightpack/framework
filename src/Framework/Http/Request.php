@@ -91,17 +91,28 @@ class Request
 
     public function url(): string
     {
-        return $this->scheme() . '://' . $this->host() . ':' . $this->port() .  $this->fullpath();
+        return $this->scheme() . '://' . $this->hostWithPort() .  $this->fullpath();
     }
 
     public function fullUrl(): string
     {
-        return $this->scheme() . '://' . $this->host() . ':' . $this->port() .  $this->uri();
+        return $this->scheme() . '://' . $this->hostWithPort() .  $this->uri();
     }
 
     public function method(): string
     {
         return $this->method;
+    }
+
+    public function hostWithPort()
+    {
+        $hostWithPort = $this->host();
+        
+        if($this->port()) {
+            $hostWithPort .= ':' . $this->port();
+        }
+
+        return $hostWithPort;
     }
 
     public function getRawBody(): string
@@ -252,9 +263,9 @@ class Request
         return explode(':', $host)[0];
     }
 
-    public function port()
+    public function port(): ?int
     {
-        return $_SERVER['SERVER_PORT'];
+        return $_SERVER['SERVER_PORT'] ?? null;
     }
 
     public function protocol()
