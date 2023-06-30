@@ -91,12 +91,12 @@ class Request
 
     public function url(): string
     {
-        return $this->scheme() . '://' . $this->host() . $this->fullpath();
+        return $this->scheme() . '://' . $this->host() . ':' . $this->port() .  $this->fullpath();
     }
 
     public function fullUrl(): string
     {
-        return $this->scheme() . '://' . $this->host() . $this->uri();
+        return $this->scheme() . '://' . $this->host() . ':' . $this->port() .  $this->uri();
     }
 
     public function method(): string
@@ -247,7 +247,14 @@ class Request
 
     public function host()
     {
-        return $_SERVER['HTTP_HOST'] ?? getenv('HTTP_HOST');
+        $host = $_SERVER['HTTP_HOST'] ?? getenv('HTTP_HOST');
+
+        return explode(':', $host)[0];
+    }
+
+    public function port()
+    {
+        return $_SERVER['SERVER_PORT'];
     }
 
     public function protocol()

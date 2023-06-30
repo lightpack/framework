@@ -10,7 +10,9 @@ class Route
     private array $params = [];
     private string $path;
     private string $uri;
+    private string $name;
     private array $pattern = [];
+    private string $host = '';
 
     /**
      * @var string HTTP method
@@ -171,5 +173,17 @@ class Route
     public function getPattern(): array
     {
         return $this->pattern;
+    }
+
+    public function host(string $host): self
+    {
+        $this->host = $host;
+
+        return $this;
+    }
+
+    public function getHost(): string
+    {
+        return $this->host;
     }
 }

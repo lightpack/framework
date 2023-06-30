@@ -41,11 +41,7 @@ class Url
 
         $url = '/' . implode('/', $params) . $queryString;
 
-        if (get_env('APP_URL')) {
-            $url = rtrim(get_env('APP_URL'), '/') . $url;
-        }
-
-        return rtrim($url, '/') ?: '/';
+        return $this->generateFullUrl($url);
     }
 
     /**
@@ -69,15 +65,11 @@ class Url
             return rtrim(get_env('ASSET_URL'), '/') . $file;
         }
 
-        return '/assets' . $file;
+        return $this->generateFullUrl('/assets' . $file);
     }
 
     public function route(string $routeName, array $params = [])
     {
-        // if (is_array(end($params))) {
-        //     $queryParams = array_pop($params);
-        // }
-
         /** @var \Lightpack\Routing\Route */
         $route = Container::getInstance()->get('route')->getByName($routeName);
 
@@ -97,7 +89,7 @@ class Url
                 $value = trim($value, ':');
                 $uri[$key] = $params[$value];
                 unset($params[$value]);
-            } 
+            }
         }
 
         $uri[] = $params ?? [];
@@ -194,5 +186,12 @@ class Url
         }
 
         return true; // URL is valid and correct
+    }
+
+    protected function generateFullUrl(string $url): string
+    {
+        $request = Container::getInstance()->get('request');
+
+        return $request->scheme()  . '://' . $request->host() . ':' . $request->port() .  '/' . trim($url, '/');
     }
 }
