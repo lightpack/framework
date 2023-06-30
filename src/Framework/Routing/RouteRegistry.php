@@ -115,7 +115,17 @@ class RouteRegistry
             }
 
             if (preg_match('@^' . $regex . '$@', $path, $matches)) {
+                
                 \array_shift($matches);
+                
+                // Make sure we have extracted matched wildcard subdomain
+                if($route->getHost() && strpos($routeUri[0], ':') === 0) {
+                    $firstParams = explode('.',  $params[0]);
+                    $firstMatches = explode('.',  $matches[0]);
+
+                    $params[0] = $firstParams[0];
+                    $matches[0] = $firstMatches[0];
+                }
 
                 /** @var Route */
                 $route = $this->routes[$this->request->method()][$routeUri];
