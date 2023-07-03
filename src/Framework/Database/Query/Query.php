@@ -410,7 +410,8 @@ class Query
             }
         }
 
-        $items = $this->fetchAll();
+        // Pass false because count() has already executed the hook
+        $items = $this->fetchAll(false);
 
         if($items instanceof Collection) {
             return new LucidPagination( $items, $total, $limit, $page);
@@ -474,9 +475,11 @@ class Query
         }
     }
 
-    protected function fetchAll()
+    protected function fetchAll(bool $executeBeforeFetchHook = true)
     {
-        $this->executeBeforeFetchHookForModel();
+        if($executeBeforeFetchHook) {
+            $this->executeBeforeFetchHookForModel();
+        }
 
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
