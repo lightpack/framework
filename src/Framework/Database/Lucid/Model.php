@@ -295,8 +295,6 @@ class Model implements JsonSerializable
     {
         $query = new Query($this->table, $this->getConnection());
 
-        $this->beforeFetch($query);
-
         $this->data = $query->where($this->primaryKey, '=', $id)->one();
 
         if (!$this->data && $fail) {
