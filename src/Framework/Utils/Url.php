@@ -41,7 +41,11 @@ class Url
 
         $url = '/' . implode('/', $params) . $queryString;
 
-        return $url;
+        if (get_env('APP_URL')) {
+            $url = rtrim(get_env('APP_URL'), '/') . $url;
+        }
+
+        return rtrim($url, '/') ?: '/';
     }
 
     /**
@@ -70,6 +74,10 @@ class Url
 
     public function route(string $routeName, array $params = [])
     {
+        // if (is_array(end($params))) {
+        //     $queryParams = array_pop($params);
+        // }
+
         /** @var \Lightpack\Routing\Route */
         $route = Container::getInstance()->get('route')->getByName($routeName);
 
@@ -87,6 +95,11 @@ class Url
         foreach ($uri as $key => $value) {
             if (strpos($value, ':') === 0) {
                 $value = trim($value, ':');
+
+                if (!isset($params[$value])) {
+                    throw new \Exception("Undefined parameter [:{$value}] for route '{$routeName}'");
+                }
+
                 $uri[$key] = $params[$value];
                 unset($params[$value]);
             }
