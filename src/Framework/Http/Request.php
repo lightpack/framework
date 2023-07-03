@@ -364,6 +364,20 @@ class Request
         return $this->route;
     }
 
+    /**
+     * Get the route parameters.
+     * 
+     * @return mixed The value of the specified parameter, or an array of all parameters if $key is null.
+     */
+    public function params(?string $key, $default = null)
+    {
+        if(is_null($key)) {
+            return $this->route()->getParams();
+        }
+
+        return $this->route()->getParams()[$key] ?? $default;
+    }
+
     public function validateUrlSignature(array $ignoredParameters = [])
     {
         if ($this->hasInValidSignature($ignoredParameters)) {
