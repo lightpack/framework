@@ -421,6 +421,8 @@ class Query
 
     public function count()
     {
+        $this->executeBeforeFetchHookForModel();
+
         $this->columns = ['COUNT(*) AS num'];
 
         $query = $this->getCompiledCount();
@@ -433,6 +435,8 @@ class Query
 
     public function countBy(string $column)
     {
+        $this->executeBeforeFetchHookForModel();
+        
         $this->columns = [$column, 'COUNT(*) AS num'];
         $this->groupBy($column);
 
@@ -472,6 +476,8 @@ class Query
 
     protected function fetchAll()
     {
+        $this->executeBeforeFetchHookForModel();
+
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
         $this->resetQuery();
@@ -492,6 +498,8 @@ class Query
 
     protected function fetchOne()
     {
+        $this->executeBeforeFetchHookForModel();
+
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -512,6 +520,8 @@ class Query
 
     public function column(string $column)
     {
+        $this->executeBeforeFetchHookForModel();
+
         $this->columns = [$column];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchColumn();
@@ -600,5 +610,12 @@ class Query
         $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];
         $this->bindings = array_merge($this->bindings, $query->bindings);
         return $this;
+    }
+
+    protected function executeBeforeFetchHookForModel()
+    {
+        if($this->model) {
+            $this->model->beforeFetch($this);
+        }
     }
 }
