@@ -74,6 +74,7 @@ class RouteRegistry
     public function group(array $options, callable $callback): void
     {
         $oldOptions = $this->options;
+        $options['prefix'] = $options['prefix'] ?? '';
         $this->options = \array_merge($oldOptions, $options);
         $this->options['prefix'] = $oldOptions['prefix'] . $this->options['prefix'];
         $callback($this);
