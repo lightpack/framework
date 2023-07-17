@@ -259,8 +259,11 @@ class Container
         // Get reflection
         $reflection = new \ReflectionClass($instance);
 
+        // Get method
+        $method = $reflection->getMethod($instanceMethod);
+
         // Get method parameters
-        $parameters = $reflection->getMethod($instanceMethod)->getParameters();
+        $parameters = $method->getParameters();
 
         // Filter parameters that are scalar
         $scalarParameters = $this->filterScalarParameters($parameters);
@@ -275,15 +278,17 @@ class Container
         $arguments = [];
 
         foreach ($scalarParameters as $parameter) {
-            $arguments[$parameter->getName()] = $args[$parameter->getName()];
+            $parameterName = $parameter->getName();
+            $arguments[$parameterName] = $args[$parameterName] ?? $parameter->getDefaultValue();
         }
 
         // Merge dependencies with args
         $dependencies = array_merge($dependencies, $arguments);
 
         // Call method
-        return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
+        return $method->invokeArgs($instance, $dependencies);
     }
+
 
     /**
      * Call a method on an object or class only if the method exists.
