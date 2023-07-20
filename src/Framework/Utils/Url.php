@@ -86,6 +86,11 @@ class Url
         }
 
         $uri = explode('/', trim($route->getUri(), '/ '));
+
+        if($route->getHost() !== '') {
+            unset($uri[0]);
+        }
+
         $uriPatterns = array_filter($uri, fn ($val) => strpos($val, ':') === 0);
 
         if (count($uriPatterns) > count($params)) {
