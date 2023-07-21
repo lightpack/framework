@@ -74,10 +74,6 @@ class Url
 
     public function route(string $routeName, array $params = [])
     {
-        // if (is_array(end($params))) {
-        //     $queryParams = array_pop($params);
-        // }
-
         /** @var \Lightpack\Routing\Route */
         $route = Container::getInstance()->get('route')->getByName($routeName);
 
@@ -87,6 +83,7 @@ class Url
 
         $uri = explode('/', trim($route->getUri(), '/ '));
 
+        // We do not want the subdomain while resolving route urls
         if($route->getHost() !== '') {
             unset($uri[0]);
         }
