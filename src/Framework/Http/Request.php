@@ -41,7 +41,7 @@ class Request
 
     public function uri(): string
     {
-        return $_SERVER['REQUEST_URI'];
+        return $_SERVER['REQUEST_URI'] ?? '';
     }
 
     public function query(string $key = null, $default = null)
