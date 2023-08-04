@@ -43,6 +43,13 @@ class Template
         }
     }
 
+    public function include(string $file, array $data = []): string
+    {
+        $template = new self();
+
+        return $template->render($file, array_merge($this->data, $data));
+    }
+
     private function throwExceptionIfTemplateNotFound(string $template)
     {
         if (!file_exists($template)) {
