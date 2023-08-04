@@ -2,6 +2,8 @@
 
 namespace Lightpack\View;
 
+use Throwable;
+
 class Template
 {
     private $data = [];
@@ -22,24 +24,23 @@ class Template
 
         $this->throwExceptionIfTemplateNotFound($file);
 
-        // Queue up the content in buffer.
-        $output = (function ($data) {
-            extract($data);
+        try {
+            $level = ob_get_level();
             ob_start();
-            require func_get_arg(1);
+
+            (function () {
+                extract($this->data);
+                require func_get_arg(0);
+            })($file);
+
             return ob_get_clean();
-        })($this->data, $file);
+        } catch (Throwable $e) {
+            while (ob_get_level() > $level) {
+                ob_end_clean();
+            }
 
-        flush();
-
-        return $output;
-    }
-
-    public function partial(string $file, array $data = []): string
-    {
-        $template = new self();
-
-        return $template->render($file, array_merge($this->data, $data));
+            throw $e;
+        }
     }
 
     private function throwExceptionIfTemplateNotFound(string $template)
