@@ -254,6 +254,9 @@ if (!function_exists('db')) {
     }
 }
 
+/**
+ * @deprecated
+ */
 if (!function_exists('template')) {
     /**
      * Returns an instance of view template.
