@@ -307,6 +307,28 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
     }
 
+    public function testCompiledSelectForUpdate()
+    {
+        // Test 1
+        $this->assertEquals(
+            'SELECT * FROM `products` LIMIT 2 FOR UPDATE',
+            $this->query->limit(2)->forUpdate()->getCompiledSelect()
+        );
+
+        $this->query->resetQuery();
+    }
+
+    public function testCompiledSelectForUpdateSkipLocked()
+    {
+        // Test 1
+        $this->assertEquals(
+            'SELECT * FROM `products` LIMIT 2 FOR UPDATE SKIP LOCKED',
+            $this->query->limit(2)->forUpdate()->skipLocked()->getCompiledSelect()
+        );
+
+        $this->query->resetQuery();
+    }
+
     public function testGetMagicMethod()
     {
         $this->assertEquals('products', $this->query->table);

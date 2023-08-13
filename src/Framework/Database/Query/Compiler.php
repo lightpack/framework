@@ -297,7 +297,7 @@ class Compiler
         }
 
         if($this->query->lock['skip_locked'] ?? false) {
-            $fragment .= 'SKIP LOCKED';
+            $fragment .= ' SKIP LOCKED';
         }
 
         return $fragment;

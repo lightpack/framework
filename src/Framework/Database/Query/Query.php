@@ -129,15 +129,22 @@ class Query
         return $this;
     }
 
+
+    /**
+     * Lock the fetched rows from update until the transaction is commited.
+     */
     public function forUpdate(): self
     {
         $this->components['lock']['for_update'] = true;
         return $this;
     }
 
+    /**
+     * Skip any rows that are locked for update by other transactions.
+     */
     public function skipLocked(): self
     {
-        $this->components['locks']['skip_locked'] = true;
+        $this->components['lock']['skip_locked'] = true;
         return $this;
     }
 
