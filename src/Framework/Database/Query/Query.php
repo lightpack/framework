@@ -23,6 +23,7 @@ class Query
         'where' => [],
         'group' => [],
         'order' => [],
+        'lock' => [],
         'limit' => null,
         'offset' => null,
     ];
@@ -125,6 +126,18 @@ class Query
     public function select(string ...$columns): self
     {
         $this->components['columns'] = $columns;
+        return $this;
+    }
+
+    public function forUpdate(): self
+    {
+        $this->components['lock']['for_update'] = true;
+        return $this;
+    }
+
+    public function skipLocked(): self
+    {
+        $this->components['locks']['skip_locked'] = true;
         return $this;
     }
 
@@ -574,6 +587,7 @@ class Query
         $this->components['join'] = [];
         $this->components['group'] = [];
         $this->components['order'] = [];
+        $this->components['lock'] = [];
         $this->components['limit'] = null;
         $this->components['offset'] = null;
         $this->bindings = [];

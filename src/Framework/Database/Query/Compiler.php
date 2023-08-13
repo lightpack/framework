@@ -22,6 +22,7 @@ class Compiler
         $sql[] = $this->orderBy();
         $sql[] = $this->limit();
         $sql[] = $this->offset();
+        $sql[] = $this->lock();
 
         $sql = array_filter($sql, function ($v) {
             return empty($v) === false;
@@ -281,6 +282,25 @@ class Compiler
         }
 
         return 'OFFSET ' . $this->query->offset;
+    }
+
+    private function lock()
+    {
+        if (!$this->query->lock) {
+            return '';
+        }
+
+        $fragment = '';
+
+        if($this->query->lock['for_update'] ?? false) {
+            $fragment .= 'FOR UPDATE';
+        }
+
+        if($this->query->lock['skip_locked'] ?? false) {
+            $fragment .= 'SKIP LOCKED';
+        }
+
+        return $fragment;
     }
 
     private function parameterize(int $count)
