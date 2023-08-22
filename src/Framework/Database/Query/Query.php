@@ -182,7 +182,7 @@ class Query
         $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
         
         if (!in_array($operator, $operators)) {
-            if($value == null) {
+            if($value === null) {
                 $value = $operator;
                 $operator = '=';
             }
