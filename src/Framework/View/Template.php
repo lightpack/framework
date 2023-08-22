@@ -35,6 +35,15 @@ class Template
         return $template->render($file);
     }
 
+    public function includeIf(bool $flag, string $file, array $data = []): string
+    {
+        if ($flag) {
+            return $this->include($file, $data);
+        }
+
+        return '';
+    }
+
     public function component(string $file, array $data): string
     {
         return $this->renderTemplateWithData($file, $data);
