@@ -70,13 +70,9 @@ class Migrator
      */
     public function rollback(string $path, int $steps = null): array
     {
+        $this->connection->disableForeignKeyChecks();
+
         $migrationFiles = $this->findMigrationFiles($path);
-
-        $migrations = array_keys($migrationFiles);
-
-        // Reverse sort migrations
-        krsort($migrations);
-
         $steps = $steps ?? 1;
         $migratedFiles = [];
 
@@ -108,6 +104,8 @@ class Migrator
                 $migratedFiles[] = $migration;
             }
         }
+
+        $this->connection->enableForeignKeyChecks();
 
         return $migratedFiles;
     }
