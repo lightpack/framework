@@ -314,12 +314,15 @@ class Model implements JsonSerializable
     public function save(): void
     {
         $this->setTimestamps();
-        $this->beforeSave();
+
+        $query = $this->query();
+
+        $this->beforeSave($query);
 
         if ($this->{$this->primaryKey}) {
-            $this->update();
+            $this->update($query);
         } else {
-            $this->insert();
+            $this->insert($query);
             $this->{$this->primaryKey} = $this->lastInsertId();
         }
 
@@ -339,9 +342,11 @@ class Model implements JsonSerializable
             return;
         }
 
-        $this->beforeDelete();
+        $query = $this->query();
 
-        $this->query()->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
+        $this->beforeDelete($query);
+
+        $query->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
 
         $this->afterDelete();
     }
@@ -385,11 +390,33 @@ class Model implements JsonSerializable
 
     /**
      * Acts as a hook method to be called before executing
+     * fetch queries.
+     *
+     * @return void
+     */
+    public function beforeFetch(Query $query)
+    {
+        // 
+    }
+
+    /**
+     * Acts as a hook method to be called after executing
+     * fetch queries.
+     *
+     * @return void
+     */
+    public function afterFetch()
+    {
+        // 
+    }
+
+    /**
+     * Acts as a hook method to be called before executing
      * save() method on model.
      *
      * @return void
      */
-    protected function beforeSave()
+    public function beforeSave(Query $query)
     {
         // 
     }
@@ -412,7 +439,7 @@ class Model implements JsonSerializable
      * @return void
      */
 
-    protected function beforeDelete()
+    public function beforeDelete(Query $query)
     {
         // 
     }
@@ -428,17 +455,17 @@ class Model implements JsonSerializable
         // 
     }
 
-    protected function insert()
+    protected function insert(Query $query)
     {
         $data = \get_object_vars($this->data);
-        return $this->query()->insert($data);
+        return $query->insert($data);
     }
 
-    protected function update()
+    protected function update(Query $query)
     {
         $data = \get_object_vars($this->data);
         unset($data[$this->primaryKey]);
-        return $this->query()->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
+        return $query->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
     }
 
     protected function setTimestamps()

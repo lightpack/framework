@@ -41,9 +41,9 @@ class Url
 
         $url = '/' . implode('/', $params) . $queryString;
 
-        if (get_env('APP_URL')) {
-            $url = rtrim(get_env('APP_URL'), '/') . $url;
-        }
+        // if (get_env('APP_URL')) {
+        //     $url = rtrim(get_env('APP_URL'), '/') . $url;
+        // }
 
         return rtrim($url, '/') ?: '/';
     }
@@ -74,10 +74,6 @@ class Url
 
     public function route(string $routeName, array $params = [])
     {
-        // if (is_array(end($params))) {
-        //     $queryParams = array_pop($params);
-        // }
-
         /** @var \Lightpack\Routing\Route */
         $route = Container::getInstance()->get('route')->getByName($routeName);
 
@@ -86,6 +82,12 @@ class Url
         }
 
         $uri = explode('/', trim($route->getUri(), '/ '));
+
+        // We do not want the subdomain while resolving route urls
+        if($route->getHost() !== '') {
+            unset($uri[0]);
+        }
+
         $uriPatterns = array_filter($uri, fn ($val) => strpos($val, ':') === 0);
 
         if (count($uriPatterns) > count($params)) {
@@ -95,9 +97,14 @@ class Url
         foreach ($uri as $key => $value) {
             if (strpos($value, ':') === 0) {
                 $value = trim($value, ':');
+
+                if (!isset($params[$value])) {
+                    throw new \Exception("Undefined parameter [:{$value}] for route '{$routeName}'");
+                }
+
                 $uri[$key] = $params[$value];
                 unset($params[$value]);
-            } 
+            }
         }
 
         $uri[] = $params ?? [];

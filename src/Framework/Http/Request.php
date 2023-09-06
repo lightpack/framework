@@ -41,7 +41,7 @@ class Request
 
     public function uri(): string
     {
-        return $_SERVER['REQUEST_URI'];
+        return $_SERVER['REQUEST_URI'] ?? '';
     }
 
     public function query(string $key = null, $default = null)
@@ -91,17 +91,28 @@ class Request
 
     public function url(): string
     {
-        return $this->scheme() . '://' . $this->host() . $this->fullpath();
+        return $this->scheme() . '://' . $this->hostWithPort() .  $this->fullpath();
     }
 
     public function fullUrl(): string
     {
-        return $this->scheme() . '://' . $this->host() . $this->uri();
+        return $this->scheme() . '://' . $this->hostWithPort() .  $this->uri();
     }
 
     public function method(): string
     {
         return $this->method;
+    }
+
+    public function hostWithPort()
+    {
+        $hostWithPort = $this->host();
+        
+        if($this->port()) {
+            $hostWithPort .= ':' . $this->port();
+        }
+
+        return $hostWithPort;
     }
 
     public function getRawBody(): string
@@ -219,7 +230,8 @@ class Request
 
     public function isAjax()
     {
-        return ($_SERVER['X-Requested-With'] ?? null)  === 'XMLHttpRequest';
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strcasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'xmlhttprequest') == 0;
     }
 
     public function isJson()
@@ -246,7 +258,14 @@ class Request
 
     public function host()
     {
-        return $_SERVER['HTTP_HOST'] ?? getenv('HTTP_HOST');
+        $host = $_SERVER['HTTP_HOST'] ?? getenv('HTTP_HOST');
+
+        return explode(':', $host)[0];
+    }
+
+    public function port(): ?int
+    {
+        return $_SERVER['SERVER_PORT'] ?? null;
     }
 
     public function protocol()
@@ -343,6 +362,20 @@ class Request
     public function route(): ?Route
     {
         return $this->route;
+    }
+
+    /**
+     * Get the route parameters.
+     * 
+     * @return mixed The value of the specified parameter, or an array of all parameters if $key is null.
+     */
+    public function params(?string $key, $default = null)
+    {
+        if(is_null($key)) {
+            return $this->route()->getParams();
+        }
+
+        return $this->route()->getParams()[$key] ?? $default;
     }
 
     public function validateUrlSignature(array $ignoredParameters = [])

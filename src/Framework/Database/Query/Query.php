@@ -9,8 +9,6 @@ use Lightpack\Pagination\Pagination as BasePagination;
 use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\DB;
 
-use function PHPUnit\Framework\callback;
-
 class Query
 {
     protected $connection;
@@ -25,6 +23,7 @@ class Query
         'where' => [],
         'group' => [],
         'order' => [],
+        'lock' => [],
         'limit' => null,
         'offset' => null,
     ];
@@ -130,6 +129,25 @@ class Query
         return $this;
     }
 
+
+    /**
+     * Lock the fetched rows from update until the transaction is commited.
+     */
+    public function forUpdate(): self
+    {
+        $this->components['lock']['for_update'] = true;
+        return $this;
+    }
+
+    /**
+     * Skip any rows that are locked for update by other transactions.
+     */
+    public function skipLocked(): self
+    {
+        $this->components['lock']['skip_locked'] = true;
+        return $this;
+    }
+
     public function from(string $table, string $alias = null): self
     {
         $this->table = $table;
@@ -164,7 +182,7 @@ class Query
         $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
         
         if (!in_array($operator, $operators)) {
-            if($value == null) {
+            if($value === null) {
                 $value = $operator;
                 $operator = '=';
             }
@@ -412,7 +430,8 @@ class Query
             }
         }
 
-        $items = $this->fetchAll();
+        // Pass false because count() has already executed the hook
+        $items = $this->fetchAll(false);
 
         if($items instanceof Collection) {
             return new LucidPagination( $items, $total, $limit, $page);
@@ -423,6 +442,8 @@ class Query
 
     public function count()
     {
+        $this->executeBeforeFetchHookForModel();
+
         $this->columns = ['COUNT(*) AS num'];
 
         $query = $this->getCompiledCount();
@@ -435,6 +456,8 @@ class Query
 
     public function countBy(string $column)
     {
+        $this->executeBeforeFetchHookForModel();
+        
         $this->columns = [$column, 'COUNT(*) AS num'];
         $this->groupBy($column);
 
@@ -472,8 +495,12 @@ class Query
         }
     }
 
-    protected function fetchAll()
+    protected function fetchAll(bool $executeBeforeFetchHook = true)
     {
+        if($executeBeforeFetchHook) {
+            $this->executeBeforeFetchHookForModel();
+        }
+
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
         $this->resetQuery();
@@ -494,6 +521,8 @@ class Query
 
     protected function fetchOne()
     {
+        $this->executeBeforeFetchHookForModel();
+
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -514,6 +543,8 @@ class Query
 
     public function column(string $column)
     {
+        $this->executeBeforeFetchHookForModel();
+
         $this->columns = [$column];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchColumn();
@@ -563,6 +594,7 @@ class Query
         $this->components['join'] = [];
         $this->components['group'] = [];
         $this->components['order'] = [];
+        $this->components['lock'] = [];
         $this->components['limit'] = null;
         $this->components['offset'] = null;
         $this->bindings = [];
@@ -602,5 +634,12 @@ class Query
         $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];
         $this->bindings = array_merge($this->bindings, $query->bindings);
         return $this;
+    }
+
+    protected function executeBeforeFetchHookForModel()
+    {
+        if($this->model) {
+            $this->model->beforeFetch($this);
+        }
     }
 }

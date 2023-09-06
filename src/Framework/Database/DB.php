@@ -169,6 +169,26 @@ class DB
         return $this->connection->getAttribute(\PDO::ATTR_DRIVER_NAME);
     }
 
+    /**
+     * Enable foreign key checks.
+     *
+     * @return void
+     */
+    public function enableForeignKeyChecks(): void
+    {
+        $this->query('SET FOREIGN_KEY_CHECKS=1;');
+    }
+
+    /**
+     * Disable foreign key checks.
+     *
+     * @return void
+     */
+    public function disableForeignKeyChecks(): void
+    {
+        $this->query('SET FOREIGN_KEY_CHECKS=0;');
+    }
+
     protected function logQuery($sql, $params)
     {
         if (!get_env('APP_DEBUG')) {
