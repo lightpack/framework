@@ -254,6 +254,16 @@ if (!function_exists('db')) {
     }
 }
 
+if (!function_exists('template')) {
+    /**
+     * Returns an instance of view template.
+     */
+    function template(): \Lightpack\View\Template
+    {
+        return app('template');
+    }
+}
+
 if (!function_exists('url')) {
     /**
      * Returns an instance of Url utility.
