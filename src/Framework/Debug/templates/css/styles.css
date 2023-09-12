@@ -60,8 +60,8 @@ body {
 }
 
 .error-line {
-    /* background: beige !important; */
-    background: #d91e180f;
+    background: beige !important;
+    /* background: #d91e180f; */
     /* padding: 5px; */
     /* margin-left: -5px; */
     color: #D91E18;
@@ -78,13 +78,14 @@ body {
 }
 
 .error-line .line {
-    /* background-color: beige; */
-    background: #d91e180f;
+    background-color: beige;
+    /* background: #d91e180f; */
 }
 
 .trace-container {
     color: #646464;
-    background-color: #f9f9f9;
+    /* background-color: #f9f9f9; */
+    background-color: #fff;
     font-size: 14px;
     /* border-radius: 0 0 4px 4px; */
 }
