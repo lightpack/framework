@@ -8,7 +8,8 @@ body {
 .container {
     word-break: break-all;
     line-height: 25px;
-    max-width: 960px;
+    /* max-width: 960px; */
+    max-width: 90%;
     margin: 30px auto;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     border-radius: 4px;
@@ -60,8 +61,8 @@ body {
 }
 
 .error-line {
-    background: beige !important;
-    /* background: #d91e180f; */
+    /* background: beige !important; */
+    background: #d91e180f;
     /* padding: 5px; */
     /* margin-left: -5px; */
     color: #D91E18;
@@ -78,8 +79,8 @@ body {
 }
 
 .error-line .line {
-    background-color: beige;
-    /* background: #d91e180f; */
+    /* background-color: beige; */
+    background: #d91e180f;
 }
 
 .trace-container {
