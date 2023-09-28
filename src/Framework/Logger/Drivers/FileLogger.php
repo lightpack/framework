@@ -10,7 +10,7 @@ class FileLogger implements ILogger
     private $maxFileSize; // max log file in bytes
     private $maxLogFiles; // max log files to retain
 
-    public function __construct(string $filename, int $maxFileSize = 10*1024*1024, int $maxLogFiles = 10)
+    public function __construct(string $filename, int $maxFileSize = 10 * 1024 * 1024, int $maxLogFiles = 10)
     {
         $this->filename = $filename;
         $this->maxFileSize = $maxFileSize;
