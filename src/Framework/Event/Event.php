@@ -3,12 +3,16 @@
 namespace Lightpack\Event;
 
 use Lightpack\Container\Container;
+use Lightpack\Exceptions\EventHandlerMethodNotFoundException;
+use Lightpack\Exceptions\EventNotFoundException;
 
 class Event
 {
     protected $subscribers = [];
 
-    public function __construct(protected Container $container) {}
+    public function __construct(protected Container $container)
+    {
+    }
 
     public function subscribe(string $event, string $subscriber): void
     {
@@ -31,9 +35,13 @@ class Event
     public function fire(string $event, mixed $data = null): void
     {
         $this->throwExceptionIfEventNotFound($event);
-        
+
         foreach ($this->subscribers[$event] as $subscriber) {
-            $this->container->call($subscriber, 'handle', [$data]);
+            $subscriberInstance = $this->container->resolve($subscriber);
+
+            $this->throwExceptionIfHandleMethodNotFound($subscriberInstance);
+
+            $subscriberInstance->handle($data);
         }
     }
 
@@ -45,12 +53,19 @@ class Event
     protected function throwExceptionIfEventNotFound(string $event): void
     {
         if (!isset($this->subscribers[$event])) {
-            throw new \Lightpack\Exceptions\EventNotFoundException(
+            throw new EventNotFoundException(
                 sprintf(
                     'Event `%s` is not registered',
                     $event
                 )
             );
+        }
+    }
+
+    public function throwExceptionIfHandleMethodNotFound(object $subscriber)
+    {
+        if (!method_exists($subscriber, 'handle')) {
+            throw new EventHandlerMethodNotFoundException(sprintf('The handle() method is not defined in event class `%s`', get_class($subscriber)));
         }
     }
 }

@@ -141,15 +141,15 @@ final class ArrTest extends TestCase
         // Test 3
         try {
             $randomItems = (new Arr)->random($items, 10);
-        } catch(\Error $e) {
+        } catch (\Error $e) {
             $this->assertInstanceOf(\ValueError::class, $e);
             $this->assertEquals('You cannot request more than 6 items.', $e->getMessage());
         }
-        
+
         // Test 4
         try {
             $randomItems = (new Arr)->random([]);
-        } catch(\Error $e) {
+        } catch (\Error $e) {
             $this->assertInstanceOf(\ValueError::class, $e);
             $this->assertEquals('You cannot pass an empty array of items.', $e->getMessage());
         }
@@ -157,7 +157,7 @@ final class ArrTest extends TestCase
         // Test 5
         try {
             $randomItems = (new Arr)->random($items, 0);
-        } catch(\Error $e) {
+        } catch (\Error $e) {
             $this->assertInstanceOf(\ValueError::class, $e);
             $this->assertEquals('You cannot request less than 1 item.', $e->getMessage());
         }
@@ -170,10 +170,79 @@ final class ArrTest extends TestCase
         $this->assertIsString(array_rand($randomItems));
         $this->assertIsNotNumeric(array_rand($randomItems));
 
-         // Test 6
-         $randomItems = (new Arr)->random($items, 3);
+        // Test 6
+        $randomItems = (new Arr)->random($items, 3);
 
-         $this->assertIsNumeric(array_rand($randomItems));
-         $this->assertIsNotString(array_rand($randomItems));
+        $this->assertIsNumeric(array_rand($randomItems));
+        $this->assertIsNotString(array_rand($randomItems));
+    }
+
+    public function testGroupByEmptyArray()
+    {
+        $items = [];
+        $result = (new Arr)->groupBy('key', $items);
+
+        $this->assertEquals([], $result);
+    }
+
+    public function testGroupByMissingKey()
+    {
+        $items = [
+            ['name' => 'John', 'age' => 25],
+            ['name' => 'Jane', 'age' => 30],
+            ['name' => 'Bob'],
+            ['name' => 'Alice', 'age' => 28],
+        ];
+        $result = (new Arr)->groupBy('country', $items);
+
+        $this->assertEquals([], $result);
+    }
+
+    public function testGroupBy()
+    {
+        $items = [
+            ['name' => 'John', 'age' => 25, 'country' => 'USA'],
+            ['name' => 'Jane', 'age' => 30, 'country' => 'Canada'],
+            ['name' => 'Bob', 'age' => 22, 'country' => 'USA'],
+            ['name' => 'Alice', 'age' => 28, 'country' => 'Canada'],
+        ];
+        $result = (new Arr)->groupBy('country', $items);
+
+        $expectedResult = [
+            'USA' => [
+                ['name' => 'John', 'age' => 25, 'country' => 'USA'],
+                ['name' => 'Bob', 'age' => 22, 'country' => 'USA'],
+            ],
+            'Canada' => [
+                ['name' => 'Jane', 'age' => 30, 'country' => 'Canada'],
+                ['name' => 'Alice', 'age' => 28, 'country' => 'Canada'],
+            ],
+        ];
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    public function testGroupByPreserveKeys()
+    {
+        $items = [
+            'A' => ['id' => 1, 'name' => 'John'],
+            'B' => ['id' => 2, 'name' => 'Jane'],
+            'C' => ['id' => 3, 'name' => 'Bob'],
+        ];
+        $result = (new Arr)->groupBy('name', $items, true);
+
+        $expectedResult = [
+            'John' => [
+                'A' => ['id' => 1, 'name' => 'John'],
+            ],
+            'Jane' => [
+                'B' => ['id' => 2, 'name' => 'Jane'],
+            ],
+            'Bob' => [
+                'C' => ['id' => 3, 'name' => 'Bob'],
+            ],
+        ];
+        
+        $this->assertEquals($expectedResult, $result);
     }
 }

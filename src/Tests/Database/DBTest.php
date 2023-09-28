@@ -68,7 +68,7 @@ final class DBTest extends TestCase
         set_env('APP_DEBUG', true);
 
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],

@@ -24,6 +24,7 @@ class RouteRegistry
     private $options = [
         'prefix' => '',
         'filter' => [],
+        'host' => '',
     ];
 
     private $names = [];
@@ -73,6 +74,7 @@ class RouteRegistry
     public function group(array $options, callable $callback): void
     {
         $oldOptions = $this->options;
+        $options['prefix'] = $options['prefix'] ?? '';
         $this->options = \array_merge($oldOptions, $options);
         $this->options['prefix'] = $oldOptions['prefix'] . $this->options['prefix'];
         $callback($this);
@@ -99,15 +101,32 @@ class RouteRegistry
         }
     }
 
-    public function matches(string $path): false|Route
+    public function matches(string $path): bool|Route
     {
+        $originalPath = $path;
         $routes = $this->getRoutesForCurrentRequest();
 
         foreach ($routes as $routeUri => $route) {
             ['params' => $params, 'regex' => $regex] = $this->compileRegexWithParams($routeUri, $route->getPattern());
 
-            if (preg_match('@^' . $regex. '$@', $path, $matches)) {
+            if ($route->getHost()) {
+                $path = $this->request->host() . '/' . trim($originalPath, '/');
+            } else {
+                $path = $originalPath;
+            }
+
+            if (preg_match('@^' . $regex . '$@', $path, $matches)) {
+                
                 \array_shift($matches);
+                
+                // Make sure we have extracted matched wildcard subdomain
+                if($route->getHost() && strpos($routeUri[0], ':') === 0) {
+                    $firstParams = explode('.',  $params[0]);
+                    $firstMatches = explode('.',  $matches[0]);
+
+                    $params[0] = $firstParams[0];
+                    $matches[0] = $firstMatches[0];
+                }
 
                 /** @var Route */
                 $route = $this->routes[$this->request->method()][$routeUri];
@@ -143,6 +162,13 @@ class RouteRegistry
 
         $route = new Route();
         $route->setController($controller)->setAction($action)->filter($this->options['filter'])->setUri($uri)->setVerb($method);
+
+        if ($this->options['host'] ?? false) {
+            $uri = $this->options['host'] . '/' . trim($uri, '/');
+            $route->host($this->options['host']);
+            $route->setUri($uri);
+        }
+
         $this->routes[$method][$uri] = $route;
 
         return $route;
@@ -163,7 +189,7 @@ class RouteRegistry
         $fragments = explode('/', $routePattern);
 
         foreach ($fragments as $fragment) {
-            if(strpos($fragment, ':') === 0) {
+            if (strpos($fragment, ':') === 0) {
                 $param = substr($fragment, 1);
                 $params[] = $param;
                 $registeredPattern = $pattern[$param] ?? ':seg';
@@ -185,13 +211,14 @@ class RouteRegistry
         $requestMethod = $this->request->method();
         $requestMethod = trim($requestMethod);
         $routes = $this->routes[$requestMethod] ?? [];
+
         return $routes;
         // return \array_keys($routes);
     }
 
     private function setRouteName(Route $route): void
     {
-        if(false === $route->hasName()) {
+        if (false === $route->hasName()) {
             return;
         }
 

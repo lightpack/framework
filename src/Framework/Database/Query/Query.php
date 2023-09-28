@@ -23,6 +23,7 @@ class Query
         'where' => [],
         'group' => [],
         'order' => [],
+        'lock' => [],
         'limit' => null,
         'offset' => null,
     ];
@@ -71,30 +72,17 @@ class Query
 
     private function executeInsert(array $data, bool $shouldIgnore = false)
     {
-        $compiler = new Compiler($this);
-        $this->bindings = array_values($data);
-        $query = $compiler->compileInsert(array_keys($data), $shouldIgnore);
-        $result = $this->connection->query($query, $this->bindings);
-        $this->resetQuery();
-
-        return $result;
-    }
-
-    public function bulkInsert(array $data)
-    {
-        return $this->executeBulkInsert($data);
-    }
-
-    public function bulkInsertIgnore(array $data)
-    {
-        return $this->executeBulkInsert($data, true);
+        return $this->executeBulkInsert($data, $shouldIgnore);
     }
 
     private function executeBulkInsert(array $data, bool $shouldIgnore = false)
     {
-        // verify that data is an array of arrays
-        if (empty($data) || array_values($data) !== $data) {
-            throw new \Exception('bulkInsert() expects an array of arrays');
+        if (empty($data)) {
+            return;
+        }
+
+        if(! is_array(reset($data))) {
+            $data = [$data];
         }
 
         // Loop data to prepare for parameter binding
@@ -105,6 +93,7 @@ class Query
         $compiler = new Compiler($this);
         $query = $compiler->compileBulkInsert($columns, $data, $shouldIgnore);
         $result = $this->connection->query($query, $this->bindings);
+
         $this->resetQuery();
         return $result;
     }
@@ -140,6 +129,25 @@ class Query
         return $this;
     }
 
+
+    /**
+     * Lock the fetched rows from update until the transaction is commited.
+     */
+    public function forUpdate(): self
+    {
+        $this->components['lock']['for_update'] = true;
+        return $this;
+    }
+
+    /**
+     * Skip any rows that are locked for update by other transactions.
+     */
+    public function skipLocked(): self
+    {
+        $this->components['lock']['skip_locked'] = true;
+        return $this;
+    }
+
     public function from(string $table, string $alias = null): self
     {
         $this->table = $table;
@@ -160,7 +168,7 @@ class Query
      * @param string|null $operator
      * @param mixed $value
      */
-    public function where($column, string $operator = null, $value = null, string $joiner = 'AND'): self
+    public function where($column, string $operator = '=', $value = null, string $joiner = 'AND'): self
     {
         if ($column instanceof Closure) {
             return $this->whereColumnIsAClosure($column, $joiner);
@@ -169,15 +177,20 @@ class Query
         if ($value instanceof Closure) {
             return $this->whereValueIsAClosure($value, $column, $operator, $joiner);
         }
-
-        $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
-
+        
         // Operators that don't require a value
         $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
-
+        
         if (!in_array($operator, $operators)) {
+            if($value === null) {
+                $value = $operator;
+                $operator = '=';
+            }
+            
             $this->bindings[] = $value;
         }
+        
+        $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
         return $this;
     }
@@ -417,7 +430,8 @@ class Query
             }
         }
 
-        $items = $this->fetchAll();
+        // Pass false because count() has already executed the hook
+        $items = $this->fetchAll(false);
 
         if($items instanceof Collection) {
             return new LucidPagination( $items, $total, $limit, $page);
@@ -428,6 +442,8 @@ class Query
 
     public function count()
     {
+        $this->executeBeforeFetchHookForModel();
+
         $this->columns = ['COUNT(*) AS num'];
 
         $query = $this->getCompiledCount();
@@ -440,6 +456,8 @@ class Query
 
     public function countBy(string $column)
     {
+        $this->executeBeforeFetchHookForModel();
+        
         $this->columns = [$column, 'COUNT(*) AS num'];
         $this->groupBy($column);
 
@@ -477,8 +495,12 @@ class Query
         }
     }
 
-    protected function fetchAll()
+    protected function fetchAll(bool $executeBeforeFetchHook = true)
     {
+        if($executeBeforeFetchHook) {
+            $this->executeBeforeFetchHookForModel();
+        }
+
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
         $this->resetQuery();
@@ -499,6 +521,8 @@ class Query
 
     protected function fetchOne()
     {
+        $this->executeBeforeFetchHookForModel();
+
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -519,6 +543,8 @@ class Query
 
     public function column(string $column)
     {
+        $this->executeBeforeFetchHookForModel();
+
         $this->columns = [$column];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchColumn();
@@ -527,6 +553,19 @@ class Query
         $this->resetWhere();
 
         return $result;
+    }
+
+    public function chunk(int $chunkSize, callable $callback)
+    {
+        $records = $this->limit($chunkSize)->offset($page = 1)->all();
+
+        while(count($records) > 0) {
+            if(false === call_user_func($callback, $records)) {
+                return;
+            }
+
+            $records = $this->limit($chunkSize)->offset(++$page)->all();
+        }
     }
 
     public function getCompiledSelect()
@@ -555,6 +594,7 @@ class Query
         $this->components['join'] = [];
         $this->components['group'] = [];
         $this->components['order'] = [];
+        $this->components['lock'] = [];
         $this->components['limit'] = null;
         $this->components['offset'] = null;
         $this->bindings = [];
@@ -594,5 +634,12 @@ class Query
         $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];
         $this->bindings = array_merge($this->bindings, $query->bindings);
         return $this;
+    }
+
+    protected function executeBeforeFetchHookForModel()
+    {
+        if($this->model) {
+            $this->model->beforeFetch($this);
+        }
     }
 }

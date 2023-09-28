@@ -34,12 +34,12 @@ class AuthUser extends Model implements Identity
     public function setAuthToken(string $token): void
     {
         $this->api_token = $token;
-        $this->saveAndRefresh();
+        $this->save();
     }
 
     public function setRememberToken(string $token): void
     {
         $this->remember_token = $token;
-        $this->saveAndRefresh();
+        $this->save();
     }
 }

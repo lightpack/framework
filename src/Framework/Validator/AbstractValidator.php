@@ -76,6 +76,10 @@ class AbstractValidator
             return;
         }
 
+        if(is_array($rules) && isset($rules['file'])) {
+            $this->rules[$key] = $rules;
+            return;
+        }
 
         throw new RuntimeException(sprintf("Could not add the rules for key: %s", $key));
     }
@@ -90,6 +94,12 @@ class AbstractValidator
         }
 
         foreach ($this->rules as $field => $values) {
+            // Rules for file uploads
+            if(is_array($values) && isset($values['file'])) {
+                $this->validate($field, 'upload', $values['file']);
+                continue;
+            }
+
             if (is_callable($values)) {
                 $this->validate($field, 'callback');
                 continue;

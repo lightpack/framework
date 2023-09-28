@@ -201,7 +201,7 @@ final class RequestTest extends TestCase
 
     public function testRequestIsAjax()
     {
-        $_SERVER['X-Requested-With']= 'XMLHttpRequest';
+        $_SERVER['HTTP_X_REQUESTED_WITH']= 'XMLHttpRequest';
         $this->assertTrue((new Request)->isAjax());
     }
 

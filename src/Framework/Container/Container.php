@@ -137,7 +137,7 @@ class Container
             $resolvedInstance = $this->resolveWithReflection($id);
 
             $this->callIf($resolvedInstance, '__boot');
-            
+
             return $resolvedInstance;
         }
 
@@ -259,21 +259,36 @@ class Container
         // Get reflection
         $reflection = new \ReflectionClass($instance);
 
+        // Get method
+        $method = $reflection->getMethod($instanceMethod);
+
         // Get method parameters
-        $parameters = $reflection->getMethod($instanceMethod)->getParameters();
+        $parameters = $method->getParameters();
+
+        // Filter parameters that are scalar
+        $scalarParameters = $this->filterScalarParameters($parameters);
 
         // Filter parameters that are non-scalar
-        $parameters = $this->filterNonScalarParameters($parameters);
+        $nonScalarParameters = $this->filterNonScalarParameters($parameters);
 
         // Resolve method parameters
-        $dependencies = $this->resolveParameters($parameters);
+        $dependencies = $this->resolveParameters($nonScalarParameters);
+
+        // Prepare method's scalar arguments
+        $arguments = [];
+
+        foreach ($scalarParameters as $parameter) {
+            $parameterName = $parameter->getName();
+            $arguments[$parameterName] = $args[$parameterName] ?? $parameter->getDefaultValue();
+        }
 
         // Merge dependencies with args
-        $dependencies = array_merge($dependencies, $args);
-        
+        $dependencies = array_merge($dependencies, $arguments);
+
         // Call method
-        return $reflection->getMethod($instanceMethod)->invokeArgs($instance, $dependencies);
+        return $method->invokeArgs($instance, $dependencies);
     }
+
 
     /**
      * Call a method on an object or class only if the method exists.
@@ -285,6 +300,17 @@ class Container
         }
 
         return null;
+    }
+
+    protected function filterScalarParameters(array $parameters): array
+    {
+        return array_filter($parameters, function ($parameter) {
+            if (empty($parameter->getType()) || $parameter->getType()->isBuiltin()) {
+                return true;
+            }
+
+            return $parameter->getType() && $parameter->getType()->isBuiltin();
+        });
     }
 
     protected function filterNonScalarParameters(array $parameters): array
@@ -315,7 +341,7 @@ class Container
     {
         // Make sure that the alias has been registered
         $this->throwExceptionIfServiceNotFound($alias);
-        
+
         $this->aliases[$type] = $alias;
     }
 }

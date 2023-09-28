@@ -22,6 +22,7 @@ use Lightpack\Console\Commands\CreateSeeder;
 use Lightpack\Console\Commands\GenerateAppKey;
 use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ScheduleEvents;
+use Lightpack\Console\Commands\ServeCommand;
 
 class Console
 {
@@ -46,6 +47,7 @@ class Console
         'db:seed' => SeedCommand::class,
         'schedule:events' => ScheduleEvents::class,
         'app:key' => GenerateAppKey::class,
+        'app:serve' => ServeCommand::class,
     ];
 
     public static function register(string $command, ICommand $handler)

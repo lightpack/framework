@@ -81,14 +81,14 @@ final class PaginationTest extends TestCase
     public function testLoadMethod()
     {
         // bulk insert projects
-        $this->db->table('projects')->bulkInsert([
+        $this->db->table('projects')->insert([
             ['name' => 'Project 1'],
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
 
         // bulk insert tasks
-        $this->db->table('tasks')->bulkInsert([
+        $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
             ['name' => 'Task 2', 'project_id' => 1],
             ['name' => 'Task 3', 'project_id' => 2],

@@ -31,17 +31,22 @@ class UploadedFile
         $this->type = $file['type'];
         $this->error = $file['error'];
         $this->tmpName = $file['tmp_name'];
-        $this->validation = new UploadValidation([]);
+        $this->validation = new UploadValidation();
     }
 
-    public function setRules(array $rules): self
+    public function setRules(string $rules): self
     {
         $this->validation->setRules($rules);
 
         return $this;
     }
 
-    public function failsValidation(): bool
+    public function passedValidation(): bool
+    {
+        return $this->failedValidation() === false;
+    }
+
+    public function failedValidation(): bool
     {
         $this->validation->validateMimes($this->getType());
         $this->validation->validateExtensions($this->getExtension());
@@ -49,6 +54,7 @@ class UploadedFile
         $this->validation->validateMaxWidth($this->getWidth());
         $this->validation->validateMinHeight($this->getHeight());
         $this->validation->validateMaxHeight($this->getHeight());
+        $this->validation->validateRatio($this->getWidth(), $this->getHeight());
         $this->validation->validateWidth($this->getWidth());
         $this->validation->validateHeight($this->getHeight());
         $this->validation->validateMinSize($this->getSize());
@@ -109,7 +115,7 @@ class UploadedFile
 
     public function getRules()
     {
-        return $this->rules;
+        return $this->validation->getRules();
     }
 
     public function getName(): string
@@ -154,7 +160,7 @@ class UploadedFile
 
     public function move(string $destination, string $name = null): void
     {
-        if($this->failsValidation()) {
+        if($this->failedValidation()) {
             throw new FileUploadException('Uploaded file fails validation rules.');
         }
 
