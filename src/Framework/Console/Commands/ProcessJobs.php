@@ -11,7 +11,7 @@ class ProcessJobs implements ICommand
     {
         $queues = $this->parseQueueArgument($arguments) ?? ['default']; // 'default' queue
         $sleep = $this->parseSleepArgument($arguments) ?? 5; // seconds
-        $cooldown = $this->parseCooldownArgument($arguments) ?? 60; // 1 minute
+        $cooldown = $this->parseCooldownArgument($arguments) ?? 0; // By default, let the worker keep running
 
         $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
 

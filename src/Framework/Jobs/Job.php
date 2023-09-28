@@ -48,7 +48,7 @@ class Job
      * @param array $payload
      * @return self
      */
-    public function setPayload(array $payload): self
+    public function setPayload(array $payload): static
     {
         $this->payload = $payload;
 
@@ -96,6 +96,16 @@ class Job
             $this->delay,
             $this->queue
         );
+    }
+
+    /**
+     * Dispatch the job immediately without queuing.
+     * 
+     * This will call the executing job class run() method.
+     */
+    public function dispatchSync(array $payload)
+    {
+        return (new static)->setPayload($payload)->run();
     }
 
     public function maxAttempts(): int

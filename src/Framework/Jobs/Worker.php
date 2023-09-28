@@ -57,7 +57,7 @@ class Worker
         $this->jobEngine = Connection::getJobEngine();
         $this->sleepInterval = $options['sleep'] ?? 5;
         $this->queues = $options['queues'] ?? ['default'];
-        $this->cooldown = $options['cooldown'] ?? 60 * 60; // 1 hour
+        $this->cooldown = $options['cooldown'] ?? 0; // 0 means unlimited run time
         $this->container = Container::getInstance();
         $this->startTime = time();
         $this->registerSignalHandlers();
@@ -200,8 +200,12 @@ class Worker
         $this->running = false;
     }
 
-    protected function shouldCooldown()
+    protected function shouldCooldown(): bool
     {
+        if($this->cooldown == 0) {
+            return false;
+        }
+
         return time() - $this->startTime > $this->cooldown;
     }
 }
