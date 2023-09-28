@@ -7,10 +7,10 @@ use Lightpack\Logger\ILogger;
 class FileLogger implements ILogger
 {
     private $filename;
-    private $maxFileSize; // Maximum file size in bytes (default: 10 MB)
-    private $maxLogFiles; // Maximum number of log files to keep
+    private $maxFileSize; // in bytes
+    private $maxLogFiles;
 
-    public function __construct(string $filename, int $maxFileSize = 200, int $maxLogFiles = 5)
+    public function __construct(string $filename, int $maxFileSize = 10*1024*1024, int $maxLogFiles = 5)
     {
         $this->filename = $filename;
         $this->maxFileSize = $maxFileSize;
@@ -19,48 +19,77 @@ class FileLogger implements ILogger
 
     public function log($level, $message, array $context = [])
     {
-        $content = date('Y-m-d H:i:s') . " $level : " . $message . PHP_EOL;
+        $logEntry = $this->formatLogEntry($level, $message, $context);
+        $this->rotateLog();
+        $this->writeLog($logEntry);
+    }
 
-        if ($context) {
-            $content .= 'Context: ' . json_encode($context) . PHP_EOL;
+    private function formatLogEntry($level, $message, $context)
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        $logEntry = "$timestamp $level : $message" . PHP_EOL;
+
+        if (!empty($context)) {
+            $logEntry .= 'Context: ' . json_encode($context) . PHP_EOL;
         }
 
-        $this->rotateLog();
-
-        file_put_contents($this->filename, $content, LOCK_EX | FILE_APPEND);
+        return $logEntry;
     }
 
     private function rotateLog()
     {
         if (file_exists($this->filename) && filesize($this->filename) >= $this->maxFileSize) {
-            // Rename the current log file
-            $rotatedFile = $this->filename . '.' . date('YmdHis');
-            rename($this->filename, $rotatedFile);
-
-            // Delete excess log files if the maximum limit is reached
+            $this->rotateLogFile();
             $this->deleteExcessLogFiles();
-
-            // Create a new log file
-            touch($this->filename);
+            $this->createNewLogFile();
         }
+    }
+
+    private function rotateLogFile()
+    {
+        $timestamp = date('YmdHis');
+        $fileInfo = pathinfo($this->filename);
+        $baseName = $fileInfo['filename'];
+        $rotatedFile = "{$fileInfo['dirname']}/{$baseName}.{$timestamp}.{$fileInfo['extension']}";
+        rename($this->filename, $rotatedFile);
     }
 
     private function deleteExcessLogFiles()
     {
-        $logFiles = glob($this->filename . '.*');
+        $fileInfo = pathinfo($this->filename);
+        $baseName = $fileInfo['filename'];
+        $logFiles = glob("{$fileInfo['dirname']}/{$baseName}.*");
         $logFilesCount = count($logFiles);
 
         if ($logFilesCount > $this->maxLogFiles) {
-            // Sort log files by creation time (oldest first)
-            usort($logFiles, function ($a, $b) {
-                return filemtime($a) - filemtime($b);
-            });
-
-            $filesToDelete = $logFilesCount - $this->maxLogFiles;
-
-            for ($i = 0; $i < $filesToDelete; $i++) {
-                unlink($logFiles[$i]);
-            }
+            $this->sortLogFilesByCreationTime($logFiles);
+            $this->deleteOldestLogFiles($logFiles, $logFilesCount);
         }
+    }
+
+    private function sortLogFilesByCreationTime(array &$logFiles)
+    {
+        usort($logFiles, function ($a, $b) {
+            return filemtime($a) - filemtime($b);
+        });
+    }
+
+    private function deleteOldestLogFiles(array $logFiles, int $logFilesCount)
+    {
+        $filesToDelete = $logFilesCount - $this->maxLogFiles;
+
+        for ($i = 0; $i < $filesToDelete; $i++) {
+            unlink($logFiles[$i]);
+        }
+    }
+
+    private function createNewLogFile()
+    {
+        touch($this->filename);
+    }
+
+    private function writeLog($logEntry)
+    {
+        file_put_contents($this->filename, $logEntry, FILE_APPEND);
     }
 }
