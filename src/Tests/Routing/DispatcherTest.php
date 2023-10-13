@@ -76,6 +76,26 @@ final class DispatcherTest extends TestCase
         $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
         $this->assertEquals('hello', $dispatcher->dispatch());
     }
+
+    public function testControllerActionInvocationWithOptionalParams()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/bar/hello/baz';
+
+        $this->container->get('route')->get('/bar/:bar/baz/:baz?', 'MockController', 'foo');
+        $this->container->get('router')->parse('/bar/hello/baz/world');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+        $this->assertEquals('helloworld', $dispatcher->dispatch());
+    }
+
+    public function testControllerActionInvocationWithoutOptionalParams()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/bar/hello/baz';
+
+        $this->container->get('route')->get('/bar/:bar/baz/:baz?', 'MockController', 'foo');
+        $this->container->get('router')->parse('/bar/hello/baz');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+        $this->assertEquals('hello', $dispatcher->dispatch());
+    }
 }
 
 class MockController
@@ -83,5 +103,10 @@ class MockController
     public function greet()
     {
         return 'hello';
+    }
+
+    public function foo($bar, $baz = null)
+    {
+        return $bar . $baz;
     }
 }

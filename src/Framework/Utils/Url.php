@@ -89,20 +89,23 @@ class Url
         }
 
         $uriPatterns = array_filter($uri, fn ($val) => strpos($val, ':') === 0);
+        $lastCharacterForEndParam = substr(end($uriPatterns), -1);
+        $minimumRequiredParams = $lastCharacterForEndParam == '?' ? count($uriPatterns) - 1 : count($uriPatterns);
 
-        if (count($uriPatterns) > count($params)) {
+        if ($minimumRequiredParams > count($params)) {
             throw new \Exception("Invalid number of parameters for route '$routeName'. Expected " . count($uriPatterns) . " but got " . count($params));
         }
 
         foreach ($uri as $key => $value) {
             if (strpos($value, ':') === 0) {
-                $value = trim($value, ':');
+                $isOptionalParam = substr($value, -1) == '?';
+                $value = trim($value, ':?');
 
-                if (!isset($params[$value])) {
+                if (!$isOptionalParam && !isset($params[$value])) {
                     throw new \Exception("Undefined parameter [:{$value}] for route '{$routeName}'");
                 }
 
-                $uri[$key] = $params[$value];
+                $uri[$key] = $params[$value] ?? null;
                 unset($params[$value]);
             }
         }

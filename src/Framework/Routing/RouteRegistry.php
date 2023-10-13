@@ -116,7 +116,6 @@ class RouteRegistry
             }
 
             if (preg_match('@^' . $regex . '$@', $path, $matches)) {
-                
                 \array_shift($matches);
                 
                 // Make sure we have extracted matched wildcard subdomain
@@ -128,9 +127,24 @@ class RouteRegistry
                     $matches[0] = $firstMatches[0];
                 }
 
+                $matches = array_map(function($match) {
+                    return trim($match, '/');
+                }, $matches);
+
+                $routeParams = [];
+
+                if($params) {
+                    foreach($params as $key => $param) {
+                        $routeParams[$param] = $matches[$key] ?? null;
+                    }
+                } else {
+                    $routeParams = $matches;
+                }
+                
                 /** @var Route */
                 $route = $this->routes[$this->request->method()][$routeUri];
-                $route->setParams($params ? array_combine($params, $matches) : $matches);
+                $route->setParams($routeParams);
+                
                 $route->setPath($path);
 
                 return $route;
@@ -191,18 +205,30 @@ class RouteRegistry
         foreach ($fragments as $fragment) {
             if (strpos($fragment, ':') === 0) {
                 $param = substr($fragment, 1);
+                $isOptional = false;
+
+                if (substr($param, -1) === '?') {
+                    $param = substr($param, 0, -1);
+                    $isOptional = true;
+                }
+
                 $params[] = $param;
                 $registeredPattern = $pattern[$param] ?? ':seg';
                 $registeredPattern = $this->placeholders[$registeredPattern] ?? $registeredPattern;
-                $parts[] = '(' . $registeredPattern . ')';
+
+                if ($isOptional) {
+                    $parts[] = '(\/' . $registeredPattern . ')?';
+                } else {
+                    $parts[] = '/(' . $registeredPattern . ')';
+                }
             } else {
-                $parts[] = $fragment;
+                $parts[] = '/' . $fragment;
             }
         }
 
         return [
             'params' => $params,
-            'regex' => implode('/', $parts),
+            'regex' => '/' . trim(implode('', $parts), '/'),
         ];
     }
 
