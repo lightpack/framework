@@ -112,11 +112,10 @@ class RouteRegistry
             if ($route->getHost()) {
                 $path = $this->request->host() . '/' . trim($originalPath, '/');
             } else {
-                $path = $originalPath;
+                $path = trim($originalPath, '/');
             }
 
             if (preg_match('@^' . $regex . '$@', $path, $matches)) {
-                
                 \array_shift($matches);
                 
                 // Make sure we have extracted matched wildcard subdomain
@@ -130,8 +129,12 @@ class RouteRegistry
 
                 /** @var Route */
                 $route = $this->routes[$this->request->method()][$routeUri];
-                $route->setParams($params ? array_combine($params, $matches) : $matches);
+                $routeParams = count($params) == count($matches) ? array_combine($params, $matches) : $matches;
+                $route->setParams($routeParams);
+                // $route->setParams($params ? array_combine($params, $matches) : $matches);
+                
                 $route->setPath($path);
+                // pp($routeParams, $routeUri);
 
                 return $route;
             }
@@ -191,10 +194,22 @@ class RouteRegistry
         foreach ($fragments as $fragment) {
             if (strpos($fragment, ':') === 0) {
                 $param = substr($fragment, 1);
+                $isOptional = false;
+
+                if (substr($param, -1) === '?') {
+                    $param = substr($param, 0, -1);
+                    $isOptional = true;
+                }
+
                 $params[] = $param;
                 $registeredPattern = $pattern[$param] ?? ':seg';
                 $registeredPattern = $this->placeholders[$registeredPattern] ?? $registeredPattern;
-                $parts[] = '(' . $registeredPattern . ')';
+
+                if ($isOptional) {
+                    $parts[] = '(\/' . $registeredPattern . ')?';
+                } else {
+                    $parts[] = '/(' . $registeredPattern . ')';
+                }
             } else {
                 $parts[] = $fragment;
             }
@@ -202,7 +217,7 @@ class RouteRegistry
 
         return [
             'params' => $params,
-            'regex' => implode('/', $parts),
+            'regex' => implode('', $parts),
         ];
     }
 

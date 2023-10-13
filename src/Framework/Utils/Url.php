@@ -96,7 +96,7 @@ class Url
 
         foreach ($uri as $key => $value) {
             if (strpos($value, ':') === 0) {
-                $value = trim($value, ':');
+                $value = trim($value, ':?');
 
                 if (!isset($params[$value])) {
                     throw new \Exception("Undefined parameter [:{$value}] for route '{$routeName}'");
