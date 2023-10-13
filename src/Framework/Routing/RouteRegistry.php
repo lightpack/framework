@@ -143,8 +143,6 @@ class RouteRegistry
                 
                 /** @var Route */
                 $route = $this->routes[$this->request->method()][$routeUri];
-                // pp($params, $matches, $routeParams);
-                // $routeParams = $params && (count($params) == count($matches)) ? array_combine($params, $matches) : $matches;
                 $route->setParams($routeParams);
                 
                 $route->setPath($path);
