@@ -161,4 +161,17 @@ final class RouterTest extends TestCase
         // tests
         $this->assertEquals(['auth', 'csrf', 'honeypot'], $this->router->getRoute()->getFilters());
     }
+
+    public function testRouterCanParseOptionalParams()
+    {
+        // Assertion 1
+        $this->routeRegistry->get('users/:user/photos/:photo?', 'User', 'photos');
+        $this->router->parse('/users/23/photos/avatar');
+        $this->assertEquals(['user' => '23', 'photo' => 'avatar'], $this->router->getRoute()->getParams());
+
+        // Assertion 2
+        $this->routeRegistry->get('users/:user/photos/:photo?', 'User', 'photos');
+        $this->router->parse('/users/23/photos');
+        $this->assertEquals(['user' => '23', 'photo' => null], $this->router->getRoute()->getParams());
+    }
 }

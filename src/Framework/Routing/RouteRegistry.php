@@ -112,7 +112,7 @@ class RouteRegistry
             if ($route->getHost()) {
                 $path = $this->request->host() . '/' . trim($originalPath, '/');
             } else {
-                $path = trim($originalPath, '/');
+                $path = $originalPath;
             }
 
             if (preg_match('@^' . $regex . '$@', $path, $matches)) {
@@ -127,14 +127,27 @@ class RouteRegistry
                     $matches[0] = $firstMatches[0];
                 }
 
+                $matches = array_map(function($match) {
+                    return trim($match, '/');
+                }, $matches);
+
+                $routeParams = [];
+
+                if($params) {
+                    foreach($params as $key => $param) {
+                        $routeParams[$param] = $matches[$key] ?? null;
+                    }
+                } else {
+                    $routeParams = $matches;
+                }
+                
                 /** @var Route */
                 $route = $this->routes[$this->request->method()][$routeUri];
-                $routeParams = count($params) == count($matches) ? array_combine($params, $matches) : $matches;
+                // pp($params, $matches, $routeParams);
+                // $routeParams = $params && (count($params) == count($matches)) ? array_combine($params, $matches) : $matches;
                 $route->setParams($routeParams);
-                // $route->setParams($params ? array_combine($params, $matches) : $matches);
                 
                 $route->setPath($path);
-                // pp($routeParams, $routeUri);
 
                 return $route;
             }
@@ -211,13 +224,13 @@ class RouteRegistry
                     $parts[] = '/(' . $registeredPattern . ')';
                 }
             } else {
-                $parts[] = $fragment;
+                $parts[] = '/' . $fragment;
             }
         }
 
         return [
             'params' => $params,
-            'regex' => implode('', $parts),
+            'regex' => '/' . trim(implode('', $parts), '/'),
         ];
     }
 
