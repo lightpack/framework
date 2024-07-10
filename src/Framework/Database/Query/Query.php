@@ -444,14 +444,14 @@ class Query
     {
         $this->executeBeforeFetchHookForModel();
 
-        $this->columns = ['COUNT(*) AS num'];
+        $this->columns = ['COUNT(*) AS total'];
 
         $query = $this->getCompiledCount();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
         $this->columns = []; // so that pagination query can be reused
 
-        return $result->num;
+        return $result->total;
     }
 
     public function countBy(string $column)
@@ -471,7 +471,7 @@ class Query
     {
         $this->executeBeforeFetchHookForModel();
 
-        $this->columns = ["SUM($column) AS sum"];
+        $this->columns = ["SUM(`$column`) AS sum"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
@@ -482,7 +482,7 @@ class Query
     {
         $this->executeBeforeFetchHookForModel();
 
-        $this->columns = ["AVG($column) AS avg"];
+        $this->columns = ["AVG(`$column`) AS avg"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
@@ -493,7 +493,7 @@ class Query
     {
         $this->executeBeforeFetchHookForModel();
 
-        $this->columns = ["MIN($column) AS min"];
+        $this->columns = ["MIN(`$column`) AS min"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
@@ -504,7 +504,7 @@ class Query
     {
         $this->executeBeforeFetchHookForModel();
 
-        $this->columns = ["MAX($column) AS max"];
+        $this->columns = ["MAX(`$column`) AS max"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
