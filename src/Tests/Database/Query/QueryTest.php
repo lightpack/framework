@@ -38,7 +38,7 @@ final class QueryTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE `products`, `options`, `owners`;";
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -828,5 +828,44 @@ final class QueryTest extends TestCase
         foreach($chunkedRecords as $records) {
             $this->assertCount(5, $records);
         }
+    }
+
+    public function HitestItProducesCorrectSyntaxForAggregateQueries()
+    {
+        // Test 1
+        // $sql = 'SELECT COUNT(*) AS count FROM `products`';
+        // $this->query->count('*');
+        // $this->assertEquals($sql, $this->query->getCompiledCount());
+        // $this->query->resetQuery();
+
+        // Test 2
+        // $sql = 'SELECT COUNT(`id`) AS count FROM `products`';
+        // $this->query->count('id');
+        // $this->assertEquals($sql, $this->query->toSql());
+        // $this->query->resetQuery();
+
+        // Test 3
+        $sql = 'SELECT SUM(`price`) AS sum FROM `products`';
+        $this->query->sum('price');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 4
+        // $sql = 'SELECT AVG(`price`) AS avg FROM `products`';
+        // $this->query->avg('price');
+        // $this->assertEquals($sql, $this->query->toSql());
+        // $this->query->resetQuery();
+
+        // Test 5
+        // $sql = 'SELECT MIN(`price`) AS min FROM `products`';
+        // $this->query->min('price');
+        // $this->assertEquals($sql, $this->query->toSql());
+        // $this->query->resetQuery();
+
+        // Test 6
+        // $sql = 'SELECT MAX(`price`) AS max FROM `products`';
+        // $this->query->max('price');
+        // $this->assertEquals($sql, $this->query->toSql());
+        // $this->query->resetQuery();
     }
 }
