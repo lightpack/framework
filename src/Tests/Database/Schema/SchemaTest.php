@@ -72,7 +72,7 @@ final class SchemaTest extends TestCase
         // Now lets modify the description column
         $table = new Table('products', $this->connection);
 
-        $table->alterContext()->modify(function(Table $table) {
+        $this->schema->alterTable('products')->modify(function(Table $table) {
             $table->column('description')->type('varchar')->length(150);
         });
 

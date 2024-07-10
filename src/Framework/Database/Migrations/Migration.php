@@ -58,9 +58,9 @@ abstract class Migration
         $this->schema->truncateTable($table);
     }
 
-    protected function alter(string $table): Table
+    protected function alter(string $table, callable $callback): void
     {
-        return $this->schema->alterTable($table);
+        $this->schema->alterTable($table)->modify($callback);
     }
 
     /**
