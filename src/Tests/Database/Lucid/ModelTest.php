@@ -1751,4 +1751,23 @@ final class ModelTest extends TestCase
             $this->assertCount(5, $records);
         }
     }
+
+    public function testAggregateMethodsOnModel()
+    {
+        // Make sure we have no records
+        Product::query()->delete();
+
+        foreach(range(1, 10) as $item) {
+            $records[] = ['name' => 'Product name', 'color' => '#CCC', 'price' => 100];
+        }
+
+        Product::query()->insert($records);
+
+        // Assertions
+        $this->assertEquals(10, Product::query()->count());
+        $this->assertEquals(100, Product::query()->min('price'));
+        $this->assertEquals(100, Product::query()->max('price'));
+        $this->assertEquals(100, Product::query()->avg('price'));
+        $this->assertEquals(1000, Product::query()->sum('price'));
+    }
 }
