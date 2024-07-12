@@ -524,4 +524,45 @@ final class SchemaTest extends TestCase
         $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_2');
         $this->assertNull($foreignKey);
     }
+
+    public function testSchemaInspectFullTextIndexes()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->text('title')->fullText();
+            $table->text('description')->fullText();
+        });
+
+        // Query full text indexes
+        $indexes = $this->schema->inspectFullTextIndexes('products');
+        $indexes = array_column($indexes, 'INDEX_NAME');
+
+        // Assert that the full text indexes are created
+        $this->assertCount(2, $indexes);
+        $this->assertContains('title_fulltext', $indexes);
+        $this->assertContains('description_fulltext', $indexes);
+    }
+
+    public function testSchemaInspectFullTextIndex()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->text('title')->fullText();
+            $table->text('description')->fullText();
+        });
+
+        // Query full text index
+        $resultTitle = $this->schema->inspectFullTextIndex('products', 'title_fulltext');
+        $resultDescription = $this->schema->inspectFullTextIndex('products', 'description_fulltext');
+
+        // Assert that the full text index is created
+        $this->assertEquals('title_fulltext', $resultTitle['INDEX_NAME']);
+        $this->assertEquals('description_fulltext', $resultDescription['INDEX_NAME']);
+
+        // test for null
+        $result = $this->schema->inspectFullTextIndex('products', 'content_fulltext');
+        $this->assertNull($result);
+    }
 }

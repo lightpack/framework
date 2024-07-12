@@ -184,4 +184,42 @@ class Schema
         $row = $result->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    /**
+     * Inspect the list of fulltext indexes in a table.
+     * 
+     * It returns an array of fulltext index names.
+     */
+    public function inspectFullTextIndexes(string $table)
+    {
+        $fullTextIndexes = [];
+
+        $result = $this->connection->query("
+            SELECT TABLE_NAME, COLUMN_NAME, INDEX_NAME
+            FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND INDEX_TYPE = 'FULLTEXT'
+        ");
+
+        foreach ($result->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $fullTextIndexes[] = $row;
+        }
+
+        return $fullTextIndexes;
+    }
+
+    /**
+     * Inspect a fulltext index in a table.
+     * It returns an array of the fulltext index details if found, otherwise null.
+     */
+    public function inspectFullTextIndex(string $table, string $index)
+    {
+        $result = $this->connection->query("
+            SELECT TABLE_NAME, COLUMN_NAME, INDEX_NAME
+            FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND INDEX_NAME = '$index' AND INDEX_TYPE = 'FULLTEXT'
+        ");
+
+        $row = $result->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
 }
