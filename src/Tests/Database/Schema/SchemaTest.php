@@ -398,4 +398,57 @@ final class SchemaTest extends TestCase
         $this->assertFalse($resultTitle);
         $this->assertFalse($resultDescription);
     }
+
+    public function testSchemaInspectColumns()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+            $table->varchar('email', 125)->nullable();
+        });
+
+        // Query columns
+        $columns = $this->schema->inspectColumns('products');
+
+        // Assert that the columns are created
+        $this->assertEquals('id', $columns[0]);
+        $this->assertEquals('title', $columns[1]);
+        $this->assertEquals('email', $columns[2]);
+    }
+
+    public function testSchemaInspectColumn()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+            $table->varchar('email', 125)->nullable();
+        });
+
+        // Query column
+        $column = $this->schema->inspectColumn('products', 'title');
+
+        // Assert that the column is created
+        $this->assertEquals('title', $column['Field']);
+    }
+
+    public function testSchemaInspectIndexes()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125)->index();
+            $table->varchar('email', 125)->unique();
+        });
+
+        // Query indexes
+        $indexes = $this->schema->inspectIndexes('products');
+        
+        // Assert that the indexes are created
+        $this->assertCount(3, $indexes);
+        $this->assertContains('PRIMARY', $indexes);
+        $this->assertContains('title_index', $indexes);
+        $this->assertContains('email_unique', $indexes);
+    }
 }

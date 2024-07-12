@@ -23,7 +23,7 @@ class Schema
         $callback($table);
 
         $sql = (new CreateTable)->compile($table);
-        
+
         $this->connection->query($sql);
     }
 
@@ -81,8 +81,10 @@ class Schema
 
     /**
      * Inspect the list of columns in a table.
+     * 
+     * This method returns an array of column names.
      */
-    public function inspectColumns(string $table)
+    public function inspectColumns(string $table): array
     {
         $columns = [];
 
@@ -97,13 +99,78 @@ class Schema
 
     /**
      * Inspect a column in a table.
+     * It returns an array of the column details if found, otherwise null.
      */
-    public function inspectColumn(string $table, string $column)
+    public function inspectColumn(string $table, string $column): ?array
     {
         $rows = $this->connection->query('DESCRIBE ' . $table);
 
         while (($row = $rows->fetch())) {
             if ($column === $row['Field']) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Inspect the list of indexes in a table.
+     */
+    public function inspectIndexes(string $table)
+    {
+        $indexes = [];
+
+        $rows = $this->connection->query('SHOW INDEXES FROM ' . $table);
+
+        while (($row = $rows->fetch())) {
+            $indexes[] = $row['Key_name'];
+        }
+
+        return $indexes;
+    }
+
+    /**
+     * Inspect an index in a table.
+     */
+    public function inspectIndex(string $table, string $index)
+    {
+        $rows = $this->connection->query('SHOW INDEXES FROM ' . $table);
+
+        while (($row = $rows->fetch())) {
+            if ($index === $row['Key_name']) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Inspect the list of foreign keys in a table.
+     */
+    public function inspectForeignKeys(string $table)
+    {
+        $foreignKeys = [];
+
+        $rows = $this->connection->query('SHOW CREATE TABLE ' . $table);
+
+        while (($row = $rows->fetch())) {
+            $foreignKeys[] = $row['Create Table'];
+        }
+
+        return $foreignKeys;
+    }
+
+    /**
+     * Inspect a foreign key in a table.
+     */
+    public function inspectForeignKey(string $table, string $foreignKey)
+    {
+        $rows = $this->connection->query('SHOW CREATE TABLE ' . $table);
+
+        while (($row = $rows->fetch())) {
+            if (strpos($row['Create Table'], $foreignKey) !== false) {
                 return $row;
             }
         }
