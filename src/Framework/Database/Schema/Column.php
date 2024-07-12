@@ -105,6 +105,19 @@ class Column
         return $this;
     }
 
+    public function fulltext(string $indexName = null): self
+    {
+        $this->columnIndexType = self::INDEX_FULLTEXT;
+
+        if ($indexName) {
+            $this->columnIndexName = $indexName;
+        } else {
+            $this->columnIndexName = $this->columnName . '_fulltext';
+        }
+
+        return $this;
+    }
+
     public function attribute(string $columnAttribute): self
     {
         $this->columnAttribute = strtoupper($columnAttribute);

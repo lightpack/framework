@@ -60,9 +60,17 @@ class AlterTable
         return $sql;
     }
 
-    public function compileDropFullText(string $table, string $indexName): string
+    public function compileDropFullText(string $table, string ...$indexName): string
     {
-        $sql = "ALTER TABLE {$table} DROP INDEX {$indexName}";
+        // $sql = "ALTER TABLE {$table} DROP INDEX {$indexName}";
+
+        $sql = "ALTER TABLE {$table}";
+
+        foreach ($indexName as $name) {
+            $sql .= " DROP INDEX {$name},";
+        }
+
+        $sql = rtrim($sql, ',');
 
         return $sql;
     }

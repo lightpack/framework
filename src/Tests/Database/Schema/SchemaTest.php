@@ -194,14 +194,208 @@ final class SchemaTest extends TestCase
             $table->column('id')->type('int')->increments();
             $table->column('title')->type('varchar')->length(55)->index();
             $table->column('slug')->type('varchar')->length(55)->unique();
+            $table->column('status')->type('varchar')->length(55);
+            $table->column('sku')->type('varchar')->length(55);
+            $table->index('status');
+            $table->unique('sku');
         });
 
-        // Assert that the index is added
-        $result = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
-        $this->assertEquals('title', $result['Column_name']);
+        // Query indexes
+        $resultTitle = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $resultSlug = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'slug'")->fetch();
+        $resultStatus = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'status'")->fetch();
+        $resultSku = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'sku'")->fetch();
 
-        // Assert that the unique index is added
-        $result = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'slug'")->fetch();
-        $this->assertEquals('slug', $result['Column_name']);
+        // Assert that the index is added
+        $this->assertEquals('title', $resultTitle['Column_name']);
+        $this->assertEquals('slug', $resultSlug['Column_name']);
+        $this->assertEquals('status', $resultStatus['Column_name']);
+        $this->assertEquals('sku', $resultSku['Column_name']);
+    }
+
+    public function testSchemaCanAddCompositeIndexWhenCreatingTableColumns()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55);
+            $table->column('status')->type('varchar')->length(55);
+            $table->column('slug')->type('varchar')->length(55);
+            $table->column('sku')->type('varchar')->length(55);
+            $table->index(['title', 'status']);
+            $table->unique(['slug', 'sku']);
+        });
+
+        // Query indexes
+        $resultTitle = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $resultStatus = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'status'")->fetch();
+        $resultSlug = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'slug'")->fetch();
+        $resultSku = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'sku'")->fetch();
+
+        // Assert that the index is added
+        $this->assertEquals('title', $resultTitle['Column_name']);
+        $this->assertEquals('status', $resultStatus['Column_name']);
+        $this->assertEquals('slug', $resultSlug['Column_name']);
+        $this->assertEquals('sku', $resultSku['Column_name']);
+    }
+
+
+    public function testSchemaCanAlterTableAddCompositeIndex()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55);
+            $table->column('status')->type('varchar')->length(55);
+            $table->column('slug')->type('varchar')->length(55);
+            $table->column('sku')->type('varchar')->length(55);
+        });
+
+        // Add index
+        $this->schema->alterTable('products')->index(['title', 'status']);
+        $this->schema->alterTable('products')->unique(['slug', 'sku']);
+
+        // Query indexes
+        $resultTitle = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $resultStatus = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'status'")->fetch();
+        $resultSlug = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'slug'")->fetch();
+        $resultSku = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'sku'")->fetch();
+
+        // Assert that the index is added
+        $this->assertEquals('title', $resultTitle['Column_name']);
+        $this->assertEquals('status', $resultStatus['Column_name']);
+        $this->assertEquals('slug', $resultSlug['Column_name']);
+        $this->assertEquals('sku', $resultSku['Column_name']);
+    }
+
+    public function testSchemaCanAlterTableDropIndex()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55)->index();
+            $table->column('slug')->type('varchar')->length(55)->unique();
+        });
+
+        // Drop the index
+        $this->schema->alterTable('products')->dropIndex('title_index');
+        $this->schema->alterTable('products')->dropUnique('slug_unique');
+
+        // Query indexes
+        $resultTitle = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $resultSlug = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'slug'")->fetch();
+
+        // Assert that the index is dropped
+        $this->assertFalse($resultTitle);
+        $this->assertFalse($resultSlug);
+    }
+
+    public function testSchemaCanAlterTableDropCompositeIndex()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55);
+            $table->column('status')->type('varchar')->length(55);
+            $table->column('slug')->type('varchar')->length(55);
+            $table->column('sku')->type('varchar')->length(55);
+            $table->index(['title', 'status']);
+            $table->unique(['slug', 'sku']);
+        });
+
+        // Drop the index
+        $this->schema->alterTable('products')->dropIndex('title_status_index');
+        $this->schema->alterTable('products')->dropUnique('slug_sku_unique');
+
+        // Query indexes
+        $resultTitle = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $resultStatus = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'status'")->fetch();
+        $resultSlug = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'slug'")->fetch();
+        $resultSku = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'sku'")->fetch();
+
+        // Assert that the index is dropped
+        $this->assertFalse($resultTitle);
+        $this->assertFalse($resultStatus);
+        $this->assertFalse($resultSlug);
+        $this->assertFalse($resultSku);
+    }
+
+    public function testSchemaCanDropPrimaryKey()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+        });
+
+        // First we need to modify the id column to int type to avoid issue: "there can be only one auto column and it must be defined as a key"
+        $this->schema->alterTable('products')->modify(function (Table $table) {
+            $table->column('id')->type('int');
+        });
+
+        $this->schema->alterTable('products')->dropPrimary();
+
+        // Query primary key
+        $result = $this->connection->query("SHOW INDEX FROM products WHERE Key_name = 'PRIMARY'")->fetch();
+
+        // Assert that the primary key is dropped
+        $this->assertFalse($result);
+    }
+
+    public function testSchemaCanDropPrimaryColumn()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55);
+        });
+
+        // Drop the primary column
+        $this->schema->alterTable('products')->dropColumn('id');
+
+        // Query if column is dropped
+        $result = $this->connection->query("SHOW COLUMNS FROM products WHERE Field = 'id'")->fetch();
+
+        // Assert that the column is dropped
+        $this->assertFalse($result);
+    }
+
+    public function testSchemaCanAddFullTextIndex()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('text')->fullText();
+            $table->column('description')->type('text');
+            $table->fullText('description');
+        });
+
+        // Query indexes
+        $resultTitle = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $resultDescription = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'description'")->fetch();
+
+        // Assert that the index is added
+        $this->assertEquals('title', $resultTitle['Column_name']);
+        $this->assertEquals('description', $resultDescription['Column_name']);
+    }
+
+    public function testSchemaCanDropFullTextIndex()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('text')->fullText();
+            $table->column('description')->type('text')->fullText();
+        });
+
+        // Drop the index
+        $this->schema->alterTable('products')->dropFullText('title_fulltext', 'description_fulltext');
+
+        // Query indexes
+        $resultTitle = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $resultDescription = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'description'")->fetch();
+
+        // Assert that the index is dropped
+        $this->assertFalse($resultTitle);
+        $this->assertFalse($resultDescription);
     }
 }
