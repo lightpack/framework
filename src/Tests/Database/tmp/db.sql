@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `products` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(55) COLLATE utf8_unicode_ci NOT NULL,
     `color` varchar(4) COLLATE utf8_unicode_ci NOT NULL,
+    `price` decimal(10,2) NOT NULL DEFAULT '0.00',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -113,6 +114,6 @@ CREATE TABLE IF NOT EXISTS `articles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- insert dummy data for products
-INSERT INTO `products` (`id`, `name`, `color`) VALUES
-    (331, 'Dummy Product', '#09F'),
-    (332, 'Dummy Product', '#CCC');
+INSERT INTO `products` (`id`, `name`, `color`, `price`) VALUES
+    (331, 'Dummy Product', '#09F', 100.00),
+    (332, 'Dummy Product', '#CCC', 200.00);

@@ -444,14 +444,14 @@ class Query
     {
         $this->executeBeforeFetchHookForModel();
 
-        $this->columns = ['COUNT(*) AS num'];
+        $this->columns = ['COUNT(*) AS total'];
 
         $query = $this->getCompiledCount();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
         $this->columns = []; // so that pagination query can be reused
 
-        return $result->num;
+        return $result->total;
     }
 
     public function countBy(string $column)
@@ -465,6 +465,50 @@ class Query
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
 
         return $result;
+    }
+
+    public function sum(string $column)
+    {
+        $this->executeBeforeFetchHookForModel();
+
+        $this->columns = ["SUM(`$column`) AS sum"];
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
+
+        return $result->sum;
+    }
+
+    public function avg(string $column)
+    {
+        $this->executeBeforeFetchHookForModel();
+
+        $this->columns = ["AVG(`$column`) AS avg"];
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
+
+        return $result->avg;
+    }
+
+    public function min(string $column)
+    {
+        $this->executeBeforeFetchHookForModel();
+
+        $this->columns = ["MIN(`$column`) AS min"];
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
+
+        return $result->min;
+    }
+
+    public function max(string $column)
+    {
+        $this->executeBeforeFetchHookForModel();
+
+        $this->columns = ["MAX(`$column`) AS max"];
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
+
+        return $result->max;
     }
 
     public function __get(string $key)

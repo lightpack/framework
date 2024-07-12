@@ -111,7 +111,7 @@ class Compiler
         }
 
         $columns = array_map(function ($column) {
-            if (strpos($column, 'COUNT') === 0) {
+            if (strpos($column, 'COUNT') !== false || strpos($column, 'SUM') !== false || strpos($column, 'AVG') !== false || strpos($column, 'MIN') !== false || strpos($column, 'MAX') !== false) {
                 return $column;
             }
 

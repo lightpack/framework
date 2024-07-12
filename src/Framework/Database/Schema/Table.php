@@ -263,6 +263,16 @@ class Table
         }
     }
 
+    /**
+     * Drop primary key from the table.
+     * 
+     * Note: Dropping the primary key does not remove the column from the table but only the primary key constraint.
+     * 
+     * Remember that there can be only one auto column and it must be defined as a key. So if the primary key is defined as auto, 
+     * you will need to remove the auto attribute first.
+     * 
+     * Also do not forget to drop or alter foreign keys referencing the primary key.
+     */
     public function dropPrimary(): void
     {
         $sql = (new AlterTable)->compileDropPrimary($this->getName());
@@ -317,9 +327,9 @@ class Table
         }
     }
 
-    public function dropFulltext(string $indexName): void
+    public function dropFulltext(string ...$indexName): void
     {
-        $sql = (new AlterTable)->compileDropFulltext($this->getName(), $indexName);
+        $sql = (new AlterTable)->compileDropFulltext($this->getName(), ...$indexName);
 
         $this->connection->query($sql);
     }
@@ -401,6 +411,13 @@ class Table
         $this->context = self::CONTEXT_ALTER;
 
         return $this;
+    }
+
+    public function dropForeign(string ...$constraintName): void
+    {
+        $sql = (new AlterTable)->compileDropForeignKey($this->getName(), ...$constraintName);
+
+        $this->connection->query($sql);
     }
 
     private function creating(): bool
