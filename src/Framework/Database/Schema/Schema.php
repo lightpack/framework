@@ -156,10 +156,14 @@ class Schema
     {
         $foreignKeys = [];
 
-        $rows = $this->connection->query('SHOW CREATE TABLE ' . $table);
+        $result = $this->connection->query("
+            SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND REFERENCED_TABLE_NAME IS NOT NULL
+        ");
 
-        while (($row = $rows->fetch())) {
-            $foreignKeys[] = $row['Create Table'];
+        foreach ($result->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $foreignKeys[] = $row;
         }
 
         return $foreignKeys;
@@ -167,17 +171,17 @@ class Schema
 
     /**
      * Inspect a foreign key in a table.
+     * It returns an array of the foreign key details if found, otherwise null.
      */
     public function inspectForeignKey(string $table, string $foreignKey)
     {
-        $rows = $this->connection->query('SHOW CREATE TABLE ' . $table);
+        $result = $this->connection->query("
+            SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND CONSTRAINT_NAME = '$foreignKey'
+        ");
 
-        while (($row = $rows->fetch())) {
-            if (strpos($row['Create Table'], $foreignKey) !== false) {
-                return $row;
-            }
-        }
-
-        return null;
+        $row = $result->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
     }
 }

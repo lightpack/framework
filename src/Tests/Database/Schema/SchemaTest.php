@@ -475,4 +475,53 @@ final class SchemaTest extends TestCase
         $index = $this->schema->inspectIndex('products', 'email_index');
         $this->assertNull($index);
     }
+
+    public function testSchemaInspectForeignKeys()
+    {
+        // Create categories table
+        $this->schema->createTable('categories', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+        });
+
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->column('category_id')->type('bigint')->attribute('unsigned');
+            $table->foreignKey('category_id')->references('id')->on('categories');
+        });
+
+        // Query foreign keys
+        $foreignKeys = $this->schema->inspectForeignKeys('products');
+
+        // Assert that the foreign keys are created
+        $this->assertCount(1, $foreignKeys);
+        $this->assertContains('products_ibfk_1', $foreignKeys[0]);
+    }
+
+    public function testSchemaInspectForeignKey()
+    {
+        // Create categories table
+        $this->schema->createTable('categories', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+        });
+
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->column('category_id')->type('bigint')->attribute('unsigned');
+            $table->foreignKey('category_id')->references('id')->on('categories');
+        });
+
+        // Query foreign key
+        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_1');
+
+        // Assert that the foreign key is created
+        $this->assertEquals('products_ibfk_1', $foreignKey['CONSTRAINT_NAME']);
+
+        // test for null
+        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_2');
+        $this->assertNull($foreignKey);
+    }
 }
