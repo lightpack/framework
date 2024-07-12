@@ -116,8 +116,10 @@ class Schema
 
     /**
      * Inspect the list of indexes in a table.
+     * 
+     * It returns an array of index names.
      */
-    public function inspectIndexes(string $table)
+    public function inspectIndexes(string $table): array
     {
         $indexes = [];
 
@@ -132,8 +134,9 @@ class Schema
 
     /**
      * Inspect an index in a table.
+     * It returns an array of the index details if found, otherwise null.
      */
-    public function inspectIndex(string $table, string $index)
+    public function inspectIndex(string $table, string $index): ?array
     {
         $rows = $this->connection->query('SHOW INDEXES FROM ' . $table);
 

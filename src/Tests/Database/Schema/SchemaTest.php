@@ -431,6 +431,10 @@ final class SchemaTest extends TestCase
 
         // Assert that the column is created
         $this->assertEquals('title', $column['Field']);
+
+        // test for null
+        $column = $this->schema->inspectColumn('products', 'description');
+        $this->assertNull($column);
     }
 
     public function testSchemaInspectIndexes()
@@ -444,11 +448,31 @@ final class SchemaTest extends TestCase
 
         // Query indexes
         $indexes = $this->schema->inspectIndexes('products');
-        
+
         // Assert that the indexes are created
         $this->assertCount(3, $indexes);
         $this->assertContains('PRIMARY', $indexes);
         $this->assertContains('title_index', $indexes);
         $this->assertContains('email_unique', $indexes);
+    }
+
+    public function testSchemaInspectIndex()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125)->index();
+            $table->varchar('email', 125)->unique();
+        });
+
+        // Query index
+        $index = $this->schema->inspectIndex('products', 'title_index');
+
+        // Assert that the index is created
+        $this->assertEquals('title_index', $index['Key_name']);
+
+        // test for null
+        $index = $this->schema->inspectIndex('products', 'email_index');
+        $this->assertNull($index);
     }
 }
