@@ -399,6 +399,20 @@ final class SchemaTest extends TestCase
         $this->assertFalse($resultDescription);
     }
 
+    public function testSchemaInspectTables()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+        });
+
+        // Query tables
+        $tables = $this->schema->inspectTables();
+        
+        // Assert that the table is created
+        $this->assertContains('products', $tables);
+    }
+
     public function testSchemaInspectColumns()
     {
         // Create products table

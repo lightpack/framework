@@ -63,6 +63,7 @@ class Schema
     
     /**
      * Inspect the list of tables in the database.
+     * It returns an array of table names.
      */
     public function inspectTables(): array
     {
