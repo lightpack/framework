@@ -23,23 +23,27 @@ abstract class Migration
     abstract public function down(): void;
 
     /**
-     * Get a new table instance.
-     */
-    private function table(string $table): Table
-    {
-        return new Table($table, $this->connection);
-    }
-
-    /**
      * Create a new table.
      */
     protected function create(string $table, callable $callback): void
     {
-        $table = $this->table($table);
+        $this->schema->createTable($table, $callback);
+    }
 
-        $callback($table);
+    /**
+     * Alter an existing table.
+     */
+    protected function alter(string $table): Table
+    {
+        return $this->schema->alterTable($table);
+    }
 
-        $this->schema->createTable($table);
+    /**
+     * Rename a table.
+     */
+    protected function rename(string $oldTable, string $newTable): void
+    {
+        $this->schema->renameTable($oldTable, $newTable);
     }
 
     /**
@@ -56,11 +60,6 @@ abstract class Migration
     protected function truncate(string $table): void
     {
         $this->schema->truncateTable($table);
-    }
-
-    protected function alter(string $table): Table
-    {
-        return $this->schema->alterTable($table);
     }
 
     /**
