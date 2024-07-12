@@ -15,14 +15,22 @@ class Schema
         // ...
     }
 
-    /**
-     * Create a new table.
-     */
-    public function createTable(Table $table): void
+    public function createTable(string $table, callable $callback): void
     {
+        $table = new Table($table, $this->connection);
+
+        $callback($table);
+
         $sql = (new CreateTable)->compile($table);
         
         $this->connection->query($sql);
+    }
+
+    public function alterTable(string $table): Table
+    {
+        $table = new Table($table, $this->connection);
+        
+        return $table->alterContext();
     }
 
     /**
@@ -45,11 +53,11 @@ class Schema
         $this->connection->query($sql);
     }
 
-    public function alterTable(string $table): Table
+    public function renameTable(string $oldTable, string $newTable): void
     {
-        $table = new Table($table, $this->connection);
-        
-        return $table->alterContext();
+        $sql = "RENAME TABLE $oldTable TO $newTable";
+
+        $this->connection->query($sql);
     }
 
     /**
