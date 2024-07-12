@@ -1,9 +1,8 @@
 <?php
 
-use Lightpack\Database\Schema\Column;
-use Lightpack\Database\Schema\Schema;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Schema\Table;
+use Lightpack\Database\Schema\Schema;
 
 final class SchemaTest extends TestCase
 {
@@ -32,13 +31,11 @@ final class SchemaTest extends TestCase
 
     public function testSchemaCanCreateTable()
     {
-        $table = new Table('products', $this->connection);
-
-        $table->id();
-        $table->varchar('title', 125);
-        $table->varchar('email', 125)->nullable();
-
-        $this->schema->createTable($table);
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+            $table->varchar('email', 125)->nullable();
+        });
 
         $this->assertTrue(in_array('products', $this->schema->inspectTables()));
     }
@@ -46,9 +43,9 @@ final class SchemaTest extends TestCase
     public function testSchemaCanAlterTableAddColumn()
     {
         // Create products table
-        $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments();
-        $this->schema->createTable($table);
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+        });
 
         // Add new column
         $table = new Table('products', $this->connection);
@@ -65,14 +62,14 @@ final class SchemaTest extends TestCase
         $this->schema->dropTable('products');
 
         // First create the table
-        $table = new Table('products', $this->connection);
-        $table->column('description')->type('text');
-        $this->schema->createTable($table);
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('description')->type('text');
+        });
 
         // Now lets modify the description column
         $table = new Table('products', $this->connection);
 
-        $this->schema->alterTable('products')->modify(function(Table $table) {
+        $table->alterContext()->modify(function(Table $table) {
             $table->column('description')->type('varchar')->length(150);
         });
 
@@ -85,9 +82,9 @@ final class SchemaTest extends TestCase
     public function testSchemaCanTruncateTable()
     {
         // Create products table
-        $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments();
-        $this->schema->createTable($table);
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+        });
 
         // Truncate the table
         $this->schema->truncateTable('products');
@@ -100,9 +97,9 @@ final class SchemaTest extends TestCase
     public function testSchemaCanDropTable()
     {
         // Create products table
-        $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments();
-        $this->schema->createTable($table);
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+        });
 
         // Drop the table
         $this->schema->dropTable('products');
@@ -113,18 +110,18 @@ final class SchemaTest extends TestCase
     public function testSchemaCanAddForeignKey()
     {
         // Create categories table
-        $table = new Table('categories', $this->connection);
-        $table->column('id')->type('int')->increments();
-        $table->column('title')->type('varchar')->length(55);
-        $this->schema->createTable($table);
+        $this->schema->createTable('categories', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55);
+        });
 
         // Create products table
-        $table = new Table('products', $this->connection);
-        $table->column('id')->type('int')->increments();
-        $table->column('category_id')->type('int');
-        $table->column('title')->type('varchar')->length(55);
-        $table->foreignKey('category_id')->references('id')->on('categories');
-        $this->schema->createTable($table);
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('category_id')->type('int');
+            $table->column('title')->type('varchar')->length(55);
+            $table->foreignKey('category_id')->references('id')->on('categories');
+        });
 
         $this->assertTrue(in_array('products', $this->schema->inspectTables()));
     }
