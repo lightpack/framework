@@ -26,6 +26,7 @@ final class SchemaTest extends TestCase
         $this->connection->query("SET FOREIGN_KEY_CHECKS = 0");
         $this->schema->dropTable('products');
         $this->schema->dropTable('categories');
+        $this->schema->dropTable('items'); // used in testSchemaCanRenameTable
         $this->connection->query("SET FOREIGN_KEY_CHECKS = 1");
     }
 
@@ -168,5 +169,39 @@ final class SchemaTest extends TestCase
         // Assert that the table is renamed
         $this->assertFalse(in_array('products', $this->schema->inspectTables()));
         $this->assertTrue(in_array('items', $this->schema->inspectTables()));
+    }
+
+    public function testSchemaCanRenameColumn()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55);
+        });
+
+        // Rename the column
+        $this->schema->alterTable('products')->renameColumn('title', 'name');
+
+        // Assert that the column is renamed
+        $this->assertFalse(in_array('title', $this->schema->inspectColumns('products')));
+        $this->assertTrue(in_array('name', $this->schema->inspectColumns('products')));
+    }
+
+    public function testSchemaCanAddIndexWhenCreatingTable()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55)->index();
+            $table->column('slug')->type('varchar')->length(55)->unique();
+        });
+
+        // Assert that the index is added
+        $result = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'title'")->fetch();
+        $this->assertEquals('title', $result['Column_name']);
+
+        // Assert that the unique index is added
+        $result = $this->connection->query("SHOW INDEX FROM products WHERE Column_name = 'slug'")->fetch();
+        $this->assertEquals('slug', $result['Column_name']);
     }
 }
