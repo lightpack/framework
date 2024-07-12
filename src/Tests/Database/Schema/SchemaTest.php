@@ -408,7 +408,7 @@ final class SchemaTest extends TestCase
 
         // Query tables
         $tables = $this->schema->inspectTables();
-        
+
         // Assert that the table is created
         $this->assertContains('products', $tables);
     }
@@ -578,5 +578,44 @@ final class SchemaTest extends TestCase
         // test for null
         $result = $this->schema->inspectFullTextIndex('products', 'content_fulltext');
         $this->assertNull($result);
+    }
+
+    public function testSchemaCanAddEnumColumn()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->enum('status', ['active', 'inactive']);
+        });
+
+        // Assert column
+        $columns = $this->schema->inspectColumns('products');
+        $this->assertContains('status', $columns);
+
+        // Assert type
+        $column = $this->schema->inspectColumn('products', 'status');
+        $this->assertEquals("enum('active','inactive')", $column['Type']);
+    }
+
+    public function testSchemaCanModifyEnumColumn()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->enum('status', ['active', 'inactive']);
+        });
+
+        // Modify column
+        $this->schema->alterTable('products')->modify(function (Table $table) {
+            $table->enum('status', ['active', 'inactive', 'deleted']);
+        });
+
+        // Assert column
+        $columns = $this->schema->inspectColumns('products');
+        $this->assertContains('status', $columns);
+
+        // Assert type
+        $column = $this->schema->inspectColumn('products', 'status');
+        $this->assertEquals("enum('active','inactive','deleted')", $column['Type']);
     }
 }
