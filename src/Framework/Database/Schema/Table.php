@@ -403,6 +403,13 @@ class Table
         return $this;
     }
 
+    public function dropForeign(string ...$constraintName): void
+    {
+        $sql = (new AlterTable)->compileDropForeignKey($this->getName(), ...$constraintName);
+
+        $this->connection->query($sql);
+    }
+
     private function creating(): bool
     {
         return $this->context === self::CONTEXT_CREATE;

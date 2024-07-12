@@ -3,6 +3,7 @@
 namespace Lightpack\Database\Schema;
 
 use Lightpack\Database\DB;
+use Lightpack\Database\Schema\Compilers\AlterTable;
 use Lightpack\Database\Schema\Table;
 use Lightpack\Database\Schema\Compilers\DropTable;
 use Lightpack\Database\Schema\Compilers\CreateTable;
@@ -55,11 +56,11 @@ class Schema
 
     public function renameTable(string $oldTable, string $newTable): void
     {
-        $sql = "RENAME TABLE $oldTable TO $newTable";
+        $sql = (new AlterTable)->compileRename($oldTable, $newTable);
 
         $this->connection->query($sql);
     }
-
+    
     /**
      * Inspect the list of tables in the database.
      */

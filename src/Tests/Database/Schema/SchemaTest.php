@@ -48,11 +48,11 @@ final class SchemaTest extends TestCase
         });
 
         // Add new column
-        $table = new Table('products', $this->connection);
-        $table->alterContext()->add(function(Table $table) {
+        $this->schema->alterTable('products')->add(function (Table $table) {
             $table->column('description')->type('text');
         });
-
+        
+        // Assert that the column was added
         $this->assertTrue(in_array('description', $this->schema->inspectColumns('products')));
     }
 
@@ -67,16 +67,12 @@ final class SchemaTest extends TestCase
         });
 
         // Now lets modify the description column
-        $table = new Table('products', $this->connection);
-
-        $table->alterContext()->modify(function(Table $table) {
+        $this->schema->alterTable('products')->modify(function (Table $table) {
             $table->column('description')->type('varchar')->length(150);
         });
 
-        // If column modified successfully, we should get its type 
-        $descriptionColumnInfo = $this->schema->inspectColumn('products', 'description');
-
-        $this->assertEquals($descriptionColumnInfo['Type'], 'varchar(150)');
+        // Assert if column modified successfully, we should get its type 
+        $this->assertEquals('varchar(150)', $this->schema->inspectColumn('products', 'description')['Type']);
     }
 
     public function testSchemaCanTruncateTable()
@@ -89,9 +85,8 @@ final class SchemaTest extends TestCase
         // Truncate the table
         $this->schema->truncateTable('products');
 
-        $count = $this->connection->query("SELECT COUNT(*) AS count FROM products")->fetch();
-
-        $this->assertEquals(0, $count['count']);
+        // Assert that the table is empty
+        $this->assertEquals(0, $this->connection->query("SELECT COUNT(*) AS count FROM products")->fetch()['count']);
     }
 
     public function testSchemaCanDropTable()
@@ -104,6 +99,7 @@ final class SchemaTest extends TestCase
         // Drop the table
         $this->schema->dropTable('products');
 
+        // Assert that the table is dropped
         $this->assertFalse(in_array('products', $this->schema->inspectTables()));
     }
 
@@ -123,6 +119,54 @@ final class SchemaTest extends TestCase
             $table->foreignKey('category_id')->references('id')->on('categories');
         });
 
-        $this->assertTrue(in_array('products', $this->schema->inspectTables()));
+        // Query if foreign key is added
+        $result = $this->connection->query("SHOW CREATE TABLE products")->fetch();
+        $this->assertStringContainsString('FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)', $result['Create Table']);
+
+        // Query created foreign key name
+        $result = $this->connection->query("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = 'products' AND COLUMN_NAME = 'category_id'")->fetch();
+        $this->assertEquals('products_ibfk_1', $result['CONSTRAINT_NAME']);
+    }
+
+    public function testSchemaCanDropForeignKey()
+    {
+        // Create categories table
+        $this->schema->createTable('categories', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('title')->type('varchar')->length(55);
+        });
+
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+            $table->column('child_id')->type('int');
+            $table->column('category_id')->type('int');
+            $table->column('title')->type('varchar')->length(55);
+            $table->foreignKey('category_id')->references('id')->on('categories');
+            $table->foreignKey('child_id')->references('id')->on('products');
+        });
+
+        // Drop the foreign key
+        $this->schema->alterTable('products')->dropForeign('products_ibfk_1', 'products_ibfk_2');
+
+        // Assert that the foreign key is dropped
+        $result = $this->connection->query("SHOW CREATE TABLE products")->fetch();
+        $this->assertStringNotContainsString('FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)', $result['Create Table']);
+        $this->assertStringNotContainsString('FOREIGN KEY (`child_id`) REFERENCES `products` (`id`)', $result['Create Table']);
+    }
+
+    public function testSchemaCanRenameTable()
+    {
+        // Create products table
+        $this->schema->createTable('products', function (Table $table) {
+            $table->column('id')->type('int')->increments();
+        });
+
+        // Rename the table
+        $this->schema->renameTable('products', 'items');
+
+        // Assert that the table is renamed
+        $this->assertFalse(in_array('products', $this->schema->inspectTables()));
+        $this->assertTrue(in_array('items', $this->schema->inspectTables()));
     }
 }
