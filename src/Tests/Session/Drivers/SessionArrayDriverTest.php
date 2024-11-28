@@ -1,11 +1,9 @@
 <?php
 
-namespace Tests\Framework\Session\Drivers;
-
 use PHPUnit\Framework\TestCase;
 use Lightpack\Session\Drivers\ArrayDriver;
 
-class ArrayDriverTest extends TestCase
+class SessionArrayDriverTest extends TestCase
 {
     private $driver;
 

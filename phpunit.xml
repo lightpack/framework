@@ -4,10 +4,6 @@
         <testsuite name="Lightpack Framework PHPUnit Test">
             <directory>src/Tests</directory>
         </testsuite>
-        # Note: Session tests require the --stderr option
-        <testsuite name="Session Tests">
-            <directory>tests/Framework/Session</directory>
-        </testsuite>
     </testsuites>
     <php>
         <!-- MySQL Test Config -->

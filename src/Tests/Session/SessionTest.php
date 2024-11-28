@@ -1,7 +1,5 @@
 <?php
 
-namespace Tests\Framework\Session;
-
 use PHPUnit\Framework\TestCase;
 use Lightpack\Session\Session;
 use Lightpack\Session\DriverInterface;

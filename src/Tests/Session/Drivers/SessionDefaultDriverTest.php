@@ -1,7 +1,5 @@
 <?php
 
-namespace Tests\Framework\Session\Drivers;
-
 use PHPUnit\Framework\TestCase;
 use Lightpack\Session\Drivers\DefaultDriver;
 
@@ -14,7 +12,7 @@ use Lightpack\Session\Drivers\DefaultDriver;
  * 2. Sessions must be started before any headers are sent
  * 3. Using --stderr prevents PHPUnit's output from triggering headers
  */
-class DefaultDriverTest extends TestCase
+class SessionDefaultDriverTest extends TestCase
 {
     private $driver;
     private $sessionBackup;
