@@ -50,12 +50,8 @@ class DB
     {
         $this->logQuery($sql, $params);
 
-        if ($params) {
-            $this->statement = $this->connection->prepare($sql);
-            $this->statement->execute($params);
-        } else {
-            $this->statement = $this->connection->query($sql);
-        }
+        $this->statement = $this->connection->prepare($sql);
+        $this->statement->execute($params ?? []);
 
         return $this->statement;
     }
@@ -147,6 +143,26 @@ class DB
     public function rollback(): bool
     {
         return $this->connection->rollBack();
+    }
+
+    /**
+     * Quotes a string for use as a database identifier (table names, column names, etc.)
+     * 
+     * @param string $identifier The identifier to quote
+     * @return string The quoted identifier
+     */
+    public function quoteIdentifier(string $identifier): string 
+    {
+        // Split identifier into parts (for handling table.column format)
+        $parts = explode('.', $identifier);
+        
+        // Quote each part separately
+        $parts = array_map(function($part) {
+            return '`' . str_replace('`', '``', trim($part)) . '`';
+        }, $parts);
+        
+        // Join the parts back together
+        return implode('.', $parts);
     }
 
     /**
