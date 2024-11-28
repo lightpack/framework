@@ -12,6 +12,19 @@ class DB
     protected $connection;
     protected $queryLogs = [];
 
+    /**
+     * Database error codes that should be logged as critical
+     */
+    private const CRITICAL_ERROR_CODES = [
+        1044, // Access denied
+        1045, // Access denied for user
+        1146, // Table doesn't exist
+        1451, // Cannot delete or update a parent row (foreign key constraint)
+        2002, // Connection refused
+        2003, // Can't connect to MySQL server
+        2006, // MySQL server has gone away
+    ];
+
     public function __construct(
         string $dsn,
         string $username = null,
@@ -45,15 +58,31 @@ class DB
      * @param string $sql
      * @param array $params
      * @return PDOStatement
+     * @throws \PDOException with sanitized error messages
      */
     public function query(string $sql, array $params = null): PDOStatement
     {
         $this->logQuery($sql, $params);
 
-        $this->statement = $this->connection->prepare($sql);
-        $this->statement->execute($params ?? []);
-
-        return $this->statement;
+        try {
+            $this->statement = $this->connection->prepare($sql);
+            $this->statement->execute($params ?? []);
+            return $this->statement;
+        } catch (\PDOException $e) {
+            // Log the detailed error for debugging
+            $this->logError($e, $sql, $params);
+            
+            // Throw a sanitized exception for non-development environments
+            if (!app()->environment('development')) {
+                throw new \PDOException(
+                    'A database error occurred. Please try again later.',
+                    $e->getCode(),
+                    $e
+                );
+            }
+            
+            throw $e;
+        }
     }
 
     /**
@@ -213,5 +242,25 @@ class DB
 
         $this->queryLogs['queries'][] = $sql;
         $this->queryLogs['bindings'][] = $params ?? [];
+    }
+
+    /**
+     * Log database errors with appropriate severity
+     */
+    protected function logError(\PDOException $e, string $sql, ?array $params): void
+    {
+        $errorCode = (int) $e->getCode();
+        $context = [
+            'error_code' => $errorCode,
+            'sql' => $sql,
+            'params' => $params,
+            'trace' => $e->getTraceAsString(),
+        ];
+
+        if (in_array($errorCode, self::CRITICAL_ERROR_CODES)) {
+            app('logger')->critical($e->getMessage(), $context);
+        } else {
+            app('logger')->error($e->getMessage(), $context);
+        }
     }
 }
