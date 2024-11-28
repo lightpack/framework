@@ -2,7 +2,7 @@
 <phpunit bootstrap="vendor/autoload.php" colors="true" testdox="true">
     <testsuites>
         <testsuite name="Lightpack Framework PHPUnit Test">
-            <directory>src/Tests</directory>
+            <directory>./tests</directory>
         </testsuite>
     </testsuites>
     <php>
