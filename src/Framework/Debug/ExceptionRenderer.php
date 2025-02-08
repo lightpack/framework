@@ -180,6 +180,32 @@ class ExceptionRenderer
         ]);
     }
 
+    private function findRelevantTrace(Throwable $exc): array
+    {
+        $trace = $exc->getTrace();
+        $vendorPath = 'vendor/lightpack/framework/';
+        
+        // Look for the first file that's not in the framework
+        foreach ($trace as $item) {
+            if (!isset($item['file'])) {
+                continue;
+            }
+            
+            if (strpos($item['file'], $vendorPath) === false) {
+                return [
+                    'file' => $item['file'],
+                    'line' => $item['line'],
+                ];
+            }
+        }
+        
+        // If no application file found, return the original exception location
+        return [
+            'file' => $exc->getFile(),
+            'line' => $exc->getLine(),
+        ];
+    }
+
     private function renderDevelopmentTemplate(Throwable $exc, string $errorType = 'Exception')
     {
         $errorTemplate = __DIR__ . '/templates/' . $this->getRequestFormat() . '/development.php';
@@ -190,6 +216,8 @@ class ExceptionRenderer
         
         $statusCode = $exc instanceof HttpException ? $exc->getCode() : 500;
 
+        $relevantTrace = $this->findRelevantTrace($exc);
+        
         $data['type'] = $errorType;
         $data['code'] = $statusCode;
         $data['message'] = $exc->getMessage();
@@ -198,9 +226,8 @@ class ExceptionRenderer
         $data['trace'] = $this->getTrace($exc);
         $data['format'] = $this->getRequestFormat();
         $data['environment'] = $this->environment;
-        $data['code_preview'] = $this->getCodePreview($data['file'], $data['line']);
+        $data['code_preview'] = $this->getCodePreview($relevantTrace['file'], $relevantTrace['line']);
         $data['ex'] = $exc;
-
 
         $this->sendHeaders($statusCode);
         $this->renderTemplate($errorTemplate, $data);
