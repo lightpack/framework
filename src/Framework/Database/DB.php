@@ -72,15 +72,6 @@ class DB
             // Log the detailed error for debugging
             $this->logError($e, $sql, $params);
             
-            // Throw a sanitized exception for non-development environments
-            if (!app()->environment('development')) {
-                throw new \PDOException(
-                    'A database error occurred. Please try again later.',
-                    $e->getCode(),
-                    $e
-                );
-            }
-            
             throw $e;
         }
     }

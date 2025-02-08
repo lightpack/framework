@@ -194,7 +194,11 @@ class Builder extends Query
                     $normalizedItems = [];
 
                     foreach ($items as $item) {
-                        $normalizedItems += $item->getItems();
+                        if($item instanceof Collection) {
+                            $normalizedItems += $item->getItems();
+                        } else {
+                            $normalizedItems[] = $item;
+                        }
                     }
 
                     $collection = new Collection($normalizedItems);
