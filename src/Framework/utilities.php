@@ -85,11 +85,9 @@ if (!function_exists('set_env')) {
      */
     function set_env(string $key, ?string $value): void
     {
-        if (get_env($key) === null) {
-            putenv("{$key}={$value}");
-            $_ENV[$key] = $value;
-            $_SERVER[$key] = $value;
-        }
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
     }
 }
 
