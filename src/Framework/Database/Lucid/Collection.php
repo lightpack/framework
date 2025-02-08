@@ -178,11 +178,15 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function offsetGet($offset): mixed
     {
-        return $this->items[$offset];
+        return $this->items[$offset] ?? null;
     }
 
     public function offsetSet($offset, $value): void
     {
+        if (!$value instanceof Model) {
+            throw new \InvalidArgumentException('Collection items must be instances of Model');
+        }
+
         if (is_null($offset)) {
             $this->items[] = $value;
         } else {
