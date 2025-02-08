@@ -85,10 +85,18 @@ class Query
             $data = [$data];
         }
 
-        // Loop data to prepare for parameter binding
+        // Loop data to prepare for parameter binding and validate types
         foreach ($data as $row) {
+            foreach ($row as $value) {
+                if (!$this->isValidParameterType($value)) {
+                    throw new \InvalidArgumentException(
+                        'Invalid parameter type. Allowed types are: null, bool, int, float, string, DateTime'
+                    );
+                }
+            }
             $this->bindings = array_merge($this->bindings, array_values($row));
         }
+
         $columns = array_keys($data[0]);
         $compiler = new Compiler($this);
         $query = $compiler->compileBulkInsert($columns, $data, $shouldIgnore);
@@ -96,6 +104,16 @@ class Query
 
         $this->resetQuery();
         return $result;
+    }
+
+    protected function isValidParameterType($value): bool
+    {
+        return is_null($value) 
+            || is_bool($value)
+            || is_int($value) 
+            || is_float($value) 
+            || is_string($value)
+            || $value instanceof \DateTime;
     }
 
     public function update(array $data)

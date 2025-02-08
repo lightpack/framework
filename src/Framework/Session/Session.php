@@ -4,6 +4,8 @@ namespace Lightpack\Session;
 
 class Session
 {
+    private DriverInterface $driver;
+
     public function __construct(DriverInterface $driver)
     {
         $this->driver = $driver;

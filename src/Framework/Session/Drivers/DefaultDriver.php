@@ -3,17 +3,26 @@
 namespace Lightpack\Session\Drivers;
 
 use Lightpack\Session\DriverInterface;
+use RuntimeException;
 
 class DefaultDriver implements DriverInterface
 {
     public function __construct(string $name)
     {
-        if (!$this->started() || !headers_sent()) {
-            ini_set('session.use_only_cookies', TRUE);
-            ini_set('session.use_trans_sid', FALSE);
-            session_name($name);
-            session_start();
+        if ($this->started()) {
+            return;
         }
+
+        if (headers_sent($file, $line)) {
+            throw new RuntimeException(
+                sprintf('Session cannot be started: headers already sent by %s:%d', $file, $line)
+            );
+        }
+
+        ini_set('session.use_only_cookies', TRUE);
+        ini_set('session.use_trans_sid', FALSE);
+        session_name($name);
+        session_start();
 
         $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP';
     }

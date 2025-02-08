@@ -1,10 +1,30 @@
+# Dependencies
 vendor/
-storage/*
-.DS_Store
-.vscode
 composer.phar
-:memory
-.phpunit.result.cache
-code-coverage
-notes.txt
 composer.lock
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+.DS_Store
+
+# PHP development files
+.phpunit.result.cache
+.php_cs.cache
+.php_cs.dist.cache
+.phpstan.cache
+.phplint.cache
+
+# Code coverage and logs
+code-coverage/
+coverage/
+*.log
+storage/*
+:memory
+
+# Project specific
+notes.txt

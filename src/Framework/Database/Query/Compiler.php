@@ -73,30 +73,38 @@ class Compiler
             }
         }
 
-        $columns = implode(', ', $columns);
+        $quotedColumns = array_map(function($col) {
+            return $this->query->getConnection()->quoteIdentifier($col);
+        }, $columns);
+
+        $columns = implode(', ', $quotedColumns);
         $values = implode(', ', $parameters);
         $ignore = $shouldIgnore ? ' IGNORE ' : ' ';
+        $table = $this->query->getConnection()->quoteIdentifier($this->query->table);
 
-        return "INSERT" . $ignore . "INTO {$this->query->table} ($columns) VALUES $values";
+        return "INSERT" . $ignore . "INTO {$table} ($columns) VALUES $values";
     }
 
     public function compileUpdate(array $columns)
     {
         $where = $this->where();
+        $table = $this->query->getConnection()->quoteIdentifier($this->query->table);
 
         foreach ($columns as $column) {
-            $columnValuePairs[] = $column . ' = ?';
+            $quotedColumn = $this->query->getConnection()->quoteIdentifier($column);
+            $columnValuePairs[] = $quotedColumn . ' = ?';
         }
 
         $columnValuePairs = implode(', ', $columnValuePairs);
 
-        return "UPDATE {$this->query->table} SET {$columnValuePairs} {$where}";
+        return "UPDATE {$table} SET {$columnValuePairs} {$where}";
     }
 
     public function compileDelete()
     {
         $where = $this->where();
-        return "DELETE FROM {$this->query->table} {$where}";
+        $table = $this->query->getConnection()->quoteIdentifier($this->query->table);
+        return "DELETE FROM {$table} {$where}";
     }
 
     private function select(): string
