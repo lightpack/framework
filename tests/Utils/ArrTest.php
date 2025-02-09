@@ -916,4 +916,118 @@ final class ArrTest extends TestCase
         $this->assertNull($arr->get('user.profile.age', $data));
         $this->assertEquals(25, $arr->get('user.profile.age', $data, 25));
     }
+
+    public function testPartitionNumbers()
+    {
+        $numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        
+        [$evens, $odds] = (new Arr)->partition(
+            $numbers, 
+            fn($n) => $n % 2 === 0
+        );
+
+        $this->assertEquals([2, 4, 6, 8, 10], array_values($evens));
+        $this->assertEquals([1, 3, 5, 7, 9], array_values($odds));
+    }
+
+    public function testPartitionWithKeys()
+    {
+        $items = [
+            'a' => 1,
+            'b' => 2,
+            'c' => 3,
+            'd' => 4
+        ];
+
+        [$evens, $odds] = (new Arr)->partition(
+            $items,
+            fn($n) => $n % 2 === 0,
+            true
+        );
+
+        $this->assertEquals(['b' => 2, 'd' => 4], $evens);
+        $this->assertEquals(['a' => 1, 'c' => 3], $odds);
+    }
+
+    public function testPartitionWithoutKeys()
+    {
+        $items = [
+            'a' => 1,
+            'b' => 2,
+            'c' => 3,
+            'd' => 4
+        ];
+
+        [$evens, $odds] = (new Arr)->partition(
+            $items,
+            fn($n) => $n % 2 === 0,
+            false
+        );
+
+        $this->assertEquals([2, 4], $evens);
+        $this->assertEquals([1, 3], $odds);
+    }
+
+    public function testPartitionObjects()
+    {
+        $users = [
+            ['name' => 'John', 'active' => true],
+            ['name' => 'Jane', 'active' => false],
+            ['name' => 'Bob', 'active' => true],
+            ['name' => 'Alice', 'active' => false]
+        ];
+
+        [$active, $inactive] = (new Arr)->partition(
+            $users,
+            fn($user) => $user['active']
+        );
+
+        $this->assertCount(2, $active);
+        $this->assertCount(2, $inactive);
+        $this->assertTrue($active[0]['active']);
+        $this->assertFalse($inactive[1]['active']);
+    }
+
+    public function testPartitionWithCallback()
+    {
+        $scores = [
+            ['name' => 'John', 'score' => 85],
+            ['name' => 'Jane', 'score' => 92],
+            ['name' => 'Bob', 'score' => 78],
+            ['name' => 'Alice', 'score' => 95]
+        ];
+
+        [$passed, $failed] = (new Arr)->partition(
+            $scores,
+            fn($student) => $student['score'] >= 80
+        );
+
+        $this->assertCount(3, $passed);
+        $this->assertCount(1, $failed);
+        $this->assertEquals('Bob', $failed[2]['name']);
+    }
+
+    public function testPartitionEmptyArray()
+    {
+        [$passed, $failed] = (new Arr)->partition(
+            [],
+            fn($value) => true
+        );
+
+        $this->assertEmpty($passed);
+        $this->assertEmpty($failed);
+    }
+
+    public function testPartitionWithKeyInCallback()
+    {
+        $items = ['a' => 1, 'b' => 2, 'c' => 3];
+
+        [$passed, $failed] = (new Arr)->partition(
+            $items,
+            fn($value, $key) => in_array($key, ['a', 'c'])
+        );
+
+        $this->assertEquals(['a' => 1, 'c' => 3], $passed);
+        $this->assertEquals(['b' => 2], $failed);
+    }
 }

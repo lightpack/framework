@@ -765,4 +765,52 @@ class Arr
 
         return $result;
     }
+
+    /**
+     * Partition an array into two arrays based on a callback.
+     * 
+     * The first array contains items that passed the callback condition,
+     * the second array contains items that failed the condition.
+     * 
+     * Example usage:
+     * ```php
+     * $numbers = [1, 2, 3, 4, 5];
+     * [$evens, $odds] = (new Arr)->partition($numbers, fn($n) => $n % 2 === 0);
+     * 
+     * $users = [
+     *    ['name' => 'John', 'active' => true],
+     *    ['name' => 'Jane', 'active' => false]
+     * ];
+     * [$active, $inactive] = (new Arr)->partition($users, fn($user) => $user['active']);
+     * ```
+     * 
+     * @param array $array The input array
+     * @param callable $callback Function that returns true/false for each item
+     *                          Callback receives (mixed $value, int|string $key)
+     * @param bool $preserveKeys Whether to preserve the original array keys
+     * @return array Array containing two arrays: [passed items, failed items]
+     */
+    public function partition(array $array, callable $callback, bool $preserveKeys = true): array
+    {
+        $passed = [];
+        $failed = [];
+
+        foreach ($array as $key => $value) {
+            if ($callback($value, $key)) {
+                if ($preserveKeys) {
+                    $passed[$key] = $value;
+                } else {
+                    $passed[] = $value;
+                }
+            } else {
+                if ($preserveKeys) {
+                    $failed[$key] = $value;
+                } else {
+                    $failed[] = $value;
+                }
+            }
+        }
+
+        return [$passed, $failed];
+    }
 }
