@@ -737,6 +737,20 @@ class Arr
             // Handle simple picks: ['id', 'name']
             if (is_int($key)) {
                 $key = $field;
+                $value = $this->get($field, $data);
+                if ($value !== null) {
+                    $result[$key] = $value;
+                }
+                continue;
+            }
+
+            // Handle callable transformations directly: ['email' => 'trim']
+            if (is_callable($field)) {
+                $value = $this->get($key, $data);
+                if ($value !== null) {
+                    $result[$key] = $field($value);
+                }
+                continue;
             }
 
             // Handle string path: 'user.name' => 'name'
@@ -755,8 +769,12 @@ class Arr
                 $value = $this->get($from, $data, $default);
 
                 // Apply transform if provided
-                if (isset($field['transform']) && is_callable($field['transform'])) {
-                    $value = $field['transform']($value);
+                if (isset($field['transform'])) {
+                    if (is_callable($field['transform'])) {
+                        $value = $field['transform']($value);
+                    } elseif (is_string($field['transform']) && is_callable($field['transform'])) {
+                        $value = call_user_func($field['transform'], $value);
+                    }
                 }
 
                 $result[$key] = $value;

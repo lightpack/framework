@@ -865,6 +865,54 @@ final class ArrTest extends TestCase
         ], $picked);
     }
 
+    public function testPickWithShorthandTransformations()
+    {
+        $data = [
+            'email' => ' User@Example.COM ',
+            'name' => '  John Doe  ',
+            'age' => '25',
+            'tags' => 'php,mysql,redis',
+            'nested' => [
+                'email' => ' Another@Example.COM '
+            ]
+        ];
+
+        $picked = (new Arr)->pick($data, [
+            // Direct callable with anonymous function
+            'email' => fn($v) => strtolower(trim($v)),
+            
+            // Direct callable with built-in function
+            'name' => 'trim',
+            
+            // Direct callable with built-in function
+            'age' => 'intval',
+            
+            // Direct callable with anonymous function
+            'tags' => fn($v) => array_map('trim', explode(',', $v)),
+            
+            // Nested path with direct callable
+            'nested_email' => [
+                'from' => 'nested.email',
+                'transform' => fn($v) => strtolower(trim($v))
+            ],
+            
+            // Missing field with direct callable (should be skipped)
+            'missing' => fn($v) => strtoupper($v)
+        ]);
+
+        $this->assertEquals([
+            'email' => 'user@example.com',
+            'name' => 'John Doe',
+            'age' => 25,
+            'tags' => ['php', 'mysql', 'redis'],
+            'nested_email' => 'another@example.com'
+        ], $picked);
+
+        // Test that original data is unchanged
+        $this->assertEquals(' User@Example.COM ', $data['email']);
+        $this->assertEquals('  John Doe  ', $data['name']);
+    }
+
     public function testGetFromObject()
     {
         $data = (object) [
