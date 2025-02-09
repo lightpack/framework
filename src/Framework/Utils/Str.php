@@ -93,22 +93,43 @@ class Str
      * This method will return the human readable version of the passed 
      * string with the first word capitalized.
      * 
-     * For example: humanize('lazy brown fox') returns 'Lazy Brown Fox'.
+     * Examples: 
+     * - humanize('lazy_brown_fox') returns 'Lazy brown fox'
+     * - humanize('lazyBrownFox') returns 'Lazy brown fox'
      */
     public function humanize(string $subject): string
     {
-        return ucfirst(str_replace(['_', '-'], ' ', $subject));
+        // Convert camelCase to space-separated words
+        $subject = preg_replace('/(?<!^)[A-Z]/', ' $0', $subject);
+        
+        // Replace underscores and hyphens with spaces
+        $subject = str_replace(['_', '-'], ' ', $subject);
+        
+        // Collapse multiple spaces and convert to lowercase
+        $subject = strtolower(trim(preg_replace('/\s+/', ' ', $subject)));
+        
+        // Capitalize first word only
+        return ucfirst($subject);
     }
 
     /**
      * This method will capitalize the the first character of each word. 
      * This is specially useful for headlines and titles.
      * 
-     * For example: headline('lazy brown fox') returns 'Lazy brown fox'.
+     * Examples:
+     * - headline('lazy_brown_fox') returns 'Lazy Brown Fox'
+     * - headline('lazyBrownFox') returns 'Lazy Brown Fox'
      */
     public function headline(string $subject): string
     {
-        return ucwords(str_replace(['_', '-'], ' ', $subject));
+        // Convert camelCase to space-separated words
+        $subject = preg_replace('/(?<!^)[A-Z]/', ' $0', $subject);
+        
+        // Replace underscores and hyphens with spaces
+        $subject = str_replace(['_', '-'], ' ', $subject);
+        
+        // Collapse multiple spaces and capitalize each word
+        return ucwords(trim(preg_replace('/\s+/', ' ', $subject)));
     }
 
     /**
@@ -534,5 +555,50 @@ class Str
     public function collapse(string $subject): string 
     {
         return preg_replace('/\s+/', ' ', trim($subject));
+    }
+
+    /**
+     * Generate initials from a name.
+     * 
+     * Example: initials('John Doe') returns 'JD'
+     */
+    public function initials(string $name): string 
+    {
+        $words = explode(' ', $this->collapse($name));
+        $initials = '';
+        
+        foreach ($words as $word) {
+            if ($word !== '') {
+                $initials .= mb_substr($word, 0, 1);
+            }
+        }
+        
+        return mb_strtoupper($initials);
+    }
+
+    /**
+     * Create an excerpt of text.
+     * 
+     * Example: excerpt('This is a very long text that needs to be shortened', 20) returns 'This is a very...'
+     */
+    public function excerpt(string $text, int $length = 100, string $end = '...'): string 
+    {
+        // If text is shorter than length, return as is
+        if (mb_strlen($text) <= $length) {
+            return $text;
+        }
+        
+        // Get the substring
+        $excerpt = mb_substr($text, 0, $length);
+        
+        // Find the last space
+        $lastSpace = mb_strrpos($excerpt, ' ');
+        
+        // If there's a space, cut at the space to avoid cutting words
+        if ($lastSpace !== false) {
+            $excerpt = mb_substr($excerpt, 0, $lastSpace);
+        }
+        
+        return $excerpt . $end;
     }
 }

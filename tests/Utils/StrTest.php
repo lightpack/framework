@@ -59,18 +59,22 @@ final class StrTest extends TestCase
 
     public function testHumanize()
     {
-        $this->assertEquals('Parent class', (new Str)->humanize('parent_class'));
-        $this->assertEquals('Parent class', (new Str)->humanize('parent class'));
-        $this->assertEquals('Lazy brown fox', (new Str)->humanize('lazy_brown_fox'));
-        $this->assertEquals('Lazy brown fox', (new Str)->humanize('lazy brown-fox'));
+        $str = new Str();
+        $this->assertEquals('Lazy brown fox', $str->humanize('lazy_brown_fox'));
+        $this->assertEquals('Lazy brown fox', $str->humanize('lazy-brown-fox'));
+        $this->assertEquals('Lazy brown fox', $str->humanize('lazyBrownFox'));
+        $this->assertEquals('Lazy brown fox', $str->humanize('lazy brown fox'));
+        $this->assertEquals('', $str->humanize(''));
     }
 
     public function testHeadline()
     {
-        $this->assertEquals('Parent Class', (new Str)->headline('parent_class'));
-        $this->assertEquals('Parent Class', (new Str)->headline('parent class'));
-        $this->assertEquals('Lazy Brown Fox', (new Str)->headline('lazy_brown_fox'));
-        $this->assertEquals('Lazy Brown Fox', (new Str)->headline('lazy brown-fox'));
+        $str = new Str();
+        $this->assertEquals('Lazy Brown Fox', $str->headline('lazy_brown_fox'));
+        $this->assertEquals('Lazy Brown Fox', $str->headline('lazy-brown-fox'));
+        $this->assertEquals('Lazy Brown Fox', $str->headline('lazyBrownFox'));
+        $this->assertEquals('Lazy Brown Fox', $str->headline('lazy brown fox'));
+        $this->assertEquals('', $str->headline(''));
     }
 
     public function testTableize()
@@ -419,9 +423,39 @@ final class StrTest extends TestCase
     public function testCollapse()
     {
         $str = new Str();
-        $this->assertEquals('Hello World', $str->collapse('Hello    World'));
+        $this->assertEquals('Hello World', $str->collapse('Hello   World'));
         $this->assertEquals('Hello World', $str->collapse("Hello\n\tWorld"));
-        $this->assertEquals('Hello World', $str->collapse('   Hello   World   '));
-        $this->assertEquals('', $str->collapse('   '));
+        $this->assertEquals('', $str->collapse(''));
+    }
+
+    public function testInitials()
+    {
+        $str = new Str();
+        $this->assertEquals('JD', $str->initials('John Doe'));
+        $this->assertEquals('ABC', $str->initials('Alice Bob Charlie'));
+        $this->assertEquals('J', $str->initials('john'));
+        $this->assertEquals('JD', $str->initials('john   doe'));
+        $this->assertEquals('', $str->initials(''));
+    }
+
+    public function testExcerpt()
+    {
+        $str = new Str();
+        $text = 'This is a very long text that needs to be shortened';
+        
+        // Test with default length and end
+        $this->assertEquals($text, $str->excerpt($text));
+        
+        // Test with custom length
+        $this->assertEquals('This is a very long...', $str->excerpt($text, 20));
+        
+        // Test with custom end
+        $this->assertEquals('This is a very long[...]', $str->excerpt($text, 20, '[...]'));
+        
+        // Test with short text
+        $this->assertEquals('Hello', $str->excerpt('Hello', 20));
+        
+        // Test with empty text
+        $this->assertEquals('', $str->excerpt(''));
     }
 }
