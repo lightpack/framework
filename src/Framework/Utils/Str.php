@@ -4,12 +4,22 @@ namespace Lightpack\Utils;
 
 class Str
 {
+    private static ?Inflector $inflector = null;
+
+    private function getInflector(): Inflector 
+    {
+        if (self::$inflector === null) {
+            self::$inflector = new Inflector();
+        }
+        return self::$inflector;
+    }
+
     /**
      * This method returns the singular form of the passed string.
      */
     public function singularize(string $subject): string
     {
-        return (new Inflector)->singularize($subject);
+        return $this->getInflector()->singularize($subject);
     }
 
     /**
@@ -17,7 +27,7 @@ class Str
      */
     public function pluralize(string $subject): string
     {
-        return (new Inflector)->pluralize($subject);
+        return $this->getInflector()->pluralize($subject);
     }
 
     /**
@@ -28,7 +38,7 @@ class Str
      */
     public function pluralizeIf(int $number, string $subject): string
     {
-        return (new Inflector)->pluralizeIf($number, $subject);
+        return $this->getInflector()->pluralizeIf($number, $subject);
     }
 
     /**
@@ -109,7 +119,7 @@ class Str
      */
     public function tableize(string $subject): string
     {
-        return (new Inflector)->pluralize($this->underscore($subject));
+        return $this->getInflector()->pluralize($this->underscore($subject));
     }
 
     /**
@@ -120,9 +130,7 @@ class Str
      */
     public function classify(string $subject): string
     {
-        $inflector = new Inflector;
-
-        return $this->camelize($inflector->singularize($subject));
+        return $this->camelize($this->getInflector()->singularize($subject));
     }
 
     /**
@@ -133,9 +141,7 @@ class Str
      */
     public function foreignKey(string $subject): string
     {
-        $inflector = new Inflector;
-
-        return $this->underscore($inflector->singularize($subject)) . '_id';
+        return $this->underscore($this->getInflector()->singularize($subject)) . '_id';
     }
 
     /**
@@ -169,11 +175,24 @@ class Str
      */
     public function slugify(string $subject, string $separator = '-'): string
     {
-        $subject = preg_replace('/[^a-zA-Z0-9]/', ' ', $subject);
-        $subject = preg_replace('/\s+/', ' ', $subject);
+        // Convert to UTF-8 if not already
+        $subject = mb_convert_encoding($subject, 'UTF-8', mb_list_encodings());
+        
+        // Transliterate (convert ü to u, é to e, etc)
+        if (function_exists('transliterator_transliterate')) {
+            $subject = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $subject);
+        }
+        
+        // Replace non-alphanumeric characters with space
+        $subject = preg_replace('/[^a-zA-Z0-9\s_-]/', ' ', $subject);
+        
+        // Replace multiple spaces/underscores/hyphens with single space
+        $subject = preg_replace('/[\s_-]+/', ' ', $subject);
+        
+        // Trim and replace spaces with separator
         $subject = trim($subject);
         $subject = str_replace(' ', $separator, $subject);
-
+        
         return strtolower($subject);
     }
 
@@ -185,7 +204,7 @@ class Str
      */
     public function startsWith(string $subject, string $prefix): bool
     {
-        return substr($subject, 0, strlen($prefix)) == $prefix;
+        return substr($subject, 0, strlen($prefix)) === $prefix;
     }
 
     /**
@@ -196,7 +215,7 @@ class Str
      */
     public function endsWith(string $subject, string $suffix): bool
     {
-        return substr($subject, -strlen($suffix)) == $suffix;
+        return substr($subject, -strlen($suffix)) === $suffix;
     }
 
     /**
@@ -215,11 +234,12 @@ class Str
      */
     public function random(int $length = 16): string
     {
-        if ($length < 2) {
-            return '';
+        if ($length < 1) {
+            throw new \InvalidArgumentException('Length must be at least 1');
         }
 
-        return bin2hex(random_bytes($length / 2));
+        $bytes = random_bytes((int) ceil($length / 2));
+        return substr(bin2hex($bytes), 0, $length);
     }
 
     /**
@@ -239,5 +259,86 @@ class Str
         }
 
         return $masked;
+    }
+
+    /**
+     * Truncate a string to a specified length with optional append string.
+     */
+    public function truncate(string $subject, int $length, string $append = '...'): string 
+    {
+        if (mb_strlen($subject, 'UTF-8') <= $length) {
+            return $subject;
+        }
+        
+        return rtrim(mb_substr($subject, 0, $length, 'UTF-8')) . $append;
+    }
+
+    /**
+     * Limit a string by word count with optional append string.
+     */
+    public function limit(string $subject, int $words = 100, string $append = '...'): string 
+    {
+        $wordArray = str_word_count($subject, 1, '0123456789');
+        if (count($wordArray) <= $words) {
+            return $subject;
+        }
+        
+        return implode(' ', array_slice($wordArray, 0, $words)) . $append;
+    }
+
+    /**
+     * Pad a string to a certain length.
+     */
+    public function pad(string $subject, int $length, string $pad = ' ', int $type = STR_PAD_RIGHT): string 
+    {
+        return str_pad($subject, $length, $pad, $type);
+    }
+
+    /**
+     * Convert string to title case with proper UTF-8 support.
+     */
+    public function title(string $subject): string 
+    {
+        return mb_convert_case($subject, MB_CASE_TITLE, 'UTF-8');
+    }
+
+    /**
+     * Convert string to uppercase with proper UTF-8 support.
+     */
+    public function upper(string $subject): string 
+    {
+        return mb_strtoupper($subject, 'UTF-8');
+    }
+
+    /**
+     * Convert string to lowercase with proper UTF-8 support.
+     */
+    public function lower(string $subject): string 
+    {
+        return mb_strtolower($subject, 'UTF-8');
+    }
+
+    /**
+     * Escape HTML entities in a string.
+     */
+    public function escape(string $subject): string 
+    {
+        return htmlspecialchars($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Check if string is a valid email address.
+     */
+    public function isEmail(string $subject): bool 
+    {
+        return filter_var($subject, FILTER_VALIDATE_EMAIL) !== false;
+    }
+
+    /**
+     * Check if string is a valid URL.
+     */
+    public function isUrl(string $subject): bool 
+    {
+        return filter_var($subject, FILTER_VALIDATE_URL) !== false;
     }
 }

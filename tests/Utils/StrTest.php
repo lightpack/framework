@@ -128,6 +128,16 @@ final class StrTest extends TestCase
         $this->assertEquals('learn-c-programming', (new Str)->slugify('Learn C++ Programming'));
     }
 
+    public function testSlugifyWithUTF8()
+    {
+        $str = new Str();
+        $this->assertEquals('uber-grunen', $str->slugify('über grünen'));
+        $this->assertEquals('cafe-francais', $str->slugify('café français'));
+        $this->assertEquals('hello-world', $str->slugify('hello world!@#$%^&*()'));
+        $this->assertEquals('ni-hao', $str->slugify('你好')); // Chinese characters
+        $this->assertEquals('kon-nichiha', $str->slugify('こんにちは')); // Japanese characters
+    }
+
     public function testStartsWith()
     {
         $this->assertTrue((new Str)->startsWith('Hello World', 'Hello'));
@@ -148,8 +158,23 @@ final class StrTest extends TestCase
 
     public function testRandom()
     {
-        $this->assertEquals(16, strlen((new Str)->random(16)));
-        $this->assertEquals(0, strlen((new Str)->random(1)));
+        $str = new Str();
+        $this->assertEquals(16, strlen($str->random(16)));
+        $this->assertEquals(1, strlen($str->random(1)));
+    }
+
+    public function testRandomWithInvalidLength()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        (new Str)->random(0);
+    }
+
+    public function testRandomWithValidLength()
+    {
+        $str = new Str();
+        $this->assertEquals(1, strlen($str->random(1)));
+        $this->assertEquals(2, strlen($str->random(2)));
+        $this->assertEquals(16, strlen($str->random(16)));
     }
 
     public function testMask()
@@ -157,5 +182,84 @@ final class StrTest extends TestCase
         $this->assertEquals('******', (new Str)->mask('secret'));
         $this->assertEquals('******', (new Str)->mask('secret', '*'));
         $this->assertEquals('se****', (new Str)->mask('secret', '*', 2));
+    }
+
+    public function testTruncate()
+    {
+        $str = new Str();
+        $this->assertEquals('Hello...', $str->truncate('Hello World', 5));
+        $this->assertEquals('Hello World', $str->truncate('Hello World', 11));
+        $this->assertEquals('Hello***', $str->truncate('Hello World', 5, '***'));
+        $this->assertEquals('Hel...', $str->truncate('Hello', 3));
+    }
+
+    public function testTruncateWithUTF8()
+    {
+        $str = new Str();
+        $this->assertEquals('über...', $str->truncate('über grünen', 4));
+        $this->assertEquals('café...', $str->truncate('café français', 4));
+    }
+
+    public function testLimit()
+    {
+        $str = new Str();
+        $this->assertEquals('one two...', $str->limit('one two three four', 2));
+        $this->assertEquals('one two three', $str->limit('one two three', 3));
+        $this->assertEquals('one***', $str->limit('one two three', 1, '***'));
+    }
+
+    public function testPad()
+    {
+        $str = new Str();
+        $this->assertEquals('Hello     ', $str->pad('Hello', 10));
+        $this->assertEquals('     Hello', $str->pad('Hello', 10, ' ', STR_PAD_LEFT));
+        $this->assertEquals('**Hello***', $str->pad('Hello', 10, '*', STR_PAD_BOTH));
+    }
+
+    public function testTitle()
+    {
+        $str = new Str();
+        $this->assertEquals('Hello World', $str->title('hello world'));
+        $this->assertEquals('Über Grünen', $str->title('über grünen'));
+    }
+
+    public function testUpper()
+    {
+        $str = new Str();
+        $this->assertEquals('HELLO WORLD', $str->upper('Hello World'));
+        $this->assertEquals('ÜBER GRÜNEN', $str->upper('über grünen'));
+    }
+
+    public function testLower()
+    {
+        $str = new Str();
+        $this->assertEquals('hello world', $str->lower('Hello World'));
+        $this->assertEquals('über grünen', $str->lower('ÜBER GRÜNEN'));
+    }
+
+    public function testEscape()
+    {
+        $str = new Str();
+        $this->assertEquals('&lt;h1&gt;Hello&lt;/h1&gt;', $str->escape('<h1>Hello</h1>'));
+        $this->assertEquals('&quot;quoted&quot;', $str->escape('"quoted"'));
+        $this->assertEquals('Tom &amp; Jerry', $str->escape('Tom & Jerry'));
+    }
+
+    public function testIsEmail()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isEmail('test@example.com'));
+        $this->assertTrue($str->isEmail('test.name@sub.example.com'));
+        $this->assertFalse($str->isEmail('invalid.email'));
+        $this->assertFalse($str->isEmail('@example.com'));
+    }
+
+    public function testIsUrl()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isUrl('http://example.com'));
+        $this->assertTrue($str->isUrl('https://sub.example.com/path?query=1'));
+        $this->assertFalse($str->isUrl('not-a-url'));
+        $this->assertFalse($str->isUrl('http://'));
     }
 }
