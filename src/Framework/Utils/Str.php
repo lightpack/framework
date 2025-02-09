@@ -480,4 +480,59 @@ class Str
     {
         return pathinfo($path, PATHINFO_DIRNAME);
     }
+
+    /**
+     * Remove all HTML tags.
+     * 
+     * For example: strip('<p>Hello World</p>') returns 'Hello World'
+     */
+    public function strip(string $subject): string 
+    {
+        // First remove script and style tags with their content
+        $subject = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $subject);
+        $subject = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $subject);
+        
+        // Then remove remaining HTML tags
+        return strip_tags($subject);
+    }
+
+    /**
+     * Keep only alphanumeric characters.
+     * 
+     * Example: alphanumeric('Hello, World! 123') returns 'HelloWorld123'
+     */
+    public function alphanumeric(string $subject): string 
+    {
+        return preg_replace('/[^a-zA-Z0-9]/', '', $subject);
+    }
+
+    /**
+     * Keep only alphabetic characters.
+     * 
+     * Example: alpha('Hello123') returns 'Hello'
+     */
+    public function alpha(string $subject): string 
+    {
+        return preg_replace('/[^a-zA-Z]/', '', $subject);
+    }
+
+    /**
+     * Keep only numeric characters.
+     * 
+     * Example: number('Price: $123.45') returns '12345'
+     */
+    public function number(string $subject): string 
+    {
+        return preg_replace('/[^0-9]/', '', $subject);
+    }
+
+    /**
+     * Replace multiple whitespace characters with a single space.
+     * 
+     * Example: collapse('Hello    World') returns 'Hello World'
+     */
+    public function collapse(string $subject): string 
+    {
+        return preg_replace('/\s+/', ' ', trim($subject));
+    }
 }

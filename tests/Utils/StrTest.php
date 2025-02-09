@@ -383,4 +383,45 @@ final class StrTest extends TestCase
         $this->assertEquals('.', $str->dir('file.txt'));
         $this->assertEquals('/var/www', $str->dir('/var/www/.htaccess'));
     }
+
+    public function testStrip()
+    {
+        $str = new Str();
+        $this->assertEquals('Hello World', $str->strip('<p>Hello World</p>'));
+        $this->assertEquals('Hello World', $str->strip('<script>alert("xss");</script>Hello World'));
+        $this->assertEquals('', $str->strip(''));
+    }
+
+    public function testAlphanumeric()
+    {
+        $str = new Str();
+        $this->assertEquals('HelloWorld123', $str->alphanumeric('Hello, World! 123'));
+        $this->assertEquals('Test123', $str->alphanumeric('Test@123!'));
+        $this->assertEquals('', $str->alphanumeric('!@#$%^&*()'));
+    }
+
+    public function testAlpha()
+    {
+        $str = new Str();
+        $this->assertEquals('HelloWorld', $str->alpha('Hello, World! 123'));
+        $this->assertEquals('Test', $str->alpha('Test@123!'));
+        $this->assertEquals('', $str->alpha('123'));
+    }
+
+    public function testNumber()
+    {
+        $str = new Str();
+        $this->assertEquals('123', $str->number('Hello123World'));
+        $this->assertEquals('12345', $str->number('Price: $123.45'));
+        $this->assertEquals('', $str->number('No numbers here'));
+    }
+
+    public function testCollapse()
+    {
+        $str = new Str();
+        $this->assertEquals('Hello World', $str->collapse('Hello    World'));
+        $this->assertEquals('Hello World', $str->collapse("Hello\n\tWorld"));
+        $this->assertEquals('Hello World', $str->collapse('   Hello   World   '));
+        $this->assertEquals('', $str->collapse('   '));
+    }
 }
