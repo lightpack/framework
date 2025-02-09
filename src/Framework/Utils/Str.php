@@ -4,12 +4,22 @@ namespace Lightpack\Utils;
 
 class Str
 {
+    private static ?Inflector $inflector = null;
+
+    private function getInflector(): Inflector 
+    {
+        if (self::$inflector === null) {
+            self::$inflector = new Inflector();
+        }
+        return self::$inflector;
+    }
+
     /**
      * This method returns the singular form of the passed string.
      */
     public function singularize(string $subject): string
     {
-        return (new Inflector)->singularize($subject);
+        return $this->getInflector()->singularize($subject);
     }
 
     /**
@@ -17,7 +27,7 @@ class Str
      */
     public function pluralize(string $subject): string
     {
-        return (new Inflector)->pluralize($subject);
+        return $this->getInflector()->pluralize($subject);
     }
 
     /**
@@ -28,7 +38,7 @@ class Str
      */
     public function pluralizeIf(int $number, string $subject): string
     {
-        return (new Inflector)->pluralizeIf($number, $subject);
+        return $this->getInflector()->pluralizeIf($number, $subject);
     }
 
     /**
@@ -83,22 +93,43 @@ class Str
      * This method will return the human readable version of the passed 
      * string with the first word capitalized.
      * 
-     * For example: humanize('lazy brown fox') returns 'Lazy Brown Fox'.
+     * Examples: 
+     * - humanize('lazy_brown_fox') returns 'Lazy brown fox'
+     * - humanize('lazyBrownFox') returns 'Lazy brown fox'
      */
     public function humanize(string $subject): string
     {
-        return ucfirst(str_replace(['_', '-'], ' ', $subject));
+        // Convert camelCase to space-separated words
+        $subject = preg_replace('/(?<!^)[A-Z]/', ' $0', $subject);
+        
+        // Replace underscores and hyphens with spaces
+        $subject = str_replace(['_', '-'], ' ', $subject);
+        
+        // Collapse multiple spaces and convert to lowercase
+        $subject = strtolower(trim(preg_replace('/\s+/', ' ', $subject)));
+        
+        // Capitalize first word only
+        return ucfirst($subject);
     }
 
     /**
      * This method will capitalize the the first character of each word. 
      * This is specially useful for headlines and titles.
      * 
-     * For example: headline('lazy brown fox') returns 'Lazy brown fox'.
+     * Examples:
+     * - headline('lazy_brown_fox') returns 'Lazy Brown Fox'
+     * - headline('lazyBrownFox') returns 'Lazy Brown Fox'
      */
     public function headline(string $subject): string
     {
-        return ucwords(str_replace(['_', '-'], ' ', $subject));
+        // Convert camelCase to space-separated words
+        $subject = preg_replace('/(?<!^)[A-Z]/', ' $0', $subject);
+        
+        // Replace underscores and hyphens with spaces
+        $subject = str_replace(['_', '-'], ' ', $subject);
+        
+        // Collapse multiple spaces and capitalize each word
+        return ucwords(trim(preg_replace('/\s+/', ' ', $subject)));
     }
 
     /**
@@ -109,7 +140,7 @@ class Str
      */
     public function tableize(string $subject): string
     {
-        return (new Inflector)->pluralize($this->underscore($subject));
+        return $this->getInflector()->pluralize($this->underscore($subject));
     }
 
     /**
@@ -120,9 +151,7 @@ class Str
      */
     public function classify(string $subject): string
     {
-        $inflector = new Inflector;
-
-        return $this->camelize($inflector->singularize($subject));
+        return $this->camelize($this->getInflector()->singularize($subject));
     }
 
     /**
@@ -133,9 +162,7 @@ class Str
      */
     public function foreignKey(string $subject): string
     {
-        $inflector = new Inflector;
-
-        return $this->underscore($inflector->singularize($subject)) . '_id';
+        return $this->underscore($this->getInflector()->singularize($subject)) . '_id';
     }
 
     /**
@@ -169,11 +196,24 @@ class Str
      */
     public function slugify(string $subject, string $separator = '-'): string
     {
-        $subject = preg_replace('/[^a-zA-Z0-9]/', ' ', $subject);
-        $subject = preg_replace('/\s+/', ' ', $subject);
+        // Convert to UTF-8 if not already
+        $subject = mb_convert_encoding($subject, 'UTF-8', mb_list_encodings());
+        
+        // Transliterate (convert ü to u, é to e, etc)
+        if (function_exists('transliterator_transliterate')) {
+            $subject = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $subject);
+        }
+        
+        // Replace non-alphanumeric characters with space
+        $subject = preg_replace('/[^a-zA-Z0-9\s_-]/', ' ', $subject);
+        
+        // Replace multiple spaces/underscores/hyphens with single space
+        $subject = preg_replace('/[\s_-]+/', ' ', $subject);
+        
+        // Trim and replace spaces with separator
         $subject = trim($subject);
         $subject = str_replace(' ', $separator, $subject);
-
+        
         return strtolower($subject);
     }
 
@@ -185,7 +225,7 @@ class Str
      */
     public function startsWith(string $subject, string $prefix): bool
     {
-        return substr($subject, 0, strlen($prefix)) == $prefix;
+        return substr($subject, 0, strlen($prefix)) === $prefix;
     }
 
     /**
@@ -196,7 +236,7 @@ class Str
      */
     public function endsWith(string $subject, string $suffix): bool
     {
-        return substr($subject, -strlen($suffix)) == $suffix;
+        return substr($subject, -strlen($suffix)) === $suffix;
     }
 
     /**
@@ -215,11 +255,12 @@ class Str
      */
     public function random(int $length = 16): string
     {
-        if ($length < 2) {
-            return '';
+        if ($length < 1) {
+            throw new \InvalidArgumentException('Length must be at least 1');
         }
 
-        return bin2hex(random_bytes($length / 2));
+        $bytes = random_bytes((int) ceil($length / 2));
+        return substr(bin2hex($bytes), 0, $length);
     }
 
     /**
@@ -239,5 +280,325 @@ class Str
         }
 
         return $masked;
+    }
+
+    /**
+     * Truncate a string to a specified length with optional append string.
+     */
+    public function truncate(string $subject, int $length, string $append = '...'): string 
+    {
+        if (mb_strlen($subject, 'UTF-8') <= $length) {
+            return $subject;
+        }
+        
+        return rtrim(mb_substr($subject, 0, $length, 'UTF-8')) . $append;
+    }
+
+    /**
+     * Limit a string by word count with optional append string.
+     */
+    public function limit(string $subject, int $words = 100, string $append = '...'): string 
+    {
+        $wordArray = str_word_count($subject, 1, '0123456789');
+        if (count($wordArray) <= $words) {
+            return $subject;
+        }
+        
+        return implode(' ', array_slice($wordArray, 0, $words)) . $append;
+    }
+
+    /**
+     * Pad a string to a certain length.
+     */
+    public function pad(string $subject, int $length, string $pad = ' ', int $type = STR_PAD_RIGHT): string 
+    {
+        return str_pad($subject, $length, $pad, $type);
+    }
+
+    /**
+     * Convert string to title case with proper UTF-8 support.
+     */
+    public function title(string $subject): string 
+    {
+        return mb_convert_case($subject, MB_CASE_TITLE, 'UTF-8');
+    }
+
+    /**
+     * Convert string to uppercase with proper UTF-8 support.
+     */
+    public function upper(string $subject): string 
+    {
+        return mb_strtoupper($subject, 'UTF-8');
+    }
+
+    /**
+     * Convert string to lowercase with proper UTF-8 support.
+     */
+    public function lower(string $subject): string 
+    {
+        return mb_strtolower($subject, 'UTF-8');
+    }
+
+    /**
+     * Escape HTML entities in a string.
+     */
+    public function escape(string $subject): string 
+    {
+        return htmlspecialchars($subject, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Check if string is a valid email address.
+     */
+    public function isEmail(string $subject): bool 
+    {
+        return filter_var($subject, FILTER_VALIDATE_EMAIL) !== false;
+    }
+
+    /**
+     * Check if string is a valid URL.
+     */
+    public function isUrl(string $subject): bool 
+    {
+        return filter_var($subject, FILTER_VALIDATE_URL) !== false;
+    }
+
+    /**
+     * Check if string is a valid IP address (IPv4 or IPv6).
+     */
+    public function isIp(string $subject): bool 
+    {
+        return filter_var($subject, FILTER_VALIDATE_IP) !== false;
+    }
+
+    /**
+     * Check if string is a valid hex color code.
+     */
+    public function isHex(string $subject): bool 
+    {
+        return (bool) preg_match('/^#(?:[0-9a-fA-F]{3}){1,2}$/', $subject);
+    }
+
+    /**
+     * Check if string is a valid UUID (v4).
+     */
+    public function isUuid(string $subject): bool 
+    {
+        return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', strtolower($subject));
+    }
+
+    /**
+     * Check if string is a valid domain name.
+     */
+    public function isDomain(string $subject): bool 
+    {
+        return (bool) preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/', strtolower($subject));
+    }
+
+    /**
+     * Check if string is valid base64 encoded.
+     */
+    public function isBase64(string $subject): bool 
+    {
+        if (empty($subject)) {
+            return false;
+        }
+        
+        // Check if string contains only valid base64 characters
+        if (!preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $subject)) {
+            return false;
+        }
+        
+        // Attempt to decode and verify
+        $decoded = base64_decode($subject, true);
+        return $decoded !== false && base64_encode($decoded) === $subject;
+    }
+
+    /**
+     * Check if string is a valid MIME type.
+     */
+    public function isMimeType(string $subject): bool 
+    {
+        return (bool) preg_match('/^[a-z]+\/[a-z0-9\-\+\.]+$/i', $subject);
+    }
+
+    /**
+     * Check if string is a valid file path.
+     */
+    public function isPath(string $subject): bool 
+    {
+        // Check for basic path format
+        if (!preg_match('/^[a-zA-Z0-9\/_\-\.]+$/', $subject)) {
+            return false;
+        }
+        
+        // Check for directory traversal attempts
+        if (strpos($subject, '../') !== false || strpos($subject, '..\\') !== false) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Check if string is valid JSON.
+     */
+    public function isJson(string $subject): bool 
+    {
+        if (empty($subject)) {
+            return false;
+        }
+        
+        try {
+            json_decode($subject, true, 512, JSON_THROW_ON_ERROR);
+            return true;
+        } catch (\JsonException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get the filename from a file path.
+     * 
+     * Example: filename('/path/to/file.txt') returns 'file.txt'
+     */
+    public function filename(string $path): string 
+    {
+        return pathinfo($path, PATHINFO_BASENAME);
+    }
+
+    /**
+     * Get the filename without extension from a file path.
+     * 
+     * Example: stem('/path/to/file.txt') returns 'file'
+     */
+    public function stem(string $path): string 
+    {
+        $filename = $this->filename($path);
+        $pos = strpos($filename, '.');
+        if ($pos === false) {
+            return $filename;
+        }
+        return substr($filename, 0, $pos);
+    }
+
+    /**
+     * Get the file extension from a file path.
+     * 
+     * Example: ext('/path/to/file.txt') returns 'txt'
+     */
+    public function ext(string $path): string 
+    {
+        return pathinfo($path, PATHINFO_EXTENSION);
+    }
+
+    /**
+     * Get the directory name from a file path.
+     * 
+     * Example: dir('/path/to/file.txt') returns '/path/to'
+     */
+    public function dir(string $path): string 
+    {
+        return pathinfo($path, PATHINFO_DIRNAME);
+    }
+
+    /**
+     * Remove all HTML tags.
+     * 
+     * For example: strip('<p>Hello World</p>') returns 'Hello World'
+     */
+    public function strip(string $subject): string 
+    {
+        // First remove script and style tags with their content
+        $subject = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $subject);
+        $subject = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $subject);
+        
+        // Then remove remaining HTML tags
+        return strip_tags($subject);
+    }
+
+    /**
+     * Keep only alphanumeric characters.
+     * 
+     * Example: alphanumeric('Hello, World! 123') returns 'HelloWorld123'
+     */
+    public function alphanumeric(string $subject): string 
+    {
+        return preg_replace('/[^a-zA-Z0-9]/', '', $subject);
+    }
+
+    /**
+     * Keep only alphabetic characters.
+     * 
+     * Example: alpha('Hello123') returns 'Hello'
+     */
+    public function alpha(string $subject): string 
+    {
+        return preg_replace('/[^a-zA-Z]/', '', $subject);
+    }
+
+    /**
+     * Keep only numeric characters.
+     * 
+     * Example: number('Price: $123.45') returns '12345'
+     */
+    public function number(string $subject): string 
+    {
+        return preg_replace('/[^0-9]/', '', $subject);
+    }
+
+    /**
+     * Replace multiple whitespace characters with a single space.
+     * 
+     * Example: collapse('Hello    World') returns 'Hello World'
+     */
+    public function collapse(string $subject): string 
+    {
+        return preg_replace('/\s+/', ' ', trim($subject));
+    }
+
+    /**
+     * Generate initials from a name.
+     * 
+     * Example: initials('John Doe') returns 'JD'
+     */
+    public function initials(string $name): string 
+    {
+        $words = explode(' ', $this->collapse($name));
+        $initials = '';
+        
+        foreach ($words as $word) {
+            if ($word !== '') {
+                $initials .= mb_substr($word, 0, 1);
+            }
+        }
+        
+        return mb_strtoupper($initials);
+    }
+
+    /**
+     * Create an excerpt of text.
+     * 
+     * Example: excerpt('This is a very long text that needs to be shortened', 20) returns 'This is a very...'
+     */
+    public function excerpt(string $text, int $length = 100, string $end = '...'): string 
+    {
+        // If text is shorter than length, return as is
+        if (mb_strlen($text) <= $length) {
+            return $text;
+        }
+        
+        // Get the substring
+        $excerpt = mb_substr($text, 0, $length);
+        
+        // Find the last space
+        $lastSpace = mb_strrpos($excerpt, ' ');
+        
+        // If there's a space, cut at the space to avoid cutting words
+        if ($lastSpace !== false) {
+            $excerpt = mb_substr($excerpt, 0, $lastSpace);
+        }
+        
+        return $excerpt . $end;
     }
 }

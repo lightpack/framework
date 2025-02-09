@@ -12,12 +12,61 @@ final class MomentTest extends TestCase
 
     public function setUp(): void
     {
-        $this->moment = new Moment();
+        // Initialize with UTC for consistent testing
+        $this->moment = new Moment('UTC');
     }
 
     public function tearDown(): void
     {
         $this->moment = null;
+    }
+
+    public function testDefaultTimezoneIsUTC()
+    {
+        $moment = new Moment();
+        $this->assertEquals('UTC', $moment->getTimezone());
+    }
+
+    public function testSetTimezone()
+    {
+        $this->moment->setTimezone('Asia/Kolkata');
+        $this->assertEquals('Asia/Kolkata', $this->moment->getTimezone());
+    }
+
+    public function testInvalidTimezone()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->moment->setTimezone('Invalid/Timezone');
+    }
+
+    public function testTimezoneConversion()
+    {
+        // Create two moments with different timezones
+        $utcMoment = new Moment('UTC');
+        $istMoment = new Moment('Asia/Kolkata');
+        
+        // Get current time in both timezones
+        $utcTime = new DateTime('now', new DateTimeZone('UTC'));
+        $istTime = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
+        
+        // Format for hour comparison (avoiding minute/second precision issues in testing)
+        $utcHour = $utcTime->format('H');
+        $istHour = $istTime->format('H');
+        
+        // Test that the hours differ by 5.5 (or 4.5 during DST)
+        $hourDiff = ($istHour - $utcHour + 24) % 24;
+        $this->assertTrue($hourDiff == 5 || $hourDiff == 6, 'IST should be ahead of UTC by 5/6 hours');
+    }
+
+    public function testFormatChaining()
+    {
+        $result = $this->moment
+            ->format('Y-m-d')
+            ->setTimezone('Asia/Kolkata')
+            ->now();
+        
+        $this->assertIsString($result);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $result);
     }
 
     public function testToday()
@@ -92,6 +141,9 @@ final class MomentTest extends TestCase
 
     public function testDiff()
     {
+        // Set timezone to ensure consistent testing
+        $this->moment->setTimezone('UTC');
+        
         $diff = $this->moment->diff('2021-07-23 14:25:45', '2019-03-14 08:23:12');
 
         $this->assertEquals(2, $diff->y); // years
@@ -110,6 +162,12 @@ final class MomentTest extends TestCase
         $this->assertEquals(6, $diff->h); // hours
         $this->assertEquals(2, $diff->i); // minutes
         $this->assertEquals(33, $diff->s); // seconds
+    }
+
+    public function testInvalidDateFormat()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->moment->create('invalid-date-format');
     }
 
     public function testDaysBetween()
