@@ -79,24 +79,69 @@ final class StrTest extends TestCase
 
     public function testTableize()
     {
-        $this->assertEquals('users', (new Str)->tableize('User'));
-        $this->assertEquals('users', (new Str)->tableize('User'));
-        $this->assertEquals('users', (new Str)->tableize('user'));
-        $this->assertEquals('users', (new Str)->tableize('users'));
-        $this->assertEquals('user_groups', (new Str)->tableize('UserGroup'));
-        $this->assertEquals('user_groups', (new Str)->tableize('User Group'));
-        $this->assertEquals('user_groups', (new Str)->tableize('user_group'));
-        $this->assertEquals('user_groups', (new Str)->tableize('user_groups'));
+        $str = new Str();
+        
+        // Basic cases
+        $this->assertEquals('users', $str->tableize('User'));
+        $this->assertEquals('users', $str->tableize('user'));
+        $this->assertEquals('users', $str->tableize('users'));
+        
+        // Multi-word cases
+        $this->assertEquals('user_groups', $str->tableize('UserGroup'));
+        $this->assertEquals('user_groups', $str->tableize('User Group'));
+        $this->assertEquals('user_groups', $str->tableize('user_group'));
+        $this->assertEquals('user_groups', $str->tableize('user_groups'));
+        $this->assertEquals('blog_post_comments', $str->tableize('BlogPostComment'));
+        $this->assertEquals('blog_post_comments', $str->tableize('Blog Post Comment'));
+        
+        // Mixed formats
+        $this->assertEquals('user_profile_photos', $str->tableize('User_Profile_Photo'));
+        $this->assertEquals('user_profile_photos', $str->tableize('userProfilePhoto'));
+        $this->assertEquals('blog_posts', $str->tableize('Blog_Post'));
+        $this->assertEquals('blog_posts', $str->tableize('blogPost'));
+        
+        // Already plural/underscored
+        $this->assertEquals('blog_posts', $str->tableize('blog_posts'));
+        $this->assertEquals('user_photos', $str->tableize('user_photos'));
+        
+        // Edge cases
+        $this->assertEquals('posts', $str->tableize('Post'));
+        $this->assertEquals('posts', $str->tableize('posts'));
+        $this->assertEquals('boxes', $str->tableize('box'));
+        $this->assertEquals('boxes', $str->tableize('Box'));
     }
 
     public function testClassify()
     {
-        $this->assertEquals('User', (new Str)->classify('user'));
-        $this->assertEquals('User', (new Str)->classify('users'));
-        $this->assertEquals('User', (new Str)->classify('user'));
-        $this->assertEquals('UserGroup', (new Str)->classify('user_group'));
-        $this->assertEquals('UserGroup', (new Str)->classify('user_groups'));
-        $this->assertEquals('UserGroup', (new Str)->classify('user groups'));
+        $str = new Str();
+        
+        // Basic cases
+        $this->assertEquals('User', $str->classify('user'));
+        $this->assertEquals('User', $str->classify('users'));
+        $this->assertEquals('User', $str->classify('User'));
+        
+        // Multi-word cases
+        $this->assertEquals('UserGroup', $str->classify('user_group'));
+        $this->assertEquals('UserGroup', $str->classify('user_groups'));
+        $this->assertEquals('UserGroup', $str->classify('user group'));
+        $this->assertEquals('BlogPostComment', $str->classify('blog_post_comments'));
+        $this->assertEquals('BlogPostComment', $str->classify('blog post comments'));
+        
+        // Mixed formats
+        $this->assertEquals('UserProfilePhoto', $str->classify('User_Profile_Photos'));
+        $this->assertEquals('UserProfilePhoto', $str->classify('userProfilePhotos'));
+        $this->assertEquals('BlogPost', $str->classify('Blog_posts'));
+        $this->assertEquals('BlogPost', $str->classify('blogPosts'));
+        
+        // Already singular/PascalCase
+        $this->assertEquals('BlogPost', $str->classify('BlogPost'));
+        $this->assertEquals('UserPhoto', $str->classify('UserPhoto'));
+        
+        // Edge cases
+        $this->assertEquals('Post', $str->classify('Post'));
+        $this->assertEquals('Post', $str->classify('posts'));
+        $this->assertEquals('Box', $str->classify('boxes'));
+        $this->assertEquals('Box', $str->classify('Box'));
     }
 
     public function testForeignKey()
