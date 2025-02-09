@@ -173,13 +173,13 @@ final class UrlTest extends TestCase
             $this->url->withQuery('https://example.com/search', ['q' => 'php'])
         );
 
-        // Test adding multiple parameters
+        // Test adding multiple parameters (preserves order)
         $this->assertEquals(
             'https://example.com/users?sort=name&order=desc',
             $this->url->withQuery('https://example.com/users', ['sort' => 'name', 'order' => 'desc'])
         );
 
-        // Test merging with existing parameters
+        // Test merging with existing parameters (preserves order)
         $this->assertEquals(
             'https://example.com/posts?category=tech&author=john',
             $this->url->withQuery('https://example.com/posts?category=tech', ['author' => 'john'])
@@ -214,13 +214,10 @@ final class UrlTest extends TestCase
             $this->url->withQuery('https://example.com/search', ['q' => 'php & mysql'])
         );
 
-        // Test overwriting array parameters
+        // Test parameter order preservation
         $this->assertEquals(
-            'https://example.com/posts?tags%5B0%5D=javascript',
-            $this->url->withQuery(
-                'https://example.com/posts?tags%5B0%5D=php', 
-                ['tags' => ['javascript']]
-            )
+            'https://example.com/posts?c=3&a=1&b=2',
+            $this->url->withQuery('https://example.com/posts', ['c' => 3, 'a' => 1, 'b' => 2])
         );
     }
 

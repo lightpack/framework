@@ -280,11 +280,7 @@ class Url
      * 
      * // With array parameters
      * withQuery('https://example.com/posts', ['tags' => ['php', 'mysql']])
-     * Returns: https://example.com/posts?tags[]=php&tags[]=mysql
-     * 
-     * // Merge with existing query
-     * withQuery('https://example.com/posts?category=tech', ['author' => 'john'])
-     * Returns: https://example.com/posts?category=tech&author=john
+     * Returns: https://example.com/posts?tags[0]=php&tags[1]=mysql
      */
     public function withQuery(string $url, array $parameters): string
     {
