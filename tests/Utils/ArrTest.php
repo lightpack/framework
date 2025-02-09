@@ -683,4 +683,237 @@ final class ArrTest extends TestCase
         $this->expectExceptionMessage('Unsupported cast type: double');
         (new Arr)->cast(['val' => '3.14'], ['val' => 'double']);
     }
+
+    public function testPickSimpleFields()
+    {
+        $data = [
+            'id' => 1,
+            'name' => 'John',
+            'email' => 'john@example.com',
+            'password' => 'secret'
+        ];
+
+        $picked = (new Arr)->pick($data, ['id', 'name']);
+
+        $this->assertEquals(['id' => 1, 'name' => 'John'], $picked);
+    }
+
+    public function testPickWithRename()
+    {
+        $data = [
+            'user_id' => 1,
+            'user_name' => 'John',
+            'user_email' => 'john@example.com'
+        ];
+
+        $picked = (new Arr)->pick($data, [
+            'id' => 'user_id',
+            'name' => 'user_name'
+        ]);
+
+        $this->assertEquals(['id' => 1, 'name' => 'John'], $picked);
+    }
+
+    public function testPickNestedFields()
+    {
+        $data = [
+            'id' => 1,
+            'profile' => [
+                'name' => 'John',
+                'contact' => [
+                    'email' => 'john@example.com',
+                    'phone' => '1234567890'
+                ]
+            ]
+        ];
+
+        $picked = (new Arr)->pick($data, [
+            'id',
+            'name' => 'profile.name',
+            'email' => 'profile.contact.email'
+        ]);
+
+        $this->assertEquals([
+            'id' => 1,
+            'name' => 'John',
+            'email' => 'john@example.com'
+        ], $picked);
+    }
+
+    public function testPickWithTransform()
+    {
+        $data = [
+            'id' => 1,
+            'birth_year' => 1990,
+            'scores' => [10, 20, 30]
+        ];
+
+        $picked = (new Arr)->pick($data, [
+            'id',
+            'age' => [
+                'from' => 'birth_year',
+                'transform' => fn($year) => date('Y') - $year
+            ],
+            'average_score' => [
+                'from' => 'scores',
+                'transform' => fn($scores) => array_sum($scores) / count($scores)
+            ]
+        ]);
+
+        $this->assertEquals([
+            'id' => 1,
+            'age' => date('Y') - 1990,
+            'average_score' => 20
+        ], $picked);
+    }
+
+    public function testPickWithDefaults()
+    {
+        $data = [
+            'id' => 1,
+            'status' => null
+        ];
+
+        $picked = (new Arr)->pick($data, [
+            'id',
+            'name' => [
+                'from' => 'missing_name',
+                'default' => 'Unknown'
+            ],
+            'status' => [
+                'default' => 'active'
+            ]
+        ]);
+
+        $this->assertEquals([
+            'id' => 1,
+            'name' => 'Unknown',
+            'status' => 'active'
+        ], $picked);
+    }
+
+    public function testPickFromObject()
+    {
+        $data = (object) [
+            'id' => 1,
+            'profile' => (object) [
+                'name' => 'John',
+                'email' => 'john@example.com'
+            ]
+        ];
+
+        $picked = (new Arr)->pick($data, [
+            'id',
+            'name' => 'profile.name'
+        ]);
+
+        $this->assertEquals([
+            'id' => 1,
+            'name' => 'John'
+        ], $picked);
+    }
+
+    public function testPickMissingFields()
+    {
+        $data = ['id' => 1];
+
+        $picked = (new Arr)->pick($data, [
+            'id',
+            'name',  // Missing field
+            'email' => 'contact.email'  // Missing nested field
+        ]);
+
+        $this->assertEquals(['id' => 1], $picked);
+    }
+
+    public function testPickWithComplexTransformations()
+    {
+        $data = [
+            'items' => [
+                ['price' => 10, 'quantity' => 2],
+                ['price' => 20, 'quantity' => 1],
+                ['price' => 30, 'quantity' => 3]
+            ],
+            'user' => [
+                'name' => 'JOHN DOE',
+                'roles' => 'admin,user'
+            ]
+        ];
+
+        $picked = (new Arr)->pick($data, [
+            'total' => [
+                'from' => 'items',
+                'transform' => fn($items) => array_sum(array_map(
+                    fn($item) => $item['price'] * $item['quantity'],
+                    $items
+                ))
+            ],
+            'name' => [
+                'from' => 'user.name',
+                'transform' => 'strtolower'
+            ],
+            'roles' => [
+                'from' => 'user.roles',
+                'transform' => fn($roles) => explode(',', $roles)
+            ]
+        ]);
+
+        $this->assertEquals([
+            'total' => 130,  // (10*2 + 20*1 + 30*3)
+            'name' => 'john doe',
+            'roles' => ['admin', 'user']
+        ], $picked);
+    }
+
+    public function testGetFromObject()
+    {
+        $data = (object) [
+            'user' => (object) [
+                'profile' => (object) [
+                    'name' => 'John',
+                    'email' => 'john@example.com'
+                ],
+                'settings' => [
+                    'theme' => 'dark'
+                ]
+            ]
+        ];
+
+        $arr = new Arr;
+
+        // Test object property access
+        $this->assertEquals('John', $arr->get('user.profile.name', $data));
+        $this->assertEquals('john@example.com', $arr->get('user.profile.email', $data));
+
+        // Test array access within object
+        $this->assertEquals('dark', $arr->get('user.settings.theme', $data));
+
+        // Test missing properties
+        $this->assertNull($arr->get('user.profile.age', $data));
+        $this->assertEquals(25, $arr->get('user.profile.age', $data, 25));
+
+        // Test invalid path
+        $this->assertNull($arr->get('invalid.path', $data));
+        $this->assertEquals('default', $arr->get('invalid.path', $data, 'default'));
+    }
+
+    public function testGetMixedArrayAndObject()
+    {
+        $data = [
+            'user' => (object) [
+                'profile' => [
+                    'name' => 'John'
+                ]
+            ]
+        ];
+
+        $arr = new Arr;
+
+        // Test mixed array and object access
+        $this->assertEquals('John', $arr->get('user.profile.name', $data));
+
+        // Test missing properties
+        $this->assertNull($arr->get('user.profile.age', $data));
+        $this->assertEquals(25, $arr->get('user.profile.age', $data, 25));
+    }
 }

@@ -35,27 +35,49 @@ class Arr
     }
 
     /**
-     * Get value from array using 'dot' notation.
+     * Get value from array or object using 'dot' notation.
      * 
      * For example:
+     * ```php
      * $array = ['a' => ['b' => ['c' => 'd']]];
      * (new Arr)->get('a.b.c', $array) === 'd';
+     * 
+     * $object = (object)['a' => (object)['b' => 'c']];
+     * (new Arr)->get('a.b', $object) === 'c';
+     * ```
      */
-    public function get(string $key, array $array, $default = null)
+    public function get(string $key, array|object $data, $default = null)
     {
         $keys = explode('.', $key);
+        $current = $data;
 
         while (count($keys) > 1) {
             $key = array_shift($keys);
 
-            if (!isset($array[$key]) || !is_array($array[$key])) {
+            if (is_array($current)) {
+                if (!isset($current[$key]) || (!is_array($current[$key]) && !is_object($current[$key]))) {
+                    return $default;
+                }
+                $current = $current[$key];
+            } elseif (is_object($current)) {
+                if (!property_exists($current, $key) || (!is_array($current->$key) && !is_object($current->$key))) {
+                    return $default;
+                }
+                $current = $current->$key;
+            } else {
                 return $default;
             }
-
-            $array = $array[$key];
         }
 
-        return $array[array_shift($keys)] ?? $default;
+        $key = array_shift($keys);
+
+        if (is_array($current)) {
+            return $current[$key] ?? $default;
+        } elseif (is_object($current)) {
+            return property_exists($current, $key) ? $current->$key : $default;
+        }
+
+        return $default;
     }
 
     /**
@@ -652,6 +674,92 @@ class Arr
 
                 default:
                     throw new ValueError("Unsupported cast type: {$type}");
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Pick specific fields from an array or array of arrays/objects.
+     * 
+     * Features:
+     * 1. Pick multiple fields: ['id', 'name']
+     * 2. Rename fields: ['newName' => 'oldName']
+     * 3. Pick nested fields: ['user.name', 'address.city']
+     * 4. Transform values: ['age' => ['from' => 'birth_year', 'transform' => fn($v) => date('Y') - $v]]
+     * 5. Default values: ['status' => ['from' => 'state', 'default' => 'active']]
+     * 
+     * Example usage:
+     * ```php
+     * $user = [
+     *     'id' => 1,
+     *     'user' => ['name' => 'John', 'age' => 30],
+     *     'address' => ['city' => 'NY', 'country' => 'USA'],
+     *     'birth_year' => 1990
+     * ];
+     * 
+     * $picked = (new Arr)->pick($user, [
+     *     'id',                                    // Simple pick
+     *     'name' => 'user.name',                  // Nested pick with rename
+     *     'city' => 'address.city',               // Nested pick with rename
+     *     'age' => [                              // Transform with callback
+     *         'from' => 'birth_year',
+     *         'transform' => fn($v) => date('Y') - $v
+     *     ],
+     *     'status' => [                           // Pick with default value
+     *         'from' => 'account_status',
+     *         'default' => 'active'
+     *     ]
+     * ]);
+     * 
+     * // Result:
+     * // [
+     * //     'id' => 1,
+     * //     'name' => 'John',
+     * //     'city' => 'NY',
+     * //     'age' => 33,
+     * //     'status' => 'active'
+     * // ]
+     * ```
+     * 
+     * @param array|object $data The source data to pick from
+     * @param array $fields Fields to pick. Can be string keys for renaming or integer keys for direct picking
+     * @return array The resulting array with picked fields
+     * @throws ValueError If a required field is missing and no default is provided
+     */
+    public function pick(array|object $data, array $fields): array
+    {
+        $result = [];
+        $data = (array) $data;
+
+        foreach ($fields as $key => $field) {
+            // Handle simple picks: ['id', 'name']
+            if (is_int($key)) {
+                $key = $field;
+            }
+
+            // Handle string path: 'user.name' => 'name'
+            if (is_string($field)) {
+                $value = $this->get($field, $data);
+                if ($value !== null) {
+                    $result[$key] = $value;
+                }
+                continue;
+            }
+
+            // Handle complex picks with options
+            if (is_array($field)) {
+                $from = $field['from'] ?? $key;
+                $default = array_key_exists('default', $field) ? $field['default'] : null;
+                $value = $this->get($from, $data, $default);
+
+                // Apply transform if provided
+                if (isset($field['transform']) && is_callable($field['transform'])) {
+                    $value = $field['transform']($value);
+                }
+
+                $result[$key] = $value;
             }
         }
 
