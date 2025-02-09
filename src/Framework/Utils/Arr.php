@@ -176,27 +176,72 @@ class Arr
     }
 
     /**
-     * Groups the items of an array by a given key.
-     *
-     * @param string $key The key by which to group the items.
-     * @param array $items The array or collection of items to be grouped.
-     * @param bool $preserveKeys (optional) Whether to preserve the keys of the grouped items. Defaults to false.
-     * @return array The grouped array with keys representing the grouping criteria and values representing the grouped items.
+     * Groups the items of an array by one or more keys.
+     * 
+     * This method supports both single-level and multi-level grouping:
+     * 
+     * Single level grouping:
+     * ```php
+     * $users = [
+     *    ['name' => 'John', 'age' => 30],
+     *    ['name' => 'Jane', 'age' => 30]
+     * ];
+     * $byAge = (new Arr)->groupBy('age', $users);
+     * // Result: ['30' => [['name' => 'John', 'age' => 30], ['name' => 'Jane', 'age' => 30]]]
+     * ```
+     * 
+     * Multi-level grouping:
+     * ```php
+     * $users = [
+     *    ['country' => 'USA', 'state' => 'CA', 'name' => 'John'],
+     *    ['country' => 'USA', 'state' => 'NY', 'name' => 'Jane']
+     * ];
+     * $grouped = (new Arr)->groupBy(['country', 'state'], $users);
+     * // Result: ['USA' => ['CA' => [...], 'NY' => [...]]]
+     * ```
+     * 
+     * @param string|array $keys The key(s) to group by. Can be a string for single level or array for multi-level grouping
+     * @param array $items The array of items to group
+     * @param bool $preserveKeys Whether to preserve the keys of the grouped items
+     * @return array The grouped array
+     * @throws ValueError When key is empty or keys array is empty
      */
-    function groupBy(string $key, array $items, bool $preserveKeys = false)
+    public function groupBy($keys, array $items, bool $preserveKeys = false): array
     {
-        $grouped = [];
+        if (empty($keys)) {
+            throw new ValueError('Key or keys array cannot be empty');
+        }
 
-        foreach ($items as $index => $item) {
-            if (array_key_exists($key, $item)) {
+        // Convert string key to array for consistent processing
+        $keys = (array) $keys;
+
+        if (count($keys) === 1) {
+            // Single level grouping
+            $key = $keys[0];
+            $grouped = [];
+
+            foreach ($items as $index => $item) {
+                if (!isset($item[$key])) {
+                    continue;
+                }
+
                 $groupKey = $item[$key];
-
                 if ($preserveKeys) {
                     $grouped[$groupKey][$index] = $item;
                 } else {
                     $grouped[$groupKey][] = $item;
                 }
             }
+
+            return $grouped;
+        }
+
+        // Multi-level grouping
+        $firstKey = array_shift($keys);
+        $grouped = $this->groupBy($firstKey, $items, $preserveKeys);
+
+        foreach ($grouped as $key => &$group) {
+            $group = $this->groupBy($keys, $group, $preserveKeys);
         }
 
         return $grouped;
@@ -397,85 +442,5 @@ class Arr
         }
 
         return array_chunk($array, $size, $preserveKeys);
-    }
-
-    /**
-     * Group an array by multiple keys, creating a deeply nested structure.
-     * 
-     * This method is incredibly powerful for:
-     * 1. Hierarchical Data Organization:
-     *    ```php
-     *    $users = [
-     *        ['country' => 'USA', 'state' => 'CA', 'name' => 'John'],
-     *        ['country' => 'USA', 'state' => 'NY', 'name' => 'Jane']
-     *    ];
-     *    $byLocation = (new Arr)->groupByMultiple($users, ['country', 'state']);
-     *    // Access: $byLocation['USA']['CA'][0]['name'] // "John"
-     *    ```
-     * 
-     * 2. Multi-level Category Trees:
-     *    ```php
-     *    $products = [
-     *        ['category' => 'Electronics', 'type' => 'Laptop', 'brand' => 'Dell'],
-     *        ['category' => 'Electronics', 'type' => 'Phone', 'brand' => 'Apple']
-     *    ];
-     *    $tree = (new Arr)->groupByMultiple($products, ['category', 'type', 'brand']);
-     *    ```
-     * 
-     * 3. Sales/Analytics Reports:
-     *    ```php
-     *    $sales = [
-     *        ['year' => 2023, 'quarter' => 'Q1', 'region' => 'West', 'amount' => 1000],
-     *        ['year' => 2023, 'quarter' => 'Q1', 'region' => 'East', 'amount' => 1500]
-     *    ];
-     *    $report = (new Arr)->groupByMultiple($sales, ['year', 'quarter', 'region']);
-     *    ```
-     * 
-     * 4. Dynamic Filter Systems:
-     *    ```php
-     *    $items = [
-     *        ['status' => 'active', 'priority' => 'high', 'type' => 'bug'],
-     *        ['status' => 'active', 'priority' => 'low', 'type' => 'feature']
-     *    ];
-     *    $filters = (new Arr)->groupByMultiple($items, ['status', 'priority', 'type']);
-     *    ```
-     * 
-     * @param array $array The input array to group
-     * @param array $keys The keys to group by, in order of hierarchy
-     * @throws ValueError When keys array is empty
-     * @return array The grouped array
-     */
-    public function groupByMultiple(array $array, array $keys): array
-    {
-        if (empty($keys)) {
-            throw new ValueError('Keys array cannot be empty');
-        }
-
-        if (empty($array)) {
-            return [];
-        }
-
-        $result = [];
-        
-        foreach ($array as $item) {
-            $current = &$result;
-            
-            foreach ($keys as $key) {
-                $value = is_array($item) ? ($item[$key] ?? null) : ($item->{$key} ?? null);
-                if ($value === null) {
-                    continue 2; // Skip items with missing keys
-                }
-                
-                if (!isset($current[$value])) {
-                    $current[$value] = [];
-                }
-                
-                $current = &$current[$value];
-            }
-            
-            $current[] = $item;
-        }
-        
-        return $result;
     }
 }

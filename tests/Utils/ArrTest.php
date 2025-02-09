@@ -185,6 +185,18 @@ final class ArrTest extends TestCase
         $this->assertEquals([], $result);
     }
 
+    public function testGroupByEmptyKey()
+    {
+        $items = [
+            ['name' => 'John', 'age' => 25],
+            ['name' => 'Jane', 'age' => 30]
+        ];
+
+        $this->expectException(\ValueError::class);
+        $this->expectExceptionMessage('Key or keys array cannot be empty');
+        (new Arr)->groupBy('', $items);
+    }
+
     public function testGroupByMissingKey()
     {
         $items = [
@@ -198,7 +210,7 @@ final class ArrTest extends TestCase
         $this->assertEquals([], $result);
     }
 
-    public function testGroupBy()
+    public function testGroupBySingleKey()
     {
         $items = [
             ['name' => 'John', 'age' => 25, 'country' => 'USA'],
@@ -206,6 +218,8 @@ final class ArrTest extends TestCase
             ['name' => 'Bob', 'age' => 22, 'country' => 'USA'],
             ['name' => 'Alice', 'age' => 28, 'country' => 'Canada'],
         ];
+        
+        // Test with string key
         $result = (new Arr)->groupBy('country', $items);
 
         $expectedResult = [
@@ -220,6 +234,10 @@ final class ArrTest extends TestCase
         ];
 
         $this->assertEquals($expectedResult, $result);
+
+        // Test with single key in array
+        $result2 = (new Arr)->groupBy(['country'], $items);
+        $this->assertEquals($expectedResult, $result2);
     }
 
     public function testGroupByPreserveKeys()
@@ -244,5 +262,167 @@ final class ArrTest extends TestCase
         ];
         
         $this->assertEquals($expectedResult, $result);
+    }
+
+    public function testGroupByMultipleKeys()
+    {
+        // Test basic multi-level grouping
+        $items = [
+            ['country' => 'USA', 'state' => 'CA', 'city' => 'LA', 'name' => 'John'],
+            ['country' => 'USA', 'state' => 'CA', 'city' => 'SF', 'name' => 'Jane'],
+            ['country' => 'USA', 'state' => 'NY', 'city' => 'NYC', 'name' => 'Bob'],
+            ['country' => 'Canada', 'state' => 'ON', 'city' => 'Toronto', 'name' => 'Alice']
+        ];
+
+        $result = (new Arr)->groupBy(['country', 'state'], $items);
+
+        // Assertions for structure
+        $this->assertCount(2, $result); // USA and Canada
+        $this->assertCount(2, $result['USA']); // CA and NY
+        $this->assertCount(2, $result['USA']['CA']); // LA and SF
+
+        // Test missing intermediate keys
+        $items = [
+            ['a' => 1, 'b' => 2, 'c' => 3],
+            ['a' => 1, 'c' => 4], // missing 'b'
+            ['a' => 2, 'b' => 3, 'c' => 5]
+        ];
+        $result = (new Arr)->groupBy(['a', 'b'], $items);
+        
+        $this->assertCount(2, $result); // 1 and 2
+        $this->assertCount(1, $result[1][2] ?? []); // One item with a=1, b=2
+    }
+
+    public function testSet()
+    {
+        $array = ['a' => ['b' => []]];
+        
+        // Test basic set
+        $this->assertEquals(
+            ['a' => ['b' => ['c' => 'value']]],
+            (new Arr)->set('a.b.c', 'value', $array)
+        );
+
+        // Test setting deep nested value
+        $this->assertEquals(
+            ['a' => ['b' => ['c' => ['d' => 'deep']]]],
+            (new Arr)->set('a.b.c.d', 'deep', $array)
+        );
+
+        // Test setting value in non-existent path
+        $array = ['x' => 1];
+        $this->assertEquals(
+            ['x' => 1, 'new' => ['path' => 'value']],
+            (new Arr)->set('new.path', 'value', $array)
+        );
+
+        // Test empty key
+        $this->expectException(\ValueError::class);
+        $this->expectExceptionMessage('Key cannot be empty');
+        (new Arr)->set('', 'value', $array);
+    }
+
+    public function testMerge()
+    {
+        // Test basic merge
+        $array1 = ['a' => 1, 'b' => 2];
+        $array2 = ['b' => 3, 'c' => 4];
+        $expected = ['a' => 1, 'b' => 3, 'c' => 4];
+        $this->assertEquals($expected, (new Arr)->merge($array1, $array2));
+
+        // Test nested merge
+        $array1 = ['a' => ['b' => 2], 'c' => 3];
+        $array2 = ['a' => ['b' => 4, 'd' => 5]];
+        $expected = ['a' => ['b' => 4, 'd' => 5], 'c' => 3];
+        $this->assertEquals($expected, (new Arr)->merge($array1, $array2));
+
+        // Test deep nested merge
+        $array1 = ['a' => ['b' => ['c' => 1]]];
+        $array2 = ['a' => ['b' => ['c' => 2, 'd' => 3]]];
+        $expected = ['a' => ['b' => ['c' => 2, 'd' => 3]]];
+        $this->assertEquals($expected, (new Arr)->merge($array1, $array2));
+    }
+
+    public function testPluck()
+    {
+        // Test plucking from array of arrays
+        $items = [
+            ['id' => 1, 'name' => 'John'],
+            ['id' => 2, 'name' => 'Jane'],
+            ['id' => 3, 'name' => 'Bob']
+        ];
+        $this->assertEquals(['John', 'Jane', 'Bob'], (new Arr)->pluck('name', $items));
+
+        // Test plucking with key by
+        $this->assertEquals(
+            [1 => 'John', 2 => 'Jane', 3 => 'Bob'],
+            (new Arr)->pluck('name', $items, 'id')
+        );
+
+        // Test plucking from array of objects
+        $objects = array_map(function($item) {
+            return (object)$item;
+        }, $items);
+        $this->assertEquals(['John', 'Jane', 'Bob'], (new Arr)->pluck('name', $objects));
+        $this->assertEquals(
+            [1 => 'John', 2 => 'Jane', 3 => 'Bob'],
+            (new Arr)->pluck('name', $objects, 'id')
+        );
+
+        // Test plucking non-existent key
+        $this->assertEquals([], (new Arr)->pluck('invalid', $items));
+
+        // Test empty key
+        $this->expectException(\ValueError::class);
+        $this->expectExceptionMessage('Key cannot be empty');
+        (new Arr)->pluck('', $items);
+    }
+
+    public function testShuffle()
+    {
+        $items = ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5];
+        
+        // Test basic shuffle
+        $shuffled = (new Arr)->shuffle($items);
+        $this->assertCount(count($items), $shuffled);
+        $this->assertEquals(array_sum($items), array_sum($shuffled));
+        $this->assertNotEquals(array_values($items), array_values($shuffled));
+
+        // Test shuffle with preserved keys
+        $shuffled = (new Arr)->shuffle($items, true);
+        $this->assertCount(count($items), $shuffled);
+        $this->assertEquals(array_sum($items), array_sum($shuffled));
+        $this->assertEquals(array_keys($items), array_keys($shuffled));
+        $this->assertNotEquals(array_values($items), array_values($shuffled));
+
+        // Test empty array
+        $this->assertEquals([], (new Arr)->shuffle([]));
+        $this->assertEquals([], (new Arr)->shuffle([], true));
+    }
+
+    public function testChunk()
+    {
+        $items = range(1, 10);
+
+        // Test basic chunking
+        $chunks = (new Arr)->chunk($items, 3);
+        $this->assertCount(4, $chunks);
+        $this->assertEquals([1, 2, 3], $chunks[0]);
+        $this->assertEquals([10], $chunks[3]);
+
+        // Test chunking with preserved keys
+        $items = ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4];
+        $chunks = (new Arr)->chunk($items, 2, true);
+        $this->assertCount(2, $chunks);
+        $this->assertEquals(['a' => 1, 'b' => 2], $chunks[0]);
+        $this->assertEquals(['c' => 3, 'd' => 4], $chunks[1]);
+
+        // Test empty array
+        $this->assertEquals([], (new Arr)->chunk([], 5));
+
+        // Test invalid chunk size
+        $this->expectException(\ValueError::class);
+        $this->expectExceptionMessage('Chunk size must be greater than 0');
+        (new Arr)->chunk($items, 0);
     }
 }
