@@ -262,4 +262,125 @@ final class StrTest extends TestCase
         $this->assertFalse($str->isUrl('not-a-url'));
         $this->assertFalse($str->isUrl('http://'));
     }
+
+    public function testIsIp()
+    {
+        $str = new Str();
+        // IPv4
+        $this->assertTrue($str->isIp('192.168.1.1'));
+        $this->assertTrue($str->isIp('127.0.0.1'));
+        // IPv6
+        $this->assertTrue($str->isIp('2001:0db8:85a3:0000:0000:8a2e:0370:7334'));
+        $this->assertTrue($str->isIp('::1'));
+        // Invalid
+        $this->assertFalse($str->isIp('256.256.256.256'));
+        $this->assertFalse($str->isIp('not.an.ip.address'));
+    }
+
+    public function testIsHex()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isHex('#fff'));
+        $this->assertTrue($str->isHex('#000000'));
+        $this->assertTrue($str->isHex('#FF0000'));
+        $this->assertFalse($str->isHex('fff'));
+        $this->assertFalse($str->isHex('#ffff'));
+        $this->assertFalse($str->isHex('#xyz'));
+    }
+
+    public function testIsUuid()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isUuid('123e4567-e89b-42d3-a456-556642440000'));
+        $this->assertFalse($str->isUuid('123e4567-e89b-12d3-a456-556642440000')); // Not v4
+        $this->assertFalse($str->isUuid('not-a-uuid'));
+    }
+
+    public function testIsDomain()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isDomain('example.com'));
+        $this->assertTrue($str->isDomain('sub.example.com'));
+        $this->assertTrue($str->isDomain('sub-domain.example.com'));
+        $this->assertFalse($str->isDomain('not_a_domain'));
+        $this->assertFalse($str->isDomain('example'));
+        $this->assertFalse($str->isDomain('-example.com'));
+    }
+
+    public function testIsBase64()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isBase64(base64_encode('Hello World')));
+        $this->assertTrue($str->isBase64('SGVsbG8gV29ybGQ=')); // "Hello World"
+        $this->assertFalse($str->isBase64('Not Base64!'));
+        $this->assertFalse($str->isBase64(''));
+    }
+
+    public function testIsMimeType()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isMimeType('text/plain'));
+        $this->assertTrue($str->isMimeType('application/json'));
+        $this->assertTrue($str->isMimeType('image/jpeg'));
+        $this->assertTrue($str->isMimeType('application/vnd.ms-excel'));
+        $this->assertFalse($str->isMimeType('not/a/mime'));
+        $this->assertFalse($str->isMimeType('text'));
+    }
+
+    public function testIsPath()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isPath('/path/to/file.txt'));
+        $this->assertTrue($str->isPath('file.txt'));
+        $this->assertTrue($str->isPath('./file.txt'));
+        $this->assertFalse($str->isPath('../file.txt')); // Directory traversal
+        $this->assertFalse($str->isPath('file*.txt')); // Invalid character
+    }
+
+    public function testIsJson()
+    {
+        $str = new Str();
+        $this->assertTrue($str->isJson('{"name":"John","age":30}'));
+        $this->assertTrue($str->isJson('[1,2,3]'));
+        $this->assertTrue($str->isJson('{"nested":{"key":"value"}}'));
+        $this->assertFalse($str->isJson('{invalid json}'));
+        $this->assertFalse($str->isJson(''));
+    }
+
+    public function testFilename()
+    {
+        $str = new Str();
+        $this->assertEquals('file.txt', $str->filename('/path/to/file.txt'));
+        $this->assertEquals('file.txt', $str->filename('file.txt'));
+        $this->assertEquals('image.jpg', $str->filename('/var/www/html/uploads/image.jpg'));
+        $this->assertEquals('.htaccess', $str->filename('/var/www/.htaccess'));
+    }
+
+    public function testStem()
+    {
+        $str = new Str();
+        $this->assertEquals('file', $str->stem('/path/to/file.txt'));
+        $this->assertEquals('image', $str->stem('/var/www/html/uploads/image.jpg'));
+        $this->assertEquals('script', $str->stem('script.min.js'));
+        $this->assertEquals('', $str->stem('.htaccess'));
+    }
+
+    public function testExt()
+    {
+        $str = new Str();
+        $this->assertEquals('txt', $str->ext('/path/to/file.txt'));
+        $this->assertEquals('jpg', $str->ext('/var/www/html/uploads/image.jpg'));
+        $this->assertEquals('js', $str->ext('script.min.js'));
+        $this->assertEquals('htaccess', $str->ext('.htaccess'));
+        $this->assertEquals('', $str->ext('README'));
+    }
+
+    public function testDir()
+    {
+        $str = new Str();
+        $this->assertEquals('/path/to', $str->dir('/path/to/file.txt'));
+        $this->assertEquals('/var/www/html/uploads', $str->dir('/var/www/html/uploads/image.jpg'));
+        $this->assertEquals('.', $str->dir('file.txt'));
+        $this->assertEquals('/var/www', $str->dir('/var/www/.htaccess'));
+    }
 }

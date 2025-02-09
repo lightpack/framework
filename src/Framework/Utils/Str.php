@@ -341,4 +341,143 @@ class Str
     {
         return filter_var($subject, FILTER_VALIDATE_URL) !== false;
     }
+
+    /**
+     * Check if string is a valid IP address (IPv4 or IPv6).
+     */
+    public function isIp(string $subject): bool 
+    {
+        return filter_var($subject, FILTER_VALIDATE_IP) !== false;
+    }
+
+    /**
+     * Check if string is a valid hex color code.
+     */
+    public function isHex(string $subject): bool 
+    {
+        return (bool) preg_match('/^#(?:[0-9a-fA-F]{3}){1,2}$/', $subject);
+    }
+
+    /**
+     * Check if string is a valid UUID (v4).
+     */
+    public function isUuid(string $subject): bool 
+    {
+        return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', strtolower($subject));
+    }
+
+    /**
+     * Check if string is a valid domain name.
+     */
+    public function isDomain(string $subject): bool 
+    {
+        return (bool) preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/', strtolower($subject));
+    }
+
+    /**
+     * Check if string is valid base64 encoded.
+     */
+    public function isBase64(string $subject): bool 
+    {
+        if (empty($subject)) {
+            return false;
+        }
+        
+        // Check if string contains only valid base64 characters
+        if (!preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $subject)) {
+            return false;
+        }
+        
+        // Attempt to decode and verify
+        $decoded = base64_decode($subject, true);
+        return $decoded !== false && base64_encode($decoded) === $subject;
+    }
+
+    /**
+     * Check if string is a valid MIME type.
+     */
+    public function isMimeType(string $subject): bool 
+    {
+        return (bool) preg_match('/^[a-z]+\/[a-z0-9\-\+\.]+$/i', $subject);
+    }
+
+    /**
+     * Check if string is a valid file path.
+     */
+    public function isPath(string $subject): bool 
+    {
+        // Check for basic path format
+        if (!preg_match('/^[a-zA-Z0-9\/_\-\.]+$/', $subject)) {
+            return false;
+        }
+        
+        // Check for directory traversal attempts
+        if (strpos($subject, '../') !== false || strpos($subject, '..\\') !== false) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Check if string is valid JSON.
+     */
+    public function isJson(string $subject): bool 
+    {
+        if (empty($subject)) {
+            return false;
+        }
+        
+        try {
+            json_decode($subject, true, 512, JSON_THROW_ON_ERROR);
+            return true;
+        } catch (\JsonException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get the filename from a file path.
+     * 
+     * Example: filename('/path/to/file.txt') returns 'file.txt'
+     */
+    public function filename(string $path): string 
+    {
+        return pathinfo($path, PATHINFO_BASENAME);
+    }
+
+    /**
+     * Get the filename without extension from a file path.
+     * 
+     * Example: stem('/path/to/file.txt') returns 'file'
+     */
+    public function stem(string $path): string 
+    {
+        $filename = $this->filename($path);
+        $pos = strpos($filename, '.');
+        if ($pos === false) {
+            return $filename;
+        }
+        return substr($filename, 0, $pos);
+    }
+
+    /**
+     * Get the file extension from a file path.
+     * 
+     * Example: ext('/path/to/file.txt') returns 'txt'
+     */
+    public function ext(string $path): string 
+    {
+        return pathinfo($path, PATHINFO_EXTENSION);
+    }
+
+    /**
+     * Get the directory name from a file path.
+     * 
+     * Example: dir('/path/to/file.txt') returns '/path/to'
+     */
+    public function dir(string $path): string 
+    {
+        return pathinfo($path, PATHINFO_DIRNAME);
+    }
 }
