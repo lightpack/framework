@@ -418,4 +418,166 @@ class Url
         
         return $normalizedUrl;
     }
+
+    /**
+     * Validate a URL with configurable options.
+     * 
+     * Example:
+     * validate('https://example.com', [
+     *     'schemes' => ['https'],
+     *     'require_scheme' => true,
+     *     'allowed_hosts' => ['example.com'],
+     *     'max_length' => 2048
+     * ])
+     */
+    public function validate(string $url, array $options = []): bool
+    {
+        // Set default options
+        $options = array_merge([
+            'schemes' => ['http', 'https'],
+            'require_scheme' => true,
+            'allowed_hosts' => [],
+            'max_length' => 2048,
+        ], $options);
+
+        // Check URL length
+        if (strlen($url) > $options['max_length']) {
+            return false;
+        }
+
+        // Parse URL
+        try {
+            $parts = $this->parse($url);
+        } catch (\InvalidArgumentException $e) {
+            return false;
+        }
+
+        // Check scheme
+        if ($options['require_scheme'] && !$parts['scheme']) {
+            return false;
+        }
+
+        if ($parts['scheme'] && !in_array($parts['scheme'], $options['schemes'])) {
+            return false;
+        }
+
+        // Check host if specified
+        if (!empty($options['allowed_hosts']) && !in_array($parts['host'], $options['allowed_hosts'])) {
+            return false;
+        }
+
+        // Check port range if specified
+        if ($parts['port'] && ($parts['port'] < 1 || $parts['port'] > 65535)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Join URL segments intelligently.
+     * 
+     * Example:
+     * join('https://api.com', 'v1/', '/users', '?sort=desc')
+     * Returns: https://api.com/v1/users?sort=desc
+     */
+    public function join(string ...$segments): string
+    {
+        if (empty($segments)) {
+            return '';
+        }
+
+        // Extract query and fragment from the last segment
+        $lastSegment = end($segments);
+        $query = '';
+        $fragment = '';
+
+        if (str_contains($lastSegment, '?')) {
+            [$lastSegment, $query] = explode('?', $lastSegment, 2);
+            $query = '?' . $query;
+        }
+
+        if (str_contains($lastSegment, '#')) {
+            [$lastSegment, $fragment] = explode('#', $lastSegment, 2);
+            $fragment = '#' . $fragment;
+        }
+
+        // Process each segment
+        $processedSegments = [];
+        foreach ($segments as $i => $segment) {
+            if ($i === count($segments) - 1) {
+                $segment = $lastSegment; // Use processed last segment
+            }
+
+            // Remove query and fragment from non-last segments
+            if ($i < count($segments) - 1) {
+                $segment = preg_replace('/[?#].*$/', '', $segment);
+            }
+
+            // Trim slashes except for protocol slashes
+            if ($i === 0 && preg_match('~^[a-zA-Z]+://~', $segment)) {
+                $segment = rtrim($segment, '/');
+            } else {
+                $segment = trim($segment, '/');
+            }
+
+            if ($segment !== '') {
+                $processedSegments[] = $segment;
+            }
+        }
+
+        // Join segments and add query/fragment
+        return implode('/', $processedSegments) . $query . $fragment;
+    }
+
+    /**
+     * Remove query parameters from URL.
+     * 
+     * Example:
+     * // Remove specific parameters
+     * withoutQuery('example.com?page=1&sort=desc', 'sort')
+     * Returns: example.com?page=1
+     * 
+     * // Remove multiple parameters
+     * withoutQuery('example.com?utm_source=fb&page=1', ['utm_source', 'utm_medium'])
+     * Returns: example.com?page=1
+     * 
+     * // Remove all query parameters
+     * withoutQuery('example.com?page=1&sort=desc')
+     * Returns: example.com
+     */
+    public function withoutQuery(string $url, string|array|null $keys = null): string
+    {
+        $parts = $this->parse($url);
+        
+        // If no keys specified, remove all query parameters
+        if ($keys === null) {
+            $query = [];
+        } else {
+            // Convert single key to array
+            $keys = (array) $keys;
+            
+            // Remove specified keys
+            $query = array_diff_key($parts['query'], array_flip($keys));
+        }
+        
+        // Build base URL without query string
+        $baseUrl = $parts['scheme'] . '://' . $parts['host'];
+        if ($parts['port']) {
+            $baseUrl .= ':' . $parts['port'];
+        }
+        $baseUrl .= $parts['path'];
+        
+        // Add remaining query parameters
+        if (!empty($query)) {
+            $baseUrl .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        }
+        
+        // Add fragment if exists
+        if ($parts['fragment']) {
+            $baseUrl .= '#' . $parts['fragment'];
+        }
+        
+        return $baseUrl;
+    }
 }

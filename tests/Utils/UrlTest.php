@@ -259,4 +259,127 @@ final class UrlTest extends TestCase
             $this->url->normalize('https://user:pass@example.com:8080//api//users//')
         );
     }
+
+    public function testValidate()
+    {
+        // Test valid URLs
+        $this->assertTrue($this->url->validate('https://example.com'));
+        $this->assertTrue($this->url->validate('http://localhost:8080'));
+        
+        // Test with custom schemes
+        $this->assertTrue($this->url->validate('https://example.com', [
+            'schemes' => ['https']
+        ]));
+        $this->assertFalse($this->url->validate('http://example.com', [
+            'schemes' => ['https']
+        ]));
+        
+        // Test with allowed hosts
+        $this->assertTrue($this->url->validate('https://example.com', [
+            'allowed_hosts' => ['example.com']
+        ]));
+        $this->assertFalse($this->url->validate('https://evil.com', [
+            'allowed_hosts' => ['example.com']
+        ]));
+        
+        // Test URL length
+        $this->assertFalse($this->url->validate('https://example.com', [
+            'max_length' => 10
+        ]));
+        
+        // Test invalid URLs
+        $this->assertFalse($this->url->validate('not-a-url'));
+        $this->assertFalse($this->url->validate('http://'));
+        $this->assertFalse($this->url->validate('https://example.com:99999')); // Invalid port
+    }
+
+    public function testJoin()
+    {
+        // Test basic joining
+        $this->assertEquals(
+            'https://api.com/v1/users',
+            $this->url->join('https://api.com', 'v1', 'users')
+        );
+        
+        // Test with slashes
+        $this->assertEquals(
+            'https://api.com/v1/users',
+            $this->url->join('https://api.com/', '/v1/', '/users/')
+        );
+        
+        // Test with query string
+        $this->assertEquals(
+            'https://api.com/v1/users?sort=desc',
+            $this->url->join('https://api.com', 'v1', 'users', '?sort=desc')
+        );
+        
+        // Test with fragment
+        $this->assertEquals(
+            'https://api.com/v1/users#section',
+            $this->url->join('https://api.com', 'v1', 'users#section')
+        );
+        
+        // Test with query and fragment
+        $this->assertEquals(
+            'https://api.com/v1/users?sort=desc#section',
+            $this->url->join('https://api.com', 'v1', 'users?sort=desc#section')
+        );
+        
+        // Test with empty segments
+        $this->assertEquals(
+            'https://api.com/users',
+            $this->url->join('https://api.com', '', 'users')
+        );
+        
+        // Test with no segments
+        $this->assertEquals('', $this->url->join());
+    }
+
+    public function testWithoutQuery()
+    {
+        // Test removing single parameter
+        $this->assertEquals(
+            'https://example.com/posts?page=1',
+            $this->url->withoutQuery('https://example.com/posts?page=1&sort=desc', 'sort')
+        );
+        
+        // Test removing multiple parameters
+        $this->assertEquals(
+            'https://example.com/search?q=php',
+            $this->url->withoutQuery(
+                'https://example.com/search?q=php&utm_source=fb&utm_medium=social',
+                ['utm_source', 'utm_medium']
+            )
+        );
+        
+        // Test removing non-existent parameters
+        $this->assertEquals(
+            'https://example.com/posts?page=1',
+            $this->url->withoutQuery('https://example.com/posts?page=1', 'sort')
+        );
+        
+        // Test removing all parameters
+        $this->assertEquals(
+            'https://example.com/posts',
+            $this->url->withoutQuery('https://example.com/posts?page=1&sort=desc', ['page', 'sort'])
+        );
+        
+        // Test with no query parameters
+        $this->assertEquals(
+            'https://example.com/posts',
+            $this->url->withoutQuery('https://example.com/posts', 'sort')
+        );
+
+        // Test removing all query parameters with no keys specified
+        $this->assertEquals(
+            'https://example.com/posts',
+            $this->url->withoutQuery('https://example.com/posts?page=1&sort=desc&utm_source=fb')
+        );
+
+        // Test removing all query parameters but preserve fragment
+        $this->assertEquals(
+            'https://example.com/posts#section',
+            $this->url->withoutQuery('https://example.com/posts?page=1&sort=desc#section')
+        );
+    }
 }
