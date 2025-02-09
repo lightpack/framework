@@ -580,4 +580,68 @@ class Url
         
         return $baseUrl;
     }
+
+    /**
+     * Add or update fragment in URL.
+     * 
+     * Example:
+     * withFragment('example.com', 'section1')
+     * Returns: example.com#section1
+     * 
+     * withFragment('example.com#old', 'new')
+     * Returns: example.com#new
+     */
+    public function withFragment(string $url, string $fragment): string
+    {
+        $parts = $this->parse($url);
+        
+        // Build base URL without fragment
+        $baseUrl = $parts['scheme'] . '://' . $parts['host'];
+        if ($parts['port']) {
+            $baseUrl .= ':' . $parts['port'];
+        }
+        $baseUrl .= $parts['path'];
+        
+        // Add query if exists
+        if (!empty($parts['query'])) {
+            $baseUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
+        }
+        
+        // Add new fragment (trim # if provided)
+        $fragment = ltrim($fragment, '#');
+        if ($fragment !== '') {
+            $baseUrl .= '#' . $fragment;
+        }
+        
+        return $baseUrl;
+    }
+
+    /**
+     * Remove fragment from URL.
+     * 
+     * Example:
+     * withoutFragment('example.com#section')
+     * Returns: example.com
+     * 
+     * withoutFragment('example.com?page=1#section')
+     * Returns: example.com?page=1
+     */
+    public function withoutFragment(string $url): string
+    {
+        $parts = $this->parse($url);
+        
+        // Build base URL without fragment
+        $baseUrl = $parts['scheme'] . '://' . $parts['host'];
+        if ($parts['port']) {
+            $baseUrl .= ':' . $parts['port'];
+        }
+        $baseUrl .= $parts['path'];
+        
+        // Add query if exists
+        if (!empty($parts['query'])) {
+            $baseUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
+        }
+        
+        return $baseUrl;
+    }
 }

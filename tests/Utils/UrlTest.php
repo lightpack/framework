@@ -382,4 +382,64 @@ final class UrlTest extends TestCase
             $this->url->withoutQuery('https://example.com/posts?page=1&sort=desc#section')
         );
     }
+
+    public function testWithFragment()
+    {
+        // Test adding fragment
+        $this->assertEquals(
+            'https://example.com/posts#section1',
+            $this->url->withFragment('https://example.com/posts', 'section1')
+        );
+        
+        // Test updating existing fragment
+        $this->assertEquals(
+            'https://example.com/posts#new',
+            $this->url->withFragment('https://example.com/posts#old', 'new')
+        );
+        
+        // Test with query parameters
+        $this->assertEquals(
+            'https://example.com/posts?page=1#section',
+            $this->url->withFragment('https://example.com/posts?page=1', 'section')
+        );
+        
+        // Test with hash in fragment
+        $this->assertEquals(
+            'https://example.com/posts#section',
+            $this->url->withFragment('https://example.com/posts', '#section')
+        );
+        
+        // Test with empty fragment
+        $this->assertEquals(
+            'https://example.com/posts',
+            $this->url->withFragment('https://example.com/posts#old', '')
+        );
+    }
+
+    public function testWithoutFragment()
+    {
+        // Test removing fragment
+        $this->assertEquals(
+            'https://example.com/posts',
+            $this->url->withoutFragment('https://example.com/posts#section')
+        );
+        
+        // Test with query parameters
+        $this->assertEquals(
+            'https://example.com/posts?page=1',
+            $this->url->withoutFragment('https://example.com/posts?page=1#section')
+        );
+        
+        // Test without fragment
+        $this->assertEquals(
+            'https://example.com/posts',
+            $this->url->withoutFragment('https://example.com/posts')
+        );
+        
+        // Test with empty fragment
+        $this->assertEquals(
+            'https://example.com/posts',
+            $this->url->withoutFragment('https://example.com/posts#')
+        );
+    }
 }
