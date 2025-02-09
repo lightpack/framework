@@ -523,4 +523,164 @@ final class ArrTest extends TestCase
         $this->assertEmpty($diff['removed']);
         $this->assertEquals(['a' => ['old' => $obj1, 'new' => $obj2]], $diff['modified']);
     }
+
+    public function testCastBasicTypes()
+    {
+        $data = [
+            'int_val' => '42',
+            'bool_val' => '1',
+            'float_val' => '3.14',
+            'string_val' => 42,
+            'untyped_val' => 'hello'
+        ];
+
+        $casted = (new Arr)->cast($data, [
+            'int_val' => 'int',
+            'bool_val' => 'bool',
+            'float_val' => 'float',
+            'string_val' => 'string'
+        ]);
+
+        $this->assertSame(42, $casted['int_val']);
+        $this->assertSame(true, $casted['bool_val']);
+        $this->assertSame(3.14, $casted['float_val']);
+        $this->assertSame('42', $casted['string_val']);
+        $this->assertSame('hello', $casted['untyped_val']);
+    }
+
+    public function testCastBooleanVariations()
+    {
+        $data = [
+            'true_string' => 'true',
+            'yes_string' => 'yes',
+            'on_string' => 'on',
+            'one_string' => '1',
+            'false_string' => 'false',
+            'no_string' => 'no',
+            'off_string' => 'off',
+            'zero_string' => '0'
+        ];
+
+        $types = array_fill_keys(array_keys($data), 'bool');
+        $casted = (new Arr)->cast($data, $types);
+
+        $this->assertTrue($casted['true_string']);
+        $this->assertTrue($casted['yes_string']);
+        $this->assertTrue($casted['on_string']);
+        $this->assertTrue($casted['one_string']);
+        $this->assertFalse($casted['false_string']);
+        $this->assertFalse($casted['no_string']);
+        $this->assertFalse($casted['off_string']);
+        $this->assertFalse($casted['zero_string']);
+    }
+
+    public function testCastArray()
+    {
+        $data = [
+            'comma_string' => 'a,b,c',
+            'spaced_string' => 'a, b, c',
+            'existing_array' => ['a', 'b', 'c'],
+            'single_value' => 'a'
+        ];
+
+        $types = array_fill_keys(array_keys($data), 'array');
+        $casted = (new Arr)->cast($data, $types);
+
+        $this->assertEquals(['a', 'b', 'c'], $casted['comma_string']);
+        $this->assertEquals(['a', 'b', 'c'], $casted['spaced_string']);
+        $this->assertEquals(['a', 'b', 'c'], $casted['existing_array']);
+        $this->assertEquals(['a'], $casted['single_value']);
+    }
+
+    public function testCastDateTime()
+    {
+        $now = new DateTime();
+        $data = [
+            'date_string' => '2024-01-01',
+            'datetime_string' => '2024-01-01 12:00:00',
+            'existing_datetime' => $now
+        ];
+
+        $types = array_fill_keys(array_keys($data), 'datetime');
+        $casted = (new Arr)->cast($data, $types);
+
+        $this->assertInstanceOf(DateTime::class, $casted['date_string']);
+        $this->assertEquals('2024-01-01', $casted['date_string']->format('Y-m-d'));
+        $this->assertEquals('12:00:00', $casted['datetime_string']->format('H:i:s'));
+        $this->assertSame($now, $casted['existing_datetime']);
+    }
+
+    public function testCastJson()
+    {
+        $data = [
+            'json_object' => '{"name":"John","age":30}',
+            'json_array' => '[1,2,3]',
+            'existing_array' => ['name' => 'John']
+        ];
+
+        $types = array_fill_keys(array_keys($data), 'json');
+        $casted = (new Arr)->cast($data, $types);
+
+        $this->assertEquals(['name' => 'John', 'age' => 30], $casted['json_object']);
+        $this->assertEquals([1, 2, 3], $casted['json_array']);
+        $this->assertEquals(['name' => 'John'], $casted['existing_array']);
+    }
+
+    public function testCastNullValues()
+    {
+        $data = [
+            'null_int' => null,
+            'null_bool' => null,
+            'null_array' => null
+        ];
+
+        $casted = (new Arr)->cast($data, [
+            'null_int' => 'int',
+            'null_bool' => 'bool',
+            'null_array' => 'array'
+        ]);
+
+        $this->assertNull($casted['null_int']);
+        $this->assertNull($casted['null_bool']);
+        $this->assertNull($casted['null_array']);
+    }
+
+    public function testCastInvalidType()
+    {
+        $this->expectException(ValueError::class);
+        $this->expectExceptionMessage('Unsupported cast type: invalid');
+
+        (new Arr)->cast(['key' => 'value'], ['key' => 'invalid']);
+    }
+
+    public function testCastInvalidDateTime()
+    {
+        $this->expectException(ValueError::class);
+        $this->expectExceptionMessage('Failed to cast');
+
+        (new Arr)->cast(['date' => 'not-a-date'], ['date' => 'datetime']);
+    }
+
+    public function testCastInvalidJson()
+    {
+        $this->expectException(ValueError::class);
+        $this->expectExceptionMessage('Failed to decode JSON');
+
+        (new Arr)->cast(['json' => '{invalid-json}'], ['json' => 'json']);
+    }
+
+    public function testCastAlternateTypeNames()
+    {
+        $this->expectException(ValueError::class);
+        $this->expectExceptionMessage('Unsupported cast type: integer');
+        (new Arr)->cast(['val' => '42'], ['val' => 'integer']);
+
+        $this->expectException(ValueError::class);
+        $this->expectExceptionMessage('Unsupported cast type: boolean');
+        (new Arr)->cast(['val' => '1'], ['val' => 'boolean']);
+
+        $this->expectException(ValueError::class);
+        $this->expectExceptionMessage('Unsupported cast type: double');
+        (new Arr)->cast(['val' => '3.14'], ['val' => 'double']);
+    }
 }

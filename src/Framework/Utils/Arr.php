@@ -4,6 +4,8 @@ namespace Lightpack\Utils;
 
 use InvalidArgumentException;
 use ValueError;
+use DateTime;
+use JsonException;
 
 class Arr
 {
@@ -526,5 +528,133 @@ class Arr
             'removed' => $removed,
             'modified' => $modified,
         ];
+    }
+
+    /**
+     * Cast array values to specified types.
+     * 
+     * Supported types:
+     * - 'int': Cast to integer
+     * - 'bool': Cast to boolean
+     * - 'float': Cast to float
+     * - 'string': Cast to string
+     * - 'array': Cast to array (comma-separated string to array)
+     * - 'datetime': Cast to DateTime object
+     * - 'json': Decode JSON string to array/object
+     * 
+     * Example usage:
+     * ```php
+     * $data = [
+     *     'id' => '1',
+     *     'active' => '1',
+     *     'score' => '99.9',
+     *     'tags' => 'php,web,dev',
+     *     'meta' => '{"type": "user"}',
+     *     'created_at' => '2024-01-01'
+     * ];
+     * 
+     * $casted = (new Arr)->cast($data, [
+     *     'id' => 'int',
+     *     'active' => 'bool',
+     *     'score' => 'float',
+     *     'tags' => 'array',
+     *     'meta' => 'json',
+     *     'created_at' => 'datetime'
+     * ]);
+     * ```
+     * 
+     * @param array $array The input array to cast
+     * @param array $types Map of field names to their desired types
+     * @return array The array with casted values
+     * @throws ValueError If an unsupported type is specified
+     * @throws JsonException If JSON decoding fails
+     */
+    public function cast(array $array, array $types): array
+    {
+        $result = [];
+        
+        foreach ($array as $key => $value) {
+            // Skip if no type casting is specified for this key
+            if (!isset($types[$key])) {
+                $result[$key] = $value;
+                continue;
+            }
+
+            $type = strtolower($types[$key]);
+            
+            // Skip null values
+            if ($value === null) {
+                $result[$key] = null;
+                continue;
+            }
+
+            // Cast based on type
+            switch ($type) {
+                case 'int':
+                    $result[$key] = (int) $value;
+                    break;
+
+                case 'bool':
+                    // Handle various boolean representations
+                    if (is_string($value)) {
+                        $value = strtolower($value);
+                        $result[$key] = in_array($value, ['1', 'true', 'yes', 'on'], true);
+                    } else {
+                        $result[$key] = (bool) $value;
+                    }
+                    break;
+
+                case 'float':
+                    $result[$key] = (float) $value;
+                    break;
+
+                case 'string':
+                    $result[$key] = (string) $value;
+                    break;
+
+                case 'array':
+                    if (is_string($value)) {
+                        $result[$key] = array_map('trim', explode(',', $value));
+                    } elseif (is_array($value)) {
+                        $result[$key] = $value;
+                    } else {
+                        $result[$key] = [$value];
+                    }
+                    break;
+
+                case 'datetime':
+                    if ($value instanceof DateTime) {
+                        $result[$key] = $value;
+                    } else {
+                        try {
+                            $result[$key] = new DateTime($value);
+                        } catch (\Exception|\Error $e) {
+                            throw new ValueError(
+                                "Failed to cast '{$key}' to datetime: Invalid date format"
+                            );
+                        }
+                    }
+                    break;
+
+                case 'json':
+                    if (is_string($value)) {
+                        try {
+                            $result[$key] = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+                        } catch (JsonException $e) {
+                            throw new ValueError(
+                                "Failed to decode JSON for '{$key}': " . $e->getMessage()
+                            );
+                        }
+                    } else {
+                        $result[$key] = $value;
+                    }
+                    break;
+
+                default:
+                    throw new ValueError("Unsupported cast type: {$type}");
+            }
+        }
+
+        return $result;
     }
 }
