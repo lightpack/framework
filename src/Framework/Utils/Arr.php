@@ -443,4 +443,88 @@ class Arr
 
         return array_chunk($array, $size, $preserveKeys);
     }
+
+    /**
+     * Compare arrays and return the differences.
+     * 
+     * This method provides three types of differences:
+     * 1. Added   - Items present in array2 but not in array1
+     * 2. Removed - Items present in array1 but not in array2
+     * 3. Modified - Items present in both but with different values
+     * 
+     * Basic usage with simple arrays:
+     * ```php
+     * $array1 = ['a' => 1, 'b' => 2];
+     * $array2 = ['b' => 3, 'c' => 4];
+     * $diff = (new Arr)->diff($array1, $array2);
+     * // Result: [
+     * //     'added'    => ['c' => 4],
+     * //     'removed'  => ['a' => 1],
+     * //     'modified' => ['b' => ['old' => 2, 'new' => 3]]
+     * // ]
+     * ```
+     * 
+     * Advanced usage with nested arrays:
+     * ```php
+     * $users1 = [
+     *     ['id' => 1, 'name' => 'John', 'age' => 30],
+     *     ['id' => 2, 'name' => 'Jane', 'age' => 25]
+     * ];
+     * $users2 = [
+     *     ['id' => 1, 'name' => 'John', 'age' => 31],
+     *     ['id' => 3, 'name' => 'Bob', 'age' => 35]
+     * ];
+     * $diff = (new Arr)->diff($users1, $users2, 'id');
+     * // Result: [
+     * //     'added'    => [['id' => 3, 'name' => 'Bob', 'age' => 35]],
+     * //     'removed'  => [['id' => 2, 'name' => 'Jane', 'age' => 25]],
+     * //     'modified' => [
+     * //         1 => [
+     * //             'old' => ['id' => 1, 'name' => 'John', 'age' => 30],
+     * //             'new' => ['id' => 1, 'name' => 'John', 'age' => 31]
+     * //         ]
+     * //     ]
+     * // ]
+     * ```
+     * 
+     * @param array $array1 The first array to compare
+     * @param array $array2 The second array to compare
+     * @param string|null $key Optional key to use as unique identifier for comparing array items
+     * @return array An array containing 'added', 'removed', and 'modified' items
+     */
+    public function diff(array $array1, array $array2, ?string $key = null): array
+    {
+        if ($key !== null) {
+            // Convert arrays to associative arrays using the key
+            $array1 = array_column($array1, null, $key);
+            $array2 = array_column($array2, null, $key);
+        }
+
+        $added = array_diff_key($array2, $array1);
+        $removed = array_diff_key($array1, $array2);
+        $modified = [];
+
+        // Find modified items (present in both but different)
+        foreach (array_intersect_key($array1, $array2) as $k => $v1) {
+            $v2 = $array2[$k];
+
+            // Handle nested arrays recursively
+            if (is_array($v1) && is_array($v2)) {
+                $nested_diff = $this->diff($v1, $v2);
+                if (!empty($nested_diff['added']) || !empty($nested_diff['removed']) || !empty($nested_diff['modified'])) {
+                    $modified[$k] = ['old' => $v1, 'new' => $v2];
+                }
+            }
+            // Compare non-array values
+            elseif ($v1 !== $v2) {
+                $modified[$k] = ['old' => $v1, 'new' => $v2];
+            }
+        }
+
+        return [
+            'added' => $added,
+            'removed' => $removed,
+            'modified' => $modified,
+        ];
+    }
 }
