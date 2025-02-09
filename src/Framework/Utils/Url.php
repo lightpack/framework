@@ -205,4 +205,221 @@ class Url
 
         return true; // URL is valid and correct
     }
+
+    /**
+     * Parse a URL into its components.
+     * 
+     * Returns an array with the following components:
+     * - scheme: The URL scheme (e.g., 'http', 'https')
+     * - host: The hostname
+     * - port: The port number (null if not specified)
+     * - user: The username (null if not specified)
+     * - pass: The password (null if not specified)
+     * - path: The path component
+     * - query: Array of query parameters
+     * - fragment: The fragment identifier (null if not specified)
+     * 
+     * Example:
+     * parse('https://example.com/blog?page=2#comments')
+     * Returns: [
+     *     'scheme' => 'https',
+     *     'host' => 'example.com',
+     *     'path' => '/blog',
+     *     'query' => ['page' => '2'],
+     *     'fragment' => 'comments',
+     *     ...
+     * ]
+     */
+    public function parse(string $url): array
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL) && !str_starts_with($url, '/')) {
+            throw new \InvalidArgumentException('Invalid URL format');
+        }
+
+        $components = parse_url($url);
+        if ($components === false) {
+            throw new \InvalidArgumentException('Invalid URL format');
+        }
+
+        // Ensure all components exist with default values
+        $defaults = [
+            'scheme' => null,
+            'host' => null,
+            'port' => null,
+            'user' => null,
+            'pass' => null,
+            'path' => null,
+            'query' => null,
+            'fragment' => null,
+        ];
+
+        $components = array_merge($defaults, $components);
+
+        // Parse query string into array if it exists
+        if ($components['query'] !== null) {
+            parse_str($components['query'], $query);
+            $components['query'] = $query;
+        } else {
+            $components['query'] = [];
+        }
+
+        // Ensure path starts with /
+        if ($components['path'] !== null && !str_starts_with($components['path'], '/')) {
+            $components['path'] = '/' . $components['path'];
+        }
+
+        return $components;
+    }
+
+    /**
+     * Add or update query parameters in a URL.
+     * 
+     * Example:
+     * withQuery('https://example.com/search', ['q' => 'php'])
+     * Returns: https://example.com/search?q=php
+     * 
+     * // With array parameters
+     * withQuery('https://example.com/posts', ['tags' => ['php', 'mysql']])
+     * Returns: https://example.com/posts?tags[]=php&tags[]=mysql
+     * 
+     * // Merge with existing query
+     * withQuery('https://example.com/posts?category=tech', ['author' => 'john'])
+     * Returns: https://example.com/posts?category=tech&author=john
+     */
+    public function withQuery(string $url, array $parameters): string
+    {
+        $parts = $this->parse($url);
+        
+        // Merge with existing query parameters
+        $parts['query'] = array_merge($parts['query'], $parameters);
+
+        // Remove null/empty values
+        $parts['query'] = array_filter($parts['query'], function ($value) {
+            return $value !== null && $value !== '' && 
+                   (!is_array($value) || !empty($value));
+        });
+
+        // Rebuild URL
+        $newUrl = '';
+        
+        // Add scheme and authority
+        if ($parts['scheme']) {
+            $newUrl .= $parts['scheme'] . '://';
+        }
+        
+        // Add user info if present
+        if ($parts['user']) {
+            $newUrl .= $parts['user'];
+            if ($parts['pass']) {
+                $newUrl .= ':' . $parts['pass'];
+            }
+            $newUrl .= '@';
+        }
+        
+        // Add host and port
+        if ($parts['host']) {
+            $newUrl .= $parts['host'];
+            if ($parts['port']) {
+                $newUrl .= ':' . $parts['port'];
+            }
+        }
+        
+        // Add path
+        if ($parts['path']) {
+            $newUrl .= $parts['path'];
+        }
+        
+        // Add query string with support for array parameters
+        if (!empty($parts['query'])) {
+            $newUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
+        }
+        
+        // Add fragment
+        if ($parts['fragment']) {
+            $newUrl .= '#' . $parts['fragment'];
+        }
+        
+        return $newUrl;
+    }
+
+    /**
+     * Normalize a URL by cleaning up common issues.
+     * 
+     * This method:
+     * - Removes duplicate slashes
+     * - Resolves directory traversal (.., .)
+     * - Ensures consistent formatting
+     * 
+     * Example:
+     * normalize('https://example.com//blog/../api/./users//')
+     * Returns: https://example.com/api/users
+     */
+    public function normalize(string $url): string
+    {
+        $parts = $this->parse($url);
+        
+        if ($parts['path']) {
+            // Remove duplicate slashes
+            $parts['path'] = preg_replace('#/+#', '/', $parts['path']);
+            
+            // Split path into segments
+            $segments = array_filter(explode('/', $parts['path']), 'strlen');
+            $pathSegments = [];
+            
+            // Process each segment
+            foreach ($segments as $segment) {
+                if ($segment === '.') {
+                    continue;
+                }
+                if ($segment === '..') {
+                    array_pop($pathSegments);
+                    continue;
+                }
+                $pathSegments[] = $segment;
+            }
+            
+            // Rebuild path
+            $parts['path'] = '/' . implode('/', $pathSegments);
+        }
+        
+        // Rebuild URL with all components
+        $normalizedUrl = '';
+        
+        // Add scheme
+        if ($parts['scheme']) {
+            $normalizedUrl .= $parts['scheme'] . '://';
+        }
+        
+        // Add authentication
+        if ($parts['user']) {
+            $normalizedUrl .= $parts['user'];
+            if ($parts['pass']) {
+                $normalizedUrl .= ':' . $parts['pass'];
+            }
+            $normalizedUrl .= '@';
+        }
+        
+        // Add host and port
+        if ($parts['host']) {
+            $normalizedUrl .= $parts['host'];
+            if ($parts['port']) {
+                $normalizedUrl .= ':' . $parts['port'];
+            }
+        }
+        
+        // Add path
+        $normalizedUrl .= $parts['path'] ?? '';
+        
+        // Add query string
+        if (!empty($parts['query'])) {
+            $normalizedUrl .= '?' . http_build_query($parts['query']);
+        }
+        
+        // Add fragment
+        if ($parts['fragment']) {
+            $normalizedUrl .= '#' . $parts['fragment'];
+        }
+        
+        return $normalizedUrl;
+    }
 }

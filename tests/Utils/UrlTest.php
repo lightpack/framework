@@ -134,4 +134,132 @@ final class UrlTest extends TestCase
         $this->assertFalse($this->url->verify($invalidUrl));
         $this->assertFalse($this->url->verify($plainUrl));
     }
+
+    public function testParse()
+    {
+        $url = 'https://john:doe@example.com:8080/blog/post?sort=desc&page=2#comments';
+        $parts = $this->url->parse($url);
+
+        $this->assertEquals('https', $parts['scheme']);
+        $this->assertEquals('example.com', $parts['host']);
+        $this->assertEquals(8080, $parts['port']);
+        $this->assertEquals('john', $parts['user']);
+        $this->assertEquals('doe', $parts['pass']);
+        $this->assertEquals('/blog/post', $parts['path']);
+        $this->assertEquals(['sort' => 'desc', 'page' => '2'], $parts['query']);
+        $this->assertEquals('comments', $parts['fragment']);
+
+        // Test with minimal URL
+        $parts = $this->url->parse('https://example.com');
+        $this->assertEquals('https', $parts['scheme']);
+        $this->assertEquals('example.com', $parts['host']);
+        $this->assertNull($parts['port']);
+        $this->assertNull($parts['user']);
+        $this->assertNull($parts['pass']);
+        $this->assertNull($parts['path']);
+        $this->assertEquals([], $parts['query']);
+        $this->assertNull($parts['fragment']);
+
+        // Test with invalid URL
+        $this->expectException(\InvalidArgumentException::class);
+        $this->url->parse('not a url');
+    }
+
+    public function testWithQuery()
+    {
+        // Test adding single parameter as array
+        $this->assertEquals(
+            'https://example.com/search?q=php',
+            $this->url->withQuery('https://example.com/search', ['q' => 'php'])
+        );
+
+        // Test adding multiple parameters
+        $this->assertEquals(
+            'https://example.com/users?sort=name&order=desc',
+            $this->url->withQuery('https://example.com/users', ['sort' => 'name', 'order' => 'desc'])
+        );
+
+        // Test merging with existing parameters
+        $this->assertEquals(
+            'https://example.com/posts?category=tech&author=john',
+            $this->url->withQuery('https://example.com/posts?category=tech', ['author' => 'john'])
+        );
+
+        // Test array parameters
+        $this->assertEquals(
+            'https://example.com/posts?tags%5B0%5D=php&tags%5B1%5D=mysql',
+            $this->url->withQuery('https://example.com/posts', ['tags' => ['php', 'mysql']])
+        );
+
+        // Test nested array parameters
+        $this->assertEquals(
+            'https://example.com/search?filter%5Btags%5D%5B0%5D=php&filter%5Byear%5D=2024',
+            $this->url->withQuery('https://example.com/search', [
+                'filter' => [
+                    'tags' => ['php'],
+                    'year' => '2024'
+                ]
+            ])
+        );
+
+        // Test with empty/null values
+        $this->assertEquals(
+            'https://example.com/posts?valid=1',
+            $this->url->withQuery('https://example.com/posts', ['empty' => '', 'null' => null, 'valid' => '1'])
+        );
+
+        // Test with special characters
+        $this->assertEquals(
+            'https://example.com/search?q=php%20%26%20mysql',
+            $this->url->withQuery('https://example.com/search', ['q' => 'php & mysql'])
+        );
+
+        // Test overwriting array parameters
+        $this->assertEquals(
+            'https://example.com/posts?tags%5B0%5D=javascript',
+            $this->url->withQuery(
+                'https://example.com/posts?tags%5B0%5D=php', 
+                ['tags' => ['javascript']]
+            )
+        );
+    }
+
+    public function testNormalize()
+    {
+        // Test removing duplicate slashes
+        $this->assertEquals(
+            'https://example.com/api/users',
+            $this->url->normalize('https://example.com//api//users')
+        );
+
+        // Test resolving directory traversal
+        $this->assertEquals(
+            'https://example.com/api/users',
+            $this->url->normalize('https://example.com/blog/../api/./users')
+        );
+
+        // Test with query parameters
+        $this->assertEquals(
+            'https://example.com/api/users?sort=name&page=1',
+            $this->url->normalize('https://example.com//api/users/?sort=name&page=1')
+        );
+
+        // Test with fragment
+        $this->assertEquals(
+            'https://example.com/api/users#section',
+            $this->url->normalize('https://example.com//api/users/#section')
+        );
+
+        // Test with complex path
+        $this->assertEquals(
+            'https://example.com/final',
+            $this->url->normalize('https://example.com/one/../two/./three/../../final')
+        );
+
+        // Test with port and authentication
+        $this->assertEquals(
+            'https://user:pass@example.com:8080/api/users',
+            $this->url->normalize('https://user:pass@example.com:8080//api//users//')
+        );
+    }
 }
