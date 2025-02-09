@@ -164,7 +164,7 @@ final class ArrTest extends TestCase
 
         // Test 6
         $randomItems = (new Arr)->random($items, 3, true);
-
+        
         $this->assertIsArray($randomItems);
         $this->assertCount(3, $randomItems);
         $this->assertIsString(array_rand($randomItems));

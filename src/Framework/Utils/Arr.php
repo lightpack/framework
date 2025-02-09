@@ -201,4 +201,281 @@ class Arr
 
         return $grouped;
     }
+
+    /**
+     * Set array value using dot notation.
+     * 
+     * For example:
+     * $array = ['a' => ['b' => []]];
+     * (new Arr)->set('a.b.c', 'value', $array);
+     * // $array is now ['a' => ['b' => ['c' => 'value']]]
+     * 
+     * @throws ValueError When key is empty
+     */
+    public function set(string $key, $value, array &$array): array
+    {
+        if (empty($key)) {
+            throw new ValueError('Key cannot be empty');
+        }
+
+        $keys = explode('.', $key);
+        $current = &$array;
+
+        while (count($keys) > 1) {
+            $key = array_shift($keys);
+
+            if (!isset($current[$key]) || !is_array($current[$key])) {
+                $current[$key] = [];
+            }
+
+            $current = &$current[$key];
+        }
+
+        $current[array_shift($keys)] = $value;
+
+        return $array;
+    }
+
+    /**
+     * Deep merge two arrays recursively.
+     * 
+     * For example:
+     * $array1 = ['a' => ['b' => 2], 'c' => 3];
+     * $array2 = ['a' => ['b' => 4, 'd' => 5]];
+     * (new Arr)->merge($array1, $array2);
+     * // Result: ['a' => ['b' => 4, 'd' => 5], 'c' => 3]
+     */
+    public function merge(array $array1, array $array2): array
+    {
+        foreach ($array2 as $key => $value) {
+            if (is_array($value) && isset($array1[$key]) && is_array($array1[$key])) {
+                $array1[$key] = $this->merge($array1[$key], $value);
+            } else {
+                $array1[$key] = $value;
+            }
+        }
+
+        return $array1;
+    }
+
+    /**
+     * Pluck a specific key from an array of arrays or objects.
+     * 
+     * For example:
+     * $items = [
+     *    ['id' => 1, 'name' => 'John'],
+     *    ['id' => 2, 'name' => 'Jane']
+     * ];
+     * (new Arr)->pluck('name', $items); // ['John', 'Jane']
+     * (new Arr)->pluck('name', $items, 'id'); // [1 => 'John', 2 => 'Jane']
+     * 
+     * @param string $key The key to pluck
+     * @param array $array Array of arrays/objects to pluck from
+     * @param string|null $keyBy Optional key to index the results by
+     * @throws ValueError When key is empty
+     */
+    public function pluck(string $key, array $array, ?string $keyBy = null): array
+    {
+        if (empty($key)) {
+            throw new ValueError('Key cannot be empty');
+        }
+
+        $result = [];
+
+        foreach ($array as $item) {
+            if (is_array($item)) {
+                if (!isset($item[$key])) {
+                    continue;
+                }
+                
+                if ($keyBy !== null && isset($item[$keyBy])) {
+                    $result[$item[$keyBy]] = $item[$key];
+                } else {
+                    $result[] = $item[$key];
+                }
+            } elseif (is_object($item)) {
+                if (!isset($item->{$key})) {
+                    continue;
+                }
+                
+                if ($keyBy !== null && isset($item->{$keyBy})) {
+                    $result[$item->{$keyBy}] = $item->{$key};
+                } else {
+                    $result[] = $item->{$key};
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Shuffle an array preserving keys optionally.
+     * 
+     * For example:
+     * $items = ['a' => 1, 'b' => 2, 'c' => 3];
+     * (new Arr)->shuffle($items); // [2, 1, 3]
+     * (new Arr)->shuffle($items, true); // ['b' => 2, 'a' => 1, 'c' => 3]
+     * (new Arr)->shuffle([]); // []
+     * 
+     * @param array $array Array to shuffle
+     * @param bool $preserveKeys Whether to preserve the keys
+     * @return array Shuffled array or empty array if input is empty
+     */
+    public function shuffle(array $array, bool $preserveKeys = false): array
+    {
+        if (empty($array)) {
+            return [];
+        }
+
+        if ($preserveKeys) {
+            $keys = array_keys($array);
+            $values = array_values($array);
+            shuffle($values);
+            
+            return array_combine($keys, $values);
+        }
+
+        $items = $array;
+        shuffle($items);
+        return $items;
+    }
+
+    /**
+     * Split an array into smaller chunks of specified size.
+     * 
+     * This method is particularly useful for:
+     * 1. Batch Processing: Process large datasets in smaller chunks
+     *    ```php
+     *    foreach ((new Arr)->chunk($users, 100) as $batch) {
+     *        processUserBatch($batch);
+     *    }
+     *    ```
+     * 
+     * 2. Pagination: Display items in pages
+     *    ```php
+     *    $itemsPerPage = 10;
+     *    $pages = (new Arr)->chunk($items, $itemsPerPage);
+     *    $currentPage = $pages[$pageNumber] ?? [];
+     *    ```
+     * 
+     * 3. Grid Layouts: Create rows with fixed number of columns
+     *    ```php
+     *    $columns = 3;
+     *    $rows = (new Arr)->chunk($products, $columns);
+     *    foreach ($rows as $row) {
+     *        echo '<div class="row">';
+     *        foreach ($row as $product) {
+     *            echo '<div class="col">' . $product['name'] . '</div>';
+     *        }
+     *        echo '</div>';
+     *    }
+     *    ```
+     * 
+     * 4. Rate Limiting: Process API calls in controlled batches
+     *    ```php
+     *    foreach ((new Arr)->chunk($apiCalls, 5) as $batch) {
+     *        processBatch($batch);
+     *        sleep(1); // Rate limit: 5 calls per second
+     *    }
+     *    ```
+     * 
+     * @param array $array The input array to chunk
+     * @param int $size The size of each chunk
+     * @param bool $preserveKeys Whether to preserve the keys in the chunks
+     * @throws ValueError When size is less than 1
+     * @return array An array containing the chunks
+     */
+    public function chunk(array $array, int $size, bool $preserveKeys = false): array
+    {
+        if ($size < 1) {
+            throw new ValueError('Chunk size must be greater than 0');
+        }
+
+        if (empty($array)) {
+            return [];
+        }
+
+        return array_chunk($array, $size, $preserveKeys);
+    }
+
+    /**
+     * Group an array by multiple keys, creating a deeply nested structure.
+     * 
+     * This method is incredibly powerful for:
+     * 1. Hierarchical Data Organization:
+     *    ```php
+     *    $users = [
+     *        ['country' => 'USA', 'state' => 'CA', 'name' => 'John'],
+     *        ['country' => 'USA', 'state' => 'NY', 'name' => 'Jane']
+     *    ];
+     *    $byLocation = (new Arr)->groupByMultiple($users, ['country', 'state']);
+     *    // Access: $byLocation['USA']['CA'][0]['name'] // "John"
+     *    ```
+     * 
+     * 2. Multi-level Category Trees:
+     *    ```php
+     *    $products = [
+     *        ['category' => 'Electronics', 'type' => 'Laptop', 'brand' => 'Dell'],
+     *        ['category' => 'Electronics', 'type' => 'Phone', 'brand' => 'Apple']
+     *    ];
+     *    $tree = (new Arr)->groupByMultiple($products, ['category', 'type', 'brand']);
+     *    ```
+     * 
+     * 3. Sales/Analytics Reports:
+     *    ```php
+     *    $sales = [
+     *        ['year' => 2023, 'quarter' => 'Q1', 'region' => 'West', 'amount' => 1000],
+     *        ['year' => 2023, 'quarter' => 'Q1', 'region' => 'East', 'amount' => 1500]
+     *    ];
+     *    $report = (new Arr)->groupByMultiple($sales, ['year', 'quarter', 'region']);
+     *    ```
+     * 
+     * 4. Dynamic Filter Systems:
+     *    ```php
+     *    $items = [
+     *        ['status' => 'active', 'priority' => 'high', 'type' => 'bug'],
+     *        ['status' => 'active', 'priority' => 'low', 'type' => 'feature']
+     *    ];
+     *    $filters = (new Arr)->groupByMultiple($items, ['status', 'priority', 'type']);
+     *    ```
+     * 
+     * @param array $array The input array to group
+     * @param array $keys The keys to group by, in order of hierarchy
+     * @throws ValueError When keys array is empty
+     * @return array The grouped array
+     */
+    public function groupByMultiple(array $array, array $keys): array
+    {
+        if (empty($keys)) {
+            throw new ValueError('Keys array cannot be empty');
+        }
+
+        if (empty($array)) {
+            return [];
+        }
+
+        $result = [];
+        
+        foreach ($array as $item) {
+            $current = &$result;
+            
+            foreach ($keys as $key) {
+                $value = is_array($item) ? ($item[$key] ?? null) : ($item->{$key} ?? null);
+                if ($value === null) {
+                    continue 2; // Skip items with missing keys
+                }
+                
+                if (!isset($current[$value])) {
+                    $current[$value] = [];
+                }
+                
+                $current = &$current[$value];
+            }
+            
+            $current[] = $item;
+        }
+        
+        return $result;
+    }
 }
