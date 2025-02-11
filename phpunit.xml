@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<phpunit bootstrap="vendor/autoload.php" colors="true" testdox="true">
+<phpunit 
+    bootstrap="vendor/autoload.php" 
+    colors="true" 
+    testdox="true">
     <testsuites>
-        <testsuite name="Lightpack Framework PHPUnit Test">
+        <testsuite name="Lightpack Framework Tests">
             <directory>./tests</directory>
+            <exclude>./tests/Session</exclude>
+        </testsuite>
+        <!-- Session tests need stderr to prevent header conflicts -->
+        <testsuite name="Session Tests" stderr="true">
+            <directory>./tests/Session</directory>
         </testsuite>
     </testsuites>
     <php>
