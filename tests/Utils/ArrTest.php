@@ -1152,4 +1152,90 @@ final class ArrTest extends TestCase
             $arr->get('users.*.name', $obj)
         );
     }
+
+    public function testPickWithWildcardAndArrayAccess()
+    {
+        $data = [
+            'users' => [
+                ['name' => 'John', 'profile' => ['age' => 30, 'city' => 'NY', 'skills' => ['php', 'js']]],
+                ['name' => 'Jane', 'profile' => ['age' => 25, 'city' => 'LA', 'skills' => ['python', 'ruby']]],
+                ['name' => 'Bob', 'profile' => ['age' => 35, 'city' => 'SF', 'skills' => ['java', 'go']]]
+            ],
+            'settings' => [
+                'notifications' => [
+                    'email' => ['enabled' => true, 'frequency' => 'daily'],
+                    'push' => ['enabled' => false, 'frequency' => 'weekly']
+                ]
+            ]
+        ];
+
+        $arr = new Arr;
+
+        // Test basic wildcard pick
+        $result = $arr->pick($data, [
+            'names' => 'users.*.name'
+        ]);
+        $this->assertEquals(['names' => ['John', 'Jane', 'Bob']], $result);
+
+        // Test nested wildcard pick
+        $result = $arr->pick($data, [
+            'cities' => 'users.*.profile.city',
+            'ages' => 'users.*.profile.age'
+        ]);
+        $this->assertEquals([
+            'cities' => ['NY', 'LA', 'SF'],
+            'ages' => [30, 25, 35]
+        ], $result);
+
+        // Test array index pick
+        $result = $arr->pick($data, [
+            'first_user' => 'users.0.name',
+            'last_user' => 'users.2.name'
+        ]);
+        $this->assertEquals([
+            'first_user' => 'John',
+            'last_user' => 'Bob'
+        ], $result);
+
+        // Test mixed wildcard and array access
+        $result = $arr->pick($data, [
+            'first_user_skills' => 'users.0.profile.skills',
+            'all_skills' => 'users.*.profile.skills'
+        ]);
+        $this->assertEquals([
+            'first_user_skills' => ['php', 'js'],
+            'all_skills' => [['php', 'js'], ['python', 'ruby'], ['java', 'go']]
+        ], $result);
+
+        // Test with transforms and wildcards
+        $result = $arr->pick($data, [
+            'skill_count' => ['from' => 'users.*.profile.skills', 'transform' => fn($skills) => count($skills)],
+            'cities_upper' => ['from' => 'users.*.profile.city', 'transform' => 'strtoupper']
+        ]);
+        $this->assertEquals([
+            'skill_count' => [2, 2, 2],
+            'cities_upper' => ['NY', 'LA', 'SF']
+        ], $result);
+
+        // Test with defaults and wildcards
+        $result = $arr->pick($data, [
+            'missing' => ['from' => 'users.*.missing', 'default' => 'Unknown'],
+            'notification_status' => ['from' => 'settings.notifications.*.enabled', 'default' => false]
+        ]);
+        $this->assertEquals([
+            'missing' => ['Unknown', 'Unknown', 'Unknown'],
+            'notification_status' => [true, false]
+        ], $result);
+
+        // Test with object data
+        $objData = json_decode(json_encode($data));
+        $result = $arr->pick($objData, [
+            'names' => 'users.*.name',
+            'cities' => 'users.*.profile.city'
+        ]);
+        $this->assertEquals([
+            'names' => ['John', 'Jane', 'Bob'],
+            'cities' => ['NY', 'LA', 'SF']
+        ], $result);
+    }
 }

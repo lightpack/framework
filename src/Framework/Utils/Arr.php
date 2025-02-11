@@ -787,18 +787,50 @@ class Arr
             if (is_array($field)) {
                 $from = $field['from'] ?? $key;
                 $default = array_key_exists('default', $field) ? $field['default'] : null;
-                $value = $this->get($from, $data, $default);
+                $value = $this->get($from, $data);
 
-                // Apply transform if provided
-                if (isset($field['transform'])) {
-                    if (is_callable($field['transform'])) {
-                        $value = $field['transform']($value);
-                    } elseif (is_string($field['transform']) && is_callable($field['transform'])) {
-                        $value = call_user_func($field['transform'], $value);
+                // Handle default values for wildcards
+                if ($value === null && str_contains($from, '*')) {
+                    // Get the array to iterate over
+                    $parts = explode('.*.', $from);
+                    $baseValue = $this->get($parts[0], $data);
+                    if (is_array($baseValue)) {
+                        $value = array_fill(0, count($baseValue), $default);
                     }
+                } elseif ($value === null) {
+                    $value = $default;
                 }
 
-                $result[$key] = $value;
+                if ($value !== null) {
+                    // Apply transform if provided
+                    if (isset($field['transform'])) {
+                        $transform = $field['transform'];
+                        if (is_array($value) && !str_contains($from, '*')) {
+                            // Only array_map if it's a regular array, not from wildcard
+                            if (is_callable($transform)) {
+                                $value = $transform($value);
+                            } elseif (is_string($transform) && is_callable($transform)) {
+                                $value = call_user_func($transform, $value);
+                            }
+                        } else {
+                            // For wildcards or single values
+                            if (is_array($value)) {
+                                if (is_callable($transform)) {
+                                    $value = array_map($transform, $value);
+                                } elseif (is_string($transform) && is_callable($transform)) {
+                                    $value = array_map($transform, $value);
+                                }
+                            } else {
+                                if (is_callable($transform)) {
+                                    $value = $transform($value);
+                                } elseif (is_string($transform) && is_callable($transform)) {
+                                    $value = call_user_func($transform, $value);
+                                }
+                            }
+                        }
+                    }
+                    $result[$key] = $value;
+                }
             }
         }
 
