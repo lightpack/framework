@@ -44,9 +44,12 @@ class Request
         return $_SERVER['REQUEST_URI'] ?? '';
     }
 
+    /**
+     * @deprecated Use input() method instead
+     */
     public function query(string $key = null, $default = null)
     {
-        return $this->queryData($key, $default);
+        return $this->input($key, $default);
     }
 
     public function basepath(): string
@@ -107,8 +110,8 @@ class Request
     public function hostWithPort()
     {
         $hostWithPort = $this->host();
-        
-        if($this->port()) {
+
+        if ($this->port()) {
             $hostWithPort .= ':' . $this->port();
         }
 
@@ -142,35 +145,38 @@ class Request
      */
     public function input(?string $key = null, $default = null): mixed
     {
+        // Handle JSON requests
         if ($this->isJson()) {
-            return $this->json($key, $default);
+            if (null === $this->jsonBody) {
+                $this->parseJson();
+            }
+            return $key === null ? $this->jsonBody : ($this->jsonBody[$key] ?? $default);
         }
 
+        // For spoofed methods, use POST data
         if ($this->isSpoofed()) {
-            return $this->postData($key, $default);
+            return $key === null ? $_POST : ($_POST[$key] ?? $default);
         }
 
-        match ($this->method) {
-            'GET' => $value = $this->queryData($key, $default),
-            'POST' => $value = $this->postData($key, $default),
-            'PUT', 'PATCH', 'DELETE' => $value = $this->getParsedBody($key, $default),
+        // Handle different HTTP methods
+        $data = match ($this->method) {
+            'GET' => $_GET,
+            'POST' => $_POST,
+            'PUT', 'PATCH', 'DELETE' => $this->getParsedBody(),
         };
 
-        // Always fallback to $_GET
-        return $value ?? $this->queryData($key, $default);
+        // Return data with fallback to query parameters
+        return $key === null
+            ? $data
+            : ($data[$key] ?? $_GET[$key] ?? $default);
     }
 
+    /**
+     * @deprecated Use input() method instead
+     */
     public function json(?string $key = null, $default = null): mixed
     {
-        if (null === $this->jsonBody) {
-            $this->parseJson();
-        }
-
-        if (null === $key) {
-            return $this->jsonBody;
-        }
-
-        return $this->jsonBody[$key] ?? $default;
+        return $this->input($key, $default);
     }
 
     public function files()
@@ -371,7 +377,7 @@ class Request
      */
     public function params(?string $key, $default = null)
     {
-        if(is_null($key)) {
+        if (is_null($key)) {
             return $this->route()->getParams();
         }
 
@@ -419,21 +425,19 @@ class Request
         $this->jsonBody = $json;
     }
 
+    /**
+     * @deprecated Internal use only, will be removed
+     */
     private function queryData(string $key = null, $default = null)
     {
-        if (null === $key) {
-            return $_GET;
-        }
-
-        return $_GET[$key] ?? $default;
+        return $this->input($key, $default);
     }
 
+    /**
+     * @deprecated Internal use only, will be removed
+     */
     private function postData(string $key = null, $default = null)
     {
-        if (null === $key) {
-            return $_POST;
-        }
-
-        return $_POST[$key] ?? $default;
+        return $this->input($key, $default);
     }
 }
