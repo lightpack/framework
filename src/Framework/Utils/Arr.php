@@ -49,35 +49,56 @@ class Arr
     public function get(string $key, array|object $data, $default = null)
     {
         $keys = explode('.', $key);
-        $current = $data;
+        $result = $data;
 
-        while (count($keys) > 1) {
-            $key = array_shift($keys);
+        while (count($keys) > 0) {
+            $segment = array_shift($keys);
 
-            if (is_array($current)) {
-                if (!isset($current[$key]) || (!is_array($current[$key]) && !is_object($current[$key]))) {
+            if ($segment === '*') {
+                if (!is_array($result) && !is_object($result)) {
                     return $default;
                 }
-                $current = $current[$key];
-            } elseif (is_object($current)) {
-                if (!property_exists($current, $key) || (!is_array($current->$key) && !is_object($current->$key))) {
+
+                $items = [];
+                $remainingPath = implode('.', $keys);
+                
+                foreach ((array)$result as $item) {
+                    if ($remainingPath !== '') {
+                        if (is_array($item) || is_object($item)) {
+                            $value = $this->get($remainingPath, $item, null);
+                            if ($value !== null) {
+                                $items[] = $value;
+                            }
+                        }
+                    } else {
+                        $items[] = $item;
+                    }
+                }
+
+                return empty($items) ? $default : $items;
+            }
+
+            // Handle array access (numeric keys)
+            if (is_numeric($segment)) {
+                $segment = (int) $segment;
+            }
+
+            if (is_array($result)) {
+                if (!isset($result[$segment])) {
                     return $default;
                 }
-                $current = $current->$key;
+                $result = $result[$segment];
+            } elseif (is_object($result)) {
+                if (!property_exists($result, $segment)) {
+                    return $default;
+                }
+                $result = $result->$segment;
             } else {
                 return $default;
             }
         }
 
-        $key = array_shift($keys);
-
-        if (is_array($current)) {
-            return $current[$key] ?? $default;
-        } elseif (is_object($current)) {
-            return property_exists($current, $key) ? $current->$key : $default;
-        }
-
-        return $default;
+        return $result;
     }
 
     /**

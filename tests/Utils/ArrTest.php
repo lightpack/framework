@@ -1078,4 +1078,78 @@ final class ArrTest extends TestCase
         $this->assertEquals(['a' => 1, 'c' => 3], $passed);
         $this->assertEquals(['b' => 2], $failed);
     }
+
+    public function testArrayGetWithWildcardAndArrayAccess()
+    {
+        // Test data
+        $data = [
+            'users' => [
+                ['name' => 'John', 'profile' => ['age' => 30, 'city' => 'NY']],
+                ['name' => 'Jane', 'profile' => ['age' => 25, 'city' => 'LA']],
+                ['name' => 'Bob', 'profile' => ['age' => 35, 'city' => 'SF']]
+            ],
+            'settings' => [
+                'notifications' => [
+                    'email' => true,
+                    'push' => false
+                ]
+            ]
+        ];
+
+        $arr = new Arr;
+
+        // Test wildcard access
+        $this->assertEquals(
+            ['John', 'Jane', 'Bob'],
+            $arr->get('users.*.name', $data)
+        );
+
+        // Test nested wildcard access
+        $this->assertEquals(
+            ['NY', 'LA', 'SF'],
+            $arr->get('users.*.profile.city', $data)
+        );
+
+        // Test array index access
+        $this->assertEquals(
+            'John',
+            $arr->get('users.0.name', $data)
+        );
+
+        // Test array index with nested access
+        $this->assertEquals(
+            30,
+            $arr->get('users.0.profile.age', $data)
+        );
+
+        // Test default value with wildcard
+        $this->assertEquals(
+            [],
+            $arr->get('users.*.missing', $data, [])
+        );
+
+        // Test wildcard on non-array
+        $this->assertNull(
+            $arr->get('settings.notifications.*.value', $data)
+        );
+
+        // Test mixed wildcard and array access
+        $this->assertEquals(
+            ['NY'],
+            $arr->get('users.0.*.city', $data)
+        );
+
+        // Test multiple wildcards
+        $this->assertEquals(
+            [30, 25, 35],
+            $arr->get('users.*.profile.age', $data)
+        );
+
+        // Test object access with wildcard
+        $obj = json_decode(json_encode($data));
+        $this->assertEquals(
+            ['John', 'Jane', 'Bob'],
+            $arr->get('users.*.name', $obj)
+        );
+    }
 }
