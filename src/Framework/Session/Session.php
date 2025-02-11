@@ -61,24 +61,23 @@ class Session
             return false;
         }
 
-        $request = request();
         $token = null;
 
         // Check headers first (for AJAX/API requests)
-        if ($request->hasHeader('X-CSRF-TOKEN')) {
-            $token = $request->header('X-CSRF-TOKEN');
+        if (isset($_SERVER['HTTP_X_CSRF_TOKEN'])) {
+            $token = $_SERVER['HTTP_X_CSRF_TOKEN'];
         }
         // Check POST data
-        else if ($request->isPost()) {
+        else if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $token = $_POST['_token'] ?? null;
         }
         // Check JSON body
-        else if ($request->isJson()) {
-            $token = $request->json('_token');
-        }
-        // For other methods (PUT/PATCH/DELETE)
-        else {
-            $token = $request->input('_token');
+        else if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'json') !== false) {
+            $rawBody = file_get_contents('php://input');
+            if ($rawBody) {
+                $jsonData = json_decode($rawBody, true);
+                $token = $jsonData['_token'] ?? null;
+            }
         }
 
         if (!$token) {

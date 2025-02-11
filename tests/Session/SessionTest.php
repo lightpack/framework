@@ -115,6 +115,7 @@ class SessionTest extends TestCase
     {
         $token = 'matching_token';
         $_POST['_token'] = $token;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
 
         $this->driver->method('started')
             ->willReturn(true);
@@ -179,6 +180,7 @@ class SessionTest extends TestCase
     {
         $token = 'valid_token';
         $_POST['_token'] = $token;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
 
         $this->driver->method('started')
             ->willReturn(true);
