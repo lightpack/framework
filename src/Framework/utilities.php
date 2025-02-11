@@ -401,3 +401,13 @@ if (!function_exists('error')) {
         return $errors[$key] ?? '';
     }
 }
+
+if(!function_exists('method_input')) {
+    /**
+     * Returns a hidden input field for the spoofed request method.
+     */
+    function method_input(string $method): string
+    {
+        return '<input type="hidden" name="_method" value="' . $method . '">';
+    }
+}

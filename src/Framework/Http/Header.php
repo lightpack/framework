@@ -13,7 +13,7 @@ class Header
 
     public function has(string $key): bool
     {
-        return $this->headers[$key] ? true : false;
+        return isset($this->headers[$key]);
     }
 
     public function get(string $key, string $default = null): ?string

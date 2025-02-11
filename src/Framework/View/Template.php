@@ -44,7 +44,7 @@ class Template
         return '';
     }
 
-    public function component(string $file, array $data): string
+    public function component(string $file, array $data = []): string
     {
         return $this->renderTemplateWithData($file, $data);
     }
