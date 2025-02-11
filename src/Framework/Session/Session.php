@@ -57,15 +57,35 @@ class Session
 
     public function verifyToken(): bool
     {
-        if (!$this->driver->started() || !isset($_POST['_token'])) {
+        if (!$this->driver->started()) {
             return false;
         }
 
-        if ($this->get('_token') !== $_POST['_token']) {
+        $request = request();
+        $token = null;
+
+        // Check headers first (for AJAX/API requests)
+        if ($request->hasHeader('X-CSRF-TOKEN')) {
+            $token = $request->header('X-CSRF-TOKEN');
+        }
+        // Check POST data
+        else if ($request->isPost()) {
+            $token = $_POST['_token'] ?? null;
+        }
+        // Check JSON body
+        else if ($request->isJson()) {
+            $token = $request->json('_token');
+        }
+        // For other methods (PUT/PATCH/DELETE)
+        else {
+            $token = $request->input('_token');
+        }
+
+        if (!$token) {
             return false;
         }
 
-        return true;
+        return $this->get('_token') === $token;
     }
 
     public function flash(string $key, $value = null)

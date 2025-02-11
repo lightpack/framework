@@ -11,10 +11,10 @@ class File
 {
     public function info($path): ?SplFileInfo
     {
-        if(!is_file($path)) {
+        if (!is_file($path)) {
             return null;
         }
-        
+
         return new SplFileInfo($path);
     }
 
@@ -30,11 +30,13 @@ class File
 
     public function read(string $path): ?string
     {
-        if(!$this->exists($path)) {
+        $path = $this->sanitizePath($path);
+
+        if (!$this->exists($path)) {
             return null;
         }
 
-        if(!is_readable($path)) {
+        if (!is_readable($path)) {
             throw new RuntimeException(
                 sprintf("Permission denied to read file contents: %s", $path)
             );
@@ -45,12 +47,22 @@ class File
 
     public function write(string $path, string $contents, $flags = LOCK_EX)
     {
+        // Get directory path
+        $directory = dirname($path);
+
+        // Create directory if it doesn't exist
+        if (!is_dir($directory)) {
+            // recursive = true to create nested directories
+            // 0755 = standard directory permissions
+            mkdir($directory, 0755, true);
+        }
+
         return file_put_contents($path, $contents, $flags);
     }
 
     public function delete(string $path): bool
     {
-        if($this->exists($path)) {
+        if ($this->exists($path)) {
             return @unlink($path);
         }
 
@@ -64,7 +76,7 @@ class File
 
     public function copy(string $source, string $destination): bool
     {
-        if($this->exists($source)) {
+        if ($this->exists($source)) {
             return copy($source, $destination);
         }
 
@@ -73,7 +85,7 @@ class File
 
     public function rename(string $old, string $new): bool
     {
-        if($this->copy($old, $new)) {
+        if ($this->copy($old, $new)) {
             return @unlink($old);
         }
 
@@ -93,24 +105,25 @@ class File
     public function size(string $path, bool $format = false)
     {
         $bytes = filesize($path);
-        
-        if($format === false) {
+
+        if ($format === false) {
             return $bytes;
-        }   
-    
+        }
+
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes >= 1024 && $i < 4; $i++) {
             $bytes /= 1024;
         }
-			
-		return round($bytes, 2) . $units[$i];
+
+        return round($bytes, 2) . $units[$i];
     }
 
-    public function modified(string $path, bool $format = false, string $dateFormat = 'M d, Y') {
+    public function modified(string $path, bool $format = false, string $dateFormat = 'M d, Y')
+    {
         $timestamp = filemtime($path);
 
-        if($format) {
+        if ($format) {
             $date = DateTime::createFromFormat('U', $timestamp);
             $timestamp = $date->format($dateFormat);
         }
@@ -118,10 +131,10 @@ class File
         return $timestamp;
     }
 
-    public function makeDir(string $path, int $mode = 0777): bool 
+    public function makeDir(string $path, int $mode = 0777): bool
     {
-        if(!is_dir($path)) {
-            if(!mkdir($path, $mode, true)) {
+        if (!is_dir($path)) {
+            if (!mkdir($path, $mode, true)) {
                 throw new RuntimeException(
                     sprintf("Unable to create directory: %s", $path)
                 );
@@ -140,58 +153,58 @@ class File
     {
         return $this->copyDir($source, $destination, true);
     }
-    
+
     public function removeDir(string $path, bool $delete = true)
     {
-        if(!is_dir($path)) {
+        if (!is_dir($path)) {
             return;
         }
 
-        foreach($this->getIterator($path) as $file) {
-            if($file->isDir()) {
+        foreach ($this->getIterator($path) as $file) {
+            if ($file->isDir()) {
                 $this->removeDir($file->getRealPath());
             } else {
                 @unlink($file->getRealPath());
             }
         }
 
-        if($delete) { 
+        if ($delete) {
             @rmdir($path);
         }
     }
 
     public function copyDir(string $source, string $destination, bool $delete = false): bool
     {
-        if(!is_dir($source)) {
+        if (!is_dir($source)) {
             return false;
         }
 
         $this->makeDir($destination);
 
-        foreach($this->getIterator($source) as $file) {
+        foreach ($this->getIterator($source) as $file) {
             $from = $file->getRealPath();
             $to = $destination . DIRECTORY_SEPARATOR . $file->getBasename();
 
-            if($file->isDir()) {
-                if(!$this->copyDir($from, $to, $delete)) {
+            if ($file->isDir()) {
+                if (!$this->copyDir($from, $to, $delete)) {
                     return false;
                 }
 
-                if($delete) {
+                if ($delete) {
                     $this->removeDir($from);
                 }
             } else {
-                if(!copy($from, $to)) {
+                if (!copy($from, $to)) {
                     return false;
                 }
 
-                if($delete) {
+                if ($delete) {
                     @unlink($from);
                 }
             }
         }
 
-        if($delete) {
+        if ($delete) {
             $this->removeDir($source);
         }
 
@@ -202,9 +215,9 @@ class File
     {
         $found = null;
         $timestamp = 0;
-        
-        foreach($this->getIterator($path) as $file) {
-            if($timestamp < $file->getMTime()) {
+
+        foreach ($this->getIterator($path) as $file) {
+            if ($timestamp < $file->getMTime()) {
                 $found = $file;
                 $timestamp = $file->getMTime();
             }
@@ -215,13 +228,13 @@ class File
 
     public function traverse(string $path): ?array
     {
-        if(!$this->isDir($path)) {
+        if (!$this->isDir($path)) {
             return null;
         }
 
         $files = [];
 
-        foreach($this->getIterator($path) as $file) {
+        foreach ($this->getIterator($path) as $file) {
             $files[$file->getFilename()] = $file;
         }
 
@@ -230,10 +243,21 @@ class File
 
     private function getIterator(string $path): ?FilesystemIterator
     {
-        if(!is_dir($path)) {
+        if (!is_dir($path)) {
             return null;
         }
 
         return new FilesystemIterator($path);
+    }
+
+    private function sanitizePath(string $path): string
+    {
+        // Replace both slashes with system separator
+        $path = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path);
+
+        // Remove any parent directory traversal
+        $path = str_replace('..', '', $path);
+
+        return $path;
     }
 }
