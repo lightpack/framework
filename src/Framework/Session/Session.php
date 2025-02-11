@@ -28,6 +28,7 @@ class Session
 
     public function regenerate(): bool
     {
+        $this->delete('_token');
         return $this->driver->regenerate();
     }
 
@@ -46,11 +47,14 @@ class Session
         return $this->get($key) !== null;
     }
 
-    public function token()
+    public function token(): string
     {
-        $token = bin2hex(openssl_random_pseudo_bytes(8));
+        $token = $this->get('_token');
 
-        $this->set('_token', $token);
+        if (!$token) {
+            $token = bin2hex(openssl_random_pseudo_bytes(8));
+            $this->set('_token', $token);
+        }
 
         return $token;
     }
