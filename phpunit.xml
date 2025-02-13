@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <phpunit 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
     bootstrap="vendor/autoload.php" 
     colors="true" 
     testdox="true">
@@ -8,8 +10,7 @@
             <directory>./tests</directory>
             <exclude>./tests/Session</exclude>
         </testsuite>
-        <!-- Session tests need stderr to prevent header conflicts -->
-        <testsuite name="Session Tests" stderr="true">
+        <testsuite name="Session Tests">
             <directory>./tests/Session</directory>
         </testsuite>
     </testsuites>
@@ -27,9 +28,9 @@
         <env name="PGSQL_PASSWORD" value="postgres" />
         <env name="PGSQL_DB" value="test_lightpack" />
     </php>
-    <filter>
-        <whitelist>
+    <coverage>
+        <include>
             <directory suffix=".php">./src/Framework</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </coverage>
 </phpunit>
