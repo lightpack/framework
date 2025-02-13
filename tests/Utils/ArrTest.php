@@ -1238,4 +1238,119 @@ final class ArrTest extends TestCase
             'cities' => ['NY', 'LA', 'SF']
         ], $result);
     }
+
+    public function testArrayGetWithMultipleWildcards()
+    {
+        $data = [
+            'departments' => [
+                'engineering' => [
+                    'teams' => [
+                        ['name' => 'frontend', 'members' => [
+                            ['name' => 'John', 'skills' => ['js', 'react']],
+                            ['name' => 'Jane', 'skills' => ['vue', 'angular']]
+                        ]],
+                        ['name' => 'backend', 'members' => [
+                            ['name' => 'Bob', 'skills' => ['php', 'mysql']],
+                            ['name' => 'Alice', 'skills' => ['python', 'postgres']]
+                        ]]
+                    ]
+                ],
+                'design' => [
+                    'teams' => [
+                        ['name' => 'ui', 'members' => [
+                            ['name' => 'Mike', 'skills' => ['figma', 'sketch']],
+                            ['name' => 'Sara', 'skills' => ['photoshop', 'illustrator']]
+                        ]],
+                        ['name' => 'ux', 'members' => [
+                            ['name' => 'Tom', 'skills' => ['research', 'prototyping']],
+                            ['name' => 'Emma', 'skills' => ['wireframing', 'testing']]
+                        ]]
+                    ]
+                ]
+            ]
+        ];
+
+        $arr = new Arr;
+
+        // Test multiple wildcards at different levels
+        $names = $arr->get('departments.*.teams.*.members.*.name', $data);
+        $this->assertEquals(
+            [
+                [['John', 'Jane'], ['Bob', 'Alice']], 
+                [['Mike', 'Sara'], ['Tom', 'Emma']]
+            ],
+            $names
+        );
+
+        // Test wildcards with specific array access
+        $names = $arr->get('departments.engineering.teams.0.members.*.name', $data);
+        sort($names); // Sort for consistent comparison
+        $this->assertEquals(
+            ['Jane', 'John'],
+            $names
+        );
+
+        // Test wildcards with mixed array/object access
+        $objData = json_decode(json_encode($data));
+        $names = $arr->get('departments.*.teams.*.members.*.name', $objData);
+        $this->assertEquals(
+            [
+                [['John', 'Jane'], ['Bob', 'Alice']],
+                [['Mike', 'Sara'], ['Tom', 'Emma']]
+            ],
+            $names
+        );
+
+        // Test wildcards with empty results
+        $this->assertEquals(
+            null,
+            $arr->get('departments.*.teams.*.members.*.nonexistent', $data)
+        );
+
+        // Test wildcards with default value
+        $this->assertEquals(
+            ['default'],
+            $arr->get('departments.nonexistent.*.members.*.name', $data, ['default'])
+        );
+
+        // Test wildcards with numeric array access
+        $firstTeamNames = $arr->get('departments.*.teams.0.name', $data);
+        sort($firstTeamNames); // Sort for consistent comparison
+        $this->assertEquals(
+            ['frontend', 'ui'],
+            $firstTeamNames
+        );
+
+        // Test wildcards with non-array/object values
+        $invalidData = ['test' => 'value'];
+        $this->assertNull($arr->get('test.*.value', $invalidData));
+    }
+
+    public function testWildcardEdgeCases()
+    {
+        $arr = new Arr;
+        
+        // Test empty array
+        $this->assertNull($arr->get('*.test', []));
+        
+        // Test invalid path with multiple wildcards
+        $data = ['key' => 'value'];
+        $this->assertNull($arr->get('*.*.*.test', $data));
+        
+        // Test wildcard at start
+        $data = ['users' => [['name' => 'John'], ['name' => 'Jane']]];
+        $result = $arr->get('*.users', ['data' => $data]);
+        $this->assertEquals(
+            [['name' => 'John'], ['name' => 'Jane']],
+            $result[0]
+        );
+        
+        // Test wildcard at end
+        $names = $arr->get('users.*.name', $data);
+        sort($names); // Sort for consistent comparison
+        $this->assertEquals(
+            ['Jane', 'John'],
+            $names
+        );
+    }
 }
