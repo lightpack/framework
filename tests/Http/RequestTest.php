@@ -328,8 +328,13 @@ final class RequestTest extends TestCase
 
     public function testRequestInputWithWildcardAccess()
     {
-        // Test with POST parameters
+        // Reset test environment
+        $_GET = [];
+        $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
+        
+        // Test with POST parameters
         $_POST = [
             'users' => [
                 ['id' => 1, 'name' => 'John', 'role' => 'admin'],
@@ -361,6 +366,12 @@ final class RequestTest extends TestCase
 
         $request = new Request();
         
+        // Verify request method is POST
+        $this->assertEquals('POST', $request->method());
+        
+        // Verify we can get all POST data
+        $this->assertEquals($_POST, $request->input());
+      
         // Test wildcard access to get all user names
         $this->assertEquals(
             ['John', 'Jane', 'Bob'],
