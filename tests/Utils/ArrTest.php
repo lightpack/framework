@@ -1353,4 +1353,76 @@ final class ArrTest extends TestCase
             $names
         );
     }
+
+    public function testDeleteRemovesNestedKey()
+    {
+        $array = [
+            'products' => [
+                'desk' => [
+                    'price' => 100,
+                    'color' => 'black'
+                ],
+                'chair' => [
+                    'price' => 50
+                ]
+            ]
+        ];
+
+        $arr = new Arr;
+        $arr->delete('products.desk.price', $array);
+        $this->assertArrayNotHasKey('price', $array['products']['desk']);
+        $this->assertEquals('black', $array['products']['desk']['color']);
+        $this->assertEquals(['price' => 50], $array['products']['chair']);
+    }
+
+    public function testDeleteWithNonExistentKeyDoesNothing()
+    {
+        $array = ['products' => ['desk' => ['price' => 100]]];
+        $original = $array;
+        $arr = new Arr;
+
+        $arr->delete('products.chair.price', $array);
+        $this->assertEquals($original, $array);
+    }
+
+    public function testDeleteWithScalarValueDoesNothing()
+    {
+        $array = ['products' => 'scalar value'];
+        $original = $array;
+        $arr = new Arr;
+
+        $arr->delete('products.desk.price', $array);
+        $this->assertEquals($original, $array);
+    }
+
+    public function testWithoutRemovesSpecifiedKeys()
+    {
+        $array = [
+            'name' => 'Desk',
+            'price' => 100,
+            'color' => 'black',
+            'weight' => '50kg'
+        ];
+
+        $arr = new Arr;
+        $filtered = $arr->without(['price', 'weight'], $array);
+        
+        $this->assertEquals([
+            'name' => 'Desk',
+            'color' => 'black'
+        ], $filtered);
+
+        // Original array should not be modified
+        $this->assertArrayHasKey('price', $array);
+        $this->assertArrayHasKey('weight', $array);
+    }
+
+    public function testWithoutNonExistentKeysReturnsOriginalArray()
+    {
+        $array = ['name' => 'Desk', 'price' => 100];
+        $arr = new Arr;
+        
+        $filtered = $arr->without(['color', 'weight'], $array);
+        $this->assertEquals($array, $filtered);
+    }
 }

@@ -884,4 +884,45 @@ class Arr
 
         return [$passed, $failed];
     }
+
+    /**
+     * Remove one or more array items from a given array using "dot" notation.
+     *
+     * @param array $array
+     * @param array|string $keys
+     * @return void
+     */
+    public function delete(string $key, array &$array): void
+    {
+        $keys = explode('.', $key);
+        $current = &$array;
+        
+        while(count($keys) > 1) {
+            $key = array_shift($keys);
+            
+            if(!isset($current[$key]) || !is_array($current[$key])) {
+                return;
+            }
+            
+            $current = &$current[$key];
+        }
+        
+        unset($current[array_shift($keys)]);
+    }
+
+    /**
+     * Get all items except for those with the specified keys.
+     *
+     * @param array $keys Keys to exclude from the array
+     * @param array $array The source array
+     * @return array New array without the specified keys
+     */
+    public function without(array $keys, array $array): array
+    {
+        foreach($keys as $key) {
+            unset($array[$key]);
+        }
+        
+        return $array;
+    }
 }
