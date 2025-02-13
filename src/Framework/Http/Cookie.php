@@ -64,7 +64,7 @@ class Cookie
 
     public function has($key)
     {
-        return $_COOKIE[$key] ?? null;
+        return isset($_COOKIE[$key]);
     }
 
     public function delete($key)
