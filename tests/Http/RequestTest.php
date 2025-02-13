@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Lightpack\Exceptions\InvalidHttpMethodException;
 use Lightpack\Http\Request;
+use Lightpack\Utils\Arr;
 use PHPUnit\Framework\TestCase;
 
 final class RequestTest extends TestCase
@@ -323,5 +324,68 @@ final class RequestTest extends TestCase
         $this->assertEquals('jane@example.com', $request->input('user.profile.email'));
         $this->assertNull($request->input('user.profile.phone'));
         $this->assertEquals('default', $request->input('user.settings.theme', 'default'));
+    }
+
+    public function testRequestInputWithWildcardAccess()
+    {
+        // Test with POST parameters
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'users' => [
+                ['id' => 1, 'name' => 'John', 'role' => 'admin'],
+                ['id' => 2, 'name' => 'Jane', 'role' => 'user'],
+                ['id' => 3, 'name' => 'Bob', 'role' => 'user']
+            ],
+            'settings' => [
+                'notifications' => [
+                    ['type' => 'email', 'enabled' => true],
+                    ['type' => 'sms', 'enabled' => false],
+                    ['type' => 'push', 'enabled' => true]
+                ]
+            ],
+            'departments' => [
+                'tech' => [
+                    'teams' => [
+                        ['name' => 'Frontend', 'members' => [['name' => 'Alice'], ['name' => ['Bob', 'Meghan']]]],
+                        ['name' => 'Backend', 'members' => [['name' => 'Charlie'], ['name' => 'Dave']]]
+                    ]
+                ],
+                'design' => [
+                    'teams' => [
+                        ['name' => 'UI', 'members' => [['name' => 'Eve'], ['name' => 'Frank']]],
+                        ['name' => 'UX', 'members' => [['name' => 'Grace'], ['name' => 'Henry']]]
+                    ]
+                ]
+            ]
+        ];
+
+        $request = new Request();
+        
+        // Test wildcard access to get all user names
+        $this->assertEquals(
+            ['John', 'Jane', 'Bob'],
+            $request->input('users.*.name')
+        );
+
+        // Test wildcard access to get all user roles
+        $this->assertEquals(
+            ['admin', 'user', 'user'],
+            $request->input('users.*.role')
+        );
+
+        // Test wildcard with nested arrays
+        $this->assertEquals(
+            [true, false, true],
+            $request->input('settings.notifications.*.enabled')
+        );
+
+        // Test wildcard with non-existent path
+        $this->assertNull($request->input('users.*.address'));
+
+        // Test wildcard with default value
+        $this->assertEquals(
+            'N/A',
+            $request->input('users.*.phone', 'N/A')
+        );
     }
 }
