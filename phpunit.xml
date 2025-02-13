@@ -21,12 +21,6 @@
         <env name="MYSQL_USER" value="phpmyadmin" />
         <env name="MYSQL_PASSWORD" value="phpmyadmin" />
         <env name="MYSQL_DB" value="test_lightpack" />
-        <!-- Postgress Test Config -->
-        <env name="PGSQL_HOST" value="localhost" />
-        <env name="PGSQL_PORT" value="5432" />
-        <env name="PGSQL_USER" value="postgres" />
-        <env name="PGSQL_PASSWORD" value="postgres" />
-        <env name="PGSQL_DB" value="test_lightpack" />
     </php>
     <coverage>
         <include>

@@ -2,8 +2,8 @@
 
 namespace Lightpack\Providers;
 
-use Psr\Log\LoggerInterface;
 use Lightpack\Logger\Logger;
+use Lightpack\Logger\ILogger;
 use Lightpack\Logger\Drivers\FileLogger;
 use Lightpack\Logger\Drivers\NullLogger;
 use Lightpack\Container\Container;
@@ -27,6 +27,6 @@ class LogProvider implements ProviderInterface
         });
 
         $container->alias(Logger::class, 'logger');
-        $container->alias(LoggerInterface::class, 'logger');
+        $container->alias(ILogger::class, 'logger');
     }
 }
