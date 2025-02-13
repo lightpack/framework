@@ -97,7 +97,7 @@ final class ArrTest extends TestCase
         // Assertions
         $this->assertIsArray($tree);
         $this->assertCount(2, $tree);
-        $this->assertObjectHasAttribute('children', $tree[0]);
+        $this->assertObjectHasProperty('children', $tree[0]);
         $this->assertCount(2, $tree[0]->children);
         $this->assertCount(1, $tree[0]->children[1]->children);
 
@@ -115,7 +115,7 @@ final class ArrTest extends TestCase
         // Assertions
         $this->assertIsArray($tree);
         $this->assertCount(2, $tree);
-        $this->assertObjectHasAttribute('children', $tree[0]);
+        $this->assertObjectHasProperty('children', $tree[0]);
         $this->assertCount(2, $tree[0]->children);
         $this->assertCount(1, $tree[0]->children[1]->children);
     }

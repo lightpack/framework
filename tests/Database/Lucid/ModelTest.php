@@ -1459,7 +1459,7 @@ final class ModelTest extends TestCase
         $this->assertEquals(2, $projects[0]->tasks[0]->comments_count);
         $this->assertEquals(1, $projects[0]->tasks[1]->comments_count);
         $this->assertEquals(0, $projects[1]->tasks[0]->comments_count);
-        $this->assertObjectNotHasAttribute('tasks', $projects[2]);
+        $this->assertObjectNotHasProperty('tasks', $projects[2]);
     }
 
     public function testEagerLoadWithThrowsException()
