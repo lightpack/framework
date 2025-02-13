@@ -39,6 +39,7 @@ final class DBTest extends TestCase
             'username' => 'invalid-user',
             'password' => 'invalid-pass',
             'database' => 'invalid-db',
+            'options' => null,
         ];
         $db = new \Lightpack\Database\Adapters\Mysql($config);
     }
