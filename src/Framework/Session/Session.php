@@ -56,27 +56,10 @@ class Session
             return;
         }
 
-        $data = [];
         $topKey = explode('.', $key)[0];
+        $data = [];
         $data[$topKey] = $this->driver->get($topKey) ?? [];
-
-        if(!$data[$topKey]) {
-            return;
-        }
-
-        $keys = explode('.', $key);
-        array_shift($keys); // Remove top key
-        $current = &$data[$topKey];
-        
-        while(count($keys) > 1) {
-            $k = array_shift($keys);
-            if(!isset($current[$k]) || !is_array($current[$k])) {
-                return;
-            }
-            $current = &$current[$k];
-        }
-        
-        unset($current[array_shift($keys)]);
+        $this->arr->delete($key, $data);
         $this->driver->set($topKey, $data[$topKey]);
     }
 

@@ -299,4 +299,69 @@ class SessionTest extends TestCase
 
         $this->session->set('user.profile.name', 'John Doe');
     }
+
+    public function testDeleteWithDotNotation()
+    {
+        $data = [
+            'user' => [
+                'profile' => [
+                    'email' => 'john@example.com',
+                    'name' => 'John Doe'
+                ]
+            ]
+        ];
+
+        $this->driver->expects($this->once())
+            ->method('get')
+            ->with('user')
+            ->willReturn($data['user']);
+
+        $this->driver->expects($this->once())
+            ->method('set')
+            ->with('user', [
+                'profile' => [
+                    'name' => 'John Doe'
+                ]
+            ]);
+
+        $this->session->delete('user.profile.email');
+    }
+
+    public function testDeleteWithNonExistentDotNotationKey()
+    {
+        $data = [
+            'user' => [
+                'profile' => [
+                    'name' => 'John Doe'
+                ]
+            ]
+        ];
+
+        $this->driver->expects($this->once())
+            ->method('get')
+            ->with('user')
+            ->willReturn($data['user']);
+
+        $this->driver->expects($this->once())
+            ->method('set')
+            ->with('user', [
+                'profile' => [
+                    'name' => 'John Doe'
+                ]
+            ]);
+
+        $this->session->delete('user.profile.email');
+    }
+
+    public function testDeleteWithScalarValue()
+    {
+        $this->driver->expects($this->never())
+            ->method('get');
+
+        $this->driver->expects($this->once())
+            ->method('delete')
+            ->with('name');
+
+        $this->session->delete('name');
+    }
 }
