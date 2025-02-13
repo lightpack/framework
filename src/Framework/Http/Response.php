@@ -5,6 +5,40 @@ namespace Lightpack\Http;
 class Response
 {
     /**
+     * Standard HTTP status codes and their messages
+     */
+    private const STATUS_MESSAGES = [
+        // 2xx Success
+        200 => 'OK',
+        201 => 'Created',
+        202 => 'Accepted',
+        204 => 'No Content',
+        
+        // 3xx Redirection
+        301 => 'Moved Permanently',
+        302 => 'Found',
+        303 => 'See Other',
+        304 => 'Not Modified',
+        307 => 'Temporary Redirect',
+        
+        // 4xx Client Errors
+        400 => 'Bad Request',
+        401 => 'Unauthorized',
+        403 => 'Forbidden',
+        404 => 'Not Found',
+        405 => 'Method Not Allowed',
+        409 => 'Conflict',
+        422 => 'Unprocessable Entity',
+        
+        // 5xx Server Errors
+        500 => 'Internal Server Error',
+        501 => 'Not Implemented',
+        502 => 'Bad Gateway',
+        503 => 'Service Unavailable',
+        504 => 'Gateway Timeout',
+    ];
+
+    /**
      * Represents HTTP Content-Type
      */
     protected string $type = 'text/html';
@@ -84,10 +118,18 @@ class Response
 
     /**
      * This method sets the HTTP response status code.
+     * If a standard HTTP message exists for the status code, it will be set automatically.
+     * You can override this with setMessage() if needed.
      */
     public function setStatus(int $status): self
     {
         $this->status = $status;
+        
+        // Set standard message if available
+        if (isset(self::STATUS_MESSAGES[$status])) {
+            $this->message = self::STATUS_MESSAGES[$status];
+        }
+        
         return $this;
     }
 
