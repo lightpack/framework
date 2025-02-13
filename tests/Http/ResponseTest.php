@@ -123,4 +123,82 @@ final class ResponseTest extends TestCase
         $this->assertEquals('text/plain', $this->response->getType());
         $this->assertEquals($data, $this->response->getBody());
     }
+
+    public function testCacheMethodWithDefaultOptions()
+    {
+        $this->response->cache(3600);
+        $headers = $this->response->getHeaders();
+
+        $this->assertArrayHasKey('Cache-Control', $headers);
+        $this->assertArrayHasKey('Expires', $headers);
+        $this->assertArrayHasKey('Pragma', $headers);
+
+        $this->assertStringContainsString('max-age=3600', $headers['Cache-Control']);
+        $this->assertStringContainsString('public', $headers['Cache-Control']);
+    }
+
+    public function testCacheMethodWithPrivateOption()
+    {
+        $this->response->cache(3600, ['public' => false]);
+        $headers = $this->response->getHeaders();
+
+        $this->assertStringContainsString('private', $headers['Cache-Control']);
+        $this->assertStringNotContainsString('public', $headers['Cache-Control']);
+    }
+
+    public function testCacheMethodWithImmutableOption()
+    {
+        $this->response->cache(3600, ['immutable' => true]);
+        $headers = $this->response->getHeaders();
+
+        $this->assertStringContainsString('immutable', $headers['Cache-Control']);
+    }
+
+    public function testNoCacheMethod()
+    {
+        $this->response->noCache();
+        $headers = $this->response->getHeaders();
+
+        $this->assertArrayHasKey('Cache-Control', $headers);
+        $this->assertArrayHasKey('Expires', $headers);
+        $this->assertArrayHasKey('Pragma', $headers);
+
+        $this->assertStringContainsString('no-store', $headers['Cache-Control']);
+        $this->assertStringContainsString('no-cache', $headers['Cache-Control']);
+        $this->assertEquals('no-cache', $headers['Pragma']);
+    }
+
+    public function testSetLastModifiedMethod()
+    {
+        // Test with timestamp
+        $time = time();
+        $this->response->setLastModified($time);
+        $this->assertEquals(gmdate('D, d M Y H:i:s', $time) . ' GMT', $this->response->getHeader('Last-Modified'));
+
+        // Test with DateTime
+        $date = new DateTime();
+        $this->response->setLastModified($date);
+        $this->assertEquals(gmdate('D, d M Y H:i:s', $date->getTimestamp()) . ' GMT', $this->response->getHeader('Last-Modified'));
+
+        // Test with date string
+        $dateStr = '2024-02-13 12:00:00';
+        $this->response->setLastModified($dateStr);
+        $this->assertEquals(gmdate('D, d M Y H:i:s', strtotime($dateStr)) . ' GMT', $this->response->getHeader('Last-Modified'));
+    }
+
+    public function testSecureMethod()
+    {
+        $this->response->secure();
+        $headers = $this->response->getHeaders();
+
+        $this->assertArrayHasKey('X-Content-Type-Options', $headers);
+        $this->assertArrayHasKey('X-Frame-Options', $headers);
+        $this->assertArrayHasKey('X-XSS-Protection', $headers);
+        $this->assertArrayHasKey('Referrer-Policy', $headers);
+
+        $this->assertEquals('nosniff', $headers['X-Content-Type-Options']);
+        $this->assertEquals('SAMEORIGIN', $headers['X-Frame-Options']);
+        $this->assertEquals('1; mode=block', $headers['X-XSS-Protection']);
+        $this->assertEquals('strict-origin-when-cross-origin', $headers['Referrer-Policy']);
+    }
 }

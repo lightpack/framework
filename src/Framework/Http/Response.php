@@ -39,6 +39,29 @@ class Response
     ];
 
     /**
+     * Common security headers for better protection
+     */
+    private const SECURITY_HEADERS = [
+        'X-Content-Type-Options' => 'nosniff',
+        'X-Frame-Options' => 'SAMEORIGIN',
+        'X-XSS-Protection' => '1; mode=block',
+        'Referrer-Policy' => 'strict-origin-when-cross-origin',
+    ];
+
+    /**
+     * Cache directives and their descriptions
+     */
+    private const CACHE_DIRECTIVES = [
+        'public' => 'Response can be cached by any cache',
+        'private' => 'Response is for a single user only',
+        'no-cache' => 'Must revalidate with server before using cached copy',
+        'no-store' => 'Don\'t cache anything about the request/response',
+        'must-revalidate' => 'Must revalidate stale cache entries with server',
+        'max-age' => 'Maximum time in seconds to cache the response',
+        'immutable' => 'Response will not change during cache lifetime',
+    ];
+
+    /**
      * Represents HTTP Content-Type
      */
     protected string $type = 'text/html';
@@ -342,5 +365,81 @@ class Response
     private function sendContent(): void
     {
         echo $this->body;
+    }
+
+    /**
+     * Apply recommended security headers to the response
+     */
+    public function secure(array $customHeaders = []): self
+    {
+        // Merge default security headers with any custom ones
+        $headers = array_merge(self::SECURITY_HEADERS, $customHeaders);
+        
+        // Set HSTS only on HTTPS
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+        }
+        
+        return $this->setHeaders($headers);
+    }
+
+    /**
+     * Enable caching for the response with given options
+     *
+     * @param int $maxAge Maximum age in seconds (e.g., 3600 for 1 hour)
+     * @param array $options Additional cache options:
+     *                      - public: boolean, can be cached by intermediate caches
+     *                      - immutable: boolean, content won't change during maxAge
+     */
+    public function cache(int $maxAge, array $options = []): self
+    {
+        $directives = ['max-age=' . $maxAge];
+        
+        // Public by default
+        if (!isset($options['public']) || $options['public']) {
+            $directives[] = 'public';
+        } else {
+            $directives[] = 'private';
+        }
+        
+        // Mark as immutable if specified
+        if (isset($options['immutable']) && $options['immutable']) {
+            $directives[] = 'immutable';
+        }
+        
+        // Set cache headers
+        return $this->setHeaders([
+            'Cache-Control' => implode(', ', $directives),
+            'Expires' => gmdate('D, d M Y H:i:s', time() + $maxAge) . ' GMT',
+            'Pragma' => 'cache',
+        ]);
+    }
+
+    /**
+     * Disable caching for the response
+     */
+    public function noCache(): self
+    {
+        return $this->setHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
+            'Expires' => 'Sat, 26 Jul 1997 05:00:00 GMT', // Date in the past
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    /**
+     * Set Last-Modified header
+     * 
+     * @param int|string|\DateTimeInterface $time Timestamp, date string, or DateTime
+     */
+    public function setLastModified($time): self
+    {
+        if ($time instanceof \DateTimeInterface) {
+            $time = $time->getTimestamp();
+        } elseif (is_string($time)) {
+            $time = strtotime($time);
+        }
+
+        return $this->setHeader('Last-Modified', gmdate('D, d M Y H:i:s', $time) . ' GMT');
     }
 }
