@@ -2,28 +2,82 @@
 
 namespace Lightpack\Session;
 
+use Lightpack\Utils\Arr;
+
 class Session
 {
     private DriverInterface $driver;
+    private Arr $arr;
 
     public function __construct(DriverInterface $driver)
     {
         $this->driver = $driver;
+        $this->arr = new Arr();
     }
 
     public function set(string $key, $value)
     {
-        $this->driver->set($key, $value);
+        if(!str_contains($key, '.')) {
+            $this->driver->set($key, $value);
+            return;
+        }
+
+        $topKey = explode('.', $key)[0];
+        $data = [];
+        $data[$topKey] = $this->driver->get($topKey) ?? [];
+        
+        $this->arr->set($key, $value, $data);
+        
+        // Only store the top-level key that was modified
+        $this->driver->set($topKey, $data[$topKey]);
     }
 
     public function get(string $key = null, $default = null)
     {
-        return $this->driver->get($key, $default);
+        if($key === null) {
+            return $this->driver->get();
+        }
+
+        if(!str_contains($key, '.')) {
+            return $this->driver->get($key, $default);
+        }
+
+        $data = [];
+        $topKey = explode('.', $key)[0];
+        $data[$topKey] = $this->driver->get($topKey) ?? [];
+        
+        return $this->arr->get($key, $data, $default);
     }
 
     public function delete(string $key)
     {
-        $this->driver->delete($key);
+        if(!str_contains($key, '.')) {
+            $this->driver->delete($key);
+            return;
+        }
+
+        $data = [];
+        $topKey = explode('.', $key)[0];
+        $data[$topKey] = $this->driver->get($topKey) ?? [];
+
+        if(!$data[$topKey]) {
+            return;
+        }
+
+        $keys = explode('.', $key);
+        array_shift($keys); // Remove top key
+        $current = &$data[$topKey];
+        
+        while(count($keys) > 1) {
+            $k = array_shift($keys);
+            if(!isset($current[$k]) || !is_array($current[$k])) {
+                return;
+            }
+            $current = &$current[$k];
+        }
+        
+        unset($current[array_shift($keys)]);
+        $this->driver->set($topKey, $data[$topKey]);
     }
 
     public function regenerate(): bool
@@ -44,7 +98,15 @@ class Session
 
     public function has(string $key): bool
     {
-        return $this->get($key) !== null;
+        if(!str_contains($key, '.')) {
+            return $this->get($key) !== null;
+        }
+
+        $data = [];
+        $topKey = explode('.', $key)[0];
+        $data[$topKey] = $this->driver->get($topKey) ?? [];
+        
+        return $this->arr->has($key, $data);
     }
 
     public function token(): string
