@@ -15,20 +15,34 @@ class Session
         $this->arr = new Arr();
     }
 
+    /**
+     * Check if key uses dot notation
+     */
+    private function hasDotNotation(string $key): bool
+    {
+        return str_contains($key, '.');
+    }
+
+    /**
+     * Get data for dot notation operations
+     */
+    private function getDataForDotNotation(string $key): array
+    {
+        $topKey = explode('.', $key)[0];
+        $data = [];
+        $data[$topKey] = $this->driver->get($topKey) ?? [];
+        return [$topKey, $data];
+    }
+
     public function set(string $key, $value)
     {
-        if(!str_contains($key, '.')) {
+        if(!$this->hasDotNotation($key)) {
             $this->driver->set($key, $value);
             return;
         }
 
-        $topKey = explode('.', $key)[0];
-        $data = [];
-        $data[$topKey] = $this->driver->get($topKey) ?? [];
-        
+        [$topKey, $data] = $this->getDataForDotNotation($key);
         $this->arr->set($key, $value, $data);
-        
-        // Only store the top-level key that was modified
         $this->driver->set($topKey, $data[$topKey]);
     }
 
@@ -38,27 +52,22 @@ class Session
             return $this->driver->get();
         }
 
-        if(!str_contains($key, '.')) {
+        if(!$this->hasDotNotation($key)) {
             return $this->driver->get($key, $default);
         }
 
-        $data = [];
-        $topKey = explode('.', $key)[0];
-        $data[$topKey] = $this->driver->get($topKey) ?? [];
-        
-        return $this->arr->get($key, $data, $default);
+        [$topKey, $data] = $this->getDataForDotNotation($key);
+        return $this->arr->get($key, $data) ?? $default;
     }
 
     public function delete(string $key)
     {
-        if(!str_contains($key, '.')) {
+        if(!$this->hasDotNotation($key)) {
             $this->driver->delete($key);
             return;
         }
 
-        $topKey = explode('.', $key)[0];
-        $data = [];
-        $data[$topKey] = $this->driver->get($topKey) ?? [];
+        [$topKey, $data] = $this->getDataForDotNotation($key);
         $this->arr->delete($key, $data);
         $this->driver->set($topKey, $data[$topKey]);
     }
@@ -81,14 +90,11 @@ class Session
 
     public function has(string $key): bool
     {
-        if(!str_contains($key, '.')) {
+        if(!$this->hasDotNotation($key)) {
             return $this->get($key) !== null;
         }
 
-        $data = [];
-        $topKey = explode('.', $key)[0];
-        $data[$topKey] = $this->driver->get($topKey) ?? [];
-        
+        [$topKey, $data] = $this->getDataForDotNotation($key);
         return $this->arr->has($key, $data);
     }
 
