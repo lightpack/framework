@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Psr\Log\LogLevel;
 use Lightpack\Logger\Logger;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Logger\Drivers\FileLogger;
@@ -27,7 +26,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::INFO, 'hello world');
+        $logger->info('hello world');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -35,7 +34,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::EMERGENCY, 'Emergency log message.');
+        $logger->emergency('Emergency log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -43,7 +42,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::ALERT, 'Alert log message.');
+        $logger->alert('Alert log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -51,7 +50,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::CRITICAL, 'Critical log message.');
+        $logger->critical('Critical log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -59,7 +58,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::ERROR, 'Error log message.');
+        $logger->error('Error log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -67,7 +66,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::WARNING, 'Warning log message.');
+        $logger->warning('Warning log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -75,7 +74,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::NOTICE, 'Notice log message.');
+        $logger->notice('Notice log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -83,7 +82,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::INFO, 'Info log message.');
+        $logger->info('Info log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 
@@ -91,7 +90,7 @@ final class LoggerTest extends TestCase
     {
         $fileLogger = new FileLogger($this->logDir . '/log.txt');
         $logger = new Logger($fileLogger);
-        $logger->log(LogLevel::DEBUG, 'Debug log message.');
+        $logger->debug('Debug log message.');
         $this->assertTrue(file_exists($this->logDir . '/log.txt'));
     }
 }
