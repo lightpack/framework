@@ -8,9 +8,9 @@ use ParseError;
 use ErrorException;
 use Exception;
 use Lightpack\Container\Container;
-use Psr\Log\LoggerInterface;
 use Lightpack\Debug\ExceptionRenderer;
 use Lightpack\Exceptions\ValidationException;
+use Lightpack\Logger\Logger;
 
 class Handler
 {
@@ -18,7 +18,7 @@ class Handler
     private $exceptionRenderer;
 
     public function __construct(
-        LoggerInterface $logger,
+        Logger $logger,
         ExceptionRenderer $exceptionRenderer
     ) {
         $this->logger = $logger;
@@ -75,7 +75,7 @@ class Handler
 
     private function logAndRenderException(Throwable $exc, $type = 'Error')
     {
-        $this->logger->error($exc);
+        $this->logger->error($exc->getMessage());
         $this->exceptionRenderer->render($exc, $type);
     }
 
