@@ -76,8 +76,8 @@ final class RequestTest extends TestCase
         $_GET = ['status' => 1, 'level' => 3];
         $request = new Request($this->basepath);
 
-        $this->assertIsArray($request->query());
-        $this->assertEquals(['status' => 1, 'level' => 3], $request->query());
+        $this->assertIsArray($request->input());
+        $this->assertEquals(['status' => 1, 'level' => 3], $request->input());
     }
 
     public function testRequestGetParams()
@@ -244,5 +244,84 @@ final class RequestTest extends TestCase
         $this->assertEquals(['users', 23], $request->segments());
         $this->assertEquals('users', $request->segments(0));
         $this->assertEquals(23, $request->segments(1));
+    }
+
+    public function testRequestInputWithDotNotation()
+    {
+        // Test with GET parameters
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_GET = [
+            'user' => [
+                'profile' => [
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com'
+                ],
+                'settings' => [
+                    'theme' => 'dark'
+                ]
+            ]
+        ];
+
+        $request = new Request();
+        
+        // Test nested access
+        $this->assertEquals('John Doe', $request->input('user.profile.name'));
+        $this->assertEquals('dark', $request->input('user.settings.theme'));
+        
+        // Test default value with non-existent key
+        $this->assertEquals('light', $request->input('user.settings.color', 'light'));
+        
+        // Test null for non-existent nested key
+        $this->assertNull($request->input('user.profile.age'));
+
+        // Test with POST parameters
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'data' => [
+                'items' => [
+                    ['id' => 1, 'name' => 'Item 1'],
+                    ['id' => 2, 'name' => 'Item 2']
+                ]
+            ]
+        ];
+
+        $request = new Request(); // Create new instance for POST test
+        
+        // Test array access with dot notation
+        $this->assertEquals('Item 1', $request->input('data.items.0.name'));
+        $this->assertEquals(2, $request->input('data.items.1.id'));
+    }
+
+    public function testRequestInputWithDotNotationAndJson()
+    {
+        // Create a mock for the Request class
+        $request = $this->getMockBuilder(Request::class)
+            ->setConstructorArgs([null])
+            ->onlyMethods(['getRawBody'])
+            ->getMock();
+
+        // Set up the environment for JSON request
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        
+        $jsonData = json_encode([
+            'user' => [
+                'profile' => [
+                    'name' => 'Jane Doe',
+                    'email' => 'jane@example.com'
+                ]
+            ]
+        ]);
+
+        // Configure the mock
+        $request->expects($this->any())
+            ->method('getRawBody')
+            ->willReturn($jsonData);
+
+        // Test JSON data access with dot notation
+        $this->assertEquals('Jane Doe', $request->input('user.profile.name'));
+        $this->assertEquals('jane@example.com', $request->input('user.profile.email'));
+        $this->assertNull($request->input('user.profile.phone'));
+        $this->assertEquals('default', $request->input('user.settings.theme', 'default'));
     }
 }

@@ -6,6 +6,7 @@ use Lightpack\Exceptions\InvalidHttpMethodException;
 use Lightpack\Exceptions\InvalidUrlSignatureException;
 use Lightpack\Routing\Route;
 use Lightpack\Utils\Url;
+use Lightpack\Utils\Arr;
 
 class Request
 {
@@ -30,12 +31,14 @@ class Request
         'TRACE',
         'PURGE',
     ];
+    private Arr $arr;
 
     public function __construct(string $basepath = null)
     {
         $this->basepath = $basepath ?? dirname($_SERVER['SCRIPT_NAME']);
         $this->files = new Files($_FILES ?? []);
         $this->headers = new Header;
+        $this->arr = new Arr();
         $this->setMethod();
     }
 
@@ -150,12 +153,12 @@ class Request
             if (null === $this->jsonBody) {
                 $this->parseJson();
             }
-            return $key === null ? $this->jsonBody : ($this->jsonBody[$key] ?? $default);
+            return $key === null ? $this->jsonBody : $this->arr->get($key, $this->jsonBody, $default);
         }
 
         // For spoofed methods, use POST data
         if ($this->isSpoofed()) {
-            return $key === null ? $_POST : ($_POST[$key] ?? $default);
+            return $key === null ? $_POST : $this->arr->get($key, $_POST, $default);
         }
 
         // Handle different HTTP methods
@@ -165,10 +168,7 @@ class Request
             'PUT', 'PATCH', 'DELETE' => $this->getParsedBody(),
         };
 
-        // Return data with fallback to query parameters
-        return $key === null
-            ? $data
-            : ($data[$key] ?? $_GET[$key] ?? $default);
+        return $key === null ? $data : $this->arr->get($key, $data, $default);
     }
 
     /**
