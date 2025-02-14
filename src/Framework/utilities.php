@@ -411,3 +411,13 @@ if(!function_exists('method_input')) {
         return '<input type="hidden" name="_method" value="' . $method . '">';
     }
 }
+
+if (!function_exists('storage')) {
+    /**
+     * Returns the storage object.
+     */
+    function storage(): \Lightpack\Storage\Storage
+    {
+        return app('storage');
+    }
+}
