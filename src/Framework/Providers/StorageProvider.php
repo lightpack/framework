@@ -4,7 +4,7 @@ namespace Lightpack\Providers;
 
 use Lightpack\Container\Container;
 use Lightpack\Storage\LocalStorage;
-use Lightpack\Storage\StorageInterface;
+use Lightpack\Storage\Storage;
 
 class StorageProvider implements ProviderInterface
 {
@@ -14,6 +14,6 @@ class StorageProvider implements ProviderInterface
             return new LocalStorage();
         });
 
-        $container->alias(StorageInterface::class, 'storage');
+        $container->alias(Storage::class, 'storage');
     }
 }
