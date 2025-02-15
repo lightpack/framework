@@ -443,7 +443,7 @@ class Str
     }
 
     /**
-     * Check if string is a valid MIME type.
+     * Check if string represents a valid MIME type format.
      */
     public function isMimeType(string $subject): bool 
     {
@@ -451,7 +451,7 @@ class Str
     }
 
     /**
-     * Check if string is a valid file path.
+     * Check if string represents a valid file path format.
      */
     public function isPath(string $subject): bool 
     {
