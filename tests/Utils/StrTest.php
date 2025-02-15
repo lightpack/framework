@@ -503,4 +503,36 @@ final class StrTest extends TestCase
         // Test with empty text
         $this->assertEquals('', $str->excerpt(''));
     }
+
+    public function testOtp()
+    {
+        $str = new Str();
+
+        // Test default length (6)
+        $otp = $str->otp();
+        $this->assertIsString($otp);
+        $this->assertEquals(6, strlen($otp));
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $otp);
+
+        // Test custom length (4)
+        $otp = $str->otp(4);
+        $this->assertIsString($otp);
+        $this->assertEquals(4, strlen($otp));
+        $this->assertMatchesRegularExpression('/^\d{4}$/', $otp);
+
+        // Test custom length (8)
+        $otp = $str->otp(8);
+        $this->assertIsString($otp);
+        $this->assertEquals(8, strlen($otp));
+        $this->assertMatchesRegularExpression('/^\d{8}$/', $otp);
+    }
+
+    public function testOtpWithInvalidLength()
+    {
+        $str = new Str();
+        
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('OTP length must be at least 1');
+        $str->otp(0);
+    }
 }

@@ -601,4 +601,25 @@ class Str
         
         return $excerpt . $end;
     }
+
+    /**
+     * Generate a numeric one-time password (OTP) of specified length.
+     * 
+     * Example: otp(6) returns '123456'
+     * 
+     * @param int $length The length of OTP to generate (default: 6)
+     * @return string The generated OTP
+     * @throws \InvalidArgumentException If length is less than 1
+     */
+    public function otp(int $length = 6): string 
+    {
+        if ($length < 1) {
+            throw new \InvalidArgumentException('OTP length must be at least 1');
+        }
+
+        $min = pow(10, $length - 1);
+        $max = pow(10, $length) - 1;
+
+        return (string) random_int($min, $max);
+    }
 }
