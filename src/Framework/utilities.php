@@ -48,6 +48,16 @@ if (!function_exists('csrf_input')) {
     }
 }
 
+if(!function_exists('csrf_token')) {
+    /**
+     * Returns the CSRF token.
+     */
+    function csrf_token(): string
+    {
+        return session()->token();
+    }
+}
+
 if (!function_exists('_e')) {
     /**
      * HTML characters to entities converter.
