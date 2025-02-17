@@ -7,7 +7,7 @@ class Event
     private string $cronExpression;
     private Cron $cron;
 
-    public function __construct(private string $type, private string $name)
+    public function __construct(private string $type, private string $name, private array $data = [])
     {
         $this->cronExpression = '* * * * *';
         $this->cron = new Cron($this->cronExpression);
@@ -42,6 +42,11 @@ class Event
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getData(): array
+    {
+        return $this->data;
     }
 
     public function isDue(): bool
