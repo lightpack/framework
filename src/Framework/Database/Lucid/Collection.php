@@ -196,4 +196,19 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     {
         unset($this->items[$offset]);
     }
+
+    public function map(Closure $callback): self
+    {
+        $items = array_map($callback, $this->items);
+        return new static($items);
+    }
+
+    public function each(Closure $callback): self
+    {
+        foreach ($this->items as $item) {
+            $callback($item);
+        }
+
+        return $this;
+    }
 }
