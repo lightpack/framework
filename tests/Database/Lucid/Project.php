@@ -23,4 +23,11 @@ class Project extends Model
     {
         return $this->hasOne(Manager::class, 'id', 'project_id');
     }
+
+    public function toUppercase(): self
+    {
+        $this->name = strtoupper($this->name);
+
+        return $this;
+    }
 }

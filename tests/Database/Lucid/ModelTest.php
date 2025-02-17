@@ -1770,4 +1770,51 @@ final class ModelTest extends TestCase
         $this->assertEquals(100, Product::query()->avg('price'));
         $this->assertEquals(1000, Product::query()->sum('price'));
     }
+
+    public function testModelCollectionEachMethod()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        
+        // get all projects 
+        $project = $this->db->model(Project::class);
+        $projects = $project::query()->all();
+        $projects->each(function($project) {
+            $project->toUppercase();
+        });
+
+        // Assertions
+        $this->assertCount(3, $projects);
+        $this->assertEquals('PROJECT 1', $projects[0]->name);
+        $this->assertEquals('PROJECT 2', $projects[1]->name);
+        $this->assertEquals('PROJECT 3', $projects[2]->name);
+    }
+
+    public function testModelCollectionFilterAndEachMethod()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        
+        // get all projects 
+        $project = $this->db->model(Project::class);
+        $projects = $project::query()->all();
+        $filteredProjects = $projects
+            ->filter(fn($project) => $project->name !== 'Project 1')
+            ->each(fn($project) => $project->toUppercase());
+
+        // Assertions
+        $this->assertCount(3, $projects);
+        $this->assertCount(2, $filteredProjects);
+        $this->assertEquals('PROJECT 2', $filteredProjects[0]->name);
+        $this->assertEquals('PROJECT 3', $filteredProjects[1]->name);
+        $this->assertEquals('Project 1', $projects[0]->name);
+    }
 }
