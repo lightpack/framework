@@ -1817,4 +1817,50 @@ final class ModelTest extends TestCase
         $this->assertEquals('PROJECT 3', $filteredProjects[1]->name);
         $this->assertEquals('Project 1', $projects[0]->name);
     }
+
+    public function testCollectionMethodsAfterFilter()
+    {
+        // Insert test data
+        $this->db->table('projects')->insert([
+            ['id' => 1, 'name' => 'Project 1', 'status' => 'active'],
+            ['id' => 2, 'name' => 'Project 2', 'status' => 'inactive'],
+            ['id' => 3, 'name' => 'Project 3', 'status' => 'active'],
+            ['id' => 4, 'name' => 'Project 4', 'status' => 'active'],
+            ['id' => 5, 'name' => 'Project 5', 'status' => 'inactive'],
+        ]);
+
+        // Get all projects and filter active ones
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+        $activeProjects = $projects->filter(fn($project) => $project->status === 'active');
+
+        // Test ids() method
+        $this->assertEquals([1, 3, 4], $activeProjects->ids());
+
+        // Test find() method
+        $this->assertNotNull($activeProjects->find(1));
+        $this->assertNull($activeProjects->find(2)); // inactive project
+        $this->assertEquals('Project 3', $activeProjects->find(3)->name);
+
+        // Test first() method with no conditions
+        $this->assertEquals('Project 1', $activeProjects->first()->name);
+
+        // Test first() method with conditions
+        $this->assertEquals('Project 3', $activeProjects->first(['name' => 'Project 3'])->name);
+        $this->assertNull($activeProjects->first(['name' => 'Project 2'])); // inactive project
+
+        // Test column() method
+        $this->assertEquals(['Project 1', 'Project 3', 'Project 4'], $activeProjects->column('name'));
+        $this->assertEquals(['active', 'active', 'active'], $activeProjects->column('status'));
+
+        // Test any() method
+        $this->assertTrue($activeProjects->any('status'));
+        $this->assertTrue($activeProjects->any('name'));
+        $this->assertFalse($activeProjects->any('non_existent_column'));
+
+        // Test that original collection remains unchanged
+        $this->assertCount(5, $projects);
+        $this->assertCount(3, $activeProjects);
+        $this->assertEquals([1, 2, 3, 4, 5], $projects->ids());
+    }
 }
