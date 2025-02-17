@@ -12,7 +12,7 @@ use IteratorAggregate;
 
 class Collection implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
-    protected $items = [];
+    protected array $items = [];
 
     /**
      * @param \Lightpack\Database\Lucid\Model|\Lightpack\Database\Lucid\Model[] $items
@@ -56,7 +56,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $default;
     }
 
-    public function getItemWherecolumn($column, $value)
+    public function getItemWhereColumn($column, $value): ?Model
     {
         foreach ($this->items as $item) {
             if ($item->{$column} == $value) {
@@ -134,17 +134,17 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $this;
     }
 
-    public function getItems()
+    public function getItems(): array
     {
         return $this->items;
     }
 
-    public function isEmpty()
+    public function isEmpty(): bool
     {
         return empty($this->items);
     }
 
-    public function isNotEmpty()
+    public function isNotEmpty(): bool
     {
         return $this->isEmpty() === false;
     }
