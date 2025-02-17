@@ -149,22 +149,20 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $this->isEmpty() === false;
     }
 
-    public function exclude($keys)
+    public function exclude(array|string|int $keys): self
     {
         if(!is_array($keys)) {
             $keys = [$keys];
         }
 
-        foreach($keys as $key) {
-            foreach($this->items as $index => $item) {
-                if ($item->{$item->getPrimaryKey()} == $key) {
-                    unset($this->items[$index]);
-                }
-            }
-        }
+        $items = array_filter($this->items, function($item) use ($keys) {
+            return !in_array($item->{$item->getPrimaryKey()}, $keys);
+        });
+
+        return new static(array_values($items));
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return array_map(function ($item) {
             return $item->toArray();
