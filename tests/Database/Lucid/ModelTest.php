@@ -26,8 +26,10 @@ final class ModelTest extends TestCase
     /** @var \Lightpack\Database\Lucid\Model */
     private $product;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
+        parent::setUp();
+
         $config = require __DIR__ . '/../tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
@@ -40,6 +42,13 @@ final class ModelTest extends TestCase
 
         $container->register('db', function () {
             return $this->db;
+        });
+
+        $container->register('logger', function () {
+            return new class {
+                public function error($message, $context = []) {}
+                public function critical($message, $context = []) {}
+            };
         });
     }
 
@@ -1822,11 +1831,11 @@ final class ModelTest extends TestCase
     {
         // Insert test data
         $this->db->table('projects')->insert([
-            ['id' => 1, 'name' => 'Project 1', 'status' => 'active'],
-            ['id' => 2, 'name' => 'Project 2', 'status' => 'inactive'],
-            ['id' => 3, 'name' => 'Project 3', 'status' => 'active'],
-            ['id' => 4, 'name' => 'Project 4', 'status' => 'active'],
-            ['id' => 5, 'name' => 'Project 5', 'status' => 'inactive'],
+            ['name' => 'Project 1', 'status' => 'active'],
+            ['name' => 'Project 2', 'status' => 'inactive'],
+            ['name' => 'Project 3', 'status' => 'active'],
+            ['name' => 'Project 4', 'status' => 'active'],
+            ['name' => 'Project 5', 'status' => 'inactive'],
         ]);
 
         // Get all projects and filter active ones
@@ -1862,5 +1871,35 @@ final class ModelTest extends TestCase
         $this->assertCount(5, $projects);
         $this->assertCount(3, $activeProjects);
         $this->assertEquals([1, 2, 3, 4, 5], $projects->ids());
+    }
+
+    public function testCollectionColumnMethod()
+    {
+        // Insert test data with null values and different cases
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1', 'status' => 'active'],
+            ['name' => 'Project 2', 'status' => null],
+            ['name' => 'Project 3', 'status' => ''],
+            ['name' => 'Project 4', 'status' => 'active'],
+            ['name' => 'Project 5', 'status' => 'inactive'],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+
+        // Test getting a column with all values present
+        $this->assertEquals([1, 2, 3, 4, 5], $projects->column('id'));
+
+        // Test getting a column with null and empty values
+        $names = $projects->column('name');
+        $this->assertEquals('Project 1', $names[0]);
+        $this->assertEquals('Project 2', $names[1]);
+        $this->assertEquals('Project 3', $names[2]);
+        $this->assertEquals('Project 4', $names[3]);
+        $this->assertEquals('Project 5', $names[4]);
+
+        // Test getting a column with null and empty string
+        $statuses = $projects->column('status');
+        $this->assertEquals(['active', 'active', 'inactive'], $statuses);
     }
 }
