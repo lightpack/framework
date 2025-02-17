@@ -1902,4 +1902,48 @@ final class ModelTest extends TestCase
         $statuses = $projects->column('status');
         $this->assertEquals(['active', 'active', 'inactive'], $statuses);
     }
+
+    public function testCollectionFirstMethod()
+    {
+        // Insert test data
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1', 'status' => 'active'],
+            ['name' => 'Project 2', 'status' => 'inactive'],
+            ['name' => 'Project 3', 'status' => 'active'],
+            ['name' => 'Project 4', 'status' => 'active'],
+            ['name' => 'Project 5', 'status' => 'inactive'],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+
+        // Test first() with no conditions
+        $first = $projects->first();
+        $this->assertNotNull($first);
+        $this->assertEquals('Project 1', $first->name);
+
+        // Test first() with single condition
+        $firstActive = $projects->first(['status' => 'active']);
+        $this->assertEquals('Project 1', $firstActive->name);
+
+        $firstInactive = $projects->first(['status' => 'inactive']);
+        $this->assertEquals('Project 2', $firstInactive->name);
+
+        // Test first() with multiple conditions
+        $firstActiveProject3 = $projects->first([
+            'status' => 'active',
+            'name' => 'Project 3'
+        ]);
+        $this->assertNotNull($firstActiveProject3);
+        $this->assertEquals('Project 3', $firstActiveProject3->name);
+
+        // Test first() with non-matching conditions
+        $nonExistent = $projects->first(['status' => 'pending']);
+        $this->assertNull($nonExistent);
+
+        // Test first() on empty collection
+        $emptyProjects = $projectModel::query()->where('id', 999)->all();
+        $this->assertNull($emptyProjects->first());
+        $this->assertNull($emptyProjects->first(['status' => 'active']));
+    }
 }
