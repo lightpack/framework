@@ -944,8 +944,8 @@ final class ModelTest extends TestCase
         // fetch all users with all its roles
         $userModel = $this->db->model(User::class);
         $users = $userModel::query()->with('roles')->all();
-        $firstUser = $users->getByKey(1);
-        $nonExistingUser = $users->getByKey('non-existing');
+        $firstUser = $users->find(1);
+        $nonExistingUser = $users->find('non-existing');
 
         // Assertions
         $this->assertNotEmpty($users);
@@ -1632,17 +1632,17 @@ final class ModelTest extends TestCase
         $projects = $projectModel::query()->all();
 
         $this->assertCount(4, $projects);
-        $this->assertEquals([1,2,3,4], $projects->getKeys());
+        $this->assertEquals([1,2,3,4], $projects->ids());
 
         // lets exclude product ID: 2
         $projects = $projects->exclude(2);
         $this->assertCount(3, $projects);
-        $this->assertEquals([1,3,4], $projects->getKeys());
+        $this->assertEquals([1,3,4], $projects->ids());
 
         // lets exclude product IDs: 1,4
         $projects = $projects->exclude([1,4]);
         $this->assertCount(1, $projects);
-        $this->assertEquals([3], $projects->getKeys());
+        $this->assertEquals([3], $projects->ids());
     }
 
     public function testModelCollectionFilterMethod()
@@ -1664,8 +1664,8 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertCount(3, $projects);
         $this->assertCount(2, $filteredProjects);
-        $this->assertEquals([1,2,3], $projects->getKeys());
-        $this->assertEquals([1,3], $filteredProjects->getKeys());
+        $this->assertEquals([1,2,3], $projects->ids());
+        $this->assertEquals([1,3], $filteredProjects->ids());
     }
 
     public function testModelCloneMethod()
