@@ -1635,12 +1635,12 @@ final class ModelTest extends TestCase
         $this->assertEquals([1,2,3,4], $projects->getKeys());
 
         // lets exclude product ID: 2
-        $projects->exclude(2);
+        $projects = $projects->exclude(2);
         $this->assertCount(3, $projects);
         $this->assertEquals([1,3,4], $projects->getKeys());
 
         // lets exclude product IDs: 1,4
-        $projects->exclude([1,4]);
+        $projects = $projects->exclude([1,4]);
         $this->assertCount(1, $projects);
         $this->assertEquals([3], $projects->getKeys());
     }
