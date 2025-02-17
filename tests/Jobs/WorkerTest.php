@@ -206,7 +206,7 @@ class WorkerTest extends TestCase
         $this->container
             ->expects($this->once())
             ->method('callIf')
-            ->with(MockJob::class, 'onSuccess')
+            ->with(MockJob::class, 'onSuccess')  // Verify onSuccess is called
             ->willReturn(null);
         
         // Process the queue
