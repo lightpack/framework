@@ -9,19 +9,18 @@ use Lightpack\Validation\Rules\AfterRule;
 use Lightpack\Validation\Rules\AlphaRule;
 use Lightpack\Validation\Rules\AlphaNumRule;
 use Lightpack\Validation\Rules\ArrayRule;
-use Lightpack\Validation\Rules\Base as FileRule;
-use Lightpack\Validation\Rules\BeforeRule;
-use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\BoolRule;
+use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\CustomRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
-use Lightpack\Validation\Rules\File\Image as FileImageRule;
-use Lightpack\Validation\Rules\File\Extension as FileExtensionRule;
-use Lightpack\Validation\Rules\File\Multiple as FileMultipleRule;
-use Lightpack\Validation\Rules\File\Size as FileSizeRule;
-use Lightpack\Validation\Rules\File\Type as FileTypeRule;
+use Lightpack\Validation\Rules\File\FileRule;
+use Lightpack\Validation\Rules\File\FileSizeRule;
+use Lightpack\Validation\Rules\File\FileTypeRule;
+use Lightpack\Validation\Rules\File\ImageRule;
+use Lightpack\Validation\Rules\File\FileExtensionRule;
+use Lightpack\Validation\Rules\File\MultipleFileRule;
 use Lightpack\Validation\Rules\FloatRule;
 use Lightpack\Validation\Rules\InRule;
 use Lightpack\Validation\Rules\IntRule;
@@ -345,13 +344,13 @@ class Validator
 
     public function image(array $constraints = []): self
     {
-        $this->rules[$this->currentField][] = new FileImageRule($constraints);
+        $this->rules[$this->currentField][] = new ImageRule($constraints);
         return $this;
     }
 
     public function files(?int $min = null, ?int $max = null): self
     {
-        $this->rules[$this->currentField][] = new FileMultipleRule($min, $max);
+        $this->rules[$this->currentField][] = new MultipleFileRule($min, $max);
         return $this;
     }
 

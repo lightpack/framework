@@ -2,12 +2,12 @@
 
 namespace Lightpack\Tests\Validation\Rules;
 
-use Lightpack\Validation\Rules\File\Base;
-use Lightpack\Validation\Rules\File\Size;
-use Lightpack\Validation\Rules\File\Type;
-use Lightpack\Validation\Rules\File\Image;
-use Lightpack\Validation\Rules\File\Extension;
-use Lightpack\Validation\Rules\File\Multiple;
+use Lightpack\Validation\Rules\File\FileRule;
+use Lightpack\Validation\Rules\File\FileSizeRule;
+use Lightpack\Validation\Rules\File\FileTypeRule;
+use Lightpack\Validation\Rules\File\ImageRule;
+use Lightpack\Validation\Rules\File\FileExtensionRule;
+use Lightpack\Validation\Rules\File\MultipleFileRule;
 use PHPUnit\Framework\TestCase;
 
 class FileValidationTest extends TestCase
@@ -44,7 +44,7 @@ class FileValidationTest extends TestCase
 
     public function testBaseFileValidation()
     {
-        $rule = new Base();
+        $rule = new FileRule();
         
         // Invalid array structure
         $this->assertFalse($rule(['name' => 'test.jpg']));
@@ -57,7 +57,7 @@ class FileValidationTest extends TestCase
 
     public function testFileSizeValidation()
     {
-        $rule = new Size('2K');
+        $rule = new FileSizeRule('2K');
         
         // File too large
         $file = $this->createUploadedFile(['size' => 3 * 1024]);
@@ -70,8 +70,8 @@ class FileValidationTest extends TestCase
 
     public function testFileTypeValidation()
     {
-        // Create a mock class extending Type to override getMimeType
-        $rule = new class(['image/jpeg', 'image/png']) extends Type {
+        // Create a mock class extending FileTypeRule to override getMimeType
+        $rule = new class(['image/jpeg', 'image/png']) extends FileTypeRule {
             protected function getMimeType(string $path): string 
             {
                 return 'image/jpeg';
@@ -83,7 +83,7 @@ class FileValidationTest extends TestCase
         $this->assertTrue($rule($file));
         
         // Test invalid type
-        $rule = new class(['image/png']) extends Type {
+        $rule = new class(['image/png']) extends FileTypeRule {
             protected function getMimeType(string $path): string 
             {
                 return 'image/jpeg';
@@ -94,13 +94,13 @@ class FileValidationTest extends TestCase
 
     public function testImageValidation()
     {
-        // Create a mock class extending Image to override detection methods
+        // Create a mock class extending ImageRule to override detection methods
         $rule = new class([
             'min_width' => 100,
             'max_width' => 1000,
             'min_height' => 100,
             'max_height' => 1000,
-        ]) extends Image {
+        ]) extends ImageRule {
             protected function isImage(string $path): bool 
             {
                 return true;
@@ -120,7 +120,7 @@ class FileValidationTest extends TestCase
         $rule = new class([
             'min_width' => 1000,
             'max_width' => 2000,
-        ]) extends Image {
+        ]) extends ImageRule {
             protected function isImage(string $path): bool 
             {
                 return true;
@@ -136,7 +136,7 @@ class FileValidationTest extends TestCase
 
     public function testFileExtensionValidation()
     {
-        $rule = new Extension(['jpg', 'png']);
+        $rule = new FileExtensionRule(['jpg', 'png']);
         
         // Valid extension
         $file = $this->createUploadedFile(['name' => 'test.jpg']);
@@ -149,7 +149,7 @@ class FileValidationTest extends TestCase
 
     public function testMultipleFileValidation()
     {
-        $rule = new Multiple(1, 3);
+        $rule = new MultipleFileRule(1, 3);
         
         // Single file
         $file = $this->createUploadedFile();

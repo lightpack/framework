@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
-class Base
+class FileRule
 {
     private string $message;
     

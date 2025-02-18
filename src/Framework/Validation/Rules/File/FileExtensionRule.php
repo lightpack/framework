@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
-class Extension
+class FileExtensionRule
 {
     private string $message;
     private array $allowedExtensions;

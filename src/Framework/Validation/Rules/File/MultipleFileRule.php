@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
-class Multiple
+class MultipleFileRule
 {
     private string $message;
     private ?int $min;
