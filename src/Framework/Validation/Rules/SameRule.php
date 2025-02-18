@@ -12,15 +12,14 @@ class SameRule
 
     public function __construct(
         private readonly string $field,
-        private array &$data,
         private readonly Arr $arr
     ) {
         $this->message = "Must match {$field}";
     }
 
-    public function __invoke($value): bool
+    public function __invoke($value, array $data = []): bool
     {
-        return $value === $this->arr->get($this->field, $this->data);
+        return $value === $this->arr->get($this->field, $data);
     }
 
     public function getMessage(): string 

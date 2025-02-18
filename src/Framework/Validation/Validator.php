@@ -244,13 +244,15 @@ class Validator
 
     public function same(string $field): self
     {
-        $this->rules[$this->currentField][] = new SameRule($field, $this->data, $this->arr);
+        $rule = new SameRule($field, $this->arr);
+        $this->rules[$this->currentField][] = $rule;
         return $this;
     }
 
     public function different(string $field): self
     {
-        $this->rules[$this->currentField][] = new DifferentRule($field, $this->data, $this->arr);
+        $rule = new DifferentRule($field, $this->arr);
+        $this->rules[$this->currentField][] = $rule;
         return $this;
     }
 
@@ -340,7 +342,7 @@ class Validator
                 $this->arr->set($field, $value, $this->data);
             }
 
-            if (!$rule($value)) {
+            if (!($rule instanceof SameRule || $rule instanceof DifferentRule ? $rule($value, $this->data) : $rule($value))) {
                 $this->errors[$field] = $rule->getMessage();
                 $this->valid = false;
                 break;
@@ -384,7 +386,7 @@ class Validator
                     $this->arr->set($actualField, $item, $this->data);
                 }
 
-                if (!$rule($item)) {
+                if (!($rule instanceof SameRule || $rule instanceof DifferentRule ? $rule($item, $this->data) : $rule($item))) {
                     $this->errors[$actualField] = $rule->getMessage();
                     $this->valid = false;
                     break;
