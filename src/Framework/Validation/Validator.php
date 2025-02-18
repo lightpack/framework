@@ -10,8 +10,8 @@ use Lightpack\Validation\Rules\AlphaRule;
 use Lightpack\Validation\Rules\AlphaNumRule;
 use Lightpack\Validation\Rules\ArrayRule;
 use Lightpack\Validation\Rules\BeforeRule;
-use Lightpack\Validation\Rules\BoolRule;
 use Lightpack\Validation\Rules\BetweenRule;
+use Lightpack\Validation\Rules\BoolRule;
 use Lightpack\Validation\Rules\CustomRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
@@ -19,8 +19,8 @@ use Lightpack\Validation\Rules\EmailRule;
 use Lightpack\Validation\Rules\File\FileRule;
 use Lightpack\Validation\Rules\File\FileSizeRule;
 use Lightpack\Validation\Rules\File\FileTypeRule;
-use Lightpack\Validation\Rules\File\ImageRule;
 use Lightpack\Validation\Rules\File\FileExtensionRule;
+use Lightpack\Validation\Rules\File\ImageRule;
 use Lightpack\Validation\Rules\File\MultipleFileRule;
 use Lightpack\Validation\Rules\FloatRule;
 use Lightpack\Validation\Rules\InRule;
@@ -66,14 +66,18 @@ class Validator
         return $this;
     }
 
-    public function validate(array &$data): self
+    public function setInput(array &$input): self
     {
-        $this->data = &$data;
+        $this->data = &$input;
         $this->errors = [];
         $this->valid = true;
-        
+        return $this;
+    }
+
+    public function validate(): self
+    {
         foreach ($this->rules as $field => $rules) {
-            $value = $this->arr->get($field, $data);
+            $value = $this->arr->get($field, $this->data);
             
             if (str_contains($field, '*')) {
                 $this->validateWildcard($field, $value, $rules);
@@ -90,24 +94,24 @@ class Validator
         return $this;
     }
 
-    public function isValid(): bool
+    public function passes(): bool
     {
         return $this->valid;
+    }
+
+    public function fails(): bool
+    {
+        return !$this->valid;
+    }
+
+    public function getError(string $field): ?string
+    {
+        return $this->errors[$field] ?? null;
     }
 
     public function getErrors(): array
     {
         return $this->errors;
-    }
-
-    public function getFieldErrors(string $field): array
-    {
-        return [$this->errors[$field]] ?? [];
-    }
-
-    public function getData(): array
-    {
-        return $this->data;
     }
 
     public function required(): self
