@@ -22,7 +22,7 @@ class FileExtensionRule
 
     public function __invoke($value, array $data = []): bool 
     {
-        if (!is_array($value) || !isset($value['name'])) {
+        if (!is_array($value)) {
             return false;
         }
 
@@ -31,6 +31,24 @@ class FileExtensionRule
             return true;
         }
 
+        // Handle multiple files
+        if (isset($value['name']) && is_array($value['name'])) {
+            foreach ($value['name'] as $filename) {
+                $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                
+                // Check if it's an alias (e.g., 'jpeg' for 'jpg')
+                if (isset($this->extensionAliases[$extension])) {
+                    $extension = $this->extensionAliases[$extension];
+                }
+                
+                if (!in_array($extension, $this->allowedExtensions)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Handle single file
         $extension = strtolower(pathinfo($value['name'], PATHINFO_EXTENSION));
         
         // Check if it's an alias (e.g., 'jpeg' for 'jpg')
