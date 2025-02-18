@@ -250,7 +250,7 @@ startxref
                 ])
             // Optional technical specs (PDF)
             ->field('tech_specs')
-                ->nullable()
+                ->optional()
                 ->fileType('application/pdf')
                 ->fileSize('5M');
 
@@ -390,7 +390,7 @@ startxref
                     'max_height' => 2048
                 ])
             ->field('tech_specs')
-                ->nullable()
+                ->optional()
                 ->fileType('application/pdf')
                 ->fileSize('5M');
 

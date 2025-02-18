@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
-class NullableRule
+class OptionalRule
 {
     private string $message = '';
 

@@ -355,13 +355,13 @@ class ValidatorTest extends TestCase
 
         $this->validator
             ->field('empty')
-            ->nullable()
+            ->optional()
             ->string()
             ->field('null')
-            ->nullable()
+            ->optional()
             ->string()
             ->field('value')
-            ->nullable()
+            ->optional()
             ->string();
 
         $this->validator->setInput($data);

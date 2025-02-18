@@ -30,8 +30,8 @@ use Lightpack\Validation\Rules\LengthRule;
 use Lightpack\Validation\Rules\MaxRule;
 use Lightpack\Validation\Rules\MinRule;
 use Lightpack\Validation\Rules\NotInRule;
-use Lightpack\Validation\Rules\NullableRule;
 use Lightpack\Validation\Rules\NumericRule;
+use Lightpack\Validation\Rules\OptionalRule;
 use Lightpack\Validation\Rules\RegexRule;
 use Lightpack\Validation\Rules\RequiredRule;
 use Lightpack\Validation\Rules\RequiredIfRule;
@@ -247,9 +247,9 @@ class Validator
         return $this;
     }
 
-    public function nullable(): self
+    public function optional(): self
     {
-        $this->rules[$this->currentField][] = new NullableRule;
+        $this->rules[$this->currentField][] = new OptionalRule;
         return $this;
     }
 
@@ -361,14 +361,14 @@ class Validator
 
     private function validateField(string $field, mixed $value, array $rules): void
     {
-        $isNullable = false;
+        $isOptional = false;
         foreach ($rules as $rule) {
-            if ($rule instanceof NullableRule) {
-                $isNullable = true;
+            if ($rule instanceof OptionalRule) {
+                $isOptional = true;
                 continue;
             }
 
-            if ($isNullable && $value === null) {
+            if ($isOptional && $value === null) {
                 return;
             }
 
@@ -405,14 +405,14 @@ class Validator
 
         foreach ($value as $key => $item) {
             $actualField = str_replace('*', (string) $key, $field);
-            $isNullable = false;
+            $isOptional = false;
             foreach ($rules as $rule) {
-                if ($rule instanceof NullableRule) {
-                    $isNullable = true;
+                if ($rule instanceof OptionalRule) {
+                    $isOptional = true;
                     continue;
                 }
 
-                if ($isNullable && $item === null) {
+                if ($isOptional && $item === null) {
                     continue 2;
                 }
 
