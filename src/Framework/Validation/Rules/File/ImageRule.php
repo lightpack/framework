@@ -13,11 +13,10 @@ class ImageRule
     public function __construct(array $constraints = [])
     {
         $this->constraints = array_merge([
-            'min_width' => 0,
-            'max_width' => PHP_INT_MAX,
-            'min_height' => 0,
-            'max_height' => PHP_INT_MAX,
-            'ratio' => null,
+            'min_width' => null,
+            'max_width' => null,
+            'min_height' => null,
+            'max_height' => null,
         ], $constraints);
         
         $this->message = 'Invalid image dimensions';
@@ -52,21 +51,32 @@ class ImageRule
         return false;
     }
 
-    private function validateSingleImage(string $tmp_name): bool
+    private function validateSingleImage(string $path): bool
     {
-        if (!$this->isImage($tmp_name)) {
-            $this->message = 'File must be an image';
+        if (!$this->isImage($path)) {
+            $this->message = 'Invalid image file';
             return false;
         }
 
-        $this->dimensions = $this->getDimensions($tmp_name);
-        
-        if (!$this->validateDimensions()) {
+        $this->dimensions = $this->getDimensions($path);
+
+        if ($this->constraints['min_width'] && $this->dimensions['width'] < $this->constraints['min_width']) {
+            $this->message = sprintf('Image width must be at least %d pixels', $this->constraints['min_width']);
             return false;
         }
 
-        if ($this->constraints['ratio'] && !$this->validateRatio()) {
-            $this->message = sprintf('Image aspect ratio must be %s', $this->constraints['ratio']);
+        if ($this->constraints['max_width'] && $this->dimensions['width'] > $this->constraints['max_width']) {
+            $this->message = sprintf('Image width must not exceed %d pixels', $this->constraints['max_width']);
+            return false;
+        }
+
+        if ($this->constraints['min_height'] && $this->dimensions['height'] < $this->constraints['min_height']) {
+            $this->message = sprintf('Image height must be at least %d pixels', $this->constraints['min_height']);
+            return false;
+        }
+
+        if ($this->constraints['max_height'] && $this->dimensions['height'] > $this->constraints['max_height']) {
+            $this->message = sprintf('Image height must not exceed %d pixels', $this->constraints['max_height']);
             return false;
         }
 
@@ -94,48 +104,5 @@ class ImageRule
         }
 
         return ['width' => $info[0], 'height' => $info[1]];
-    }
-
-    private function validateDimensions(): bool
-    {
-        $width = $this->dimensions['width'];
-        $height = $this->dimensions['height'];
-
-        if ($width < $this->constraints['min_width']) {
-            $this->message = sprintf('Image width must be at least %dpx', $this->constraints['min_width']);
-            return false;
-        }
-
-        if ($width > $this->constraints['max_width']) {
-            $this->message = sprintf('Image width must not exceed %dpx', $this->constraints['max_width']);
-            return false;
-        }
-
-        if ($height < $this->constraints['min_height']) {
-            $this->message = sprintf('Image height must be at least %dpx', $this->constraints['min_height']);
-            return false;
-        }
-
-        if ($height > $this->constraints['max_height']) {
-            $this->message = sprintf('Image height must not exceed %dpx', $this->constraints['max_height']);
-            return false;
-        }
-
-        return true;
-    }
-
-    private function validateRatio(): bool
-    {
-        if (!$this->constraints['ratio']) {
-            return true;
-        }
-
-        [$expectedWidth, $expectedHeight] = array_map('intval', explode(':', $this->constraints['ratio']));
-        
-        $actualRatio = $this->dimensions['width'] / $this->dimensions['height'];
-        $expectedRatio = $expectedWidth / $expectedHeight;
-
-        // Allow for small floating point differences
-        return abs($actualRatio - $expectedRatio) < 0.01;
     }
 }
