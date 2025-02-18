@@ -8,6 +8,11 @@ class FileExtensionRule
 {
     private string $message;
     private array $allowedExtensions;
+    private array $extensionAliases = [
+        'jpeg' => 'jpg',
+        'tiff' => 'tif',
+        'htm' => 'html',
+    ];
 
     public function __construct(array|string $extensions)
     {
@@ -22,6 +27,11 @@ class FileExtensionRule
         }
 
         $extension = strtolower(pathinfo($value['name'], PATHINFO_EXTENSION));
+        
+        // Check if it's an alias (e.g., 'jpeg' for 'jpg')
+        if (isset($this->extensionAliases[$extension])) {
+            $extension = $this->extensionAliases[$extension];
+        }
         
         return in_array($extension, $this->allowedExtensions);
     }
