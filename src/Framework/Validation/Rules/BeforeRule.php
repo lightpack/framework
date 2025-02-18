@@ -13,8 +13,8 @@ class BeforeRule
         private readonly ?string $format = null
     ) {
         $this->message = $format 
-            ? "Must be a date before {$date} in format {$format}"
-            : "Must be a date before {$date}";
+            ? "Date must be before {$date} (format: {$format})"
+            : "Date must be before {$date}";
     }
 
     public function __invoke($value): bool
@@ -25,7 +25,9 @@ class BeforeRule
             return $date && $compare && $date < $compare;
         }
 
-        return strtotime($value) < strtotime($this->date);
+        $date = strtotime($value);
+        $compare = strtotime($this->date);
+        return $date !== false && $compare !== false && $date < $compare;
     }
 
     public function getMessage(): string 

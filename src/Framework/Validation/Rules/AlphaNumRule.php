@@ -10,7 +10,7 @@ class AlphaNumRule
 
     public function __invoke($value): bool
     {
-        return ctype_alnum($value);
+        return is_string($value) && preg_match('/^[\p{L}\p{M}\p{N}]+$/u', $value);
     }
 
     public function getMessage(): string 

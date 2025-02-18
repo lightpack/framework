@@ -12,6 +12,7 @@ use Lightpack\Validation\Rules\ArrayRule;
 use Lightpack\Validation\Rules\BeforeRule;
 use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\BoolRule;
+use Lightpack\Validation\Rules\CustomRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
@@ -31,6 +32,7 @@ use Lightpack\Validation\Rules\RequiredIfRule;
 use Lightpack\Validation\Rules\SameRule;
 use Lightpack\Validation\Rules\SlugRule;
 use Lightpack\Validation\Rules\StringRule;
+use Lightpack\Validation\Rules\TransformRule;
 use Lightpack\Validation\Rules\UniqueRule;
 use Lightpack\Validation\Rules\UrlRule;
 
@@ -110,7 +112,7 @@ class Validator
 
     public function requiredIf(string $field, mixed $value = null): self
     {
-        $this->rules[$this->currentField][] = new RequiredIfRule($field, $value, $this->data);
+        $this->rules[$this->currentField][] = new RequiredIfRule($field, $this->data, $this->arr, $value);
         return $this;
     }
 
@@ -180,9 +182,9 @@ class Validator
         return $this;
     }
 
-    public function ip(): self
+    public function ip(?string $version = null): self
     {
-        $this->rules[$this->currentField][] = new IpRule;
+        $this->rules[$this->currentField][] = new IpRule($version);
         return $this;
     }
 
@@ -242,13 +244,13 @@ class Validator
 
     public function same(string $field): self
     {
-        $this->rules[$this->currentField][] = new SameRule($field, $this->data);
+        $this->rules[$this->currentField][] = new SameRule($field, $this->data, $this->arr);
         return $this;
     }
 
     public function different(string $field): self
     {
-        $this->rules[$this->currentField][] = new DifferentRule($field, $this->data);
+        $this->rules[$this->currentField][] = new DifferentRule($field, $this->data, $this->arr);
         return $this;
     }
 
@@ -272,54 +274,36 @@ class Validator
 
     public function custom(callable $callback, string $message = 'Validation failed'): self
     {
-        $this->rules[$this->currentField][] = [
-            'rule' => 'custom',
-            'params' => [],
-            'message' => $message,
-            'callback' => $callback,
-        ];
+        $this->rules[$this->currentField][] = new CustomRule($callback, $message);
         return $this;
     }
 
     public function transform(callable $callback): self
     {
-        $this->rules[$this->currentField][] = [
-            'rule' => 'transform',
-            'params' => [],
-            'message' => '',
-            'callback' => $callback,
-            'transform' => true,
-        ];
+        $this->rules[$this->currentField][] = new TransformRule($callback);
         return $this;
     }
 
     public function message(string $message): self
     {
         if (!empty($this->rules[$this->currentField])) {
-            $lastRule = &$this->rules[$this->currentField][count($this->rules[$this->currentField]) - 1];
-            $lastRule['message'] = $message;
+            $lastRule = $this->rules[$this->currentField][count($this->rules[$this->currentField]) - 1];
+            if (method_exists($lastRule, 'setMessage')) {
+                $lastRule->setMessage($message);
+            }
         }
         return $this;
     }
 
     public function addRule(string $name, callable $callback, string $message = 'Validation failed'): void
     {
-        $this->customRules[$name] = [
-            'callback' => $callback,
-            'message' => $message,
-        ];
+        $this->customRules[$name] = new CustomRule($callback, $message);
     }
 
     public function __call(string $name, array $arguments): self
     {
         if (isset($this->customRules[$name])) {
-            $rule = $this->customRules[$name];
-            $this->rules[$this->currentField][] = [
-                'rule' => $name,
-                'params' => $arguments,
-                'message' => $rule['message'],
-                'callback' => $rule['callback'],
-            ];
+            $this->rules[$this->currentField][] = $this->customRules[$name];
             return $this;
         }
 
@@ -328,7 +312,34 @@ class Validator
 
     private function validateField(string $field, mixed $value, array $rules): void
     {
+        $isNullable = false;
         foreach ($rules as $rule) {
+            if ($rule instanceof NullableRule) {
+                $isNullable = true;
+                continue;
+            }
+
+            if ($isNullable && $value === null) {
+                return;
+            }
+
+            if ($rule instanceof TransformRule) {
+                $value = $rule->transform($value);
+                $this->arr->set($field, $value, $this->data);
+                continue;
+            }
+
+            if ($rule instanceof IntRule && is_string($value) && preg_match('/^-?\d+$/', $value)) {
+                $value = (int) $value;
+                $this->arr->set($field, $value, $this->data);
+            } elseif ($rule instanceof FloatRule && is_string($value) && is_numeric($value)) {
+                $value = (float) $value;
+                $this->arr->set($field, $value, $this->data);
+            } elseif ($rule instanceof BoolRule && is_string($value)) {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                $this->arr->set($field, $value, $this->data);
+            }
+
             if (!$rule($value)) {
                 $this->errors[$field] = $rule->getMessage();
                 $this->valid = false;
@@ -344,8 +355,35 @@ class Validator
         }
 
         foreach ($value as $key => $item) {
-            $actualField = str_replace('*', $key, $field);
+            $actualField = str_replace('*', (string) $key, $field);
+            $isNullable = false;
             foreach ($rules as $rule) {
+                if ($rule instanceof NullableRule) {
+                    $isNullable = true;
+                    continue;
+                }
+
+                if ($isNullable && $item === null) {
+                    continue 2;
+                }
+
+                if ($rule instanceof TransformRule) {
+                    $item = $rule->transform($item);
+                    $this->arr->set($actualField, $item, $this->data);
+                    continue;
+                }
+
+                if ($rule instanceof IntRule && is_string($item) && preg_match('/^-?\d+$/', $item)) {
+                    $item = (int) $item;
+                    $this->arr->set($actualField, $item, $this->data);
+                } elseif ($rule instanceof FloatRule && is_string($item) && is_numeric($item)) {
+                    $item = (float) $item;
+                    $this->arr->set($actualField, $item, $this->data);
+                } elseif ($rule instanceof BoolRule && is_string($item)) {
+                    $item = filter_var($item, FILTER_VALIDATE_BOOLEAN);
+                    $this->arr->set($actualField, $item, $this->data);
+                }
+
                 if (!$rule($item)) {
                     $this->errors[$actualField] = $rule->getMessage();
                     $this->valid = false;

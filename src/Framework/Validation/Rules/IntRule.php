@@ -10,7 +10,15 @@ class IntRule
 
     public function __invoke($value): bool
     {
-        return is_int($value);
+        if (is_int($value)) {
+            return true;
+        }
+
+        if (is_string($value) && preg_match('/^-?\d+$/', $value)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getMessage(): string 

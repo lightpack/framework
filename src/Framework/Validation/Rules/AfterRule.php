@@ -13,8 +13,8 @@ class AfterRule
         private readonly ?string $format = null
     ) {
         $this->message = $format 
-            ? "Must be a date after {$date} in format {$format}"
-            : "Must be a date after {$date}";
+            ? "Date must be after {$date} (format: {$format})"
+            : "Date must be after {$date}";
     }
 
     public function __invoke($value): bool
@@ -25,7 +25,9 @@ class AfterRule
             return $date && $compare && $date > $compare;
         }
 
-        return strtotime($value) > strtotime($this->date);
+        $date = strtotime($value);
+        $compare = strtotime($this->date);
+        return $date !== false && $compare !== false && $date > $compare;
     }
 
     public function getMessage(): string 

@@ -10,16 +10,15 @@ class LengthRule
 
     public function __construct(private readonly int $length) 
     {
-        $this->message = "Must be exactly {$length} characters long";
+        $this->message = "Length must be exactly {$length} characters";
     }
 
     public function __invoke($value): bool
     {
-        if (!is_string($value) && !is_array($value)) {
+        if ($value === null) {
             return false;
         }
-
-        return strlen((string) $value) === $this->length;
+        return mb_strlen((string) $value) === $this->length;
     }
 
     public function getMessage(): string 

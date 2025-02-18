@@ -15,12 +15,15 @@ class MinRule
 
     public function __invoke($value): bool
     {
-        if (is_string($value) || is_array($value)) {
-            return strlen((string) $value) >= $this->min;
+        if ($value === null) {
+            return false;
+        }
+        if (is_array($value)) {
+            return count($value) >= $this->min;
         }
 
         if (!is_numeric($value)) {
-            return false;
+            return mb_strlen((string) $value) >= $this->min;
         }
 
         return (float) $value >= $this->min;

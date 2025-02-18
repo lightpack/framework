@@ -10,7 +10,15 @@ class FloatRule
 
     public function __invoke($value): bool
     {
-        return is_float($value);
+        if (is_float($value)) {
+            return true;
+        }
+
+        if (is_string($value) && is_numeric($value) && strpos($value, '.') !== false) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getMessage(): string 

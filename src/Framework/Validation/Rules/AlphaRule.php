@@ -10,7 +10,7 @@ class AlphaRule
 
     public function __invoke($value): bool
     {
-        return ctype_alpha($value);
+        return is_string($value) && preg_match('/^[\p{L}\p{M}]+$/u', $value);
     }
 
     public function getMessage(): string 

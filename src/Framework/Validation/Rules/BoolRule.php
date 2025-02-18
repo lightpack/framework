@@ -10,7 +10,20 @@ class BoolRule
 
     public function __invoke($value): bool
     {
-        return is_bool($value);
+        if (is_bool($value)) {
+            return true;
+        }
+
+        if (is_string($value)) {
+            $value = strtolower($value);
+            return in_array($value, ['true', 'false', '1', '0', 'yes', 'no', 'on', 'off']);
+        }
+
+        if (is_int($value)) {
+            return $value === 0 || $value === 1;
+        }
+
+        return false;
     }
 
     public function getMessage(): string 
