@@ -9,6 +9,7 @@ use Lightpack\Validation\Rules\AfterRule;
 use Lightpack\Validation\Rules\AlphaRule;
 use Lightpack\Validation\Rules\AlphaNumRule;
 use Lightpack\Validation\Rules\ArrayRule;
+use Lightpack\Validation\Rules\BeforeRule;
 use Lightpack\Validation\Rules\BoolRule;
 use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\CustomRule;
