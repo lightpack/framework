@@ -25,8 +25,25 @@ class FileRule
 
     public function __invoke($value, array $data = []): bool 
     {
+        // Handle non-array value
+        if (!is_array($value)) {
+            return false;
+        }
+
+        // Handle nested file array structure
+        if (isset($value['tmp_name']) && is_array($value['tmp_name'])) {
+            // This is a nested file structure
+            return $this->validateNestedFiles($value);
+        }
+
+        // Handle single file structure
+        return $this->validateSingleFile($value);
+    }
+
+    private function validateSingleFile(array $value): bool
+    {
         // Not a file upload
-        if (!is_array($value) || !isset($value['tmp_name'], $value['error'])) {
+        if (!isset($value['tmp_name'], $value['error'])) {
             return false;
         }
 
@@ -40,6 +57,32 @@ class FileRule
         if (!is_uploaded_file($value['tmp_name'])) {
             $this->message = 'Invalid file upload';
             return false;
+        }
+
+        return true;
+    }
+
+    private function validateNestedFiles(array $value): bool
+    {
+        // Ensure all required keys exist
+        if (!isset($value['tmp_name'], $value['error'])) {
+            return false;
+        }
+
+        // For nested files, we'll validate each file
+        $files = array_keys($value['tmp_name']);
+        foreach ($files as $key) {
+            $singleFile = [
+                'tmp_name' => $value['tmp_name'][$key],
+                'error' => $value['error'][$key],
+                'name' => $value['name'][$key],
+                'type' => $value['type'][$key],
+                'size' => $value['size'][$key],
+            ];
+
+            if (!$this->validateSingleFile($singleFile)) {
+                return false;
+            }
         }
 
         return true;
