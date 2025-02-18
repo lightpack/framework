@@ -17,11 +17,26 @@ class FileSizeRule
 
     public function __invoke($value, array $data = []): bool 
     {
-        if (!is_array($value) || !isset($value['size'])) {
+        if (!is_array($value)) {
             return false;
         }
 
-        return $value['size'] <= $this->maxBytes;
+        // Single file upload
+        if (isset($value['size']) && !is_array($value['size'])) {
+            return $value['size'] <= $this->maxBytes;
+        }
+
+        // Multiple file upload
+        if (isset($value['size']) && is_array($value['size'])) {
+            foreach ($value['size'] as $size) {
+                if ($size > $this->maxBytes) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public function getMessage(): string 

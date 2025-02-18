@@ -17,11 +17,26 @@ class FileTypeRule
 
     public function __invoke($value, array $data = []): bool 
     {
-        if (!is_array($value) || !isset($value['tmp_name'])) {
+        if (!is_array($value)) {
             return false;
         }
 
-        return in_array($this->getMimeType($value['tmp_name']), $this->allowedTypes);
+        // Single file upload
+        if (isset($value['tmp_name']) && !is_array($value['tmp_name'])) {
+            return in_array($this->getMimeType($value['tmp_name']), $this->allowedTypes);
+        }
+
+        // Multiple file upload
+        if (isset($value['tmp_name']) && is_array($value['tmp_name'])) {
+            foreach ($value['tmp_name'] as $tmp_name) {
+                if (!in_array($this->getMimeType($tmp_name), $this->allowedTypes)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public function getMessage(): string 

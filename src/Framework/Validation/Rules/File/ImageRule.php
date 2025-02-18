@@ -25,16 +25,36 @@ class ImageRule
 
     public function __invoke($value, array $data = []): bool 
     {
-        if (!is_array($value) || !isset($value['tmp_name'])) {
+        if (!is_array($value)) {
             return false;
         }
 
-        if (!$this->isImage($value['tmp_name'])) {
+        // Single file upload
+        if (isset($value['tmp_name']) && !is_array($value['tmp_name'])) {
+            return $this->validateSingleImage($value['tmp_name']);
+        }
+
+        // Multiple file upload
+        if (isset($value['tmp_name']) && is_array($value['tmp_name'])) {
+            foreach ($value['tmp_name'] as $tmp_name) {
+                if (!$this->validateSingleImage($tmp_name)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    private function validateSingleImage(string $tmp_name): bool
+    {
+        if (!$this->isImage($tmp_name)) {
             $this->message = 'File must be an image';
             return false;
         }
 
-        $this->dimensions = $this->getDimensions($value['tmp_name']);
+        $this->dimensions = $this->getDimensions($tmp_name);
         
         if (!$this->validateDimensions()) {
             return false;
@@ -101,19 +121,16 @@ class ImageRule
 
     private function validateRatio(): bool
     {
-        if (empty($this->constraints['ratio'])) {
+        if (!$this->constraints['ratio']) {
             return true;
         }
 
-        $width = $this->dimensions['width'];
-        $height = $this->dimensions['height'];
-
-        if ($width === 0 || $height === 0) {
-            return false;
-        }
-
-        list($ratioWidth, $ratioHeight) = explode(':', $this->constraints['ratio']);
+        [$expectedWidth, $expectedHeight] = array_map('intval', explode(':', $this->constraints['ratio']));
         
-        return abs(($width / $height) - ($ratioWidth / $ratioHeight)) < 0.01;
+        $actualRatio = $this->dimensions['width'] / $this->dimensions['height'];
+        $expectedRatio = $expectedWidth / $expectedHeight;
+
+        // Allow for small floating point differences
+        return abs($actualRatio - $expectedRatio) < 0.01;
     }
 }

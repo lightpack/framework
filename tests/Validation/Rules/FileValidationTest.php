@@ -42,6 +42,64 @@ class FileValidationTest extends TestCase
         ], $attributes);
     }
 
+    private function createTestImage(string $path, int $width, int $height): void
+    {
+        $image = imagecreatetruecolor($width, $height);
+        imagejpeg($image, $path);
+        imagedestroy($image);
+    }
+
+    private function createTestPdf(string $path): void
+    {
+        file_put_contents($path, '%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj
+xref
+0 4
+0000000000 65535 f
+0000000009 00000 n
+0000000056 00000 n
+0000000111 00000 n
+trailer<</Size 4/Root 1 0 R>>
+startxref
+190
+%%EOF');
+    }
+
+    public function setUpFixtures(): void
+    {
+        // Create test fixtures directory
+        $fixturesDir = __DIR__ . '/fixtures';
+        if (!is_dir($fixturesDir)) {
+            mkdir($fixturesDir);
+        }
+
+        // Create test images
+        $this->createTestImage($fixturesDir . '/800x600.jpg', 800, 600);
+        $this->createTestImage($fixturesDir . '/1024x768.jpg', 1024, 768);
+        $this->createTestImage($fixturesDir . '/2048x1536.jpg', 2048, 1536);
+
+        // Create test PDF
+        $this->createTestPdf($fixturesDir . '/test.pdf');
+
+        // Create test GIF (just a text file with .gif extension)
+        file_put_contents($fixturesDir . '/test.gif', 'GIF89a');
+
+        // Create test DOC (just a text file with .doc extension)
+        file_put_contents($fixturesDir . '/test.doc', 'MS-WORD');
+    }
+
+    public function tearDownFixtures(): void
+    {
+        // Clean up test files
+        $fixturesDir = __DIR__ . '/fixtures';
+        foreach (glob($fixturesDir . '/*') as $file) {
+            unlink($file);
+        }
+        rmdir($fixturesDir);
+    }
+
     public function testBaseFileValidation()
     {
         $rule = new FileRule();
@@ -169,5 +227,226 @@ class FileValidationTest extends TestCase
         $files['name'][] = 'test3.jpg';
         $files['name'][] = 'test4.jpg';
         $this->assertFalse($rule($files));
+    }
+
+    public function testComplexMultiFileValidation()
+    {
+        $this->setUpFixtures();
+
+        // Test 1: Valid submission
+        $validator = new \Lightpack\Validation\Validator();
+        $validator
+            // Required product images (2-5 images)
+            ->field('product_images')
+                ->required()
+                ->files(2, 5)
+                ->fileSize('2M')
+                ->fileType(['image/jpeg', 'image/png'])
+                ->image([
+                    'min_width' => 800,
+                    'max_width' => 2048,
+                    'min_height' => 600,
+                    'max_height' => 2048
+                ])
+            // Optional technical specs (PDF)
+            ->field('tech_specs')
+                ->nullable()
+                ->fileType('application/pdf')
+                ->fileSize('5M');
+
+        $validFiles = [
+            'product_images' => [
+                'name' => ['product1.jpg', 'product2.jpg', 'product3.jpg'],
+                'type' => ['image/jpeg', 'image/jpeg', 'image/jpeg'],
+                'tmp_name' => [
+                    __DIR__ . '/fixtures/800x600.jpg',
+                    __DIR__ . '/fixtures/1024x768.jpg',
+                    __DIR__ . '/fixtures/2048x1536.jpg'
+                ],
+                'error' => [0, 0, 0],
+                'size' => [500 * 1024, 800 * 1024, 1000 * 1024] // Smaller sizes
+            ],
+            'tech_specs' => [
+                'name' => 'specs.pdf',
+                'type' => 'application/pdf',
+                'tmp_name' => __DIR__ . '/fixtures/test.pdf',
+                'error' => 0,
+                'size' => 1024 * 1024 // 1MB
+            ]
+        ];
+
+        $result = $validator->validate($validFiles);
+        if (!$result->isValid()) {
+            var_dump($validator->getErrors());
+        }
+        $this->assertTrue($result->isValid());
+
+        // Test 2: Invalid - Too few product images
+        $validator = new \Lightpack\Validation\Validator();
+        $validator
+            ->field('product_images')
+                ->required()
+                ->files(2, 5)
+                ->fileSize('2M')
+                ->fileType(['image/jpeg', 'image/png'])
+                ->image([
+                    'min_width' => 800,
+                    'max_width' => 2048,
+                    'min_height' => 600,
+                    'max_height' => 2048
+                ]);
+
+        $tooFewImages = [
+            'product_images' => [
+                'name' => ['product1.jpg'],
+                'type' => ['image/jpeg'],
+                'tmp_name' => [__DIR__ . '/fixtures/800x600.jpg'],
+                'error' => [0],
+                'size' => [1024 * 1024]
+            ]
+        ];
+
+        $this->assertFalse($validator->validate($tooFewImages)->isValid());
+        $errors = $validator->getErrors();
+        $this->assertArrayHasKey('product_images', $errors);
+
+        // Test 3: Invalid - Wrong image type
+        $validator = new \Lightpack\Validation\Validator();
+        $validator
+            ->field('product_images')
+                ->required()
+                ->files(2, 5)
+                ->fileSize('2M')
+                ->fileType(['image/jpeg', 'image/png'])
+                ->image([
+                    'min_width' => 800,
+                    'max_width' => 2048,
+                    'min_height' => 600,
+                    'max_height' => 2048
+                ]);
+
+        $wrongImageType = [
+            'product_images' => [
+                'name' => ['product1.jpg', 'product2.gif'],
+                'type' => ['image/jpeg', 'image/gif'],
+                'tmp_name' => [
+                    __DIR__ . '/fixtures/800x600.jpg',
+                    __DIR__ . '/fixtures/test.gif'
+                ],
+                'error' => [0, 0],
+                'size' => [1024 * 1024, 1024 * 1024]
+            ]
+        ];
+
+        $this->assertFalse($validator->validate($wrongImageType)->isValid());
+        $errors = $validator->getErrors();
+        $this->assertArrayHasKey('product_images', $errors);
+
+        // Test 4: Invalid - File too large
+        $validator = new \Lightpack\Validation\Validator();
+        $validator
+            ->field('product_images')
+                ->required()
+                ->files(2, 5)
+                ->fileSize('2M')
+                ->fileType(['image/jpeg', 'image/png'])
+                ->image([
+                    'min_width' => 800,
+                    'max_width' => 2048,
+                    'min_height' => 600,
+                    'max_height' => 2048
+                ]);
+
+        $fileTooLarge = [
+            'product_images' => [
+                'name' => ['product1.jpg', 'product2.jpg'],
+                'type' => ['image/jpeg', 'image/jpeg'],
+                'tmp_name' => [
+                    __DIR__ . '/fixtures/800x600.jpg',
+                    __DIR__ . '/fixtures/1024x768.jpg'
+                ],
+                'error' => [0, 0],
+                'size' => [1024 * 1024, 3 * 1024 * 1024] // Second file > 2M
+            ]
+        ];
+
+        $this->assertFalse($validator->validate($fileTooLarge)->isValid());
+        $errors = $validator->getErrors();
+        $this->assertArrayHasKey('product_images', $errors);
+
+        // Test 5: Invalid - Wrong PDF file type
+        $validator = new \Lightpack\Validation\Validator();
+        $validator
+            ->field('product_images')
+                ->required()
+                ->files(2, 5)
+                ->fileSize('2M')
+                ->fileType(['image/jpeg', 'image/png'])
+                ->image([
+                    'min_width' => 800,
+                    'max_width' => 2048,
+                    'min_height' => 600,
+                    'max_height' => 2048
+                ])
+            ->field('tech_specs')
+                ->nullable()
+                ->fileType('application/pdf')
+                ->fileSize('5M');
+
+        $wrongPdfType = [
+            'product_images' => [
+                'name' => ['product1.jpg', 'product2.jpg'],
+                'type' => ['image/jpeg', 'image/jpeg'],
+                'tmp_name' => [
+                    __DIR__ . '/fixtures/800x600.jpg',
+                    __DIR__ . '/fixtures/1024x768.jpg'
+                ],
+                'error' => [0, 0],
+                'size' => [1024 * 1024, 1024 * 1024]
+            ],
+            'tech_specs' => [
+                'name' => 'specs.doc',
+                'type' => 'application/msword',
+                'tmp_name' => __DIR__ . '/fixtures/test.doc',
+                'error' => 0,
+                'size' => 1024 * 1024
+            ]
+        ];
+
+        $this->assertFalse($validator->validate($wrongPdfType)->isValid());
+        $errors = $validator->getErrors();
+        $this->assertArrayHasKey('tech_specs', $errors);
+
+        // Test 6: Valid - Without optional PDF
+        $validator = new \Lightpack\Validation\Validator();
+        $validator
+            ->field('product_images')
+                ->required()
+                ->files(2, 5)
+                ->fileSize('2M')
+                ->fileType(['image/jpeg', 'image/png'])
+                ->image([
+                    'min_width' => 800,
+                    'max_width' => 2048,
+                    'min_height' => 600,
+                    'max_height' => 2048
+                ]);
+
+        $withoutPdf = [
+            'product_images' => [
+                'name' => ['product1.jpg', 'product2.jpg'],
+                'type' => ['image/jpeg', 'image/jpeg'],
+                'tmp_name' => [
+                    __DIR__ . '/fixtures/800x600.jpg',
+                    __DIR__ . '/fixtures/1024x768.jpg'
+                ],
+                'error' => [0, 0],
+                'size' => [1024 * 1024, 1024 * 1024]
+            ]
+        ];
+
+        $this->assertTrue($validator->validate($withoutPdf)->isValid());
+
+        $this->tearDownFixtures();
     }
 }
