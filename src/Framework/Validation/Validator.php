@@ -9,6 +9,7 @@ use Lightpack\Validation\Rules\AfterRule;
 use Lightpack\Validation\Rules\AlphaRule;
 use Lightpack\Validation\Rules\AlphaNumRule;
 use Lightpack\Validation\Rules\ArrayRule;
+use Lightpack\Validation\Rules\Base as FileRule;
 use Lightpack\Validation\Rules\BeforeRule;
 use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\BoolRule;
@@ -16,6 +17,11 @@ use Lightpack\Validation\Rules\CustomRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
+use Lightpack\Validation\Rules\File\Image as FileImageRule;
+use Lightpack\Validation\Rules\File\Extension as FileExtensionRule;
+use Lightpack\Validation\Rules\File\Multiple as FileMultipleRule;
+use Lightpack\Validation\Rules\File\Size as FileSizeRule;
+use Lightpack\Validation\Rules\File\Type as FileTypeRule;
 use Lightpack\Validation\Rules\FloatRule;
 use Lightpack\Validation\Rules\InRule;
 use Lightpack\Validation\Rules\IntRule;
@@ -311,6 +317,42 @@ class Validator
         }
 
         throw new \BadMethodCallException("Rule '{$name}' not found");
+    }
+
+    public function file(): self
+    {
+        $this->rules[$this->currentField][] = new FileRule();
+        return $this;
+    }
+
+    public function fileSize(string $size): self
+    {
+        $this->rules[$this->currentField][] = new FileSizeRule($size);
+        return $this;
+    }
+
+    public function fileType(array|string $types): self
+    {
+        $this->rules[$this->currentField][] = new FileTypeRule($types);
+        return $this;
+    }
+
+    public function fileExtension(array|string $extensions): self
+    {
+        $this->rules[$this->currentField][] = new FileExtensionRule($extensions);
+        return $this;
+    }
+
+    public function image(array $constraints = []): self
+    {
+        $this->rules[$this->currentField][] = new FileImageRule($constraints);
+        return $this;
+    }
+
+    public function files(?int $min = null, ?int $max = null): self
+    {
+        $this->rules[$this->currentField][] = new FileMultipleRule($min, $max);
+        return $this;
     }
 
     private function validateField(string $field, mixed $value, array $rules): void
