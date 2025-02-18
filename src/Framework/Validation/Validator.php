@@ -358,10 +358,13 @@ class Validator
         foreach ($rules as $rule) {
             if ($rule instanceof OptionalRule) {
                 $isOptional = true;
-                continue;
+            } elseif ($rule instanceof RequiredIfRule) {
+                if ($rule($value, $this->data)) {
+                    $isOptional = true;
+                }
             }
 
-            if ($isOptional && $value === null) {
+            if ($isOptional && empty($value)) {
                 return;
             }
 
