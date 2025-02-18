@@ -23,20 +23,28 @@ class MultipleFileRule
             return false;
         }
 
-        // Handle non-multiple uploads
-        if (isset($value['name']) && !is_array($value['name'])) {
-            $count = 1;
-        } else {
-            $count = count($value['name'] ?? []);
+        // For optional fields, no file is valid
+        if (isset($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
+            return true;
+        }
+
+        // Get count of files from the name array
+        $count = 0;
+        if (isset($value['name'])) {
+            if (is_array($value['name'])) {
+                $count = count($value['name']);
+            } else {
+                $count = 1;
+            }
         }
 
         if ($this->min !== null && $count < $this->min) {
-            $this->message = sprintf('At least %d files must be uploaded', $this->min);
+            $this->message = "Must upload at least {$this->min} files";
             return false;
         }
 
         if ($this->max !== null && $count > $this->max) {
-            $this->message = sprintf('No more than %d files can be uploaded', $this->max);
+            $this->message = "Cannot upload more than {$this->max} files";
             return false;
         }
 

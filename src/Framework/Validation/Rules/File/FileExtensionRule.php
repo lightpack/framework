@@ -26,6 +26,11 @@ class FileExtensionRule
             return false;
         }
 
+        // For optional fields, no file is valid
+        if (isset($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
+            return true;
+        }
+
         $extension = strtolower(pathinfo($value['name'], PATHINFO_EXTENSION));
         
         // Check if it's an alias (e.g., 'jpeg' for 'jpg')

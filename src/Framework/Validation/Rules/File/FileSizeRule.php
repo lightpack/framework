@@ -21,6 +21,11 @@ class FileSizeRule
             return false;
         }
 
+        // For optional fields, no file is valid
+        if (isset($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
+            return true;
+        }
+
         // Single file upload
         if (isset($value['size']) && !is_array($value['size'])) {
             return $value['size'] <= $this->maxBytes;

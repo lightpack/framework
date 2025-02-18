@@ -224,8 +224,13 @@ startxref
         $this->assertTrue($rule($files));
         
         // Too many files
-        $files['name'][] = 'test3.jpg';
-        $files['name'][] = 'test4.jpg';
+        $files = [
+            'name' => ['test1.jpg', 'test2.jpg', 'test3.jpg', 'test4.jpg'],
+            'type' => ['image/jpeg', 'image/jpeg', 'image/jpeg', 'image/jpeg'],
+            'tmp_name' => [$this->tempFile, $this->tempFile, $this->tempFile, $this->tempFile],
+            'error' => [UPLOAD_ERR_OK, UPLOAD_ERR_OK, UPLOAD_ERR_OK, UPLOAD_ERR_OK],
+            'size' => [1024, 1024, 1024, 1024],
+        ];
         $this->assertFalse($rule($files));
     }
 

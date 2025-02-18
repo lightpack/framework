@@ -47,7 +47,12 @@ class FileRule
             return false;
         }
 
-        // Check for upload errors
+        // For optional fields, UPLOAD_ERR_NO_FILE is valid
+        if ($value['error'] === UPLOAD_ERR_NO_FILE) {
+            return true;
+        }
+
+        // Check for other upload errors
         if ($value['error'] !== UPLOAD_ERR_OK) {
             $this->message = $this->errors[$value['error']] ?? 'Unknown upload error';
             return false;
