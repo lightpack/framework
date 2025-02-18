@@ -353,7 +353,7 @@ class Validator
         return $this;
     }
 
-    public function files(?int $min = null, ?int $max = null): self
+    public function multipleFiles(?int $min = null, ?int $max = null): self
     {
         $this->rules[$this->currentField][] = new MultipleFileRule($min, $max);
         return $this;

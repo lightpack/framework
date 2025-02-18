@@ -239,7 +239,7 @@ startxref
             // Required product images (2-5 images)
             ->field('product_images')
                 ->required()
-                ->files(2, 5)
+                ->multipleFiles(2, 5)
                 ->fileSize('2M')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
@@ -287,7 +287,7 @@ startxref
         $validator
             ->field('product_images')
                 ->required()
-                ->files(2, 5)
+                ->multipleFiles(2, 5)
                 ->fileSize('2M')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
@@ -316,7 +316,7 @@ startxref
         $validator
             ->field('product_images')
                 ->required()
-                ->files(2, 5)
+                ->multipleFiles(2, 5)
                 ->fileSize('2M')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
@@ -348,7 +348,7 @@ startxref
         $validator
             ->field('product_images')
                 ->required()
-                ->files(2, 5)
+                ->multipleFiles(2, 5)
                 ->fileSize('2M')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
@@ -380,7 +380,7 @@ startxref
         $validator
             ->field('product_images')
                 ->required()
-                ->files(2, 5)
+                ->multipleFiles(2, 5)
                 ->fileSize('2M')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
@@ -423,7 +423,7 @@ startxref
         $validator
             ->field('product_images')
                 ->required()
-                ->files(2, 5)
+                ->multipleFiles(2, 5)
                 ->fileSize('2M')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
