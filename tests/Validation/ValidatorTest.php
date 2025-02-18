@@ -274,6 +274,7 @@ class ValidatorTest extends TestCase
 
     public function testBetweenValidation(): void
     {
+        // Test basic between validation
         $data = [
             'valid' => '15',
             'invalid' => '25',
@@ -291,6 +292,26 @@ class ValidatorTest extends TestCase
         $this->validator->setInput($data);
         $result = $this->validator->validate();
         $this->assertTrue($result->fails());
+
+        // Test chained between validation
+        $data = [
+            'age' => '25',
+            'score' => '85.5'
+        ];
+
+        $this->validator
+            ->field('age')
+            ->required()
+            ->int()
+            ->between(18, 30)
+            ->field('score')
+            ->required()
+            ->float()
+            ->between(0, 100);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        $this->assertTrue($result->passes());
     }
 
     public function testUniqueValidation(): void
