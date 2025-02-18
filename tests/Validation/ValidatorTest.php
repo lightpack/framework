@@ -113,23 +113,7 @@ class ValidatorTest extends TestCase
         $result = $validator->validate();
         $this->assertTrue($result->fails());
 
-        // Test 3: Array with custom validation and transformation
-        $data = [
-            'scores' => ['85', '90', '110', '75']
-        ];
-
-        $this->validator
-            ->field('scores.*')
-            ->required()
-            ->numeric()
-            ->transform(fn($value) => (int) $value)
-            ->custom(fn($value) => $value <= 100, 'Score must not exceed 100');
-
-        $this->validator->setInput($data);
-        $result = $this->validator->validate();
-        $this->assertTrue($result->fails());
-
-        // Test 4: Valid complex data
+        // Test 3: Valid complex data
         $data = [
             'contacts' => [
                 ['email' => 'john@example.com', 'phone' => '1234567890'],
@@ -165,22 +149,6 @@ class ValidatorTest extends TestCase
         $this->validator->setInput($data);
         $result = $this->validator->validate();
         $this->assertTrue($result->fails());
-    }
-
-    public function testTransformation(): void
-    {
-        $data = ['name' => ' john '];
-
-        $this->validator
-            ->field('name')
-            ->required()
-            ->transform(fn($value) => trim($value))
-            ->min(4);
-
-        $this->validator->setInput($data);
-        $result = $this->validator->validate();
-
-        $this->assertEquals('john', $data['name']);
     }
 
     public function testCustomRule(): void
@@ -638,8 +606,8 @@ class ValidatorTest extends TestCase
     {
         $data = [
             'shipping_method' => 'pickup',
-            'pickup_location' => null,  
-            'delivery_address' => null  
+            'pickup_location' => null,
+            'delivery_address' => null
         ];
 
         $this->validator
@@ -654,8 +622,8 @@ class ValidatorTest extends TestCase
 
         $data = [
             'has_company' => true,
-            'company_name' => null,  
-            'company_tax_id' => null 
+            'company_name' => null,
+            'company_tax_id' => null
         ];
 
         $this->validator
@@ -670,9 +638,9 @@ class ValidatorTest extends TestCase
 
         $data = [
             'has_company' => false,
-            'company_name' => null,  
+            'company_name' => null,
             'shipping_method' => 'delivery',
-            'pickup_location' => null 
+            'pickup_location' => null
         ];
 
         $this->validator
@@ -690,7 +658,7 @@ class ValidatorTest extends TestCase
                 'method' => 'card',
                 'card' => [
                     'number' => '4242424242424242',
-                    'cvv' => null  
+                    'cvv' => null
                 ]
             ]
         ];
@@ -751,13 +719,13 @@ class ValidatorTest extends TestCase
 
         $this->validator
             ->field('ipv4')
-                ->ip('v4')                        // IPv4 only
+            ->ip('v4')                        // IPv4 only
             ->field('ipv6')
-                ->ip('v6')                        // IPv6 only
+            ->ip('v6')                        // IPv6 only
             ->field('invalid_ip')
-                ->ip()                            // Any IP version
+            ->ip()                            // Any IP version
             ->field('not_ip')
-                ->ip();                           // Any IP version
+            ->ip();                           // Any IP version
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
@@ -813,13 +781,13 @@ class ValidatorTest extends TestCase
 
         $this->validator
             ->field('past_date')
-                ->before('2024-01-01')
+            ->before('2024-01-01')
             ->field('future_date')
-                ->after('2025-01-01')
+            ->after('2025-01-01')
             ->field('custom_date')
-                ->before('01-01-2025', 'd-m-Y')
+            ->before('01-01-2025', 'd-m-Y')
             ->field('invalid_date')
-                ->before('2024-01-01');
+            ->before('2024-01-01');
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
@@ -833,12 +801,118 @@ class ValidatorTest extends TestCase
 
         $this->validator
             ->field('too_late')
-                ->before('2024-01-01')
+            ->before('2024-01-01')
             ->field('too_early')
-                ->after('2024-01-01');
+            ->after('2024-01-01');
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
         $this->assertTrue($result->fails());
+    }
+
+    public function testBasicArrayValidation()
+    {
+        $validator = new Validator();
+
+        // Test valid array
+        $validator->field('items')->required()->array();
+        $validator->setInput(['items' => ['a', 'b', 'c']]);
+        $this->assertTrue($validator->validate()->passes());
+
+        // Test non-array
+        $validator->field('items')->required()->array();
+        $validator->setInput(['items' => 'not an array']);
+        $this->assertFalse($validator->validate()->passes());
+    }
+
+    public function testArrayMinValidation()
+    {
+        $validator = new Validator();
+        $validator->field('items')->required()->array(2);
+
+        // Test with less items than minimum
+        $validator->setInput(['items' => ['a']]);
+        $this->assertFalse($validator->validate()->passes());
+
+        // Test with exact minimum
+        $validator->setInput(['items' => ['a', 'b']]);
+        $this->assertTrue($validator->validate()->passes());
+
+        // Test with more than minimum
+        $validator->setInput(['items' => ['a', 'b', 'c']]);
+        $this->assertTrue($validator->validate()->passes());
+    }
+
+    public function testArrayMaxValidation()
+    {
+        $validator = new Validator();
+
+        // Test with less than maximum
+        $validator->field('items')->required()->array(null, 2);
+        $validator->setInput(['items' => ['a']]);
+        $this->assertTrue($validator->validate()->passes());
+
+        // Test with exact maximum
+        $validator->field('items')->required()->array(null, 2);
+        $validator->setInput(['items' => ['a', 'b']]);
+        $this->assertTrue($validator->validate()->passes());
+
+        // Test with more than maximum
+        $validator->field('items')->required()->array(null, 2);
+        $validator->setInput(['items' => ['a', 'b', 'c']]);
+        $this->assertFalse($validator->validate()->passes());
+    }
+
+    public function testArrayMinMaxValidation()
+    {
+        $validator = new Validator();
+
+        // Test with less than minimum
+        $validator->field('items')->required()->array(2, 4);
+        $validator->setInput(['items' => ['a']]);
+        $this->assertFalse($validator->validate()->passes());
+
+        // Test with minimum
+        $validator->field('items')->required()->array(2, 4);
+        $validator->setInput(['items' => ['a', 'b']]);
+        $this->assertTrue($validator->validate()->passes());
+
+        // Test with between min and max
+        $validator->field('items')->required()->array(2, 4);
+        $validator->setInput(['items' => ['a', 'b', 'c']]);
+        $this->assertTrue($validator->validate()->passes());
+
+        // Test with maximum
+        $validator->field('items')->required()->array(2, 4);
+        $validator->setInput(['items' => ['a', 'b', 'c', 'd']]);
+        $this->assertTrue($validator->validate()->passes());
+
+        // Test with more than maximum
+        $validator->field('items')->required()->array(2, 4);
+        $validator->setInput(['items' => ['a', 'b', 'c', 'd', 'e']]);
+        $this->assertFalse($validator->validate()->passes());
+    }
+
+    public function testErrorMessages()
+    {
+        $validator = new Validator();
+
+        // Test min error message
+        $validator->field('items')->required()->array(2);
+        $validator->setInput(['items' => ['a']]);
+        $validator->validate();
+        $this->assertStringContainsString('at least 2 items', $validator->getError('items'));
+
+        // Test max error message
+        $validator->field('items')->required()->array(null, 2);
+        $validator->setInput(['items' => ['a', 'b', 'c']]);
+        $validator->validate();
+        $this->assertStringContainsString('more than 2 items', $validator->getError('items'));
+
+        // Test min-max error message
+        $validator->field('items')->required()->array(2, 4);
+        $validator->setInput(['items' => ['a']]);
+        $validator->validate();
+        $this->assertStringContainsString('between 2 and 4 items', $validator->getError('items'));
     }
 }

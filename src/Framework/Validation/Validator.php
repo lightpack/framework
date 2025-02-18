@@ -38,7 +38,6 @@ use Lightpack\Validation\Rules\RequiredIfRule;
 use Lightpack\Validation\Rules\SameRule;
 use Lightpack\Validation\Rules\SlugRule;
 use Lightpack\Validation\Rules\StringRule;
-use Lightpack\Validation\Rules\TransformRule;
 use Lightpack\Validation\Rules\UniqueRule;
 use Lightpack\Validation\Rules\UrlRule;
 
@@ -66,9 +65,9 @@ class Validator
         return $this;
     }
 
-    public function setInput(array &$input): self
+    public function setInput(array $input): self
     {
-        $this->data = &$input;
+        $this->data = $input;
         $this->errors = [];
         $this->valid = true;
         return $this;
@@ -217,9 +216,9 @@ class Validator
         return $this;
     }
 
-    public function array(): self
+    public function array(?int $min = null, ?int $max = null): self
     {
-        $this->rules[$this->currentField][] = new ArrayRule;
+        $this->rules[$this->currentField][] = new ArrayRule($min, $max);
         return $this;
     }
 
@@ -288,12 +287,6 @@ class Validator
     public function custom(callable $callback, string $message = 'Validation failed'): self
     {
         $this->rules[$this->currentField][] = new CustomRule($callback, $message);
-        return $this;
-    }
-
-    public function transform(callable $callback): self
-    {
-        $this->rules[$this->currentField][] = new TransformRule($callback);
         return $this;
     }
 
@@ -372,12 +365,6 @@ class Validator
                 return;
             }
 
-            if ($rule instanceof TransformRule) {
-                $value = $rule->transform($value);
-                $this->arr->set($field, $value, $this->data);
-                continue;
-            }
-
             if ($rule instanceof IntRule && is_string($value) && preg_match('/^-?\d+$/', $value)) {
                 $value = (int) $value;
                 $this->arr->set($field, $value, $this->data);
@@ -389,7 +376,7 @@ class Validator
                 $this->arr->set($field, $value, $this->data);
             }
 
-            if (!($rule instanceof SameRule || $rule instanceof DifferentRule || $rule instanceof RequiredIfRule ? $rule($value, $this->data) : $rule($value))) {
+            if (!$rule($value, $this->data)) {
                 $this->errors[$field] = $rule->getMessage();
                 $this->valid = false;
                 break;
@@ -416,12 +403,6 @@ class Validator
                     continue 2;
                 }
 
-                if ($rule instanceof TransformRule) {
-                    $item = $rule->transform($item);
-                    $this->arr->set($actualField, $item, $this->data);
-                    continue;
-                }
-
                 if ($rule instanceof IntRule && is_string($item) && preg_match('/^-?\d+$/', $item)) {
                     $item = (int) $item;
                     $this->arr->set($actualField, $item, $this->data);
@@ -433,7 +414,7 @@ class Validator
                     $this->arr->set($actualField, $item, $this->data);
                 }
 
-                if (!($rule instanceof SameRule || $rule instanceof DifferentRule || $rule instanceof RequiredIfRule ? $rule($item, $this->data) : $rule($item))) {
+                if (!$rule($item, $this->data)) {
                     $this->errors[$actualField] = $rule->getMessage();
                     $this->valid = false;
                     break;
