@@ -46,10 +46,24 @@ class FileSizeRule
 
     private function parseSize(string $size): int 
     {
-        $units = ['B' => 1, 'K' => 1024, 'M' => 1024 * 1024, 'G' => 1024 * 1024 * 1024];
-        $unit = strtoupper(substr($size, -1));
-        $value = (int)substr($size, 0, -1);
+        $size = strtoupper(trim($size));
+        
+        // Define units with their byte multipliers
+        $units = [
+            'B' => 1,
+            'KB' => 1024,
+            'MB' => 1024 * 1024,
+            'GB' => 1024 * 1024 * 1024,
+        ];
 
-        return isset($units[$unit]) ? $value * $units[$unit] : $value;
+        // Extract numeric value and unit
+        if (preg_match('/^(\d+)\s*(B|KB|MB|GB)$/', $size, $matches)) {
+            $value = (int)$matches[1];
+            $unit = $matches[2];
+            return $value * $units[$unit];
+        }
+
+        // If no unit specified or invalid format, assume bytes
+        return (int)$size;
     }
 }

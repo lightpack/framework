@@ -115,7 +115,7 @@ startxref
 
     public function testFileSizeValidation()
     {
-        $rule = new FileSizeRule('2K');
+        $rule = new FileSizeRule('2KB');
         
         // File too large
         $file = $this->createUploadedFile(['size' => 3 * 1024]);
@@ -240,7 +240,7 @@ startxref
             ->field('product_images')
                 ->required()
                 ->multipleFiles(2, 5)
-                ->fileSize('2M')
+                ->fileSize('2MB')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
                     'min_width' => 800,
@@ -252,7 +252,7 @@ startxref
             ->field('tech_specs')
                 ->optional()
                 ->fileType('application/pdf')
-                ->fileSize('5M');
+                ->fileSize('5MB');
 
         $validFiles = [
             'product_images' => [
@@ -288,7 +288,7 @@ startxref
             ->field('product_images')
                 ->required()
                 ->multipleFiles(2, 5)
-                ->fileSize('2M')
+                ->fileSize('2MB')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
                     'min_width' => 800,
@@ -317,7 +317,7 @@ startxref
             ->field('product_images')
                 ->required()
                 ->multipleFiles(2, 5)
-                ->fileSize('2M')
+                ->fileSize('2MB')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
                     'min_width' => 800,
@@ -349,7 +349,7 @@ startxref
             ->field('product_images')
                 ->required()
                 ->multipleFiles(2, 5)
-                ->fileSize('2M')
+                ->fileSize('2MB')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
                     'min_width' => 800,
@@ -381,7 +381,7 @@ startxref
             ->field('product_images')
                 ->required()
                 ->multipleFiles(2, 5)
-                ->fileSize('2M')
+                ->fileSize('2MB')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
                     'min_width' => 800,
@@ -392,7 +392,7 @@ startxref
             ->field('tech_specs')
                 ->optional()
                 ->fileType('application/pdf')
-                ->fileSize('5M');
+                ->fileSize('5MB');
 
         $wrongPdfType = [
             'product_images' => [
@@ -424,7 +424,7 @@ startxref
             ->field('product_images')
                 ->required()
                 ->multipleFiles(2, 5)
-                ->fileSize('2M')
+                ->fileSize('2MB')
                 ->fileType(['image/jpeg', 'image/png'])
                 ->image([
                     'min_width' => 800,
