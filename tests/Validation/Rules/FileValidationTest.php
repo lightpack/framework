@@ -275,11 +275,12 @@ startxref
             ]
         ];
 
-        $result = $validator->validate($validFiles);
-        if (!$result->isValid()) {
+        $validator->setInput($validFiles);
+        $result = $validator->validate();
+        if (!$result->passes()) {
             var_dump($validator->getErrors());
         }
-        $this->assertTrue($result->isValid());
+        $this->assertTrue($result->passes());
 
         // Test 2: Invalid - Too few product images
         $validator = new \Lightpack\Validation\Validator();
@@ -306,9 +307,9 @@ startxref
             ]
         ];
 
-        $this->assertFalse($validator->validate($tooFewImages)->isValid());
-        $errors = $validator->getErrors();
-        $this->assertArrayHasKey('product_images', $errors);
+        $validator->setInput($tooFewImages)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertNotNull($validator->getError('product_images'));
 
         // Test 3: Invalid - Wrong image type
         $validator = new \Lightpack\Validation\Validator();
@@ -338,9 +339,9 @@ startxref
             ]
         ];
 
-        $this->assertFalse($validator->validate($wrongImageType)->isValid());
-        $errors = $validator->getErrors();
-        $this->assertArrayHasKey('product_images', $errors);
+        $validator->setInput($wrongImageType)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertNotNull($validator->getError('product_images'));
 
         // Test 4: Invalid - File too large
         $validator = new \Lightpack\Validation\Validator();
@@ -370,9 +371,9 @@ startxref
             ]
         ];
 
-        $this->assertFalse($validator->validate($fileTooLarge)->isValid());
-        $errors = $validator->getErrors();
-        $this->assertArrayHasKey('product_images', $errors);
+        $validator->setInput($fileTooLarge)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertNotNull($validator->getError('product_images'));
 
         // Test 5: Invalid - Wrong PDF file type
         $validator = new \Lightpack\Validation\Validator();
@@ -413,9 +414,9 @@ startxref
             ]
         ];
 
-        $this->assertFalse($validator->validate($wrongPdfType)->isValid());
-        $errors = $validator->getErrors();
-        $this->assertArrayHasKey('tech_specs', $errors);
+        $validator->setInput($wrongPdfType)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertNotNull($validator->getError('tech_specs'));
 
         // Test 6: Valid - Without optional PDF
         $validator = new \Lightpack\Validation\Validator();
@@ -445,7 +446,8 @@ startxref
             ]
         ];
 
-        $this->assertTrue($validator->validate($withoutPdf)->isValid());
+        $validator->setInput($withoutPdf)->validate();
+        $this->assertTrue($validator->passes());
 
         $this->tearDownFixtures();
     }
