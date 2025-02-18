@@ -112,7 +112,8 @@ class Validator
 
     public function requiredIf(string $field, mixed $value = null): self
     {
-        $this->rules[$this->currentField][] = new RequiredIfRule($field, $this->data, $this->arr, $value);
+        $rule = new RequiredIfRule($field, $this->arr, $value);
+        $this->rules[$this->currentField][] = $rule;
         return $this;
     }
 
@@ -342,7 +343,7 @@ class Validator
                 $this->arr->set($field, $value, $this->data);
             }
 
-            if (!($rule instanceof SameRule || $rule instanceof DifferentRule ? $rule($value, $this->data) : $rule($value))) {
+            if (!($rule instanceof SameRule || $rule instanceof DifferentRule || $rule instanceof RequiredIfRule ? $rule($value, $this->data) : $rule($value))) {
                 $this->errors[$field] = $rule->getMessage();
                 $this->valid = false;
                 break;
@@ -386,7 +387,7 @@ class Validator
                     $this->arr->set($actualField, $item, $this->data);
                 }
 
-                if (!($rule instanceof SameRule || $rule instanceof DifferentRule ? $rule($item, $this->data) : $rule($item))) {
+                if (!($rule instanceof SameRule || $rule instanceof DifferentRule || $rule instanceof RequiredIfRule ? $rule($item, $this->data) : $rule($item))) {
                     $this->errors[$actualField] = $rule->getMessage();
                     $this->valid = false;
                     break;

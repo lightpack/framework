@@ -12,7 +12,6 @@ class RequiredIfRule
 
     public function __construct(
         private readonly string $field,
-        private array &$data,
         private readonly Arr $arr,
         private readonly mixed $value = null
     ) {
@@ -21,9 +20,9 @@ class RequiredIfRule
             : "Required when {$field} is {$value}";
     }
 
-    public function __invoke($value): bool
+    public function __invoke($value, array $data = []): bool
     {
-        $dependentValue = $this->arr->get($this->field, $this->data);
+        $dependentValue = $this->arr->get($this->field, $data);
         
         // If no specific value is provided, check if dependent field is truthy
         if ($this->value === null) {
