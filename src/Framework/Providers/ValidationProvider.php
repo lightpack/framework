@@ -10,9 +10,7 @@ class ValidationProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->factory('validator', function ($container) {
-            $data = array_merge($container->get('request')->input(), $_FILES);
-
-            return (new Validator)->setInput($data);
+            return new Validator;
         });
 
         $container->alias(Validator::class, 'validator');

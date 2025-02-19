@@ -7,9 +7,7 @@ use TypeError;
 use ParseError;
 use ErrorException;
 use Exception;
-use Lightpack\Container\Container;
 use Lightpack\Debug\ExceptionRenderer;
-use Lightpack\Exceptions\ValidationException;
 use Lightpack\Logger\Logger;
 
 class Handler
@@ -62,10 +60,6 @@ class Handler
             return $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
         }
 
-        if ($exc instanceof ValidationException) {
-            return $this->handleFormRequestValidationException($exc);
-        }
-
         if ($exc instanceof Exception) {
             return $this->logAndRenderException($exc, 'Exception');
         }
@@ -77,28 +71,5 @@ class Handler
     {
         $this->logger->error($exc->getMessage());
         $this->exceptionRenderer->render($exc, $type);
-    }
-
-    private function handleFormRequestValidationException(ValidationException $exc)
-    {
-        /** @var \Lightpack\Container\Container $container */
-        $container = Container::getInstance();
-
-        // For ajax or json requests, return json response.
-        if ($container->get('request')->isAjax() || $container->get('request')->isJson()) {
-            $container->get('response')
-                ->setStatus(422)
-                ->setMessage('Unprocessable Entity')
-                ->json([
-                    'success' => false,
-                    'message' => $exc->getMessage(),
-                    'errors' => $exc->getErrors(),
-                ])->send();
-        }
-
-        // Redirect to previous page with errors and old input.
-        $container->get('session')->flash('_old_input', $container->get('request')->input());
-        $container->get('session')->flash('_validation_errors', $exc->getErrors());
-        $container->get('redirect')->back()->send();
     }
 }
