@@ -18,7 +18,7 @@ abstract class FormRequest extends Request
         parent::__construct();
     }
 
-    abstract public function rules();
+    abstract protected function rules();
 
     public function __boot()
     {
@@ -50,17 +50,17 @@ abstract class FormRequest extends Request
     }
 
 
-    protected function data(): void
+    protected function data()
     {
         // ...
     }
 
-    protected function beforeSend(): void
+    protected function beforeSend()
     {
         // ...
     }
 
-    protected function beforeRedirect(): void
+    protected function beforeRedirect()
     {
         // ...
     }
