@@ -3,7 +3,7 @@
 namespace Lightpack\Http;
 
 use Lightpack\Container\Container;
-use Lightpack\Validator\Validator;
+use Lightpack\Validation\Validator;
 
 class FormRequest extends Request
 {

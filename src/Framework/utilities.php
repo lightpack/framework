@@ -356,7 +356,7 @@ if (!function_exists('validator')) {
     /**
      * Returns an instance of validator.
      */
-    function validator(): \Lightpack\Validator\Validator
+    function validator(): \Lightpack\Validation\Validator
     {
         return app('validator');
     }

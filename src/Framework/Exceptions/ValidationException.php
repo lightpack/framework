@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-use Lightpack\Validator\Validator;
+use Lightpack\Validation\Validator;
 
 class ValidationException extends HttpException 
 {
