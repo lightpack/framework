@@ -34,7 +34,6 @@ use Lightpack\Validation\Rules\NumericRule;
 use Lightpack\Validation\Rules\OptionalRule;
 use Lightpack\Validation\Rules\RegexRule;
 use Lightpack\Validation\Rules\RequiredRule;
-use Lightpack\Validation\Rules\RequiredIfRule;
 use Lightpack\Validation\Rules\SameRule;
 use Lightpack\Validation\Rules\SlugRule;
 use Lightpack\Validation\Rules\StringRule;
@@ -116,13 +115,6 @@ class Validator
     public function required(): self
     {
         $this->rules[$this->currentField][] = new RequiredRule;
-        return $this;
-    }
-
-    public function requiredIf(string $field, mixed $value = null): self
-    {
-        $rule = new RequiredIfRule($field, $this->arr, $value);
-        $this->rules[$this->currentField][] = $rule;
         return $this;
     }
 
@@ -358,10 +350,6 @@ class Validator
         foreach ($rules as $rule) {
             if ($rule instanceof OptionalRule) {
                 $isOptional = true;
-            } elseif ($rule instanceof RequiredIfRule) {
-                if ($rule($value, $this->data)) {
-                    $isOptional = true;
-                }
             }
 
             if ($isOptional && empty($value)) {
