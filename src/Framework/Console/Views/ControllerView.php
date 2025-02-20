@@ -15,7 +15,7 @@ class __CONTROLLER_NAME__
 {
     public function index()
     {
-        // Code goes here
+        // return response()->view('', []);
     }
 }
 TEMPLATE;
