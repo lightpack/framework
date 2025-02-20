@@ -376,7 +376,7 @@ if(!function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
-    function old(string $key, ?string $default = '', bool $escape = true): string
+    function old(string $key, string|array $default = '', bool $escape = true): string|array
     {
         static $oldInput;
         
@@ -390,6 +390,10 @@ if(!function_exists('old')) {
 
         if(is_null($value)) {
             return '';
+        }
+
+        if(is_array($value)) {
+            return $value;
         }
 
         return $escape ? _e($value) : $value;

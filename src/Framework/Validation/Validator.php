@@ -238,6 +238,9 @@ class Validator
         return $this;
     }
 
+    /**
+     * @deprecated
+     */
     public function optional(): self
     {
         $this->rules[$this->currentField][] = new OptionalRule;
@@ -261,6 +264,7 @@ class Validator
     public function in(array $values): self
     {
         $this->rules[$this->currentField][] = new InRule($values);
+        
         return $this;
     }
 
@@ -346,26 +350,26 @@ class Validator
 
     private function validateField(string $field, mixed $value, array $rules): void
     {
-        $isOptional = false;
+        $isOptional = true;
         foreach ($rules as $rule) {
-            if ($rule instanceof OptionalRule) {
-                $isOptional = true;
+            if ($rule instanceof RequiredRule) {
+                $isOptional = false;
             }
 
-            if ($isOptional && empty($value)) {
+            if ($isOptional && !is_array($value) && empty($value)) {
                 return;
             }
 
-            if ($rule instanceof IntRule && is_string($value) && preg_match('/^-?\d+$/', $value)) {
-                $value = (int) $value;
-                $this->arr->set($field, $value, $this->data);
-            } elseif ($rule instanceof FloatRule && is_string($value) && is_numeric($value)) {
-                $value = (float) $value;
-                $this->arr->set($field, $value, $this->data);
-            } elseif ($rule instanceof BoolRule && is_string($value)) {
-                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                $this->arr->set($field, $value, $this->data);
-            }
+            // if ($rule instanceof IntRule && is_string($value) && preg_match('/^-?\d+$/', $value)) {
+            //     $value = (int) $value;
+            //     $this->arr->set($field, $value, $this->data);
+            // } elseif ($rule instanceof FloatRule && is_string($value) && is_numeric($value)) {
+            //     $value = (float) $value;
+            //     $this->arr->set($field, $value, $this->data);
+            // } elseif ($rule instanceof BoolRule && is_string($value)) {
+            //     $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            //     $this->arr->set($field, $value, $this->data);
+            // }
 
             if (!$rule($value, $this->data)) {
                 $this->errors[$field] = $rule->getMessage();
