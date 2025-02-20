@@ -7,14 +7,17 @@ use Lightpack\Database\Lucid\Model;
 
 class AuthUser extends Model implements Identity
 {
-    /** @inheritDoc */
     protected $table = 'users';
 
-    /** @inheritDoc */
     protected $primaryKey = 'id';
 
-    /** @inheritDoc */
     protected $timestamps = true;
+
+    protected $hidden = [
+        'password',
+        'api_token',
+        'remember_token',
+    ];
 
     public function getId(): mixed
     {
