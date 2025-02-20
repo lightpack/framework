@@ -15,11 +15,9 @@ use Lightpack\Http\FormRequest;
 
 class __REQUEST_NAME__ extends FormRequest
 {
-    public function __construct()
+    public function rules()
     {
-        parent::__construct([
-            // rules
-        ]);
+        // $this->validator->field('')->required();`
     }
 }
 TEMPLATE;
