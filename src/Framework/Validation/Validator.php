@@ -17,11 +17,11 @@ use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
 use Lightpack\Validation\Rules\File\FileExtensionRule;
+use Lightpack\Validation\Rules\File\FileRule;
 use Lightpack\Validation\Rules\File\FileSizeRule;
 use Lightpack\Validation\Rules\File\FileTypeRule;
 use Lightpack\Validation\Rules\File\ImageRule;
 use Lightpack\Validation\Rules\File\MultipleFileRule;
-use Lightpack\Validation\Rules\File\FileRule;
 use Lightpack\Validation\Rules\FloatRule;
 use Lightpack\Validation\Rules\InRule;
 use Lightpack\Validation\Rules\IntRule;
@@ -39,9 +39,12 @@ use Lightpack\Validation\Rules\SlugRule;
 use Lightpack\Validation\Rules\StringRule;
 use Lightpack\Validation\Rules\UniqueRule;
 use Lightpack\Validation\Rules\UrlRule;
+use Lightpack\Validation\Traits\FileUploadValidationTrait;
 
 class Validator
 {
+    use FileUploadValidationTrait;
+
     private array $rules = [];
     private array $data = [];
     private array $errors = [];
@@ -355,12 +358,19 @@ class Validator
     private function validateField(string $field, mixed $value, array $rules): void
     {
         $isOptional = true;
-        foreach ($rules as $rule) {
+        foreach ($rules as $index => $rule) {
             if ($rule instanceof RequiredRule) {
                 $isOptional = false;
             }
 
-            if ($isOptional && !is_array($value) && empty($value)) {
+            // For optional file uploads, skip validation if no file was uploaded
+            if ($index === 0 && $isOptional && is_array($value)) {
+                if ($this->isEmptySingleFileUpload($value) || $this->isEmptyMultiFileUpload($value)) {
+                    return;
+                }
+            }
+
+            if ($isOptional && empty($value)) {
                 return;
             }
 

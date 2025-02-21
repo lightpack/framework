@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\FileUploadValidationTrait;
+
 class RequiredRule
 {
+    use FileUploadValidationTrait;
+
     private string $message = 'This field is required';
 
     public function __invoke($value): bool
     {
-        if ($value === null || $value === '') {
+        if (empty($value)) {
             return false;
         }
 
-        if (is_array($value)) {
-            return !empty($value);
+        if(is_array($value) && ($this->isEmptySingleFileUpload($value) || $this->isEmptyMultiFileUpload($value))) {
+            return false;
         }
 
         return true;
