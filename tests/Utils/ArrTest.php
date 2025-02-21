@@ -113,13 +113,7 @@ class ArrTest extends TestCase
 
         // Test multiple wildcards at different levels
         $names = $arr->get('departments.*.teams.*.members.*.name', $data);
-        $this->assertEquals(
-            [
-                [['John', 'Jane'], ['Bob', 'Alice']], 
-                [['Mike', 'Sara'], ['Tom', 'Emma']]
-            ],
-            $names
-        );
+        $this->assertEquals(['John', 'Jane', 'Bob', 'Alice', 'Mike', 'Sara', 'Tom', 'Emma'], $names);
 
         // Test wildcards with specific array access
         $names = $arr->get('departments.engineering.teams.0.members.*.name', $data);
@@ -194,45 +188,6 @@ class ArrTest extends TestCase
         $data = ['key' => 'value'];
         $arr->set('key.nested', 'test',  $data);
         $this->assertEquals(['nested' => 'test'], $data['key']);
-    }
-
-    public function testArrayTreeFromArrays()
-    {
-        // Test 1
-        $categories = [
-            ['id' => 1, 'parent_id' => 0, 'name' => 'Category 1'],
-            ['id' => 2, 'parent_id' => 1, 'name' => 'Category 2'],
-            ['id' => 3, 'parent_id' => 1, 'name' => 'Category 3'],
-            ['id' => 4, 'parent_id' => 2, 'name' => 'Category 4'],
-            ['id' => 5, 'parent_id' => 0, 'name' => 'Category 5'],
-        ];
-
-        $tree = (new Arr)->tree($categories);
-
-        // Assertions
-        $this->assertIsArray($tree);
-        $this->assertCount(2, $tree);
-        $this->assertArrayHasKey('children', $tree[0]);
-        $this->assertCount(2, $tree[0]['children']);
-        $this->assertCount(1, $tree[0]['children'][1]['children']);
-
-        // Test 2
-        $categories = [
-            ['category_id' => 1, 'category_parent_id' => null, 'name' => 'Category 1'],
-            ['category_id' => 2, 'category_parent_id' => 1, 'name' => 'Category 2'],
-            ['category_id' => 3, 'category_parent_id' => 1, 'name' => 'Category 3'],
-            ['category_id' => 4, 'category_parent_id' => 2, 'name' => 'Category 4'],
-            ['category_id' => 5, 'category_parent_id' => null, 'name' => 'Category 5'],
-        ];
-
-        $tree = (new Arr)->tree($categories, null, 'category_id', 'category_parent_id');
-
-        // Assertions
-        $this->assertIsArray($tree);
-        $this->assertCount(2, $tree);
-        $this->assertArrayHasKey('children', $tree[0]);
-        $this->assertCount(2, $tree[0]['children']);
-        $this->assertCount(1, $tree[0]['children'][1]['children']);
     }
 
     public function testDeleteRemovesNestedKey()

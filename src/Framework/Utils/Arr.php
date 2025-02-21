@@ -1,190 +1,136 @@
 <?php
 
-namespace Lightpack\Utils;
+declare(strict_types=1);
 
-use DateTime;
-use ValueError;
-use JsonException;
+namespace Lightpack\Utils;
 
 class Arr
 {
     /**
-     * Check if an array has key using 'dot' notation.
-     * 
-     * For example:
-     * $array = ['a' => ['b' => ['c' => 'd']]];
-     * (new Arr)->hasKey('a.b.c', $array) === true;
+     * Check if array has a key using dot notation.
      */
-
-    public function has(string $key, array $array): bool
+    public function has(string $key, array $data): bool
     {
         $keys = explode('.', $key);
+        $current = $data;
 
-        while (count($keys) > 1) {
-            $key = array_shift($keys);
-
-            if (!isset($array[$key]) || !is_array($array[$key])) {
+        foreach ($keys as $key) {
+            if (!is_array($current) || !array_key_exists($key, $current)) {
                 return false;
             }
 
-            $array = $array[$key];
+            $current = $current[$key];
         }
 
-        return isset($array[array_shift($keys)]);
+        return true;
     }
 
     /**
-     * Get value from array using 'dot' notation.
-     * 
-     * For example:
-     * ```php
-     * $array = ['a' => ['b' => ['c' => 'd']]];
-     * (new Arr)->get('a.b.c', $array) === 'd';
-     * ```
+     * Get array value using dot notation.
+     * Supports wildcard (*) for matching multiple elements.
      */
     public function get(string $key, array $data, $default = null)
     {
+        if (strpos($key, '*') !== false) {
+            return $this->getWildcard($key, $data, $default);
+        }
+
         $keys = explode('.', $key);
-        $result = $data;
+        $current = $data;
 
-        while (count($keys) > 0) {
-            $segment = array_shift($keys);
-
-            if ($segment === '*') {
-                if (!is_array($result)) {
-                    return $default;
-                }
-
-                $items = [];
-                $remainingPath = implode('.', $keys);
-                
-                foreach ($result as $item) {
-                    if ($remainingPath !== '') {
-                        if (is_array($item)) {
-                            $value = $this->get($remainingPath, $item, null);
-                            if ($value !== null) {
-                                $items[] = $value;
-                            }
-                        }
-                    } else {
-                        $items[] = $item;
-                    }
-                }
-
-                return empty($items) ? $default : $items;
-            }
-
-            // Handle array access (numeric keys)
-            if (is_numeric($segment)) {
-                $segment = (int) $segment;
-            }
-
-            if (!isset($result[$segment])) {
+        foreach ($keys as $key) {
+            if (!is_array($current) || !array_key_exists($key, $current)) {
                 return $default;
             }
 
-            $result = $result[$segment];
+            $current = $current[$key];
         }
 
-        return $result;
+        return $current;
     }
 
     /**
      * Set array value using dot notation.
-     * 
-     * For example:
-     * $array = ['a' => ['b' => []]];
-     * (new Arr)->set('a.b.c', 'value', $array);
-     * // $array is now ['a' => ['b' => ['c' => 'value']]]
-     * 
-     * @throws ValueError When key is empty
      */
-    public function set(string $key, $value, array &$array): array
+    public function set(string $key, $value, array &$data): void
     {
         if (empty($key)) {
-            throw new ValueError('Key cannot be empty');
+            throw new \ValueError('Key cannot be empty');
         }
 
         $keys = explode('.', $key);
-        $current = &$array;
+        $current = &$data;
 
-        while (count($keys) > 1) {
-            $key = array_shift($keys);
+        foreach ($keys as $key) {
+            if (!is_array($current)) {
+                $current = [];
+            }
 
-            if (!isset($current[$key]) || !is_array($current[$key])) {
+            if (!array_key_exists($key, $current)) {
                 $current[$key] = [];
             }
 
             $current = &$current[$key];
         }
 
-        $current[array_shift($keys)] = $value;
-
-        return $array;
+        $current = $value;
     }
 
     /**
-     * Remove one or more array items from a given array using "dot" notation.
-     *
-     * @param array $array
-     * @param array|string $keys
-     * @return void
+     * Delete array value using dot notation.
      */
-    public function delete(string $key, array &$array): void
+    public function delete(string $key, array &$data): void
     {
         $keys = explode('.', $key);
-        $current = &$array;
-        
-        while(count($keys) > 1) {
-            $key = array_shift($keys);
-            
-            if(!isset($current[$key]) || !is_array($current[$key])) {
+        $lastKey = array_pop($keys);
+        $current = &$data;
+
+        foreach ($keys as $key) {
+            if (!is_array($current) || !array_key_exists($key, $current)) {
                 return;
             }
-            
+
             $current = &$current[$key];
         }
-        
-        unset($current[array_shift($keys)]);
+
+        if (is_array($current)) {
+            unset($current[$lastKey]);
+        }
     }
 
-        /**
-     * Build a tree from a flat array. 
-     * 
-     * The tree will contain a 'children' key for each element in the 
-     * array. Each child will be grouped by the value of the parent key.
-     * 
-     * @param array $array The array to build the tree from.
-     * @param mixed $parentId The value to use for the parent ID.
-     * @param string $idKey The key name to use for the ID.
-     * @param string $parentIdKey The key name to use for the parent ID.
-     * 
-     * @return array The tree.
-     * 
-     * Example:
-     * ```php
-     * $categories = [
-     *    ['id' => 1, 'parent_id' => null, 'name' => 'Category 1'],
-     *    ['id' => 2, 'parent_id' => 1, 'name' => 'Category 2'],
-     *    ['id' => 3, 'parent_id' => 1, 'name' => 'Category 3'],
-     *    ['id' => 4, 'parent_id' => 2, 'name' => 'Category 4'],
-     *    ['id' => 5, 'parent_id' => null, 'name' => 'Category 5'],
-     * ];
-     * 
-     * $tree = (new Arr)->tree($categories);
-     * ```
+    /**
+     * Internal method to handle wildcard array access.
      */
-    public function tree(array $items, $parentId = null, string $idKey = 'id', string $parentIdKey = 'parent_id'): array
+    private function getWildcard(string $key, array $data, $default = null)
     {
-        $result = [];
+        $pattern = str_replace('*', '[^.]+', $key);
+        $pattern = '#^' . str_replace('.', '\.', $pattern) . '$#';
+        $results = [];
 
-        foreach ($items as $key => $item) {
-            if ($item[$parentIdKey] == $parentId) {
-                $result[$key] = $item;
-                $result[$key]['children'] = $this->tree($items, $item[$idKey], $idKey, $parentIdKey);
-            }
+        $this->findWildcardMatches($pattern, $data, '', $results);
+
+        if (empty($results)) {
+            return $default;
         }
 
-        return $result;
+        return $results;
+    }
+
+    /**
+     * Internal method to recursively find wildcard matches.
+     */
+    private function findWildcardMatches(string $pattern, array $data, string $currentPath, array &$results): void
+    {
+        foreach ($data as $key => $value) {
+            $path = $currentPath ? $currentPath . '.' . $key : $key;
+
+            if (is_array($value)) {
+                $this->findWildcardMatches($pattern, $value, $path, $results);
+            }
+
+            if (preg_match($pattern, $path)) {
+                $results[] = $value;
+            }
+        }
     }
 }
