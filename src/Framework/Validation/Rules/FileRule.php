@@ -80,7 +80,7 @@ class FileRule
             return [$value];
         }
 
-        // Handle multiple file upload
+        // Handle multiple file upload ($_FILES format)
         if (isset($value['name']) && is_array($value['name'])) {
             $files = [];
             $keys = ['name', 'type', 'tmp_name', 'error', 'size'];
@@ -97,8 +97,14 @@ class FileRule
         }
 
         // Handle array of files
-        if (is_array($value) && isset($value[0]['name'])) {
-            return $value;
+        if (is_array($value)) {
+            $files = [];
+            foreach ($value as $item) {
+                if (is_array($item) && isset($item['name']) && isset($item['type']) && isset($item['tmp_name'])) {
+                    $files[] = $item;
+                }
+            }
+            return $files;
         }
 
         return [];
