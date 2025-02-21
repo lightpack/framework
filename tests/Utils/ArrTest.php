@@ -346,4 +346,81 @@ class ArrTest extends TestCase
         $tree = $arr->tree($items, '');
         $this->assertEquals($expected, $tree);
     }
+
+    public function testTranspose()
+    {
+        $arr = new Arr();
+
+        // Test basic transposition
+        $data = [
+            'name' => ['John', 'Jane'],
+            'age' => [25, 30]
+        ];
+
+        $expected = [
+            ['name' => 'John', 'age' => 25],
+            ['name' => 'Jane', 'age' => 30]
+        ];
+
+        $this->assertEquals($expected, $arr->transpose($data));
+
+        // Test with $_FILES like structure
+        $files = [
+            'name' => ['photo1.jpg', 'photo2.jpg'],
+            'type' => ['image/jpeg', 'image/jpeg'],
+            'tmp_name' => ['/tmp/php123', '/tmp/php456'],
+            'error' => [0, 0],
+            'size' => [1024, 2048]
+        ];
+
+        $expected = [
+            [
+                'name' => 'photo1.jpg',
+                'type' => 'image/jpeg',
+                'tmp_name' => '/tmp/php123',
+                'error' => 0,
+                'size' => 1024
+            ],
+            [
+                'name' => 'photo2.jpg',
+                'type' => 'image/jpeg',
+                'tmp_name' => '/tmp/php456',
+                'error' => 0,
+                'size' => 2048
+            ]
+        ];
+
+        $this->assertEquals($expected, $arr->transpose($files));
+
+        // Test with specific keys
+        $this->assertEquals(
+            [
+                ['name' => 'photo1.jpg', 'size' => 1024],
+                ['name' => 'photo2.jpg', 'size' => 2048]
+            ],
+            $arr->transpose($files, ['name', 'size'])
+        );
+
+        // Test empty array
+        $this->assertEquals([], $arr->transpose([]));
+
+        // Test non-array values
+        $this->assertEquals(
+            [['key' => 'value']],
+            $arr->transpose(['key' => 'value'])
+        );
+
+        // Test with missing values
+        $data = [
+            'name' => ['John', 'Jane'],
+            'age' => [25] // Missing second age
+        ];
+
+        $expected = [
+            ['name' => 'John', 'age' => 25],
+            ['name' => 'Jane'] // No age for Jane
+        ];
+
+        $this->assertEquals($expected, $arr->transpose($data));
+    }
 }

@@ -167,11 +167,65 @@ class Arr
                 if (!empty($children)) {
                     $item['children'] = $children;
                 }
-                
+
                 $tree[] = $item;
             }
         }
 
         return $tree;
+    }
+
+    /**
+     * Transpose a column-based array to row-based array.
+     * 
+     * Example:
+     * ```php
+     * $data = [
+     *     'name' => ['John', 'Jane'],
+     *     'age' => [25, 30]
+     * ];
+     * 
+     * $result = $arr->transpose($data);
+     * // [
+     * //     ['name' => 'John', 'age' => 25],
+     * //     ['name' => 'Jane', 'age' => 30]
+     * // ]
+     * ```
+     * 
+     * @param array $array Column-based array to transpose
+     * @param array $keys Optional specific keys to include
+     * @return array Row-based array
+     */
+    public function transpose(array $array, array $keys = []): array
+    {
+        if (empty($array)) {
+            return [];
+        }
+
+        if (empty($keys)) {
+            $keys = array_keys($array);
+        }
+
+        $firstKey = reset($keys);
+        if (!isset($array[$firstKey]) || !is_array($array[$firstKey])) {
+            return [$array];
+        }
+
+        $result = [];
+        $total = count($array[$firstKey]);
+
+        for ($i = 0; $i < $total; $i++) {
+            $item = [];
+            foreach ($keys as $key) {
+                if (isset($array[$key][$i])) {
+                    $item[$key] = $array[$key][$i];
+                }
+            }
+            if (!empty($item)) {
+                $result[] = $item;
+            }
+        }
+
+        return $result;
     }
 }
