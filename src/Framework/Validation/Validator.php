@@ -21,7 +21,7 @@ use Lightpack\Validation\Rules\File\FileSizeRule;
 use Lightpack\Validation\Rules\File\FileTypeRule;
 use Lightpack\Validation\Rules\File\ImageRule;
 use Lightpack\Validation\Rules\File\MultipleFileRule;
-use Lightpack\Validation\Rules\FileRule;
+use Lightpack\Validation\Rules\File\FileRule;
 use Lightpack\Validation\Rules\FloatRule;
 use Lightpack\Validation\Rules\InRule;
 use Lightpack\Validation\Rules\IntRule;

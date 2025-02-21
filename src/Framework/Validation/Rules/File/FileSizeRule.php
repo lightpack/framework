@@ -62,10 +62,10 @@ class FileSizeRule
         ];
 
         // Extract numeric value and unit
-        if (preg_match('/^(\d+)\s*(B|KB|MB|GB)$/', $size, $matches)) {
+        if (preg_match('/^(\d+)\s*([KMGB]+)B?$/i', $size, $matches)) {
             $value = (int)$matches[1];
             $unit = $matches[2];
-            return $value * $units[$unit];
+            return $value * ($units[$unit] ?? 1);
         }
 
         // If no unit specified or invalid format, assume bytes

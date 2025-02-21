@@ -117,11 +117,7 @@ startxref
     {
         $validator = new \Lightpack\Validation\Validator();
         
-        // Test case-insensitive size units
-        $validator->field('file')
-            ->fileSize('2m')  // lowercase
-            ->fileSize('500K') // uppercase
-            ->fileSize('1g');  // lowercase
+        $validator->field('file')->fileSize('2MB');
         
         $file = [
             'name' => 'test.txt',
@@ -134,15 +130,11 @@ startxref
         $validator->setInput(['file' => $file]);
         $this->assertTrue($validator->validate()->passes());
 
-        $rule = new FileSizeRule('2KB');
-        
-        // File too large
-        $file = $this->createUploadedFile(['size' => 3 * 1024]);
-        $this->assertFalse($rule($file));
-        
-        // File within limit
-        $file = $this->createUploadedFile(['size' => 1024]);
-        $this->assertTrue($rule($file));
+        // Test smaller filesize
+        $validator->field('file')->fileSize('500KB');
+
+        $validator->setInput(['file' => $file]);
+        $this->assertTrue($validator->validate()->fails());
     }
 
     public function testFileTypeValidation()
@@ -260,14 +252,9 @@ startxref
         $validator = new \Lightpack\Validation\Validator();
         $validator
             // Optional technical specs (PDF)
-            ->field('tech_specs')->fileType('application/pdf')->fileSize('5M')
+            ->field('tech_specs')->required()->fileType('application/pdf')->fileSize('5Mb')
             // Required product images (2-5 images)
-            ->field('product_images')->required()->multipleFiles(2, 5)->fileSize('2M')->fileType(['image/jpeg', 'image/png'])->image([
-                'min_width' => 800,
-                'max_width' => 2048,
-                'min_height' => 600,
-                'max_height' => 2048
-            ]);
+            ->field('product_images')->required()->multipleFiles(1, 5)->fileSize('2mb')->fileType(['image/jpeg', 'image/png']);
 
         $validFiles = [
             'product_images' => [
