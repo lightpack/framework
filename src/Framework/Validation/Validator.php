@@ -16,6 +16,11 @@ use Lightpack\Validation\Rules\CustomRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
+use Lightpack\Validation\Rules\File\FileExtensionRule;
+use Lightpack\Validation\Rules\File\FileSizeRule;
+use Lightpack\Validation\Rules\File\FileTypeRule;
+use Lightpack\Validation\Rules\File\ImageRule;
+use Lightpack\Validation\Rules\File\MultipleFileRule;
 use Lightpack\Validation\Rules\FileRule;
 use Lightpack\Validation\Rules\FloatRule;
 use Lightpack\Validation\Rules\InRule;
@@ -44,7 +49,6 @@ class Validator
     private string $currentField = '';
     private bool $valid = true;
     private ?Arr $arr = null;
-    private ?FileRule $currentFileRule = null;
 
     public function __construct()
     {
@@ -54,7 +58,7 @@ class Validator
     public function field(string $field): self 
     {
         $this->currentField = $field;
-        $this->currentFileRule = null; // Reset file rule when switching fields
+
         if (!isset($this->rules[$field])) {
             $this->rules[$field] = [];
         }
@@ -85,7 +89,6 @@ class Validator
         // Reset rules after validation
         $this->rules = [];
         $this->currentField = '';
-        $this->currentFileRule = null;
         
         return $this;
     }
@@ -315,70 +318,37 @@ class Validator
      */
     public function file(): self
     {
-        $this->currentFileRule = new FileRule();
-        $this->rules[$this->currentField][] = $this->currentFileRule;
+        $this->rules[$this->currentField][] = new FileRule();
         return $this;
     }
 
     public function fileSize(string $size): self
     {
-        if (!$this->currentFileRule) {
-            $this->file();
-        }
-        
-        $this->currentFileRule->addConstraint('size', $size);
+        $this->rules[$this->currentField][] = new FileSizeRule($size);
         return $this;
     }
 
     public function fileType(array|string $types): self
     {
-        if (!$this->currentFileRule) {
-            $this->file();
-        }
-
-        $this->currentFileRule->addConstraint('types', (array) $types);
+        $this->rules[$this->currentField][] = new FileTypeRule($types);
         return $this;
     }
 
     public function fileExtension(array|string $extensions): self
     {
-        if (!$this->currentFileRule) {
-            $this->file();
-        }
-
-        $this->currentFileRule->addConstraint('extensions', (array) $extensions);
+        $this->rules[$this->currentField][] = new FileExtensionRule($extensions);
         return $this;
     }
 
     public function image(array $constraints = []): self
     {
-        if (!$this->currentFileRule) {
-            $this->file();
-        }
-
-        $this->currentFileRule->addConstraint('types', ['image/jpeg', 'image/png', 'image/gif']);
-        
-        if (!empty($constraints)) {
-            $this->currentFileRule->addConstraint('dimensions', $constraints);
-        }
-
+        $this->rules[$this->currentField][] = new ImageRule($constraints);
         return $this;
     }
 
     public function multipleFiles(?int $min = null, ?int $max = null): self
     {
-        if (!$this->currentFileRule) {
-            $this->file();
-        }
-
-        if ($min !== null) {
-            $this->currentFileRule->addConstraint('min_files', $min);
-        }
-
-        if ($max !== null) {
-            $this->currentFileRule->addConstraint('max_files', $max);
-        }
-
+        $this->rules[$this->currentField][] = new MultipleFileRule($min, $max);
         return $this;
     }
 
