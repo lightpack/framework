@@ -241,23 +241,15 @@ startxref
         // Test 1: Valid submission
         $validator = new \Lightpack\Validation\Validator();
         $validator
-            // Required product images (2-5 images)
-            ->field('product_images')
-                ->required()
-                ->multipleFiles(2, 5)
-                ->fileSize('2MB')
-                ->fileType(['image/jpeg', 'image/png'])
-                ->image([
-                    'min_width' => 800,
-                    'max_width' => 2048,
-                    'min_height' => 600,
-                    'max_height' => 2048
-                ])
             // Optional technical specs (PDF)
-            ->field('tech_specs')
-                ->optional()
-                ->fileType('application/pdf')
-                ->fileSize('5MB');
+            ->field('tech_specs')->fileType('application/pdf')->fileSize('5MB')
+            // Required product images (2-5 images)
+            ->field('product_images')->required()->multipleFiles(2, 5)->fileSize('2MB')->fileType(['image/jpeg', 'image/png'])->image([
+                'min_width' => 800,
+                'max_width' => 2048,
+                'min_height' => 600,
+                'max_height' => 2048
+            ]);
 
         $validFiles = [
             'product_images' => [

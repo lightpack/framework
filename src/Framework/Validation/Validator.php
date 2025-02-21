@@ -16,12 +16,7 @@ use Lightpack\Validation\Rules\CustomRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
-use Lightpack\Validation\Rules\File\FileRule;
-use Lightpack\Validation\Rules\File\FileSizeRule;
-use Lightpack\Validation\Rules\File\FileTypeRule;
-use Lightpack\Validation\Rules\File\FileExtensionRule;
-use Lightpack\Validation\Rules\File\ImageRule;
-use Lightpack\Validation\Rules\File\MultipleFileRule;
+use Lightpack\Validation\Rules\FileRule;
 use Lightpack\Validation\Rules\FloatRule;
 use Lightpack\Validation\Rules\InRule;
 use Lightpack\Validation\Rules\IntRule;
@@ -49,6 +44,7 @@ class Validator
     private string $currentField = '';
     private bool $valid = true;
     private ?Arr $arr = null;
+    private ?FileRule $currentFileRule = null;
 
     public function __construct()
     {
@@ -58,6 +54,7 @@ class Validator
     public function field(string $field): self 
     {
         $this->currentField = $field;
+        $this->currentFileRule = null; // Reset file rule when switching fields
         if (!isset($this->rules[$field])) {
             $this->rules[$field] = [];
         }
@@ -88,6 +85,7 @@ class Validator
         // Reset rules after validation
         $this->rules = [];
         $this->currentField = '';
+        $this->currentFileRule = null;
         
         return $this;
     }
@@ -312,39 +310,75 @@ class Validator
         throw new \BadMethodCallException("Rule '{$name}' not found");
     }
 
+    /**
+     * Configure file validation rules
+     */
     public function file(): self
     {
-        $this->rules[$this->currentField][] = new FileRule();
+        $this->currentFileRule = new FileRule();
+        $this->rules[$this->currentField][] = $this->currentFileRule;
         return $this;
     }
 
     public function fileSize(string $size): self
     {
-        $this->rules[$this->currentField][] = new FileSizeRule($size);
+        if (!$this->currentFileRule) {
+            $this->file();
+        }
+        
+        $this->currentFileRule->addConstraint('size', $size);
         return $this;
     }
 
     public function fileType(array|string $types): self
     {
-        $this->rules[$this->currentField][] = new FileTypeRule($types);
+        if (!$this->currentFileRule) {
+            $this->file();
+        }
+
+        $this->currentFileRule->addConstraint('types', (array) $types);
         return $this;
     }
 
     public function fileExtension(array|string $extensions): self
     {
-        $this->rules[$this->currentField][] = new FileExtensionRule($extensions);
+        if (!$this->currentFileRule) {
+            $this->file();
+        }
+
+        $this->currentFileRule->addConstraint('extensions', (array) $extensions);
         return $this;
     }
 
     public function image(array $constraints = []): self
     {
-        $this->rules[$this->currentField][] = new ImageRule($constraints);
+        if (!$this->currentFileRule) {
+            $this->file();
+        }
+
+        $this->currentFileRule->addConstraint('types', ['image/jpeg', 'image/png', 'image/gif']);
+        
+        if (!empty($constraints)) {
+            $this->currentFileRule->addConstraint('dimensions', $constraints);
+        }
+
         return $this;
     }
 
     public function multipleFiles(?int $min = null, ?int $max = null): self
     {
-        $this->rules[$this->currentField][] = new MultipleFileRule($min, $max);
+        if (!$this->currentFileRule) {
+            $this->file();
+        }
+
+        if ($min !== null) {
+            $this->currentFileRule->addConstraint('min_files', $min);
+        }
+
+        if ($max !== null) {
+            $this->currentFileRule->addConstraint('max_files', $max);
+        }
+
         return $this;
     }
 
@@ -360,17 +394,6 @@ class Validator
                 return;
             }
 
-            // if ($rule instanceof IntRule && is_string($value) && preg_match('/^-?\d+$/', $value)) {
-            //     $value = (int) $value;
-            //     $this->arr->set($field, $value, $this->data);
-            // } elseif ($rule instanceof FloatRule && is_string($value) && is_numeric($value)) {
-            //     $value = (float) $value;
-            //     $this->arr->set($field, $value, $this->data);
-            // } elseif ($rule instanceof BoolRule && is_string($value)) {
-            //     $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-            //     $this->arr->set($field, $value, $this->data);
-            // }
-
             if (!$rule($value, $this->data)) {
                 $this->errors[$field] = $rule->getMessage();
                 $this->valid = false;
@@ -382,39 +405,28 @@ class Validator
     private function validateWildcard(string $field, mixed $value, array $rules): void
     {
         if (!is_array($value)) {
+            $this->errors[$field] = 'Field must be an array';
+            $this->valid = false;
             return;
         }
 
+        // For file uploads, handle the special $_FILES structure
+        if ($this->isFileUpload($value)) {
+            $this->validateField($field, $value, $rules);
+            return;
+        }
+
+        // For regular arrays, validate each item
         foreach ($value as $key => $item) {
             $actualField = str_replace('*', (string) $key, $field);
-            $isOptional = false;
-            foreach ($rules as $rule) {
-                if ($rule instanceof OptionalRule) {
-                    $isOptional = true;
-                    continue;
-                }
-
-                if ($isOptional && $item === null) {
-                    continue 2;
-                }
-
-                if ($rule instanceof IntRule && is_string($item) && preg_match('/^-?\d+$/', $item)) {
-                    $item = (int) $item;
-                    $this->arr->set($actualField, $item, $this->data);
-                } elseif ($rule instanceof FloatRule && is_string($item) && is_numeric($item)) {
-                    $item = (float) $item;
-                    $this->arr->set($actualField, $item, $this->data);
-                } elseif ($rule instanceof BoolRule && is_string($item)) {
-                    $item = filter_var($item, FILTER_VALIDATE_BOOLEAN);
-                    $this->arr->set($actualField, $item, $this->data);
-                }
-
-                if (!$rule($item, $this->data)) {
-                    $this->errors[$actualField] = $rule->getMessage();
-                    $this->valid = false;
-                    break;
-                }
-            }
+            $this->validateField($actualField, $item, $rules);
         }
+    }
+
+    private function isFileUpload(array $value): bool
+    {
+        return isset($value['name']) && isset($value['type']) && 
+               isset($value['tmp_name']) && isset($value['error']) && 
+               isset($value['size']);
     }
 }
