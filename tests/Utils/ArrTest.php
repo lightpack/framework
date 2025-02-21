@@ -226,4 +226,124 @@ class ArrTest extends TestCase
         $arr->delete('key.nested', $data);
         $this->assertEquals($original, $data);
     }
+
+    public function testTree()
+    {
+        $arr = new Arr();
+        
+        // Test basic tree structure
+        $items = [
+            ['id' => 1, 'parent_id' => 0, 'name' => 'Category 1'],
+            ['id' => 2, 'parent_id' => 1, 'name' => 'Category 2'],
+            ['id' => 3, 'parent_id' => 1, 'name' => 'Category 3'],
+            ['id' => 4, 'parent_id' => 2, 'name' => 'Category 4'],
+            ['id' => 5, 'parent_id' => 0, 'name' => 'Category 5'],
+        ];
+
+        $expected = [
+            [
+                'id' => 1,
+                'parent_id' => 0,
+                'name' => 'Category 1',
+                'children' => [
+                    [
+                        'id' => 2,
+                        'parent_id' => 1,
+                        'name' => 'Category 2',
+                        'children' => [
+                            [
+                                'id' => 4,
+                                'parent_id' => 2,
+                                'name' => 'Category 4'
+                            ]
+                        ]
+                    ],
+                    [
+                        'id' => 3,
+                        'parent_id' => 1,
+                        'name' => 'Category 3'
+                    ]
+                ]
+            ],
+            [
+                'id' => 5,
+                'parent_id' => 0,
+                'name' => 'Category 5'
+            ]
+        ];
+
+        $tree = $arr->tree($items);
+        $this->assertEquals($expected, $tree);
+
+        // Test with custom keys
+        $items = [
+            ['item_id' => 1, 'pid' => null, 'title' => 'Root'],
+            ['item_id' => 2, 'pid' => 1, 'title' => 'Child 1'],
+            ['item_id' => 3, 'pid' => 1, 'title' => 'Child 2']
+        ];
+
+        $expected = [
+            [
+                'item_id' => 1,
+                'pid' => null,
+                'title' => 'Root',
+                'children' => [
+                    [
+                        'item_id' => 2,
+                        'pid' => 1,
+                        'title' => 'Child 1'
+                    ],
+                    [
+                        'item_id' => 3,
+                        'pid' => 1,
+                        'title' => 'Child 2'
+                    ]
+                ]
+            ]
+        ];
+
+        $tree = $arr->tree($items, null, 'item_id', 'pid');
+        $this->assertEquals($expected, $tree);
+
+        // Test empty array
+        $this->assertEquals([], $arr->tree([]));
+
+        // Test with string IDs
+        $items = [
+            ['id' => 'root', 'parent_id' => '', 'name' => 'Root'],
+            ['id' => 'a1', 'parent_id' => 'root', 'name' => 'A1'],
+            ['id' => 'a2', 'parent_id' => 'root', 'name' => 'A2'],
+            ['id' => 'b1', 'parent_id' => 'a1', 'name' => 'B1']
+        ];
+
+        $expected = [
+            [
+                'id' => 'root',
+                'parent_id' => '',
+                'name' => 'Root',
+                'children' => [
+                    [
+                        'id' => 'a1',
+                        'parent_id' => 'root',
+                        'name' => 'A1',
+                        'children' => [
+                            [
+                                'id' => 'b1',
+                                'parent_id' => 'a1',
+                                'name' => 'B1'
+                            ]
+                        ]
+                    ],
+                    [
+                        'id' => 'a2',
+                        'parent_id' => 'root',
+                        'name' => 'A2'
+                    ]
+                ]
+            ]
+        ];
+
+        $tree = $arr->tree($items, '');
+        $this->assertEquals($expected, $tree);
+    }
 }

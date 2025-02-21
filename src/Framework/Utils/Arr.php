@@ -133,4 +133,45 @@ class Arr
             }
         }
     }
+
+    /**
+     * Build a hierarchical tree structure from a flat array.
+     * 
+     * Example:
+     * ```php
+     * $items = [
+     *    ['id' => 1, 'parent_id' => 0, 'name' => 'Category 1'],
+     *    ['id' => 2, 'parent_id' => 1, 'name' => 'Category 2'],
+     *    ['id' => 3, 'parent_id' => 1, 'name' => 'Category 3'],
+     * ];
+     * 
+     * $tree = (new Arr)->tree($items);
+     * ```
+     * 
+     * @param array $items The flat array of items
+     * @param mixed $parentId The parent ID to start building from (default: 0)
+     * @param string $idKey The key that contains the item's ID (default: 'id')
+     * @param string $parentIdKey The key that contains the parent's ID (default: 'parent_id')
+     * @return array The hierarchical tree structure
+     */
+    public function tree(array $items, $parentId = 0, string $idKey = 'id', string $parentIdKey = 'parent_id'): array
+    {
+        $tree = [];
+
+        foreach ($items as $item) {
+            $itemParentId = $item[$parentIdKey] ?? null;
+
+            if ($itemParentId == $parentId) {
+                $children = $this->tree($items, $item[$idKey], $idKey, $parentIdKey);
+
+                if (!empty($children)) {
+                    $item['children'] = $children;
+                }
+                
+                $tree[] = $item;
+            }
+        }
+
+        return $tree;
+    }
 }
