@@ -157,16 +157,15 @@ class FileRule
     private function parseSize(string $size): int
     {
         $size = strtoupper($size);
-        if (preg_match('/^(\d+)(B|K|KB|M|MB|G|GB)?$/', $size, $matches)) {
+        if (preg_match('/^(\d+)(B|K|M|G)$/', $size, $matches)) {
             $value = (int) $matches[1];
-            $unit = $matches[2] ?? 'B';
+            $unit = $matches[2];
             
             return match($unit) {
                 'B' => $value,
-                'K', 'KB' => $value * 1024,
-                'M', 'MB' => $value * 1024 * 1024,
-                'G', 'GB' => $value * 1024 * 1024 * 1024,
-                default => $value
+                'K' => $value * 1024,
+                'M' => $value * 1024 * 1024,
+                'G' => $value * 1024 * 1024 * 1024,
             };
         }
         
