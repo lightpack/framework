@@ -82,18 +82,8 @@ class FileRule
 
         // Handle multiple file upload ($_FILES format)
         if (isset($value['name']) && is_array($value['name'])) {
-            $files = [];
-            $keys = ['name', 'type', 'tmp_name', 'error', 'size'];
-            
-            foreach ($value['name'] as $i => $name) {
-                $file = [];
-                foreach ($keys as $key) {
-                    $file[$key] = $value[$key][$i];
-                }
-                $files[] = $file;
-            }
-            
-            return $files;
+            $arr = new \Lightpack\Utils\Arr();
+            return $arr->transpose($value);
         }
 
         // Handle array of files
