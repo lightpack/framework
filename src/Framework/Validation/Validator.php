@@ -410,23 +410,10 @@ class Validator
             return;
         }
 
-        // For file uploads, handle the special $_FILES structure
-        if ($this->isFileUpload($value)) {
-            $this->validateField($field, $value, $rules);
-            return;
-        }
-
         // For regular arrays, validate each item
         foreach ($value as $key => $item) {
             $actualField = str_replace('*', (string) $key, $field);
             $this->validateField($actualField, $item, $rules);
         }
-    }
-
-    private function isFileUpload(array $value): bool
-    {
-        return isset($value['name']) && isset($value['type']) && 
-               isset($value['tmp_name']) && isset($value['error']) && 
-               isset($value['size']);
     }
 }
