@@ -343,15 +343,9 @@ class ValidatorTest extends TestCase
         ];
 
         $this->validator
-            ->field('empty')
-            ->optional()
-            ->string()
-            ->field('null')
-            ->optional()
-            ->string()
-            ->field('value')
-            ->optional()
-            ->string();
+            ->field('empty')->string()
+            ->field('null')->string()
+            ->field('value')->string();
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();

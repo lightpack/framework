@@ -242,15 +242,6 @@ class Validator
         return $this;
     }
 
-    /**
-     * @deprecated
-     */
-    public function optional(): self
-    {
-        $this->rules[$this->currentField][] = new OptionalRule;
-        return $this;
-    }
-
     public function same(string $field): self
     {
         $rule = new SameRule($field, $this->arr);
