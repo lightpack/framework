@@ -860,4 +860,52 @@ class ValidatorTest extends TestCase
         $validator->validate();
         $this->assertStringContainsString('between 2 and 4 items', $validator->getError('items'));
     }
+
+    public function testChainedRuleMessages()
+    {
+        $validator = new Validator();
+        
+        // Define custom messages for each rule
+        $messages = [
+            'email' => [
+                'required' => 'Email is required',
+                'email' => 'Please provide a valid email format',
+            ],
+            'password' => [
+                'required' => 'Password cannot be empty',
+                'alphanum' => 'Password must be text wth alphabets and numbers only',
+                'between' => 'Password must be between 8 and 16 characters',
+            ],
+        ];
+
+        // Test with invalid data
+        $data = [
+            'email' => '',                // Should fail required
+            'password' => '',          // Should fail required
+        ];
+
+        // Set up validation rules
+        $validator->field('email')->required()->message($messages['email']['required'])->email()->message($messages['email']['email']);
+        $validator->field('password')->required()->message($messages['password']['required'])->alphaNum()->message($messages['password']['alphanum'])->between(8, 16)->message($messages['password']['between']);
+        $validator->setInput($data)->validate();
+
+        // Verify each error message matches our custom messages
+        $this->assertEquals($messages['email']['required'], $validator->getError('email'));
+        $this->assertEquals($messages['password']['required'], $validator->getError('password'));
+
+        // Now test with partially valid data to trigger different error messages
+        $data = [
+            'email' => 'invalid-email',   // Should fail email format
+            'password' => '!abcde@',            // Should fail alphanum
+        ];
+
+        // Set up validation rules
+        $validator->field('email')->required()->message($messages['email']['required'])->email()->message($messages['email']['email']);
+        $validator->field('password')->required()->message($messages['password']['required'])->alphaNum()->message($messages['password']['alphanum'])->between(8, 16)->message($messages['password']['between']);
+        $validator->setInput($data)->validate($data);
+
+        // Verify the different error messages
+        $this->assertEquals($messages['email']['email'], $validator->getError('email'));
+        $this->assertEquals($messages['password']['alphanum'], $validator->getError('password'));
+    }
 }
