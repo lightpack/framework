@@ -23,6 +23,10 @@ use Lightpack\Validation\Rules\File\FileTypeRule;
 use Lightpack\Validation\Rules\File\ImageRule;
 use Lightpack\Validation\Rules\File\MultipleFileRule;
 use Lightpack\Validation\Rules\FloatRule;
+use Lightpack\Validation\Rules\HasLowercaseRule;
+use Lightpack\Validation\Rules\HasNumberRule;
+use Lightpack\Validation\Rules\HasSymbolRule;
+use Lightpack\Validation\Rules\HasUppercaseRule;
 use Lightpack\Validation\Rules\InRule;
 use Lightpack\Validation\Rules\IntRule;
 use Lightpack\Validation\Rules\IpRule;
@@ -343,6 +347,30 @@ class Validator
         $this->rules = [];
         $this->currentField = '';
         
+        return $this;
+    }
+
+    public function hasUppercase(): self 
+    {
+        $this->rules[] = new HasUppercaseRule();
+        return $this;
+    }
+
+    public function hasLowercase(): self 
+    {
+        $this->rules[] = new HasLowercaseRule();
+        return $this;
+    }
+
+    public function hasNumber(): self 
+    {
+        $this->rules[] = new HasNumberRule();
+        return $this;
+    }
+
+    public function hasSymbol(): self 
+    {
+        $this->rules[] = new HasSymbolRule();
         return $this;
     }
 
