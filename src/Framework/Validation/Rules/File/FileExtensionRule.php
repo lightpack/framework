@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class FileExtensionRule
 {
-    private string $message;
+    use ValidationMessageTrait;
+
     private array $allowedExtensions;
     private array $extensionAliases = [
         'jpeg' => 'jpg',
@@ -57,10 +60,5 @@ class FileExtensionRule
         }
         
         return in_array($extension, $this->allowedExtensions);
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

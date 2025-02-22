@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class FileRule
 {
-    private string $message;
+    use ValidationMessageTrait;
     
     private array $errors = [
         UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
@@ -91,10 +93,5 @@ class FileRule
         }
 
         return true;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

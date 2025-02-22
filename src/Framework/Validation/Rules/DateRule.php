@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class DateRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(private readonly ?string $format = null) 
     {
@@ -23,10 +25,5 @@ class DateRule
         }
 
         return strtotime($value) !== false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

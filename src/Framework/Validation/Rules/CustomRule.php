@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class CustomRule
 {
-    private string $message;
+    use ValidationMessageTrait;
+
     private $callback;
 
     public function __construct(callable $callback, string $message = 'Validation failed') 
@@ -18,10 +21,5 @@ class CustomRule
     public function __invoke($value): bool
     {
         return ($this->callback)($value);
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

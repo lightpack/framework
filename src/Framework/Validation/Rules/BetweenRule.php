@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class BetweenRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(
         private readonly int|float $min,
@@ -35,10 +37,5 @@ class BetweenRule
 
         $value = (float) $value;
         return $value >= $this->min && $value <= $this->max;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

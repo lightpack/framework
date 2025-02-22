@@ -9,7 +9,7 @@ trait ValidationMessageTrait
     /**
      * The validation error message
      */
-    protected string $message = 'Validation failed';
+    private string $message = 'Validation failed';
 
     /**
      * Get the validation error message

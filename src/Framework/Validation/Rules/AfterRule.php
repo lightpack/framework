@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class AfterRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(
         private readonly string $date,
@@ -28,10 +30,5 @@ class AfterRule
         $date = strtotime($value);
         $compare = strtotime($this->date);
         return $date !== false && $compare !== false && $date > $compare;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

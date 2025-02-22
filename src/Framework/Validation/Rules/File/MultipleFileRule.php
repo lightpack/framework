@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class MultipleFileRule
 {
-    private string $message;
+    use ValidationMessageTrait;
+    
     private ?int $min;
     private ?int $max;
 
@@ -49,11 +52,6 @@ class MultipleFileRule
         }
 
         return true;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 
     private function buildMessage(): string

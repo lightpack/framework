@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class ArrayRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(
         private readonly ?int $min = null,
@@ -40,10 +42,5 @@ class ArrayRule
         }
 
         return true;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

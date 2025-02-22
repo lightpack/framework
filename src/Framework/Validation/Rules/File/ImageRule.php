@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class ImageRule
 {
-    private string $message;
+    use ValidationMessageTrait;
+
     private array $constraints;
     private array $dimensions;
 
@@ -81,11 +84,6 @@ class ImageRule
         }
 
         return true;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 
     protected function isImage(string $path): bool

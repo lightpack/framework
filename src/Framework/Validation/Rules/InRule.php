@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class InRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(private readonly array $values) 
     {
@@ -25,10 +27,5 @@ class InRule
         }
 
         return in_array($value, $this->values, true);
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

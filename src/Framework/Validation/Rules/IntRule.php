@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class IntRule
 {
-    private string $message = 'Must be an integer';
+    use ValidationMessageTrait;
+
+    
+    public function __construct()
+    {
+       $this->message = 'Must be an integer';
+    }
 
     public function __invoke($value): bool
     {
@@ -19,10 +27,5 @@ class IntRule
         }
 
         return false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

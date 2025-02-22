@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class RegexRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(private readonly string $pattern) 
     {
@@ -16,10 +18,5 @@ class RegexRule
     public function __invoke($value): bool
     {
         return preg_match($this->pattern, $value) === 1;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

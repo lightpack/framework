@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class FloatRule
 {
-    private string $message = 'Must be a floating point number';
+    use ValidationMessageTrait;
+
+    public function __construct()
+    {
+        $this->message = 'Must be a floating point number';
+    }
 
     public function __invoke($value): bool
     {
@@ -19,10 +26,5 @@ class FloatRule
         }
 
         return false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

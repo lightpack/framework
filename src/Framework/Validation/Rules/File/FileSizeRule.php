@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class FileSizeRule
 {
-    private string $message;
+    use ValidationMessageTrait;
+
     private int $maxBytes;
 
     public function __construct(string $size)
@@ -42,11 +45,6 @@ class FileSizeRule
         }
 
         return false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 
     private function parseSize(string $size): int 

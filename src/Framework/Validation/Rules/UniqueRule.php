@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class UniqueRule
 {
-    private string $message = 'Values must be unique';
+    use ValidationMessageTrait;
+
+    
+    public function __construct()
+    {
+        $this->message = 'Values must be unique';
+    }
 
     public function __invoke($value): bool
     {
@@ -15,10 +23,5 @@ class UniqueRule
         }
 
         return count($value) === count(array_unique($value));
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

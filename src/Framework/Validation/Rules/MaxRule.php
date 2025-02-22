@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class MaxRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(private readonly int|float $max) 
     {
@@ -27,10 +29,5 @@ class MaxRule
         }
 
         return (float) $value <= $this->max;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

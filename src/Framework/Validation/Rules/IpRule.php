@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class IpRule
 {
-    private string $message = 'Must be a valid IP address';
-    private string $version;
-
-    public function __construct(?string $version = null)
+    use ValidationMessageTrait;
+    
+    public function __construct(private ?string $version = null)
     {
+        $this->message = 'Must be a valid IP address';
+
         $this->version = $version ?? '';
         if ($this->version === 'v4') {
             $this->message = 'Must be a valid IPv4 address';
@@ -27,10 +30,5 @@ class IpRule
             return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false;
         }
         return filter_var($value, FILTER_VALIDATE_IP) !== false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class LengthRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(private readonly int $length) 
     {
@@ -19,10 +21,5 @@ class LengthRule
             return false;
         }
         return mb_strlen((string) $value) === $this->length;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

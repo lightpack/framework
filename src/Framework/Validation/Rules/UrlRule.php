@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class UrlRule
 {
-    private string $message = 'Must be a valid URL';
+    use ValidationMessageTrait;
+
+    
+    public function __construct()
+    {
+        $this->message = 'Must be a valid URL';
+    }
 
     public function __invoke($value): bool
     {
         return filter_var($value, FILTER_VALIDATE_URL) !== false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

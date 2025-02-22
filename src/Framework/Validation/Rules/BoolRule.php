@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class BoolRule
 {
-    private string $message = 'Must be a boolean value';
+    use ValidationMessageTrait;
+
+    
+    public function __construct()
+    {
+        $this->message = 'Must be a boolean value';
+    }
 
     public function __invoke($value): bool
     {
@@ -24,10 +32,5 @@ class BoolRule
         }
 
         return false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

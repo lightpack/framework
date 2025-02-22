@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class NotInRule
 {
-    private string $message;
+    use ValidationMessageTrait;
 
     public function __construct(private readonly array $values) 
     {
@@ -16,10 +18,5 @@ class NotInRule
     public function __invoke($value): bool
     {
         return !in_array($value, $this->values, true);
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 }

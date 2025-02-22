@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
 use Lightpack\Validation\Traits\FileUploadValidationTrait;
 
 class RequiredRule
 {
+    use ValidationMessageTrait;
     use FileUploadValidationTrait;
 
-    private string $message = 'This field is required';
+    public function __construct()
+    {
+        $this->message = 'This field is required';
+    }
 
     public function __invoke($value): bool
     {
@@ -23,15 +28,5 @@ class RequiredRule
         }
 
         return true;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
-    }
-
-    public function setMessage(string $message): void
-    {
-        $this->message = $message;
     }
 }

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation\Rules\File;
 
+use Lightpack\Validation\Traits\ValidationMessageTrait;
+
 class FileTypeRule
 {
-    private string $message;
+    use ValidationMessageTrait;
+
     private array $allowedTypes;
 
     public function __construct(array|string $types)
@@ -42,11 +45,6 @@ class FileTypeRule
         }
 
         return false;
-    }
-
-    public function getMessage(): string 
-    {
-        return $this->message;
     }
 
     protected function getMimeType(string $path): string
