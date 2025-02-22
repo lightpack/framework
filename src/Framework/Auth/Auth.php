@@ -47,6 +47,7 @@ class Auth
 
     public function logout()
     {
+        $this->manager->clearIdentity();
         $this->manager->forgetRememberMeCookie();
 
         session()->destroy();
