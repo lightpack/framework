@@ -69,6 +69,7 @@ class Validator
         if (!isset($this->rules[$field])) {
             $this->rules[$field] = [];
         }
+        
         return $this;
     }
 
@@ -330,6 +331,30 @@ class Validator
         return $this;
     }
 
+    public function hasUppercase(): self 
+    {
+        $this->rules[$this->currentField][] = new HasUppercaseRule();
+        return $this;
+    }
+
+    public function hasLowercase(): self 
+    {
+        $this->rules[$this->currentField][] = new HasLowercaseRule();
+        return $this;
+    }
+
+    public function hasNumber(): self 
+    {
+        $this->rules[$this->currentField][] = new HasNumberRule();
+        return $this;
+    }
+
+    public function hasSymbol(): self 
+    {
+        $this->rules[$this->currentField][] = new HasSymbolRule();
+        return $this;
+    }
+
     public function validate(): self
     {
         foreach ($this->rules as $field => $rules) {
@@ -350,33 +375,10 @@ class Validator
         return $this;
     }
 
-    public function hasUppercase(): self 
-    {
-        $this->rules[] = new HasUppercaseRule();
-        return $this;
-    }
-
-    public function hasLowercase(): self 
-    {
-        $this->rules[] = new HasLowercaseRule();
-        return $this;
-    }
-
-    public function hasNumber(): self 
-    {
-        $this->rules[] = new HasNumberRule();
-        return $this;
-    }
-
-    public function hasSymbol(): self 
-    {
-        $this->rules[] = new HasSymbolRule();
-        return $this;
-    }
-
     private function validateField(string $field, mixed $value, array $rules): void
     {
         $isOptional = true;
+
         foreach ($rules as $index => $rule) {
             if ($rule instanceof RequiredRule) {
                 $isOptional = false;

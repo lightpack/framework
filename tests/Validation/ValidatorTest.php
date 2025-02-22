@@ -908,4 +908,58 @@ class ValidatorTest extends TestCase
         $this->assertEquals($messages['email']['email'], $validator->getError('email'));
         $this->assertEquals($messages['password']['alphanum'], $validator->getError('password'));
     }
+
+    public function testPasswordValidationRules()
+    {
+        $validator = new Validator();
+        
+        // Test valid password
+        $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
+
+        $data = ['password' => 'Test123!@#', 'a' => 'b'];
+        $validator->setInput($data)->validate();
+        $this->assertTrue($validator->passes());
+
+        // Test missing uppercase
+        $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
+        $data = ['password' => 'test123!@#'];
+        $validator->setInput($data)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString('uppercase', $validator->getError('password'));
+
+        // Test missing lowercase
+        $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
+        $data = ['password' => 'TEST123!@#'];
+        $validator->setInput($data)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString('lowercase', $validator->getError('password'));
+
+        // Test missing number
+        $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
+        $data = ['password' => 'TestABC!@#'];
+        $validator->setInput($data)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString('numeric', $validator->getError('password'));
+
+        // Test missing symbol
+        $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
+        $data = ['password' => 'Test1234ABC'];
+        $validator->setInput($data)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString('special character', $validator->getError('password'));
+
+        // Test too short password
+        $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
+        $data = ['password' => 'Te1!'];
+        $validator->setInput($data)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString('between', $validator->getError('password'));
+
+        // Test too long password
+        $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
+        $data = ['password' => str_repeat('Te1!', 10)];
+        $validator->setInput($data)->validate();
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString('between', $validator->getError('password'));
+    }
 }
