@@ -92,6 +92,16 @@ class UploadedFile
         return empty($this->getName());
     }
 
+    /**
+     * Store the uploaded file in the specified destination
+     * 
+     * @param string $destination Target directory or full path
+     * @param array $options Storage options:
+     *                      - name: Custom filename (string|callable)
+     *                      - unique: Generate unique filename (bool)
+     *                      - preserve_name: Keep original name as prefix when unique (bool)
+     * @throws FileUploadException If file cannot be uploaded or directory issues
+     */
     public function store(string $destination, array $options = []): void
     {
         // Default options
