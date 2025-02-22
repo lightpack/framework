@@ -45,7 +45,7 @@ class File
         return file_get_contents($path);
     }
 
-    public function write(string $path, string $contents, $flags = LOCK_EX)
+    public function write(string $path, string $contents, $flags = LOCK_EX): bool
     {
         // Get directory path
         $directory = dirname($path);
@@ -57,7 +57,7 @@ class File
             mkdir($directory, 0755, true);
         }
 
-        return file_put_contents($path, $contents, $flags);
+        return file_put_contents($path, $contents, $flags) !== false;
     }
 
     public function delete(string $path): bool
