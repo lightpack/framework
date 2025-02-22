@@ -110,7 +110,7 @@ class Auth
 
     public function extend(string $type, string $authenticatorClass): self
     {
-        $this->authManager->extend($type, $authenticatorClass);
+        $this->manager->extend($type, $authenticatorClass);
 
         return $this;
     }
