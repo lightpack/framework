@@ -76,26 +76,6 @@ class Validator
         return $this;
     }
 
-    public function validate(): self
-    {
-        foreach ($this->rules as $field => $rules) {
-            $value = $this->arr->get($field, $this->data);
-            
-            if (str_contains($field, '*')) {
-                $this->validateWildcard($field, $value, $rules);
-                continue;
-            }
-
-            $this->validateField($field, $value, $rules);
-        }
-        
-        // Reset rules after validation
-        $this->rules = [];
-        $this->currentField = '';
-        
-        return $this;
-    }
-
     public function passes(): bool
     {
         return $this->valid;
@@ -343,6 +323,26 @@ class Validator
     public function multipleFiles(?int $min = null, ?int $max = null): self
     {
         $this->rules[$this->currentField][] = new MultipleFileRule($min, $max);
+        return $this;
+    }
+
+    public function validate(): self
+    {
+        foreach ($this->rules as $field => $rules) {
+            $value = $this->arr->get($field, $this->data);
+            
+            if (str_contains($field, '*')) {
+                $this->validateWildcard($field, $value, $rules);
+                continue;
+            }
+
+            $this->validateField($field, $value, $rules);
+        }
+        
+        // Reset rules after validation
+        $this->rules = [];
+        $this->currentField = '';
+        
         return $this;
     }
 
