@@ -36,6 +36,8 @@ interface Storage
 
     /**
      * Store an uploaded file
+     * 
+     * @throws FileUploadException on failure
      */
-    public function store(string $source, string $destination): bool;
+    public function store(string $source, string $destination): void;
 }

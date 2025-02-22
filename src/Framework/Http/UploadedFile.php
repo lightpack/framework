@@ -92,7 +92,7 @@ class UploadedFile
         return empty($this->getName());
     }
 
-    public function store(string $destination, array $options = []): bool
+    public function store(string $destination, array $options = []): void
     {
         // Default options
         $options = array_merge([
@@ -111,7 +111,7 @@ class UploadedFile
             $this->ensureDirectoryChecks($destination);
         }
 
-        return $this->storage->store($this->tmpName, $targetPath);
+        $this->storage->store($this->tmpName, $targetPath);
     }
 
     private function resolveFilename(array $options): string 
