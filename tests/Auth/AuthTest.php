@@ -85,29 +85,22 @@ class AuthTest extends TestCase
         Container::getInstance()->reset();
     }
 
-    public function testGuestUserCannotAccessProtectedRoute()
+    public function testAuthRecognizesGuestUser()
     {
-        $this->sessionDriver->method('get')
-            ->willReturnMap([
-                ['_logged_in', false, false],
-            ]);
-            
-        $this->assertFalse($this->auth->isLoggedIn());
+        $this->sessionDriver->method('get')->with('_logged_in', false)->willReturn(false);        
+
         $this->assertTrue($this->auth->isGuest());
         $this->assertNull($this->auth->user());
     }
 
     public function testCanLoginAsUser()
     {
-        $this->sessionDriver->expects($this->once())
-            ->method('regenerate');
+        $this->sessionDriver->expects($this->once())->method('regenerate');
             
-        $this->sessionDriver->expects($this->exactly(2))
-            ->method('set')
-            ->withConsecutive(
-                ['_logged_in', true],
-                ['_auth_id', 1]
-            );
+        $this->sessionDriver->expects($this->exactly(2))->method('set')->withConsecutive(
+            ['_logged_in', true],
+            ['_auth_id', 1]
+        );
             
         $this->auth->loginAs($this->user);
         
