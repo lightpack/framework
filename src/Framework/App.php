@@ -88,6 +88,7 @@ final class App
             \Lightpack\Providers\FilterProvider::class,
             \Lightpack\Providers\CookieProvider::class,
             \Lightpack\Providers\SessionProvider::class,
+            \Lightpack\Providers\StorageProvider::class,
             \Lightpack\Providers\RequestProvider::class,
             \Lightpack\Providers\ResponseProvider::class,
             \Lightpack\Providers\DatabaseProvider::class,

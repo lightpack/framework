@@ -33,4 +33,9 @@ interface Storage
      * Move a file from source to destination
      */
     public function move(string $source, string $destination): bool;
+
+    /**
+     * Store an uploaded file
+     */
+    public function store(string $source, string $destination): bool;
 }
