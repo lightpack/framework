@@ -11,10 +11,10 @@ class GenerateAppKey implements ICommand
     public function run(array $arguments = [])
     {
         $file = new File();
-        $filepath = DIR_ROOT . '/env.php';
+        $filepath = realpath(DIR_ROOT . '/.env');
 
         if (!$file->exists($filepath)) {
-            fputs(STDOUT, "[Error] No env.php file found.\n");
+            fputs(STDOUT, "[Error] No env file found.\n");
             fputs(STDOUT, "Please run the command below to create one:\n\n");
             fputs(STDOUT, "php lucy create:env\n\n");
             return;
@@ -22,8 +22,8 @@ class GenerateAppKey implements ICommand
 
         $contents = $file->read($filepath);
         $newKey = (new Str)->random(32);
-        $pattern = "/('APP_KEY'\s*=>\s*')([^']*)(')/";
-        $replacement = '${1}' . $newKey . '${3}';
+        $pattern = "/^APP_KEY=.*$/m";
+        $replacement = "APP_KEY=" . $newKey;
         $modifiedContents = preg_replace($pattern, $replacement, $contents);
         
         (new File)->write($filepath, $modifiedContents);
