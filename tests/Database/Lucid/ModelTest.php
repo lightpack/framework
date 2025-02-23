@@ -26,8 +26,10 @@ final class ModelTest extends TestCase
     /** @var \Lightpack\Database\Lucid\Model */
     private $product;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
+        parent::setUp();
+
         $config = require __DIR__ . '/../tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
@@ -40,6 +42,13 @@ final class ModelTest extends TestCase
 
         $container->register('db', function () {
             return $this->db;
+        });
+
+        $container->register('logger', function () {
+            return new class {
+                public function error($message, $context = []) {}
+                public function critical($message, $context = []) {}
+            };
         });
     }
 
@@ -944,8 +953,8 @@ final class ModelTest extends TestCase
         // fetch all users with all its roles
         $userModel = $this->db->model(User::class);
         $users = $userModel::query()->with('roles')->all();
-        $firstUser = $users->getByKey(1);
-        $nonExistingUser = $users->getByKey('non-existing');
+        $firstUser = $users->find(1);
+        $nonExistingUser = $users->find('non-existing');
 
         // Assertions
         $this->assertNotEmpty($users);
@@ -1459,7 +1468,7 @@ final class ModelTest extends TestCase
         $this->assertEquals(2, $projects[0]->tasks[0]->comments_count);
         $this->assertEquals(1, $projects[0]->tasks[1]->comments_count);
         $this->assertEquals(0, $projects[1]->tasks[0]->comments_count);
-        $this->assertObjectNotHasAttribute('tasks', $projects[2]);
+        $this->assertObjectNotHasProperty('tasks', $projects[2]);
     }
 
     public function testEagerLoadWithThrowsException()
@@ -1632,17 +1641,17 @@ final class ModelTest extends TestCase
         $projects = $projectModel::query()->all();
 
         $this->assertCount(4, $projects);
-        $this->assertEquals([1,2,3,4], $projects->getKeys());
+        $this->assertEquals([1,2,3,4], $projects->ids());
 
         // lets exclude product ID: 2
-        $projects->exclude(2);
+        $projects = $projects->exclude(2);
         $this->assertCount(3, $projects);
-        $this->assertEquals([1,3,4], $projects->getKeys());
+        $this->assertEquals([1,3,4], $projects->ids());
 
         // lets exclude product IDs: 1,4
-        $projects->exclude([1,4]);
+        $projects = $projects->exclude([1,4]);
         $this->assertCount(1, $projects);
-        $this->assertEquals([3], $projects->getKeys());
+        $this->assertEquals([3], $projects->ids());
     }
 
     public function testModelCollectionFilterMethod()
@@ -1664,8 +1673,8 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertCount(3, $projects);
         $this->assertCount(2, $filteredProjects);
-        $this->assertEquals([1,2,3], $projects->getKeys());
-        $this->assertEquals([1,3], $filteredProjects->getKeys());
+        $this->assertEquals([1,2,3], $projects->ids());
+        $this->assertEquals([1,3], $filteredProjects->ids());
     }
 
     public function testModelCloneMethod()
@@ -1769,5 +1778,172 @@ final class ModelTest extends TestCase
         $this->assertEquals(100, Product::query()->max('price'));
         $this->assertEquals(100, Product::query()->avg('price'));
         $this->assertEquals(1000, Product::query()->sum('price'));
+    }
+
+    public function testModelCollectionEachMethod()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        
+        // get all projects 
+        $project = $this->db->model(Project::class);
+        $projects = $project::query()->all();
+        $projects->each(function($project) {
+            $project->toUppercase();
+        });
+
+        // Assertions
+        $this->assertCount(3, $projects);
+        $this->assertEquals('PROJECT 1', $projects[0]->name);
+        $this->assertEquals('PROJECT 2', $projects[1]->name);
+        $this->assertEquals('PROJECT 3', $projects[2]->name);
+    }
+
+    public function testModelCollectionFilterAndEachMethod()
+    {
+        // bulk insert projects
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        
+        // get all projects 
+        $project = $this->db->model(Project::class);
+        $projects = $project::query()->all();
+        $filteredProjects = $projects
+            ->filter(fn($project) => $project->name !== 'Project 1')
+            ->each(fn($project) => $project->toUppercase());
+
+        // Assertions
+        $this->assertCount(3, $projects);
+        $this->assertCount(2, $filteredProjects);
+        $this->assertEquals('PROJECT 2', $filteredProjects[0]->name);
+        $this->assertEquals('PROJECT 3', $filteredProjects[1]->name);
+        $this->assertEquals('Project 1', $projects[0]->name);
+    }
+
+    public function testCollectionMethodsAfterFilter()
+    {
+        // Insert test data
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1', 'status' => 'active'],
+            ['name' => 'Project 2', 'status' => 'inactive'],
+            ['name' => 'Project 3', 'status' => 'active'],
+            ['name' => 'Project 4', 'status' => 'active'],
+            ['name' => 'Project 5', 'status' => 'inactive'],
+        ]);
+
+        // Get all projects and filter active ones
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+        $activeProjects = $projects->filter(fn($project) => $project->status === 'active');
+
+        // Test ids() method
+        $this->assertEquals([1, 3, 4], $activeProjects->ids());
+
+        // Test find() method
+        $this->assertNotNull($activeProjects->find(1));
+        $this->assertNull($activeProjects->find(2)); // inactive project
+        $this->assertEquals('Project 3', $activeProjects->find(3)->name);
+
+        // Test first() method with no conditions
+        $this->assertEquals('Project 1', $activeProjects->first()->name);
+
+        // Test first() method with conditions
+        $this->assertEquals('Project 3', $activeProjects->first(['name' => 'Project 3'])->name);
+        $this->assertNull($activeProjects->first(['name' => 'Project 2'])); // inactive project
+
+        // Test column() method
+        $this->assertEquals(['Project 1', 'Project 3', 'Project 4'], $activeProjects->column('name'));
+        $this->assertEquals(['active', 'active', 'active'], $activeProjects->column('status'));
+
+        // Test any() method
+        $this->assertTrue($activeProjects->any('status'));
+        $this->assertTrue($activeProjects->any('name'));
+        $this->assertFalse($activeProjects->any('non_existent_column'));
+
+        // Test that original collection remains unchanged
+        $this->assertCount(5, $projects);
+        $this->assertCount(3, $activeProjects);
+        $this->assertEquals([1, 2, 3, 4, 5], $projects->ids());
+    }
+
+    public function testCollectionColumnMethod()
+    {
+        // Insert test data with null values and different cases
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1', 'status' => 'active'],
+            ['name' => 'Project 2', 'status' => null],
+            ['name' => 'Project 3', 'status' => ''],
+            ['name' => 'Project 4', 'status' => 'active'],
+            ['name' => 'Project 5', 'status' => 'inactive'],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+
+        // Test getting a column with all values present
+        $this->assertEquals([1, 2, 3, 4, 5], $projects->column('id'));
+
+        // Test getting a column with null and empty values
+        $names = $projects->column('name');
+        $this->assertEquals('Project 1', $names[0]);
+        $this->assertEquals('Project 2', $names[1]);
+        $this->assertEquals('Project 3', $names[2]);
+        $this->assertEquals('Project 4', $names[3]);
+        $this->assertEquals('Project 5', $names[4]);
+
+        // Test getting a column with null and empty string
+        $statuses = $projects->column('status');
+        $this->assertEquals(['active', 'active', 'inactive'], $statuses);
+    }
+
+    public function testCollectionFirstMethod()
+    {
+        // Insert test data
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1', 'status' => 'active'],
+            ['name' => 'Project 2', 'status' => 'inactive'],
+            ['name' => 'Project 3', 'status' => 'active'],
+            ['name' => 'Project 4', 'status' => 'active'],
+            ['name' => 'Project 5', 'status' => 'inactive'],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->all();
+
+        // Test first() with no conditions
+        $first = $projects->first();
+        $this->assertNotNull($first);
+        $this->assertEquals('Project 1', $first->name);
+
+        // Test first() with single condition
+        $firstActive = $projects->first(['status' => 'active']);
+        $this->assertEquals('Project 1', $firstActive->name);
+
+        $firstInactive = $projects->first(['status' => 'inactive']);
+        $this->assertEquals('Project 2', $firstInactive->name);
+
+        // Test first() with multiple conditions
+        $firstActiveProject3 = $projects->first([
+            'status' => 'active',
+            'name' => 'Project 3'
+        ]);
+        $this->assertNotNull($firstActiveProject3);
+        $this->assertEquals('Project 3', $firstActiveProject3->name);
+
+        // Test first() with non-matching conditions
+        $nonExistent = $projects->first(['status' => 'pending']);
+        $this->assertNull($nonExistent);
+
+        // Test first() on empty collection
+        $emptyProjects = $projectModel::query()->where('id', 999)->all();
+        $this->assertNull($emptyProjects->first());
+        $this->assertNull($emptyProjects->first(['status' => 'active']));
     }
 }

@@ -72,6 +72,7 @@ DROP TABLE IF EXISTS `projects`;
 CREATE TABLE IF NOT EXISTS `projects` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
+  `status` varchar(45) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 

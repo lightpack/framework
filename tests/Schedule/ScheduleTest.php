@@ -3,6 +3,8 @@
 use Lightpack\Schedule\Event;
 use Lightpack\Schedule\Schedule;
 use PHPUnit\Framework\TestCase;
+use Lightpack\Console\ICommand;
+use Lightpack\Container\Container;
 
 class ScheduleTest extends TestCase
 {
@@ -39,5 +41,33 @@ class ScheduleTest extends TestCase
         $this->assertCount(2, $dueEvents);
         $this->assertContains($event1, $dueEvents);
         $this->assertContains($event2, $dueEvents);
+    }
+
+    public function testCommand()
+    {
+        $schedule = new Schedule();
+        $event = $schedule->command('MyCommand', ['--force' => true]);
+        
+        $this->assertInstanceOf(Event::class, $event);
+        $this->assertEquals('command', $event->getType());
+        $this->assertEquals('MyCommand', $event->getName());
+        $this->assertEquals(['--force' => true], $event->getData());
+    }
+
+    public function testExecuteCommand()
+    {
+        $mockCommand = $this->createMock(ICommand::class);
+        $mockCommand->expects($this->once())
+            ->method('run')
+            ->with(['--quiet' => true]);
+
+        $container = Container::getInstance();
+        $container->instance('TestCommand', $mockCommand);
+
+        $schedule = new Schedule();
+        $event = $schedule->command('TestCommand', ['--quiet' => true])
+            ->cron('* * * * *');
+        
+        $schedule->run();
     }
 }

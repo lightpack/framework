@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Lightpack\Exceptions\InvalidHttpMethodException;
 use Lightpack\Http\Request;
+use Lightpack\Utils\Arr;
 use PHPUnit\Framework\TestCase;
 
 final class RequestTest extends TestCase
@@ -76,8 +77,8 @@ final class RequestTest extends TestCase
         $_GET = ['status' => 1, 'level' => 3];
         $request = new Request($this->basepath);
 
-        $this->assertIsArray($request->query());
-        $this->assertEquals(['status' => 1, 'level' => 3], $request->query());
+        $this->assertIsArray($request->input());
+        $this->assertEquals(['status' => 1, 'level' => 3], $request->input());
     }
 
     public function testRequestGetParams()
@@ -244,5 +245,158 @@ final class RequestTest extends TestCase
         $this->assertEquals(['users', 23], $request->segments());
         $this->assertEquals('users', $request->segments(0));
         $this->assertEquals(23, $request->segments(1));
+    }
+
+    public function testRequestInputWithDotNotation()
+    {
+        // Test with GET parameters
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_GET = [
+            'user' => [
+                'profile' => [
+                    'name' => 'John Doe',
+                    'email' => 'john@example.com'
+                ],
+                'settings' => [
+                    'theme' => 'dark'
+                ]
+            ]
+        ];
+
+        $request = new Request();
+        
+        // Test nested access
+        $this->assertEquals('John Doe', $request->input('user.profile.name'));
+        $this->assertEquals('dark', $request->input('user.settings.theme'));
+        
+        // Test default value with non-existent key
+        $this->assertEquals('light', $request->input('user.settings.color', 'light'));
+        
+        // Test null for non-existent nested key
+        $this->assertNull($request->input('user.profile.age'));
+
+        // Test with POST parameters
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'data' => [
+                'items' => [
+                    ['id' => 1, 'name' => 'Item 1'],
+                    ['id' => 2, 'name' => 'Item 2']
+                ]
+            ]
+        ];
+
+        $request = new Request(); // Create new instance for POST test
+        
+        // Test array access with dot notation
+        $this->assertEquals('Item 1', $request->input('data.items.0.name'));
+        $this->assertEquals(2, $request->input('data.items.1.id'));
+    }
+
+    public function testRequestInputWithDotNotationAndJson()
+    {
+        // Create a mock for the Request class
+        $request = $this->getMockBuilder(Request::class)
+            ->setConstructorArgs([null])
+            ->onlyMethods(['getRawBody'])
+            ->getMock();
+
+        // Set up the environment for JSON request
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        
+        $jsonData = json_encode([
+            'user' => [
+                'profile' => [
+                    'name' => 'Jane Doe',
+                    'email' => 'jane@example.com'
+                ]
+            ]
+        ]);
+
+        // Configure the mock
+        $request->expects($this->any())
+            ->method('getRawBody')
+            ->willReturn($jsonData);
+
+        // Test JSON data access with dot notation
+        $this->assertEquals('Jane Doe', $request->input('user.profile.name'));
+        $this->assertEquals('jane@example.com', $request->input('user.profile.email'));
+        $this->assertNull($request->input('user.profile.phone'));
+        $this->assertEquals('default', $request->input('user.settings.theme', 'default'));
+    }
+
+    public function testRequestInputWithWildcardAccess()
+    {
+        // Reset test environment
+        $_GET = [];
+        $_POST = [];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
+        
+        // Test with POST parameters
+        $_POST = [
+            'users' => [
+                ['id' => 1, 'name' => 'John', 'role' => 'admin'],
+                ['id' => 2, 'name' => 'Jane', 'role' => 'user'],
+                ['id' => 3, 'name' => 'Bob', 'role' => 'user']
+            ],
+            'settings' => [
+                'notifications' => [
+                    ['type' => 'email', 'enabled' => true],
+                    ['type' => 'sms', 'enabled' => false],
+                    ['type' => 'push', 'enabled' => true]
+                ]
+            ],
+            'departments' => [
+                'tech' => [
+                    'teams' => [
+                        ['name' => 'Frontend', 'members' => [['name' => 'Alice'], ['name' => ['Bob', 'Meghan']]]],
+                        ['name' => 'Backend', 'members' => [['name' => 'Charlie'], ['name' => 'Dave']]]
+                    ]
+                ],
+                'design' => [
+                    'teams' => [
+                        ['name' => 'UI', 'members' => [['name' => 'Eve'], ['name' => 'Frank']]],
+                        ['name' => 'UX', 'members' => [['name' => 'Grace'], ['name' => 'Henry']]]
+                    ]
+                ]
+            ]
+        ];
+
+        $request = new Request();
+        
+        // Verify request method is POST
+        $this->assertEquals('POST', $request->method());
+        
+        // Verify we can get all POST data
+        $this->assertEquals($_POST, $request->input());
+      
+        // Test wildcard access to get all user names
+        $this->assertEquals(
+            ['John', 'Jane', 'Bob'],
+            $request->input('users.*.name')
+        );
+
+        // Test wildcard access to get all user roles
+        $this->assertEquals(
+            ['admin', 'user', 'user'],
+            $request->input('users.*.role')
+        );
+
+        // Test wildcard with nested arrays
+        $this->assertEquals(
+            [true, false, true],
+            $request->input('settings.notifications.*.enabled')
+        );
+
+        // Test wildcard with non-existent path
+        $this->assertNull($request->input('users.*.address'));
+
+        // Test wildcard with default value
+        $this->assertEquals(
+            'N/A',
+            $request->input('users.*.phone', 'N/A')
+        );
     }
 }

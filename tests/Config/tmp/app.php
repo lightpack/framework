@@ -1,6 +1,8 @@
 <?php
 
 return [
-    'app.name' => 'Lightpack',
-    'app.version' => 1,
+    'app' => [
+        'name' => 'Lightpack',
+        'version' => 1,
+    ]
 ];

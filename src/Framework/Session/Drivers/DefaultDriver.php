@@ -19,8 +19,17 @@ class DefaultDriver implements DriverInterface
             );
         }
 
+        // Always-on security settings
         ini_set('session.use_only_cookies', TRUE);
         ini_set('session.use_trans_sid', FALSE);
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_strict_mode', '1');
+
+        // Only enable secure cookies in production/HTTPS
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', '1');
+        }
+
         session_name($name);
         session_start();
 

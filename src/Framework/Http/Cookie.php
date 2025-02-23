@@ -31,8 +31,16 @@ class Cookie
         $domain = $options['domain'] ?? '';
         $secure = $options['secure'] ?? false;
         $httpOnly = $options['http_only'] ?? true;
+        $sameSite = $options['same_site'] ?? 'lax';
 
-        return setcookie($key, $value, $expire, $path, $domain, $secure, $httpOnly);
+        return setcookie($key, $value, [
+            'expires' => $expire,
+            'path' => $path,
+            'domain' => $domain,
+            'secure' => $secure,
+            'httpOnly' => $httpOnly,
+            'sameSite' => $sameSite,
+        ]);
     }
 
     public function forever(string $key, string $value, array $options = [])
@@ -56,7 +64,7 @@ class Cookie
 
     public function has($key)
     {
-        return $_COOKIE[$key] ?? null;
+        return isset($_COOKIE[$key]);
     }
 
     public function delete($key)

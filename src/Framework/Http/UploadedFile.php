@@ -2,79 +2,28 @@
 
 namespace Lightpack\Http;
 
+use Lightpack\Container\Container;
+use Lightpack\Utils\Str;
+use Lightpack\Storage\LocalStorage;
 use Lightpack\Exceptions\FileUploadException;
-use Lightpack\Validator\Validator;
 
 class UploadedFile
 {
+    private $storage;
     private $name;
     private $size;
     private $type;
     private $error;
     private $tmpName;
-    private $validation;
-    private $errors = [
-        UPLOAD_ERR_OK => 'There is no error, the file uploaded with success',
-        UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
-        UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
-        UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded',
-        UPLOAD_ERR_NO_FILE => 'No file was uploaded',
-        UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
-        UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-        UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload',
-    ];
 
     public function __construct($file)
     {
+        $this->storage = Container::getInstance()->get('storage');
         $this->name = $file['name'];
         $this->size = $file['size'];
         $this->type = $file['type'];
         $this->error = $file['error'];
         $this->tmpName = $file['tmp_name'];
-        $this->validation = new UploadValidation();
-    }
-
-    public function setRules(string $rules): self
-    {
-        $this->validation->setRules($rules);
-
-        return $this;
-    }
-
-    public function passedValidation(): bool
-    {
-        return $this->failedValidation() === false;
-    }
-
-    public function failedValidation(): bool
-    {
-        $this->validation->validateMimes($this->getType());
-        $this->validation->validateExtensions($this->getExtension());
-        $this->validation->validateMinWidth($this->getWidth());
-        $this->validation->validateMaxWidth($this->getWidth());
-        $this->validation->validateMinHeight($this->getHeight());
-        $this->validation->validateMaxHeight($this->getHeight());
-        $this->validation->validateRatio($this->getWidth(), $this->getHeight());
-        $this->validation->validateWidth($this->getWidth());
-        $this->validation->validateHeight($this->getHeight());
-        $this->validation->validateMinSize($this->getSize());
-        $this->validation->validateMaxSize($this->getSize());
-
-        if ($this->validation->hasError()) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function getValidationErrors()
-    {
-        return $this->validation->getErrors();
-    }
-
-    public function getValidationError(string $rule)
-    {
-        return $this->validation->getError($rule);
     }
 
     public function isImage()
@@ -113,11 +62,6 @@ class UploadedFile
         return $dimensions['height'];
     }
 
-    public function getRules()
-    {
-        return $this->validation->getRules();
-    }
-
     public function getName(): string
     {
         return $this->name;
@@ -138,11 +82,6 @@ class UploadedFile
         return pathinfo($this->name, PATHINFO_EXTENSION);
     }
 
-    public function getError(): string
-    {
-        return $this->error;
-    }
-
     public function getTmpName(): string
     {
         return $this->tmpName;
@@ -153,32 +92,86 @@ class UploadedFile
         return empty($this->getName());
     }
 
-    public function hasError(): bool
+    /**
+     * Store the uploaded file in the specified destination
+     * 
+     * @param string $destination Target directory or full path
+     * @param array $options Storage options:
+     *                      - name: Custom filename (string|callable)
+     *                      - unique: Generate unique filename (bool)
+     *                      - preserve_name: Keep original name as prefix when unique (bool)
+     * @throws FileUploadException If file cannot be uploaded or directory issues
+     */
+    public function store(string $destination, array $options = []): void
     {
-        return UPLOAD_ERR_OK !== $this->error;
+        // Default options
+        $options = array_merge([
+            'name' => null,        // string|callable
+            'unique' => false,     // bool
+            'preserve_name' => false, // bool
+        ], $options);
+
+        // Get filename
+        $filename = $this->resolveFilename($options);
+
+        // Build full path
+        $targetPath = rtrim($destination, '\\/') . '/' . $filename;
+
+        if($this->storage instanceof LocalStorage) {
+            $this->ensureDirectoryChecks($destination);
+        }
+
+        $this->storage->store($this->tmpName, $targetPath);
     }
 
+    private function resolveFilename(array $options): string 
+    {
+        $str = new Str();
+
+        // 1. Use callback if provided
+        if (isset($options['name']) && is_callable($options['name'])) {
+            $filename = $options['name']($this);
+        } 
+        // 2. Use provided name
+        elseif (isset($options['name']) && is_string($options['name'])) {
+            $filename = $options['name'];
+        }
+        // 3. Use original name
+        else {
+            $filename = $this->name;
+        }
+
+        // Get name and extension using Str helpers
+        $name = $str->slug($str->stem($filename));
+        $ext = $str->ext($filename);
+
+        // Make unique if requested
+        if (!empty($options['unique'])) {            
+            // Prefix with original name if requested
+            if (!empty($options['preserve_name'])) {
+                $name .= '-' .  $str->random(32);
+            } else {
+                $name = $str->random(32);
+            }
+        }
+
+        // Combine name and extension
+        return $name . '.' . $ext;
+    }
+
+    /**
+     * @deprecated use store() method
+     */
     public function move(string $destination, string $name = null): void
     {
-        if($this->failedValidation()) {
-            throw new FileUploadException('Uploaded file fails validation rules.');
-        }
-
-        if ($this->hasError()) {
-            throw new FileUploadException('Uploaded file has error. Error code: ' . $this->error . ' - ' . $this->errors[$this->error]);
-        }
-
-        if (is_dir($destination)) {
-            if (!is_writable($destination)) {
-                throw new FileUploadException('Upload directory does not have sufficient write permission: ' . $destination);
-            }
-        } elseif (!mkdir($destination, 0777, true)) {
-            throw new FileUploadException('Could not create upload directory: ' . $destination);
-        }
+        $this->ensureDirectoryChecks($destination);
 
         $this->processUpload($name ?? $this->name, $destination);
     }
 
+    /**
+     * @deprecated
+     */
     private function processUpload(string $name, string $destination): void
     {
         $targetPath = rtrim($destination, '\\/') . '/' . $name;
@@ -192,6 +185,17 @@ class UploadedFile
 
         if (!$success) {
             throw new FileUploadException('Could not upload the file.');
+        }
+    }
+
+    private function ensureDirectoryChecks(string $destination)
+    {
+        if (is_dir($destination)) {
+            if (!is_writable($destination)) {
+                throw new FileUploadException('Upload directory does not have sufficient write permission: ' . $destination);
+            }
+        } elseif (!mkdir($destination, 0777, true)) {
+            throw new FileUploadException('Could not create upload directory: ' . $destination);
         }
     }
 }

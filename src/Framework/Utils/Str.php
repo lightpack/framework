@@ -189,32 +189,60 @@ class Str
     }
 
     /**
+     * Convert string to URL-friendly slug.
+     * 
+     * Example: slug('Hello World') returns 'hello-world'
+     * 
+     * @throws \RuntimeException If neither intl extension nor iconv are available
+     */
+    public function slug(string $subject, string $separator = '-'): string
+    {
+        if (empty($subject)) {
+            return '';
+        }
+
+        // Validate separator
+        if (!preg_match('/^[a-zA-Z0-9_-]$/', $separator)) {
+            throw new \InvalidArgumentException('Separator must be a single alphanumeric character, hyphen or underscore');
+        }
+
+        // Convert to UTF-8 if not already
+        $encoding = mb_detect_encoding($subject, 'UTF-8, ISO-8859-1', true);
+        $subject = mb_convert_encoding($subject, 'UTF-8', $encoding);
+
+        // Try different transliteration methods
+        if (function_exists('transliterator_transliterate')) {
+            // Best option: uses ICU transliterator
+            $subject = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $subject);
+        } elseif (function_exists('iconv')) {
+            // Fallback: uses iconv
+            $subject = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $subject);
+        } else {
+            throw new \RuntimeException('Either intl extension or iconv is required for slug()');
+        }
+
+        // Convert all types of spaces and separators to single space
+        $subject = preg_replace('/[\pZ\pC\pM\pP\pS]+/u', ' ', $subject);
+        
+        // Remove anything that's not alphanumeric or space
+        $subject = preg_replace('/[^a-zA-Z0-9\s]/', '', $subject);
+        
+        // Convert to lowercase and trim
+        $subject = mb_strtolower(trim($subject));
+        
+        // Replace spaces with separator
+        return preg_replace('/\s+/', $separator, $subject);
+    }
+
+    /**
      * This method will return the slug form of the passed string useful
      * for human friendly URLs.
      * 
-     * For example: slugify('Lazy Brown Fox') returns 'lazy-brown-fox'.
+     * @deprecated Use slug() instead
      */
     public function slugify(string $subject, string $separator = '-'): string
     {
-        // Convert to UTF-8 if not already
-        $subject = mb_convert_encoding($subject, 'UTF-8', mb_list_encodings());
-        
-        // Transliterate (convert ü to u, é to e, etc)
-        if (function_exists('transliterator_transliterate')) {
-            $subject = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $subject);
-        }
-        
-        // Replace non-alphanumeric characters with space
-        $subject = preg_replace('/[^a-zA-Z0-9\s_-]/', ' ', $subject);
-        
-        // Replace multiple spaces/underscores/hyphens with single space
-        $subject = preg_replace('/[\s_-]+/', ' ', $subject);
-        
-        // Trim and replace spaces with separator
-        $subject = trim($subject);
-        $subject = str_replace(' ', $separator, $subject);
-        
-        return strtolower($subject);
+        return $this->slug($subject, $separator);
     }
 
     /**
@@ -415,7 +443,7 @@ class Str
     }
 
     /**
-     * Check if string is a valid MIME type.
+     * Check if string represents a valid MIME type format.
      */
     public function isMimeType(string $subject): bool 
     {
@@ -423,7 +451,7 @@ class Str
     }
 
     /**
-     * Check if string is a valid file path.
+     * Check if string represents a valid file path format.
      */
     public function isPath(string $subject): bool 
     {
@@ -600,5 +628,26 @@ class Str
         }
         
         return $excerpt . $end;
+    }
+
+    /**
+     * Generate a numeric one-time password (OTP) of specified length.
+     * 
+     * Example: otp(6) returns '123456'
+     * 
+     * @param int $length The length of OTP to generate (default: 6)
+     * @return string The generated OTP
+     * @throws \InvalidArgumentException If length is less than 1
+     */
+    public function otp(int $length = 6): string 
+    {
+        if ($length < 1) {
+            throw new \InvalidArgumentException('OTP length must be at least 1');
+        }
+
+        $min = pow(10, $length - 1);
+        $max = pow(10, $length) - 1;
+
+        return (string) random_int($min, $max);
     }
 }

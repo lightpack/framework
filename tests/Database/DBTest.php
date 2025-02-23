@@ -33,7 +33,14 @@ final class DBTest extends TestCase
     public function testConstructorThrowsException()
     {
         $this->expectException(\Exception::class);
-        $config = require __DIR__ . '/tmp/pgsql.config.php';
+        $config = [
+            'host' => 'invalid-host',
+            'port' => 3306,
+            'username' => 'invalid-user',
+            'password' => 'invalid-pass',
+            'database' => 'invalid-db',
+            'options' => null,
+        ];
         $db = new \Lightpack\Database\Adapters\Mysql($config);
     }
 

@@ -169,22 +169,57 @@ final class StrTest extends TestCase
         $this->assertEquals('24th', (new Str)->ordinalize(24));
     }
 
-    public function testSlugify()
-    {
-        $this->assertEquals('simple-blog', (new Str)->slugify('simple blog'));
-        $this->assertEquals('this-is-blog-id-123', (new Str)->slugify('This is blog_id 123'));
-        $this->assertEquals('what-is-seo', (new Str)->slugify('What is SEO?'));
-        $this->assertEquals('learn-c-programming', (new Str)->slugify('Learn C++ Programming'));
-    }
-
-    public function testSlugifyWithUTF8()
+    public function testSlug()
     {
         $str = new Str();
-        $this->assertEquals('uber-grunen', $str->slugify('über grünen'));
-        $this->assertEquals('cafe-francais', $str->slugify('café français'));
-        $this->assertEquals('hello-world', $str->slugify('hello world!@#$%^&*()'));
-        $this->assertEquals('ni-hao', $str->slugify('你好')); // Chinese characters
-        $this->assertEquals('kon-nichiha', $str->slugify('こんにちは')); // Japanese characters
+        
+        // Basic slugification
+        $this->assertEquals('simple-blog', $str->slug('simple blog'));
+        $this->assertEquals('this-is-blog-id-123', $str->slug('This is blog_id 123'));
+        $this->assertEquals('what-is-seo', $str->slug('What is SEO?'));
+        $this->assertEquals('learn-c-programming', $str->slug('Learn C++ Programming'));
+        
+        // Empty string handling
+        $this->assertEquals('', $str->slug(''));
+        $this->assertEquals('', $str->slug(' '));
+        
+        // Custom separators
+        $this->assertEquals('hello_world', $str->slug('Hello World', '_'));
+        $this->assertEquals('hello1world', $str->slug('Hello World', '1'));
+        
+        // Multiple spaces and special characters
+        $this->assertEquals('hello-world', $str->slug('Hello    World'));
+        $this->assertEquals('hello-world', $str->slug('Hello----World'));
+        $this->assertEquals('hello-world', $str->slug('Hello....World'));
+        
+        // Numbers and special characters
+        $this->assertEquals('article-123-test', $str->slug('Article #123 & Test!'));
+        $this->assertEquals('100-percent', $str->slug('100% %% Percent'));
+    }
+
+    public function testSlugWithUTF8()
+    {
+        $str = new Str();
+        
+        // International characters
+        $this->assertEquals('uber-grunen', $str->slug('über grünen'));
+        $this->assertEquals('cafe-francais', $str->slug('café français'));
+        $this->assertEquals('hello-world', $str->slug('hello world!@#$%^&*()'));
+        $this->assertEquals('ni-hao', $str->slug('你好')); // Chinese characters
+        
+        // Special spaces and punctuation
+        $this->assertEquals('hello-world', $str->slug('hello　world')); // Ideographic space
+        $this->assertEquals('hello-world', $str->slug('hello—world')); // Em dash
+        $this->assertEquals('hello-world', $str->slug('hello∙world')); // Bullet
+    }
+
+    public function testSlugWithInvalidSeparator()
+    {
+        $str = new Str();
+        
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Separator must be a single alphanumeric character, hyphen or underscore');
+        $str->slug('Hello World', '##');
     }
 
     public function testStartsWith()
@@ -502,5 +537,37 @@ final class StrTest extends TestCase
         
         // Test with empty text
         $this->assertEquals('', $str->excerpt(''));
+    }
+
+    public function testOtp()
+    {
+        $str = new Str();
+
+        // Test default length (6)
+        $otp = $str->otp();
+        $this->assertIsString($otp);
+        $this->assertEquals(6, strlen($otp));
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $otp);
+
+        // Test custom length (4)
+        $otp = $str->otp(4);
+        $this->assertIsString($otp);
+        $this->assertEquals(4, strlen($otp));
+        $this->assertMatchesRegularExpression('/^\d{4}$/', $otp);
+
+        // Test custom length (8)
+        $otp = $str->otp(8);
+        $this->assertIsString($otp);
+        $this->assertEquals(8, strlen($otp));
+        $this->assertMatchesRegularExpression('/^\d{8}$/', $otp);
+    }
+
+    public function testOtpWithInvalidLength()
+    {
+        $str = new Str();
+        
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('OTP length must be at least 1');
+        $str->otp(0);
     }
 }

@@ -48,6 +48,16 @@ if (!function_exists('csrf_input')) {
     }
 }
 
+if(!function_exists('csrf_token')) {
+    /**
+     * Returns the CSRF token.
+     */
+    function csrf_token(): string
+    {
+        return session()->token();
+    }
+}
+
 if (!function_exists('_e')) {
     /**
      * HTML characters to entities converter.
@@ -346,7 +356,7 @@ if (!function_exists('validator')) {
     /**
      * Returns an instance of validator.
      */
-    function validator(): \Lightpack\Validator\Validator
+    function validator(): \Lightpack\Validation\Validator
     {
         return app('validator');
     }
@@ -366,7 +376,7 @@ if(!function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
-    function old(string $key, ?string $default = '', bool $escape = true): string
+    function old(string $key, string|array $default = '', bool $escape = true): string|array
     {
         static $oldInput;
         
@@ -380,6 +390,10 @@ if(!function_exists('old')) {
 
         if(is_null($value)) {
             return '';
+        }
+
+        if(is_array($value)) {
+            return $value;
         }
 
         return $escape ? _e($value) : $value;
@@ -399,5 +413,25 @@ if (!function_exists('error')) {
         }
        
         return $errors[$key] ?? '';
+    }
+}
+
+if(!function_exists('method_input')) {
+    /**
+     * Returns a hidden input field for the spoofed request method.
+     */
+    function method_input(string $method): string
+    {
+        return '<input type="hidden" name="_method" value="' . $method . '">';
+    }
+}
+
+if (!function_exists('storage')) {
+    /**
+     * Returns the storage object.
+     */
+    function storage(): \Lightpack\Storage\Storage
+    {
+        return app('storage');
     }
 }

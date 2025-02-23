@@ -47,6 +47,7 @@ class Auth
 
     public function logout()
     {
+        $this->manager->clearIdentity();
         $this->manager->forgetRememberMeCookie();
 
         session()->destroy();
@@ -110,7 +111,23 @@ class Auth
 
     public function extend(string $type, string $authenticatorClass): self
     {
-        $this->authManager->extend($type, $authenticatorClass);
+        $this->manager->extend($type, $authenticatorClass);
+
+        return $this;
+    }
+
+    /**
+     * Login as a specific user without credentials.
+     * Useful for testing and user impersonation.
+     * 
+     * @param Identity $user The user to login as
+     * @return self For method chaining
+     */
+    public function loginAs(Identity $user): self
+    {
+        $this->manager->setIdentity($user);
+        $this->manager->populateSession();
+        $this->manager->updateLastLogin();
 
         return $this;
     }

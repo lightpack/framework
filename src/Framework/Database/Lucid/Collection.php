@@ -12,7 +12,7 @@ use IteratorAggregate;
 
 class Collection implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
-    protected $items = [];
+    protected array $items = [];
 
     /**
      * @param \Lightpack\Database\Lucid\Model|\Lightpack\Database\Lucid\Model[] $items
@@ -36,30 +36,49 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return count($this->items);
     }
 
-    public function getKeys(): array
+    /**
+     * Get all primary keys from the collection
+     */
+    public function ids(): array
     {
+        $keys = [];
         foreach($this->items as $item) {
             $keys[] = $item->{$item->getPrimaryKey()};
         }
-
-        return $keys ?? [];
+        return $keys;
     }
 
-    public function getByKey($key, $default = null)
+    /**
+     * Find a model by its primary key
+     */
+    public function find($key, $default = null): ?Model
     {
         foreach ($this->items as $item) {
             if ($item->{$item->getPrimaryKey()} == $key) {
                 return $item;
             }
         }
-
         return $default;
     }
 
-    public function getItemWherecolumn($column, $value)
+    /**
+     * Get first item matching the conditions
+     */
+    public function first(array $conditions = []): ?Model
     {
+        if (empty($conditions)) {
+            return $this->items[0] ?? null;
+        }
+
         foreach ($this->items as $item) {
-            if ($item->{$column} == $value) {
+            $match = true;
+            foreach ($conditions as $column => $value) {
+                if ($item->{$column} != $value) {
+                    $match = false;
+                    break;
+                }
+            }
+            if ($match) {
                 return $item;
             }
         }
@@ -67,7 +86,10 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return null;
     }
 
-    public function getByColumn(string $column)
+    /**
+     * Get values for specified column from all items
+     */
+    public function column(string $column): array
     {
         $data = [];
 
@@ -80,15 +102,57 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $data;
     }
 
-    public function columnExists(string $column)
+    /**
+     * @deprecated Use column() instead
+     */
+    public function getByColumn(string $column)
+    {
+        return $this->column($column);
+    }
+
+    /**
+     * Check if any item has the specified column
+     */
+    public function any(string $column): bool
     {
         foreach ($this->items as $item) {
             if ($item->hasAttribute($column)) {
                 return true;
             }
         }
-
         return false;
+    }
+
+    /**
+     * @deprecated Use ids() instead
+     */
+    public function getKeys(): array
+    {
+        return $this->ids();
+    }
+
+    /**
+     * @deprecated Use find() instead
+     */
+    public function getByKey($key, $default = null)
+    {
+        return $this->find($key, $default);
+    }
+
+    /**
+     * @deprecated Use first() instead
+     */
+    public function getItemWhereColumn($column, $value): ?Model
+    {
+        return $this->first([$column => $value]);
+    }
+
+    /**
+     * @deprecated Use any() instead
+     */
+    public function columnExists(string $column)
+    {
+        return $this->any($column);
     }
 
     public function filter(Closure $callback): Collection
@@ -134,37 +198,30 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $this;
     }
 
-    public function getItems()
-    {
-        return $this->items;
-    }
-
-    public function isEmpty()
+    public function isEmpty(): bool
     {
         return empty($this->items);
     }
 
-    public function isNotEmpty()
+    public function isNotEmpty(): bool
     {
         return $this->isEmpty() === false;
     }
 
-    public function exclude($keys)
+    public function exclude(array|string|int $keys): self
     {
         if(!is_array($keys)) {
             $keys = [$keys];
         }
 
-        foreach($keys as $key) {
-            foreach($this->items as $index => $item) {
-                if ($item->{$item->getPrimaryKey()} == $key) {
-                    unset($this->items[$index]);
-                }
-            }
-        }
+        $items = array_filter($this->items, function($item) use ($keys) {
+            return !in_array($item->{$item->getPrimaryKey()}, $keys);
+        });
+
+        return new static(array_values($items));
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return array_map(function ($item) {
             return $item->toArray();
@@ -197,5 +254,19 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     public function offsetUnset($offset): void
     {
         unset($this->items[$offset]);
+    }
+
+    public function each(Closure $callback): self
+    {
+        foreach ($this->items as $item) {
+            $callback($item);
+        }
+
+        return $this;
+    }
+
+    public function getItems(): array
+    {
+        return $this->items;
     }
 }

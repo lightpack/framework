@@ -115,6 +115,7 @@ class SessionTest extends TestCase
     {
         $token = 'matching_token';
         $_POST['_token'] = $token;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
 
         $this->driver->method('started')
             ->willReturn(true);
@@ -179,6 +180,7 @@ class SessionTest extends TestCase
     {
         $token = 'valid_token';
         $_POST['_token'] = $token;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
 
         $this->driver->method('started')
             ->willReturn(true);
@@ -204,5 +206,162 @@ class SessionTest extends TestCase
             ->method('destroy');
 
         $this->session->destroy();
+    }
+
+    public function testSetWithDotNotationStoresNestedValueInSession()
+    {
+        $key = 'user.profile.name';
+        $value = 'John Doe';
+
+        $this->driver->method('get')
+            ->willReturn([]);
+
+        $this->driver->expects($this->once())
+            ->method('set')
+            ->with('user', ['profile' => ['name' => $value]]);
+
+        $this->session->set($key, $value);
+    }
+
+    public function testGetWithDotNotationRetrievesNestedValue()
+    {
+        $this->driver->method('get')
+            ->willReturnCallback(function($key) {
+                if($key === 'user') {
+                    return ['profile' => ['name' => 'John Doe']];
+                }
+                return null;
+            });
+
+        $value = $this->session->get('user.profile.name');
+        $this->assertEquals('John Doe', $value);
+    }
+
+    public function testSetWithDotNotationPreservesExistingValues()
+    {
+        $this->driver->method('get')
+            ->willReturnCallback(function($key) {
+                if($key === 'user') {
+                    return [
+                        'profile' => [
+                            'name' => 'John Doe',
+                            'age' => 30,
+                        ],
+                    ];
+                }
+                return null;
+            });
+
+        $this->driver->expects($this->once())
+            ->method('set')
+            ->with('user', [
+                'profile' => [
+                    'name' => 'John Doe',
+                    'age' => 30,
+                    'email' => 'john@example.com',
+                ],
+            ]);
+
+        $this->session->set('user.profile.email', 'john@example.com');
+    }
+
+    public function testGetWithDotNotationReturnsDefaultForMissingKey()
+    {
+        $this->driver->method('get')
+            ->willReturnCallback(function($key) {
+                if($key === 'user') {
+                    return ['profile' => ['name' => 'John Doe']];
+                }
+                return null;
+            });
+
+        $value = $this->session->get('user.profile.email', 'default@example.com');
+        $this->assertEquals('default@example.com', $value);
+    }
+
+    public function testSetWithDotNotationOverwritesScalarWithArray()
+    {
+        $this->driver->method('get')
+            ->willReturnCallback(function($key) {
+                if($key === 'user') {
+                    return 'scalar value';
+                }
+                return null;
+            });
+
+        $this->driver->expects($this->once())
+            ->method('set')
+            ->with('user', [
+                'profile' => [
+                    'name' => 'John Doe',
+                ],
+            ]);
+
+        $this->session->set('user.profile.name', 'John Doe');
+    }
+
+    public function testDeleteWithDotNotation()
+    {
+        $data = [
+            'user' => [
+                'profile' => [
+                    'email' => 'john@example.com',
+                    'name' => 'John Doe'
+                ]
+            ]
+        ];
+
+        $this->driver->expects($this->once())
+            ->method('get')
+            ->with('user')
+            ->willReturn($data['user']);
+
+        $this->driver->expects($this->once())
+            ->method('set')
+            ->with('user', [
+                'profile' => [
+                    'name' => 'John Doe'
+                ]
+            ]);
+
+        $this->session->delete('user.profile.email');
+    }
+
+    public function testDeleteWithNonExistentDotNotationKey()
+    {
+        $data = [
+            'user' => [
+                'profile' => [
+                    'name' => 'John Doe'
+                ]
+            ]
+        ];
+
+        $this->driver->expects($this->once())
+            ->method('get')
+            ->with('user')
+            ->willReturn($data['user']);
+
+        $this->driver->expects($this->once())
+            ->method('set')
+            ->with('user', [
+                'profile' => [
+                    'name' => 'John Doe'
+                ]
+            ]);
+
+        $this->session->delete('user.profile.email');
+    }
+
+    public function testDeleteWithScalarValue()
+    {
+        $this->driver->expects($this->never())
+            ->method('get');
+
+        $this->driver->expects($this->once())
+            ->method('delete')
+            ->with('name');
+
+        $this->session->delete('name');
     }
 }

@@ -15,8 +15,8 @@ class AuthManager
 
     protected $driver;
 
-    /** @var Identity */
-    protected static $identity;
+    /** @var Identity|null */
+    protected static ?Identity $identity = null;
 
     protected static $authenticators = [
         'bearer' => BearerAuthenticator::class,
@@ -29,6 +29,19 @@ class AuthManager
         $this->driver = $driver;
         $this->config = $config;
         $this->normalizedConfig = $this->getNormalizedConfig($config);
+    }
+
+    /**
+     * Set the current identity
+     * Used internally by auth system
+     */
+    public function setIdentity(Identity $identity): void 
+    {
+        self::$identity = $identity;
+    }
+
+    public function clearIdentity() {
+        self::$identity = null;
     }
 
     public function getAuthToken()

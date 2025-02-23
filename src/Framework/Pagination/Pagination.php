@@ -8,6 +8,7 @@ use JsonSerializable;
 
 class Pagination implements Countable, ArrayAccess, JsonSerializable
 {
+    protected $items;
     protected $total;
     protected $perPage;
     protected $currentPage;

@@ -5,7 +5,6 @@ namespace Lightpack\Providers;
 use Exception;
 use Lightpack\Container\Container;
 use Lightpack\Database\Adapters\Mysql;
-use Lightpack\Database\Adapters\Sqlite;
 use Lightpack\Database\DB;
 
 class DatabaseProvider implements ProviderInterface
@@ -15,10 +14,6 @@ class DatabaseProvider implements ProviderInterface
         $container->register('db', function ($container) {
             $config = $container->get('config');
 
-            if ('sqlite' === $config->get('db.driver')) {
-                return $this->sqlite($config);
-            }
-
             if ('mysql' === $config->get('db.driver')) {
                 return $this->mysql($config);
             }
@@ -27,13 +22,6 @@ class DatabaseProvider implements ProviderInterface
         });
 
         $container->alias(DB::class, 'db');
-    }
-
-    protected function sqlite($config)
-    {
-        return new Sqlite([
-            'database' => $config->get('db.sqlite.database')
-        ]);
     }
 
     protected function mysql($config)
@@ -51,7 +39,7 @@ class DatabaseProvider implements ProviderInterface
     protected function throwException($config)
     {
         throw new Exception(
-            'Unsupported database driver type: ',
+            'Only MySQL database is supported. Unsupported driver type: ' .
             $config->get('db.driver')
         );
     }

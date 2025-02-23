@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<phpunit bootstrap="vendor/autoload.php" colors="true" testdox="true">
+<phpunit 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
+    bootstrap="vendor/autoload.php" 
+    colors="true" 
+    testdox="true">
     <testsuites>
-        <testsuite name="Lightpack Framework PHPUnit Test">
+        <testsuite name="Lightpack Framework Tests">
             <directory>./tests</directory>
+            <exclude>./tests/Session</exclude>
+        </testsuite>
+        <testsuite name="Session Tests">
+            <directory>./tests/Session</directory>
         </testsuite>
     </testsuites>
     <php>
@@ -12,16 +21,10 @@
         <env name="MYSQL_USER" value="phpmyadmin" />
         <env name="MYSQL_PASSWORD" value="phpmyadmin" />
         <env name="MYSQL_DB" value="test_lightpack" />
-        <!-- Postgress Test Config -->
-        <env name="PGSQL_HOST" value="localhost" />
-        <env name="PGSQL_PORT" value="5432" />
-        <env name="PGSQL_USER" value="postgres" />
-        <env name="PGSQL_PASSWORD" value="postgres" />
-        <env name="PGSQL_DB" value="test_lightpack" />
     </php>
-    <filter>
-        <whitelist>
+    <coverage>
+        <include>
             <directory suffix=".php">./src/Framework</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </coverage>
 </phpunit>
