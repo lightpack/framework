@@ -15,7 +15,6 @@ class GenerateAppKey implements ICommand
 
         if (!$file->exists($filepath)) {
             fputs(STDOUT, "[Error] No env file found.\n");
-            fputs(STDOUT, "Please run the command below to create one:\n\n");
             return;
         }
 
