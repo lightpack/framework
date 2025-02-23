@@ -11,6 +11,7 @@ use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\CreateProvider;
 use Lightpack\Console\Commands\CreateMigration;
 use Lightpack\Console\Commands\CreateController;
+use Lightpack\Console\Commands\CreateEnv;
 use Lightpack\Console\Commands\CreateJob;
 use Lightpack\Console\Commands\RunMigrationUp;
 use Lightpack\Console\Commands\RunMigrationDown;
@@ -26,6 +27,7 @@ use Lightpack\Console\Commands\ServeCommand;
 class Console
 {
     private static $commands = [
+        'create:env' => CreateEnv::class,
         'create:event' => CreateEvent::class,
         'create:model' => CreateModel::class,
         'create:filter' => CreateFilter::class,
