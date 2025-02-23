@@ -2,7 +2,6 @@
 
 namespace Lightpack\Console;
 
-use Lightpack\Console\Commands\CreateEnv;
 use Lightpack\Console\Commands\CreateEvent;
 use Lightpack\Console\Commands\CreateModel;
 use Lightpack\Console\Commands\CreateFilter;
@@ -27,7 +26,6 @@ use Lightpack\Console\Commands\ServeCommand;
 class Console
 {
     private static $commands = [
-        'create:env' => CreateEnv::class,
         'create:event' => CreateEvent::class,
         'create:model' => CreateModel::class,
         'create:filter' => CreateFilter::class,
