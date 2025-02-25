@@ -27,6 +27,11 @@
             "src/Framework/utilities.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Lightpack\\Tests\\": "tests/"
+        }
+    },
     "minimum-stability": "dev",
     "require": {
         "php": ">=8.2",
