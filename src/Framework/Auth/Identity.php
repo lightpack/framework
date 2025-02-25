@@ -2,6 +2,8 @@
 
 namespace Lightpack\Auth;
 
+use Lightpack\Auth\Models\AccessToken;
+
 interface Identity
 {
     /**
@@ -12,16 +14,6 @@ interface Identity
     public function getId(): mixed;
 
     /**
-     * Get the API auth token for the user.
-     */
-    public function getAuthToken(): ?string;
-
-    /**
-     * Set the API auth token for the user.
-     */
-    public function setAuthToken(string $token): void;
-
-    /**
      * Get the remember token for the user.
      */
     public function getRememberToken(): ?string;
@@ -30,4 +22,19 @@ interface Identity
      * Set the remember token for the user.
      */
     public function setRememberToken(string $token): void;
+
+    /**
+     * Retrieve access token for the user.
+     */
+    public function accessTokens();
+
+    /**
+     * Create an access token for the user.
+     */
+    public function createToken(string $name, array $abilities = ['*'], ?string $expiresAt = null): AccessToken;
+
+    /**
+     * Delete an access token assigned to the user.
+     */
+    public function deleteTokens(?string $tokenId = '');
 }

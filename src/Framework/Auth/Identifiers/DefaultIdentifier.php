@@ -24,17 +24,6 @@ class DefaultIdentifier implements Identifier
         return $user;
     }
 
-    public function findByAuthToken(string $token): ?Identity
-    {
-        $user = $this->user->query()->where('api_token', '=', $token)->one();
-
-        if (!$user) {
-            return null;
-        }
-
-        return $user;
-    }
-
     public function findByRememberToken($id, string $token): ?Identity
     {
         $user = $this->user->query()->where('id', '=', $id)->one();

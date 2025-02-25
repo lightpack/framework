@@ -14,11 +14,6 @@ class Auth
         $this->manager = new AuthManager($driver, $config);
     }
 
-    public function token()
-    {
-        return $this->manager->getAuthToken();
-    }
-
     public function viaToken(): ?Identity
     {
         $identity = $this->manager->verify('bearer');
