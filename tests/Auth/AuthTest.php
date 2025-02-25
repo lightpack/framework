@@ -15,8 +15,6 @@ use Lightpack\Utils\Url;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Database\Lucid\Builder;
 use Lightpack\Database\DB;
-use PDO;
-use PDOStatement;
 
 class AuthTest extends TestCase
 {
