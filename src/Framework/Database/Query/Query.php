@@ -469,8 +469,6 @@ class Query
 
         $this->columns = []; // so that pagination query can be reused
 
-        $this->executeAfterFetchHookForModel();
-
         return $result->total;
     }
 
@@ -484,8 +482,6 @@ class Query
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
 
-        $this->executeAfterFetchHookForModel();
-
         return $result;
     }
 
@@ -496,8 +492,6 @@ class Query
         $this->columns = ["SUM(`$column`) AS sum"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
-
-        $this->executeAfterFetchHookForModel();
 
         return $result->sum;
     }
@@ -510,8 +504,6 @@ class Query
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
-        $this->executeAfterFetchHookForModel();
-
         return $result->avg;
     }
 
@@ -523,8 +515,6 @@ class Query
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
-        $this->executeAfterFetchHookForModel();
-
         return $result->min;
     }
 
@@ -535,8 +525,6 @@ class Query
         $this->columns = ["MAX(`$column`) AS max"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
-
-        $this->executeAfterFetchHookForModel();
 
         return $result->max;
     }
@@ -582,13 +570,7 @@ class Query
         $this->resetWhere();
 
         if ($this->model) {
-            $models = static::hydrate($result);
-
-            foreach($models as $model) {
-                $model->afterFetch();
-            }
-
-            return $models;
+            return static::hydrate($result);
         }
 
         return $result;
@@ -611,7 +593,6 @@ class Query
         if ($result && $this->model) {
             $result = (array) $result;
             $result = static::hydrateItem($result);
-            $result->afterFetch();
         }
 
         return $result;
@@ -632,8 +613,6 @@ class Query
         $this->resetQuery();
         $this->resetBindings();
         $this->resetWhere();
-
-        $this->executeAfterFetchHookForModel();
 
         return $result;
     }
@@ -723,13 +702,6 @@ class Query
     {
         if($this->model) {
             $this->model->beforeFetch($this);
-        }
-    }
-
-    protected function executeAfterFetchHookForModel()
-    {
-        if($this->model) {
-            $this->model->afterFetch();
         }
     }
 }
