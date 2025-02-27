@@ -5,6 +5,7 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Lightpack\Auth\Auth;
 use Lightpack\Auth\Identity;
+use Lightpack\Auth\Models\AccessToken;
 use Lightpack\Session\Session;
 use Lightpack\Http\Request;
 use Lightpack\Container\Container;
@@ -12,6 +13,8 @@ use Lightpack\Http\Cookie;
 use Lightpack\Http\Redirect;
 use Lightpack\Utils\Url;
 use Lightpack\Session\DriverInterface;
+use Lightpack\Database\Lucid\Builder;
+use Lightpack\Database\DB;
 
 class AuthTest extends TestCase
 {
@@ -57,6 +60,30 @@ class AuthTest extends TestCase
             ->willReturnSelf();
         Container::getInstance()->instance('redirect', $this->redirect);
         Container::getInstance()->instance('url', $this->url);
+
+        // Setup database mocks
+        $pdoStatement = $this->createMock(PDOStatement::class);
+        $pdoStatement->method('execute')->willReturn(true);
+        $pdoStatement->method('fetch')->willReturn([
+            'id' => 1,
+            'token' => hash('sha256', 'test-token'),
+            'user_id' => 1,
+            'name' => 'Test Token',
+            'abilities' => '["*"]',
+            'last_used_at' => null,
+            'expires_at' => null,
+        ]);
+        
+        $pdo = $this->createMock(PDO::class);
+        $pdo->method('prepare')->willReturn($pdoStatement);
+        
+        $db = $this->getMockBuilder(DB::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getConnection', 'query'])
+            ->getMock();
+        $db->method('getConnection')->willReturn($pdo);
+        $db->method('query')->willReturn($pdoStatement);
+        Container::getInstance()->instance('db', $db);
         
         // Setup auth config
         $config = [
@@ -170,20 +197,29 @@ class AuthTest extends TestCase
         $this->assertNull($this->auth->user());
     }
 
-    public function testCanLoginViaToken()
+    public function testCanAuthenticateViaToken()
     {
-        // Mock bearer token
+        // Mock request to return bearer token
         $this->request->expects($this->once())
             ->method('bearerToken')
-            ->willReturn('test_token');
+            ->willReturn('test-token');
             
-        // Mock token hash
-        $tokenHash = hash_hmac('sha1', 'test_token', '');
-            
-        $identity = $this->auth->viaToken();
+        $user = $this->auth->viaToken();
         
-        $this->assertInstanceOf(Identity::class, $identity);
-        $this->assertEquals(1, $identity->getId());
+        $this->assertInstanceOf(Identity::class, $user);
+        $this->assertEquals(1, $user->getId());
+    }
+
+    public function testCannotAuthenticateWithInvalidToken()
+    {
+        // Mock request to return invalid token
+        $this->request->expects($this->once())
+            ->method('bearerToken')
+            ->willReturn('invalid-token');
+            
+        $user = $this->auth->viaToken();
+        
+        $this->assertNull($user);
     }
 }
 
@@ -199,10 +235,14 @@ class TestUser implements Identity
     public function getId(): mixed { return $this->id; }
     public function getEmail(): string { return $this->email; }
     public function getPassword(): string { return $this->password; }
-    public function getAuthToken(): ?string { return $this->authToken; }
-    public function setAuthToken($token): void { $this->authToken = $token; }
     public function getRememberToken(): ?string { return $this->rememberToken; }
-    public function setRememberToken($token): void { $this->rememberToken = $token; }
+    public function setRememberToken(string $token): void { $this->rememberToken = $token; }
+    public function accessTokens() { return []; }
+    public function createToken(string $name, array $abilities = ['*'], ?string $expiresAt = null): AccessToken 
+    {
+        return new AccessToken();
+    }
+    public function deleteTokens(?string $tokenId = ''): void {}
 }
 
 class TestIdentifier implements Lightpack\Auth\Identifier
@@ -215,11 +255,6 @@ class TestIdentifier implements Lightpack\Auth\Identifier
     }
     
     public function findByCredentials(array $credentials): ?Identity
-    {
-        return $this->model;
-    }
-
-    public function findByAuthToken(string $token): ?Identity 
     {
         return $this->model;
     }

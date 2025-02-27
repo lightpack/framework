@@ -44,13 +44,6 @@ class AuthManager
         self::$identity = null;
     }
 
-    public function getAuthToken()
-    {
-        if(self::$identity) {
-            return self::$identity->getAuthToken();
-        }
-    }
-
     public function viaToken(): ?Identity
     {
         $identity = $this->verify('bearer');
@@ -196,7 +189,6 @@ class AuthManager
 
     public function updateLogin()
     {
-        $apiTokenField = $this->normalizedConfig['fields.api_token'];
         $lastLoginField = $this->normalizedConfig['fields.last_login_at'];
         $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
 
@@ -204,8 +196,6 @@ class AuthManager
 
         if (request()->input($rememberTokenField)) {
             $fields[$rememberTokenField] = $this->generateRememberToken();
-        } else {
-            $fields[$apiTokenField] = $this->hashToken($this->generateApiToken());
         }
 
         /** @var Identifier */
@@ -225,15 +215,6 @@ class AuthManager
         $identifier->updateLogin(self::$identity->getId(), $fields);
     }
 
-    protected function generateApiToken()
-    {
-        $token = self::$identity->getId() . '|' . bin2hex(random_bytes(16));
-
-        self::$identity->setAuthToken($token);
-
-        return $token;
-    }
-
     protected function generateRememberToken()
     {
         $rememberToken = bin2hex(random_bytes(16));
@@ -243,11 +224,6 @@ class AuthManager
         self::$identity->setRememberToken($cookie);
 
         return $rememberToken;
-    }
-
-    protected function hashToken(string $token): string
-    {
-        return hash_hmac('sha1', $token, '');
     }
 
     public function extend(string $type, string $authenticatorClass): self
