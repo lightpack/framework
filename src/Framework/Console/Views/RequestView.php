@@ -17,7 +17,7 @@ class __REQUEST_NAME__ extends FormRequest
 {
     public function rules()
     {
-        // $this->validator->field('')->required();`
+        // $this->validator->field('')->required();
     }
 }
 TEMPLATE;
