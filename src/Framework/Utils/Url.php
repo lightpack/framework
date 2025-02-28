@@ -67,6 +67,8 @@ class Url
 
         if (get_env('ASSET_URL')) {
             return rtrim(get_env('ASSET_URL'), '/') . $file;
+        } elseif(get_env('APP_URL')) {
+            return rtrim(get_env('APP_URL'), '/') . $file;
         }
 
         return $file;
