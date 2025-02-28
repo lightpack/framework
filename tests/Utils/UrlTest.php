@@ -44,12 +44,12 @@ final class UrlTest extends TestCase
 
     public function testUrlAssetMethod()
     {
-        $this->assertEquals('/assets', $this->url->asset(''));
-        $this->assertEquals('/assets/styles.css', $this->url->asset('styles.css'));
-        $this->assertEquals('/assets/styles.css', $this->url->asset('/styles.css'));
-        $this->assertEquals('/assets/styles.css', $this->url->asset(' styles.css '));
-        $this->assertEquals('/assets/css/styles.css', $this->url->asset('css/styles.css'));
-        $this->assertEquals('/assets/css/styles.css', $this->url->asset('/css/styles.css'));
+        $this->assertEquals('', $this->url->asset(''));
+        $this->assertEquals('/styles.css', $this->url->asset('styles.css'));
+        $this->assertEquals('/styles.css', $this->url->asset('/styles.css'));
+        $this->assertEquals('/styles.css', $this->url->asset(' styles.css '));
+        $this->assertEquals('/css/styles.css', $this->url->asset('css/styles.css'));
+        $this->assertEquals('/css/styles.css', $this->url->asset('/css/styles.css'));
     }
 
     public function testUrlRouteMethod()

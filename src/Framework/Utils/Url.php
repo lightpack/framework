@@ -50,7 +50,7 @@ class Url
 
     /**
      * ------------------------------------------------------------
-     * Generates URL for assets in /public/assets folder.
+     * Generates URL for assets in /public folder.
      * ------------------------------------------------------------
      * 
      * Usage: 
@@ -69,7 +69,7 @@ class Url
             return rtrim(get_env('ASSET_URL'), '/') . $file;
         }
 
-        return '/assets' . $file;
+        return $file;
     }
 
     public function route(string $routeName, array $params = [])
