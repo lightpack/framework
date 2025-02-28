@@ -41,9 +41,9 @@ class Url
 
         $url = '/' . implode('/', $params) . $queryString;
 
-        // if (get_env('APP_URL')) {
-        //     $url = rtrim(get_env('APP_URL'), '/') . $url;
-        // }
+        if (get_env('APP_URL')) {
+            return rtrim(get_env('APP_URL'), '/') . $url;
+        }
 
         return rtrim($url, '/') ?: '/';
     }
