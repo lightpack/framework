@@ -8,45 +8,43 @@ use Lightpack\Validation\Validator;
 
 abstract class FormRequest extends Request
 {
-    public function __construct(
-        protected Response $response, 
-        protected Redirect $redirect, 
-        protected Validator $validator,
-        protected Container $container,
-        protected Session $session,
-    ) {
-        parent::__construct();
-    }
+    protected Validator $validator;
 
     abstract protected function rules();
 
-    public function __boot()
+    /**
+     * @internal This method is for internal use only.
+     */
+    public function __boot(Container $container, Validator $validator, Redirect $redirect, Session $session)
     {
-        $this->container->call($this, 'rules');
-        $this->container->call($this, 'data');
-        $this->validator->setInput($this->input() + $_FILES);
-        $this->validator->validate();
+        $this->validator = $validator;
+        
+        $container->call($this, 'rules');
+        $container->call($this, 'data');
 
-        if ($this->validator->passes()) {
+        $validator->setInput($this->input() + $_FILES);
+        $validator->validate();
+
+        if ($validator->passes()) {
             return;
         }
 
         if ($this->isAjax() || $this->isJson()) {
-            $this->response->setStatus(422)->setMessage('Unprocessable Entity')->json([
+            $redirect->setStatus(422)->setMessage('Unprocessable Entity')->json([
                     'success' => false,
                     'message' => 'Request validation failed',
-                    'errors' => $this->validator->getErrors(),
+                    'errors' => $validator->getErrors(),
             ]);
 
-            $this->container->call($this, 'beforeSend');
-            $this->response->send();
+            $container->call($this, 'beforeSend');
+            $redirect->send();
         }
 
-        $this->session->flash('_old_input', $this->input());
-        $this->session->flash('_validation_errors', $this->validator->getErrors());
-        $this->container->call($this, 'beforeRedirect');
+        $session->flash('_old_input', $this->input());
+        $session->flash('_validation_errors', $validator->getErrors());
+        $container->call($this, 'beforeRedirect');
 
-        $this->redirect->back()->send();
+        $redirect->back()->send();
     }
 
 

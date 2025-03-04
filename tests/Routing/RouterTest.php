@@ -26,7 +26,7 @@ final class RouterTest extends TestCase
 
         $request = new \Lightpack\Http\Request($basepath);
         $this->routeRegistry = new \Lightpack\Routing\RouteRegistry($request);
-        $this->router = new \Lightpack\Routing\Router($request, $this->routeRegistry);
+        $this->router = new \Lightpack\Routing\Router($this->routeRegistry);
     }
 
     public function testRouterCanParseUrl()

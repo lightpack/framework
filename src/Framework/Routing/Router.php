@@ -19,10 +19,9 @@ class Router
      */
     private $route;
 
-    public function __construct(Request $request, RouteRegistry $routeRegistry)
+    public function __construct(RouteRegistry $routeRegistry)
     {
         $this->routeRegistry = $routeRegistry;
-        $this->parse($request->path());
     }
 
     public function hasRoute(): bool
