@@ -56,6 +56,8 @@ class TestCase extends BaseTestCase
         $this->container->register('request', function () {
             return new \Lightpack\Http\Request('/');
         });
+
+        $this->container->alias(\Lightpack\Http\Request::class, 'request');
     }
 
     public function withHeaders(array $headers): self
