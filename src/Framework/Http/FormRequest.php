@@ -4,6 +4,7 @@ namespace Lightpack\Http;
 
 use Lightpack\Session\Session;
 use Lightpack\Container\Container;
+use Lightpack\Exceptions\ValidationException;
 use Lightpack\Validation\Validator;
 
 abstract class FormRequest extends Request
@@ -30,21 +31,22 @@ abstract class FormRequest extends Request
         }
 
         if ($this->isAjax() || $this->isJson()) {
-            $redirect->setStatus(422)->setMessage('Unprocessable Entity')->json([
+            $container->get('redirect')->setStatus(422)->setMessage('Unprocessable Entity')->json([
                     'success' => false,
                     'message' => 'Request validation failed',
                     'errors' => $validator->getErrors(),
             ]);
 
             $container->call($this, 'beforeSend');
-            $redirect->send();
+            return;
         }
 
         $session->flash('_old_input', $this->input());
         $session->flash('_validation_errors', $validator->getErrors());
         $container->call($this, 'beforeRedirect');
+        $redirect->back();
 
-        $redirect->back()->send();
+        throw new ValidationException();
     }
 
 

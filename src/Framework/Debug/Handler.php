@@ -7,7 +7,9 @@ use TypeError;
 use ParseError;
 use ErrorException;
 use Exception;
+use Lightpack\Container\Container;
 use Lightpack\Debug\ExceptionRenderer;
+use Lightpack\Exceptions\ValidationException;
 use Lightpack\Logger\Logger;
 
 class Handler
@@ -58,6 +60,10 @@ class Handler
 
         if ($exc instanceof TypeError) {
             return $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
+        }
+
+        if ($exc instanceof ValidationException) {
+            return Container::getInstance()->get('redirect')->send();
         }
 
         if ($exc instanceof Exception) {
