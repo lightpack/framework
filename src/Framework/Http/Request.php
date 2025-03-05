@@ -48,11 +48,21 @@ class Request
     }
 
     /**
-     * @deprecated Use input() method instead
+     * Retrieves query string parameters from $_GET superglobal.
+     *
+     * @param string|null $key     The query parameter key to retrieve. If null, returns all query parameters.
+     * @param mixed      $default  The default value to return if the key is not found.
+     *
+     * @return mixed|array Returns the value for the specified key if found, the default value if key not found,
+     *                     or the entire $_GET array if no key is specified.
      */
     public function query(string $key = null, $default = null)
     {
-        return $this->input($key, $default);
+        if (null === $key) {
+            return $_GET;
+        }
+
+        return $_GET[$key] ?? $default;
     }
 
     public function basepath(): string

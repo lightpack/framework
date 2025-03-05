@@ -2,6 +2,8 @@
 
 namespace Lightpack\Routing;
 
+use Lightpack\Container\Container;
+
 class RouteRegistry
 {
     private $routes = [
@@ -29,11 +31,11 @@ class RouteRegistry
 
     private $names = [];
 
-    private $request;
+    private Container $container;
 
-    public function __construct(\Lightpack\Http\Request $request)
+    public function __construct(Container $container)
     {
-        $this->request = $request;
+        $this->container = $container;
     }
 
     public function get(string $uri, string $controller, string $action = 'index'): Route
@@ -110,7 +112,7 @@ class RouteRegistry
             ['params' => $params, 'regex' => $regex] = $this->compileRegexWithParams($routeUri, $route->getPattern());
 
             if ($route->getHost()) {
-                $path = $this->request->host() . '/' . trim($originalPath, '/');
+                $path = $this->container->get('request')->host() . '/' . trim($originalPath, '/');
             } else {
                 $path = $originalPath;
             }
@@ -142,7 +144,7 @@ class RouteRegistry
                 }
                 
                 /** @var Route */
-                $route = $this->routes[$this->request->method()][$routeUri];
+                $route = $this->routes[$this->container->get('request')->method()][$routeUri];
                 $route->setParams($routeParams);
                 
                 $route->setPath($path);
@@ -234,7 +236,7 @@ class RouteRegistry
 
     private function getRoutesForCurrentRequest()
     {
-        $requestMethod = $this->request->method();
+        $requestMethod = $this->container->get('request')->method();
         $requestMethod = trim($requestMethod);
         $routes = $this->routes[$requestMethod] ?? [];
 

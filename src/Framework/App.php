@@ -51,8 +51,11 @@ final class App
     public static function run(): Response
     {
         $container = Container::getInstance();
+        $request = $container->get('request');
         $response = $container->get('response');
+        $router = $container->get('router');
         $filter = $container->get('filter');
+        $router->parse($request->path());
         $dispatcher = new Dispatcher($container);
         $routeUri = $container->get('router')->getRoute()->getUri();
         $container->get('route')->bootRouteNames();

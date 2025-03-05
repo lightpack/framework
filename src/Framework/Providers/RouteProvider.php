@@ -11,7 +11,7 @@ class RouteProvider implements ProviderInterface
     {
         $container->register('route', function ($container) {
             return new RouteRegistry(
-                $container->get('request')
+                $container
             );
         });
 

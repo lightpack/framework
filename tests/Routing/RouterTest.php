@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Lightpack\Container\Container;
 use PHPUnit\Framework\TestCase;
 
 final class RouterTest extends TestCase
@@ -25,8 +26,10 @@ final class RouterTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
 
         $request = new \Lightpack\Http\Request($basepath);
-        $this->routeRegistry = new \Lightpack\Routing\RouteRegistry($request);
-        $this->router = new \Lightpack\Routing\Router($request, $this->routeRegistry);
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $this->routeRegistry = new \Lightpack\Routing\RouteRegistry($container);
+        $this->router = new \Lightpack\Routing\Router($this->routeRegistry);
     }
 
     public function testRouterCanParseUrl()

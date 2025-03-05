@@ -17,17 +17,21 @@ class MaxRule
 
     public function __invoke($value): bool
     {
-        if ($value === null) {
+        if (empty($value)) {
             return false;
         }
         if (is_array($value)) {
             return count($value) <= $this->max;
         }
 
-        if (!is_numeric($value)) {
+        if (is_string($value)) {
             return mb_strlen((string) $value) <= $this->max;
         }
 
-        return (float) $value <= $this->max;
+        if (is_numeric($value)) {
+            return (float) $value <= $this->max;
+        }
+
+        return true;
     }
 }

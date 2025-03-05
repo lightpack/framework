@@ -44,18 +44,20 @@ final class UrlTest extends TestCase
 
     public function testUrlAssetMethod()
     {
-        $this->assertEquals('/assets', $this->url->asset(''));
-        $this->assertEquals('/assets/styles.css', $this->url->asset('styles.css'));
-        $this->assertEquals('/assets/styles.css', $this->url->asset('/styles.css'));
-        $this->assertEquals('/assets/styles.css', $this->url->asset(' styles.css '));
-        $this->assertEquals('/assets/css/styles.css', $this->url->asset('css/styles.css'));
-        $this->assertEquals('/assets/css/styles.css', $this->url->asset('/css/styles.css'));
+        $this->assertEquals('', $this->url->asset(''));
+        $this->assertEquals('/styles.css', $this->url->asset('styles.css'));
+        $this->assertEquals('/styles.css', $this->url->asset('/styles.css'));
+        $this->assertEquals('/styles.css', $this->url->asset(' styles.css '));
+        $this->assertEquals('/css/styles.css', $this->url->asset('css/styles.css'));
+        $this->assertEquals('/css/styles.css', $this->url->asset('/css/styles.css'));
     }
 
     public function testUrlRouteMethod()
     {
         // Add routes
-        $routeRegistery = new RouteRegistry(new Request());
+        $container = Container::getInstance();
+        $container->instance('request', new Request());
+        $routeRegistery = new RouteRegistry($container);
         $routeRegistery->get('/foo', 'DummyController')->name('foo');
         $routeRegistery->get('/foo/:num', 'DummyController')->name('foo.num');
         $routeRegistery->get('/foo/:num/bar/:slug?', 'DummyController')->name('foo.num.bar');
@@ -78,7 +80,9 @@ final class UrlTest extends TestCase
         $url = 'https://example.com';
 
         // Add routes
-        $routeRegistery = new RouteRegistry(new Request());
+        $container = Container::getInstance();
+        $container->instance('request', new Request());
+        $routeRegistery = new RouteRegistry($container);
         $routeRegistery->get('/users', 'DummyController')->name('users');
         $routeRegistery->bootRouteNames();
         Container::getInstance()->instance('route', $routeRegistery);

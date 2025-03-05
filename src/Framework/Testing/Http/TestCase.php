@@ -37,8 +37,11 @@ class TestCase extends BaseTestCase
         }
 
         $this->setRequestContentType();
+        $this->registerAppRequest();
 
-        return $this->response = $this->dispatchAppRequest($route);
+        $this->container->get('request')->setMethod($method);
+
+        return $this->response = \Lightpack\App::run();
     }
 
     public function requestJson(string $method, string $route, array $params = []): Response
@@ -48,22 +51,13 @@ class TestCase extends BaseTestCase
         return $this->request($method, $route, $params);
     }
 
-    protected function dispatchAppRequest(string $route): Response
-    {
-        $this->registerAppRequest();
-
-        $this->container->get('router')->parse($route);
-
-        \Lightpack\App::run($this->container);
-
-        return $this->container->get('response');
-    }
-
     protected function registerAppRequest()
     {
         $this->container->register('request', function () {
             return new \Lightpack\Http\Request('/');
         });
+
+        $this->container->alias(\Lightpack\Http\Request::class, 'request');
     }
 
     public function withHeaders(array $headers): self

@@ -10,24 +10,29 @@ class MinRule
 {
     use ValidationMessageTrait;
 
-    public function __construct(private readonly int|float $min) 
+    public function __construct(private readonly int|float $min)
     {
         $this->message = "Must not be less than {$min}";
     }
 
     public function __invoke($value): bool
     {
-        if ($value === null) {
+        if (empty($value)) {
             return false;
         }
+
         if (is_array($value)) {
             return count($value) >= $this->min;
         }
 
-        if (!is_numeric($value)) {
+        if (is_string($value)) {
             return mb_strlen((string) $value) >= $this->min;
         }
 
-        return (float) $value >= $this->min;
+        if (is_numeric($value)) {
+            return (float) $value >= $this->min;
+        }
+
+        return true;
     }
 }

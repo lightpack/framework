@@ -37,20 +37,20 @@ class Url
         });
 
         // Trim whitespace and slashes from URL params
-        array_walk($params, fn (&$el) => $el = trim($el, '/ '));
+        array_walk($params, fn(&$el) => $el = trim($el, '/ '));
 
         $url = '/' . implode('/', $params) . $queryString;
 
-        // if (get_env('APP_URL')) {
-        //     $url = rtrim(get_env('APP_URL'), '/') . $url;
-        // }
+        if (get_env('APP_URL')) {
+            return rtrim(get_env('APP_URL'), '/') . $url;
+        }
 
         return rtrim($url, '/') ?: '/';
     }
 
     /**
      * ------------------------------------------------------------
-     * Generates URL for assets in /public/assets folder.
+     * Generates URL for assets in /public folder.
      * ------------------------------------------------------------
      * 
      * Usage: 
@@ -67,9 +67,11 @@ class Url
 
         if (get_env('ASSET_URL')) {
             return rtrim(get_env('ASSET_URL'), '/') . $file;
+        } elseif (get_env('APP_URL')) {
+            return rtrim(get_env('APP_URL'), '/') . $file;
         }
 
-        return '/assets' . $file;
+        return $file;
     }
 
     public function route(string $routeName, array $params = [])
@@ -84,11 +86,11 @@ class Url
         $uri = explode('/', trim($route->getUri(), '/ '));
 
         // We do not want the subdomain while resolving route urls
-        if($route->getHost() !== '') {
+        if ($route->getHost() !== '') {
             unset($uri[0]);
         }
 
-        $uriPatterns = array_filter($uri, fn ($val) => strpos($val, ':') === 0);
+        $uriPatterns = array_filter($uri, fn($val) => strpos($val, ':') === 0);
         $lastCharacterForEndParam = substr(end($uriPatterns), -1);
         $minimumRequiredParams = $lastCharacterForEndParam == '?' ? count($uriPatterns) - 1 : count($uriPatterns);
 
@@ -151,8 +153,10 @@ class Url
         $crypto = Container::getInstance()->get('crypto');
         $encryptedSignature = $crypto->hash($stringToSign);
 
-        // Append the encrypted signature and expiration timestamp as query parameters
-        $url .= '&signature=' . urlencode($encryptedSignature);
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        // Append the encrypted signature and expiration timestamp
+        $url .= $separator . 'signature=' . urlencode($encryptedSignature);
         $url .= '&expires=' . $expirationTime;
 
         return $url;
@@ -183,7 +187,15 @@ class Url
         }
 
         // Reconstruct the URL without the signature, expires, and ignored parameters
-        $urlWithoutSignature = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . $parsedUrl['path'];
+        $urlWithoutSignature = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+
+        // Add port if exists
+        if (isset($parsedUrl['port'])) {
+            $urlWithoutSignature .= ':' . $parsedUrl['port'];
+        }
+
+        $urlWithoutSignature .= $parsedUrl['path'];
+
         if (!empty($queryParams)) {
             $urlWithoutSignature .= '?' . http_build_query($queryParams);
         }
@@ -285,24 +297,24 @@ class Url
     public function withQuery(string $url, array $parameters): string
     {
         $parts = $this->parse($url);
-        
+
         // Merge with existing query parameters
         $parts['query'] = array_merge($parts['query'], $parameters);
 
         // Remove null/empty values
         $parts['query'] = array_filter($parts['query'], function ($value) {
-            return $value !== null && $value !== '' && 
-                   (!is_array($value) || !empty($value));
+            return $value !== null && $value !== '' &&
+                (!is_array($value) || !empty($value));
         });
 
         // Rebuild URL
         $newUrl = '';
-        
+
         // Add scheme and authority
         if ($parts['scheme']) {
             $newUrl .= $parts['scheme'] . '://';
         }
-        
+
         // Add user info if present
         if ($parts['user']) {
             $newUrl .= $parts['user'];
@@ -311,7 +323,7 @@ class Url
             }
             $newUrl .= '@';
         }
-        
+
         // Add host and port
         if ($parts['host']) {
             $newUrl .= $parts['host'];
@@ -319,22 +331,22 @@ class Url
                 $newUrl .= ':' . $parts['port'];
             }
         }
-        
+
         // Add path
         if ($parts['path']) {
             $newUrl .= $parts['path'];
         }
-        
+
         // Add query string with support for array parameters
         if (!empty($parts['query'])) {
             $newUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
         }
-        
+
         // Add fragment
         if ($parts['fragment']) {
             $newUrl .= '#' . $parts['fragment'];
         }
-        
+
         return $newUrl;
     }
 
@@ -353,15 +365,15 @@ class Url
     public function normalize(string $url): string
     {
         $parts = $this->parse($url);
-        
+
         if ($parts['path']) {
             // Remove duplicate slashes
             $parts['path'] = preg_replace('#/+#', '/', $parts['path']);
-            
+
             // Split path into segments
             $segments = array_filter(explode('/', $parts['path']), 'strlen');
             $pathSegments = [];
-            
+
             // Process each segment
             foreach ($segments as $segment) {
                 if ($segment === '.') {
@@ -373,19 +385,19 @@ class Url
                 }
                 $pathSegments[] = $segment;
             }
-            
+
             // Rebuild path
             $parts['path'] = '/' . implode('/', $pathSegments);
         }
-        
+
         // Rebuild URL with all components
         $normalizedUrl = '';
-        
+
         // Add scheme
         if ($parts['scheme']) {
             $normalizedUrl .= $parts['scheme'] . '://';
         }
-        
+
         // Add authentication
         if ($parts['user']) {
             $normalizedUrl .= $parts['user'];
@@ -394,7 +406,7 @@ class Url
             }
             $normalizedUrl .= '@';
         }
-        
+
         // Add host and port
         if ($parts['host']) {
             $normalizedUrl .= $parts['host'];
@@ -402,20 +414,20 @@ class Url
                 $normalizedUrl .= ':' . $parts['port'];
             }
         }
-        
+
         // Add path
         $normalizedUrl .= $parts['path'] ?? '';
-        
+
         // Add query string
         if (!empty($parts['query'])) {
             $normalizedUrl .= '?' . http_build_query($parts['query']);
         }
-        
+
         // Add fragment
         if ($parts['fragment']) {
             $normalizedUrl .= '#' . $parts['fragment'];
         }
-        
+
         return $normalizedUrl;
     }
 
@@ -549,35 +561,35 @@ class Url
     public function withoutQuery(string $url, string|array|null $keys = null): string
     {
         $parts = $this->parse($url);
-        
+
         // If no keys specified, remove all query parameters
         if ($keys === null) {
             $query = [];
         } else {
             // Convert single key to array
             $keys = (array) $keys;
-            
+
             // Remove specified keys
             $query = array_diff_key($parts['query'], array_flip($keys));
         }
-        
+
         // Build base URL without query string
         $baseUrl = $parts['scheme'] . '://' . $parts['host'];
         if ($parts['port']) {
             $baseUrl .= ':' . $parts['port'];
         }
         $baseUrl .= $parts['path'];
-        
+
         // Add remaining query parameters
         if (!empty($query)) {
             $baseUrl .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
         }
-        
+
         // Add fragment if exists
         if ($parts['fragment']) {
             $baseUrl .= '#' . $parts['fragment'];
         }
-        
+
         return $baseUrl;
     }
 
@@ -594,25 +606,25 @@ class Url
     public function withFragment(string $url, string $fragment): string
     {
         $parts = $this->parse($url);
-        
+
         // Build base URL without fragment
         $baseUrl = $parts['scheme'] . '://' . $parts['host'];
         if ($parts['port']) {
             $baseUrl .= ':' . $parts['port'];
         }
         $baseUrl .= $parts['path'];
-        
+
         // Add query if exists
         if (!empty($parts['query'])) {
             $baseUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
         }
-        
+
         // Add new fragment (trim # if provided)
         $fragment = ltrim($fragment, '#');
         if ($fragment !== '') {
             $baseUrl .= '#' . $fragment;
         }
-        
+
         return $baseUrl;
     }
 
@@ -629,19 +641,19 @@ class Url
     public function withoutFragment(string $url): string
     {
         $parts = $this->parse($url);
-        
+
         // Build base URL without fragment
         $baseUrl = $parts['scheme'] . '://' . $parts['host'];
         if ($parts['port']) {
             $baseUrl .= ':' . $parts['port'];
         }
         $baseUrl .= $parts['path'];
-        
+
         // Add query if exists
         if (!empty($parts['query'])) {
             $baseUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
         }
-        
+
         return $baseUrl;
     }
 }
