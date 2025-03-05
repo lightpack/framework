@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Lightpack\Container\Container;
 use Lightpack\Http\Request;
 use Lightpack\Routing\Route;
 use Lightpack\Routing\RouteRegistry;
@@ -19,7 +20,9 @@ final class RouteRegistryTest extends TestCase
     private function getRouteRegistry()
     {
         $request = new Request();
-        return new RouteRegistry($request);
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        return new RouteRegistry($container);
     }
 
     public function testRoutePathException()
@@ -155,7 +158,7 @@ final class RouteRegistryTest extends TestCase
     public function testRouteMatchesGroupedUrls()
     {
         $request = new Request();
-        $routeRegistry = new RouteRegistry($request);
+        $routeRegistry = $this->getRouteRegistry();
 
         $routeRegistry->group(
             ['prefix' => '/admin'],
@@ -188,7 +191,9 @@ final class RouteRegistryTest extends TestCase
     {
         $request = new Request();
         $request->setMethod(self::HTTP_GET);
-        $routeRegistry = new RouteRegistry($request);
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $routeRegistry = new RouteRegistry($container);
 
         $routeRegistry->group(['prefix' => '/admin'], function ($route) {
             $route->get('/users/:num', 'UserController', 'index');
@@ -207,7 +212,9 @@ final class RouteRegistryTest extends TestCase
     {
         $request = new Request();
         $request->setMethod(self::HTTP_GET);
-        $routeRegistry = new RouteRegistry($request);
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $routeRegistry = new RouteRegistry($container);
 
         $routeRegistry->group(['prefix' => '/admin'], function ($route) {
             $route->group(['prefix' => '/posts'], function ($route) {
