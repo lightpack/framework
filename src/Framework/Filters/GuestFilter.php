@@ -10,7 +10,7 @@ class GuestFilter implements IFilter
 {
     public function before(Request $request, array $params = [])
     {
-        if (auth()->user()) {
+        if (auth()->isLoggedIn()) {
             return auth()->redirectLogin();
         }
     }
