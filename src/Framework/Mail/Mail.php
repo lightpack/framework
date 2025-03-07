@@ -155,7 +155,12 @@ abstract class Mail extends PHPMailer
         $this->setBody();
 
         try {
-            parent::send();
+            return match (get_env('MAIL_DRIVER', 'smtp')) {
+                'null' => true,
+                'log' => $this->logMail(),
+                'smtp' => parent::send(),
+                default => throw new GlobalException('Invalid mail driver: ' . get_env('MAIL_DRIVER')),
+            };
         } catch (Exception $e) {
             throw new GlobalException("Message could not be sent. Mailer Error: {$this->ErrorInfo}");
         }
@@ -211,5 +216,25 @@ abstract class Mail extends PHPMailer
 
             $this->addAttachment($path, $name);
         }
+    }
+
+    protected function logMail(): bool
+    {
+        $mail = [
+            'id' => uniqid(),
+            'timestamp' => time(),
+            'to' => $this->getToAddresses()[0][0],
+            'from' => $this->From,
+            'subject' => $this->Subject,
+            'html_body' => $this->Body,
+            'text_body' => $this->AltBody,
+        ];
+
+        $logFile = DIR_STORAGE . '/logs/mails.json';
+        $mails = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
+        $mails[] = $mail;
+        file_put_contents($logFile, json_encode($mails, JSON_PRETTY_PRINT));
+    
+        return true;
     }
 }
