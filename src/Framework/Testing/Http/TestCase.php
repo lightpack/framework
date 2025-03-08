@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase as BaseTestCase;
 class TestCase extends BaseTestCase
 {
     use AssertionTrait;
+    use MailAssertionTrait;
 
     /** @var \Lightpack\Container\Container */
     protected $container;
