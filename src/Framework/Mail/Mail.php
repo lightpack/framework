@@ -183,11 +183,20 @@ abstract class Mail extends PHPMailer
         $mail = [
             'id' => uniqid(),
             'timestamp' => time(),
-            'to' => $this->getToAddresses()[0][0],
+            'to' => array_column($this->getToAddresses(), 0),
             'from' => $this->From,
             'subject' => $this->Subject,
             'html_body' => $this->Body,
             'text_body' => $this->AltBody,
+            'cc' => array_column($this->getCcAddresses(), 0),
+            'bcc' => array_column($this->getBccAddresses(), 0),
+            'reply_to' => array_column($this->getReplyToAddresses(), 0),
+            'attachments' => array_map(function($attachment) {
+                return [
+                    'filename' => $attachment[1],
+                    'path' => $attachment[0],
+                ];
+            }, $this->getAttachments()),
         ];
 
         static::$sentMails[] = $mail;
