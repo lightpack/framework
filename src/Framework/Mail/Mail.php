@@ -11,6 +11,7 @@ abstract class Mail extends PHPMailer
     protected $textView;
     protected $htmlView;
     protected $viewData = [];
+    protected static $sentMails = [];
 
     abstract public function dispatch(array $payload = []);
 
@@ -156,8 +157,8 @@ abstract class Mail extends PHPMailer
 
         try {
             return match (get_env('MAIL_DRIVER', 'smtp')) {
-                'null' => true,
                 'log' => $this->logMail(),
+                'array' => $this->arrayMail(),
                 'smtp' => parent::send(),
                 default => throw new GlobalException('Invalid mail driver: ' . get_env('MAIL_DRIVER')),
             };
@@ -175,6 +176,32 @@ abstract class Mail extends PHPMailer
         if ($this->textView) {
             $this->AltBody = app('template')->setData($this->viewData)->render($this->textView);
         }
+    }
+
+    protected function arrayMail(): bool
+    {
+        $mail = [
+            'id' => uniqid(),
+            'timestamp' => time(),
+            'to' => $this->getToAddresses()[0][0],
+            'from' => $this->From,
+            'subject' => $this->Subject,
+            'html_body' => $this->Body,
+            'text_body' => $this->AltBody,
+        ];
+
+        static::$sentMails[] = $mail;
+        return true;
+    }
+
+    public static function getSentMails(): array
+    {
+        return static::$sentMails;
+    }
+
+    public static function clearSentMails(): void
+    {
+        static::$sentMails = [];
     }
 
     private function setAddresses(array $addresses, string $type)
@@ -234,7 +261,7 @@ abstract class Mail extends PHPMailer
         $mails = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
         $mails[] = $mail;
         file_put_contents($logFile, json_encode($mails, JSON_PRETTY_PRINT));
-    
+
         return true;
     }
 }
