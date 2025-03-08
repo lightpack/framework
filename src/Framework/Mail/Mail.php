@@ -178,26 +178,23 @@ abstract class Mail extends PHPMailer
         }
     }
 
+
+
+    protected function logMail(): bool
+    {
+        $mail = $this->getNormalizedMailData();
+
+        $logFile = DIR_STORAGE . '/logs/mails.json';
+        $mails = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
+        $mails[] = $mail;
+        file_put_contents($logFile, json_encode($mails, JSON_PRETTY_PRINT));
+
+        return true;
+    }
+
     protected function arrayMail(): bool
     {
-        $mail = [
-            'id' => uniqid(),
-            'timestamp' => time(),
-            'to' => array_column($this->getToAddresses(), 0),
-            'from' => $this->From,
-            'subject' => $this->Subject,
-            'html_body' => $this->Body,
-            'text_body' => $this->AltBody,
-            'cc' => array_column($this->getCcAddresses(), 0),
-            'bcc' => array_column($this->getBccAddresses(), 0),
-            'reply_to' => array_column($this->getReplyToAddresses(), 0),
-            'attachments' => array_map(function($attachment) {
-                return [
-                    'filename' => $attachment[1],
-                    'path' => $attachment[0],
-                ];
-            }, $this->getAttachments()),
-        ];
+        $mail = $this->getNormalizedMailData();
 
         static::$sentMails[] = $mail;
         return true;
@@ -254,23 +251,25 @@ abstract class Mail extends PHPMailer
         }
     }
 
-    protected function logMail(): bool
+    private function getNormalizedMailData(): array
     {
-        $mail = [
+        return [
             'id' => uniqid(),
             'timestamp' => time(),
-            'to' => $this->getToAddresses()[0][0],
+            'to' => array_column($this->getToAddresses(), 0),
             'from' => $this->From,
             'subject' => $this->Subject,
             'html_body' => $this->Body,
             'text_body' => $this->AltBody,
+            'cc' => array_column($this->getCcAddresses(), 0),
+            'bcc' => array_column($this->getBccAddresses(), 0),
+            'reply_to' => array_column($this->getReplyToAddresses(), 0),
+            'attachments' => array_map(function ($attachment) {
+                return [
+                    'filename' => $attachment[1],
+                    'path' => $attachment[0],
+                ];
+            }, $this->getAttachments()),
         ];
-
-        $logFile = DIR_STORAGE . '/logs/mails.json';
-        $mails = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
-        $mails[] = $mail;
-        file_put_contents($logFile, json_encode($mails, JSON_PRETTY_PRINT));
-
-        return true;
     }
 }
