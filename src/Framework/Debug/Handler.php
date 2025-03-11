@@ -75,7 +75,13 @@ class Handler
 
     private function logAndRenderException(Throwable $exc, $type = 'Error')
     {
-        $this->logger->error($exc->getMessage());
+        $this->logger->error($exc->getMessage(), [
+            'stack_trace' => [
+                'file' => $exc->getFile(),
+                'line' => $exc->getLine(),
+                'trace' => $exc->getTraceAsString(),
+            ],
+        ]);
         $this->exceptionRenderer->render($exc, $type);
     }
 }
