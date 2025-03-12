@@ -29,7 +29,7 @@ class Model implements JsonSerializable
     /** 
      * @var \Lightpack\Database\DB
      */
-    protected static $connection;
+    protected $connection;
 
     /**
      * @var bool Timestamps
@@ -147,7 +147,7 @@ class Model implements JsonSerializable
      */
     public function setConnection(DB $connection): void
     {
-        self::$connection = $connection;
+        $this->connection = $connection;
     }
 
     /**
@@ -158,7 +158,7 @@ class Model implements JsonSerializable
      */
     public function getConnection(): DB
     {
-        return self::$connection ?? app('db');
+        return $this->connection ?? app('db');
     }
 
     public function setEagerLoading(bool $flag)
