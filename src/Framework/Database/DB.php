@@ -342,4 +342,38 @@ class DB
     {
         return $this->connection->inTransaction();
     }
+
+    /**
+     * Execute a closure within a transaction.
+     * 
+     * Uses our counter-based transaction implementation to provide a clean,
+     * closure-based API for transaction handling. The closure may optionally 
+     * return a value which will be available after successful commit.
+     * 
+     * Example:
+     * ```php
+     * $result = $db->transaction(function() {
+     *     $user->save();
+     *     $profile->save();
+     *     return $user;  // Optional
+     * });
+     * ```
+     * 
+     * @param callable $callback Closure containing transaction operations
+     * @return mixed|null Value returned by closure after successful commit
+     * @throws \Exception Rethrows any exception after rollback
+     */
+    public function transaction(callable $callback)
+    {
+        $this->begin();
+        
+        try {
+            $result = $callback();
+            $this->commit();
+            return $result;
+        } catch(\Exception $e) {
+            $this->rollback();
+            throw $e;
+        }
+    }
 }

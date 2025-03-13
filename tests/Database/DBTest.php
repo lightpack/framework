@@ -220,4 +220,38 @@ final class DBTest extends TestCase
         $this->db->rollback();
         $this->assertEquals(0, $this->db->getTransactionLevel(), 'Final rollback() should reset level to 0');
     }
+
+    /**
+     * Test closure-based transaction API
+     */
+    public function testClosureBasedTransaction()
+    {
+        // Test successful transaction with return value
+        $result = $this->db->transaction(function() {
+            $this->db->query("INSERT INTO users (name) VALUES ('test')");
+            return 'success';
+        });
+        $this->assertEquals('success', $result);
+        
+        // Verify data was committed
+        $user = $this->db->query("SELECT * FROM users WHERE name = 'test'")->fetch();
+        $this->assertNotNull($user);
+
+        // Test nested transactions using closure
+        $result = $this->db->transaction(function() {
+            $this->db->query("INSERT INTO users (name) VALUES ('outer')");
+            
+            // Inner transaction - should just increment counter
+            $this->db->transaction(function() {
+                $this->db->query("INSERT INTO users (name) VALUES ('inner')");
+            });
+            
+            return 'nested';
+        });
+        $this->assertEquals('nested', $result);
+        
+        // Verify both outer and inner were committed
+        $count = $this->db->query("SELECT COUNT(*) as count FROM users WHERE name IN ('outer', 'inner')")->fetch();
+        $this->assertEquals(2, $count['count']);
+    }
 }
