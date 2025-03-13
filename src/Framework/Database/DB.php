@@ -6,6 +6,27 @@ use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use PDOStatement;
 
+/**
+ * Database connection and query manager.
+ * 
+ * This class provides a clean interface for database operations including
+ * query building, execution, and transaction management.
+ * 
+ * Transaction Management: this class implements a counter-based approach to 
+ * nested transactions:
+ * 
+ * Transaction Nesting:
+ *    - First begin() starts a real database transaction
+ *    - Subsequent begin() calls increment an internal counter
+ *    - Only the outermost commit()/rollback() affects the database
+ * 
+ * Key Design Principles:
+ *    - Clean Separation: Each transaction unit is truly atomic
+ *    - Simple & Reliable: No complex savepoint management
+ *    - All operations in a transaction unit succeed or fail together
+ *    - No partial commits or rollbacks (by design)
+ *    - Clear, predictable behavior in all scenarios
+ */
 class DB
 {
     protected $statement;
