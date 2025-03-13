@@ -130,12 +130,31 @@ class DB
     }
 
     /**
-     * Initiates a transaction or increments the nesting level if already in one.
+     * Returns current transaction nesting level.
      * 
-     * This method supports nested transactions through a counter mechanism:
-     * - First call starts an actual database transaction
-     * - Subsequent calls only increment an internal counter
-     * - Only the outermost transaction interacts with the database
+     * Useful for:
+     * - Debugging transaction state
+     * - Testing nested transaction behavior
+     * - Understanding current transaction context
+     * 
+     * Values:
+     * - Level 0: No active transaction
+     * - Level 1: In a top-level transaction
+     * - Level > 1: In a nested transaction
+     *
+     * @return int Current transaction nesting level
+     */
+    public function getTransactionLevel(): int 
+    {
+        return $this->transactionLevel;
+    }
+
+    /**
+     * Initiates a transaction or increments nesting level.
+     * 
+     * Behavior:
+     * - First call: Starts real database transaction
+     * - Subsequent calls: Increments nesting counter
      *
      * @throws PDOException If the driver does not support transactions
      * @return boolean True on success
@@ -147,19 +166,18 @@ class DB
             return $this->connection->beginTransaction();
         }
         
-        // For nested transactions, just increment the level
         $this->transactionLevel++;
         return true;
     }
 
     /**
-     * Commits the current transaction or decrements the nesting level.
+     * Commits the current transaction or decrements nesting level.
      * 
-     * For nested transactions:
-     * - Inner commits only decrement the nesting counter
-     * - Only the outermost commit actually commits to the database
-     * - Maintains transaction isolation in testing environments
-     *
+     * Behavior:
+     * - No transaction active: Throws PDOException
+     * - In nested transaction: Decrements counter only
+     * - In top-level transaction: Commits all changes
+     * 
      * @throws PDOException If there is no active transaction
      * @return boolean True on success
      */
@@ -169,25 +187,22 @@ class DB
             throw new \PDOException('No active transaction to commit');
         }
 
-        // For nested transactions, just decrement the level
         if ($this->transactionLevel > 1) {
             $this->transactionLevel--;
             return true;
         }
 
-        // For the outermost transaction
         $this->transactionLevel = 0;
         return $this->connection->commit();
     }
 
     /**
-     * Rolls back the current transaction or decrements the nesting level.
+     * Rolls back the current transaction or decrements nesting level.
      * 
-     * For nested transactions:
-     * - Inner rollbacks only decrement the nesting counter
-     * - Only the outermost rollback actually rolls back the database
-     * - Particularly useful in testing where the test framework manages
-     *   the outer transaction for isolation
+     * Behavior:
+     * - No transaction active: Throws PDOException
+     * - In nested transaction: Decrements counter only
+     * - In top-level transaction: Rolls back all changes
      *
      * @throws PDOException If there is no active transaction
      * @return boolean True on success
@@ -198,26 +213,13 @@ class DB
             throw new \PDOException('No active transaction to rollback');
         }
 
-        // For nested transactions, just decrement the level
         if ($this->transactionLevel > 1) {
             $this->transactionLevel--;
             return true;
         }
 
-        // For the outermost transaction
         $this->transactionLevel = 0;
         return $this->connection->rollBack();
-    }
-
-    /**
-     * Returns current transaction nesting level.
-     * Useful for debugging transaction issues.
-     *
-     * @return int
-     */
-    public function getTransactionLevel(): int 
-    {
-        return $this->transactionLevel;
     }
 
     /**

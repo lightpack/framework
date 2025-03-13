@@ -144,4 +144,80 @@ final class DBTest extends TestCase
         $this->assertIsNumeric($this->db->lastInsertId());
         $this->assertGreaterThan(0, $this->db->lastInsertId());
     }
+
+    public function testNestedTransactions()
+    {
+        $initialCount = $this->db->query('SELECT COUNT(*) FROM products')->fetchColumn();
+
+        // Start outer transaction
+        $this->db->begin();
+        $this->db->query('INSERT INTO products (name, color) VALUES (?, ?)', ['Outer1', 'Red']);
+
+        // Start first nested transaction
+        $this->db->begin();
+        $this->db->query('INSERT INTO products (name, color) VALUES (?, ?)', ['Inner1', 'Blue']);
+        $this->db->commit(); // Just decrements counter
+
+        // Start second nested transaction
+        $this->db->begin();
+        $this->db->query('INSERT INTO products (name, color) VALUES (?, ?)', ['Inner2', 'Green']);
+        $this->db->rollback(); // Just decrements counter
+
+        // Commit outer transaction - this should persist all changes
+        $this->db->commit();
+
+        $finalCount = $this->db->query('SELECT COUNT(*) FROM products')->fetchColumn();
+        $this->assertEquals($initialCount + 3, $finalCount, 'All records should persist since nested transactions are logical');
+
+        // Verify all records exist
+        $products = $this->db->query('SELECT name FROM products WHERE name IN (?, ?, ?)', ['Outer1', 'Inner1', 'Inner2'])
+            ->fetchAll(\PDO::FETCH_COLUMN);
+        
+        $this->assertContains('Outer1', $products, 'Outer transaction record should exist');
+        $this->assertContains('Inner1', $products, 'First nested transaction record should exist');
+        $this->assertContains('Inner2', $products, 'Second nested transaction record should exist');
+    }
+
+    public function testNestedTransactionRollback()
+    {
+        $initialCount = $this->db->query('SELECT COUNT(*) FROM products')->fetchColumn();
+
+        // Start outer transaction
+        $this->db->begin();
+        $this->db->query('INSERT INTO products (name, color) VALUES (?, ?)', ['Outer1', 'Red']);
+
+        // Start nested transaction
+        $this->db->begin();
+        $this->db->query('INSERT INTO products (name, color) VALUES (?, ?)', ['Inner1', 'Blue']);
+        $this->db->commit(); // Just decrements counter
+
+        // Rollback outer transaction - this should remove all changes
+        $this->db->rollback();
+
+        $finalCount = $this->db->query('SELECT COUNT(*) FROM products')->fetchColumn();
+        $this->assertEquals($initialCount, $finalCount, 'Outer rollback should remove all changes');
+
+        // Verify no records were inserted
+        $products = $this->db->query('SELECT name FROM products WHERE name IN (?, ?)', ['Outer1', 'Inner1'])
+            ->fetchAll(\PDO::FETCH_COLUMN);
+        
+        $this->assertEmpty($products, 'No records should exist after outer transaction rollback');
+    }
+
+    public function testTransactionLevel()
+    {
+        $this->assertEquals(0, $this->db->getTransactionLevel(), 'Initial level should be 0');
+
+        $this->db->begin();
+        $this->assertEquals(1, $this->db->getTransactionLevel(), 'First begin() should set level to 1');
+
+        $this->db->begin();
+        $this->assertEquals(2, $this->db->getTransactionLevel(), 'Nested begin() should increment level');
+
+        $this->db->commit();
+        $this->assertEquals(1, $this->db->getTransactionLevel(), 'Nested commit() should decrement level');
+
+        $this->db->rollback();
+        $this->assertEquals(0, $this->db->getTransactionLevel(), 'Final rollback() should reset level to 0');
+    }
 }

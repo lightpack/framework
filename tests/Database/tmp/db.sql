@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS `products`;
 CREATE TABLE IF NOT EXISTS `products` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(55) COLLATE utf8_unicode_ci NOT NULL,
-    `color` varchar(4) COLLATE utf8_unicode_ci NOT NULL,
+    `color` varchar(55) COLLATE utf8_unicode_ci NOT NULL,
     `price` decimal(10,2) NOT NULL DEFAULT '0.00',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
