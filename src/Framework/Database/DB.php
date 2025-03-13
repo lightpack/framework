@@ -11,6 +11,7 @@ class DB
     protected $statement;
     protected $connection;
     protected $queryLogs = [];
+    protected $transactionLevel = 0;
 
     /**
      * Database error codes that should be logged as critical
@@ -129,40 +130,94 @@ class DB
     }
 
     /**
-     * Initiates a transaction.
+     * Initiates a transaction or increments the nesting level if already in one.
+     * 
+     * This method supports nested transactions through a counter mechanism:
+     * - First call starts an actual database transaction
+     * - Subsequent calls only increment an internal counter
+     * - Only the outermost transaction interacts with the database
      *
-     * @throws PDOException — If there is already a transaction started 
-     *                        or the driver does not support transactions.
-     * @return boolean
+     * @throws PDOException If the driver does not support transactions
+     * @return boolean True on success
      */
     public function begin(): bool
     {
-        return $this->connection->beginTransaction();
+        if (!$this->inTransaction()) {
+            $this->transactionLevel = 1;
+            return $this->connection->beginTransaction();
+        }
+        
+        // For nested transactions, just increment the level
+        $this->transactionLevel++;
+        return true;
     }
 
     /**
-     * Commits the current active transaction.
+     * Commits the current transaction or decrements the nesting level.
+     * 
+     * For nested transactions:
+     * - Inner commits only decrement the nesting counter
+     * - Only the outermost commit actually commits to the database
+     * - Maintains transaction isolation in testing environments
      *
-     * @throws PDOException — if there is no active transaction.
-     * @return boolean
+     * @throws PDOException If there is no active transaction
+     * @return boolean True on success
      */
     public function commit(): bool
     {
+        if ($this->transactionLevel === 0) {
+            throw new \PDOException('No active transaction to commit');
+        }
+
+        // For nested transactions, just decrement the level
+        if ($this->transactionLevel > 1) {
+            $this->transactionLevel--;
+            return true;
+        }
+
+        // For the outermost transaction
+        $this->transactionLevel = 0;
         return $this->connection->commit();
     }
 
     /**
-     * Rollsback a transaction.
+     * Rolls back the current transaction or decrements the nesting level.
      * 
-     * Make sure to put this method call in a try-catch block
-     * when executing transactions.
+     * For nested transactions:
+     * - Inner rollbacks only decrement the nesting counter
+     * - Only the outermost rollback actually rolls back the database
+     * - Particularly useful in testing where the test framework manages
+     *   the outer transaction for isolation
      *
-     * @throws PDOException — if there is no active transaction.
-     * @return boolean
+     * @throws PDOException If there is no active transaction
+     * @return boolean True on success
      */
     public function rollback(): bool
     {
+        if ($this->transactionLevel === 0) {
+            throw new \PDOException('No active transaction to rollback');
+        }
+
+        // For nested transactions, just decrement the level
+        if ($this->transactionLevel > 1) {
+            $this->transactionLevel--;
+            return true;
+        }
+
+        // For the outermost transaction
+        $this->transactionLevel = 0;
         return $this->connection->rollBack();
+    }
+
+    /**
+     * Returns current transaction nesting level.
+     * Useful for debugging transaction issues.
+     *
+     * @return int
+     */
+    public function getTransactionLevel(): int 
+    {
+        return $this->transactionLevel;
     }
 
     /**
@@ -253,5 +308,15 @@ class DB
         } else {
             app('logger')->error($e->getMessage(), $context);
         }
+    }
+
+    /**
+     * Checks if inside a transaction.
+     *
+     * @return boolean TRUE if a transaction is currently active, FALSE otherwise.
+     */
+    public function inTransaction(): bool
+    {
+        return $this->connection->inTransaction();
     }
 }
