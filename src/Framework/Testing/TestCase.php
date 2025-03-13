@@ -1,24 +1,49 @@
 <?php
 
-namespace Lightpack\Testing\Http;
+namespace Lightpack\Testing;
 
+use Lightpack\Mail\Mail;
 use Lightpack\Http\Response;
+use Lightpack\Container\Container;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
+/**
+ * @method void beginTransaction()
+ * @method void rollbackTransaction()
+ */
 class TestCase extends BaseTestCase
 {
     use AssertionTrait;
     use MailAssertionTrait;
 
-    /** @var \Lightpack\Container\Container */
-    protected $container;
-
-    /** @var \Lightpack\Http\Response */
-    protected $response;
-
+    protected Container $container;
+    protected Response $response;
     protected $isJsonRequest = false;
-
     protected $isMultipartFormdata = false;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        require getcwd() . '/bootstrap/init.php';
+
+        $this->container = Container::getInstance();
+
+        Mail::clearSentMails();
+
+        if(method_exists($this, 'beginTransaction')) {
+            $this->beginTransaction();
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if(method_exists($this, 'rollbackTransaction')) {
+            $this->rollbackTransaction();
+        }
+
+        parent::tearDown();
+    }
 
     public function request(string $method, string $route, array $params = []): Response
     {
@@ -37,7 +62,7 @@ class TestCase extends BaseTestCase
             $_GET = array_merge($queryParams, $params);
         } else {
             $_POST = $params;
-            $_GET = $queryParams;  // Keep query params in $_GET
+            $_GET = $queryParams; 
         }
 
         $_SERVER['HTTP_HOST'] = 'localhost';

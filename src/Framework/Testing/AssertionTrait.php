@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Testing\Http;
+namespace Lightpack\Testing;
 
 use Lightpack\Utils\Arr;
 use Lightpack\Http\Redirect;
