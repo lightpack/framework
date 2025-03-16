@@ -2,9 +2,10 @@
 
 namespace Lightpack\Routing;
 
-use Lightpack\Container\Container;
 use Lightpack\Http\Request;
 use Lightpack\Routing\Router;
+use Lightpack\Container\Container;
+use Lightpack\Exceptions\ValidationException;
 
 class Dispatcher
 {
@@ -48,7 +49,11 @@ class Dispatcher
             );
         }
 
-        return $this->container->call($controller, $action, $params);
+        try {
+            return $this->container->call($controller, $action, $params);
+        } catch (ValidationException $e) {
+            return $this->container->get('redirect');
+        }
     }
 
     private function throwExceptionIfRouteNotFound()
