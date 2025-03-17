@@ -8,6 +8,8 @@ use JsonSerializable;
 use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
+use Lightpack\Database\Lucid\Attributes\AttributeHandler;
+use Lightpack\Database\Lucid\Relations\RelationHandler;
 
 class Model implements JsonSerializable
 {
@@ -22,11 +24,6 @@ class Model implements JsonSerializable
     protected $primaryKey = 'id';
 
     /** 
-     * @var stdClass Model data object 
-     */
-    protected $data;
-
-    /** 
      * @var \Lightpack\Database\DB
      */
     protected $connection;
@@ -37,59 +34,32 @@ class Model implements JsonSerializable
     protected $timestamps = false;
 
     /**
-     * @var string Type of relation to be resolved.
-     */
-    protected $relationType;
-
-    /**
-     * @var string Model associated with the relation.
-     */
-    protected $relatingModel;
-
-    /**
-     * @var string The key used to resolve the relation while eager loading.
-     */
-    protected $relatingKey;
-
-    /**
-     * @var string The foreign key used to resolve the relation while eager loading.
-     */
-    protected $relatingForeignKey;
-
-    /**
-     * @var string Pivot table when resolving many-to-many relationship.
-     */
-    protected $pivotTable;
-
-    /**
-     * @var array Cached models that have already been loaded.
-     */
-    protected $cachedModels = [];
-
-    /**
-     * @var \Lightpack\Database\Lucid\Builder
-     */
-    protected $builder;
-
-    /**
      * @var array Attributes to be hidden for serialization or array conversion.
      */
     protected $hidden = [];
 
     /**
-     * @var boolean Is the relation getting eagerloaded.
+     * @var AttributeHandler
      */
-    protected $isEagerLoading = false;
+    protected $attributes;
+
+    /**
+     * @var RelationHandler
+     */
+    protected $relations;
 
     /**
      * Constructor.
      *
      * @param [int|string] $id
-     * @param DB $connection
      */
     public function __construct($id = null)
     {
-        $this->data = new \stdClass();
+        $this->attributes = new AttributeHandler();
+        $this->attributes->setHidden($this->hidden);
+        $this->attributes->setTimestamps($this->timestamps);
+
+        $this->relations = new RelationHandler($this);
 
         if ($id) {
             $this->find($id);
@@ -98,64 +68,52 @@ class Model implements JsonSerializable
 
     /**
      * Sets the model properties.
-     *
-     * @param string $column
-     * @param mix $value
      */
     public function __set($column, $value)
     {
         if (!method_exists($this, $column)) {
-            $this->data->$column = $value;
+            $this->attributes->set($column, $value);
         }
     }
 
     /**
      * Returns a model property or executes a relation
      * method if present.
-     *
-     * @param string $key
-     * @return void
      */
     public function __get(string $key)
     {
-        if (property_exists($this->data, $key)) {
-            return $this->data->$key;
+        // Check attributes first
+        if ($this->attributes->has($key)) {
+            return $this->attributes->get($key);
         }
 
+        // Check for relation method
         if (!method_exists($this, $key)) {
-            return $this->data->$key ?? null;
+            return $this->attributes->get($key);
         }
 
-        if (array_key_exists($key, $this->cachedModels)) {
-            return $this->cachedModels[$key];
+        // Check relation cache
+        if ($cached = $this->relations->getFromCache($key)) {
+            return $cached;
         }
 
+        // Execute relation
         $query = $this->{$key}();
-        if ($this->relationType === 'hasMany' || $this->relationType === 'pivot' || $this->relationType === 'hasManyThrough') {
-            return $this->cachedModels[$key] = $query->all();
-        }
+        $result = $this->relations->getRelationType() === 'hasMany' || 
+                 $this->relations->getRelationType() === 'pivot' || 
+                 $this->relations->getRelationType() === 'hasManyThrough'
+            ? $query->all()
+            : $query->one();
 
-        return $this->cachedModels[$key] = $query->one();
+        $this->relations->cache($key, $result);
+        return $result;
     }
 
-    /**
-     * Sets the database connection to be used for querying
-     * the tables.
-     *
-     * @param DB $connection
-     * @return void
-     */
     public function setConnection(DB $connection): void
     {
         $this->connection = $connection;
     }
 
-    /**
-     * Sets the database connection to be used for querying
-     * the tables.
-     *
-     * @return DB $connection
-     */
     public function getConnection(): DB
     {
         return $this->connection ?? app('db');
@@ -163,220 +121,96 @@ class Model implements JsonSerializable
 
     public function setEagerLoading(bool $flag)
     {
-        $this->isEagerLoading = $flag;
+        $this->relations->setEagerLoading($flag);
     }
 
-    /**
-     * This method maps 1:1 relationship with the provided model.
-     *
-     * @param string $model The relating model class name.
-     * @param string $foreignKey
-     * @return Query
-     */
     public function hasOne(string $model, string $foreignKey): Query
     {
-        $this->relationType = __FUNCTION__;
-        $this->relatingKey = $foreignKey;
-        $this->relatingForeignKey = $foreignKey;
-        // $this->relatingForeignKey = $this->primaryKey;
-        $this->relatingModel = $model;
-        $model = $this->getConnection()->model($model);
-
-        if($this->isEagerLoading) {
-            return $model::query();
-        }
-
-        return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
+        return $this->relations->hasOne($model, $foreignKey);
     }
 
-    /**
-     * This method maps 1:N relationship with the provided model.
-     *
-     * @param string $model The relating model class name.
-     * @param string $foreignKey
-     * @return Query
-     */
     public function hasMany(string $model, string $foreignKey): Query
     {
-        $this->relationType = __FUNCTION__;
-        $this->relatingKey = $foreignKey;
-        $this->relatingForeignKey = $this->primaryKey;
-        $this->relatingModel = $model;
-
-        if($this->isEagerLoading) {
-            return $model::query();
-        }
-
-        return $model::query()->where($foreignKey, '=', $this->{$this->primaryKey});
+        return $this->relations->hasMany($model, $foreignKey);
     }
 
-    /**
-     * This method maps belongs to relationship with the provided model.
-     *
-     * @param string $model The relating model class name.
-     * @param string $foreignKey
-     * @return Query
-     */
     public function belongsTo(string $model, string $foreignKey): Query
     {
-        $model = $this->getConnection()->model($model);
-        $this->relationType = __FUNCTION__;
-        $this->relatingKey = $model->getPrimaryKey();
-        $this->relatingForeignKey = $foreignKey;
-        $this->relatingModel = $model;
-
-        if($this->isEagerLoading) {
-            return $model::query();
-        }
-
-        return $model::query()->where($this->primaryKey, '=', $this->{$foreignKey});
+        return $this->relations->belongsTo($model, $foreignKey);
     }
 
-    /**
-     * This method maps N:N relationship with the provided model.
-     *
-     * @param string $model The relating model class name.
-     * @param string $pivot Name of the pivot table.
-     * @param string $foreignKey
-     * @param string $associateKey
-     * @return Pivot
-     */
     public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Pivot
     {
-        $this->relationType = __FUNCTION__;
-        $this->relatingKey = $foreignKey;
-        $this->relatingForeignKey = $foreignKey;
-        $this->relatingModel = $model;
-        $this->pivotTable = $pivotTable;
-        $model = $this->getConnection()->model($model);
-        $pivot = new Pivot($model, $this, $pivotTable, $foreignKey, $associateKey);
-
-        $pivot
-            ->select("$model->table.*", "$pivotTable.$foreignKey")
-            ->join($pivotTable, "$model->table.{$this->primaryKey}", "$pivotTable.$associateKey");
-
-        if($this->isEagerLoading) {
-            return $pivot;
-        }
-
-        return $pivot->where("$pivotTable.$foreignKey", '=', $this->{$this->primaryKey});
+        return $this->relations->pivot($model, $pivotTable, $foreignKey, $associateKey);
     }
 
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
     {
-        $this->relationType = __FUNCTION__;
-        $this->relatingForeignKey = $throughKey;
-        $this->relatingModel = $model;
-        $model = $this->getConnection()->model($model);
-        $throughModel = $this->getConnection()->model($through);
-        $this->relatingKey = $throughKey;
-        $throughModelPrimaryKey = $throughModel->getPrimaryKey();
-
-        $query = $model
-            ->query()
-            ->select("$model->table.*", "$throughModel->table.$throughKey")
-            ->join($throughModel->table, "$model->table.{$foreignKey}", "$throughModel->table.$throughModelPrimaryKey");
-            
-        if($this->isEagerLoading) {
-            return $query;
-        }
-
-        return $query->where("$throughModel->table.$throughKey", '=', $this->{$this->primaryKey});
+        return $this->relations->hasManyThrough($model, $through, $throughKey, $foreignKey);
     }
 
-    /**
-     * Find a record by its primary key.
-     *
-     * @param [int|string] $id
-     * @param boolean $fail
-     * @return self
-     */
     public function find($id, bool $fail = true): self
     {
         $query = new Query($this->table, $this->getConnection());
+        $data = $query->where($this->primaryKey, '=', $id)->one();
 
-        $this->data = $query->where($this->primaryKey, '=', $id)->one();
-
-        if (!$this->data && $fail) {
+        if (!$data && $fail) {
             throw new RecordNotFoundException(
                 sprintf('%s: No record found for ID = %d', get_called_class(), $id)
             );
         }
 
+        if ($data) {
+            $this->attributes->fill((array)$data);
+        }
+
         return $this;
     }
 
-    /**
-     * Insert or update a model.
-     *
-     * @return void
-     */
     public function save(): void
     {
-        $this->setTimestamps();
-
+        $primaryKeyValue = $this->attributes->get($this->primaryKey);
+        $this->attributes->updateTimestamps($primaryKeyValue !== null);
         $query = $this->query();
-
+        
         $this->beforeSave($query);
 
-        if ($this->{$this->primaryKey}) {
+        if ($primaryKeyValue !== null) {
             $this->update($query);
         } else {
             $this->insert($query);
-            $this->{$this->primaryKey} = $this->lastInsertId();
+            $this->attributes->set($this->primaryKey, $this->lastInsertId());
         }
 
         $this->afterSave();
     }
 
-    /**
-     * Deletes a model.
-     */
     public function delete($id = null)
     {
         if ($id) {
             $this->find($id);
         }
 
-        if (!isset($this->data->{$this->primaryKey})) {
+        if (!$this->attributes->get($this->primaryKey)) {
             return;
         }
 
         $query = $this->query();
-
         $this->beforeDelete($query);
-
-        $query->where($this->primaryKey, '=', $this->{$this->primaryKey})->delete();
-
+        $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
         $this->afterDelete();
     }
 
-    /**
-     * Returns the last inserted row id.
-     *
-     * @return void
-     */
     public function lastInsertId()
     {
         return $this->getConnection()->lastInsertId();
     }
 
-    /**
-     * Returns the database table name the model
-     * represents.
-     *
-     * @return string
-     */
     public function getTableName(): string
     {
         return $this->table;
     }
 
-    /**
-     * Returns the primary key identifier.
-     *
-     * @return string
-     */
     public function getPrimaryKey(): string
     {
         return $this->primaryKey;
@@ -384,161 +218,104 @@ class Model implements JsonSerializable
 
     public static function query(): Builder
     {
-        // return new Builder(new static, self::$connection);
         return new Builder(new static);
     }
 
-    /**
-     * Acts as a hook method to be called before executing
-     * fetch queries.
-     *
-     * @return void
-     */
     public function beforeFetch(Query $query)
     {
-        // 
+        // Hook method
     }
 
-    /**
-     * Acts as a hook method to be called after executing
-     * fetch queries.
-     *
-     * @return void
-     */
     public function afterFetch()
     {
-        // 
+        // Hook method
     }
 
-    /**
-     * Acts as a hook method to be called before executing
-     * save() method on model.
-     *
-     * @return void
-     */
     public function beforeSave(Query $query)
     {
-        // 
+        // Hook method
     }
 
-    /**
-     * Acts as a hook method to be called after executing
-     * save() method on model.
-     *
-     * @return void
-     */
     protected function afterSave()
     {
-        // 
+        // Hook method
     }
-
-    /**
-     * Acts as a hook method to be called before executing
-     * delete() method on model.
-     *
-     * @return void
-     */
 
     public function beforeDelete(Query $query)
     {
-        // 
+        // Hook method
     }
 
-    /**
-     * Acts as a hook method to be called after executing
-     * delete() method on model.
-     *
-     * @return void
-     */
     protected function afterDelete()
     {
-        // 
+        // Hook method
     }
 
     protected function insert(Query $query)
     {
-        $data = \get_object_vars($this->data);
-        return $query->insert($data);
+        return $query->insert($this->attributes->toArray());
     }
 
     protected function update(Query $query)
     {
-        $data = \get_object_vars($this->data);
+        $data = $this->attributes->toArray();
         unset($data[$this->primaryKey]);
-        return $query->where($this->primaryKey, '=', $this->{$this->primaryKey})->update($data);
-    }
-
-    protected function setTimestamps()
-    {
-        if (false === $this->timestamps) {
-            return;
-        }
-
-
-        if ($this->data->{$this->primaryKey} ?? false) {
-            $this->data->updated_at = date('Y-m-d H:i:s');
-        } else {
-            $this->data->created_at = date('Y-m-d H:i:s');
-        }
+        return $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->update($data);
     }
 
     public function jsonSerialize(): mixed
     {
-        $data = \get_object_vars($this->data);
-
-        return array_filter($data, function ($key) {
-            return !in_array($key, $this->hidden);
-        }, ARRAY_FILTER_USE_KEY);
+        return $this->attributes->toArray();
     }
 
     public function getRelationType()
     {
-        return $this->relationType;
+        return $this->relations->getRelationType();
     }
 
     public function getRelatingKey()
     {
-        return $this->relatingKey;
+        return $this->relations->getRelationKey();
     }
 
     public function getRelatingForeignKey()
     {
-        return $this->relatingForeignKey;
+        return $this->relations->getForeignKey();
     }
 
     public function getRelatingModel()
     {
-        return $this->relatingModel;
+        return $this->relations->getRelatedModel();
     }
 
     public function getPivotTable()
     {
-        return $this->pivotTable;
+        return $this->relations->getPivotTable();
     }
 
     public function getAttributes()
     {
-        return $this->data;
+        return $this->attributes->all();
     }
 
     public function getAttribute($key, $default = null)
     {
-        return $this->data->{$key} ?? $default;
+        return $this->attributes->get($key, $default);
     }
 
     public function setAttributes(array $data)
     {
-        $this->data = (object) $data;
+        $this->attributes->fill($data);
     }
 
     public function hasAttribute(string $key)
     {
-        return property_exists($this->data, $key);
+        return $this->attributes->has($key);
     }
 
     public function setAttribute($key, $value)
     {
-        $this->data->{$key} = $value;
+        $this->attributes->set($key, $value);
     }
 
     public function load()
@@ -557,7 +334,7 @@ class Model implements JsonSerializable
 
     public function toArray()
     {
-        $data = (array) $this->jsonSerialize();
+        $data = $this->attributes->toArray();
 
         foreach ($data as $key => $value) {
             if (is_object($value)) {
@@ -572,25 +349,18 @@ class Model implements JsonSerializable
 
     public function getCachedModels()
     {
-        return $this->cachedModels;
+        return $this->relations->getCachedRelations();
     }
 
-    /**
-     * Clone the model creating a new instance without actually saving into database.
-     * Note that the cloned model excludes the primary_key, and created_at, update_at 
-     * timestamp fields.
-     * 
-     * @param array $exclude An array of keys to exclude while cloning.
-     */
     public function clone(array $exclude = []): self
     {
-        if(!property_exists($this->data, $this->primaryKey)) {
+        if (!$this->attributes->get($this->primaryKey)) {
             throw new \Exception('You cannot clone a non-existing model instance.');
         }
 
         $instance = new static;
         $exclude = array_merge($exclude, [$this->primaryKey, 'created_at', 'updated_at']);
-        $data = \get_object_vars($this->data);
+        $data = $this->attributes->toArray();
 
         foreach($data as $key => $value) {
             if(!in_array($key, $exclude)) {
