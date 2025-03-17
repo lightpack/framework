@@ -4,7 +4,7 @@ namespace Lightpack\Database\Query;
 
 use Closure;
 use Lightpack\Database\DB;
-use Lightpack\Pagination\Pagination as BasePagination;
+use Lightpack\Pagination\Pagination;
 
 class Query
 {
@@ -432,13 +432,13 @@ class Query
         $this->components['offset'] = $limit * ($page - 1);
 
         if($total == 0) { // no need to query further
-            return new BasePagination([], $total);
+            return new Pagination([], $total);
         }
 
         // Pass false because count() has already executed the hook
         $items = $this->fetchAll(false);
 
-        return new BasePagination($items, $total, $limit, $page);
+        return new Pagination($items, $total, $limit, $page);
     }
 
     public function count()
