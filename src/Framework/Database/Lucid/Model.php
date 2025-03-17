@@ -2,7 +2,6 @@
 
 namespace Lightpack\Database\Lucid;
 
-use Closure;
 use Exception;
 use JsonSerializable;
 use Lightpack\Database\DB;
@@ -49,6 +48,21 @@ class Model implements JsonSerializable
     protected $relations;
 
     /**
+     * @var bool Enable strict relation loading
+     */
+    protected $strictMode = false;
+
+    /**
+     * @var array Relations that can be lazy loaded even in strict mode
+     */
+    protected $allowedLazyRelations = [];
+
+    /**
+     * @var array Currently loaded relations
+     */
+    protected $loadedRelations = [];
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
@@ -90,6 +104,18 @@ class Model implements JsonSerializable
         // Check for relation method
         if (!method_exists($this, $key)) {
             return $this->attributes->get($key);
+        }
+
+        // Check if relation is allowed to be lazy loaded
+        if ($this->strictMode && !in_array($key, $this->allowedLazyRelations)) {
+            throw new \RuntimeException(
+                sprintf(
+                    "Strict Mode: Relation '%s' must be eager loaded. Use %s::with('%s')->get()",
+                    $key,
+                    get_class($this),
+                    $key
+                )
+            );
         }
 
         // Check relation cache
@@ -369,5 +395,31 @@ class Model implements JsonSerializable
         }
 
         return $instance;
+    }
+
+    /**
+     * Track loaded relations
+     */
+    public function markRelationLoaded(string $relation): void
+    {
+        if (!in_array($relation, $this->loadedRelations)) {
+            $this->loadedRelations[] = $relation;
+        }
+    }
+
+    /**
+     * Check if a relation is loaded
+     */
+    public function isRelationLoaded(string $relation): bool
+    {
+        return in_array($relation, $this->loadedRelations);
+    }
+
+    /**
+     * Get list of loaded relations
+     */
+    public function getLoadedRelations(): array
+    {
+        return $this->loadedRelations;
     }
 }

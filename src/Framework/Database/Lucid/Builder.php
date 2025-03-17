@@ -29,12 +29,12 @@ class Builder extends Query
 
     public function with(): self
     {
-        $args = func_get_args();
+        $relations = func_get_args();
 
-        if (is_array($args[0])) {
-            $this->includes = $args[0];
+        if (is_array($relations[0])) {
+            $this->includes = $relations[0];
         } else {
-            $this->includes = $args;
+            $this->includes = $relations;
         }
 
         return $this;
@@ -163,11 +163,8 @@ class Builder extends Query
                 $this->model->setEagerLoading(false);
 
                 foreach ($models as $model) {
-                    if ($this->model->getRelationType() === 'hasOne') {
-                        $model->setAttribute($relation, $children->first([$this->model->getRelatingForeignKey(), $model->{$this->model->getPrimarykey()}]));
-                    } elseif ($this->model->getRelationType() === 'belongsTo') {
+                    if (in_array($this->model->getRelationType(), ['hasOne', 'belongsTo'])) {
                         $model->setAttribute($relation, $children->find($model->{$this->model->getRelatingForeignKey()}));
-                        continue;
                     } elseif ($this->model->getRelationType() === 'hasMany') {
                         $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
                             return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
@@ -181,6 +178,9 @@ class Builder extends Query
                             return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
                         }));
                     }
+                    
+                    // Mark the relation as loaded
+                    $model->markRelationLoaded($relation);
                 }
             }
 

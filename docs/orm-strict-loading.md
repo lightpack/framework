@@ -25,7 +25,7 @@ Instead of allowing accidental N+1 queries, Lightpack enforces efficient relatio
 ```php
 // This will throw an exception
 $posts = Post::all();
-$posts[0]->author;  // StrictModeViolationException: Relation 'author' must be eager loaded
+$posts[0]->author;  // RuntimeException: Relation 'author' must be eager loaded
 
 // This is the correct way
 $posts = Post::with('author')->all();
@@ -60,9 +60,6 @@ class Post extends Model
     
     // Optionally, whitelist relations that can be lazy loaded
     protected $allowedLazyRelations = ['comments'];
-    
-    // Optionally, declare relations that should always be loaded
-    protected $requiredRelations = ['author'];
 }
 ```
 
@@ -74,20 +71,31 @@ class Post extends Model
 $posts = Post::with(['author', 'comments'])->all();
 ```
 
-2. **Use Required Relations**
-```php
-class Post extends Model
-{
-    protected $requiredRelations = ['author'];
-    // Now $post->author will always be available
-}
-```
-
-3. **Batch Loading for Collections**
+2. **Use Batch Loading for Collections**
 ```php
 // Load relations for existing collections
 $posts->load('comments', 'likes');
 ```
+
+3. **Keep Lazy Loading Minimal**
+```php
+// Only whitelist relations that truly need lazy loading
+protected $allowedLazyRelations = ['userSettings'];
+```
+
+## Error Handling
+
+When accessing non-eager-loaded relations in strict mode, a `RuntimeException` is thrown with a helpful message:
+
+```php
+RuntimeException: Strict Mode: Relation 'author' must be eager loaded. 
+Use Post::with('author')->get()
+```
+
+The error message clearly indicates:
+- What relation caused the error
+- How to fix it using eager loading
+- The correct method to use
 
 ## Development Tools
 
@@ -120,8 +128,7 @@ If you're coming from other ORMs:
 
 1. Identify commonly accessed relations
 2. Use `with()` to eager load these relations
-3. Configure `$requiredRelations` for always-needed relations
-4. Use `$allowedLazyRelations` sparingly for truly dynamic cases
+3. Use `$allowedLazyRelations` sparingly for truly dynamic cases
 
 ## Conclusion
 

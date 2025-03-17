@@ -756,9 +756,9 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($project->tasks);
         $this->assertEquals(2, $project->tasks->count());
-        // $this->assertEquals('Task 2', $project->tasks[2]->name);
-        // $this->assertNotEmpty($project->tasks[2]->comments);
-        // $this->assertEquals(2, $project->tasks[2]->comments->count());
+        $this->assertEquals('Task 2', $project->tasks[0]->name);
+        $this->assertNotEmpty($project->tasks[0]->comments);
+        $this->assertEquals(2, $project->tasks[0]->comments->count());
     }
 
     public function testWithMethodForEagerLoadingAll()
@@ -783,10 +783,10 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->tasks);
-        // $this->assertEquals(1, $projects[1]->tasks->count());
-        // $this->assertEquals('Task 1', $projects[1]->tasks[1]->name);
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertNotEmpty($projects[1]->tasks);
+        $this->assertEquals(2, $projects[1]->tasks->count());
+        $this->assertEquals('Task 3', $projects[1]->tasks[1]->name);
     }
 
     public function testWithCountMethodForEagerLoadingAll()
@@ -811,8 +811,8 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals(1, $projects[1]->tasks_count);
-        // $this->assertEquals(2, $projects[2]->tasks_count);
+        $this->assertEquals(1, $projects[0]->tasks_count);
+        $this->assertEquals(2, $projects[1]->tasks_count);
     }
 
     public function testWithAndWithCountMethodBoth()
@@ -837,11 +837,11 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->tasks);
-        // $this->assertEquals(1, $projects[1]->tasks->count());
-        // $this->assertEquals('Task 1', $projects[1]->tasks[1]->name);
-        // $this->assertEquals(1, $projects[1]->tasks_count);
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertNotEmpty($projects[1]->tasks);
+        $this->assertEquals(1, $projects[0]->tasks->count());
+        $this->assertEquals('Task 3', $projects[1]->tasks[1]->name);
+        $this->assertEquals(2, $projects[1]->tasks_count);
     }
 
     public function testWithAndWithCountMethodForHasManyThroughRelations()
@@ -873,10 +873,10 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->comments);
-        // $this->assertEquals(1, $projects[1]->comments->count());
-        // $this->assertEquals('Comment 1', $projects[1]->comments[1]->content);
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertNotEmpty($projects[0]->comments);
+        $this->assertEquals(1, $projects[0]->comments->count());
+        $this->assertEquals('Comment 1', $projects[0]->comments[0]->content);
     }
 
     public function testThrowsExceptionWhenEagerLoadingNonExistingRelation()
@@ -907,9 +907,9 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->manager);
-        // $this->assertEquals('Manager 1', $projects[1]->manager->name);
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertNotEmpty($projects[1]->manager);
+        $this->assertEquals('Manager 2', $projects[1]->manager->name);
     }
 
     public function testEagerLoadForEmptyRelation()
@@ -927,8 +927,8 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNull($projects[1]->manager);
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertNull($projects[0]->manager);
     }
 
     public function testEagerLoadForManyToManyRelation()
