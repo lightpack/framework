@@ -68,26 +68,15 @@ class Builder extends Query
      */
     public function paginate(int $limit = null, int $page = null)
     {
-        $columns = $this->columns;
-        $total = $this->count();
-        $this->columns = $columns;
-
-        $page = $page ?? request()->input('page');
-        $page = (int) $page;
-        $page = $page > 0 ? $page : 1;
-
-        $limit = $limit ?: request()->input('limit', 10);
-        $limit = $limit > 0 ? $limit : 10;
-
-        $this->limit($limit);
-        $this->offset($limit * ($page - 1));
-
-        if($total == 0) {
-            return new Pagination(new Collection([]), $total, $limit, $page);
+        $this->executeBeforeFetchHookForModel();
+        $pagination = parent::paginate($limit, $page);
+        
+        if ($pagination->items()) {
+            $items = $this->hydrate($pagination->items());
+            return new Pagination($items, $pagination->total(), $pagination->limit(), $pagination->currentPage());
         }
-
-        $items = $this->all();
-        return new Pagination($items, $total, $limit, $page);
+        
+        return new Pagination(new Collection([]), $pagination->total(), $pagination->limit(), $pagination->currentPage());
     }
 
     /**
