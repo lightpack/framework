@@ -743,14 +743,6 @@ final class QueryTest extends TestCase
         $this->query->resetQuery();
     }
 
-    public function testSetModel()
-    {
-        // Test 1
-        $this->query->setModel(new Product);
-        $this->assertInstanceOf(Product::class, $this->query->getModel());
-        $this->query->resetQuery();
-    }
-
     public function testSetConnection()
     {
         // Test 1

@@ -3,17 +3,13 @@
 namespace Lightpack\Database\Query;
 
 use Closure;
-use Lightpack\Database\Lucid\Collection;
-use Lightpack\Database\Lucid\Model;
-use Lightpack\Pagination\Pagination as BasePagination;
-use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\DB;
+use Lightpack\Pagination\Pagination as BasePagination;
 
 class Query
 {
     protected $connection;
     protected $table;
-    protected $model;
     protected $bindings = [];
     protected $components = [
         'alias' => null,
@@ -28,36 +24,32 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct($subject = null, DB $connection = null)
+    public function __construct($table = null, DB $connection = null)
     {
-        if ($subject instanceof Model) {
-            $this->model = $subject;
-            $this->table = $subject->getTableName();
-        } else {
-            $this->table = $subject;
-        }
-
+        $this->table = $table;
         $this->connection = $connection ?? app('db');
-    }
-
-    public function setModel(Model $model)
-    {
-        $this->model = $model;
-    }
-
-    public function getModel()
-    {
-        return $this->model;
     }
 
     public function setConnection(DB $connection)
     {
         $this->connection = $connection;
+        return $this;
     }
 
     public function getConnection()
     {
         return $this->connection;
+    }
+
+    public function getTable()
+    {
+        return $this->table;
+    }
+
+    public function setTable(string $table)
+    {
+        $this->table = $table;
+        return $this;
     }
 
     public function insert(array $data)
@@ -146,7 +138,6 @@ class Query
         $this->components['columns'] = $columns;
         return $this;
     }
-
 
     /**
      * Lock the fetched rows from update until the transaction is commited.
@@ -423,7 +414,7 @@ class Query
      *
      * @param integer|null $limit
      * @param integer|null $page
-     * @return \Lightpack\Pagination\Pagination|\Lightpack\Database\Lucid\Pagination
+     * @return \Lightpack\Pagination\Pagination
      */
     public function paginate(int $limit = null, int $page = null)
     {
@@ -441,27 +432,17 @@ class Query
         $this->components['offset'] = $limit * ($page - 1);
 
         if($total == 0) { // no need to query further
-            if($this->model) {
-               return new LucidPagination(new Collection([]), $total, $limit, $page);
-            } else {
-                return new BasePagination([], $total);
-            }
+            return new BasePagination([], $total);
         }
 
         // Pass false because count() has already executed the hook
         $items = $this->fetchAll(false);
-
-        if($items instanceof Collection) {
-            return new LucidPagination( $items, $total, $limit, $page);
-        }
 
         return new BasePagination($items, $total, $limit, $page);
     }
 
     public function count()
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ['COUNT(*) AS total'];
 
         $query = $this->getCompiledCount();
@@ -474,8 +455,6 @@ class Query
 
     public function countBy(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-        
         $this->columns = [$column, 'COUNT(*) AS num'];
         $this->groupBy($column);
 
@@ -487,8 +466,6 @@ class Query
 
     public function sum(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["SUM(`$column`) AS sum"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -498,8 +475,6 @@ class Query
 
     public function avg(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["AVG(`$column`) AS avg"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -509,8 +484,6 @@ class Query
 
     public function min(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["MIN(`$column`) AS min"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -520,8 +493,6 @@ class Query
 
     public function max(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["MAX(`$column`) AS max"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -560,7 +531,7 @@ class Query
     protected function fetchAll(bool $executeBeforeFetchHook = true)
     {
         if($executeBeforeFetchHook) {
-            $this->executeBeforeFetchHookForModel();
+            // Removed model-related code
         }
 
         $query = $this->getCompiledSelect();
@@ -568,10 +539,6 @@ class Query
         $this->resetQuery();
         $this->resetBindings();
         $this->resetWhere();
-
-        if ($this->model) {
-            return static::hydrate($result);
-        }
 
         return $result;
     }
@@ -583,17 +550,12 @@ class Query
 
     protected function fetchOne()
     {
-        $this->executeBeforeFetchHookForModel();
+        // Removed model-related code
 
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
-
-        if ($result && $this->model) {
-            $result = (array) $result;
-            $result = static::hydrateItem($result);
-        }
 
         return $result;
     }
@@ -605,7 +567,7 @@ class Query
 
     public function column(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
+        // Removed model-related code
 
         $this->columns = [$column];
         $query = $this->getCompiledSelect();
@@ -696,12 +658,5 @@ class Query
         $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];
         $this->bindings = array_merge($this->bindings, $query->bindings);
         return $this;
-    }
-
-    protected function executeBeforeFetchHookForModel()
-    {
-        if($this->model) {
-            $this->model->beforeFetch($this);
-        }
     }
 }

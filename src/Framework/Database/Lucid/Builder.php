@@ -3,6 +3,8 @@
 namespace Lightpack\Database\Lucid;
 
 use Lightpack\Database\Query\Query;
+use Lightpack\Database\Query\Compiler;
+use Lightpack\Database\Lucid\Pagination;
 
 class Builder extends Query
 {
@@ -12,19 +14,128 @@ class Builder extends Query
     protected $model;
 
     /**
-     * @var array Relations to inlcude.
+     * @var array Relations to include.
      */
     protected $includes;
 
     /**
-     * @var array Relations to inlcude.
+     * @var array Relations to include.
      */
     protected $countIncludes;
 
     public function __construct(Model $model)
     {
         $this->model = $model;
-        parent::__construct($model, $model->getConnection());
+        parent::__construct($model->getTableName(), $model->getConnection());
+    }
+
+    protected function executeBeforeFetchHookForModel()
+    {
+        if($this->model) {
+            $this->model->beforeFetch($this);
+        }
+    }
+
+    public function all()
+    {
+        $this->executeBeforeFetchHookForModel();
+        $results = parent::all();
+        return $this->hydrate($results);
+    }
+
+    public function one()
+    {
+        $this->executeBeforeFetchHookForModel();
+        $result = parent::one();
+        
+        if ($result) {
+            $result = $this->hydrateItem((array) $result);
+        }
+
+        return $result;
+    }
+
+    public function column(string $column)
+    {
+        $this->executeBeforeFetchHookForModel();
+        return parent::column($column);
+    }
+
+    /**
+     * @param integer|null $limit
+     * @param integer|null $page
+     * @return \Lightpack\Database\Lucid\Pagination
+     */
+    public function paginate(int $limit = null, int $page = null)
+    {
+        $columns = $this->columns;
+        $total = $this->count();
+        $this->columns = $columns;
+
+        $page = $page ?? request()->input('page');
+        $page = (int) $page;
+        $page = $page > 0 ? $page : 1;
+
+        $limit = $limit ?: request()->input('limit', 10);
+        $limit = $limit > 0 ? $limit : 10;
+
+        $this->limit($limit);
+        $this->offset($limit * ($page - 1));
+
+        if($total == 0) {
+            return new Pagination(new Collection([]), $total, $limit, $page);
+        }
+
+        $items = $this->all();
+        return new Pagination($items, $total, $limit, $page);
+    }
+
+    /**
+     * Hydrate a collection of models from raw database results.
+     */
+    protected function hydrate(array $results): Collection
+    {
+        $models = [];
+        $modelClass = get_class($this->model);
+
+        foreach ($results as $result) {
+            $model = new $modelClass;
+            $model->setAttributes((array) $result);
+            $models[] = $model;
+        }
+
+        $models = new Collection($models);
+
+        if ($this->includes) {
+            $this->eagerLoadRelations($models);
+        }
+
+        if ($this->countIncludes) {
+            $this->eagerLoadRelationsCount($models);
+        }
+
+        return $models;
+    }
+
+    /**
+     * Hydrate a single model from raw database result.
+     */
+    protected function hydrateItem(array $attributes): Model
+    {
+        $model = clone $this->model;
+        $model->setAttributes($attributes);
+
+        $collection = new Collection($model);
+
+        if ($this->includes) {
+            $this->eagerLoadRelations($collection);
+        }
+
+        if ($this->countIncludes) {
+            $collection->loadCount(...$this->countIncludes);
+        }
+
+        return $model;
     }
 
     public function with(): self
@@ -262,46 +373,5 @@ class Builder extends Query
                 }
             }
         }
-    }
-
-    public function hydrate(array $items)
-    {
-        $models = [];
-        $modelClass = get_class($this->model);
-
-        foreach ($items as $item) {
-            $model = new $modelClass;
-            $model->setAttributes((array) $item);
-            $models[] = $model;
-        }
-
-        $models = new Collection($models);
-
-        if ($this->includes) {
-            $this->eagerLoadRelations($models);
-        }
-
-        if ($this->countIncludes) {
-            $this->eagerLoadRelationsCount($models);
-        }
-
-        return $models;
-    }
-
-    public function hydrateItem(array $attributes)
-    {
-        $this->model->setAttributes($attributes);
-
-        $collection = new Collection($this->model);
-
-        if ($this->includes) {
-            $this->eagerLoadRelations($collection);
-        }
-
-        if ($this->countIncludes) {
-            $collection->loadCount(...$this->countIncludes);
-        }
-
-        return $this->model;
     }
 }
