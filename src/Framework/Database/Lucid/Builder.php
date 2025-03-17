@@ -3,7 +3,6 @@
 namespace Lightpack\Database\Lucid;
 
 use Lightpack\Database\Query\Query;
-use Lightpack\Database\Query\Compiler;
 use Lightpack\Database\Lucid\Pagination;
 
 class Builder extends Query
