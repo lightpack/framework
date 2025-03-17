@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Database\Lucid\Relations;
+namespace Lightpack\Database\Lucid;
 
 use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;

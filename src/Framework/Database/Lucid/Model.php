@@ -7,8 +7,8 @@ use JsonSerializable;
 use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
-use Lightpack\Database\Lucid\Attributes\AttributeHandler;
-use Lightpack\Database\Lucid\Relations\RelationHandler;
+use Lightpack\Database\Lucid\AttributeHandler;
+use Lightpack\Database\Lucid\RelationHandler;
 
 class Model implements JsonSerializable
 {

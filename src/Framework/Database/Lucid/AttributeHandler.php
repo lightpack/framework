@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Database\Lucid\Attributes;
+namespace Lightpack\Database\Lucid;
 
 class AttributeHandler
 {
