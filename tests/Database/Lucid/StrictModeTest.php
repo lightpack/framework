@@ -119,7 +119,7 @@ class StrictModeTest extends TestCase
 
         // Should work fine with eager loading
         $strictProduct = $strictProduct->query()->with('owner')->where('id', '=', $product->id)->one();
-        print_r($strictProduct->toArray());
+        
         $this->assertNotNull($strictProduct->owner);
         $this->assertEquals('John', $strictProduct->owner->name);
     }

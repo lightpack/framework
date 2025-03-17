@@ -163,7 +163,9 @@ class Builder extends Query
                 $this->model->setEagerLoading(false);
 
                 foreach ($models as $model) {
-                    if (in_array($this->model->getRelationType(), ['hasOne', 'belongsTo'])) {
+                    if ($this->model->getRelationType() === 'hasOne') {
+                        $model->setAttribute($relation, $children->first([$this->model->getRelatingForeignKey() => $model->{$this->model->getPrimaryKey()}]));
+                    } elseif($this->model->getRelationType() === 'belongsTo') {
                         $model->setAttribute($relation, $children->find($model->{$this->model->getRelatingForeignKey()}));
                     } elseif ($this->model->getRelationType() === 'hasMany') {
                         $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
