@@ -37,7 +37,7 @@ class StrictModeTest extends TestCase
         $this->db = null;
     }
 
-    public function test_strict_mode_prevents_lazy_loading()
+    public function testStrictModePreventsLazyLoading()
     {
         // Create test data
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#000']);
@@ -58,7 +58,7 @@ class StrictModeTest extends TestCase
         $strictProduct->owner;
     }
 
-    public function test_strict_mode_prevents_non_whitelisted_relations()
+    public function testStrictModePreventsNonWhitelistedRelations()
     {
         // Create test data
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#000']);
@@ -81,7 +81,7 @@ class StrictModeTest extends TestCase
         $strictProduct->owner;
     }
 
-    public function test_strict_mode_allows_whitelisted_relations()
+    public function testStrictModeAllowsWhitelistedRelations()
     {
         // Create test data
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#000']);
@@ -103,7 +103,7 @@ class StrictModeTest extends TestCase
         $this->assertCount(1, $strictProduct->options);
     }
 
-    public function test_strict_mode_works_with_eager_loading()
+    public function testStrictModeWorksWithEagerLoading()
     {
         // Create test data
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#000']);
@@ -124,7 +124,7 @@ class StrictModeTest extends TestCase
         $this->assertEquals('John', $strictProduct->owner->name);
     }
 
-    public function test_strict_mode_works_with_collection_load()
+    public function testStrictModeWorksWithCollectionLoad()
     {
         // Create test data
         $this->db->table('products')->insert(['name' => 'Test Product 1', 'color' => '#000']);
@@ -156,7 +156,7 @@ class StrictModeTest extends TestCase
         }
     }
 
-    public function test_strict_mode_with_multiple_relations()
+    public function testStrictModeWithMultipleRelations()
     {
         // Create test data
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#000']);
