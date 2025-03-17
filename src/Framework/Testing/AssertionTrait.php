@@ -87,17 +87,10 @@ trait AssertionTrait
 
     public function assertSessionHas(string $key, $value = null): self
     {
-        $this->assertTrue(
-            session()->has($key),
-            "Failed asserting that session has key '{$key}'"
-        );
+        $this->assertTrue(session()->has($key), "Failed asserting that session has key '{$key}'");
 
         if ($value !== null) {
-            $this->assertEquals(
-                $value,
-                session()->get($key),
-                "Failed asserting that session key '{$key}' has value '{$value}'"
-            );
+            $this->assertEquals($value, session()->get($key), "Failed asserting that session key '{$key}' has value '{$value}'");
         }
 
         return $this;
