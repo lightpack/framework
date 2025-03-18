@@ -530,10 +530,6 @@ class Query
 
     protected function fetchAll(bool $executeBeforeFetchHook = true)
     {
-        if($executeBeforeFetchHook) {
-            // Removed model-related code
-        }
-
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
         $this->resetQuery();
@@ -550,8 +546,6 @@ class Query
 
     protected function fetchOne()
     {
-        // Removed model-related code
-
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -567,8 +561,6 @@ class Query
 
     public function column(string $column)
     {
-        // Removed model-related code
-
         $this->columns = [$column];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchColumn();

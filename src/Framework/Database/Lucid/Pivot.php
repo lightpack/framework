@@ -35,22 +35,37 @@ class Pivot extends Builder
      */
     public function sync(array $ids)
     {
-        // Get query builder for pivot table
         $query = new Query($this->pivotTable, $this->getConnection());
+        
+        // Get current IDs
+        $currentIds = $query->where($this->foreignKey, '=', $this->baseModel->id)
+                          ->select($this->associateKey)
+                          ->all($this->associateKey);
+        
+        $currentIds = array_column($currentIds, $this->associateKey);
 
-        // Delete all pivot rows
-        $query->where($this->foreignKey, '=', $this->baseModel->id)->delete();
+        // Find IDs to delete (in current but not in new)
+        $idsToDelete = array_diff($currentIds, $ids);
+        
+        // Find IDs to insert (in new but not in current)
+        $idsToInsert = array_values(array_diff($ids, $currentIds));
 
-        // Prepare data for pivot table
-        $data = array_map(function ($id) {
-            return [
-                $this->foreignKey => $this->baseModel->id,
-                $this->associateKey => $id,
-            ];
-        }, $ids);
+        // Delete removed IDs
+        if ($idsToDelete) {
+            $query->where($this->foreignKey, '=', $this->baseModel->id)
+                  ->whereIn($this->associateKey, $idsToDelete)
+                  ->delete();
+        }
 
-        // Insert new pivot rows
-        if ($data) {
+        // Insert new IDs
+        if ($idsToInsert) {
+            $data = array_map(function ($id) {
+                return [
+                    $this->foreignKey => $this->baseModel->id,
+                    $this->associateKey => $id,
+                ];
+            }, $idsToInsert);
+            
             $query->insert($data);
         }
     }
