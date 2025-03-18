@@ -165,21 +165,10 @@ Best practices for handling checkbox inputs:
 
 ### Password Fields
 
-Password fields require special handling for security:
+There are two approaches to handle password fields in Lightpack ORM:
 
-1. Use the `$hidden` property to exclude passwords from serialization:
-```php
-class User extends Model
-{
-    protected array $hidden = ['password'];
-}
+#### 1. Using Model Events (Basic Approach)
 
-// Now password won't appear in:
-$user->toArray();  // For API responses
-json_encode($user);  // For JSON serialization
-```
-
-2. Hash passwords before saving using model events:
 ```php
 class User extends Model
 {
@@ -187,26 +176,59 @@ class User extends Model
     
     public function beforeSave(Query $query): void
     {
-        // Only hash if password is being updated
-        if (isset($this->data->password)) {
+        if (isset($this->data->password) && $this->password !== '') {
             $this->data->password = password_hash($this->password, PASSWORD_DEFAULT);
+        } else {
+            unset($this->data->password);
         }
     }
-}
-```
 
-3. Verify passwords safely:
-```php
-class User extends Model
-{
     public function verifyPassword(string $password): bool
     {
         return password_verify($password, $this->password);
     }
 }
+```
 
-// Usage:
+#### 2. Using Hash Facade (Laravel-style Approach)
+
+For a more elegant approach similar to Laravel:
+
+```php
+class Hash 
+{
+    public static function make(string $value): string 
+    {
+        return password_hash($value, PASSWORD_DEFAULT);
+    }
+
+    public static function check(string $value, string $hashedValue): bool 
+    {
+        return password_verify($value, $hashedValue);
+    }
+}
+
+class User extends Model
+{
+    protected array $hidden = ['password'];
+    
+    public function setPassword(string $value): void
+    {
+        $this->password = Hash::make($value);
+    }
+
+    public function verifyPassword(string $password): bool
+    {
+        return Hash::check($password, $this->password);
+    }
+}
+
+// Usage in controller:
 $user = User::find(1);
+$user->setPassword($_POST['new_password']);
+$user->save();
+
+// Verify password:
 if ($user->verifyPassword($_POST['password'])) {
     // Password is correct
 }
@@ -224,29 +246,13 @@ protected array $hidden = [
 ];
 ```
 
-2. **Validate Before Hashing**:
-```php
-public function beforeSave(Query $query): void
-{
-    if (isset($this->data->password)) {
-        // Validate password strength
-        if (strlen($this->password) < 8) {
-            throw new \InvalidArgumentException('Password too short');
-        }
-        
-        // Hash password
-        $this->data->password = password_hash($this->password, PASSWORD_DEFAULT);
-    }
-}
-```
-
-3. **Handle Password Updates**:
+2. **Use Dedicated Methods**:
 ```php
 class User extends Model
 {
     public function updatePassword(string $newPassword): void
     {
-        $this->password = $newPassword;  // Will be hashed in beforeSave
+        $this->setPassword($newPassword);
         $this->save();
     }
     
@@ -265,30 +271,47 @@ class User extends Model
 $user->changePassword($_POST['current_password'], $_POST['new_password']);
 ```
 
-4. **Never Store Plain Passwords**:
-- Don't create casts for password fields
-- Always hash before saving
-- Never log or display password values
-- Use `password_hash()` and `password_verify()`
+3. **Password Update Rules**:
+   - Never store plain passwords
+   - Always hash before saving
+   - Don't create casts for password fields
+   - Handle empty password updates properly
+   - Use `password_hash()` and `password_verify()`
+   - Consider password strength validation
 
-5. **Handle Empty Password Updates**:
+4. **Empty Password Handling**:
 ```php
-public function beforeSave(Query $query): void
+public function setPassword(?string $value): void
 {
-    // Only hash if password is being updated and not empty
-    if (isset($this->data->password) && $this->password !== '') {
-        $this->data->password = password_hash($this->password, PASSWORD_DEFAULT);
-    } else {
-        // Remove empty password from update
-        unset($this->data->password);
+    if ($value === null || $value === '') {
+        return;  // Don't update password if empty
     }
+    
+    $this->password = Hash::make($value);
 }
 ```
 
-This ensures that:
-- Empty password submissions don't overwrite existing hash
+5. **Form Handling**:
+```php
+// In your controller:
+public function updatePassword(Request $request)
+{
+    $user = User::find(1);
+    
+    // Only update if password is provided
+    if ($request->has('password')) {
+        $user->setPassword($request->get('password'));
+    }
+    
+    $user->save();
+}
+```
+
+This ensures:
 - Passwords are always properly hashed
+- Empty password submissions don't overwrite existing hash
 - Sensitive data is never accidentally exposed
+- Clean and consistent API for password operations
 
 ## Best Practices
 
