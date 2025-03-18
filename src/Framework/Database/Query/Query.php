@@ -127,13 +127,13 @@ class Query
         return $result;
     }
 
-    public function alias(string $alias): self
+    public function alias(string $alias): static
     {
         $this->components['alias'] = $alias;
         return $this;
     }
 
-    public function select(string ...$columns): self
+    public function select(string ...$columns): static
     {
         $this->components['columns'] = $columns;
         return $this;
@@ -142,7 +142,7 @@ class Query
     /**
      * Lock the fetched rows from update until the transaction is commited.
      */
-    public function forUpdate(): self
+    public function forUpdate(): static
     {
         $this->components['lock']['for_update'] = true;
         return $this;
@@ -151,20 +151,20 @@ class Query
     /**
      * Skip any rows that are locked for update by other transactions.
      */
-    public function skipLocked(): self
+    public function skipLocked(): static
     {
         $this->components['lock']['skip_locked'] = true;
         return $this;
     }
 
-    public function from(string $table, string $alias = null): self
+    public function from(string $table, string $alias = null): static
     {
         $this->table = $table;
         $this->components['alias'] = $alias;
         return $this;
     }
 
-    public function distinct(): self
+    public function distinct(): static
     {
         $this->components['distinct'] = true;
         return $this;
@@ -177,7 +177,7 @@ class Query
      * @param string|null $operator
      * @param mixed $value
      */
-    public function where($column, string $operator = '=', $value = null, string $joiner = 'AND'): self
+    public function where($column, string $operator = '=', $value = null, string $joiner = 'AND'): static
     {
         if ($column instanceof Closure) {
             return $this->whereColumnIsAClosure($column, $joiner);
@@ -204,7 +204,7 @@ class Query
         return $this;
     }
 
-    public function whereRaw(string $where, array $values = [], string $joiner = 'AND'): self
+    public function whereRaw(string $where, array $values = [], string $joiner = 'AND'): static
     {
         $type = 'where_raw';
 
@@ -216,19 +216,19 @@ class Query
         return $this;
     }
 
-    public function orWhereRaw(string $where, array $values = []): self
+    public function orWhereRaw(string $where, array $values = []): static
     {
         $this->whereRaw($where, $values, 'OR');
         return $this;
     }
 
-    public function orWhere($column, string $operator = null, $value = null): self
+    public function orWhere($column, string $operator = null, $value = null): static
     {
         $this->where($column, $operator, $value, 'OR');
         return $this;
     }
 
-    public function whereIn($column, $values = null, string $joiner = 'AND'): self
+    public function whereIn($column, $values = null, string $joiner = 'AND'): static
     {
         if ($values instanceof Closure) {
             $this->where($column, 'IN', $values, $joiner);
@@ -241,13 +241,13 @@ class Query
         return $this;
     }
 
-    public function orWhereIn($column, $values): self
+    public function orWhereIn($column, $values): static
     {
         $this->whereIn($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNotIn($column, $values, string $joiner = 'AND'): self
+    public function whereNotIn($column, $values, string $joiner = 'AND'): static
     {
         if ($values instanceof Closure) {
             $this->where($column, 'NOT IN', $values, $joiner);
@@ -260,37 +260,37 @@ class Query
         return $this;
     }
 
-    public function orWhereNotIn($column, $values): self
+    public function orWhereNotIn($column, $values): static
     {
         $this->whereNotIn($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNull(string $column): self
+    public function whereNull(string $column): static
     {
         $this->where($column, 'IS NULL');
         return $this;
     }
 
-    public function whereNotNull(string $column): self
+    public function whereNotNull(string $column): static
     {
         $this->where($column, 'IS NOT NULL');
         return $this;
     }
 
-    public function orWhereNull(string $column): self
+    public function orWhereNull(string $column): static
     {
         $this->orWhere($column, 'IS NULL');
         return $this;
     }
 
-    public function orWhereNotNull(string $column): self
+    public function orWhereNotNull(string $column): static
     {
         $this->orWhere($column, 'IS NOT NULL');
         return $this;
     }
 
-    public function whereBetween(string $column, array $values, string $joiner = 'AND'): self
+    public function whereBetween(string $column, array $values, string $joiner = 'AND'): static
     {
         if(count($values) !== 2) {
             throw new \Exception('You must provide two values for the between clause');
@@ -303,13 +303,13 @@ class Query
         return $this;
     }
 
-    public function orWhereBetween($column, $values): self
+    public function orWhereBetween($column, $values): static
     {
         $this->whereBetween($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNotBetween($column, $values, string $joiner = 'AND'): self
+    public function whereNotBetween($column, $values, string $joiner = 'AND'): static
     {
         $operator = 'NOT BETWEEN';
         $type = 'where_not_between';
@@ -318,37 +318,37 @@ class Query
         return $this;
     }
 
-    public function orWhereNotBetween($column, $values): self
+    public function orWhereNotBetween($column, $values): static
     {
         $this->whereNotBetween($column, $values, 'OR');
         return $this;
     }
 
-    public function whereTrue(string $column): self
+    public function whereTrue(string $column): static
     {
         $this->where($column, 'IS TRUE');
         return $this;
     }
 
-    public function orWhereTrue(string $column): self
+    public function orWhereTrue(string $column): static
     {
         $this->orWhere($column, 'IS TRUE');
         return $this;
     }
 
-    public function whereFalse(string $column): self
+    public function whereFalse(string $column): static
     {
         $this->where($column, 'IS FALSE');
         return $this;
     }
 
-    public function orWhereFalse(string $column): self
+    public function orWhereFalse(string $column): static
     {
         $this->orWhere($column, 'IS FALSE');
         return $this;
     }
 
-    public function whereExists(Closure $callback): self
+    public function whereExists(Closure $callback): static
     {
         $query = new Query();
         $callback($query);
@@ -357,7 +357,7 @@ class Query
         return $this;
     }
 
-    public function whereNotExists(Closure $callback): self
+    public function whereNotExists(Closure $callback): static
     {
         $query = new Query();
         $callback($query);
