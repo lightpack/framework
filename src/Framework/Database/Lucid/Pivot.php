@@ -35,39 +35,41 @@ class Pivot extends Builder
      */
     public function sync(array $ids)
     {
-        $query = new Query($this->pivotTable, $this->getConnection());
-        
-        // Get current IDs
-        $currentIds = $query->where($this->foreignKey, '=', $this->baseModel->id)
-                          ->select($this->associateKey)
-                          ->all($this->associateKey);
-        
-        $currentIds = array_column($currentIds, $this->associateKey);
+        $this->getConnection()->transaction(function () use ($ids) {
+            $query = new Query($this->pivotTable, $this->getConnection());
 
-        // Find IDs to delete (in current but not in new)
-        $idsToDelete = array_diff($currentIds, $ids);
-        
-        // Find IDs to insert (in new but not in current)
-        $idsToInsert = array_values(array_diff($ids, $currentIds));
+            // Get current IDs
+            $currentIds = $query->where($this->foreignKey, '=', $this->baseModel->id)
+                ->select($this->associateKey)
+                ->all($this->associateKey);
 
-        // Delete removed IDs
-        if ($idsToDelete) {
-            $query->where($this->foreignKey, '=', $this->baseModel->id)
-                  ->whereIn($this->associateKey, $idsToDelete)
-                  ->delete();
-        }
+            $currentIds = array_column($currentIds, $this->associateKey);
 
-        // Insert new IDs
-        if ($idsToInsert) {
-            $data = array_map(function ($id) {
-                return [
-                    $this->foreignKey => $this->baseModel->id,
-                    $this->associateKey => $id,
-                ];
-            }, $idsToInsert);
-            
-            $query->insert($data);
-        }
+            // Find IDs to delete (in current but not in new)
+            $idsToDelete = array_diff($currentIds, $ids);
+
+            // Find IDs to insert (in new but not in current)
+            $idsToInsert = array_values(array_diff($ids, $currentIds));
+
+            // Delete removed IDs
+            if ($idsToDelete) {
+                $query->where($this->foreignKey, '=', $this->baseModel->id)
+                    ->whereIn($this->associateKey, $idsToDelete)
+                    ->delete();
+            }
+
+            // Insert new IDs
+            if ($idsToInsert) {
+                $data = array_map(function ($id) {
+                    return [
+                        $this->foreignKey => $this->baseModel->id,
+                        $this->associateKey => $id,
+                    ];
+                }, $idsToInsert);
+
+                $query->insert($data);
+            }
+        });
     }
 
     /**
@@ -77,7 +79,7 @@ class Pivot extends Builder
      */
     public function attach($ids)
     {
-        if(!is_array($ids)) {
+        if (!is_array($ids)) {
             $ids = [$ids];
         }
 
@@ -105,7 +107,7 @@ class Pivot extends Builder
      */
     public function detach($ids)
     {
-        if(!is_array($ids)) {
+        if (!is_array($ids)) {
             $ids = [$ids];
         }
 
