@@ -9,6 +9,7 @@ require_once 'Task.php';
 require_once 'Comment.php';
 require_once 'Article.php';
 require_once 'Manager.php';
+require_once 'CastModel.php';
 
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
@@ -16,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
-use Lightpack\Moment\Moment;
 
 final class ModelTest extends TestCase
 {
@@ -54,7 +54,7 @@ final class ModelTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers";
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -315,7 +315,7 @@ final class ModelTest extends TestCase
             ['name' => 'John'],
             ['name' => 'Jane'],
         ]);
-
+        
         $this->db->table('roles')->insert([
             ['name' => 'admin'],
             ['name' => 'user'],
@@ -1483,10 +1483,10 @@ final class ModelTest extends TestCase
         // bulk insert tasks
         $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
-            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
-
+        
         // fetch all projects with tasks count
         $projectModel = $this->db->model(Project::class);
 
@@ -1513,7 +1513,7 @@ final class ModelTest extends TestCase
         // bulk insert tasks
         $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
-            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
@@ -1945,5 +1945,94 @@ final class ModelTest extends TestCase
         $emptyProjects = $projectModel::query()->where('id', 999)->all();
         $this->assertNull($emptyProjects->first());
         $this->assertNull($emptyProjects->first(['status' => 'active']));
+    }
+
+    public function testModelAttributeCasting()
+    {
+        // Test all types of casting
+        $now = new \DateTime();
+        
+        $data = [
+            'string_col' => 123,
+            'integer_col' => '456',
+            'float_col' => '123.45',
+            'boolean_col' => 1,
+            'json_col' => json_encode(['key' => 'value', 'nested' => ['foo' => 'bar']]),
+            'date_col' => $now->format('Y-m-d'),
+            'datetime_col' => $now->format('Y-m-d H:i:s'),
+            'timestamp_col' => $now->format('Y-m-d H:i:s')
+        ];
+
+        $this->db->table('cast_models')->insert($data);
+        $model = $this->db->model(CastModel::class);
+        $record = $model->query()->one();
+
+        // Verify types after create
+        $this->assertIsString($record->string_col);
+        $this->assertEquals('123', $record->string_col);
+
+        $this->assertIsInt($record->integer_col);
+        $this->assertEquals(456, $record->integer_col);
+
+        $this->assertIsFloat($record->float_col);
+        $this->assertEquals(123.45, $record->float_col);
+
+        $this->assertIsBool($record->boolean_col);
+        $this->assertTrue($record->boolean_col);
+
+        $this->assertIsArray($record->json_col);
+        $this->assertEquals(['key' => 'value', 'nested' => ['foo' => 'bar']], $record->json_col);
+        
+        $this->assertEquals($now->format('Y-m-d'), $record->date_col);
+        $this->assertInstanceOf(\DateTimeInterface::class, $record->datetime_col);
+        $this->assertEquals(
+            $now->format('Y-m-d H:i:s'), 
+            $record->datetime_col->format('Y-m-d H:i:s')
+        );
+
+        $this->assertIsInt($record->timestamp_col);
+        $this->assertEquals($now->getTimestamp(), $record->timestamp_col);
+    }
+
+    public function testModelAttributeCastingWithNullValues()
+    {
+        $model = $this->db->model(CastModel::class);
+        
+        $data = [
+            'string_col' => null,
+            'integer_col' => null,
+            'float_col' => null,
+            'boolean_col' => null,
+            'json_col' => null,
+            'date_col' => null,
+            'datetime_col' => null,
+            'timestamp_col' => null,
+        ];
+
+        // Create with null values
+        $this->db->table('cast_models')->insert($data);
+        $model = $this->db->model(CastModel::class);
+        $record = $model->query()->one();
+
+        // Verify all values remain null
+        $this->assertNull($record->string_col);
+        $this->assertNull($record->integer_col);
+        $this->assertNull($record->float_col);
+        $this->assertNull($record->boolean_col);
+        $this->assertNull($record->json_col);
+        $this->assertNull($record->date_col);
+        $this->assertNull($record->datetime_col);
+        $this->assertNull($record->timestamp_col);
+
+        // Fetch and verify nulls persist
+        $fetched = $model->find($record->id);
+        $this->assertNull($fetched->string_col);
+        $this->assertNull($fetched->integer_col);
+        $this->assertNull($fetched->float_col);
+        $this->assertNull($fetched->boolean_col);
+        $this->assertNull($fetched->json_col);
+        $this->assertNull($fetched->date_col);
+        $this->assertNull($fetched->datetime_col);
+        $this->assertNull($fetched->timestamp_col);
     }
 }

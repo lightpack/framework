@@ -114,6 +114,21 @@ CREATE TABLE IF NOT EXISTS `articles` (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- create table cast_models for testing attribute casting
+DROP TABLE IF EXISTS `cast_models`;
+CREATE TABLE IF NOT EXISTS `cast_models` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `string_col` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `integer_col` int DEFAULT NULL,
+  `float_col` decimal(10,2) DEFAULT NULL,
+  `boolean_col` tinyint(1) DEFAULT NULL,
+  `json_col` json DEFAULT NULL,
+  `date_col` date DEFAULT NULL,
+  `datetime_col` datetime DEFAULT NULL,
+  `timestamp_col` timestamp DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 -- insert dummy data for products
 INSERT INTO `products` (`id`, `name`, `color`, `price`) VALUES
     (331, 'Dummy Product', '#09F', 100.00),

@@ -71,6 +71,18 @@ class AttributeHandler
     }
 
     /**
+     * Set raw attribute from database without casting.
+     */
+    public function setRaw(string $key, $value): void
+    {
+        if ($value !== null && $castType = $this->getCastType($key)) {
+            $value = $this->castHandler->cast($value, $castType);
+        }
+
+        $this->data->{$key} = $value;
+    }
+
+    /**
      * Check if attribute exists.
      */
     public function has(string $key): bool
@@ -85,6 +97,16 @@ class AttributeHandler
     {
         foreach ($attributes as $key => $value) {
             $this->set($key, $value);
+        }
+    }
+
+    /**
+     * Fill attributes from database.
+     */
+    public function fillRaw(array $attributes): void
+    {
+        foreach ($attributes as $key => $value) {
+            $this->setRaw($key, $value);
         }
     }
 

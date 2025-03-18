@@ -337,7 +337,7 @@ class Model implements JsonSerializable
 
     public function setAttributes(array $data)
     {
-        $this->attributes->fill($data);
+        $this->attributes->fillRaw($data);
     }
 
     public function hasAttribute(string $key)
