@@ -12,16 +12,6 @@ class CastHandler
      */
     public function cast(mixed $value, string $type): mixed
     {
-        // Handle null values
-        if ($value === null) {
-            return null;
-        }
-
-        // Handle false values (for empty relations)
-        if ($value === false) {
-            return null;
-        }
-
         return match($type) {
             'int', 'integer' => (int) $value,
             'real', 'float', 'double' => (float) $value,
@@ -40,16 +30,6 @@ class CastHandler
      */
     public function uncast(mixed $value, string $type): mixed
     {
-        // Handle null values
-        if ($value === null) {
-            return null;
-        }
-
-        // Handle false values (for empty relations)
-        if ($value === false) {
-            return null;
-        }
-
         return match($type) {
             'int', 'integer', 'real', 'float', 'double', 'string', 'bool', 'boolean' => $value,
             'array', 'json' => $this->uncastFromArray($value),
