@@ -416,7 +416,7 @@ class Query
      * @param integer|null $page
      * @return \Lightpack\Pagination\Pagination
      */
-    public function paginate(int $limit = null, int $page = null)
+    public function paginate(?int $limit = null, ?int $page = null)
     {
         // Preserve the columns because calling count() will reset the columns.
         $columns = $this->columns;
@@ -435,8 +435,7 @@ class Query
             return new Pagination([], $total);
         }
 
-        // Pass false because count() has already executed the hook
-        $items = $this->fetchAll(false);
+        $items = $this->fetchAll();
 
         return new Pagination($items, $total, $limit, $page);
     }
@@ -528,7 +527,7 @@ class Query
         }
     }
 
-    protected function fetchAll(bool $executeBeforeFetchHook = true)
+    protected function fetchAll()
     {
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
