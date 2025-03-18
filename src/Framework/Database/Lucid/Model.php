@@ -279,12 +279,12 @@ class Model implements JsonSerializable
 
     protected function insert(Query $query)
     {
-        return $query->insert($this->attributes->toArray());
+        return $query->insert($this->attributes->toDatabaseArray());
     }
 
     protected function update(Query $query)
     {
-        $data = $this->attributes->toArray();
+        $data = $this->attributes->toDatabaseArray();
         unset($data[$this->primaryKey]);
         return $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->update($data);
     }

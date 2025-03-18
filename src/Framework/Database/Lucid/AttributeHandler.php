@@ -76,6 +76,15 @@ class AttributeHandler
     }
 
     /**
+     * Get all attributes as array for database operations.
+     * This method returns all attributes regardless of hidden status.
+     */
+    public function toDatabaseArray(): array
+    {
+        return get_object_vars($this->data);
+    }
+
+    /**
      * Set hidden attributes.
      */
     public function setHidden(array $hidden): void
