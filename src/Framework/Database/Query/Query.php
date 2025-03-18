@@ -551,6 +551,10 @@ class Query
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
 
+        if($result == false) {
+            return null;
+        }
+
         return $result;
     }
 

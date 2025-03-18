@@ -91,7 +91,7 @@ final class QueryTest extends TestCase
 
         // Test 3
         $product = $this->query->where('color', '=', 'maroon')->one();
-        $this->assertFalse($product);
+        $this->assertNull($product);
         $this->query->resetQuery();
 
         // Test 4

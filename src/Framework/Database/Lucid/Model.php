@@ -38,6 +38,11 @@ class Model implements JsonSerializable
     protected $hidden = [];
 
     /**
+     * @var array The attributes that should be cast.
+     */
+    protected $casts = [];
+
+    /**
      * @var AttributeHandler
      */
     protected $attributes;
@@ -72,6 +77,7 @@ class Model implements JsonSerializable
         $this->attributes = new AttributeHandler();
         $this->attributes->setHidden($this->hidden);
         $this->attributes->setTimestamps($this->timestamps);
+        $this->attributes->setCasts($this->casts);
 
         $this->relations = new RelationHandler($this);
 

@@ -5,47 +5,87 @@ namespace Lightpack\Database\Lucid;
 class AttributeHandler
 {
     /**
-     * @var \stdClass Model data object
+     * @var \stdClass Attributes container
      */
     protected $data;
 
     /**
-     * @var array Attributes to be hidden for serialization or array conversion.
+     * @var array Attributes to be hidden
      */
     protected $hidden = [];
 
     /**
-     * @var bool Whether to use timestamps
+     * @var bool Enable timestamps
      */
     protected $timestamps = false;
+
+    /**
+     * @var array Cast definitions
+     */
+    protected array $casts = [];
+
+    /**
+     * @var CastHandler
+     */
+    protected CastHandler $castHandler;
 
     public function __construct()
     {
         $this->data = new \stdClass;
+        $this->castHandler = new CastHandler();
     }
 
     /**
-     * Get an attribute value.
+     * Get attribute with casting.
      */
     public function get(string $key, $default = null)
     {
-        return $this->data->{$key} ?? $default;
+        if (!isset($this->data->{$key})) {
+            return $default;
+        }
+
+        $value = $this->data->{$key};
+        
+        // Return null as is
+        if ($value === null) {
+            return null;
+        }
+        
+        if ($castType = $this->getCastType($key)) {
+            return $this->castHandler->cast($value, $castType);
+        }
+
+        return $value;
     }
 
     /**
-     * Set an attribute value.
+     * Set attribute with casting.
      */
     public function set(string $key, $value): void
     {
+        if ($value !== null && $castType = $this->getCastType($key)) {
+            $value = $this->castHandler->uncast($value, $castType);
+        }
+
         $this->data->{$key} = $value;
     }
 
     /**
-     * Check if an attribute exists.
+     * Check if attribute exists.
      */
     public function has(string $key): bool
     {
-        return property_exists($this->data, $key);
+        return isset($this->data->{$key});
+    }
+
+    /**
+     * Fill attributes.
+     */
+    public function fill(array $attributes): void
+    {
+        foreach ($attributes as $key => $value) {
+            $this->set($key, $value);
+        }
     }
 
     /**
@@ -57,31 +97,20 @@ class AttributeHandler
     }
 
     /**
-     * Set multiple attributes at once.
-     */
-    public function fill(array $data): void
-    {
-        $this->data = (object) $data;
-    }
-
-    /**
      * Get attributes as array, respecting hidden fields.
      */
     public function toArray(): array
     {
-        $data = get_object_vars($this->data);
-        return array_filter($data, function ($key) {
-            return !in_array($key, $this->hidden);
-        }, ARRAY_FILTER_USE_KEY);
+        $data = (array) $this->data;
+        return array_diff_key($data, array_flip($this->hidden));
     }
 
     /**
      * Get all attributes as array for database operations.
-     * This method returns all attributes regardless of hidden status.
      */
     public function toDatabaseArray(): array
     {
-        return get_object_vars($this->data);
+        return (array) $this->data;
     }
 
     /**
@@ -93,7 +122,7 @@ class AttributeHandler
     }
 
     /**
-     * Enable/disable timestamps.
+     * Set timestamps flag.
      */
     public function setTimestamps(bool $timestamps): void
     {
@@ -101,18 +130,37 @@ class AttributeHandler
     }
 
     /**
-     * Update timestamps when saving/updating.
+     * Set cast definitions.
      */
-    public function updateTimestamps(bool $isUpdate = false): void
+    public function setCasts(array $casts): void
+    {
+        $this->casts = $casts;
+    }
+
+    /**
+     * Get cast type for attribute.
+     */
+    protected function getCastType(string $key): ?string
+    {
+        return $this->casts[$key] ?? null;
+    }
+
+    /**
+     * Update timestamps.
+     */
+    public function updateTimestamps(bool $updating = true): void
     {
         if (!$this->timestamps) {
             return;
         }
 
-        if ($isUpdate) {
-            $this->data->updated_at = date('Y-m-d H:i:s');
-        } else {
-            $this->data->created_at = date('Y-m-d H:i:s');
+        $now = date('Y-m-d H:i:s');
+
+        if ($updating) {
+            $this->data->updated_at = $now;
+            return;
         }
+
+        $this->data->created_at = $now;
     }
 }
