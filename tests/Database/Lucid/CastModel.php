@@ -16,4 +16,9 @@ class CastModel extends Model
         'datetime_col' => 'datetime',
         'timestamp_col' => 'timestamp',
     ];
+
+    public function options()
+    {
+        return $this->pivot(self::class, 'cast_model_relations', 'parent_id', 'child_id');
+    }
 }

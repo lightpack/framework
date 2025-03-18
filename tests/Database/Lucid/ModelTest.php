@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
+use PhpParser\Node\Expr\Cast;
 
 final class ModelTest extends TestCase
 {
@@ -54,7 +55,7 @@ final class ModelTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models";
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -1852,9 +1853,7 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 3', $activeProjects->find(3)->name);
 
         // Test first() method with no conditions
-        $first = $activeProjects->first();
-        $this->assertNotNull($first);
-        $this->assertEquals('Project 1', $first->name);
+        $this->assertEquals('Project 1', $activeProjects->first()->name);
 
         // Test first() method with conditions
         $this->assertEquals('Project 3', $activeProjects->first(['name' => 'Project 3'])->name);
@@ -2110,5 +2109,60 @@ final class ModelTest extends TestCase
         $fetched = $model->find($model->id);
         $this->assertIsArray($fetched->json_col);
         $this->assertEquals(['updated' => true], $fetched->json_col);
+    }
+
+    public function testModelAttributeCastingWithRelations()
+    {
+        // Create a product with cast attributes
+        $product = $this->db->model(CastModel::class);
+        $product->string_col = 'Product 1';
+        $product->json_col = ['tags' => ['electronics', 'gadgets']];
+        $product->save();
+
+        // Create options with cast attributes
+        $option1 = $this->db->model(CastModel::class);
+        $option1->string_col = 'Option 1';
+        $option1->json_col = ['color' => 'red', 'size' => 'small'];
+        $option1->save();
+
+        $option2 = $this->db->model(CastModel::class);
+        $option2->string_col = 'Option 2';
+        $option2->json_col = ['color' => 'blue', 'size' => 'large'];
+        $option2->save();
+
+        // Link options to product
+        $this->db->table('cast_model_relations')->insert([
+            ['parent_id' => $product->id, 'child_id' => $option1->id],
+            ['parent_id' => $product->id, 'child_id' => $option2->id],
+        ]);
+
+        // Test collection with relations
+        $products = $product->query()
+            ->with('options')
+            ->all();
+
+        $this->assertCount(3, $products);
+        $product = $products->first();
+
+        // Verify main model casting
+        $this->assertIsString($product->string_col);
+        $this->assertEquals('Product 1', $product->string_col);
+        $this->assertIsArray($product->json_col);
+        $this->assertEquals(['tags' => ['electronics', 'gadgets']], $product->json_col);
+
+        // Verify relation casting
+        $this->assertCount(2, $product->options);
+        
+        $option = $product->options->first();
+        $this->assertIsString($option->string_col);
+        $this->assertEquals('Option 1', $option->string_col);
+        $this->assertIsArray($option->json_col);
+        $this->assertEquals(['color' => 'red', 'size' => 'small'], $option->json_col);
+
+        $option = $product->options[1];
+        $this->assertIsString($option->string_col);
+        $this->assertEquals('Option 2', $option->string_col);
+        $this->assertIsArray($option->json_col);
+        $this->assertEquals(['color' => 'blue', 'size' => 'large'], $option->json_col);
     }
 }

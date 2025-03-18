@@ -129,6 +129,13 @@ CREATE TABLE IF NOT EXISTS `cast_models` (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- create pivot table for CastModel relationships
+CREATE TABLE IF NOT EXISTS cast_model_relations (
+    parent_id INTEGER,
+    child_id INTEGER,
+    PRIMARY KEY (parent_id, child_id)
+);
+
 -- insert dummy data for products
 INSERT INTO `products` (`id`, `name`, `color`, `price`) VALUES
     (331, 'Dummy Product', '#09F', 100.00),
