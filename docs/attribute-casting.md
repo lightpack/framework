@@ -161,6 +161,135 @@ Best practices for handling checkbox inputs:
    - "1", "true", "on", 1 → true → 1 in DB
    - "0", "false", "", 0, null, false → false → 0 in DB
 
+## Handling Sensitive Fields
+
+### Password Fields
+
+Password fields require special handling for security:
+
+1. Use the `$hidden` property to exclude passwords from serialization:
+```php
+class User extends Model
+{
+    protected array $hidden = ['password'];
+}
+
+// Now password won't appear in:
+$user->toArray();  // For API responses
+json_encode($user);  // For JSON serialization
+```
+
+2. Hash passwords before saving using model events:
+```php
+class User extends Model
+{
+    protected array $hidden = ['password'];
+    
+    public function beforeSave(Query $query): void
+    {
+        // Only hash if password is being updated
+        if (isset($this->data->password)) {
+            $this->data->password = password_hash($this->password, PASSWORD_DEFAULT);
+        }
+    }
+}
+```
+
+3. Verify passwords safely:
+```php
+class User extends Model
+{
+    public function verifyPassword(string $password): bool
+    {
+        return password_verify($password, $this->password);
+    }
+}
+
+// Usage:
+$user = User::find(1);
+if ($user->verifyPassword($_POST['password'])) {
+    // Password is correct
+}
+```
+
+### Best Practices for Sensitive Data
+
+1. **Always Hide Sensitive Fields**:
+```php
+protected array $hidden = [
+    'password',
+    'remember_token',
+    'api_key',
+    'secret_key',
+];
+```
+
+2. **Validate Before Hashing**:
+```php
+public function beforeSave(Query $query): void
+{
+    if (isset($this->data->password)) {
+        // Validate password strength
+        if (strlen($this->password) < 8) {
+            throw new \InvalidArgumentException('Password too short');
+        }
+        
+        // Hash password
+        $this->data->password = password_hash($this->password, PASSWORD_DEFAULT);
+    }
+}
+```
+
+3. **Handle Password Updates**:
+```php
+class User extends Model
+{
+    public function updatePassword(string $newPassword): void
+    {
+        $this->password = $newPassword;  // Will be hashed in beforeSave
+        $this->save();
+    }
+    
+    public function changePassword(string $currentPassword, string $newPassword): bool
+    {
+        if (!$this->verifyPassword($currentPassword)) {
+            return false;
+        }
+        
+        $this->updatePassword($newPassword);
+        return true;
+    }
+}
+
+// Usage:
+$user->changePassword($_POST['current_password'], $_POST['new_password']);
+```
+
+4. **Never Store Plain Passwords**:
+- Don't create casts for password fields
+- Always hash before saving
+- Never log or display password values
+- Use `password_hash()` and `password_verify()`
+
+5. **Handle Empty Password Updates**:
+```php
+public function beforeSave(Query $query): void
+{
+    // Only hash if password is being updated and not empty
+    if (isset($this->data->password) && $this->password !== '') {
+        $this->data->password = password_hash($this->password, PASSWORD_DEFAULT);
+    } else {
+        // Remove empty password from update
+        unset($this->data->password);
+    }
+}
+```
+
+This ensures that:
+- Empty password submissions don't overwrite existing hash
+- Passwords are always properly hashed
+- Sensitive data is never accidentally exposed
+
 ## Best Practices
 
 1. **Type Safety**: Always define casts for attributes that should have specific types
