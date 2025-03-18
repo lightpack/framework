@@ -1852,7 +1852,9 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 3', $activeProjects->find(3)->name);
 
         // Test first() method with no conditions
-        $this->assertEquals('Project 1', $activeProjects->first()->name);
+        $first = $activeProjects->first();
+        $this->assertNotNull($first);
+        $this->assertEquals('Project 1', $first->name);
 
         // Test first() method with conditions
         $this->assertEquals('Project 3', $activeProjects->first(['name' => 'Project 3'])->name);
@@ -1981,15 +1983,20 @@ final class ModelTest extends TestCase
         $this->assertTrue($record->boolean_col);
 
         $this->assertIsArray($record->json_col);
-        $this->assertEquals(['key' => 'value', 'nested' => ['foo' => 'bar']], $record->json_col);
+        $this->assertEquals(
+            ['key' => 'value', 'nested' => ['foo' => 'bar']], 
+            $record->json_col,
+            'JSON in database does not match expected array structure'
+        );
         
         $this->assertEquals($now->format('Y-m-d'), $record->date_col);
+        
         $this->assertInstanceOf(\DateTimeInterface::class, $record->datetime_col);
         $this->assertEquals(
             $now->format('Y-m-d H:i:s'), 
             $record->datetime_col->format('Y-m-d H:i:s')
         );
-
+        
         $this->assertIsInt($record->timestamp_col);
         $this->assertEquals($now->getTimestamp(), $record->timestamp_col);
     }
@@ -2034,5 +2041,74 @@ final class ModelTest extends TestCase
         $this->assertNull($fetched->date_col);
         $this->assertNull($fetched->datetime_col);
         $this->assertNull($fetched->timestamp_col);
+    }
+
+    public function testModelAttributeCastingWithSave()
+    {
+        $model = $this->db->model(CastModel::class);
+        $now = new \DateTime();
+
+        // Test creating through model
+        $model->string_col = 123;
+        $model->integer_col = '456';
+        $model->float_col = '123.45';
+        $model->boolean_col = 1;
+        $model->json_col = ['key' => 'value'];
+        $model->date_col = $now->format('Y-m-d');
+        $model->datetime_col = $now->format('Y-m-d H:i:s');
+        $model->timestamp_col = $now->format('Y-m-d H:i:s');
+        
+        $model->save();
+        
+        // Verify types after save
+        $this->assertIsString($model->string_col);
+        $this->assertEquals('123', $model->string_col);
+        
+        $this->assertIsInt($model->integer_col);
+        $this->assertEquals(456, $model->integer_col);
+        
+        $this->assertIsFloat($model->float_col);
+        $this->assertEquals(123.45, $model->float_col);
+        
+        $this->assertIsBool($model->boolean_col);
+        $this->assertTrue($model->boolean_col);
+        
+        $this->assertIsArray($model->json_col);
+        $this->assertEquals(['key' => 'value'], $model->json_col);
+        
+        $this->assertEquals($now->format('Y-m-d'), $model->date_col);
+        
+        $this->assertInstanceOf(\DateTimeInterface::class, $model->datetime_col);
+        $this->assertEquals(
+            $now->format('Y-m-d H:i:s'),
+            $model->datetime_col->format('Y-m-d H:i:s')
+        );
+        
+        $this->assertIsInt($model->timestamp_col);
+        $this->assertEquals($now->getTimestamp(), $model->timestamp_col);
+
+        // Verify database received correct format
+        $raw = $this->db->table('cast_models')->where('id', $model->id)->one();
+        $this->assertEquals('123', $raw->string_col);
+        $this->assertEquals('456', $raw->integer_col);
+        $this->assertEquals('123.45', $raw->float_col);
+        $this->assertEquals('1', $raw->boolean_col);
+        $this->assertEquals(['key' => 'value'], json_decode($raw->json_col, true));
+        $this->assertEquals($now->format('Y-m-d'), $raw->date_col);
+        $this->assertEquals($now->format('Y-m-d H:i:s'), $raw->datetime_col);
+        $this->assertEquals($now->format('Y-m-d H:i:s'), $raw->timestamp_col);
+
+        // Test updating through model
+        $model->json_col = ['updated' => true];
+        $model->save();
+
+        // Verify update was cast correctly
+        $raw = $this->db->table('cast_models')->where('id', $model->id)->one();
+        $this->assertEquals(['updated' => true], json_decode($raw->json_col, true));
+
+        // Verify we can read it back
+        $fetched = $model->find($model->id);
+        $this->assertIsArray($fetched->json_col);
+        $this->assertEquals(['updated' => true], $fetched->json_col);
     }
 }

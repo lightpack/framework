@@ -193,7 +193,7 @@ class Model implements JsonSerializable
         }
 
         if ($data) {
-            $this->attributes->fill((array)$data);
+            $this->attributes->fillRaw((array)$data);
         }
 
         return $this;
