@@ -12,6 +12,10 @@ class CastHandler
      */
     public function cast(mixed $value, string $type): mixed
     {
+        if ($value === null) {
+            return null;
+        }
+
         return match($type) {
             'int', 'integer' => (int) $value,
             'real', 'float', 'double' => (float) $value,
