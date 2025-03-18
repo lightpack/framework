@@ -545,6 +545,7 @@ class Query
 
     protected function fetchOne()
     {
+        $this->limit(1);
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
