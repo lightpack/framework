@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
-use PhpParser\Node\Expr\Cast;
 
 final class ModelTest extends TestCase
 {
