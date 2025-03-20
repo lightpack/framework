@@ -8,20 +8,24 @@ use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
 
-class TenantModel extends Model {
-    public function applyScope(Query $query) {
+class TenantModel extends Model
+{
+    public function applyScope(Query $query)
+    {
         $query->where('tenant_id', 1);  // Hardcode tenant_id=1 for test
     }
 }
 
-class TestModel extends TenantModel {
+class TestModel extends TenantModel
+{
     protected $table = 'users';
 }
 
-class ModelScopeTest extends TestCase {
+class ModelScopeTest extends TestCase
+{
     private DB $db;
 
-    protected function setUp(): void 
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -61,35 +65,80 @@ class ModelScopeTest extends TestCase {
         $this->db->query($sql);
     }
 
-    public function testTenantScopeAppliedToCount() {
+    public function testTenantScopeAppliedToCount()
+    {
         $count = TestModel::query()->count();
         $this->assertEquals(3, $count);  // Should only count tenant_id=1
     }
 
-    public function testTenantScopeAppliedToAll() {
+    public function testTenantScopeAppliedToAll()
+    {
         $users = TestModel::query()->all();
         $this->assertCount(3, $users);
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $this->assertEquals(1, $user->tenant_id);
         }
     }
 
-    public function testTenantScopeAppliedToWhere() {
+    public function testTenantScopeAppliedToWhere()
+    {
         $users = TestModel::query()
             ->where('name', 'LIKE', '%user%')
             ->all();
-        
+
         $this->assertCount(3, $users);
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $this->assertEquals(1, $user->tenant_id);
         }
     }
 
-    public function testRawSqlStillScoped() {
+    public function testRawSqlStillScoped()
+    {
         $count = TestModel::query()
             ->select('SELECT COUNT(*) FROM users')
             ->column('COUNT(*)');
-            
+
         $this->assertEquals(3, $count);
+    }
+
+    public function testTenantScopeAppliedToDelete()
+    {
+        // Try to delete all users
+        TestModel::query()->delete();
+
+        // Should only delete tenant_id=1
+        $remaining = $this->db->table('users')
+            ->select('tenant_id, COUNT(*) as count')
+            ->groupBy('tenant_id')
+            ->all();
+
+        // Should still have tenant 2 and null tenant records
+        $this->assertCount(2, $remaining);
+        foreach ($remaining as $row) {
+            $this->assertNotEquals(1, $row->tenant_id);
+        }
+    }
+
+    public function testTenantScopeAppliedToUpdate()
+    {
+        // Try to update all users
+        TestModel::query()->update(['name' => 'Changed']);
+
+        // Check tenant 1 users are updated
+        $tenant1Users = $this->db->table('users')
+            ->where('tenant_id', 1)
+            ->all();
+        foreach ($tenant1Users as $user) {
+            $this->assertEquals('Changed', $user->name);
+        }
+
+        // Check other users are unchanged
+        $otherUsers = $this->db->table('users')
+            ->where('tenant_id', '!=', 1)
+            ->orWhereNull('tenant_id')
+            ->all();
+        foreach ($otherUsers as $user) {
+            $this->assertNotEquals('Changed', $user->name);
+        }
     }
 }
