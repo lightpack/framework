@@ -7,6 +7,7 @@ use Lightpack\Database\Lucid\Model;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
+use Lightpack\Exceptions\RecordNotFoundException;
 
 class TenantModel extends Model
 {
@@ -23,7 +24,8 @@ class TestModel extends TenantModel
 
 class ModelScopeTest extends TestCase
 {
-    private DB $db;
+    /** @var \Lightpack\Database\DB */
+    private $db;
 
     protected function setUp(): void
     {
@@ -63,6 +65,7 @@ class ModelScopeTest extends TestCase
     {
         $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
         $this->db->query($sql);
+        $this->db = null;
     }
 
     public function testTenantScopeAppliedToCount()
@@ -140,5 +143,20 @@ class ModelScopeTest extends TestCase
         foreach ($otherUsers as $user) {
             $this->assertNotEquals('Changed', $user->name);
         }
+    }
+
+    public function testTenantScopeAppliedToFind()
+    {
+        // Create user in tenant 2
+        $this->db->table('users')->insert([
+            'name' => 'Other Tenant',
+            'tenant_id' => 2,
+            'active' => 1,
+        ]);
+        $otherId = $this->db->lastInsertId();
+
+        // Should not be able to find it
+        $this->expectException(RecordNotFoundException::class);
+        (new TestModel)->find($otherId);
     }
 }

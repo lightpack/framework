@@ -185,6 +185,7 @@ class Model implements JsonSerializable
     {
         $query = new Query($this->table, $this->getConnection());
 
+        $this->applyScope($query);
         $this->beforeFetch($query);
         $data = $query->where($this->primaryKey, '=', $id)->one();
         $this->afterFetch();
