@@ -684,3 +684,261 @@ This case study demonstrates:
 7. Proper testing approach
 
 Each component has a clear responsibility and the models remain focused on their core purpose: data structure and relationships.
+
+## Understanding the Architecture
+
+### Key Concepts & Terminology
+
+#### 1. Models (What, When, Why)
+- **What**: Simple classes that represent database tables and their relationships
+- **When**: Use when you need to interact with database tables
+- **Why**: To provide a clean interface for data access and relationships
+- **Where**: In the data layer, closest to the database
+- **How**: Extend `Model` class, define table and relationships only
+
+```php
+// THIS is a model's job
+class Post extends Model {
+    protected $table = 'posts';
+    protected $casts = ['published_at' => 'datetime'];
+    
+    public function author() {
+        return $this->belongsTo(User::class);
+    }
+}
+
+// NOT a model's job
+class Post extends Model {
+    public function publish() {        // ❌ Business logic
+    public function validateTitle() {  // ❌ Validation
+    public function toSearchIndex() {  // ❌ External concerns
+}
+```
+
+#### 2. Value Objects (What, When, Why)
+- **What**: Small, immutable objects representing a domain concept
+- **When**: Use when a simple value needs validation or behavior
+- **Why**: To encapsulate validation and provide type safety
+- **Where**: In the domain layer, used by models and services
+- **How**: Create plain PHP classes with validation in constructor
+
+```php
+// Good Value Object
+class Email {
+    private string $address;
+    
+    public function __construct(string $address) {
+        if (!filter_var($address, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Invalid email');
+        }
+        $this->address = $address;
+    }
+    
+    public function domain(): string {
+        return substr(strrchr($this->address, "@"), 1);
+    }
+}
+
+// Usage
+$user->email = new Email('john@example.com');  // Type-safe, validated
+```
+
+#### 3. Repositories (What, When, Why)
+- **What**: Classes that encapsulate database queries
+- **When**: Use when you have complex queries or need to reuse queries
+- **Why**: To keep query logic in one place and make it reusable
+- **Where**: In the data access layer, between models and services
+- **How**: Create methods that return models or collections
+
+```php
+// Good Repository
+class PostRepository {
+    public function findPublished(): array {
+        return Post::query()
+            ->where('status', 'published')
+            ->where('published_at', '<=', now())
+            ->orderBy('published_at', 'DESC')
+            ->all();
+    }
+}
+
+// BAD: Don't scatter queries
+class PostController {
+    public function index() {
+        $posts = Post::query()  // ❌ Complex query in controller
+            ->where('status', 'published')
+            ->where('published_at', '<=', now())
+            ->orderBy('published_at', 'DESC')
+            ->all();
+    }
+}
+```
+
+#### 4. Domain Services (What, When, Why)
+- **What**: Classes that implement business rules
+- **When**: Use when an operation doesn't naturally belong to a single model
+- **Why**: To keep business logic organized and testable
+- **Where**: In the domain layer, used by application services
+- **How**: Create focused classes for specific business operations
+
+```php
+// Good Domain Service
+class OrderProcessor {
+    public function process(Order $order): void {
+        $this->validateStock($order);
+        $this->calculateTotal($order);
+        $this->applyDiscount($order);
+    }
+}
+
+// BAD: Don't put business logic in models
+class Order extends Model {
+    public function process() {  // ❌ Complex operation in model
+        $this->validateStock();
+        $this->calculateTotal();
+        $this->applyDiscount();
+    }
+}
+```
+
+#### 5. Application Services (What, When, Why)
+- **What**: Classes that orchestrate multiple operations
+- **When**: Use when you need to coordinate multiple steps
+- **Why**: To provide a single entry point for complex operations
+- **Where**: Between controllers and domain layer
+- **How**: Inject dependencies, coordinate steps
+
+```php
+// Good Application Service
+class PostService {
+    public function __construct(
+        private PostRepository $posts,
+        private SlugGenerator $slugs,
+        private SearchIndexer $search
+    ) {}
+    
+    public function create(array $data): Post {
+        // Orchestrates the creation process
+        $post = $this->posts->create($data);
+        $post->slug = $this->slugs->generate($post);
+        $this->search->index($post);
+        return $post;
+    }
+}
+
+// BAD: Don't orchestrate in controllers
+class PostController {
+    public function store(Request $request) {  // ❌ Too much responsibility
+        $post = new Post($request->all());
+        $post->slug = Str::slug($post->title);
+        $post->save();
+        SearchIndex::update($post);
+    }
+}
+```
+
+### Common Anti-Patterns to Avoid
+
+1. **Fat Models**
+```php
+// ❌ DON'T: Model doing everything
+class User extends Model {
+    public function register() {}    // Business logic
+    public function suspend() {}     // Business logic
+    public function sendEmail() {}   // External service
+    public function toJson() {}      // Presentation
+}
+
+// ✅ DO: Keep models focused on data
+class User extends Model {
+    protected $table = 'users';
+    protected $casts = ['settings' => 'json'];
+    
+    public function profile() {
+        return $this->hasOne(Profile::class);
+    }
+}
+```
+
+2. **Anemic Services**
+```php
+// ❌ DON'T: Just passing through
+class UserService {
+    public function create(array $data) {
+        return User::create($data);  // No value added
+    }
+}
+
+// ✅ DO: Add business value
+class UserService {
+    public function register(array $data) {
+        $user = $this->users->create($data);
+        $this->passwordHasher->hash($user);
+        $this->roles->assignDefault($user);
+        $this->mailer->sendWelcome($user);
+        return $user;
+    }
+}
+```
+
+3. **Logic in Controllers**
+```php
+// ❌ DON'T: Business logic in controllers
+class OrderController {
+    public function process(Order $order) {
+        if ($order->items->isEmpty()) {
+            throw new ValidationException();
+        }
+        
+        $total = $order->items->sum('price');
+        if ($total > 1000) {
+            $discount = $total * 0.1;
+        }
+        // More business logic...
+    }
+}
+
+// ✅ DO: Controllers should delegate
+class OrderController {
+    public function process(Order $order) {
+        $this->orderService->process($order);
+        return redirect()->with('success', 'Order processed');
+    }
+}
+```
+
+### Decision Making Guide
+
+1. **Where to Put New Code?**
+   - Data structure/relationships → Model
+   - Complex queries → Repository
+   - Business rules → Domain Service
+   - Coordination → Application Service
+   - HTTP/Request handling → Controller
+
+2. **When to Create a Service?**
+   - Operation involves multiple models
+   - Complex business rules
+   - External service integration
+   - Need to maintain transaction boundary
+   - Code reuse across controllers
+
+3. **When to Use Value Objects?**
+   - Need validation for a value
+   - Value has its own behavior
+   - Want type safety
+   - Concept appears in multiple places
+
+4. **When to Use Repository?**
+   - Same query used in multiple places
+   - Complex query conditions
+   - Need to abstract query logic
+   - Want to make queries testable
+
+This architecture promotes:
+- Single Responsibility Principle
+- Separation of Concerns
+- Don't Repeat Yourself (DRY)
+- Easy Testing
+- Clear Boundaries
+- Maintainable Code
