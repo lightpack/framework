@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS `owners` (
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `tenant_id` int NULL DEFAULT NULL,
   `name` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
   `active` TINYINT(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (id)

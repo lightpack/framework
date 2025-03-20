@@ -253,7 +253,16 @@ class Model implements JsonSerializable
 
     public static function query(): Builder
     {
-        return new Builder(new static);
+        $model = new static;
+        $builder = new Builder($model);
+        $model->applyScope($builder);
+
+        return $builder;
+    }
+
+    protected function applyScope(Query $query)
+    {
+        // ...
     }
 
     public function beforeFetch(Query $query)

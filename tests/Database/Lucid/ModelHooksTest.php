@@ -6,6 +6,7 @@ use Lightpack\Database\Query\Query;
 use Lightpack\Database\Lucid\Model;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
+use Lightpack\Database\DB;
 
 class TestModel extends Model 
 {
@@ -51,24 +52,25 @@ class TestModel extends Model
 
 class ModelHooksTest extends TestCase 
 {
-    private $testModel;
+    private DB $db;
+    private TestModel $testModel;
 
     protected function setUp(): void 
     {
         parent::setUp();
 
         $config = require __DIR__ . '/../tmp/mysql.config.php';
-        $db = new \Lightpack\Database\Adapters\Mysql($config);
+        $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
-        $stmt = $db->query($sql);
+        $stmt = $this->db->query($sql);
         $stmt->closeCursor();
-        $this->testModel = $db->model(TestModel::class);
+        $this->testModel = $this->db->model(TestModel::class);
 
         // Configure container
         $container = Container::getInstance();
 
-        $container->register('db', function () use($db) {
-            return $db;
+        $container->register('db', function () {
+            return $this->db;
         });
 
         $container->register('logger', function () {
@@ -77,6 +79,12 @@ class ModelHooksTest extends TestCase
                 public function critical($message, $context = []) {}
             };
         });
+    }
+
+    public function tearDown(): void
+    {
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
+        $this->db->query($sql);
     }
 
     public function testFetchHooks() 
