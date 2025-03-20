@@ -184,8 +184,10 @@ class Model implements JsonSerializable
     public function find($id, bool $fail = true): self
     {
         $query = new Query($this->table, $this->getConnection());
-        $this->beforeFind($query);
+
+        $this->beforeFetch($query);
         $data = $query->where($this->primaryKey, '=', $id)->one();
+        $this->afterFetch();
 
         if (!$data && $fail) {
             throw new RecordNotFoundException(
@@ -196,8 +198,7 @@ class Model implements JsonSerializable
         if ($data) {
             $this->attributes->fillRaw((array)$data);
         }
-        
-        $this->afterFind();
+
         return $this;
     }
 
@@ -219,9 +220,14 @@ class Model implements JsonSerializable
         $this->afterSave();
     }
 
-    public function delete() {
+    public function delete($id = null)
+    {
+        if ($id) {
+            $this->find($id);
+        }
+
         if (!$this->attributes->get($this->primaryKey)) {
-            throw new \RuntimeException('Cannot delete: model has no ID');
+            return;
         }
 
         $query = $this->query();
@@ -250,32 +256,32 @@ class Model implements JsonSerializable
         return new Builder(new static);
     }
 
-    protected function beforeFind(Query $query)
+    public function beforeFetch(Query $query)
     {
         // Hook method
     }
 
-    protected function afterFind()
+    public function afterFetch()
     {
         // Hook method
     }
 
-    protected function beforeSave(Query $query)
+    public function beforeSave(Query $query)
     {
         // Hook method
     }
 
-    protected function afterSave()
+    public function afterSave()
     {
         // Hook method
     }
 
-    protected function beforeDelete(Query $query)
+    public function beforeDelete(Query $query)
     {
         // Hook method
     }
 
-    protected function afterDelete()
+    public function afterDelete()
     {
         // Hook method
     }

@@ -17,33 +17,33 @@ class TestModel extends Model
         return $this->hooksCalled;
     }
 
-    protected function beforeFind(Query $query) 
+    public function beforeFetch(Query $query) 
     {
-        $this->hooksCalled[] = 'beforeFind';
+        $this->hooksCalled[] = 'beforeFetch';
         $query->where('active', '=', 1);
     }
 
-    protected function afterFind() 
+    public function afterFetch() 
     {
-        $this->hooksCalled[] = 'afterFind';
+        $this->hooksCalled[] = 'afterFetch';
     }
 
-    protected function beforeSave(Query $query) 
+    public function beforeSave(Query $query) 
     {
         $this->hooksCalled[] = 'beforeSave';
     }
 
-    protected function afterSave() 
+    public function afterSave() 
     {
         $this->hooksCalled[] = 'afterSave';
     }
 
-    protected function beforeDelete(Query $query) 
+    public function beforeDelete(Query $query) 
     {
         $this->hooksCalled[] = 'beforeDelete';
     }
 
-    protected function afterDelete() 
+    public function afterDelete() 
     {
         $this->hooksCalled[] = 'afterDelete';
     }
@@ -84,8 +84,8 @@ class ModelHooksTest extends TestCase
         $this->testModel->find(1, false);
         $hooks = $this->testModel->getHooksCalled();
         
-        $this->assertContains('beforeFind', $hooks);
-        $this->assertContains('afterFind', $hooks);
+        $this->assertContains('beforeFetch', $hooks);
+        $this->assertContains('afterFetch', $hooks);
     }
 
     public function testSaveHooks() 
@@ -125,11 +125,8 @@ class ModelHooksTest extends TestCase
     public function testQueryModificationInBeforeHook() 
     {
         $this->testModel->find(1, false);
-        // The beforeFind hook adds where active = 1
-        // We can verify this by checking the generated SQL
-        // This would require exposing the query object or its SQL
-        // For now we just verify the hook was called
+
         $hooks = $this->testModel->getHooksCalled();
-        $this->assertContains('beforeFind', $hooks);
+        $this->assertContains('beforeFetch', $hooks);
     }
 }
