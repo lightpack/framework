@@ -709,9 +709,9 @@ class Post extends Model {
 
 // NOT a model's job
 class Post extends Model {
-    public function publish() {        // ❌ Business logic
-    public function validateTitle() {  // ❌ Validation
-    public function toSearchIndex() {  // ❌ External concerns
+    public function publish() {        // Business logic
+    public function validateTitle() {  // Validation
+    public function toSearchIndex() {  // External concerns
 }
 ```
 
@@ -765,7 +765,7 @@ class PostRepository {
 // BAD: Don't scatter queries
 class PostController {
     public function index() {
-        $posts = Post::query()  // ❌ Complex query in controller
+        $posts = Post::query()  // Complex query in controller
             ->where('status', 'published')
             ->where('published_at', '<=', now())
             ->orderBy('published_at', 'DESC')
@@ -793,7 +793,7 @@ class OrderProcessor {
 
 // BAD: Don't put business logic in models
 class Order extends Model {
-    public function process() {  // ❌ Complex operation in model
+    public function process() {  // Complex operation in model
         $this->validateStock();
         $this->calculateTotal();
         $this->applyDiscount();
@@ -828,7 +828,7 @@ class PostService {
 
 // BAD: Don't orchestrate in controllers
 class PostController {
-    public function store(Request $request) {  // ❌ Too much responsibility
+    public function store(Request $request) {  // Too much responsibility
         $post = new Post($request->all());
         $post->slug = Str::slug($post->title);
         $post->save();
@@ -841,7 +841,7 @@ class PostController {
 
 1. **Fat Models**
 ```php
-// ❌ DON'T: Model doing everything
+// BAD: Model doing everything
 class User extends Model {
     public function register() {}    // Business logic
     public function suspend() {}     // Business logic
@@ -849,7 +849,7 @@ class User extends Model {
     public function toJson() {}      // Presentation
 }
 
-// ✅ DO: Keep models focused on data
+// GOOD: Keep models focused on data
 class User extends Model {
     protected $table = 'users';
     protected $casts = ['settings' => 'json'];
@@ -862,14 +862,14 @@ class User extends Model {
 
 2. **Anemic Services**
 ```php
-// ❌ DON'T: Just passing through
+// BAD: Just passing through
 class UserService {
     public function create(array $data) {
         return User::create($data);  // No value added
     }
 }
 
-// ✅ DO: Add business value
+// GOOD: Add business value
 class UserService {
     public function register(array $data) {
         $user = $this->users->create($data);
@@ -883,7 +883,7 @@ class UserService {
 
 3. **Logic in Controllers**
 ```php
-// ❌ DON'T: Business logic in controllers
+// BAD: Business logic in controllers
 class OrderController {
     public function process(Order $order) {
         if ($order->items->isEmpty()) {
@@ -898,7 +898,7 @@ class OrderController {
     }
 }
 
-// ✅ DO: Controllers should delegate
+// GOOD: Controllers should delegate
 class OrderController {
     public function process(Order $order) {
         $this->orderService->process($order);
@@ -942,3 +942,355 @@ This architecture promotes:
 - Easy Testing
 - Clear Boundaries
 - Maintainable Code
+
+## Deep Dive: Repository Pattern
+
+### What is a Repository?
+
+A repository mediates between the domain and data mapping layers, acting like an in-memory collection of domain objects.
+
+```php
+// Basic repository structure
+class PostRepository {
+    public function find(int $id): ?Post { }     // Single record
+    public function all(): array { }              // All records
+    public function matching(array $criteria): array { }  // Filtered
+    public function save(Post $post): void { }    // Persistence
+    public function delete(Post $post): void { }  // Removal
+}
+```
+
+### Why Use Repositories?
+
+1. **Centralized Query Logic**
+```php
+// GOOD: Single source of truth
+class PostRepository {
+    public function findPublished(): array {
+        return Post::query()
+            ->where('status', 'published')
+            ->where('published_at', '<=', now())
+            ->orderBy('published_at', 'DESC')
+            ->all();
+    }
+}
+
+// BAD: Duplicated queries everywhere
+class PostController {
+    public function index() {
+        $posts = Post::query()  // Complex query in controller
+            ->where('status', 'published')
+            ->where('published_at', '<=', now())
+            ->orderBy('published_at', 'DESC')
+            ->all();
+    }
+}
+
+class RssController {
+    public function feed() {
+        // Same query duplicated! 
+        $posts = Post::query()
+            ->where('status', 'published')
+            ->where('published_at', '<=', now())
+            ->orderBy('published_at', 'DESC')
+            ->all();
+    }
+}
+```
+
+### Repository Best Practices
+
+1. **Name Methods Clearly**
+```php
+// BAD: Unclear names
+class UserRepository {
+    public function get() {}      // Get what?
+    public function find() {}     // Find by what?
+    public function filter() {}   // Filter how?
+}
+
+// GOOD: Clear intent
+class UserRepository {
+    public function findByEmail(string $email): ?User {}
+    public function findActiveSubscribers(): array {}
+    public function findByRole(string $role): array {}
+}
+```
+
+2. **Return Types**
+```php
+class PostRepository {
+    // Single record: Return nullable model
+    public function findById(int $id): ?Post {
+        return Post::query()->find($id);
+    }
+    
+    // Multiple records: Return array
+    public function findByAuthor(User $author): array {
+        return Post::query()
+            ->where('author_id', $author->id)
+            ->all();
+    }
+}
+```
+
+3. **Encapsulate Complex Queries**
+```php
+class OrderRepository {
+    public function findPendingWithItems(): array {
+        return Order::query()
+            ->where('status', 'pending')
+            ->whereHas('items', function($q) {
+                $q->where('quantity', '>', 0);
+            })
+            ->with(['items.product', 'customer'])
+            ->orderBy('created_at', 'DESC')
+            ->all();
+    }
+}
+```
+
+4. **Use Criteria Pattern for Flexible Queries**
+```php
+// Reusable criteria
+class PublishedCriteria {
+    public function apply(Query $query): void {
+        $query->where('status', 'published')
+              ->where('published_at', '<=', now());
+    }
+}
+
+class RecentCriteria {
+    public function apply(Query $query): void {
+        $query->where('created_at', '>=', now()->subDays(7));
+    }
+}
+
+// Repository with criteria
+class PostRepository {
+    public function matching(array $criteria): array {
+        $query = Post::query();
+        
+        foreach ($criteria as $criterion) {
+            $criterion->apply($query);
+        }
+        
+        return $query->all();
+    }
+}
+
+// Usage
+$posts = $repository->matching([
+    new PublishedCriteria(),
+    new RecentCriteria()
+]);
+```
+
+### Common Repository Patterns
+
+1. **Caching Repository**
+```php
+class CachingPostRepository implements PostRepository {
+    public function __construct(
+        private PostRepository $repository,
+        private Cache $cache
+    ) {}
+    
+    public function findById(int $id): ?Post {
+        return $this->cache->remember(
+            "post.{$id}",
+            fn() => $this->repository->findById($id)
+        );
+    }
+}
+```
+
+2. **Searching Repository**
+```php
+class SearchingPostRepository implements PostRepository {
+    public function search(string $query): array {
+        return Post::query()
+            ->where('title', 'LIKE', "%{$query}%")
+            ->orWhere('content', 'LIKE', "%{$query}%")
+            ->orderBy('published_at', 'DESC')
+            ->all();
+    }
+}
+```
+
+3. **Filtering Repository**
+```php
+class FilteringPostRepository implements PostRepository {
+    public function filter(array $filters): array {
+        $query = Post::query();
+        
+        if (isset($filters['category'])) {
+            $query->whereHas('category', function($q) use($filters) {
+                $q->where('slug', $filters['category']);
+            });
+        }
+        
+        if (isset($filters['author'])) {
+            $query->where('author_id', $filters['author']);
+        }
+        
+        return $query->all();
+    }
+}
+```
+
+### Testing Repositories
+
+```php
+class PostRepositoryTest extends TestCase {
+    private PostRepository $repository;
+    
+    public function setUp(): void {
+        parent::setUp();
+        $this->repository = new PostRepository();
+    }
+    
+    public function testFindsPublishedPosts() {
+        // Create test data
+        Post::create([
+            'title' => 'Published',
+            'status' => 'published',
+            'published_at' => now()
+        ]);
+        
+        Post::create([
+            'title' => 'Draft',
+            'status' => 'draft'
+        ]);
+        
+        // Test repository
+        $posts = $this->repository->findPublished();
+        
+        $this->assertCount(1, $posts);
+        $this->assertEquals('Published', $posts[0]->title);
+    }
+    
+    public function testSearchesPosts() {
+        Post::create(['title' => 'Hello World']);
+        Post::create(['title' => 'Goodbye World']);
+        
+        $posts = $this->repository->search('Hello');
+        
+        $this->assertCount(1, $posts);
+        $this->assertEquals('Hello World', $posts[0]->title);
+    }
+}
+```
+
+### Repository Anti-Patterns
+
+1. **Exposing Query Builder**
+```php
+// BAD: Leaking abstraction
+class PostRepository {
+    public function query(): Query {
+        return Post::query();  // Don't expose internal query builder
+    }
+}
+```
+
+2. **Business Logic in Repository**
+```php
+// BAD: Repository doing too much
+class OrderRepository {
+    public function process(Order $order) {  // Business logic doesn't belong here
+        $order->calculateTotal();
+        $order->charge();
+        $order->save();
+    }
+}
+```
+
+3. **Anemic Repository**
+```php
+// BAD: Just wrapping model methods
+class PostRepository {
+    public function all() {
+        return Post::all();  // No value added
+    }
+    
+    public function find($id) {
+        return Post::find($id);  // Just proxying
+    }
+}
+```
+
+### When to Use Repository Pattern?
+
+Use When:
+- Complex queries are used in multiple places
+- Need to centralize query logic
+- Want to make database access testable
+- Need to implement caching
+- Want to switch data sources easily
+- Want to enforce consistent data access patterns
+- Need to maintain single responsibility principle
+
+Don't Use When:
+- Already have a different data access abstraction
+- Repository would just proxy model methods without adding value
+- Application is too small to justify the abstraction
+- Team is not familiar with the pattern and proper training isn't possible
+
+The key is not whether operations are simple or complex, but whether you need:
+1. Consistent data access patterns
+2. Centralized query logic
+3. Testable data layer
+4. Clean separation of concerns
+
+Even for simple CRUD, repositories can provide value by:
+- Enforcing consistent naming conventions
+- Centralizing query logic
+- Making testing easier
+- Providing a clean abstraction layer
+- Making future changes easier
+
+```php
+// Simple but valuable repository
+class UserRepository {
+    // Consistent naming
+    public function findById(int $id): ?User {}
+    public function findByEmail(string $email): ?User {}
+    
+    // Centralized queries
+    public function create(array $data): User {}
+    public function update(User $user, array $data): void {}
+    
+    // Easy to modify behavior later
+    public function delete(User $user): void {
+        // Start simple
+        $user->delete();
+        
+        // Easy to add features later:
+        // - Soft deletes
+        // - Event dispatching
+        // - Cache invalidation
+        // - Audit logging
+    }
+}
+```
+
+### Repository Layer Architecture
+
+```
+Controller → Service → Repository → Model
+                   ↓
+              Domain Objects
+```
+
+1. **Controllers**: Handle HTTP, delegate to services
+2. **Services**: Orchestrate business operations
+3. **Repositories**: Handle data access
+4. **Models**: Represent data structure
+5. **Domain Objects**: Implement business rules
+
+This layering ensures:
+- Clean separation of concerns
+- Testable components
+- Maintainable codebase
+- Flexible architecture
