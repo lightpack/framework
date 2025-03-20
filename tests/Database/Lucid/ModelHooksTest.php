@@ -18,33 +18,22 @@ class TestHookModel extends Model
         return $this->hooksCalled;
     }
 
-    public function beforeFetch(Query $query) 
-    {
-        $this->hooksCalled[] = 'beforeFetch';
-        $query->where('active', '=', 1);
-    }
-
-    public function afterFetch() 
-    {
-        $this->hooksCalled[] = 'afterFetch';
-    }
-
-    public function beforeSave(Query $query) 
+    protected function beforeSave() 
     {
         $this->hooksCalled[] = 'beforeSave';
     }
 
-    public function afterSave() 
+    protected function afterSave() 
     {
         $this->hooksCalled[] = 'afterSave';
     }
 
-    public function beforeDelete(Query $query) 
+    protected function beforeDelete() 
     {
         $this->hooksCalled[] = 'beforeDelete';
     }
 
-    public function afterDelete() 
+    protected function afterDelete() 
     {
         $this->hooksCalled[] = 'afterDelete';
     }

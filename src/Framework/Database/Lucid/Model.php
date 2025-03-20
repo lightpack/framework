@@ -264,7 +264,7 @@ class Model implements JsonSerializable
         // ...
     }
 
-    protected function beforeSave(Query $query)
+    protected function beforeSave()
     {
         // Hook method
     }
@@ -274,7 +274,7 @@ class Model implements JsonSerializable
         // Hook method
     }
 
-    protected function beforeDelete(Query $query)
+    protected function beforeDelete()
     {
         // Hook method
     }
