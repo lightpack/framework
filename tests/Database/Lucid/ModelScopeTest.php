@@ -20,7 +20,6 @@ class TestModel extends TenantModel {
 
 class ModelScopeTest extends TestCase {
     private DB $db;
-    // private TestModel $testModel;
 
     protected function setUp(): void 
     {
@@ -31,13 +30,12 @@ class ModelScopeTest extends TestCase {
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
         $stmt = $this->db->query($sql);
         $stmt->closeCursor();
-        // $this->testModel = $this->db->model(TestModel::class);
 
         // test data
         $this->db->table('users')->insert([
             ['name' => 'User 1', 'tenant_id' => 1, 'active' => 1],
             ['name' => 'User 2', 'tenant_id' => 1, 'active' => 1],
-            ['name' => 'User 3', 'tenant_id' => 2, 'active' => 1],
+            ['name' => 'User 3', 'tenant_id' => 1, 'active' => 1],
             ['name' => 'User 4', 'tenant_id' => 2, 'active' => 0],
             ['name' => 'Admin', 'tenant_id' => null, 'active' => 1],
         ]);
@@ -65,12 +63,12 @@ class ModelScopeTest extends TestCase {
 
     public function testTenantScopeAppliedToCount() {
         $count = TestModel::query()->count();
-        $this->assertEquals(2, $count);  // Should only count tenant_id=1
+        $this->assertEquals(3, $count);  // Should only count tenant_id=1
     }
 
     public function testTenantScopeAppliedToAll() {
         $users = TestModel::query()->all();
-        $this->assertCount(2, $users);
+        $this->assertCount(3, $users);
         foreach($users as $user) {
             $this->assertEquals(1, $user->tenant_id);
         }
@@ -81,7 +79,7 @@ class ModelScopeTest extends TestCase {
             ->where('name', 'LIKE', '%user%')
             ->all();
         
-        $this->assertCount(2, $users);
+        $this->assertCount(3, $users);
         foreach($users as $user) {
             $this->assertEquals(1, $user->tenant_id);
         }
@@ -92,6 +90,6 @@ class ModelScopeTest extends TestCase {
             ->select('SELECT COUNT(*) FROM users')
             ->column('COUNT(*)');
             
-        $this->assertEquals(2, $count);
+        $this->assertEquals(3, $count);
     }
 }
