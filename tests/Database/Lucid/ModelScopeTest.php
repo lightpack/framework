@@ -17,15 +17,14 @@ class TenantModel extends Model
     }
 }
 
-class TestModel extends TenantModel
+class TestScopeModel extends TenantModel
 {
     protected $table = 'users';
 }
 
 class ModelScopeTest extends TestCase
 {
-    /** @var \Lightpack\Database\DB */
-    private $db;
+    private ?DB $db;
 
     protected function setUp(): void
     {
@@ -70,13 +69,13 @@ class ModelScopeTest extends TestCase
 
     public function testTenantScopeAppliedToCount()
     {
-        $count = TestModel::query()->count();
+        $count = TestScopeModel::query()->count();
         $this->assertEquals(3, $count);  // Should only count tenant_id=1
     }
 
     public function testTenantScopeAppliedToAll()
     {
-        $users = TestModel::query()->all();
+        $users = TestScopeModel::query()->all();
         $this->assertCount(3, $users);
         foreach ($users as $user) {
             $this->assertEquals(1, $user->tenant_id);
@@ -85,7 +84,7 @@ class ModelScopeTest extends TestCase
 
     public function testTenantScopeAppliedToWhere()
     {
-        $users = TestModel::query()
+        $users = TestScopeModel::query()
             ->where('name', 'LIKE', '%user%')
             ->all();
 
@@ -97,7 +96,7 @@ class ModelScopeTest extends TestCase
 
     public function testRawSqlStillScoped()
     {
-        $count = TestModel::query()
+        $count = TestScopeModel::query()
             ->select('SELECT COUNT(*) FROM users')
             ->column('COUNT(*)');
 
@@ -107,7 +106,7 @@ class ModelScopeTest extends TestCase
     public function testTenantScopeAppliedToDelete()
     {
         // Try to delete all users
-        TestModel::query()->delete();
+        TestScopeModel::query()->delete();
 
         // Should only delete tenant_id=1
         $remaining = $this->db->table('users')
@@ -125,7 +124,7 @@ class ModelScopeTest extends TestCase
     public function testTenantScopeAppliedToUpdate()
     {
         // Try to update all users
-        TestModel::query()->update(['name' => 'Changed']);
+        TestScopeModel::query()->update(['name' => 'Changed']);
 
         // Check tenant 1 users are updated
         $tenant1Users = $this->db->table('users')
@@ -157,6 +156,6 @@ class ModelScopeTest extends TestCase
 
         // Should not be able to find it
         $this->expectException(RecordNotFoundException::class);
-        (new TestModel)->find($otherId);
+        (new TestScopeModel)->find($otherId);
     }
 }

@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
 
-class TestModel extends Model 
+class TestHookModel extends Model 
 {
     protected $table = 'users';
     private $hooksCalled = [];
@@ -52,8 +52,8 @@ class TestModel extends Model
 
 class ModelHooksTest extends TestCase 
 {
-    private DB $db;
-    private TestModel $testModel;
+    private ?DB $db;
+    private TestHookModel $TestHookModel;
 
     protected function setUp(): void 
     {
@@ -64,7 +64,7 @@ class ModelHooksTest extends TestCase
         $sql = file_get_contents(__DIR__ . '/../tmp/db.sql');
         $stmt = $this->db->query($sql);
         $stmt->closeCursor();
-        $this->testModel = $this->db->model(TestModel::class);
+        $this->TestHookModel = $this->db->model(TestHookModel::class);
 
         // Configure container
         $container = Container::getInstance();
@@ -85,22 +85,14 @@ class ModelHooksTest extends TestCase
     {
         $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
         $this->db->query($sql);
-    }
-
-    public function testFetchHooks() 
-    {
-        $this->testModel->find(1, false);
-        $hooks = $this->testModel->getHooksCalled();
-        
-        $this->assertContains('beforeFetch', $hooks);
-        $this->assertContains('afterFetch', $hooks);
+        $this->db = null;
     }
 
     public function testSaveHooks() 
     {
-        $this->testModel->name = 'Test User';
-        $this->testModel->save();
-        $hooks = $this->testModel->getHooksCalled();
+        $this->TestHookModel->name = 'Test User';
+        $this->TestHookModel->save();
+        $hooks = $this->TestHookModel->getHooksCalled();
         
         $this->assertContains('beforeSave', $hooks);
         $this->assertContains('afterSave', $hooks);
@@ -108,33 +100,25 @@ class ModelHooksTest extends TestCase
 
     public function testDeleteHooks() 
     {
-        $this->testModel->name = 'Test User';
-        $this->testModel->save();
+        $this->TestHookModel->name = 'Test User';
+        $this->TestHookModel->save();
 
-        $this->testModel->delete();
-        $hooks = $this->testModel->getHooksCalled();
+        $this->TestHookModel->delete();
+        $hooks = $this->TestHookModel->getHooksCalled();
         
         $this->assertContains('beforeDelete', $hooks);
         $this->assertContains('afterDelete', $hooks);
     }
 
-    public function testHookOrder() 
+    public function testHookModelOrder() 
     {
-        $this->testModel->name = 'Test User';
-        $this->testModel->save();
-        $hooks = $this->testModel->getHooksCalled();
+        $this->TestHookModel->name = 'Test User';
+        $this->TestHookModel->save();
+        $hooks = $this->TestHookModel->getHooksCalled();
         
         $saveIndex = array_search('beforeSave', $hooks);
         $afterSaveIndex = array_search('afterSave', $hooks);
         
         $this->assertLessThan($afterSaveIndex, $saveIndex, 'beforeSave should be called before afterSave');
-    }
-
-    public function testQueryModificationInBeforeHook() 
-    {
-        $this->testModel->find(1, false);
-
-        $hooks = $this->testModel->getHooksCalled();
-        $this->assertContains('beforeFetch', $hooks);
     }
 }

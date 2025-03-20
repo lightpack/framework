@@ -24,23 +24,14 @@ class Builder extends Query
         parent::__construct($model->getTableName(), $model->getConnection());
     }
 
-    protected function executeBeforeFetchHookForModel()
-    {
-        if($this->model) {
-            $this->model->beforeFetch($this);
-        }
-    }
-
     public function all()
     {
-        $this->executeBeforeFetchHookForModel();
         $results = parent::all();
         return $this->hydrate($results);
     }
 
     public function one()
     {
-        $this->executeBeforeFetchHookForModel();
         $result = parent::one();
         
         if ($result) {
@@ -52,7 +43,6 @@ class Builder extends Query
 
     public function column(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
         return parent::column($column);
     }
 
@@ -63,7 +53,6 @@ class Builder extends Query
      */
     public function paginate(?int $limit = null, ?int $page = null)
     {
-        $this->executeBeforeFetchHookForModel();
         $pagination = parent::paginate($limit, $page);
         
         if ($pagination->items()) {

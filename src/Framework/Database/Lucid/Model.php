@@ -186,9 +186,7 @@ class Model implements JsonSerializable
         $query = new Query($this->table, $this->getConnection());
 
         $this->applyScope($query);
-        $this->beforeFetch($query);
         $data = $query->where($this->primaryKey, '=', $id)->one();
-        $this->afterFetch();
 
         if (!$data && $fail) {
             throw new RecordNotFoundException(
@@ -266,32 +264,22 @@ class Model implements JsonSerializable
         // ...
     }
 
-    public function beforeFetch(Query $query)
+    protected function beforeSave(Query $query)
     {
         // Hook method
     }
 
-    public function afterFetch()
+    protected function afterSave()
     {
         // Hook method
     }
 
-    public function beforeSave(Query $query)
+    protected function beforeDelete(Query $query)
     {
         // Hook method
     }
 
-    public function afterSave()
-    {
-        // Hook method
-    }
-
-    public function beforeDelete(Query $query)
-    {
-        // Hook method
-    }
-
-    public function afterDelete()
+    protected function afterDelete()
     {
         // Hook method
     }
