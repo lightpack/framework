@@ -24,6 +24,11 @@ class Builder extends Query
         parent::__construct($model->getTableName(), $model->getConnection());
     }
 
+    public function getModel(): Model
+    {
+        return $this->model;
+    }
+
     public function all()
     {
         $results = parent::all();

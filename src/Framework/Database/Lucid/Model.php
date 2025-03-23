@@ -259,6 +259,22 @@ class Model implements JsonSerializable
         return $builder;
     }
 
+    public static function filters(array $filters): Builder
+    {
+        $builder = self::query();
+        $model = $builder->getModel();
+
+        foreach($filters as $key => $value) {
+            $method = 'scope' . str()->camelize($key);
+
+            if(method_exists($model, $method)) {
+                $model->{$method}($builder, $value);
+            }
+        }
+
+        return $builder;
+    }
+
     protected function applyScope(Query $query)
     {
         // ...
