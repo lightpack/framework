@@ -111,9 +111,20 @@ class CastHandler
         }
 
         if (is_string($value)) {
-            $date = date_create($value);
-            if ($date) {
-                return $date->getTimestamp();
+            // Handle @ prefix for Unix timestamp strings
+            if (str_starts_with($value, '@')) {
+                return (int) substr($value, 1);
+            }
+            
+            // If the string is numeric, treat it as a Unix timestamp
+            if (is_numeric($value)) {
+                return (int) $value;
+            }
+            
+            // Otherwise try to parse it as a date string
+            $timestamp = strtotime($value);
+            if ($timestamp !== false) {
+                return $timestamp;
             }
         }
 
