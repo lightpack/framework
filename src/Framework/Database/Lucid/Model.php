@@ -68,6 +68,22 @@ class Model implements JsonSerializable
     protected $loadedRelations = [];
 
     /**
+     * The transformer(s) for this model.
+     * 
+     * Can be:
+     * - string: Single transformer class (e.g., UserTransformer::class)
+     * - array: Multiple transformers for different contexts
+     *         [
+     *             'api' => UserApiTransformer::class,
+     *             'view' => UserViewTransformer::class
+     *         ]
+     * - null: No transformation
+     * 
+     * @var string|array|null
+     */
+    protected $transformer = null;
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
@@ -131,9 +147,9 @@ class Model implements JsonSerializable
 
         // Execute relation
         $query = $this->{$key}();
-        $result = $this->relations->getRelationType() === 'hasMany' || 
-                 $this->relations->getRelationType() === 'pivot' || 
-                 $this->relations->getRelationType() === 'hasManyThrough'
+        $result = $this->relations->getRelationType() === 'hasMany' ||
+            $this->relations->getRelationType() === 'pivot' ||
+            $this->relations->getRelationType() === 'hasManyThrough'
             ? $query->all()
             : $query->one();
 
@@ -206,7 +222,7 @@ class Model implements JsonSerializable
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
         $this->attributes->updateTimestamps($primaryKeyValue !== null);
         $query = $this->query();
-        
+
         $this->beforeSave($query);
 
         if ($primaryKeyValue !== null) {
@@ -264,10 +280,10 @@ class Model implements JsonSerializable
         $builder = self::query();
         $model = $builder->getModel();
 
-        foreach($filters as $key => $value) {
+        foreach ($filters as $key => $value) {
             $method = 'scope' . str()->camelize($key);
 
-            if(method_exists($model, $method)) {
+            if (method_exists($model, $method)) {
                 $model->{$method}($builder, $value);
             }
         }
@@ -387,7 +403,7 @@ class Model implements JsonSerializable
 
         foreach ($data as $key => $value) {
             if (is_object($value)) {
-                if($value instanceof Collection || $value instanceof Model) {
+                if ($value instanceof Collection || $value instanceof Model) {
                     $data[$key] = $value->toArray();
                 }
             }
@@ -411,8 +427,8 @@ class Model implements JsonSerializable
         $exclude = array_merge($exclude, [$this->primaryKey, 'created_at', 'updated_at']);
         $data = $this->attributes->toArray();
 
-        foreach($data as $key => $value) {
-            if(!in_array($key, $exclude)) {
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $exclude)) {
                 $instance->setAttribute($key, $value);
             }
         }
@@ -449,22 +465,40 @@ class Model implements JsonSerializable
     /**
      * Transform the model using its transformer
      */
-    public function transform(array $fields = [], array $includes = []): array
+    public function transform(array $options = []): array
     {
         if (!$this->transformer) {
             throw new Exception('No transformer defined for model: ' . get_class($this));
         }
 
-        $transformer = new $this->transformer();
-        
-        if ($fields) {
-            $transformer->fields($fields);
+        // Single transformer case
+        if (is_string($this->transformer)) {
+            $transformer = new $this->transformer();
         }
-        
-        if ($includes) {
-            $transformer->including($includes);
+        // Multiple transformers case
+        else {
+            $group = $options['group'] ?? 'api';  // Default to 'api'
+
+            if (!isset($this->transformer[$group])) {
+                $available = implode(', ', array_keys($this->transformer));
+                throw new \RuntimeException(
+                    "Invalid transformer group '{$group}' for " . get_class($this) .
+                        ". Available groups: {$available}"
+                );
+            }
+
+            $transformer = new $this->transformer[$group]();
         }
-        
+
+        // Apply options
+        if (isset($options['fields'])) {
+            $transformer->fields($options['fields']);
+        }
+
+        if (isset($options['includes'])) {
+            $transformer->includes($options['includes']);
+        }
+
         return $transformer->transform($this);
     }
 }

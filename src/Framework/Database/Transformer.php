@@ -36,7 +36,7 @@ abstract class Transformer
         return $this->loadIncludes($model, $data);
     }
 
-    public function including($relations): self
+    public function includes($relations): self
     {
         if (is_string($relations)) {
             $relations = [$relations];
@@ -80,7 +80,7 @@ abstract class Transformer
         }
 
         $this->currentRelation = $relationName;
-        $transformer = $transformer->including($nested)->fields($this->getNestedFields());
+        $transformer = $transformer->includes($nested)->fields($this->getNestedFields());
 
         if ($relation instanceof Collection) {
             $results = [];

@@ -96,7 +96,7 @@ class TransformerTest extends TestCase
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
-            ->including('tasks')
+            ->includes('tasks')
             ->fields([
                 'self' => ['name'],
                 'tasks' => ['id', 'name'],
@@ -121,7 +121,7 @@ class TransformerTest extends TestCase
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
-            ->including('tasks.comments')
+            ->includes('tasks.comments')
             ->fields([
                 'self' => ['name'],
                 'tasks' => ['name'],
@@ -150,7 +150,7 @@ class TransformerTest extends TestCase
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
-            ->including(['tasks', 'tasks.comments'])
+            ->includes(['tasks', 'tasks.comments'])
             ->fields([
                 'self' => ['id', 'name'],
                 'tasks' => ['name'],
@@ -188,7 +188,7 @@ class TransformerTest extends TestCase
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
-            ->including(['tasks', 'nonexistent'])
+            ->includes(['tasks', 'nonexistent'])
             ->fields([
                 'self' => ['name'],
                 'tasks' => ['name']
@@ -214,7 +214,7 @@ class TransformerTest extends TestCase
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
-            ->including(['tasks'])
+            ->includes(['tasks'])
             ->fields([
                 'self' => ['name'],
                 'tasks' => ['name']
@@ -233,7 +233,7 @@ class TransformerTest extends TestCase
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
-            ->including(['tasks'])
+            ->includes(['tasks'])
             ->fields([
                 'self' => ['name'],
                 'tasks' => ['name']
@@ -272,10 +272,13 @@ class TransformerTest extends TestCase
         $project = new Project(1);
 
         $result = $project->transform([
-            'self' => ['name'],
-            'tasks' => ['name'],
-            'tasks.comments' => ['content']
-        ], ['tasks.comments']);
+            'includes' => ['tasks.comments'],
+            'fields' => [
+                'self' => ['name'],
+                'tasks' => ['name'],
+                'tasks.comments' => ['content'],
+            ],
+        ]);
 
         $this->assertSame([
             'name' => 'Project 1',
@@ -300,9 +303,12 @@ class TransformerTest extends TestCase
         ]);
 
         $result = $projects->transform([
-            'self' => ['name'],
-            'tasks' => ['name']
-        ], ['tasks']);
+            'includes' => ['tasks'],
+            'fields' => [
+                'self' => ['name'],
+                'tasks' => ['name'],
+            ], 
+        ]);
 
         $this->assertSame([
             [
@@ -344,9 +350,12 @@ class TransformerTest extends TestCase
         );
 
         $result = $pagination->transform([
-            'self' => ['name'],
-            'tasks' => ['name']
-        ], ['tasks']);
+            'includes' => ['tasks'],
+            'fields' => [
+                'self' => ['name'],
+                'tasks' => ['name'],
+            ], 
+        ]);
 
         $this->assertSame([
             'data' => [
@@ -397,8 +406,10 @@ class TransformerTest extends TestCase
         );
 
         $result = $pagination->transform([
-            'self' => ['name']
-        ], []);
+            'fields' => [
+                'self' => ['name']
+            ]
+        ]);
 
         $this->assertSame([
             'data' => [
@@ -427,7 +438,7 @@ class TransformerTest extends TestCase
 
         // Test comma notation (direct relations)
         $result = (new \ProjectTransformer)
-            ->including(['tasks', 'comments'])
+            ->includes(['tasks', 'comments'])
             ->transform($project);
 
         $this->assertArrayHasKey('tasks', $result);
@@ -445,9 +456,9 @@ class TransformerTest extends TestCase
 
         // Test dot notation (nested relations)
         $result = (new \ProjectTransformer)
-            ->including('tasks.comments')
+            ->includes('tasks.comments')
             ->transform($project);
-            
+
         $this->assertArrayHasKey('tasks', $result);
         $this->assertCount(2, $result['tasks']);
         

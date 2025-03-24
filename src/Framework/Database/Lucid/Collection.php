@@ -278,8 +278,13 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     /**
      * Transform the collection using the model's transformer
+     * 
+     * @param array $options Transformation options:
+     *                      - fields: Field selection for models and relations
+     *                      - includes: Relations to include
+     *                      - group: Transformer group to use
      */
-    public function transform(array $fields = [], array $includes = []): array
+    public function transform(array $options = []): array
     {
         if (empty($this->items)) {
             return [];
@@ -287,7 +292,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
         $result = [];
         foreach ($this->items as $item) {
-            $result[] = $item->transform($fields, $includes);
+            $result[] = $item->transform($options);
         }
         return $result;
     }
