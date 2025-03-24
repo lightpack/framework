@@ -44,16 +44,31 @@ class Pagination extends BasePagination implements IteratorAggregate
     {
         $arr = parent::toArray();
 
-        $arr['items'] = $this->items->toArray();
+        $arr['items'] = is_array($this->items) ? $this->items : $this->items->toArray();
 
         return $arr;
     }
 
-    public function transform(array $fields = [], array $includes = []): self
+    public function transform(array $fields = [], array $includes = []): array
     {
-        $this->fields = $fields;
-        $this->includes = $includes;
-        $this->items = $this->items->transform($fields, $includes);
-        return $this;
+        $totalPages = (int) ceil($this->total / $this->perPage);
+        
+        $result = [
+            'data' => $this->items->transform($fields, $includes),
+            'meta' => [
+                'current_page' => $this->currentPage,
+                'per_page' => $this->perPage,
+                'total' => $this->total,
+                'total_pages' => $totalPages
+            ],
+            'links' => [
+                'first' => '?page=1',
+                'last' => '?page=' . $totalPages,
+                'prev' => $this->currentPage > 1 ? '?page=' . ($this->currentPage - 1) : null,
+                'next' => $this->currentPage < $totalPages ? '?page=' . ($this->currentPage + 1) : null
+            ]
+        ];
+
+        return $result;
     }
 }

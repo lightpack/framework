@@ -13,6 +13,7 @@ use Project;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
+use Lightpack\Http\Request;
 
 class TransformerTest extends TestCase
 {
@@ -42,6 +43,13 @@ class TransformerTest extends TestCase
                 public function critical($message, $context = []) {}
             };
         });
+
+        // required for pagination transformer test
+        $container->register('request', function () {
+            return new Request();
+        });
+
+        $_SERVER['REQUEST_URI'] = '';
 
         $this->createTestData();
     }
@@ -315,6 +323,100 @@ class TransformerTest extends TestCase
                         'name' => 'Task 3'
                     ]
                 ]
+            ]
+        ], $result);
+    }
+
+    public function testPaginationTransform()
+    {
+        // Create a collection with first page items
+        $collection = new Collection([
+            new Project(1),
+            new Project(2)
+        ]);
+
+        // Create pagination with 2 items per page (3 total items = 2 pages)
+        $pagination = new \Lightpack\Database\Lucid\Pagination(
+            $collection, 
+            3,  // total records
+            2,  // per page
+            1   // current page
+        );
+
+        $result = $pagination->transform([
+            'self' => ['name'],
+            'tasks' => ['name']
+        ], ['tasks']);
+
+        $this->assertSame([
+            'data' => [
+                [
+                    'name' => 'Project 1',
+                    'tasks' => [
+                        [
+                            'name' => 'Task 1'
+                        ]
+                    ]
+                ],
+                [
+                    'name' => 'Project 2',
+                    'tasks' => [
+                        [
+                            'name' => 'Task 2'
+                        ],
+                        [
+                            'name' => 'Task 3'
+                        ]
+                    ]
+                ]
+            ],
+            'meta' => [
+                'current_page' => 1,
+                'per_page' => 2,
+                'total' => 3,
+                'total_pages' => 2
+            ],
+            'links' => [
+                'first' => '?page=1',
+                'last' => '?page=2',
+                'prev' => null,  // null because we're on first page
+                'next' => '?page=2'
+            ]
+        ], $result);
+
+        // Test second page pagination
+        $collection = new Collection([
+            new Project(3)
+        ]);
+
+        $pagination = new \Lightpack\Database\Lucid\Pagination(
+            $collection, 
+            3,  // total records
+            2,  // per page
+            2   // current page (second page)
+        );
+
+        $result = $pagination->transform([
+            'self' => ['name']
+        ], []);
+
+        $this->assertSame([
+            'data' => [
+                [
+                    'name' => 'Project 3'
+                ]
+            ],
+            'meta' => [
+                'current_page' => 2,
+                'per_page' => 2,
+                'total' => 3,
+                'total_pages' => 2
+            ],
+            'links' => [
+                'first' => '?page=1',
+                'last' => '?page=2',
+                'prev' => '?page=1',
+                'next' => null  // null because we're on last page
             ]
         ], $result);
     }
