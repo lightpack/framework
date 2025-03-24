@@ -8,6 +8,9 @@ use Lightpack\Pagination\Pagination as BasePagination;
 
 class Pagination extends BasePagination implements IteratorAggregate
 {
+    protected array $fields = [];
+    protected array $includes = [];
+
     public function __construct(Collection $items, $total, $perPage = 10, $currentPage = null)
     {
         parent::__construct($items, $total, $perPage, $currentPage);
@@ -44,5 +47,13 @@ class Pagination extends BasePagination implements IteratorAggregate
         $arr['items'] = $this->items->toArray();
 
         return $arr;
+    }
+
+    public function transform(array $fields = [], array $includes = []): self
+    {
+        $this->fields = $fields;
+        $this->includes = $includes;
+        $this->items = $this->items->transform($fields, $includes);
+        return $this;
     }
 }

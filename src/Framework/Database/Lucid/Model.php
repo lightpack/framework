@@ -68,6 +68,11 @@ class Model implements JsonSerializable
     protected $loadedRelations = [];
 
     /**
+     * @var string|null Class name of the transformer for this model
+     */
+    protected $transformer = null;
+
+    /**
      * Constructor.
      *
      * @param [int|string] $id
@@ -444,5 +449,27 @@ class Model implements JsonSerializable
     public function getLoadedRelations(): array
     {
         return $this->loadedRelations;
+    }
+
+    /**
+     * Transform the model using its transformer
+     */
+    public function transform(array $fields = [], array $includes = []): array
+    {
+        if (!$this->transformer) {
+            throw new Exception('No transformer defined for model: ' . get_class($this));
+        }
+
+        $transformer = new $this->transformer();
+        
+        if ($fields) {
+            $transformer->fields($fields);
+        }
+        
+        if ($includes) {
+            $transformer->including($includes);
+        }
+        
+        return $transformer->transform($this);
     }
 }

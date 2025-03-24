@@ -275,4 +275,20 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     {
         return $this->items;
     }
+
+    /**
+     * Transform the collection using the model's transformer
+     */
+    public function transform(array $fields = [], array $includes = []): array
+    {
+        if (empty($this->items)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($this->items as $item) {
+            $result[] = $item->transform($fields, $includes);
+        }
+        return $result;
+    }
 }

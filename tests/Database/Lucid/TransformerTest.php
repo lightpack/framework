@@ -12,6 +12,7 @@ require_once 'ProjectTransformer.php';
 use Project;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\Collection;
 
 class TransformerTest extends TestCase
 {
@@ -254,6 +255,66 @@ class TransformerTest extends TestCase
             [
                 'name' => 'Project 3',
                 'tasks' => []
+            ]
+        ], $result);
+    }
+
+    public function testModelTransform()
+    {
+        $project = new Project(1);
+
+        $result = $project->transform([
+            'self' => ['name'],
+            'tasks' => ['name'],
+            'tasks.comments' => ['content']
+        ], ['tasks.comments']);
+
+        $this->assertSame([
+            'name' => 'Project 1',
+            'tasks' => [
+                [
+                    'name' => 'Task 1',
+                    'comments' => [
+                        [
+                            'content' => 'Comment 1'
+                        ]
+                    ]
+                ]
+            ]
+        ], $result);
+    }
+
+    public function testCollectionTransform()
+    {
+        $projects = new Collection([
+            new Project(1),
+            new Project(2)
+        ]);
+
+        $result = $projects->transform([
+            'self' => ['name'],
+            'tasks' => ['name']
+        ], ['tasks']);
+
+        $this->assertSame([
+            [
+                'name' => 'Project 1',
+                'tasks' => [
+                    [
+                        'name' => 'Task 1'
+                    ]
+                ]
+            ],
+            [
+                'name' => 'Project 2',
+                'tasks' => [
+                    [
+                        'name' => 'Task 2'
+                    ],
+                    [
+                        'name' => 'Task 3'
+                    ]
+                ]
             ]
         ], $result);
     }
