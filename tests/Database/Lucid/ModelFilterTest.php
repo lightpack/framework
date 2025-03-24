@@ -61,6 +61,8 @@ class ModelFilterTest extends TestCase
 
     protected function tearDown(): void
     {
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
+        $this->db->query($sql);
         $this->db = null;
     }
 

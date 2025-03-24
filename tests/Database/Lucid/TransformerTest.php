@@ -42,22 +42,7 @@ class TransformerTest extends TestCase
             };
         });
 
-        // projects, tasks, and comments table will be used for tests of hasmanyThrough relation
-        $this->db->table('projects')->insert([
-            ['name' => 'Project 1'],
-            ['name' => 'Project 2'],
-            ['name' => 'Project 3'],
-        ]);
-        $this->db->table('tasks')->insert([
-            ['name' => 'Task 1', 'project_id' => 1],
-            ['name' => 'Task 2', 'project_id' => 2],
-            ['name' => 'Task 3', 'project_id' => 2],
-        ]);
-        $this->db->table('comments')->insert([
-            ['task_id' => 1, 'content' => 'Comment 1'],
-            ['task_id' => 2, 'content' => 'Comment 2'],
-            ['task_id' => 2, 'content' => 'Comment 3'],
-        ]);
+        $this->createTestData();
     }
 
     public function tearDown(): void
@@ -65,6 +50,8 @@ class TransformerTest extends TestCase
         $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
         $this->db->query($sql);
         $this->db = null;
+
+        parent::tearDown();
     }
 
     public function testBasicTransform()
@@ -269,5 +256,25 @@ class TransformerTest extends TestCase
                 'tasks' => []
             ]
         ], $result);
+    }
+
+    private function createTestData()
+    {
+        // projects, tasks, and comments table will be used for tests of hasmanyThrough relation
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+        ]);
+        $this->db->table('comments')->insert([
+            ['task_id' => 1, 'content' => 'Comment 1'],
+            ['task_id' => 2, 'content' => 'Comment 2'],
+            ['task_id' => 2, 'content' => 'Comment 3'],
+        ]);
     }
 }

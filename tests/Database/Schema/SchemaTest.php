@@ -16,7 +16,7 @@ final class SchemaTest extends TestCase
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
 
-        $this->connection = new Lightpack\Database\Adapters\Mysql($config);
+        $this->connection = new \Lightpack\Database\Adapters\Mysql($config);
 
         $this->schema = new Schema($this->connection);
     }
@@ -28,6 +28,8 @@ final class SchemaTest extends TestCase
         $this->schema->dropTable('categories');
         $this->schema->dropTable('items'); // used in testSchemaCanRenameTable
         $this->connection->query("SET FOREIGN_KEY_CHECKS = 1");
+        $this->connection = null;
+        $this->schema = null;
     }
 
     public function testSchemaCanCreateTable()

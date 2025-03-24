@@ -13,6 +13,11 @@ use PHPUnit\Framework\TestCase;
 
 final class PaginationTest extends TestCase
 {
+    /** @var \Lightpack\Database\DB */
+    private $db;
+
+    private $productsCollection;
+    
     public function setUp(): void
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
