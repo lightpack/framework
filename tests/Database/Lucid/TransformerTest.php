@@ -348,8 +348,6 @@ class TransformerTest extends TestCase
             'tasks' => ['name']
         ], ['tasks']);
 
-        print_r($result);
-
         $this->assertSame([
             'data' => [
                 [
