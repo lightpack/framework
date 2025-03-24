@@ -11,9 +11,9 @@ abstract class Transformer
     protected array $fields = [];
     protected ?string $currentRelation = null;
 
-    abstract protected function data($model): array;
+    abstract protected function data(Model $model): array;
 
-    public function transform($model): array
+    public function transform(Model|Collection $model): array
     {
         if (is_null($model)) {
             return [];
