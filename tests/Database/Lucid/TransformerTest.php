@@ -421,6 +421,42 @@ class TransformerTest extends TestCase
         ], $result);
     }
 
+    public function testTransformWithDifferentIncludePaths()
+    {
+        $project = new Project(2);
+
+        // Test comma notation (direct relations)
+        $result = (new \ProjectTransformer)
+            ->including(['tasks', 'comments'])
+            ->transform($project);
+
+        $this->assertArrayHasKey('tasks', $result);
+        $this->assertArrayHasKey('comments', $result);
+        $this->assertCount(2, $result['tasks']);
+        $this->assertCount(2, $result['comments']);
+        
+        // Verify tasks are loaded directly
+        $this->assertEquals('Task 2', $result['tasks'][0]['name']);
+        $this->assertEquals('Task 3', $result['tasks'][1]['name']);
+        
+        // Verify comments are loaded through hasManyThrough
+        $this->assertEquals('Comment 2', $result['comments'][0]['content']);
+        $this->assertEquals('Comment 3', $result['comments'][1]['content']);
+
+        // Test dot notation (nested relations)
+        $result = (new \ProjectTransformer)
+            ->including('tasks.comments')
+            ->transform($project);
+            
+        $this->assertArrayHasKey('tasks', $result);
+        $this->assertCount(2, $result['tasks']);
+        
+        // Verify comments are nested under tasks
+        $this->assertArrayHasKey('comments', $result['tasks'][0]);
+        $this->assertCount(2, $result['tasks'][0]['comments']);
+        $this->assertEquals('Comment 2', $result['tasks'][0]['comments'][0]['content']);
+    }
+
     private function createTestData()
     {
         // projects, tasks, and comments table will be used for tests of hasmanyThrough relation

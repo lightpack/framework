@@ -102,10 +102,43 @@ abstract class Transformer
         ];
     }
 
+    /**
+     * Define relation transformers
+     */
+    protected function relations(): array
+    {
+        return [];
+    }
+
     protected function resolveTransformer(string $relation): Transformer
     {
-        $class = ucfirst(str()->singularize($relation)) . 'Transformer';
-        return new $class;
+        $relations = $this->relations();
+        
+        if (!isset($relations[$relation])) {
+            throw new \RuntimeException(
+                sprintf(
+                    "No transformer defined for relation '%s'. Define it in %s::relations().", 
+                    $relation,
+                    get_class($this)
+                )
+            );
+        }
+
+        $transformer = $relations[$relation];
+        if (is_string($transformer)) {
+            $transformer = new $transformer;
+        }
+
+        if (!$transformer instanceof Transformer) {
+            throw new \RuntimeException(
+                sprintf(
+                    "Invalid transformer for relation '%s'. Must be a Transformer instance or class name.",
+                    $relation
+                )
+            );
+        }
+
+        return $transformer;
     }
 
     protected function getNestedFields(): array

@@ -11,4 +11,12 @@ class TaskTransformer extends Transformer
             'name' => $model->name,
         ];
     }
+
+    protected function relations(): array 
+    {
+        return [
+            'comments' => CommentTransformer::class,
+            'project' => ProjectTransformer::class,
+        ];
+    }
 }
