@@ -150,6 +150,15 @@ abstract class Transformer
 
     protected function shouldLoadRelation(Model $model, string $relation): bool
     {
-        return method_exists($model, $relation);
+        if (!method_exists($model, $relation)) {
+            return false;
+        }
+
+        // Don't load if already eager loaded
+        if (array_key_exists($relation, $model->getLoadedRelations())) {
+            return false;
+        }
+
+        return true;
     }
 }
