@@ -19,6 +19,14 @@ abstract class Transformer
             return [];
         }
 
+        if ($model instanceof Collection) {
+            $result = [];
+            foreach ($model as $item) {
+                $result[] = $this->transform($item);
+            }
+            return $result;
+        }
+
         $data = $this->data($model);
 
         if ($this->fields) {
