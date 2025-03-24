@@ -72,28 +72,39 @@ class TransformerTest extends TestCase
         $project = Project::query()->one(1);
         $transformer = new \ProjectTransformer();
 
-        // Test basic transform
         $result = $transformer->transform($project);
+
         $this->assertSame([
             'id' => 1,
             'name' => 'Project 1',
         ], $result);
+    }
 
-        // Test with field filtering
+    public function testTransformWithFieldFiltering()
+    {
+        $project = Project::query()->one(1);
+        $transformer = new \ProjectTransformer();
+
         $result = $transformer
-            ->fields(['self' => ['id']])
+            ->fields(['self' => ['name']])
             ->transform($project);
-        $this->assertSame([
-            'id' => 1,
-        ], $result);
 
-        // Test with includes
+        $this->assertSame([
+            'name' => 'Project 1',
+        ], $result);
+    }
+
+    public function testTransformWithRelations()
+    {
+        $project = Project::query()->one(1);
+        $transformer = new \ProjectTransformer();
+
         $result = $transformer
-            ->including('tasks.comments')
+            ->including('tasks')
             ->fields([
                 'self' => ['name'],
                 'tasks' => ['id', 'name'],
-                'tasks.comments' => ['id', 'content']
+                'tasks.comments' => ['id', 'name'],
             ])
             ->transform($project);
 
@@ -103,9 +114,32 @@ class TransformerTest extends TestCase
                 [
                     'id' => 1,
                     'name' => 'Task 1',
+                ]
+            ]
+        ], $result);
+    }
+
+    public function testTransformWithNestedRelations()
+    {
+        $project = Project::query()->one(1);
+        $transformer = new \ProjectTransformer();
+
+        $result = $transformer
+            ->including('tasks.comments')
+            ->fields([
+                'self' => ['name'],
+                'tasks' => ['name'],
+                'tasks.comments' => ['content']
+            ])
+            ->transform($project);
+
+        $this->assertSame([
+            'name' => 'Project 1',
+            'tasks' => [
+                [
+                    'name' => 'Task 1',
                     'comments' => [
                         [
-                            'id' => 1,
                             'content' => 'Comment 1'
                         ]
                     ]

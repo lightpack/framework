@@ -107,27 +107,37 @@ abstract class Transformer
         }
 
         $nestedFields = [];
+        
+        // Add direct fields for this relation as 'self'
+        if (isset($this->fields[$this->currentRelation])) {
+            $nestedFields['self'] = $this->fields[$this->currentRelation];
+        }
+
+        // Add nested fields
         foreach ($this->fields as $key => $fields) {
             if (str_starts_with($key, $this->currentRelation . '.')) {
-                $nestedFields[str_replace($this->currentRelation . '.', '', $key)] = $fields;
+                $nestedKey = str_replace($this->currentRelation . '.', '', $key);
+                $nestedFields[$nestedKey] = $fields;
             }
         }
+        
         return $nestedFields;
     }
 
     protected function filterFields(array $data): array 
     {
-        if (isset($this->fields['self'])) {
-            $filtered = [];
-            foreach ($this->fields['self'] as $field) {
-                if (array_key_exists($field, $data)) {
-                    $filtered[$field] = $data[$field];
-                }
-            }
-            return $filtered;
+        // Only filter if fields are explicitly specified
+        if (!isset($this->fields['self'])) {
+            return $data;
         }
-        
-        return $data;
+
+        $filtered = [];
+        foreach ($this->fields['self'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $filtered[$field] = $data[$field];
+            }
+        }
+        return $filtered;
     }
 
     protected function shouldLoadRelation(Model $model, string $relation): bool 
