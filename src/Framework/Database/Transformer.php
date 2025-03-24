@@ -5,15 +5,15 @@ namespace Lightpack\Database;
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Lucid\Collection;
 
-abstract class Transformer 
+abstract class Transformer
 {
     protected array $includes = [];
     protected array $fields = [];
     protected ?string $currentRelation = null;
-    
+
     abstract protected function data($model): array;
-    
-    public function transform($model): array 
+
+    public function transform($model): array
     {
         if (is_null($model)) {
             return [];
@@ -36,7 +36,7 @@ abstract class Transformer
         return $this->loadIncludes($model, $data);
     }
 
-    public function including($relations): self 
+    public function including($relations): self
     {
         if (is_string($relations)) {
             $relations = [$relations];
@@ -49,17 +49,17 @@ abstract class Transformer
 
         return $this;
     }
-    
-    public function fields(array $fields): self 
+
+    public function fields(array $fields): self
     {
         $this->fields = $fields;
         return $this;
     }
-    
-    protected function loadIncludes($model, array $data): array 
+
+    protected function loadIncludes($model, array $data): array
     {
         foreach ($this->includes as $relation => $nested) {
-            
+
             if ($this->shouldLoadRelation($model, $relation)) {
                 $data[$relation] = $this->transformRelation(
                     $relation,
@@ -69,11 +69,11 @@ abstract class Transformer
                 );
             }
         }
-        
+
         return $data;
     }
-    
-    protected function transformRelation(string $relationName, $relation, $transformer, array $nested = []): array 
+
+    protected function transformRelation(string $relationName, $relation, $transformer, array $nested = []): array
     {
         if (is_null($relation)) {
             return [];
@@ -92,8 +92,8 @@ abstract class Transformer
 
         return $transformer->transform($relation);
     }
-    
-    protected function parseInclude(string $include): array 
+
+    protected function parseInclude(string $include): array
     {
         $parts = explode('.', $include);
         return [
@@ -101,21 +101,21 @@ abstract class Transformer
             $parts
         ];
     }
-    
-    protected function resolveTransformer(string $relation): Transformer 
+
+    protected function resolveTransformer(string $relation): Transformer
     {
         $class = ucfirst(str()->singularize($relation)) . 'Transformer';
         return new $class;
     }
-    
-    protected function getNestedFields(): array 
+
+    protected function getNestedFields(): array
     {
         if (!$this->currentRelation) {
             return [];
         }
 
         $nestedFields = [];
-        
+
         // Add direct fields for this relation as 'self'
         if (isset($this->fields[$this->currentRelation])) {
             $nestedFields['self'] = $this->fields[$this->currentRelation];
@@ -128,11 +128,11 @@ abstract class Transformer
                 $nestedFields[$nestedKey] = $fields;
             }
         }
-        
+
         return $nestedFields;
     }
 
-    protected function filterFields(array $data): array 
+    protected function filterFields(array $data): array
     {
         // Only filter if fields are explicitly specified
         if (!isset($this->fields['self'])) {
@@ -148,7 +148,7 @@ abstract class Transformer
         return $filtered;
     }
 
-    protected function shouldLoadRelation(Model $model, string $relation): bool 
+    protected function shouldLoadRelation(Model $model, string $relation): bool
     {
         return method_exists($model, $relation);
     }
