@@ -67,7 +67,7 @@ class TransformerTest extends TestCase
         $this->db = null;
     }
 
-    public function test_basic_transform()
+    public function testBasicTransform()
     {
         $project = Project::query()->one(1);
         $transformer = new \ProjectTransformer();
@@ -91,14 +91,13 @@ class TransformerTest extends TestCase
         $result = $transformer
             ->including('tasks.comments')
             ->fields([
-                'self' => ['id', 'name'],
+                'self' => ['name'],
                 'tasks' => ['id', 'name'],
                 'tasks.comments' => ['id', 'content']
             ])
             ->transform($project);
 
         $this->assertSame([
-            'id' => 1,
             'name' => 'Project 1',
             'tasks' => [
                 [
