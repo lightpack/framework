@@ -69,7 +69,7 @@ class TransformerTest extends TestCase
 
     public function testBasicTransform()
     {
-        $project = Project::query()->one(1);
+        $project = new Project(1);
         $transformer = new \ProjectTransformer();
 
         $result = $transformer->transform($project);
@@ -82,7 +82,7 @@ class TransformerTest extends TestCase
 
     public function testTransformWithFieldFiltering()
     {
-        $project = Project::query()->one(1);
+        $project = new Project(1);
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
@@ -96,7 +96,7 @@ class TransformerTest extends TestCase
 
     public function testTransformWithRelations()
     {
-        $project = Project::query()->one(1);
+        $project = new Project(1);
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
@@ -121,7 +121,7 @@ class TransformerTest extends TestCase
 
     public function testTransformWithNestedRelations()
     {
-        $project = Project::query()->one(1);
+        $project = new Project(1);
         $transformer = new \ProjectTransformer();
 
         $result = $transformer
@@ -144,6 +144,129 @@ class TransformerTest extends TestCase
                         ]
                     ]
                 ]
+            ]
+        ], $result);
+    }
+
+    public function testTransformWithMultipleNestedPaths()
+    {
+        $project = new Project(2);
+        $transformer = new \ProjectTransformer();
+
+        $result = $transformer
+            ->including(['tasks', 'tasks.comments'])
+            ->fields([
+                'self' => ['id', 'name'],
+                'tasks' => ['name'],
+                'tasks.comments' => ['content']
+            ])
+            ->transform($project);
+
+        $this->assertSame([
+            'id' => 2,
+            'name' => 'Project 2',
+            'tasks' => [
+                [
+                    'name' => 'Task 2',
+                    'comments' => [
+                        [
+                            'content' => 'Comment 2'
+                        ],
+                        [
+                            'content' => 'Comment 3'
+                        ]
+                    ]
+                ],
+                [
+                    'name' => 'Task 3',
+                    'comments' => []
+                ]
+            ]
+        ], $result);
+    }
+
+    public function testTransformWithMissingRelation()
+    {
+        $project = Project::query()->one(1);
+        $project = new Project(1);
+        $transformer = new \ProjectTransformer();
+
+        $result = $transformer
+            ->including(['tasks', 'nonexistent'])
+            ->fields([
+                'self' => ['name'],
+                'tasks' => ['name']
+            ])
+            ->transform($project);
+
+        $this->assertSame([
+            'name' => 'Project 1',
+            'tasks' => [
+                [
+                    'name' => 'Task 1'
+                ]
+            ]
+        ], $result);
+    }
+
+    public function testTransformWithNullRelation()
+    {
+        $project = new Project();
+        $project->id = 999;
+        $project->name = 'New Project';
+        
+        $transformer = new \ProjectTransformer();
+
+        $result = $transformer
+            ->including(['tasks'])
+            ->fields([
+                'self' => ['name'],
+                'tasks' => ['name']
+            ])
+            ->transform($project);
+
+        $this->assertSame([
+            'name' => 'New Project',
+            'tasks' => []
+        ], $result);
+    }
+
+    public function testTransformCollection()
+    {
+        $projects = Project::query()->all();  // Get all projects
+        $transformer = new \ProjectTransformer();
+
+        $result = $transformer
+            ->including(['tasks'])
+            ->fields([
+                'self' => ['name'],
+                'tasks' => ['name']
+            ])
+            ->transform($projects);
+
+        $this->assertSame([
+            [
+                'name' => 'Project 1',
+                'tasks' => [
+                    [
+                        'name' => 'Task 1'
+                    ]
+                ]
+            ],
+            [
+                'name' => 'Project 2',
+                'tasks' => [
+                    [
+                        'name' => 'Task 2'
+                    ],
+                    [
+                        'name' => 'Task 3'
+                    ]
+                ]
+            ],
+            [
+                'name' => 'Project 3',
+                'tasks' => []
             ]
         ], $result);
     }
