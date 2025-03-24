@@ -68,11 +68,6 @@ class Model implements JsonSerializable
     protected $loadedRelations = [];
 
     /**
-     * @var string|null Class name of the transformer for this model
-     */
-    protected $transformer = null;
-
-    /**
      * Constructor.
      *
      * @param [int|string] $id
