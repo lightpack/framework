@@ -5,11 +5,13 @@ namespace Tests\Database\Lucid;
 require_once 'Project.php';
 require_once 'Task.php';
 require_once 'Comment.php';
+require_once 'Product.php';
 require_once 'TaskTransformer.php';
 require_once 'CommentTransformer.php';
 require_once 'ProjectTransformer.php';
 
 use Project;
+use Product;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
@@ -466,6 +468,43 @@ class TransformerTest extends TestCase
         $this->assertArrayHasKey('comments', $result['tasks'][0]);
         $this->assertCount(2, $result['tasks'][0]['comments']);
         $this->assertEquals('Comment 2', $result['tasks'][0]['comments'][0]['content']);
+    }
+
+    public function testProductTransformers()
+    {
+        $product = new Product(1);
+        
+        // Test API transformer
+        $result = $product->transform(['group' => 'api']);
+        $this->assertArrayHasKey('name', $result);
+        $this->assertArrayHasKey('price', $result);
+        $this->assertArrayNotHasKey('color', $result);
+        $this->assertArrayNotHasKey('id', $result);
+
+        // Test View transformer
+        $result = $product->transform(['group' => 'view']);
+        $this->assertArrayHasKey('id', $result);
+        $this->assertArrayHasKey('name', $result);
+        $this->assertArrayHasKey('price', $result);
+        $this->assertArrayHasKey('color', $result);
+    }
+
+    public function testProductTransformerInvalidGroup()
+    {
+        $product = new Product(1);
+        
+        $this->expectException(\RuntimeException::class);
+        
+        try {
+            $product->transform(['group' => 'admin']);
+        } catch (\RuntimeException $e) {
+            $message = $e->getMessage();
+            $this->assertStringContainsString("Invalid transformer group 'admin' for", $message);
+            $this->assertStringContainsString("Available groups:", $message);
+            $this->assertStringContainsString("api", $message);
+            $this->assertStringContainsString("view", $message);
+            throw $e;
+        }
     }
 
     private function createTestData()

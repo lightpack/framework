@@ -582,7 +582,7 @@ final class ModelTest extends TestCase
     {
         $this->expectException(RecordNotFoundException::class);
         $product = new Product();
-        $product->find(1);
+        $product->find(99999);
     }
 
     public function testModelsAreCached()

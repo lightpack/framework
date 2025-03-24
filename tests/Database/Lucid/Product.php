@@ -2,12 +2,18 @@
 
 require_once 'Owner.php';
 require_once 'Option.php';
+require_once 'ProductApiTransformer.php';
+require_once 'ProductViewTransformer.php';
 
 use \Lightpack\Database\Lucid\Model;
 
 class Product extends Model
 {   
     protected $table = 'products';
+    protected $transformer = [
+        'api' => \ProductApiTransformer::class, 
+        'view' => \ProductViewTransformer::class, 
+    ];
 
     public function options()
     {

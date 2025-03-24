@@ -139,6 +139,6 @@ CREATE TABLE IF NOT EXISTS cast_model_relations (
 );
 
 -- insert dummy data for products
-INSERT INTO `products` (`id`, `name`, `color`, `price`) VALUES
-    (331, 'Dummy Product', '#09F', 100.00),
-    (332, 'Dummy Product', '#CCC', 200.00);
+INSERT INTO `products` (`name`, `color`, `price`) VALUES
+    ('Dummy Product', '#09F', 100.00),
+    ('Dummy Product', '#CCC', 200.00);
