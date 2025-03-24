@@ -163,6 +163,12 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return new static($items);
     }
 
+    public function map(Closure $callback): Collection
+    {
+        $items = array_map($callback, $this->items);
+        return new static($items);
+    }
+
     public function jsonSerialize(): mixed
     {
         return array_values($this->items);
