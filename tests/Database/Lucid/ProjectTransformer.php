@@ -12,7 +12,7 @@ class ProjectTransformer extends Transformer
         ];
     }
 
-    protected function relations(): array 
+    protected function transformerMap(): array 
     {
         return [
             'tasks' => TaskTransformer::class,

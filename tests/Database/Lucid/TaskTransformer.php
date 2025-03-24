@@ -12,7 +12,7 @@ class TaskTransformer extends Transformer
         ];
     }
 
-    protected function relations(): array 
+    protected function transformerMap(): array 
     {
         return [
             'comments' => CommentTransformer::class,

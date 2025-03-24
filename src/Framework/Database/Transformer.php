@@ -103,28 +103,28 @@ abstract class Transformer
     }
 
     /**
-     * Define relation transformers
+     * Define transformer mappings for relations
      */
-    protected function relations(): array
+    protected function transformerMap(): array
     {
         return [];
     }
 
     protected function resolveTransformer(string $relation): Transformer
     {
-        $relations = $this->relations();
+        $transformers = $this->transformerMap();
         
-        if (!isset($relations[$relation])) {
+        if (!isset($transformers[$relation])) {
             throw new \RuntimeException(
                 sprintf(
-                    "No transformer defined for relation '%s'. Define it in %s::relations().", 
+                    "No transformer defined for relation '%s'. Define it in %s::transformerMap().", 
                     $relation,
                     get_class($this)
                 )
             );
         }
 
-        $transformer = $relations[$relation];
+        $transformer = $transformers[$relation];
         if (is_string($transformer)) {
             $transformer = new $transformer;
         }
