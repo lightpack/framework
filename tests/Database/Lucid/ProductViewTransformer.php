@@ -1,8 +1,8 @@
 <?php
 
-use Lightpack\Database\Transformer;
+use Lightpack\Database\Lucid\Transformer;
 
-class ProductViewTransformer extends Transformer 
+class ProductViewTransformer extends Transformer
 {
     protected function data($model): array 
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Database;
+namespace Lightpack\Database\Lucid;
 
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Lucid\Collection;

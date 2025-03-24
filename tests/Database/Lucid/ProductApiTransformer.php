@@ -1,8 +1,8 @@
 <?php
 
-use Lightpack\Database\Transformer;
+use Lightpack\Database\Lucid\Transformer;
 
-class ProductApiTransformer extends Transformer 
+class ProductApiTransformer extends Transformer
 {
     protected function data($model): array 
     {
