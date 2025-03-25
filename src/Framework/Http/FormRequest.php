@@ -23,10 +23,7 @@ abstract class FormRequest extends Request
         $container->call($this, 'rules');
         $container->call($this, 'data');
 
-        $validator->setInput($this->input() + $_FILES);
-        $validator->validate();
-
-        if ($validator->passes()) {
+        if ($validator->validateRequest()->passes()) {
             return;
         }
 
@@ -41,8 +38,6 @@ abstract class FormRequest extends Request
             return;
         }
 
-        $session->flash('_old_input', $this->input());
-        $session->flash('_validation_errors', $validator->getErrors());
         $container->call($this, 'beforeRedirect');
         $redirect->back();
 

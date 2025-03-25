@@ -3,7 +3,6 @@
 namespace Lightpack\Tests\Validation\Rules;
 
 use Lightpack\Validation\Rules\File\FileRule;
-use Lightpack\Validation\Rules\File\FileSizeRule;
 use Lightpack\Validation\Rules\File\FileTypeRule;
 use Lightpack\Validation\Rules\File\ImageRule;
 use Lightpack\Validation\Rules\File\FileExtensionRule;

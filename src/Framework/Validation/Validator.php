@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lightpack\Validation;
 
+use Lightpack\Container\Container;
 use Lightpack\Utils\Arr;
 use Lightpack\Validation\Rules\AfterRule;
 use Lightpack\Validation\Rules\AlphaRule;
@@ -35,7 +36,6 @@ use Lightpack\Validation\Rules\MaxRule;
 use Lightpack\Validation\Rules\MinRule;
 use Lightpack\Validation\Rules\NotInRule;
 use Lightpack\Validation\Rules\NumericRule;
-use Lightpack\Validation\Rules\OptionalRule;
 use Lightpack\Validation\Rules\RegexRule;
 use Lightpack\Validation\Rules\RequiredRule;
 use Lightpack\Validation\Rules\SameRule;
@@ -55,7 +55,7 @@ class Validator
     private array $customRules = [];
     private string $currentField = '';
     private bool $valid = true;
-    private ?Arr $arr = null;
+    private Arr $arr;
 
     public function __construct()
     {
@@ -372,6 +372,30 @@ class Validator
         $this->rules = [];
         $this->currentField = '';
         
+        return $this;
+    }
+
+    public function validateRequest(): self
+    {
+        $container = Container::getInstance();
+        $request = $container->get('request');
+
+        $input = $request->input() + $_FILES;
+
+        $this->setInput($input);
+        $this->validate();
+
+        if($request->isAjax() || $request->isJson()) {
+            return $this;
+        }
+
+        if($this->fails()) {
+            $session = $container->get('session');
+
+            $session->flash('_old_input', $request->input());
+            $session->flash('_validation_errors', $this->getErrors());
+        }
+
         return $this;
     }
 
