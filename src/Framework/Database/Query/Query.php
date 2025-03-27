@@ -655,4 +655,37 @@ class Query
         $this->bindings = array_merge($this->bindings, $query->bindings);
         return $this;
     }
+
+    /**
+     * Conditionally add a where clause if the condition is a truthy value.
+     * 
+     * @param mixed $condition The condition to check
+     * @param string|Closure $column Column name or closure
+     * @param string|null $operator Operator (optional)
+     * @param mixed $compareValue Value to compare against (optional)
+     * @param string $joiner AND/OR joiner for the where clause
+     */
+    public function whereIf($condition, $column, string $operator = '=', $compareValue = null, string $joiner = 'AND'): static
+    {
+        if ($condition) {
+            return $this->where($column, $operator, $compareValue, $joiner);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Execute a query callback when condition is a truthy value.
+     * 
+     * @param mixed $condition The condition to check
+     * @param Closure $callback Callback to execute if condition is true
+     */
+    public function when($condition, Closure $callback): static
+    {
+        if ($condition) {
+            $callback($this);
+        }
+
+        return $this;
+    }
 }
