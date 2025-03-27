@@ -29,6 +29,11 @@ class AttributeHandler
      */
     protected CastHandler $castHandler;
 
+    /**
+     * @var array Track modified attributes
+     */
+    protected array $dirty = [];
+
     public function __construct()
     {
         $this->data = new \stdClass;
@@ -67,6 +72,11 @@ class AttributeHandler
             $value = $this->castHandler->uncast($value, $castType);
         }
 
+        // Track modification only if value actually changes
+        if (!isset($this->data->{$key}) || $this->data->{$key} !== $value) {
+            $this->dirty[$key] = true;
+        }
+
         $this->data->{$key} = $value;
     }
 
@@ -80,6 +90,7 @@ class AttributeHandler
         }
 
         $this->data->{$key} = $value;
+        unset($this->dirty[$key]); // Clear modification flag for raw sets
     }
 
     /**
@@ -108,6 +119,7 @@ class AttributeHandler
         foreach ($attributes as $key => $value) {
             $this->setRaw($key, $value);
         }
+        $this->clearDirty(); // Clear modified state after database load
     }
 
     /**
@@ -184,5 +196,33 @@ class AttributeHandler
         }
 
         $this->data->created_at = $now;
+    }
+
+    /**
+     * Get attributes in dirty state.
+     */
+    public function getDirty(): array
+    {
+        return array_keys($this->dirty);
+    }
+
+    /**
+     * Check if model or specific attributes are in dirty state.
+     */
+    public function isDirty(?string $key = null): bool
+    {
+        if ($key === null) {
+            return !empty($this->dirty);
+        }
+
+        return isset($this->dirty[$key]);
+    }
+
+    /**
+     * Clear modified attributes tracking.
+     */
+    public function clearDirty(): void
+    {
+        $this->dirty = [];
     }
 }

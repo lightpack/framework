@@ -232,6 +232,7 @@ class Model implements JsonSerializable
             $this->attributes->set($this->primaryKey, $this->lastInsertId());
         }
 
+        $this->attributes->clearDirty(); // Clear modified state after save
         $this->afterSave();
     }
 
@@ -500,5 +501,21 @@ class Model implements JsonSerializable
         }
 
         return $transformer->transform($this);
+    }
+
+    /**
+     * Check if model or specific attributes are in dirty state.
+     */
+    public function isDirty(?string $attribute = null): bool
+    {
+        return $this->attributes->isDirty($attribute);
+    }
+
+    /**
+     * Get attributes in dirty state.
+     */
+    public function getDirty(): array
+    {
+        return $this->attributes->getDirty();
     }
 }

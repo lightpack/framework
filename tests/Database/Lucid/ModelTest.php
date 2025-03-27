@@ -2164,4 +2164,43 @@ final class ModelTest extends TestCase
         $this->assertIsArray($option->json_col);
         $this->assertEquals(['color' => 'blue', 'size' => 'large'], $option->json_col);
     }
+
+    public function testModelChangeTracking()
+    {
+        // Test fresh model has no changes
+        $model = new Project();
+        $this->assertFalse($model->isDirty());
+        $this->assertEmpty($model->getDirty());
+
+        // Test setting new attribute
+        $model->name = 'Test';
+        $this->assertTrue($model->isDirty());
+        $this->assertTrue($model->isDirty('name'));
+        $this->assertEquals(['name'], $model->getDirty());
+
+        // Test multiple attributes
+        $model->status = 'processing';
+        $this->assertTrue($model->isDirty());
+        $this->assertTrue($model->isDirty('status'));
+        $this->assertEquals(['name', 'status'], $model->getDirty());
+
+        // Test modified attributes list stays the same 
+        $model->name = 'Test';
+        $this->assertEquals(['name', 'status'], $model->getDirty());
+
+        // Test loading from database clears modifications
+        $model->save();
+        $this->assertFalse($model->isDirty());
+        $this->assertEmpty($model->getDirty());
+
+        // Test modifying existing model
+        $model = $model->find($model->id);
+        $this->assertFalse($model->isDirty());
+        
+        $model->name = 'Updated';
+        $this->assertTrue($model->isDirty());
+        $this->assertTrue($model->isDirty('name'));
+        $this->assertFalse($model->isDirty('status'));
+        $this->assertEquals(['name'], $model->getDirty());
+    }
 }
