@@ -663,12 +663,11 @@ class Query
      * @param string|Closure $column Column name or closure
      * @param string|null $operator Operator (optional)
      * @param mixed $compareValue Value to compare against (optional)
-     * @param string $joiner AND/OR joiner for the where clause
      */
-    public function whereIf($condition, $column, string $operator = '=', $compareValue = null, string $joiner = 'AND'): static
+    public function whereIf($condition, $column, string $operator = '=', $compareValue = null): static
     {
         if ($condition) {
-            return $this->where($column, $operator, $compareValue, $joiner);
+            return $this->where($column, $operator, $compareValue);
         }
 
         return $this;
