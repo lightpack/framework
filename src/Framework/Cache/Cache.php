@@ -21,10 +21,21 @@ class Cache
         return $this->driver->get($key);
     }
 
-    public function set(string $key, $value, int $seconds = 0)
+    public function set(string $key, $value, int $seconds = 0, bool $preserveTtl = false)
     {
-        $ttl = time() + ($seconds * 60);
-        return $this->driver->set($key, $value, $ttl);
+        if ($preserveTtl) {
+            // Pass 0 to driver to preserve existing TTL
+            return $this->driver->set($key, $value, 0, true);
+        }
+
+        // Calculate new TTL
+        if ($seconds === 0) {
+            $ttl = time() + 157680000; // 5 years
+        } else {
+            $ttl = time() + $seconds;
+        }
+
+        return $this->driver->set($key, $value, $ttl, false);
     }
 
     public function delete($key)
@@ -34,8 +45,7 @@ class Cache
 
     public function forever(string $key, $value)
     {
-        $lifetime = time() + (60 * 60 * 24 * 365 * 5);
-        return $this->driver->set($key, $value, $lifetime);
+        return $this->set($key, $value, 0);
     }
 
     public function flush()

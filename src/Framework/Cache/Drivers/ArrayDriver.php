@@ -18,7 +18,7 @@ class ArrayDriver implements DriverInterface
         return $this->cache[$key] ?? null;
     }
 
-    public function set($key, $value, $ttl = null)
+    public function set($key, $value, $ttl = null, bool $preserveTtl = false)
     {
         $this->cache[$key] = $value;
     }

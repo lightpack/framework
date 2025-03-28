@@ -2,14 +2,11 @@
 
 namespace Lightpack\Debug;
 
-use Error;
-use Exception;
-use Lightpack\Exceptions\HttpException;
 use Throwable;
+use Lightpack\Exceptions\HttpException;
 
 class ExceptionRenderer
 {
-    private $data = [];
     private $environment;
     private $errorLevels = [
         E_ERROR => 'Error',
@@ -173,8 +170,15 @@ class ExceptionRenderer
         }
 
         $this->sendHeaders($statusCode);
+
+        if($exc instanceof HttpException) {
+            foreach ($exc->getHeaders() as $name => $value) {
+                header("$name: $value");
+            }
+        }
+
         $this->renderTemplate($errorTemplate, [
-            'code' => $statusCode, 
+            'code' => 'HTTP: ' . $statusCode, 
             'message' => $message,
             'template' => $template ?? null,
         ]);

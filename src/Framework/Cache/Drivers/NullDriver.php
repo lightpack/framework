@@ -16,7 +16,7 @@ class NullDriver implements DriverInterface
         return null;
     }
 
-    public function set(string $key, $value, int $ttl)
+    public function set(string $key, $value, int $ttl, bool $preserveTtl = false)
     {
         return true;
     }
