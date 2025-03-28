@@ -5,9 +5,8 @@ namespace Lightpack\Filters;
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
 use Lightpack\Filters\IFilter;
-use Lightpack\Limit\Limiter;
-use Lightpack\Limit\DatabaseStorage;
 use Lightpack\Exceptions\TooManyRequestsException;
+use Lightpack\Utils\Limiter;
 
 class LimitFilter implements IFilter
 {
@@ -15,7 +14,7 @@ class LimitFilter implements IFilter
     
     public function __construct() 
     {
-        $this->limiter = new Limiter(new DatabaseStorage());
+        $this->limiter = new Limiter();
     }
     
     public function before(Request $request, array $params = [])

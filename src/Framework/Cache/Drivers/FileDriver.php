@@ -36,9 +36,18 @@ class FileDriver implements DriverInterface
         return null;
     }
 
-    public function set(string $key, $value, int $ttl)
+    public function set(string $key, $value, int $lifetime, bool $preserveTtl = false)
     {
         $file = $this->getFilename($key);
+        
+        if ($preserveTtl && file_exists($file)) {
+            // Keep existing TTL
+            $current = unserialize(file_get_contents($file));
+            $ttl = $current['ttl'];
+        } else {
+            $ttl = $lifetime;
+        }
+
         $value = serialize([
             'ttl' => $ttl,
             'value' => $value,
