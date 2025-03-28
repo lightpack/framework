@@ -174,7 +174,7 @@ class ExceptionRenderer
 
         $this->sendHeaders($statusCode);
         $this->renderTemplate($errorTemplate, [
-            'code' => $statusCode, 
+            'code' => 'HTTP: ' . $statusCode, 
             'message' => $message,
             'template' => $template ?? null,
         ]);

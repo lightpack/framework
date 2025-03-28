@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-class TooManyRequestsException extends \Exception 
+class TooManyRequestsException extends HttpException
 {
     public function __construct(string $message = '', int $code = 429) 
     {

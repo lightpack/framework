@@ -13,14 +13,15 @@ class DatabaseStorage implements Storage
     public function __construct() 
     {
         /** @var DB */
-        $db = Container::getInstance('db');
+        $db = Container::getInstance()->get('db');
+
         $this->table = config('limit.table', 'limits');
         $this->db = $db->table($this->table);
     }
     
     public function exists(string $key): bool 
     {
-        $row = $this->db->where('key', $key)
+        $row = $this->db->where('id', $key)
             ->where('reset_at', '>', date('Y-m-d H:i:s'))
             ->one();
             
@@ -30,7 +31,7 @@ class DatabaseStorage implements Storage
     public function create(string $key, int $minutes): void 
     {
         $this->db->insert([
-            'key' => $key,
+            'id' => $key,
             'hits' => 1,
             'reset_at' => date('Y-m-d H:i:s', time() + ($minutes * 60)),
         ]);
@@ -38,10 +39,10 @@ class DatabaseStorage implements Storage
     
     public function increment(string $key): void 
     {
-        $row = $this->db->where('key', $key)->one();
+        $row = $this->db->where('id', $key)->one();
         
         if ($row) {
-            $this->db->where('key', $key)->update([
+            $this->db->where('id', $key)->update([
                 'hits' => $row->hits + 1,
             ]);
         }
@@ -49,7 +50,7 @@ class DatabaseStorage implements Storage
     
     public function getHits(string $key): int 
     {
-        $row = $this->db->where('key', $key)
+        $row = $this->db->where('id', $key)
             ->where('reset_at', '>', date('Y-m-d H:i:s'))
             ->one();
             
@@ -58,7 +59,7 @@ class DatabaseStorage implements Storage
     
     public function delete(string $key): void 
     {
-        $this->db->where('key', $key)->delete();
+        $this->db->where('id', $key)->delete();
     }
     
     public function deleteExpired(): void 
