@@ -3,17 +3,13 @@
 namespace Lightpack\Database\Query;
 
 use Closure;
-use Lightpack\Database\Lucid\Collection;
-use Lightpack\Database\Lucid\Model;
-use Lightpack\Pagination\Pagination as BasePagination;
-use Lightpack\Database\Lucid\Pagination as LucidPagination;
 use Lightpack\Database\DB;
+use Lightpack\Pagination\Pagination;
 
 class Query
 {
     protected $connection;
     protected $table;
-    protected $model;
     protected $bindings = [];
     protected $components = [
         'alias' => null,
@@ -28,36 +24,32 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct($subject = null, DB $connection = null)
+    public function __construct($table = null, DB $connection = null)
     {
-        if ($subject instanceof Model) {
-            $this->model = $subject;
-            $this->table = $subject->getTableName();
-        } else {
-            $this->table = $subject;
-        }
-
+        $this->table = $table;
         $this->connection = $connection ?? app('db');
-    }
-
-    public function setModel(Model $model)
-    {
-        $this->model = $model;
-    }
-
-    public function getModel()
-    {
-        return $this->model;
     }
 
     public function setConnection(DB $connection)
     {
         $this->connection = $connection;
+        return $this;
     }
 
     public function getConnection()
     {
         return $this->connection;
+    }
+
+    public function getTable()
+    {
+        return $this->table;
+    }
+
+    public function setTable(string $table)
+    {
+        $this->table = $table;
+        return $this;
     }
 
     public function insert(array $data)
@@ -135,23 +127,22 @@ class Query
         return $result;
     }
 
-    public function alias(string $alias): self
+    public function alias(string $alias): static
     {
         $this->components['alias'] = $alias;
         return $this;
     }
 
-    public function select(string ...$columns): self
+    public function select(string ...$columns): static
     {
         $this->components['columns'] = $columns;
         return $this;
     }
 
-
     /**
      * Lock the fetched rows from update until the transaction is commited.
      */
-    public function forUpdate(): self
+    public function forUpdate(): static
     {
         $this->components['lock']['for_update'] = true;
         return $this;
@@ -160,20 +151,20 @@ class Query
     /**
      * Skip any rows that are locked for update by other transactions.
      */
-    public function skipLocked(): self
+    public function skipLocked(): static
     {
         $this->components['lock']['skip_locked'] = true;
         return $this;
     }
 
-    public function from(string $table, string $alias = null): self
+    public function from(string $table, string $alias = null): static
     {
         $this->table = $table;
         $this->components['alias'] = $alias;
         return $this;
     }
 
-    public function distinct(): self
+    public function distinct(): static
     {
         $this->components['distinct'] = true;
         return $this;
@@ -186,7 +177,7 @@ class Query
      * @param string|null $operator
      * @param mixed $value
      */
-    public function where($column, string $operator = '=', $value = null, string $joiner = 'AND'): self
+    public function where($column, string $operator = '=', $value = null, string $joiner = 'AND'): static
     {
         if ($column instanceof Closure) {
             return $this->whereColumnIsAClosure($column, $joiner);
@@ -213,7 +204,7 @@ class Query
         return $this;
     }
 
-    public function whereRaw(string $where, array $values = [], string $joiner = 'AND'): self
+    public function whereRaw(string $where, array $values = [], string $joiner = 'AND'): static
     {
         $type = 'where_raw';
 
@@ -225,19 +216,19 @@ class Query
         return $this;
     }
 
-    public function orWhereRaw(string $where, array $values = []): self
+    public function orWhereRaw(string $where, array $values = []): static
     {
         $this->whereRaw($where, $values, 'OR');
         return $this;
     }
 
-    public function orWhere($column, string $operator = null, $value = null): self
+    public function orWhere($column, string $operator = null, $value = null): static
     {
         $this->where($column, $operator, $value, 'OR');
         return $this;
     }
 
-    public function whereIn($column, $values = null, string $joiner = 'AND'): self
+    public function whereIn($column, $values = null, string $joiner = 'AND'): static
     {
         if ($values instanceof Closure) {
             $this->where($column, 'IN', $values, $joiner);
@@ -250,13 +241,13 @@ class Query
         return $this;
     }
 
-    public function orWhereIn($column, $values): self
+    public function orWhereIn($column, $values): static
     {
         $this->whereIn($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNotIn($column, $values, string $joiner = 'AND'): self
+    public function whereNotIn($column, $values, string $joiner = 'AND'): static
     {
         if ($values instanceof Closure) {
             $this->where($column, 'NOT IN', $values, $joiner);
@@ -269,37 +260,37 @@ class Query
         return $this;
     }
 
-    public function orWhereNotIn($column, $values): self
+    public function orWhereNotIn($column, $values): static
     {
         $this->whereNotIn($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNull(string $column): self
+    public function whereNull(string $column): static
     {
         $this->where($column, 'IS NULL');
         return $this;
     }
 
-    public function whereNotNull(string $column): self
+    public function whereNotNull(string $column): static
     {
         $this->where($column, 'IS NOT NULL');
         return $this;
     }
 
-    public function orWhereNull(string $column): self
+    public function orWhereNull(string $column): static
     {
         $this->orWhere($column, 'IS NULL');
         return $this;
     }
 
-    public function orWhereNotNull(string $column): self
+    public function orWhereNotNull(string $column): static
     {
         $this->orWhere($column, 'IS NOT NULL');
         return $this;
     }
 
-    public function whereBetween(string $column, array $values, string $joiner = 'AND'): self
+    public function whereBetween(string $column, array $values, string $joiner = 'AND'): static
     {
         if(count($values) !== 2) {
             throw new \Exception('You must provide two values for the between clause');
@@ -312,13 +303,13 @@ class Query
         return $this;
     }
 
-    public function orWhereBetween($column, $values): self
+    public function orWhereBetween($column, $values): static
     {
         $this->whereBetween($column, $values, 'OR');
         return $this;
     }
 
-    public function whereNotBetween($column, $values, string $joiner = 'AND'): self
+    public function whereNotBetween($column, $values, string $joiner = 'AND'): static
     {
         $operator = 'NOT BETWEEN';
         $type = 'where_not_between';
@@ -327,37 +318,37 @@ class Query
         return $this;
     }
 
-    public function orWhereNotBetween($column, $values): self
+    public function orWhereNotBetween($column, $values): static
     {
         $this->whereNotBetween($column, $values, 'OR');
         return $this;
     }
 
-    public function whereTrue(string $column): self
+    public function whereTrue(string $column): static
     {
         $this->where($column, 'IS TRUE');
         return $this;
     }
 
-    public function orWhereTrue(string $column): self
+    public function orWhereTrue(string $column): static
     {
         $this->orWhere($column, 'IS TRUE');
         return $this;
     }
 
-    public function whereFalse(string $column): self
+    public function whereFalse(string $column): static
     {
         $this->where($column, 'IS FALSE');
         return $this;
     }
 
-    public function orWhereFalse(string $column): self
+    public function orWhereFalse(string $column): static
     {
         $this->orWhere($column, 'IS FALSE');
         return $this;
     }
 
-    public function whereExists(Closure $callback): self
+    public function whereExists(Closure $callback): static
     {
         $query = new Query();
         $callback($query);
@@ -366,7 +357,7 @@ class Query
         return $this;
     }
 
-    public function whereNotExists(Closure $callback): self
+    public function whereNotExists(Closure $callback): static
     {
         $query = new Query();
         $callback($query);
@@ -423,9 +414,9 @@ class Query
      *
      * @param integer|null $limit
      * @param integer|null $page
-     * @return \Lightpack\Pagination\Pagination|\Lightpack\Database\Lucid\Pagination
+     * @return \Lightpack\Pagination\Pagination
      */
-    public function paginate(int $limit = null, int $page = null)
+    public function paginate(?int $limit = null, ?int $page = null)
     {
         // Preserve the columns because calling count() will reset the columns.
         $columns = $this->columns;
@@ -441,27 +432,16 @@ class Query
         $this->components['offset'] = $limit * ($page - 1);
 
         if($total == 0) { // no need to query further
-            if($this->model) {
-               return new LucidPagination(new Collection([]), $total, $limit, $page);
-            } else {
-                return new BasePagination([], $total);
-            }
+            return new Pagination([], $total);
         }
 
-        // Pass false because count() has already executed the hook
-        $items = $this->fetchAll(false);
+        $items = $this->fetchAll();
 
-        if($items instanceof Collection) {
-            return new LucidPagination( $items, $total, $limit, $page);
-        }
-
-        return new BasePagination($items, $total, $limit, $page);
+        return new Pagination($items, $total, $limit, $page);
     }
 
     public function count()
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ['COUNT(*) AS total'];
 
         $query = $this->getCompiledCount();
@@ -474,8 +454,6 @@ class Query
 
     public function countBy(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-        
         $this->columns = [$column, 'COUNT(*) AS num'];
         $this->groupBy($column);
 
@@ -487,8 +465,6 @@ class Query
 
     public function sum(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["SUM(`$column`) AS sum"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -498,8 +474,6 @@ class Query
 
     public function avg(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["AVG(`$column`) AS avg"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -509,8 +483,6 @@ class Query
 
     public function min(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["MIN(`$column`) AS min"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -520,8 +492,6 @@ class Query
 
     public function max(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = ["MAX(`$column`) AS max"];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
@@ -557,21 +527,13 @@ class Query
         }
     }
 
-    protected function fetchAll(bool $executeBeforeFetchHook = true)
+    protected function fetchAll()
     {
-        if($executeBeforeFetchHook) {
-            $this->executeBeforeFetchHookForModel();
-        }
-
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
         $this->resetQuery();
         $this->resetBindings();
         $this->resetWhere();
-
-        if ($this->model) {
-            return static::hydrate($result);
-        }
 
         return $result;
     }
@@ -583,16 +545,14 @@ class Query
 
     protected function fetchOne()
     {
-        $this->executeBeforeFetchHookForModel();
-
+        $this->limit(1);
         $compiler = new Compiler($this);
         $query = $compiler->compileSelect();
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
 
-        if ($result && $this->model) {
-            $result = (array) $result;
-            $result = static::hydrateItem($result);
+        if($result == false) {
+            return null;
         }
 
         return $result;
@@ -605,8 +565,6 @@ class Query
 
     public function column(string $column)
     {
-        $this->executeBeforeFetchHookForModel();
-
         $this->columns = [$column];
         $query = $this->getCompiledSelect();
         $result = $this->connection->query($query, $this->bindings)->fetchColumn();
@@ -698,10 +656,35 @@ class Query
         return $this;
     }
 
-    protected function executeBeforeFetchHookForModel()
+    /**
+     * Conditionally add a where clause if the condition is a truthy value.
+     * 
+     * @param mixed $condition The condition to check
+     * @param string|Closure $column Column name or closure
+     * @param string|null $operator Operator (optional)
+     * @param mixed $compareValue Value to compare against (optional)
+     */
+    public function whereIf($condition, $column, string $operator = '=', $compareValue = null): static
     {
-        if($this->model) {
-            $this->model->beforeFetch($this);
+        if ($condition) {
+            return $this->where($column, $operator, $compareValue);
         }
+
+        return $this;
+    }
+
+    /**
+     * Execute a query callback when condition is a truthy value.
+     * 
+     * @param mixed $condition The condition to check
+     * @param Closure $callback Callback to execute if condition is true
+     */
+    public function when($condition, Closure $callback): static
+    {
+        if ($condition) {
+            $callback($this);
+        }
+
+        return $this;
     }
 }

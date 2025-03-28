@@ -91,7 +91,7 @@ final class QueryTest extends TestCase
 
         // Test 3
         $product = $this->query->where('color', '=', 'maroon')->one();
-        $this->assertFalse($product);
+        $this->assertNull($product);
         $this->query->resetQuery();
 
         // Test 4
@@ -740,14 +740,6 @@ final class QueryTest extends TestCase
         $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color`';
         $this->query->countBy('color');
         $this->assertEquals($sql, $this->query->toSql());
-        $this->query->resetQuery();
-    }
-
-    public function testSetModel()
-    {
-        // Test 1
-        $this->query->setModel(new Product);
-        $this->assertInstanceOf(Product::class, $this->query->getModel());
         $this->query->resetQuery();
     }
 

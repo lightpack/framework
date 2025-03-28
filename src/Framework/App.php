@@ -12,6 +12,11 @@ use Lightpack\Exceptions\FilterNotFoundException;
 
 final class App
 {
+    public static function bootRouteNames()
+    {
+        Container::getInstance()->get('route')->bootRouteNames();
+    }
+
     public static function bootProviders(array $providers = [])
     {
         $container = Container::getInstance();
@@ -58,7 +63,6 @@ final class App
         $router->parse($request->path());
         $dispatcher = new Dispatcher($container);
         $routeUri = $container->get('router')->getRoute()->getUri();
-        $container->get('route')->bootRouteNames();
 
         self::bootFilters();
 

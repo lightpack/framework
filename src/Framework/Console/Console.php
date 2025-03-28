@@ -19,6 +19,7 @@ use Lightpack\Console\Commands\CreateRequest;
 use Lightpack\Console\Commands\ProcessJobs;
 use Lightpack\Console\Commands\CreateMail;
 use Lightpack\Console\Commands\CreateSeeder;
+use Lightpack\Console\Commands\CreateTransformer;
 use Lightpack\Console\Commands\GenerateAppKey;
 use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ScheduleEvents;
@@ -37,6 +38,7 @@ class Console
         'create:provider' => CreateProvider::class,
         'create:migration' => CreateMigration::class,
         'create:controller' => CreateController::class,
+        'create:transformer' => CreateTransformer::class,
         'migrate:up' => RunMigrationUp::class,
         'migrate:down' => RunMigrationDown::class,
         'create:request' => CreateRequest::class,

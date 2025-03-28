@@ -10,15 +10,13 @@ class SignedFilter implements IFilter
 {
     public function before(Request $request, array $params = [])
     {
-        if (!url()->verify($request->fullUrl())) {
-            // API response
+        if ($request->hasInValidSignature()) {
             if ($request->isJson()) {
                 return response()->setStatus(403)->json([
                     'error' => 'Invalid URL signature'
                 ]);
             }
 
-            // Web response
             return response()->setStatus(403)->view('errors/403');
         }
     }

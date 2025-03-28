@@ -6,11 +6,33 @@ use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use PDOStatement;
 
+/**
+ * Database connection and query manager.
+ * 
+ * This class provides a clean interface for database operations including
+ * query building, execution, and transaction management.
+ * 
+ * Transaction Management: this class implements a counter-based approach to 
+ * nested transactions:
+ * 
+ * Transaction Nesting:
+ *    - First begin() starts a real database transaction
+ *    - Subsequent begin() calls increment an internal counter
+ *    - Only the outermost commit()/rollback() affects the database
+ * 
+ * Key Design Principles:
+ *    - Clean Separation: Each transaction unit is truly atomic
+ *    - Simple & Reliable: No complex savepoint management
+ *    - All operations in a transaction unit succeed or fail together
+ *    - No partial commits or rollbacks (by design)
+ *    - Clear, predictable behavior in all scenarios
+ */
 class DB
 {
     protected $statement;
     protected $connection;
     protected $queryLogs = [];
+    protected $transactionLevel = 0;
 
     /**
      * Database error codes that should be logged as critical
@@ -129,39 +151,95 @@ class DB
     }
 
     /**
-     * Initiates a transaction.
+     * Returns current transaction nesting level.
+     * 
+     * Useful for:
+     * - Debugging transaction state
+     * - Testing nested transaction behavior
+     * - Understanding current transaction context
+     * 
+     * Values:
+     * - Level 0: No active transaction
+     * - Level 1: In a top-level transaction
+     * - Level > 1: In a nested transaction
      *
-     * @throws PDOException — If there is already a transaction started 
-     *                        or the driver does not support transactions.
-     * @return boolean
+     * @return int Current transaction nesting level
      */
-    public function begin(): bool
+    public function getTransactionLevel(): int 
     {
-        return $this->connection->beginTransaction();
+        return $this->transactionLevel;
     }
 
     /**
-     * Commits the current active transaction.
+     * Initiates a transaction or increments nesting level.
+     * 
+     * Behavior:
+     * - First call: Starts real database transaction
+     * - Subsequent calls: Increments nesting counter
      *
-     * @throws PDOException — if there is no active transaction.
-     * @return boolean
+     * @throws PDOException If the driver does not support transactions
+     * @return boolean True on success
+     */
+    public function begin(): bool
+    {
+        if (!$this->inTransaction()) {
+            $this->transactionLevel = 1;
+            return $this->connection->beginTransaction();
+        }
+        
+        $this->transactionLevel++;
+        return true;
+    }
+
+    /**
+     * Commits the current transaction or decrements nesting level.
+     * 
+     * Behavior:
+     * - No transaction active: Throws PDOException
+     * - In nested transaction: Decrements counter only
+     * - In top-level transaction: Commits all changes
+     * 
+     * @throws PDOException If there is no active transaction
+     * @return boolean True on success
      */
     public function commit(): bool
     {
+        if ($this->transactionLevel === 0) {
+            throw new \PDOException('No active transaction to commit');
+        }
+
+        if ($this->transactionLevel > 1) {
+            $this->transactionLevel--;
+            return true;
+        }
+
+        $this->transactionLevel = 0;
         return $this->connection->commit();
     }
 
     /**
-     * Rollsback a transaction.
+     * Rolls back the current transaction or decrements nesting level.
      * 
-     * Make sure to put this method call in a try-catch block
-     * when executing transactions.
+     * Behavior:
+     * - No transaction active: Throws PDOException
+     * - In nested transaction: Decrements counter only
+     * - In top-level transaction: Rolls back all changes
      *
-     * @throws PDOException — if there is no active transaction.
-     * @return boolean
+     * @throws PDOException If there is no active transaction
+     * @return boolean True on success
      */
     public function rollback(): bool
     {
+        if ($this->transactionLevel === 0) {
+            throw new \PDOException('No active transaction to rollback');
+        }
+
+        if ($this->transactionLevel > 1) {
+            $this->transactionLevel--;
+            return true;
+        }
+
+        $this->transactionLevel = 0;
         return $this->connection->rollBack();
     }
 
@@ -252,6 +330,50 @@ class DB
             app('logger')->critical($e->getMessage(), $context);
         } else {
             app('logger')->error($e->getMessage(), $context);
+        }
+    }
+
+    /**
+     * Checks if inside a transaction.
+     *
+     * @return boolean TRUE if a transaction is currently active, FALSE otherwise.
+     */
+    public function inTransaction(): bool
+    {
+        return $this->connection->inTransaction();
+    }
+
+    /**
+     * Execute a closure within a transaction.
+     * 
+     * Uses our counter-based transaction implementation to provide a clean,
+     * closure-based API for transaction handling. The closure may optionally 
+     * return a value which will be available after successful commit.
+     * 
+     * Example:
+     * ```php
+     * $result = $db->transaction(function() {
+     *     $user->save();
+     *     $profile->save();
+     *     return $user;  // Optional
+     * });
+     * ```
+     * 
+     * @param callable $callback Closure containing transaction operations
+     * @return mixed|null Value returned by closure after successful commit
+     * @throws \Exception Rethrows any exception after rollback
+     */
+    public function transaction(callable $callback)
+    {
+        $this->begin();
+        
+        try {
+            $result = $callback();
+            $this->commit();
+            return $result;
+        } catch(\Exception $e) {
+            $this->rollback();
+            throw $e;
         }
     }
 }

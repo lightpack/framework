@@ -8,6 +8,7 @@ use \Lightpack\Database\Lucid\Model;
 class Project extends Model
 {   
     protected $table = 'projects';
+    protected $transformer = \ProjectTransformer::class;
 
     public function tasks()
     {

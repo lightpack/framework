@@ -163,6 +163,12 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return new static($items);
     }
 
+    public function map(Closure $callback): Collection
+    {
+        $items = array_map($callback, $this->items);
+        return new static($items);
+    }
+
     public function jsonSerialize(): mixed
     {
         return array_values($this->items);
@@ -268,5 +274,26 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     public function getItems(): array
     {
         return $this->items;
+    }
+
+    /**
+     * Transform the collection using the model's transformer
+     * 
+     * @param array $options Transformation options:
+     *                      - fields: Field selection for models and relations
+     *                      - includes: Relations to include
+     *                      - group: Transformer group to use
+     */
+    public function transform(array $options = []): array
+    {
+        if (empty($this->items)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($this->items as $item) {
+            $result[] = $item->transform($options);
+        }
+        return $result;
     }
 }

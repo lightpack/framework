@@ -11,6 +11,7 @@ abstract class Mail extends PHPMailer
     protected $textView;
     protected $htmlView;
     protected $viewData = [];
+    protected static $sentMails = [];
 
     abstract public function dispatch(array $payload = []);
 
@@ -155,7 +156,12 @@ abstract class Mail extends PHPMailer
         $this->setBody();
 
         try {
-            parent::send();
+            return match (get_env('MAIL_DRIVER', 'smtp')) {
+                'log' => $this->logMail(),
+                'array' => $this->arrayMail(),
+                'smtp' => parent::send(),
+                default => throw new GlobalException('Invalid mail driver: ' . get_env('MAIL_DRIVER')),
+            };
         } catch (Exception $e) {
             throw new GlobalException("Message could not be sent. Mailer Error: {$this->ErrorInfo}");
         }
@@ -170,6 +176,38 @@ abstract class Mail extends PHPMailer
         if ($this->textView) {
             $this->AltBody = app('template')->setData($this->viewData)->render($this->textView);
         }
+    }
+
+
+
+    protected function logMail(): bool
+    {
+        $mail = $this->getNormalizedMailData();
+
+        $logFile = DIR_STORAGE . '/logs/mails.json';
+        $mails = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
+        $mails[] = $mail;
+        file_put_contents($logFile, json_encode($mails, JSON_PRETTY_PRINT));
+
+        return true;
+    }
+
+    protected function arrayMail(): bool
+    {
+        $mail = $this->getNormalizedMailData();
+
+        static::$sentMails[] = $mail;
+        return true;
+    }
+
+    public static function getSentMails(): array
+    {
+        return static::$sentMails;
+    }
+
+    public static function clearSentMails(): void
+    {
+        static::$sentMails = [];
     }
 
     private function setAddresses(array $addresses, string $type)
@@ -211,5 +249,27 @@ abstract class Mail extends PHPMailer
 
             $this->addAttachment($path, $name);
         }
+    }
+
+    private function getNormalizedMailData(): array
+    {
+        return [
+            'id' => uniqid(),
+            'timestamp' => time(),
+            'to' => array_column($this->getToAddresses(), 0),
+            'from' => $this->From,
+            'subject' => $this->Subject,
+            'html_body' => $this->Body,
+            'text_body' => $this->AltBody,
+            'cc' => array_column($this->getCcAddresses(), 0),
+            'bcc' => array_column($this->getBccAddresses(), 0),
+            'reply_to' => array_column($this->getReplyToAddresses(), 0),
+            'attachments' => array_map(function ($attachment) {
+                return [
+                    'filename' => $attachment[1],
+                    'path' => $attachment[0],
+                ];
+            }, $this->getAttachments()),
+        ];
     }
 }

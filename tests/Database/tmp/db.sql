@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS `products`;
 CREATE TABLE IF NOT EXISTS `products` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(55) COLLATE utf8_unicode_ci NOT NULL,
-    `color` varchar(4) COLLATE utf8_unicode_ci NOT NULL,
+    `color` varchar(55) COLLATE utf8_unicode_ci NOT NULL,
     `price` decimal(10,2) NOT NULL DEFAULT '0.00',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -31,7 +31,9 @@ CREATE TABLE IF NOT EXISTS `owners` (
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `tenant_id` int NULL DEFAULT NULL,
   `name` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
+  `active` TINYINT(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -114,7 +116,29 @@ CREATE TABLE IF NOT EXISTS `articles` (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- create table cast_models for testing attribute casting
+DROP TABLE IF EXISTS `cast_models`;
+CREATE TABLE IF NOT EXISTS `cast_models` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `string_col` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `integer_col` int DEFAULT NULL,
+  `float_col` decimal(10,2) DEFAULT NULL,
+  `boolean_col` tinyint(1) DEFAULT NULL,
+  `json_col` json DEFAULT NULL,
+  `date_col` date DEFAULT NULL,
+  `datetime_col` datetime DEFAULT NULL,
+  `timestamp_col` timestamp DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- create pivot table for CastModel relationships
+CREATE TABLE IF NOT EXISTS cast_model_relations (
+    parent_id INTEGER,
+    child_id INTEGER,
+    PRIMARY KEY (parent_id, child_id)
+);
+
 -- insert dummy data for products
-INSERT INTO `products` (`id`, `name`, `color`, `price`) VALUES
-    (331, 'Dummy Product', '#09F', 100.00),
-    (332, 'Dummy Product', '#CCC', 200.00);
+INSERT INTO `products` (`name`, `color`, `price`) VALUES
+    ('Dummy Product', '#09F', 100.00),
+    ('Dummy Product', '#CCC', 200.00);

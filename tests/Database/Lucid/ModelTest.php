@@ -9,6 +9,7 @@ require_once 'Task.php';
 require_once 'Comment.php';
 require_once 'Article.php';
 require_once 'Manager.php';
+require_once 'CastModel.php';
 
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
@@ -16,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
-use Lightpack\Moment\Moment;
 
 final class ModelTest extends TestCase
 {
@@ -54,7 +54,7 @@ final class ModelTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers";
+        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -315,7 +315,7 @@ final class ModelTest extends TestCase
             ['name' => 'John'],
             ['name' => 'Jane'],
         ]);
-
+        
         $this->db->table('roles')->insert([
             ['name' => 'admin'],
             ['name' => 'user'],
@@ -582,7 +582,7 @@ final class ModelTest extends TestCase
     {
         $this->expectException(RecordNotFoundException::class);
         $product = new Product();
-        $product->find(1);
+        $product->find(99999);
     }
 
     public function testModelsAreCached()
@@ -756,9 +756,9 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($project->tasks);
         $this->assertEquals(2, $project->tasks->count());
-        // $this->assertEquals('Task 2', $project->tasks[2]->name);
-        // $this->assertNotEmpty($project->tasks[2]->comments);
-        // $this->assertEquals(2, $project->tasks[2]->comments->count());
+        $this->assertEquals('Task 2', $project->tasks[0]->name);
+        $this->assertNotEmpty($project->tasks[0]->comments);
+        $this->assertEquals(2, $project->tasks[0]->comments->count());
     }
 
     public function testWithMethodForEagerLoadingAll()
@@ -783,10 +783,10 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->tasks);
-        // $this->assertEquals(1, $projects[1]->tasks->count());
-        // $this->assertEquals('Task 1', $projects[1]->tasks[1]->name);
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertNotEmpty($projects[1]->tasks);
+        $this->assertEquals(2, $projects[1]->tasks->count());
+        $this->assertEquals('Task 3', $projects[1]->tasks[1]->name);
     }
 
     public function testWithCountMethodForEagerLoadingAll()
@@ -811,8 +811,8 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals(1, $projects[1]->tasks_count);
-        // $this->assertEquals(2, $projects[2]->tasks_count);
+        $this->assertEquals(1, $projects[0]->tasks_count);
+        $this->assertEquals(2, $projects[1]->tasks_count);
     }
 
     public function testWithAndWithCountMethodBoth()
@@ -837,11 +837,11 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->tasks);
-        // $this->assertEquals(1, $projects[1]->tasks->count());
-        // $this->assertEquals('Task 1', $projects[1]->tasks[1]->name);
-        // $this->assertEquals(1, $projects[1]->tasks_count);
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertNotEmpty($projects[1]->tasks);
+        $this->assertEquals(1, $projects[0]->tasks->count());
+        $this->assertEquals('Task 3', $projects[1]->tasks[1]->name);
+        $this->assertEquals(2, $projects[1]->tasks_count);
     }
 
     public function testWithAndWithCountMethodForHasManyThroughRelations()
@@ -873,10 +873,10 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->comments);
-        // $this->assertEquals(1, $projects[1]->comments->count());
-        // $this->assertEquals('Comment 1', $projects[1]->comments[1]->content);
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertNotEmpty($projects[0]->comments);
+        $this->assertEquals(1, $projects[0]->comments->count());
+        $this->assertEquals('Comment 1', $projects[0]->comments[0]->content);
     }
 
     public function testThrowsExceptionWhenEagerLoadingNonExistingRelation()
@@ -907,9 +907,9 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNotEmpty($projects[1]->manager);
-        // $this->assertEquals('Manager 1', $projects[1]->manager->name);
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertNotEmpty($projects[1]->manager);
+        $this->assertEquals('Manager 2', $projects[1]->manager->name);
     }
 
     public function testEagerLoadForEmptyRelation()
@@ -927,8 +927,8 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertNotEmpty($projects);
         $this->assertEquals(2, $projects->count());
-        // $this->assertEquals('Project 1', $projects[1]->name);
-        // $this->assertNull($projects[1]->manager);
+        $this->assertEquals('Project 1', $projects[0]->name);
+        $this->assertNull($projects[0]->manager);
     }
 
     public function testEagerLoadForManyToManyRelation()
@@ -1483,10 +1483,10 @@ final class ModelTest extends TestCase
         // bulk insert tasks
         $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
-            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
-
+        
         // fetch all projects with tasks count
         $projectModel = $this->db->model(Project::class);
 
@@ -1513,7 +1513,7 @@ final class ModelTest extends TestCase
         // bulk insert tasks
         $this->db->table('tasks')->insert([
             ['name' => 'Task 1', 'project_id' => 1],
-            ['name' => 'Task 2', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
 
@@ -1945,5 +1945,262 @@ final class ModelTest extends TestCase
         $emptyProjects = $projectModel::query()->where('id', 999)->all();
         $this->assertNull($emptyProjects->first());
         $this->assertNull($emptyProjects->first(['status' => 'active']));
+    }
+
+    public function testModelAttributeCasting()
+    {
+        // Test all types of casting
+        $now = new \DateTime();
+        
+        $data = [
+            'string_col' => 123,
+            'integer_col' => '456',
+            'float_col' => '123.45',
+            'boolean_col' => 1,
+            'json_col' => json_encode(['key' => 'value', 'nested' => ['foo' => 'bar']]),
+            'date_col' => $now->format('Y-m-d'),
+            'datetime_col' => $now->format('Y-m-d H:i:s'),
+            'timestamp_col' => $now->format('Y-m-d H:i:s')
+        ];
+
+        $this->db->table('cast_models')->insert($data);
+        $model = $this->db->model(CastModel::class);
+        $record = $model->query()->one();
+
+        // Verify types after create
+        $this->assertIsString($record->string_col);
+        $this->assertEquals('123', $record->string_col);
+
+        $this->assertIsInt($record->integer_col);
+        $this->assertEquals(456, $record->integer_col);
+
+        $this->assertIsFloat($record->float_col);
+        $this->assertEquals(123.45, $record->float_col);
+
+        $this->assertIsBool($record->boolean_col);
+        $this->assertTrue($record->boolean_col);
+
+        $this->assertIsArray($record->json_col);
+        $this->assertEquals(
+            ['key' => 'value', 'nested' => ['foo' => 'bar']], 
+            $record->json_col,
+            'JSON in database does not match expected array structure'
+        );
+        
+        $this->assertEquals($now->format('Y-m-d'), $record->date_col);
+        
+        $this->assertInstanceOf(\DateTimeInterface::class, $record->datetime_col);
+        $this->assertEquals(
+            $now->format('Y-m-d H:i:s'), 
+            $record->datetime_col->format('Y-m-d H:i:s')
+        );
+        
+        $this->assertIsInt($record->timestamp_col);
+        $this->assertEquals($now->getTimestamp(), $record->timestamp_col);
+    }
+
+    public function testModelAttributeCastingWithNullValues()
+    {
+        $model = $this->db->model(CastModel::class);
+        
+        $data = [
+            'string_col' => null,
+            'integer_col' => null,
+            'float_col' => null,
+            'boolean_col' => null,
+            'json_col' => null,
+            'date_col' => null,
+            'datetime_col' => null,
+            'timestamp_col' => null,
+        ];
+
+        // Create with null values
+        $this->db->table('cast_models')->insert($data);
+        $model = $this->db->model(CastModel::class);
+        $record = $model->query()->one();
+
+        // Verify all values remain null
+        $this->assertNull($record->string_col);
+        $this->assertNull($record->integer_col);
+        $this->assertNull($record->float_col);
+        $this->assertNull($record->boolean_col);
+        $this->assertNull($record->json_col);
+        $this->assertNull($record->date_col);
+        $this->assertNull($record->datetime_col);
+        $this->assertNull($record->timestamp_col);
+
+        // Fetch and verify nulls persist
+        $fetched = $model->find($record->id);
+        $this->assertNull($fetched->string_col);
+        $this->assertNull($fetched->integer_col);
+        $this->assertNull($fetched->float_col);
+        $this->assertNull($fetched->boolean_col);
+        $this->assertNull($fetched->json_col);
+        $this->assertNull($fetched->date_col);
+        $this->assertNull($fetched->datetime_col);
+        $this->assertNull($fetched->timestamp_col);
+    }
+
+    public function testModelAttributeCastingWithSave()
+    {
+        $model = $this->db->model(CastModel::class);
+        $now = new \DateTime();
+
+        // Test creating through model
+        $model->string_col = 123;
+        $model->integer_col = '456';
+        $model->float_col = '123.45';
+        $model->boolean_col = 1;
+        $model->json_col = ['key' => 'value'];
+        $model->date_col = $now->format('Y-m-d');
+        $model->datetime_col = $now->format('Y-m-d H:i:s');
+        $model->timestamp_col = $now->format('Y-m-d H:i:s');
+        
+        $model->save();
+        
+        // Verify types after save
+        $this->assertIsString($model->string_col);
+        $this->assertEquals('123', $model->string_col);
+        
+        $this->assertIsInt($model->integer_col);
+        $this->assertEquals(456, $model->integer_col);
+        
+        $this->assertIsFloat($model->float_col);
+        $this->assertEquals(123.45, $model->float_col);
+        
+        $this->assertIsBool($model->boolean_col);
+        $this->assertTrue($model->boolean_col);
+        
+        $this->assertIsArray($model->json_col);
+        $this->assertEquals(['key' => 'value'], $model->json_col);
+        
+        $this->assertEquals($now->format('Y-m-d'), $model->date_col);
+        
+        $this->assertInstanceOf(\DateTimeInterface::class, $model->datetime_col);
+        $this->assertEquals(
+            $now->format('Y-m-d H:i:s'),
+            $model->datetime_col->format('Y-m-d H:i:s')
+        );
+        
+        $this->assertIsInt($model->timestamp_col);
+        $this->assertEquals($now->getTimestamp(), $model->timestamp_col);
+
+        // Verify database received correct format
+        $raw = $this->db->table('cast_models')->where('id', $model->id)->one();
+        $this->assertEquals('123', $raw->string_col);
+        $this->assertEquals('456', $raw->integer_col);
+        $this->assertEquals('123.45', $raw->float_col);
+        $this->assertEquals('1', $raw->boolean_col);
+        $this->assertEquals(['key' => 'value'], json_decode($raw->json_col, true));
+        $this->assertEquals($now->format('Y-m-d'), $raw->date_col);
+        $this->assertEquals($now->format('Y-m-d H:i:s'), $raw->datetime_col);
+        $this->assertEquals($now->format('Y-m-d H:i:s'), $raw->timestamp_col);
+
+        // Test updating through model
+        $model->json_col = ['updated' => true];
+        $model->save();
+
+        // Verify update was cast correctly
+        $raw = $this->db->table('cast_models')->where('id', $model->id)->one();
+        $this->assertEquals(['updated' => true], json_decode($raw->json_col, true));
+
+        // Verify we can read it back
+        $fetched = $model->find($model->id);
+        $this->assertIsArray($fetched->json_col);
+        $this->assertEquals(['updated' => true], $fetched->json_col);
+    }
+
+    public function testModelAttributeCastingWithRelations()
+    {
+        // Create a product with cast attributes
+        $product = $this->db->model(CastModel::class);
+        $product->string_col = 'Product 1';
+        $product->json_col = ['tags' => ['electronics', 'gadgets']];
+        $product->save();
+
+        // Create options with cast attributes
+        $option1 = $this->db->model(CastModel::class);
+        $option1->string_col = 'Option 1';
+        $option1->json_col = ['color' => 'red', 'size' => 'small'];
+        $option1->save();
+
+        $option2 = $this->db->model(CastModel::class);
+        $option2->string_col = 'Option 2';
+        $option2->json_col = ['color' => 'blue', 'size' => 'large'];
+        $option2->save();
+
+        // Link options to product
+        $this->db->table('cast_model_relations')->insert([
+            ['parent_id' => $product->id, 'child_id' => $option1->id],
+            ['parent_id' => $product->id, 'child_id' => $option2->id],
+        ]);
+
+        // Test collection with relations
+        $products = $product->query()
+            ->with('options')
+            ->all();
+
+        $this->assertCount(3, $products);
+        $product = $products->first();
+
+        // Verify main model casting
+        $this->assertIsString($product->string_col);
+        $this->assertEquals('Product 1', $product->string_col);
+        $this->assertIsArray($product->json_col);
+        $this->assertEquals(['tags' => ['electronics', 'gadgets']], $product->json_col);
+
+        // Verify relation casting
+        $this->assertCount(2, $product->options);
+        
+        $option = $product->options->first();
+        $this->assertIsString($option->string_col);
+        $this->assertEquals('Option 1', $option->string_col);
+        $this->assertIsArray($option->json_col);
+        $this->assertEquals(['color' => 'red', 'size' => 'small'], $option->json_col);
+
+        $option = $product->options[1];
+        $this->assertIsString($option->string_col);
+        $this->assertEquals('Option 2', $option->string_col);
+        $this->assertIsArray($option->json_col);
+        $this->assertEquals(['color' => 'blue', 'size' => 'large'], $option->json_col);
+    }
+
+    public function testModelChangeTracking()
+    {
+        // Test fresh model has no changes
+        $model = new Project();
+        $this->assertFalse($model->isDirty());
+        $this->assertEmpty($model->getDirty());
+
+        // Test setting new attribute
+        $model->name = 'Test';
+        $this->assertTrue($model->isDirty());
+        $this->assertTrue($model->isDirty('name'));
+        $this->assertEquals(['name'], $model->getDirty());
+
+        // Test multiple attributes
+        $model->status = 'processing';
+        $this->assertTrue($model->isDirty());
+        $this->assertTrue($model->isDirty('status'));
+        $this->assertEquals(['name', 'status'], $model->getDirty());
+
+        // Test modified attributes list stays the same 
+        $model->name = 'Test';
+        $this->assertEquals(['name', 'status'], $model->getDirty());
+
+        // Test loading from database clears modifications
+        $model->save();
+        $this->assertFalse($model->isDirty());
+        $this->assertEmpty($model->getDirty());
+
+        // Test modifying existing model
+        $model = $model->find($model->id);
+        $this->assertFalse($model->isDirty());
+        
+        $model->name = 'Updated';
+        $this->assertTrue($model->isDirty());
+        $this->assertTrue($model->isDirty('name'));
+        $this->assertFalse($model->isDirty('status'));
+        $this->assertEquals(['name'], $model->getDirty());
     }
 }

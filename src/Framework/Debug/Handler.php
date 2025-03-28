@@ -4,13 +4,11 @@ namespace Lightpack\Debug;
 
 use Throwable;
 use TypeError;
+use Exception;
 use ParseError;
 use ErrorException;
-use Exception;
-use Lightpack\Container\Container;
-use Lightpack\Debug\ExceptionRenderer;
-use Lightpack\Exceptions\ValidationException;
 use Lightpack\Logger\Logger;
+use Lightpack\Debug\ExceptionRenderer;
 
 class Handler
 {
@@ -62,10 +60,6 @@ class Handler
             return $this->handleError(E_RECOVERABLE_ERROR, "Type error: {$exc->getMessage()}", $exc->getFile(), $exc->getLine());
         }
 
-        if ($exc instanceof ValidationException) {
-            return Container::getInstance()->get('redirect')->send();
-        }
-
         if ($exc instanceof Exception) {
             return $this->logAndRenderException($exc, 'Exception');
         }
@@ -75,7 +69,13 @@ class Handler
 
     private function logAndRenderException(Throwable $exc, $type = 'Error')
     {
-        $this->logger->error($exc->getMessage());
+        $this->logger->error($exc->getMessage(), [
+            'stack_trace' => [
+                'file' => $exc->getFile(),
+                'line' => $exc->getLine(),
+                'trace' => $exc->getTraceAsString(),
+            ],
+        ]);
         $this->exceptionRenderer->render($exc, $type);
     }
 }

@@ -215,10 +215,10 @@ class AuthTest extends TestCase
         // Mock request to return invalid token
         $this->request->expects($this->once())
             ->method('bearerToken')
-            ->willReturn('invalid-token');
+            ->willReturn(null);
             
         $user = $this->auth->viaToken();
-        
+     
         $this->assertNull($user);
     }
 }

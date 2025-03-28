@@ -8,12 +8,16 @@ require_once 'Project.php';
 require_once 'Task.php';
 
 use Lightpack\Container\Container;
-use Lightpack\Database\Lucid\Pagination;
 use Lightpack\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 final class PaginationTest extends TestCase
 {
+    /** @var \Lightpack\Database\DB */
+    private $db;
+
+    private $productsCollection;
+    
     public function setUp(): void
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';

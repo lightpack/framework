@@ -8,6 +8,9 @@ use Lightpack\Pagination\Pagination as BasePagination;
 
 class Pagination extends BasePagination implements IteratorAggregate
 {
+    protected array $fields = [];
+    protected array $includes = [];
+
     public function __construct(Collection $items, $total, $perPage = 10, $currentPage = null)
     {
         parent::__construct($items, $total, $perPage, $currentPage);
@@ -41,8 +44,39 @@ class Pagination extends BasePagination implements IteratorAggregate
     {
         $arr = parent::toArray();
 
-        $arr['items'] = $this->items->toArray();
+        $arr['items'] = is_array($this->items) ? $this->items : $this->items->toArray();
 
         return $arr;
+    }
+
+    /**
+     * Transform the paginated data using the model's transformer
+     * 
+     * @param array $options Transformation options:
+     *                      - fields: Field selection for models and relations
+     *                      - includes: Relations to include
+     *                      - group: Transformer group to use
+     */
+    public function transform(array $options = []): array
+    {
+        $totalPages = (int) ceil($this->total / $this->perPage);
+        
+        $result = [
+            'data' => $this->items->transform($options),
+            'meta' => [
+                'current_page' => $this->currentPage,
+                'per_page' => $this->perPage,
+                'total' => $this->total,
+                'total_pages' => $totalPages
+            ],
+            'links' => [
+                'first' => '?page=1',
+                'last' => '?page=' . $totalPages,
+                'prev' => $this->currentPage > 1 ? '?page=' . ($this->currentPage - 1) : null,
+                'next' => $this->currentPage < $totalPages ? '?page=' . ($this->currentPage + 1) : null
+            ]
+        ];
+
+        return $result;
     }
 }
