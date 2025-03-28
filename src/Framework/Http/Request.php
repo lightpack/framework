@@ -450,4 +450,18 @@ class Request
     {
         return $this->input($key, $default);
     }
+
+    /**
+     * Get the client's IP address.
+     * 
+     * @throws \RuntimeException if IP address cannot be determined
+     */
+    public function ip(): string
+    {
+        if (!isset($_SERVER['REMOTE_ADDR'])) {
+            throw new \RuntimeException('Could not determine client IP address');
+        }
+
+        return $_SERVER['REMOTE_ADDR'];
+    }
 }
