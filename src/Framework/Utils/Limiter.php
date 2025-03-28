@@ -26,4 +26,9 @@ class Limiter
         $this->cache->set($key, $hits + 1, $mins * 60, $hits > 0);
         return true;
     }
+
+    public function getHits(string $key): ?int
+    {
+        return $this->cache->get($key);
+    }
 }
