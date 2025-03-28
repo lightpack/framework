@@ -475,32 +475,32 @@ class TransformerTest extends TestCase
         $product = new Product(1);
         
         // Test API transformer
-        $result = $product->transform(['group' => 'api']);
+        $result = $product->transform(['context' => 'api']);
         $this->assertArrayHasKey('name', $result);
         $this->assertArrayHasKey('price', $result);
         $this->assertArrayNotHasKey('color', $result);
         $this->assertArrayNotHasKey('id', $result);
 
         // Test View transformer
-        $result = $product->transform(['group' => 'view']);
+        $result = $product->transform(['context' => 'view']);
         $this->assertArrayHasKey('id', $result);
         $this->assertArrayHasKey('name', $result);
         $this->assertArrayHasKey('price', $result);
         $this->assertArrayHasKey('color', $result);
     }
 
-    public function testProductTransformerInvalidGroup()
+    public function testProductTransformerInvalidContext()
     {
         $product = new Product(1);
         
         $this->expectException(\RuntimeException::class);
         
         try {
-            $product->transform(['group' => 'admin']);
+            $product->transform(['context' => 'admin']);
         } catch (\RuntimeException $e) {
             $message = $e->getMessage();
-            $this->assertStringContainsString("Invalid transformer group 'admin' for", $message);
-            $this->assertStringContainsString("Available groups:", $message);
+            $this->assertStringContainsString("Invalid transformer context 'admin' for", $message);
+            $this->assertStringContainsString("Available contexts:", $message);
             $this->assertStringContainsString("api", $message);
             $this->assertStringContainsString("view", $message);
             throw $e;

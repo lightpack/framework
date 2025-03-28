@@ -478,17 +478,17 @@ class Model implements JsonSerializable
         }
         // Multiple transformers case
         else {
-            $group = $options['group'] ?? 'api';  // Default to 'api'
+            $context = $options['context'];
 
-            if (!isset($this->transformer[$group])) {
+            if (!isset($this->transformer[$context])) {
                 $available = implode(', ', array_keys($this->transformer));
                 throw new \RuntimeException(
-                    "Invalid transformer group '{$group}' for " . get_class($this) .
-                        ". Available groups: {$available}"
+                    "Invalid transformer context '{$context}' for " . get_class($this) .
+                        ". Available contexts: {$available}"
                 );
             }
 
-            $transformer = new $this->transformer[$group]();
+            $transformer = new $this->transformer[$context]();
         }
 
         // Apply options
