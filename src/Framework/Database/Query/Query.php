@@ -687,4 +687,71 @@ class Query
 
         return $this;
     }
+
+    public function upsert(array $data, array $updateColumns = null)
+    {
+        if (empty($data)) {
+            return;
+        }
+
+        // If update columns not specified, use all columns
+        if ($updateColumns === null) {
+            $updateColumns = array_keys(is_array(reset($data)) ? reset($data) : $data);
+        }
+
+        // Handle both single and bulk upsert
+        if (!is_array(reset($data))) {
+            $data = [$data];
+        }
+
+        // Validate data types
+        foreach ($data as $row) {
+            foreach ($row as $value) {
+                if (!$this->isValidParameterType($value)) {
+                    throw new \InvalidArgumentException(
+                        'Invalid parameter type. Allowed types are: null, bool, int, float, string, DateTime'
+                    );
+                }
+            }
+            $this->bindings = array_merge($this->bindings, array_values($row));
+        }
+
+        // Add update values to bindings
+        foreach ($data[0] as $key => $value) {
+            if (in_array($key, $updateColumns)) {
+                $this->bindings[] = $value;
+            }
+        }
+
+        $compiler = new Compiler($this);
+        $query = $compiler->compileUpsert(array_keys($data[0]), $data, $updateColumns);
+        $result = $this->connection->query($query, $this->bindings);
+        
+        $this->resetQuery();
+        return $result;
+    }
+
+    public function increment(string $column, int $amount = 1)
+    {
+        return $this->incrementOrDecrement($column, $amount);
+    }
+
+    public function decrement(string $column, int $amount = 1)
+    {
+        return $this->incrementOrDecrement($column, -$amount);
+    }
+
+    protected function incrementOrDecrement(string $column, int $amount)
+    {
+        if (empty($this->components['where'])) {
+            throw new \RuntimeException('Increment/Decrement operations require a where clause');
+        }
+
+        $compiler = new Compiler($this);
+        $query = $compiler->compileIncrement($column, $amount);
+        $result = $this->connection->query($query, $this->bindings);
+        
+        $this->resetQuery();
+        return $result;
+    }
 }

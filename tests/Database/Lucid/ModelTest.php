@@ -2203,4 +2203,103 @@ final class ModelTest extends TestCase
         $this->assertFalse($model->isDirty('status'));
         $this->assertEquals(['name'], $model->getDirty());
     }
+
+    public function testUpsertMethod()
+    {
+        // Test 1: Basic upsert (insert)
+        $products = $this->product->query()->all();
+        $productsCountBeforeUpsert = count($products);
+
+        $this->product->query()->upsert([
+            'name' => 'Product Upsert',
+            'color' => '#AAA',
+            'views' => 0,
+        ]);
+
+        $products = $this->product->query()->all();
+        $productsCountAfterUpsert = count($products);
+        $this->assertEquals($productsCountBeforeUpsert + 1, $productsCountAfterUpsert);
+
+        // Test 2: Basic upsert (update)
+        $product = $this->product->query()->where('name', 'Product Upsert')->one();
+        $this->product->query()->upsert([
+            'id' => $product->id,
+            'name' => 'Product Upsert',
+            'color' => '#BBB',
+            'views' => 5,
+        ]);
+
+        $updatedProduct = $this->product->query()->where('id', $product->id)->one();
+        $this->assertEquals('#BBB', $updatedProduct->color);
+        $this->assertEquals(5, $updatedProduct->views);
+
+        // Test 3: Bulk upsert
+        $this->product->query()->upsert([
+            [
+                'name' => 'Bulk Upsert 1',
+                'color' => '#CCC',
+                'views' => 10,
+            ],
+            [
+                'name' => 'Bulk Upsert 2',
+                'color' => '#DDD',
+                'views' => 20,
+            ],
+        ]);
+
+        $bulkProducts = $this->product->query()->where('name', 'LIKE', 'Bulk Upsert%')->orderBy('name')->all();
+        $this->assertEquals(2, count($bulkProducts));
+        $this->assertEquals(10, $bulkProducts[0]->views);
+        $this->assertEquals(20, $bulkProducts[1]->views);
+
+        // Test 4: Upsert with specific update columns
+        $product = $this->product->query()->where('name', 'Bulk Upsert 1')->one();
+        $this->product->query()->upsert(
+            [
+                'id' => $product->id,
+                'name' => 'Updated Name',
+                'color' => '#EEE',
+                'views' => 50,
+            ],
+            ['name', 'views']
+        );
+
+        $updatedProduct = $this->product->query()->where('id', $product->id)->one();
+        $this->assertEquals('Updated Name', $updatedProduct->name);
+        $this->assertEquals('#CCC', $updatedProduct->color); // Color should not change
+        $this->assertEquals(50, $updatedProduct->views);
+    }
+
+    public function testIncrementAndDecrementMethods()
+    {
+        // Test 1: Basic increment
+        $product = $this->product->query()->one();
+        $this->product->query()->where('id', $product->id)->increment('views');
+        
+        $updatedProduct = $this->product->query()->where('id', $product->id)->one();
+        $this->assertEquals(1, $updatedProduct->views);
+
+        // Test 2: Increment by amount
+        $this->product->query()->where('id', $product->id)->increment('views', 5);
+        
+        $updatedProduct = $this->product->query()->where('id', $product->id)->one();
+        $this->assertEquals(6, $updatedProduct->views);
+
+        // Test 3: Basic decrement
+        $this->product->query()->where('id', $product->id)->decrement('views');
+        
+        $updatedProduct = $this->product->query()->where('id', $product->id)->one();
+        $this->assertEquals(5, $updatedProduct->views);
+
+        // Test 4: Decrement by amount
+        $this->product->query()->where('id', $product->id)->decrement('views', 3);
+        
+        $updatedProduct = $this->product->query()->where('id', $product->id)->one();
+        $this->assertEquals(2, $updatedProduct->views);
+
+        // Test 5: Increment without where clause should throw exception
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Increment/Decrement operations require a where clause');
+        $this->product->query()->increment('views');
+    }
 }

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS `products` (
     `name` varchar(55) COLLATE utf8_unicode_ci NOT NULL,
     `color` varchar(55) COLLATE utf8_unicode_ci NOT NULL,
     `price` decimal(10,2) NOT NULL DEFAULT '0.00',
+    `views` INT DEFAULT 0,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
