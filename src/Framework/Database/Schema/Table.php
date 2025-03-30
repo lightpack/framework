@@ -286,7 +286,7 @@ class Table
      * NOTE: You should remove duplicate values from the columns before 
      * adding unique index otherwise it may result in "mysql error 1062".
      */
-    public function unique(string|array $columns, string $indexName = null): void
+    public function unique(string|array $columns, ?string $indexName = null): void
     {
         if($this->altering()) {
             $this->addUniqueIndex($columns, $indexName);
@@ -302,7 +302,7 @@ class Table
         $this->connection->query($sql);
     }
 
-    public function index(string|array $columns, string $indexName = null): void
+    public function index(string|array $columns, ?string $indexName = null): void
     {
         if($this->altering()) {
             $this->addIndex($columns, $indexName);
@@ -318,7 +318,7 @@ class Table
         $this->connection->query($sql);
     }
 
-    public function fulltext(string|array $columns, string $indexName = null): void
+    public function fulltext(string|array $columns, ?string $indexName = null): void
     {
         if($this->altering()) {
             $this->addFulltextIndex($columns, $indexName);
@@ -334,7 +334,7 @@ class Table
         $this->connection->query($sql);
     }
 
-    public function spatial(string|array $columns, string $indexName = null): void
+    public function spatial(string|array $columns, ?string $indexName = null): void
     {
         if($this->altering()) {
             $this->addSpatialIndex($columns, $indexName);
@@ -437,7 +437,7 @@ class Table
         $this->connection->query($sql);
     }
 
-    private function addUniqueIndex(string|array $columns, string $indexName = null): void
+    private function addUniqueIndex(string|array $columns, ?string $indexName = null): void
     {
 
         $sql = (new AlterTable)->compileUnique($this->getName(), $columns, $indexName);
@@ -445,21 +445,21 @@ class Table
         $this->connection->query($sql);
     }
 
-    private function addIndex(string|array $columns, string $indexName = null): void
+    private function addIndex(string|array $columns, ?string $indexName = null): void
     {
         $sql = (new AlterTable)->compileIndex($this->getName(), $columns, $indexName);
 
         $this->connection->query($sql);
     }
 
-    private function addFulltextIndex(string|array $columns, string $indexName = null): void
+    private function addFulltextIndex(string|array $columns, ?string $indexName = null): void
     {
         $sql = (new AlterTable)->compileFulltext($this->getName(), $columns, $indexName);
 
         $this->connection->query($sql);
     }
 
-    private function addSpatialIndex(string|array $columns, string $indexName = null): void
+    private function addSpatialIndex(string|array $columns, ?string $indexName = null): void
     {
         $sql = (new AlterTable)->compileSpatial($this->getName(), $columns, $indexName);
 

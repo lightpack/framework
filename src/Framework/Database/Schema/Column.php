@@ -63,7 +63,7 @@ class Column
         return $this;
     }
 
-    public function unique(string $indexName = null): self
+    public function unique(?string $indexName = null): self
     {
         $this->columnIndexType = self::INDEX_UNIQUE;
 
@@ -84,7 +84,7 @@ class Column
         return $this;
     }
 
-    public function index(string $indexName = null): self
+    public function index(?string $indexName = null): self
     {
         $this->columnIndexType = self::INDEX_INDEX;
 
@@ -105,7 +105,7 @@ class Column
         return $this;
     }
 
-    public function fulltext(string $indexName = null): self
+    public function fulltext(?string $indexName = null): self
     {
         $this->columnIndexType = self::INDEX_FULLTEXT;
 
