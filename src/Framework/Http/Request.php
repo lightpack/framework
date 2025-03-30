@@ -281,6 +281,15 @@ class Request
 
     public function port(): ?int
     {
+        // First check APP_URL for port
+        $appUrl = get_env('APP_URL');
+        if ($appUrl) {
+            $parts = parse_url($appUrl);
+            if (isset($parts['port'])) {
+                return (int) $parts['port'];
+            }
+        }
+
         return $_SERVER['SERVER_PORT'] ?? null;
     }
 
