@@ -33,7 +33,7 @@ class Request
     ];
     private Arr $arr;
 
-    public function __construct(string $basepath = null)
+    public function __construct(?string $basepath = null)
     {
         $this->basepath = $basepath ?? dirname($_SERVER['SCRIPT_NAME']);
         $this->files = new Files($_FILES ?? []);
@@ -56,7 +56,7 @@ class Request
      * @return mixed|array Returns the value for the specified key if found, the default value if key not found,
      *                     or the entire $_GET array if no key is specified.
      */
-    public function query(string $key = null, $default = null)
+    public function query(?string $key = null, $default = null)
     {
         if (null === $key) {
             return $_GET;
@@ -94,7 +94,7 @@ class Request
         return '/' . trim($path, '/');
     }
 
-    public function segments(int $index = null)
+    public function segments(?int $index = null)
     {
         $segments = explode('/', trim($this->path(), '/'));
 
@@ -299,7 +299,7 @@ class Request
         return self::$verbs;
     }
 
-    public function header(string $key, string $default = null): ?string
+    public function header(string $key, ?string $default = null): ?string
     {
         return $this->headers->get($key, $default);
     }
@@ -342,7 +342,7 @@ class Request
         return $_SERVER['HTTP_REFERER'] ?? null;
     }
 
-    public function setMethod(string $method = null): self
+    public function setMethod(?string $method = null): self
     {
         $method = $method ?? ($_SERVER['REQUEST_METHOD'] ?? 'GET');
         $method = strtoupper($method);
@@ -438,7 +438,7 @@ class Request
     /**
      * @deprecated Internal use only, will be removed
      */
-    private function queryData(string $key = null, $default = null)
+    private function queryData(?string $key = null, $default = null)
     {
         return $this->input($key, $default);
     }
@@ -446,7 +446,7 @@ class Request
     /**
      * @deprecated Internal use only, will be removed
      */
-    private function postData(string $key = null, $default = null)
+    private function postData(?string $key = null, $default = null)
     {
         return $this->input($key, $default);
     }

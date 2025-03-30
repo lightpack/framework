@@ -14,7 +14,7 @@ class ForeignKey
     public const ACTION_RESTRICT = 'RESTRICT';
     public const ACTION_SET_NULL = 'SET NULL';
 
-    public function __construct(string $foreignKey = null)
+    public function __construct(?string $foreignKey = null)
     {
         $this->foreignKey = $foreignKey;
         $this->updateAction = self::ACTION_RESTRICT;

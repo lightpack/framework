@@ -24,7 +24,7 @@ class Query
         'offset' => null,
     ];
 
-    public function __construct($table = null, DB $connection = null)
+    public function __construct($table = null, ?DB $connection = null)
     {
         $this->table = $table;
         $this->connection = $connection ?? app('db');
@@ -157,7 +157,7 @@ class Query
         return $this;
     }
 
-    public function from(string $table, string $alias = null): static
+    public function from(string $table, ?string $alias = null): static
     {
         $this->table = $table;
         $this->components['alias'] = $alias;
@@ -222,7 +222,7 @@ class Query
         return $this;
     }
 
-    public function orWhere($column, string $operator = null, $value = null): static
+    public function orWhere($column, ?string $operator = null, $value = null): static
     {
         $this->where($column, $operator, $value, 'OR');
         return $this;
@@ -688,7 +688,7 @@ class Query
         return $this;
     }
 
-    public function upsert(array $data, array $updateColumns = null)
+    public function upsert(array $data, ?array $updateColumns = null)
     {
         if (empty($data)) {
             return;
