@@ -68,7 +68,7 @@ class Migrator
      * @param integer|null $steps No. of batches to rollback.
      * @return array Array of rolled back migratins.
      */
-    public function rollback(string $path, int $steps = null): array
+    public function rollback(string $path, ?int $steps = null): array
     {
         $this->connection->disableForeignKeyChecks();
 
