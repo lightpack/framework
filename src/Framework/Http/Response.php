@@ -273,7 +273,7 @@ class Response
      * @param string $name  Custom name for downloaded file.
      * @param array $headers  Additional headers for download response.
      */
-    public function download(string $path, string $name = null, array $headers = []): self
+    public function download(string $path, ?string $name = null, array $headers = []): self
     {
         $name = $name ?? basename($path);
 
@@ -300,7 +300,7 @@ class Response
      * @param string $name  Custom name for downloaded file.
      * @param array $headers  Additional headers for download response.
      */
-    public function file(string $path, string $name = null, array $headers = []): self
+    public function file(string $path, ?string $name = null, array $headers = []): self
     {
         $name = $name ?? basename($path);
 

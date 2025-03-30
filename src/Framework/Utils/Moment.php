@@ -80,42 +80,42 @@ class Moment
         }
     }
 
-    public function today(string $format = null): string
+    public function today(?string $format = null): string
     {
         return $this->create('today')->format($format ?? $this->format);
     }
 
-    public function tomorrow(string $format = null): string
+    public function tomorrow(?string $format = null): string
     {
         return $this->create('tomorrow')->format($format ?? $this->format);
     }
 
-    public function yesterday(string $format = null): string
+    public function yesterday(?string $format = null): string
     {
         return $this->create('yesterday')->format($format ?? $this->format);
     }
 
-    public function next(string $dayname, string $format = null): string
+    public function next(string $dayname, ?string $format = null): string
     {
         return $this->create('next ' . strtolower($dayname))->format($format ?? $this->format);
     }
 
-    public function last(string $dayname, string $format = null): string
+    public function last(string $dayname, ?string $format = null): string
     {
         return $this->create('last ' . strtolower($dayname))->format($format ?? $this->format);
     }
 
-    public function thisMonthEnd(string $format = null): string
+    public function thisMonthEnd(?string $format = null): string
     {
         return $this->create('last day of this month')->format($format ?? $this->format);
     }
 
-    public function nextMonthEnd(string $format = null): string
+    public function nextMonthEnd(?string $format = null): string
     {
         return $this->create('last day of next month')->format($format ?? $this->format);
     }
 
-    public function lastMonthEnd(string $format = null): string
+    public function lastMonthEnd(?string $format = null): string
     {
         return $this->create('last day of last month')->format($format ?? $this->format);
     }
@@ -136,12 +136,12 @@ class Moment
         return $this->diff($datetime1, $datetime2)->days;
     }
 
-    public function now(string $format = null): string
+    public function now(?string $format = null): string
     {
         return $this->create('now')->format($format ?? $this->format);
     }
 
-    public function travel(string $modifier, string $format = null): string
+    public function travel(string $modifier, ?string $format = null): string
     {
         try {
             $datetime = $this->create();

@@ -15,6 +15,7 @@ class DefaultIdentifier implements Identifier
 
     public function findById($id): ?Identity
     {
+        /** @var AuthUser */
         $user = $this->user->find($id);
 
         if (!$user) {

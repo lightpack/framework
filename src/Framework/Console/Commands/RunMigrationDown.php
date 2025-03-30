@@ -85,7 +85,7 @@ class RunMigrationDown implements ICommand
         return $steps;
     }
 
-    private function promptConfirmation(string|int $steps = null): bool
+    private function promptConfirmation(null|string|int $steps = null): bool
     {
         fputs(STDOUT, "\n");
 

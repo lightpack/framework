@@ -18,7 +18,7 @@ class ArrayDriver implements DriverInterface
         $this->store[$key] = $value;
     }
 
-    public function get(string $key = null, $default = null)
+    public function get(?string $key = null, $default = null)
     {
         if ($key === null) {
             return $this->store;
