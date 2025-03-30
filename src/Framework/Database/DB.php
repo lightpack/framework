@@ -49,9 +49,9 @@ class DB
 
     public function __construct(
         string $dsn,
-        string $username = null,
-        string $password = null,
-        array $options = null
+        ?string $username = null,
+        ?string $password = null,
+        ?array $options = null
     ) {
         try {
             $this->connection = new \PDO($dsn, $username, $password, $options);
@@ -82,7 +82,7 @@ class DB
      * @return PDOStatement
      * @throws \PDOException with sanitized error messages
      */
-    public function query(string $sql, array $params = null): PDOStatement
+    public function query(string $sql, ?array $params = null): PDOStatement
     {
         $this->logQuery($sql, $params);
 
