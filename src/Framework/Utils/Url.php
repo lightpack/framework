@@ -186,15 +186,14 @@ class Url
             unset($queryParams[$ignoredParam]);
         }
 
-        // Reconstruct the URL without the signature, expires, and ignored parameters
-        $urlWithoutSignature = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
-
-        // Add port if exists
-        if (isset($parsedUrl['port'])) {
-            $urlWithoutSignature .= ':' . $parsedUrl['port'];
+        // Get the base URL from environment, just like we do when generating URLs
+        $baseUrl = get_env('APP_URL') ? rtrim(get_env('APP_URL'), '/') : '';
+        if (!$baseUrl) {
+            // If no APP_URL, reconstruct from request
+            $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
         }
 
-        $urlWithoutSignature .= $parsedUrl['path'];
+        $urlWithoutSignature = $baseUrl . $parsedUrl['path'];
 
         if (!empty($queryParams)) {
             $urlWithoutSignature .= '?' . http_build_query($queryParams);
