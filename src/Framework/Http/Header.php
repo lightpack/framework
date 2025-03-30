@@ -16,7 +16,7 @@ class Header
         return isset($this->headers[$key]);
     }
 
-    public function get(string $key, string $default = null): ?string
+    public function get(string $key, ?string $default = null): ?string
     {
         return $this->headers[$key] ?? $default;
     }

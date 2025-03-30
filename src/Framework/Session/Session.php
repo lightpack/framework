@@ -46,7 +46,7 @@ class Session
         $this->driver->set($topKey, $data[$topKey]);
     }
 
-    public function get(string $key = null, $default = null)
+    public function get(?string $key = null, $default = null)
     {
         if($key === null) {
             return $this->driver->get();

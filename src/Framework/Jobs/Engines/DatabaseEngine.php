@@ -63,7 +63,7 @@ class DatabaseEngine extends BaseEngine
      *
      * @return object|null
      */
-    private function findNextQueuedJob(string $queue = null)
+    private function findNextQueuedJob(?string $queue = null)
     {
         $now = date('Y-m-d H:i:s');
 

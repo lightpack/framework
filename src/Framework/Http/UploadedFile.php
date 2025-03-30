@@ -162,7 +162,7 @@ class UploadedFile
     /**
      * @deprecated use store() method
      */
-    public function move(string $destination, string $name = null): void
+    public function move(string $destination, ?string $name = null): void
     {
         $this->ensureDirectoryChecks($destination);
 
