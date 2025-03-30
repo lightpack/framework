@@ -9,7 +9,7 @@ if (!function_exists('app')) {
      *
      * @return Lightpack\Container\Container|mixed
      */
-    function app(string $key = null)
+    function app(?string $key = null)
     {
         $container = \Lightpack\Container\Container::getInstance();
 
@@ -75,7 +75,7 @@ if (!function_exists('get_env')) {
     /**
      * Gets an environment variable.
      */
-    function get_env(string $key, string $default = null): ?string
+    function get_env(string $key, ?string $default = null): ?string
     {
         if (isset($_ENV[$key])) {
             return $_ENV[$key];
@@ -232,7 +232,7 @@ if (!function_exists('auth')) {
      * 
      * @return \Lightpack\Auth\Auth
      */
-    function auth(string $driver = null)
+    function auth(?string $driver = null)
     {
         if (!$driver) {
             return app('auth');
