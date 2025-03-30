@@ -31,7 +31,6 @@ class DatabaseDriver implements DriverInterface
             ->one();
 
         if (!$entry) {
-            $this->delete($key);
             return null;
         }
 

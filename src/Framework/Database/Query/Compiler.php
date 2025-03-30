@@ -85,6 +85,36 @@ class Compiler
         return "INSERT" . $ignore . "INTO {$table} ($columns) VALUES $values";
     }
 
+    public function compileUpsert(array $columns, array $values, array $updateColumns)
+    {
+        // Compile the INSERT part
+        foreach ($values as $value) {
+            if (count($value) == 1) {
+                $parameters[] = '(' . $this->parameterize(count($value)) . ')';
+            } else {
+                $parameters[] = $this->parameterize(count($value));
+            }
+        }
+
+        $quotedColumns = array_map(function($col) {
+            return $this->query->getConnection()->quoteIdentifier($col);
+        }, $columns);
+
+        $columns = implode(', ', $quotedColumns);
+        $values = implode(', ', $parameters);
+        $table = $this->query->getConnection()->quoteIdentifier($this->query->table);
+
+        // Compile the ON DUPLICATE KEY UPDATE part
+        $updates = array_map(function($col) {
+            $quotedCol = $this->query->getConnection()->quoteIdentifier($col);
+            return "{$quotedCol} = ?";
+        }, $updateColumns);
+
+        $updateClause = implode(', ', $updates);
+
+        return "INSERT INTO {$table} ($columns) VALUES $values ON DUPLICATE KEY UPDATE $updateClause";
+    }
+
     public function compileUpdate(array $columns)
     {
         $where = $this->where();
@@ -98,6 +128,19 @@ class Compiler
         $columnValuePairs = implode(', ', $columnValuePairs);
 
         return "UPDATE {$table} SET {$columnValuePairs} {$where}";
+    }
+
+    public function compileIncrement(string $column, int $amount)
+    {
+        $where = $this->where();
+        $table = $this->query->getConnection()->quoteIdentifier($this->query->table);
+        $quotedColumn = $this->query->getConnection()->quoteIdentifier($column);
+
+        // For positive amount, use + operator, for negative use - operator
+        $operator = $amount >= 0 ? '+' : '-';
+        $amount = abs($amount); // Use absolute value since operator is already determined
+
+        return "UPDATE {$table} SET {$quotedColumn} = {$quotedColumn} {$operator} {$amount} {$where}";
     }
 
     public function compileDelete()
