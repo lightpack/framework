@@ -293,7 +293,21 @@ class Request
 
     public function port(): ?int
     {
-        // First check APP_URL for port
+        // Check forwarded port from load balancer
+        if ($this->headers->has('X-Forwarded-Port')) {
+            return (int) $this->headers->get('X-Forwarded-Port');
+        }
+
+        // Try to extract port from forwarded host
+        if ($this->headers->has('X-Forwarded-Host')) {
+            $hosts = explode(',', $this->headers->get('X-Forwarded-Host'));
+            $parts = explode(':', trim($hosts[0]));
+            if (isset($parts[1])) {
+                return (int) $parts[1];
+            }
+        }
+
+        // check APP_URL for port
         $appUrl = get_env('APP_URL');
         if ($appUrl) {
             $parts = parse_url($appUrl);
