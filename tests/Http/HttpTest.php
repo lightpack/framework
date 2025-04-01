@@ -137,8 +137,8 @@ class HttpTest extends TestCase
         $http = new Http();
         $response = $http->get($this->httpBin . '/get');
         
-        $this->assertIsString($response->getText());
-        $this->assertJson($response->getText());
+        $this->assertIsString($response->body());
+        $this->assertJson($response->body());
     }
 
     public function testCanMakePatchRequest()
