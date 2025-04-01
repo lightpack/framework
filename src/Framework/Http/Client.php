@@ -4,12 +4,12 @@ namespace Lightpack\Http;
 
 class Client
 {
-    private array $headers = [];
-    private array $options = [];
-    private ?string $error = null;
-    private mixed $response = null;
-    private int $statusCode = 0;
-    private array $files = [];
+    protected array $headers = [];
+    protected array $options = [];
+    protected ?string $error = null;
+    protected mixed $response = null;
+    protected int $statusCode = 0;
+    protected array $files = [];
 
     public function get(string $url, array $query = []): self
     {
@@ -109,23 +109,25 @@ class Client
 
         // Set files for upload
         if (!empty($this->files)) {
-            $body = [];
-            foreach ($this->files as $key => $file) {
-                $body[$key] = $file;
-            }
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->files);
         }
 
-        // Set additional curl options
+        // Set custom options
         foreach ($this->options as $option => $value) {
             curl_setopt($ch, $option, $value);
         }
 
+        // Execute request
         $this->response = curl_exec($ch);
         $this->error = curl_error($ch);
         $this->statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         curl_close($ch);
+
+        // Reset state for next request
+        $this->headers = [];
+        $this->options = [];
+        $this->files = [];
 
         return $this;
     }

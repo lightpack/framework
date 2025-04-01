@@ -36,7 +36,6 @@ class ClientTest extends TestCase
     {
         $client = new Client();
         $response = $client
-            ->json()
             ->post($this->jsonApi . '/posts', [
                 'title' => 'foo',
                 'body' => 'bar',
@@ -51,7 +50,6 @@ class ClientTest extends TestCase
     {
         $client = new Client();
         $response = $client
-            ->json()
             ->put($this->jsonApi . '/posts/1', [
                 'title' => 'updated',
             ]);
