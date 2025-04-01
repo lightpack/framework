@@ -65,29 +65,97 @@ class Client
         return $this;
     }
 
+    /**
+     * Get the HTTP status code of the response.
+     * 
+     * Returns:
+     * - 2xx for successful requests
+     * - 4xx for client errors (like 404 Not Found)
+     * - 5xx for server errors
+     * - 0 if the request failed to connect
+     */
     public function status(): int
     {
         return $this->statusCode;
     }
 
+    /**
+     * Get the connection error message if any.
+     * 
+     * Returns connection-level errors like:
+     * - DNS resolution failed
+     * - Connection timed out
+     * - SSL certificate issues
+     * - Network unreachable
+     * 
+     * Note: This only returns cURL errors. For HTTP errors (404, 500 etc),
+     * check the status() code instead.
+     * 
+     * @return string|null Error message or null if no connection error
+     */
     public function error(): ?string
     {
         return $this->error;
     }
 
+    /**
+     * Get the response data as array.
+     * Note: Assumes JSON response.
+     */
     public function data(): array
     {
         return json_decode($this->response, true);
     }
 
+    /**
+     * Get the raw response text.
+     */
     public function getText(): string
     {
         return $this->response;
     }
 
+    /**
+     * Check if status code is in the 2xx range (success).
+     */
+    public function ok(): bool
+    {
+        return $this->statusCode >= 200 && $this->statusCode < 300;
+    }
+
+    /**
+     * Check if status code is in the 3xx range (redirect).
+     */
+    public function redirect(): bool
+    {
+        return $this->statusCode >= 300 && $this->statusCode < 400;
+    }
+
+    /**
+     * Check if status code is in the 4xx range (client error).
+     */
+    public function clientError(): bool
+    {
+        return $this->statusCode >= 400 && $this->statusCode < 500;
+    }
+
+    /**
+     * Check if status code is in the 5xx range (server error).
+     */
+    public function serverError(): bool
+    {
+        return $this->statusCode >= 500 && $this->statusCode < 600;
+    }
+
+    /**
+     * Check if the request failed.
+     * Returns true if:
+     * - There was a connection error, or
+     * - The server returned a 4xx or 5xx status code
+     */
     public function failed(): bool 
     {
-        return !empty($this->error);
+        return !empty($this->error) || $this->statusCode >= 400;
     }
 
     private function request(string $method, string $url, array $data = []): self
@@ -177,5 +245,18 @@ class Client
     public function token(string $token): self
     {
         return $this->headers(['Authorization' => 'Bearer ' . $token]);
+    }
+
+    /**
+     * Set custom cURL options for the request.
+     * 
+     * @param array $options Array of CURLOPT_* options
+     */
+    public function options(array $options): self
+    {
+        foreach ($options as $option => $value) {
+            $this->options[$option] = $value;
+        }
+        return $this;
     }
 }

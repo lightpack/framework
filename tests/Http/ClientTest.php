@@ -151,12 +151,66 @@ class ClientTest extends TestCase
         $this->assertEquals('patched', $data['title']);
     }
 
-    public function testReturnsErrorOnFailure()
+    public function testReturnsErrorOnConnectionFailure()
     {
         $client = new Client();
         $response = $client->get('http://non-existent-domain-123456.com');
         
         $this->assertTrue($response->failed());
         $this->assertEquals(0, $response->status());
+        $this->assertNotEmpty($response->error());
+    }
+
+    public function testFailsOnServerError()
+    {
+        $client = new Client();
+        $response = $client->get($this->httpBin . '/status/404');
+        
+        $this->assertTrue($response->failed());
+        $this->assertEquals(404, $response->status());
+        $this->assertEmpty($response->error());
+    }
+
+    public function testOkForSuccessfulRequest()
+    {
+        $client = new Client();
+        $response = $client->get($this->jsonApi . '/posts/1');
+        
+        $this->assertTrue($response->ok());
+        $this->assertFalse($response->clientError());
+        $this->assertFalse($response->serverError());
+    }
+
+    public function testClientErrorFor404()
+    {
+        $client = new Client();
+        $response = $client->get($this->httpBin . '/status/404');
+        
+        $this->assertFalse($response->ok());
+        $this->assertTrue($response->clientError());
+        $this->assertFalse($response->serverError());
+    }
+
+    public function testServerErrorFor500()
+    {
+        $client = new Client();
+        $response = $client->get($this->httpBin . '/status/500');
+        
+        $this->assertFalse($response->ok());
+        $this->assertFalse($response->clientError());
+        $this->assertTrue($response->serverError());
+    }
+
+    public function testRedirectFor301()
+    {
+        $client = new Client();
+        $response = $client->options([
+            CURLOPT_FOLLOWLOCATION => false
+        ])->get($this->httpBin . '/status/301');
+        
+        $this->assertFalse($response->ok());
+        $this->assertTrue($response->redirect());
+        $this->assertFalse($response->clientError());
+        $this->assertFalse($response->serverError());
     }
 }
