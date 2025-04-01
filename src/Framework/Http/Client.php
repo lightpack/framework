@@ -80,18 +80,19 @@ class Client
     }
 
     /**
-     * Get the connection error message if any.
+     * Get connection/transport level error message if any.
      * 
-     * Returns connection-level errors like:
-     * - DNS resolution failed
+     * Examples of transport errors:
+     * - Could not resolve host (DNS failure)
+     * - Connection refused
      * - Connection timed out
-     * - SSL certificate issues
-     * - Network unreachable
+     * - SSL certificate verification failed
+     * - No route to host
      * 
-     * Note: This only returns cURL errors. For HTTP errors (404, 500 etc),
-     * check the status() code instead.
+     * Note: These are low-level errors that occur before getting an HTTP response.
+     * For HTTP-level errors (404, 500 etc), check the status() code instead.
      * 
-     * @return string|null Error message or null if no connection error
+     * @return string|null Error message or null if connection was successful
      */
     public function error(): ?string
     {
