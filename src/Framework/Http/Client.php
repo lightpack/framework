@@ -75,7 +75,7 @@ class Client
         return $this->error;
     }
 
-    public function getJson()
+    public function data(): array
     {
         return json_decode($this->response, true);
     }

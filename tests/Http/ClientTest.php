@@ -16,7 +16,7 @@ class ClientTest extends TestCase
         $response = $client->get($this->jsonApi . '/posts/1');
         
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertNotEmpty($response->getJson());
+        $this->assertNotEmpty($response->data());
     }
 
     public function testCanMakeGetRequestWithQueryParams()
@@ -28,7 +28,7 @@ class ClientTest extends TestCase
         ]);
         
         $this->assertEquals(200, $response->getStatusCode());
-        $data = $response->getJson();
+        $data = $response->data();
         $this->assertIsArray($data);
     }
 
@@ -43,7 +43,7 @@ class ClientTest extends TestCase
             ]);
         
         $this->assertEquals(201, $response->getStatusCode());
-        $this->assertNotEmpty($response->getJson());
+        $this->assertNotEmpty($response->data());
     }
 
     public function testCanMakePutRequest()
@@ -55,7 +55,7 @@ class ClientTest extends TestCase
             ]);
         
         $this->assertEquals(200, $response->getStatusCode());
-        $data = $response->getJson();
+        $data = $response->data();
         $this->assertEquals('updated', $data['title']);
     }
 
@@ -77,7 +77,7 @@ class ClientTest extends TestCase
             ])
             ->get($this->httpBin . '/headers');
         
-        $data = $response->getJson();
+        $data = $response->data();
         $this->assertEquals('test', $data['headers']['X-Custom']);
     }
 
@@ -88,7 +88,7 @@ class ClientTest extends TestCase
             ->token('xyz123')
             ->get($this->httpBin . '/headers');
         
-        $data = $response->getJson();
+        $data = $response->data();
         $this->assertEquals('Bearer xyz123', $data['headers']['Authorization']);
     }
 
@@ -105,7 +105,7 @@ class ClientTest extends TestCase
         unlink($tempFile);
         
         $this->assertEquals(200, $response->getStatusCode());
-        $data = $response->getJson();
+        $data = $response->data();
         $this->assertArrayHasKey('files', $data);
     }
 
@@ -147,7 +147,7 @@ class ClientTest extends TestCase
             ]);
         
         $this->assertEquals(200, $response->getStatusCode());
-        $data = $response->getJson();
+        $data = $response->data();
         $this->assertEquals('patched', $data['title']);
     }
 
