@@ -70,7 +70,7 @@ class Client
         return $this->statusCode;
     }
 
-    public function getError(): ?string
+    public function error(): ?string
     {
         return $this->error;
     }
