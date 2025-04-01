@@ -150,13 +150,20 @@ class Client
 
     /**
      * Check if the request failed.
-     * Returns true if:
-     * - There was a connection error, or
-     * - The server returned a 4xx or 5xx status code
+     * 
+     * A request can fail in two ways:
+     * 1. Transport failure: Connection/DNS/SSL errors (status = 0)
+     * 2. HTTP failure: Server returned 4xx or 5xx status
      */
     public function failed(): bool 
     {
-        return !empty($this->error) || $this->statusCode >= 400;
+        // Transport error = no HTTP response at all
+        if (!empty($this->error)) {
+            return true;
+        }
+
+        // HTTP error = got response but it's 4xx/5xx
+        return $this->statusCode >= 400;
     }
 
     private function request(string $method, string $url, array $data = []): self
