@@ -37,11 +37,6 @@ class Client
         return $this;
     }
 
-    public function json(): self
-    {
-        return $this->headers(['Content-Type' => 'application/json']);
-    }
-
     public function files(array $files): self
     {
         if (empty($files)) {
@@ -94,19 +89,21 @@ class Client
 
         // Set headers
         $headers = [];
+        if ($method !== 'GET') {
+            $this->headers['Content-Type'] = 'application/json';
+        }
+
         foreach ($this->headers as $key => $value) {
             $headers[] = "$key: $value";
         }
+
         if (!empty($headers)) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
 
         // Set request body for non-GET requests
         if ($method !== 'GET' && !empty($data)) {
-            $body = isset($this->headers['Content-Type']) && $this->headers['Content-Type'] === 'application/json'
-                ? json_encode($data)
-                : http_build_query($data);
-            
+            $body = json_encode($data);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         }
 
