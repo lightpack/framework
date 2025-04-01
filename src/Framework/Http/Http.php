@@ -293,4 +293,36 @@ class Http
         }
         return $this;
     }
+
+    /**
+     * Download a file from URL and save it to disk.
+     * 
+     * @param string $url URL to download from
+     * @param string $savePath Path where to save the file
+     * @return bool True if download was successful
+     */
+    public function download(string $url, string $savePath): bool
+    {
+        $fp = fopen($savePath, 'w+');
+        
+        $this->options[CURLOPT_URL] = $url;
+        $this->options[CURLOPT_FILE] = $fp;
+        $this->options[CURLOPT_FOLLOWLOCATION] = true;
+        
+        $ch = curl_init();
+        curl_setopt_array($ch, $this->options);
+        
+        $success = curl_exec($ch);
+        $this->error = curl_error($ch);
+        $this->statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+        fclose($fp);
+        
+        if (!$success) {
+            @unlink($savePath);
+        }
+        
+        return $success;
+    }
 }

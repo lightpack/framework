@@ -235,4 +235,18 @@ class HttpTest extends TestCase
         $this->assertEquals('john', $data['form']['username']);
         $this->assertEquals('secret', $data['form']['password']);
     }
+
+    public function testCanDownloadFile()
+    {
+        $http = new Http();
+        $savePath = tempnam(sys_get_temp_dir(), 'download_');
+        
+        $success = $http->download($this->httpBin . '/image/jpeg', $savePath);
+        
+        $this->assertTrue($success);
+        $this->assertFileExists($savePath);
+        $this->assertGreaterThan(0, filesize($savePath));
+        
+        unlink($savePath);
+    }
 }
