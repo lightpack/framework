@@ -16,7 +16,7 @@ class ClientTest extends TestCase
         $response = $client->get($this->jsonApi . '/posts/1');
         
         $this->assertEquals(200, $response->status());
-        $this->assertNotEmpty($response->data());
+        $this->assertNotEmpty($response->json());
     }
 
     public function testCanMakeGetRequestWithQueryParams()
@@ -28,7 +28,7 @@ class ClientTest extends TestCase
         ]);
         
         $this->assertEquals(200, $response->status());
-        $data = $response->data();
+        $data = $response->json();
         $this->assertIsArray($data);
     }
 
@@ -42,21 +42,24 @@ class ClientTest extends TestCase
                 'userId' => 1,
             ]);
         
-        $this->assertEquals(201, $response->status());
-        $this->assertNotEmpty($response->data());
+        $this->assertFalse($response->failed());
+        $data = $response->json();
+        $this->assertEquals('foo', $data['title']);
     }
 
     public function testCanMakePutRequest()
     {
         $client = new Client();
-        $response = $client
-            ->put($this->jsonApi . '/posts/1', [
-                'title' => 'updated',
-            ]);
+        $response = $client->put($this->httpBin . '/put', [
+            'name' => 'john',
+            'email' => 'john@example.com'
+        ]);
         
-        $this->assertEquals(200, $response->status());
-        $data = $response->data();
-        $this->assertEquals('updated', $data['title']);
+        $this->assertFalse($response->failed());
+        $data = $response->json();
+        $this->assertEquals('application/json', $data['headers']['Content-Type']);
+        $this->assertEquals('john', $data['json']['name']);
+        $this->assertEquals('john@example.com', $data['json']['email']);
     }
 
     public function testCanMakeDeleteRequest()
@@ -77,7 +80,7 @@ class ClientTest extends TestCase
             ])
             ->get($this->httpBin . '/headers');
         
-        $data = $response->data();
+        $data = $response->json();
         $this->assertEquals('test', $data['headers']['X-Custom']);
     }
 
@@ -88,7 +91,7 @@ class ClientTest extends TestCase
             ->token('xyz123')
             ->get($this->httpBin . '/headers');
         
-        $data = $response->data();
+        $data = $response->json();
         $this->assertEquals('Bearer xyz123', $data['headers']['Authorization']);
     }
 
@@ -105,7 +108,7 @@ class ClientTest extends TestCase
         unlink($tempFile);
         
         $this->assertEquals(200, $response->status());
-        $data = $response->data();
+        $data = $response->json();
         $this->assertArrayHasKey('files', $data);
     }
 
@@ -141,14 +144,16 @@ class ClientTest extends TestCase
     public function testCanMakePatchRequest()
     {
         $client = new Client();
-        $response = $client
-            ->patch($this->jsonApi . '/posts/1', [
-                'title' => 'patched'
-            ]);
+        $response = $client->patch($this->httpBin . '/patch', [
+            'name' => 'john',
+            'active' => true
+        ]);
         
-        $this->assertEquals(200, $response->status());
-        $data = $response->data();
-        $this->assertEquals('patched', $data['title']);
+        $this->assertFalse($response->failed());
+        $data = $response->json();
+        $this->assertEquals('application/json', $data['headers']['Content-Type']);
+        $this->assertEquals('john', $data['json']['name']);
+        $this->assertTrue($data['json']['active']);
     }
 
     public function testReturnsErrorOnConnectionFailure()
@@ -212,5 +217,22 @@ class ClientTest extends TestCase
         $this->assertTrue($response->redirect());
         $this->assertFalse($response->clientError());
         $this->assertFalse($response->serverError());
+    }
+
+    public function testCanSendFormData()
+    {
+        $client = new Client();
+        $response = $client
+            ->form()
+            ->post($this->httpBin . '/post', [
+                'username' => 'john',
+                'password' => 'secret'
+            ]);
+        
+        $this->assertFalse($response->failed());
+        $data = $response->json();
+        $this->assertEquals('application/x-www-form-urlencoded', $data['headers']['Content-Type']);
+        $this->assertEquals('john', $data['form']['username']);
+        $this->assertEquals('secret', $data['form']['password']);
     }
 }

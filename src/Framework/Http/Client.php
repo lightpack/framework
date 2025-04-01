@@ -103,9 +103,19 @@ class Client
      * Get the response data as array.
      * Note: Assumes JSON response.
      */
-    public function data(): array
+    public function json(): array
     {
         return json_decode($this->response, true);
+    }
+
+    /**
+     * Send request body as form-urlencoded data.
+     * Use this when submitting traditional HTML forms.
+     */
+    public function form(): self
+    {
+        $this->headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        return $this;
     }
 
     /**
@@ -182,7 +192,10 @@ class Client
         // Set headers
         $headers = [];
         if ($method !== 'GET') {
-            $this->headers['Content-Type'] = 'application/json';
+            // Default to JSON unless form-encoded is requested
+            if (!isset($this->headers['Content-Type'])) {
+                $this->headers['Content-Type'] = 'application/json';
+            }
         }
 
         foreach ($this->headers as $key => $value) {
@@ -195,7 +208,9 @@ class Client
 
         // Set request body for non-GET requests
         if ($method !== 'GET' && !empty($data)) {
-            $body = json_encode($data);
+            $body = $this->headers['Content-Type'] === 'application/x-www-form-urlencoded'
+                ? http_build_query($data)
+                : json_encode($data);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         }
 
