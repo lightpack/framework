@@ -257,15 +257,16 @@ class Request
 
     public function isSecure(): bool
     {
-        if ($this->headers->has('X-Forwarded-Proto')) {
-            return $this->headers->get('X-Forwarded-Proto') === 'https';
-        }
-
         return $this->scheme() == 'https';
     }
 
     public function scheme()
     {
+        // Check forwarded proto from load balancer first
+        if ($this->headers->has('X-Forwarded-Proto')) {
+            return $this->headers->get('X-Forwarded-Proto');
+        }
+
         if (
             (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on') ||
             (isset($_SERVER['SERVER_PORT']) && ($_SERVER['SERVER_PORT'] == '443'))
