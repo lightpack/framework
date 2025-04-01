@@ -133,9 +133,37 @@ class Client
         return $this;
     }
 
-    public function withOption(int $option, mixed $value): self
+    /**
+     * Set CURL options.
+     * 
+     * Example:
+     *   $client->options([
+     *       CURLOPT_TIMEOUT => 30,
+     *       CURLOPT_SSL_VERIFYPEER => false
+     *   ]);
+     */
+    public function options(array $options): self
     {
-        $this->options[$option] = $value;
+        $this->options = array_merge($this->options, $options);
         return $this;
+    }
+
+    /**
+     * Set request timeout in seconds.
+     */
+    public function timeout(int $seconds): self
+    {
+        return $this->options([CURLOPT_TIMEOUT => $seconds]);
+    }
+
+    /**
+     * Disable SSL verification (use with caution).
+     */
+    public function insecure(): self
+    {
+        return $this->options([
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
+        ]);
     }
 }
