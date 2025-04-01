@@ -15,7 +15,7 @@ class ClientTest extends TestCase
         $client = new Client();
         $response = $client->get($this->jsonApi . '/posts/1');
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
         $this->assertNotEmpty($response->data());
     }
 
@@ -27,7 +27,7 @@ class ClientTest extends TestCase
             'id' => 5
         ]);
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
         $data = $response->data();
         $this->assertIsArray($data);
     }
@@ -42,7 +42,7 @@ class ClientTest extends TestCase
                 'userId' => 1,
             ]);
         
-        $this->assertEquals(201, $response->getStatusCode());
+        $this->assertEquals(201, $response->status());
         $this->assertNotEmpty($response->data());
     }
 
@@ -54,7 +54,7 @@ class ClientTest extends TestCase
                 'title' => 'updated',
             ]);
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
         $data = $response->data();
         $this->assertEquals('updated', $data['title']);
     }
@@ -64,7 +64,7 @@ class ClientTest extends TestCase
         $client = new Client();
         $response = $client->delete($this->jsonApi . '/posts/1');
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
     }
 
     public function testCanSetCustomHeaders()
@@ -104,7 +104,7 @@ class ClientTest extends TestCase
 
         unlink($tempFile);
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
         $data = $response->data();
         $this->assertArrayHasKey('files', $data);
     }
@@ -116,7 +116,7 @@ class ClientTest extends TestCase
             ->timeout(5)
             ->get($this->httpBin . '/get');
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
     }
 
     public function testCanMakeInsecureRequest()
@@ -126,7 +126,7 @@ class ClientTest extends TestCase
             ->insecure()
             ->get($this->httpBin . '/get');
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
     }
 
     public function testCanGetResponseAsText()
@@ -146,7 +146,7 @@ class ClientTest extends TestCase
                 'title' => 'patched'
             ]);
         
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->status());
         $data = $response->data();
         $this->assertEquals('patched', $data['title']);
     }
@@ -157,6 +157,6 @@ class ClientTest extends TestCase
         $response = $client->get('http://non-existent-domain-123456.com');
         
         $this->assertTrue($response->failed());
-        $this->assertEquals(0, $response->getStatusCode());
+        $this->assertEquals(0, $response->status());
     }
 }

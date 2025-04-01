@@ -65,7 +65,7 @@ class Client
         return $this;
     }
 
-    public function getStatusCode(): int
+    public function status(): int
     {
         return $this->statusCode;
     }
