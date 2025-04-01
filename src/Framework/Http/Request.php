@@ -255,9 +255,13 @@ class Request
         return false !== stripos($this->format(), 'json');
     }
 
-    public function isSecure()
+    public function isSecure(): bool
     {
-        return $this->scheme() === 'https';
+        if ($this->headers->has('X-Forwarded-Proto')) {
+            return $this->headers->get('X-Forwarded-Proto') === 'https';
+        }
+
+        return $this->scheme() == 'https';
     }
 
     public function scheme()
@@ -272,11 +276,15 @@ class Request
         return 'http';
     }
 
-    public function host()
+    public function host(): string
     {
-        $host = $_SERVER['HTTP_HOST'] ?? getenv('HTTP_HOST');
+        // Check forwarded host from load balancer
+        if ($this->headers->has('X-Forwarded-Host')) {
+            $hosts = explode(',', $this->headers->get('X-Forwarded-Host'));
+            return trim($hosts[0]);
+        }
 
-        return explode(':', $host)[0];
+        return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
     }
 
     public function port(): ?int
@@ -467,6 +475,17 @@ class Request
      */
     public function ip(): string
     {
+        // Check X-Forwarded-For from load balancer/proxy
+        if ($this->headers->has('X-Forwarded-For')) {
+            $ips = explode(',', $this->headers->get('X-Forwarded-For'));
+            return trim($ips[0]);
+        }
+
+        // Check X-Real-IP from nginx
+        if ($this->headers->has('X-Real-IP')) {
+            return $this->headers->get('X-Real-IP');
+        }
+
         if (!isset($_SERVER['REMOTE_ADDR'])) {
             throw new \RuntimeException('Could not determine client IP address');
         }
