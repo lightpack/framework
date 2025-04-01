@@ -150,4 +150,13 @@ class ClientTest extends TestCase
         $data = $response->getJson();
         $this->assertEquals('patched', $data['title']);
     }
+
+    public function testReturnsErrorOnFailure()
+    {
+        $client = new Client();
+        $response = $client->get('http://non-existent-domain-123456.com');
+        
+        $this->assertTrue($response->hasError());
+        $this->assertEquals(0, $response->getStatusCode());
+    }
 }

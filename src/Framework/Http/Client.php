@@ -85,6 +85,11 @@ class Client
         return $this->response;
     }
 
+    public function hasError(): bool 
+    {
+        return !empty($this->error);
+    }
+
     private function request(string $method, string $url, array $data = []): self
     {
         $ch = curl_init();
