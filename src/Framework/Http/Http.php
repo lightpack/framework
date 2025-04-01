@@ -2,6 +2,17 @@
 
 namespace Lightpack\Http;
 
+/**
+ * A lightweight HTTP client for making API requests.
+ * 
+ * Features:
+ * - Fluent interface for HTTP methods (get, post, put, patch, delete)
+ * - Support for JSON and form-urlencoded data
+ * - Custom headers and bearer token authentication
+ * - File uploads
+ * - Timeout and SSL configuration
+ * - Response status helpers (ok, failed, clientError, serverError)
+ */
 class Http
 {
     protected array $headers = [];
