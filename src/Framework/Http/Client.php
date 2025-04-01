@@ -32,6 +32,11 @@ class Client
         return $this->request('PUT', $url, $data);
     }
 
+    public function patch(string $url, array $data = []): self
+    {
+        return $this->request('PATCH', $url, $data);
+    }
+
     public function delete(string $url, array $data = []): self
     {
         return $this->request('DELETE', $url, $data);

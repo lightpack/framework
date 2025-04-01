@@ -137,4 +137,17 @@ class ClientTest extends TestCase
         $this->assertIsString($response->getText());
         $this->assertJson($response->getText());
     }
+
+    public function testCanMakePatchRequest()
+    {
+        $client = new Client();
+        $response = $client
+            ->patch($this->jsonApi . '/posts/1', [
+                'title' => 'patched'
+            ]);
+        
+        $this->assertEquals(200, $response->getStatusCode());
+        $data = $response->getJson();
+        $this->assertEquals('patched', $data['title']);
+    }
 }
