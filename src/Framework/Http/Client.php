@@ -134,26 +134,13 @@ class Client
     }
 
     /**
-     * Set CURL options.
-     * 
-     * Example:
-     *   $client->options([
-     *       CURLOPT_TIMEOUT => 30,
-     *       CURLOPT_SSL_VERIFYPEER => false
-     *   ]);
-     */
-    public function options(array $options): self
-    {
-        $this->options = array_merge($this->options, $options);
-        return $this;
-    }
-
-    /**
      * Set request timeout in seconds.
      */
     public function timeout(int $seconds): self
     {
-        return $this->options([CURLOPT_TIMEOUT => $seconds]);
+        $this->options[CURLOPT_TIMEOUT] = $seconds;
+        $this->options[CURLOPT_CONNECTTIMEOUT] = $seconds;
+        return $this;
     }
 
     /**
@@ -161,9 +148,19 @@ class Client
      */
     public function insecure(): self
     {
-        return $this->options([
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
-        ]);
+        $this->options[CURLOPT_SSL_VERIFYPEER] = false;
+        $this->options[CURLOPT_SSL_VERIFYHOST] = 0;
+        return $this;
+    }
+
+    /**
+     * Set authentication bearer token.
+     * 
+     * Example:
+     *   $client->token('xyz')->get('https://api.example.com');
+     */
+    public function token(string $token): self
+    {
+        return $this->headers(['Authorization' => 'Bearer ' . $token]);
     }
 }

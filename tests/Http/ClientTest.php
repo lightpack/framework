@@ -7,13 +7,29 @@ use PHPUnit\Framework\TestCase;
 
 class ClientTest extends TestCase
 {
+    private string $jsonApi = 'https://jsonplaceholder.typicode.com';
+    private string $httpBin = 'https://httpbin.org';
+
     public function testCanMakeGetRequest()
     {
         $client = new Client();
-        $response = $client->get('https://jsonplaceholder.typicode.com/posts/1');
+        $response = $client->get($this->jsonApi . '/posts/1');
         
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getJson());
+    }
+
+    public function testCanMakeGetRequestWithQueryParams()
+    {
+        $client = new Client();
+        $response = $client->get($this->jsonApi . '/posts', [
+            'userId' => 1,
+            'id' => 5
+        ]);
+        
+        $this->assertEquals(200, $response->getStatusCode());
+        $data = $response->getJson();
+        $this->assertIsArray($data);
     }
 
     public function testCanMakePostRequest()
@@ -21,7 +37,7 @@ class ClientTest extends TestCase
         $client = new Client();
         $response = $client
             ->json()
-            ->post('https://jsonplaceholder.typicode.com/posts', [
+            ->post($this->jsonApi . '/posts', [
                 'title' => 'foo',
                 'body' => 'bar',
                 'userId' => 1,
@@ -29,6 +45,53 @@ class ClientTest extends TestCase
         
         $this->assertEquals(201, $response->getStatusCode());
         $this->assertNotEmpty($response->getJson());
+    }
+
+    public function testCanMakePutRequest()
+    {
+        $client = new Client();
+        $response = $client
+            ->json()
+            ->put($this->jsonApi . '/posts/1', [
+                'title' => 'updated',
+            ]);
+        
+        $this->assertEquals(200, $response->getStatusCode());
+        $data = $response->getJson();
+        $this->assertEquals('updated', $data['title']);
+    }
+
+    public function testCanMakeDeleteRequest()
+    {
+        $client = new Client();
+        $response = $client->delete($this->jsonApi . '/posts/1');
+        
+        $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    public function testCanSetCustomHeaders()
+    {
+        $client = new Client();
+        $response = $client
+            ->headers([
+                'X-Custom' => 'test',
+                'Accept' => 'application/json'
+            ])
+            ->get($this->httpBin . '/headers');
+        
+        $data = $response->getJson();
+        $this->assertEquals('test', $data['headers']['X-Custom']);
+    }
+
+    public function testCanSetBearerToken()
+    {
+        $client = new Client();
+        $response = $client
+            ->token('xyz123')
+            ->get($this->httpBin . '/headers');
+        
+        $data = $response->getJson();
+        $this->assertEquals('Bearer xyz123', $data['headers']['Authorization']);
     }
 
     public function testCanUploadFile()
@@ -39,12 +102,41 @@ class ClientTest extends TestCase
 
         $response = $client
             ->files(['file' => $tempFile])
-            ->post('https://httpbin.org/post');
+            ->post($this->httpBin . '/post');
 
         unlink($tempFile);
         
         $this->assertEquals(200, $response->getStatusCode());
         $data = $response->getJson();
         $this->assertArrayHasKey('files', $data);
+    }
+
+    public function testCanSetTimeout()
+    {
+        $client = new Client();
+        $response = $client
+            ->timeout(5)
+            ->get($this->httpBin . '/get');
+        
+        $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    public function testCanMakeInsecureRequest()
+    {
+        $client = new Client();
+        $response = $client
+            ->insecure()
+            ->get($this->httpBin . '/get');
+        
+        $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    public function testCanGetResponseAsText()
+    {
+        $client = new Client();
+        $response = $client->get($this->httpBin . '/get');
+        
+        $this->assertIsString($response->getText());
+        $this->assertJson($response->getText());
     }
 }
