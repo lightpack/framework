@@ -2,7 +2,7 @@
 
 namespace Lightpack\Http;
 
-class Client
+class Http
 {
     protected array $headers = [];
     protected array $options = [];

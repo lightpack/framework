@@ -2,18 +2,18 @@
 
 namespace Lightpack\Tests\Http;
 
-use Lightpack\Http\Client;
+use Lightpack\Http\Http;
 use PHPUnit\Framework\TestCase;
 
-class ClientTest extends TestCase
+class HttpTest extends TestCase
 {
     private string $jsonApi = 'https://jsonplaceholder.typicode.com';
     private string $httpBin = 'https://httpbin.org';
 
     public function testCanMakeGetRequest()
     {
-        $client = new Client();
-        $response = $client->get($this->jsonApi . '/posts/1');
+        $http = new Http();
+        $response = $http->get($this->jsonApi . '/posts/1');
         
         $this->assertEquals(200, $response->status());
         $this->assertNotEmpty($response->json());
@@ -21,8 +21,8 @@ class ClientTest extends TestCase
 
     public function testCanMakeGetRequestWithQueryParams()
     {
-        $client = new Client();
-        $response = $client->get($this->jsonApi . '/posts', [
+        $http = new Http();
+        $response = $http->get($this->jsonApi . '/posts', [
             'userId' => 1,
             'id' => 5
         ]);
@@ -34,8 +34,8 @@ class ClientTest extends TestCase
 
     public function testCanMakePostRequest()
     {
-        $client = new Client();
-        $response = $client
+        $http = new Http();
+        $response = $http
             ->post($this->jsonApi . '/posts', [
                 'title' => 'foo',
                 'body' => 'bar',
@@ -49,8 +49,8 @@ class ClientTest extends TestCase
 
     public function testCanMakePutRequest()
     {
-        $client = new Client();
-        $response = $client->put($this->httpBin . '/put', [
+        $http = new Http();
+        $response = $http->put($this->httpBin . '/put', [
             'name' => 'john',
             'email' => 'john@example.com'
         ]);
@@ -64,16 +64,16 @@ class ClientTest extends TestCase
 
     public function testCanMakeDeleteRequest()
     {
-        $client = new Client();
-        $response = $client->delete($this->jsonApi . '/posts/1');
+        $http = new Http();
+        $response = $http->delete($this->jsonApi . '/posts/1');
         
         $this->assertEquals(200, $response->status());
     }
 
     public function testCanSetCustomHeaders()
     {
-        $client = new Client();
-        $response = $client
+        $http = new Http();
+        $response = $http
             ->headers([
                 'X-Custom' => 'test',
                 'Accept' => 'application/json'
@@ -86,8 +86,8 @@ class ClientTest extends TestCase
 
     public function testCanSetBearerToken()
     {
-        $client = new Client();
-        $response = $client
+        $http = new Http();
+        $response = $http
             ->token('xyz123')
             ->get($this->httpBin . '/headers');
         
@@ -97,11 +97,11 @@ class ClientTest extends TestCase
 
     public function testCanUploadFile()
     {
-        $client = new Client();
+        $http = new Http();
         $tempFile = tempnam(sys_get_temp_dir(), 'test_');
         file_put_contents($tempFile, 'test content');
 
-        $response = $client
+        $response = $http
             ->files(['file' => $tempFile])
             ->post($this->httpBin . '/post');
 
@@ -114,8 +114,8 @@ class ClientTest extends TestCase
 
     public function testCanSetTimeout()
     {
-        $client = new Client();
-        $response = $client
+        $http = new Http();
+        $response = $http
             ->timeout(5)
             ->get($this->httpBin . '/get');
         
@@ -124,8 +124,8 @@ class ClientTest extends TestCase
 
     public function testCanMakeInsecureRequest()
     {
-        $client = new Client();
-        $response = $client
+        $http = new Http();
+        $response = $http
             ->insecure()
             ->get($this->httpBin . '/get');
         
@@ -134,8 +134,8 @@ class ClientTest extends TestCase
 
     public function testCanGetResponseAsText()
     {
-        $client = new Client();
-        $response = $client->get($this->httpBin . '/get');
+        $http = new Http();
+        $response = $http->get($this->httpBin . '/get');
         
         $this->assertIsString($response->getText());
         $this->assertJson($response->getText());
@@ -143,8 +143,8 @@ class ClientTest extends TestCase
 
     public function testCanMakePatchRequest()
     {
-        $client = new Client();
-        $response = $client->patch($this->httpBin . '/patch', [
+        $http = new Http();
+        $response = $http->patch($this->httpBin . '/patch', [
             'name' => 'john',
             'active' => true
         ]);
@@ -158,8 +158,8 @@ class ClientTest extends TestCase
 
     public function testReturnsErrorOnConnectionFailure()
     {
-        $client = new Client();
-        $response = $client->get('http://non-existent-domain-123456.com');
+        $http = new Http();
+        $response = $http->get('http://non-existent-domain-123456.com');
         
         $this->assertTrue($response->failed());
         $this->assertEquals(0, $response->status());
@@ -168,8 +168,8 @@ class ClientTest extends TestCase
 
     public function testFailsOnServerError()
     {
-        $client = new Client();
-        $response = $client->get($this->httpBin . '/status/404');
+        $http = new Http();
+        $response = $http->get($this->httpBin . '/status/404');
         
         $this->assertTrue($response->failed());
         $this->assertEquals(404, $response->status());
@@ -178,8 +178,8 @@ class ClientTest extends TestCase
 
     public function testOkForSuccessfulRequest()
     {
-        $client = new Client();
-        $response = $client->get($this->jsonApi . '/posts/1');
+        $http = new Http();
+        $response = $http->get($this->jsonApi . '/posts/1');
         
         $this->assertTrue($response->ok());
         $this->assertFalse($response->clientError());
@@ -188,8 +188,8 @@ class ClientTest extends TestCase
 
     public function testClientErrorFor404()
     {
-        $client = new Client();
-        $response = $client->get($this->httpBin . '/status/404');
+        $http = new Http();
+        $response = $http->get($this->httpBin . '/status/404');
         
         $this->assertFalse($response->ok());
         $this->assertTrue($response->clientError());
@@ -198,8 +198,8 @@ class ClientTest extends TestCase
 
     public function testServerErrorFor500()
     {
-        $client = new Client();
-        $response = $client->get($this->httpBin . '/status/500');
+        $http = new Http();
+        $response = $http->get($this->httpBin . '/status/500');
         
         $this->assertFalse($response->ok());
         $this->assertFalse($response->clientError());
@@ -208,8 +208,8 @@ class ClientTest extends TestCase
 
     public function testRedirectFor301()
     {
-        $client = new Client();
-        $response = $client->options([
+        $http = new Http();
+        $response = $http->options([
             CURLOPT_FOLLOWLOCATION => false
         ])->get($this->httpBin . '/status/301');
         
@@ -221,8 +221,8 @@ class ClientTest extends TestCase
 
     public function testCanSendFormData()
     {
-        $client = new Client();
-        $response = $client
+        $http = new Http();
+        $response = $http
             ->form()
             ->post($this->httpBin . '/post', [
                 'username' => 'john',
