@@ -282,10 +282,13 @@ class Request
         // Check forwarded host from load balancer
         if ($this->headers->has('X-Forwarded-Host')) {
             $hosts = explode(',', $this->headers->get('X-Forwarded-Host'));
-            return trim($hosts[0]);
+            // Strip port if present
+            return explode(':', trim($hosts[0]))[0];
         }
 
-        return $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+        $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+        // Strip port if present
+        return explode(':', $host)[0];
     }
 
     public function port(): ?int
