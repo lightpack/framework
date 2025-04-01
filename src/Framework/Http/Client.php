@@ -85,7 +85,7 @@ class Client
         return $this->response;
     }
 
-    public function hasError(): bool 
+    public function failed(): bool 
     {
         return !empty($this->error);
     }

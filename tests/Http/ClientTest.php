@@ -156,7 +156,7 @@ class ClientTest extends TestCase
         $client = new Client();
         $response = $client->get('http://non-existent-domain-123456.com');
         
-        $this->assertTrue($response->hasError());
+        $this->assertTrue($response->failed());
         $this->assertEquals(0, $response->getStatusCode());
     }
 }
