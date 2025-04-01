@@ -11,6 +11,12 @@ class Client
     protected int $statusCode = 0;
     protected array $files = [];
 
+    public function __construct()
+    {
+        $this->options[CURLOPT_TIMEOUT] = 5;
+        $this->options[CURLOPT_FOLLOWLOCATION] = true;
+    }
+
     public function get(string $url, array $query = []): self
     {
         return $this->request('GET', $url, $query);
