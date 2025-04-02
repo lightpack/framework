@@ -73,7 +73,7 @@ class Query
             return;
         }
 
-        if(! is_array(reset($data))) {
+        if (! is_array(reset($data))) {
             $data = [$data];
         }
 
@@ -100,10 +100,10 @@ class Query
 
     protected function isValidParameterType($value): bool
     {
-        return is_null($value) 
+        return is_null($value)
             || is_bool($value)
-            || is_int($value) 
-            || is_float($value) 
+            || is_int($value)
+            || is_float($value)
             || is_string($value)
             || $value instanceof \DateTime;
     }
@@ -186,19 +186,19 @@ class Query
         if ($value instanceof Closure) {
             return $this->whereValueIsAClosure($value, $column, $operator, $joiner);
         }
-        
+
         // Operators that don't require a value
         $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
-        
+
         if (!in_array($operator, $operators)) {
-            if($value === null) {
+            if ($value === null) {
                 $value = $operator;
                 $operator = '=';
             }
-            
+
             $this->bindings[] = $value;
         }
-        
+
         $this->components['where'][] = compact('column', 'operator', 'value', 'joiner');
 
         return $this;
@@ -292,7 +292,7 @@ class Query
 
     public function whereBetween(string $column, array $values, string $joiner = 'AND'): static
     {
-        if(count($values) !== 2) {
+        if (count($values) !== 2) {
             throw new \Exception('You must provide two values for the between clause');
         }
 
@@ -431,13 +431,25 @@ class Query
         $this->components['limit'] = $limit > 0 ? $limit : 10;
         $this->components['offset'] = $limit * ($page - 1);
 
-        if($total == 0) { // no need to query further
+        if ($total == 0) { // no need to query further
             return new Pagination([], $total);
         }
 
         $items = $this->fetchAll();
 
         return new Pagination($items, $total, $limit, $page);
+    }
+
+    public function exists(): bool
+    {
+        $this->components['columns'] = [];
+
+        return $this->select('1')->one() !== null;
+    }
+
+    public function notExists(): bool
+    {
+        return !$this->exists();
     }
 
     public function count()
@@ -551,7 +563,7 @@ class Query
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
         $this->resetQuery();
 
-        if($result == false) {
+        if ($result == false) {
             return null;
         }
 
@@ -579,8 +591,8 @@ class Query
     {
         $records = $this->limit($chunkSize)->offset($page = 1)->all();
 
-        while(count($records) > 0) {
-            if(false === call_user_func($callback, $records)) {
+        while (count($records) > 0) {
+            if (false === call_user_func($callback, $records)) {
                 return;
             }
 
@@ -726,7 +738,7 @@ class Query
         $compiler = new Compiler($this);
         $query = $compiler->compileUpsert(array_keys($data[0]), $data, $updateColumns);
         $result = $this->connection->query($query, $this->bindings);
-        
+
         $this->resetQuery();
         return $result;
     }
@@ -750,7 +762,7 @@ class Query
         $compiler = new Compiler($this);
         $query = $compiler->compileIncrement($column, $amount);
         $result = $this->connection->query($query, $this->bindings);
-        
+
         $this->resetQuery();
         return $result;
     }

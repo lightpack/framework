@@ -845,4 +845,22 @@ final class QueryTest extends TestCase
         $this->assertEquals(200, $this->query->max('price'));
         $this->query->resetQuery();
     }
+
+    public function testExistsMethod()
+    {
+        // Test when records exist
+        $exists = $this->query->exists();
+        $this->assertTrue($exists);
+        $this->query->resetQuery();
+
+        // Test when no records exist
+        $notExists = $this->query->where('color', '=', 'non-existent-color')->notExists();
+        $this->assertTrue($notExists);
+        $this->query->resetQuery();
+
+        // Test with complex where conditions
+        $exists = $this->query->where('id', '>', 0)->where('color', '!=', 'non-existent-color')->exists();
+        $this->assertTrue($exists);
+        $this->query->resetQuery();
+    }
 }

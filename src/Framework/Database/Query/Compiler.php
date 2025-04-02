@@ -378,6 +378,10 @@ class Compiler
 
     private function wrapColumn(string $column): string
     {
+        if (is_numeric($column)) {
+            return $column;
+        }
+        
         if (strpos(strtolower($column), ' as ') !== false) {
             $parts = explode(' ', $column);
 

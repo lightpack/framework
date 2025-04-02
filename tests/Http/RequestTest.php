@@ -399,4 +399,74 @@ final class RequestTest extends TestCase
             $request->input('users.*.phone', 'N/A')
         );
     }
+
+    public function testLoadBalancerHeaders()
+    {
+        // Setup headers
+        $headers = [
+            'X-Forwarded-Proto' => 'https',
+            'X-Forwarded-Host' => 'example.com',
+            'X-Forwarded-Port' => '443',
+        ];
+
+        foreach ($headers as $key => $value) {
+            $_SERVER['HTTP_' . str_replace('-', '_', $key)] = $value;
+        }
+
+        $request = new Request($this->basepath);
+
+        // Test scheme detection
+        $this->assertSame('https', $request->scheme(), 'Should detect HTTPS from X-Forwarded-Proto');
+        $this->assertTrue($request->isSecure(), 'Should be secure when X-Forwarded-Proto is https');
+
+        // Test host detection
+        $this->assertSame('example.com', $request->host(), 'Should use X-Forwarded-Host');
+
+        // Test port detection
+        $this->assertSame(443, $request->port(), 'Should use X-Forwarded-Port');
+    }
+
+    public function testLoadBalancerWithCustomPort()
+    {
+        // Setup headers with custom port
+        $headers = [
+            'X-Forwarded-Proto' => 'http',
+            'X-Forwarded-Host' => 'example.com:8080',
+            'X-Forwarded-Port' => '8080',
+        ];
+
+        foreach ($headers as $key => $value) {
+            $_SERVER['HTTP_' . str_replace('-', '_', $key)] = $value;
+        }
+
+        $request = new Request($this->basepath);
+
+        // Test scheme detection
+        $this->assertSame('http', $request->scheme(), 'Should detect HTTP from X-Forwarded-Proto');
+        $this->assertFalse($request->isSecure(), 'Should not be secure when X-Forwarded-Proto is http');
+
+        // Test host detection (should strip port)
+        $this->assertSame('example.com', $request->host(), 'Should use hostname from X-Forwarded-Host without port');
+
+        // Test port detection
+        $this->assertSame(8080, $request->port(), 'Should use X-Forwarded-Port');
+    }
+
+    public function testLoadBalancerHeaderPriority()
+    {
+        // Setup conflicting headers
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+        $_SERVER['HTTP_X_FORWARDED_HOST'] = 'example.com:8443';
+        $_SERVER['HTTP_X_FORWARDED_PORT'] = '443';
+        $_SERVER['SERVER_PORT'] = '80';
+        $_SERVER['HTTP_HOST'] = 'localhost:8080';
+        $_SERVER['HTTPS'] = 'off';
+
+        $request = new Request($this->basepath);
+
+        // Headers should take priority over server vars
+        $this->assertSame('https', $request->scheme(), 'X-Forwarded-Proto should override HTTPS');
+        $this->assertSame('example.com', $request->host(), 'X-Forwarded-Host should override HTTP_HOST');
+        $this->assertSame(443, $request->port(), 'X-Forwarded-Port should override SERVER_PORT');
+    }
 }

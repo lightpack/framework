@@ -255,13 +255,18 @@ class Request
         return false !== stripos($this->format(), 'json');
     }
 
-    public function isSecure()
+    public function isSecure(): bool
     {
-        return $this->scheme() === 'https';
+        return $this->scheme() == 'https';
     }
 
     public function scheme()
     {
+        // Check forwarded proto from load balancer first
+        if ($this->headers->has('X-Forwarded-Proto')) {
+            return $this->headers->get('X-Forwarded-Proto');
+        }
+
         if (
             (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on') ||
             (isset($_SERVER['SERVER_PORT']) && ($_SERVER['SERVER_PORT'] == '443'))
@@ -272,16 +277,37 @@ class Request
         return 'http';
     }
 
-    public function host()
+    public function host(): string
     {
-        $host = $_SERVER['HTTP_HOST'] ?? getenv('HTTP_HOST');
+        // Check forwarded host from load balancer
+        if ($this->headers->has('X-Forwarded-Host')) {
+            $hosts = explode(',', $this->headers->get('X-Forwarded-Host'));
+            // Strip port if present
+            return explode(':', trim($hosts[0]))[0];
+        }
 
+        $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+        // Strip port if present
         return explode(':', $host)[0];
     }
 
     public function port(): ?int
     {
-        // First check APP_URL for port
+        // Check forwarded port from load balancer
+        if ($this->headers->has('X-Forwarded-Port')) {
+            return (int) $this->headers->get('X-Forwarded-Port');
+        }
+
+        // Try to extract port from forwarded host
+        if ($this->headers->has('X-Forwarded-Host')) {
+            $hosts = explode(',', $this->headers->get('X-Forwarded-Host'));
+            $parts = explode(':', trim($hosts[0]));
+            if (isset($parts[1])) {
+                return (int) $parts[1];
+            }
+        }
+
+        // check APP_URL for port
         $appUrl = get_env('APP_URL');
         if ($appUrl) {
             $parts = parse_url($appUrl);
@@ -467,6 +493,17 @@ class Request
      */
     public function ip(): string
     {
+        // Check X-Forwarded-For from load balancer/proxy
+        if ($this->headers->has('X-Forwarded-For')) {
+            $ips = explode(',', $this->headers->get('X-Forwarded-For'));
+            return trim($ips[0]);
+        }
+
+        // Check X-Real-IP from nginx
+        if ($this->headers->has('X-Real-IP')) {
+            return $this->headers->get('X-Real-IP');
+        }
+
         if (!isset($_SERVER['REMOTE_ADDR'])) {
             throw new \RuntimeException('Could not determine client IP address');
         }

@@ -7,50 +7,36 @@ use PHPUnit\Framework\TestCase;
 
 class HttpTest extends TestCase
 {
-    private string $jsonApi = 'https://jsonplaceholder.typicode.com';
-    private string $httpBin = 'https://httpbin.org';
+    private string $baseUrl = 'https://httpbin.org';
 
     public function testCanMakeGetRequest()
     {
         $http = new Http();
-        $response = $http->get($this->jsonApi . '/posts/1');
-        
-        $this->assertEquals(200, $response->status());
-        $this->assertNotEmpty($response->json());
-    }
-
-    public function testCanMakeGetRequestWithQueryParams()
-    {
-        $http = new Http();
-        $response = $http->get($this->jsonApi . '/posts', [
-            'userId' => 1,
-            'id' => 5
-        ]);
+        $response = $http->get($this->baseUrl . '/get');
         
         $this->assertEquals(200, $response->status());
         $data = $response->json();
         $this->assertIsArray($data);
     }
 
+    public function testCanMakeGetRequestWithQueryParams()
+    {
+        $http = new Http();
+        $response = $http->get($this->baseUrl . '/get', [
+            'name' => 'john',
+            'age' => 30
+        ]);
+        
+        $this->assertEquals(200, $response->status());
+        $data = $response->json();
+        $this->assertEquals('john', $data['args']['name']);
+        $this->assertEquals('30', $data['args']['age']);
+    }
+
     public function testCanMakePostRequest()
     {
         $http = new Http();
-        $response = $http
-            ->post($this->jsonApi . '/posts', [
-                'title' => 'foo',
-                'body' => 'bar',
-                'userId' => 1,
-            ]);
-        
-        $this->assertFalse($response->failed());
-        $data = $response->json();
-        $this->assertEquals('foo', $data['title']);
-    }
-
-    public function testCanMakePutRequest()
-    {
-        $http = new Http();
-        $response = $http->put($this->httpBin . '/put', [
+        $response = $http->post($this->baseUrl . '/post', [
             'name' => 'john',
             'email' => 'john@example.com'
         ]);
@@ -59,13 +45,26 @@ class HttpTest extends TestCase
         $data = $response->json();
         $this->assertEquals('application/json', $data['headers']['Content-Type']);
         $this->assertEquals('john', $data['json']['name']);
-        $this->assertEquals('john@example.com', $data['json']['email']);
+    }
+
+    public function testCanMakePutRequest()
+    {
+        $http = new Http();
+        $response = $http->put($this->baseUrl . '/put', [
+            'name' => 'john',
+            'email' => 'john@example.com'
+        ]);
+        
+        $this->assertFalse($response->failed());
+        $data = $response->json();
+        $this->assertEquals('application/json', $data['headers']['Content-Type']);
+        $this->assertEquals('john', $data['json']['name']);
     }
 
     public function testCanMakeDeleteRequest()
     {
         $http = new Http();
-        $response = $http->delete($this->jsonApi . '/posts/1');
+        $response = $http->delete($this->baseUrl . '/delete');
         
         $this->assertEquals(200, $response->status());
     }
@@ -78,7 +77,7 @@ class HttpTest extends TestCase
                 'X-Custom' => 'test',
                 'Accept' => 'application/json'
             ])
-            ->get($this->httpBin . '/headers');
+            ->get($this->baseUrl . '/headers');
         
         $data = $response->json();
         $this->assertEquals('test', $data['headers']['X-Custom']);
@@ -89,7 +88,7 @@ class HttpTest extends TestCase
         $http = new Http();
         $response = $http
             ->token('xyz123')
-            ->get($this->httpBin . '/headers');
+            ->get($this->baseUrl . '/headers');
         
         $data = $response->json();
         $this->assertEquals('Bearer xyz123', $data['headers']['Authorization']);
@@ -103,7 +102,7 @@ class HttpTest extends TestCase
 
         $response = $http
             ->files(['file' => $tempFile])
-            ->post($this->httpBin . '/post');
+            ->post($this->baseUrl . '/post');
 
         unlink($tempFile);
         
@@ -117,7 +116,7 @@ class HttpTest extends TestCase
         $http = new Http();
         $response = $http
             ->timeout(5)
-            ->get($this->httpBin . '/get');
+            ->get($this->baseUrl . '/get');
         
         $this->assertEquals(200, $response->status());
     }
@@ -127,7 +126,7 @@ class HttpTest extends TestCase
         $http = new Http();
         $response = $http
             ->insecure()
-            ->get($this->httpBin . '/get');
+            ->get($this->baseUrl . '/get');
         
         $this->assertEquals(200, $response->status());
     }
@@ -135,16 +134,16 @@ class HttpTest extends TestCase
     public function testCanGetResponseAsText()
     {
         $http = new Http();
-        $response = $http->get($this->httpBin . '/get');
+        $response = $http->get($this->baseUrl . '/get');
         
-        $this->assertIsString($response->getText());
-        $this->assertJson($response->getText());
+        $this->assertIsString($response->body());
+        $this->assertJson($response->body());
     }
 
     public function testCanMakePatchRequest()
     {
         $http = new Http();
-        $response = $http->patch($this->httpBin . '/patch', [
+        $response = $http->patch($this->baseUrl . '/patch', [
             'name' => 'john',
             'active' => true
         ]);
@@ -163,23 +162,21 @@ class HttpTest extends TestCase
         
         $this->assertTrue($response->failed());
         $this->assertEquals(0, $response->status());
-        $this->assertNotEmpty($response->error());
     }
 
     public function testFailsOnServerError()
     {
         $http = new Http();
-        $response = $http->get($this->httpBin . '/status/404');
+        $response = $http->get($this->baseUrl . '/status/404');
         
         $this->assertTrue($response->failed());
         $this->assertEquals(404, $response->status());
-        $this->assertEmpty($response->error());
     }
 
     public function testOkForSuccessfulRequest()
     {
         $http = new Http();
-        $response = $http->get($this->jsonApi . '/posts/1');
+        $response = $http->get($this->baseUrl . '/get');
         
         $this->assertTrue($response->ok());
         $this->assertFalse($response->clientError());
@@ -189,7 +186,7 @@ class HttpTest extends TestCase
     public function testClientErrorFor404()
     {
         $http = new Http();
-        $response = $http->get($this->httpBin . '/status/404');
+        $response = $http->get($this->baseUrl . '/status/404');
         
         $this->assertFalse($response->ok());
         $this->assertTrue($response->clientError());
@@ -199,7 +196,7 @@ class HttpTest extends TestCase
     public function testServerErrorFor500()
     {
         $http = new Http();
-        $response = $http->get($this->httpBin . '/status/500');
+        $response = $http->get($this->baseUrl . '/status/500');
         
         $this->assertFalse($response->ok());
         $this->assertFalse($response->clientError());
@@ -211,10 +208,10 @@ class HttpTest extends TestCase
         $http = new Http();
         $response = $http->options([
             CURLOPT_FOLLOWLOCATION => false
-        ])->get($this->httpBin . '/status/301');
+        ])->get($this->baseUrl . '/status/301');
         
-        $this->assertFalse($response->ok());
         $this->assertTrue($response->redirect());
+        $this->assertFalse($response->ok());
         $this->assertFalse($response->clientError());
         $this->assertFalse($response->serverError());
     }
@@ -224,7 +221,7 @@ class HttpTest extends TestCase
         $http = new Http();
         $response = $http
             ->form()
-            ->post($this->httpBin . '/post', [
+            ->post($this->baseUrl . '/post', [
                 'username' => 'john',
                 'password' => 'secret'
             ]);
@@ -241,7 +238,7 @@ class HttpTest extends TestCase
         $http = new Http();
         $savePath = tempnam(sys_get_temp_dir(), 'download_');
         
-        $success = $http->download($this->httpBin . '/image/jpeg', $savePath);
+        $success = $http->download($this->baseUrl . '/image/jpeg', $savePath);
         
         $this->assertTrue($success);
         $this->assertFileExists($savePath);

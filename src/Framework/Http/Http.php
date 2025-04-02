@@ -130,11 +130,12 @@ class Http
     }
 
     /**
-     * Get the raw response text.
+     * Get the raw response body.
+     * Returns empty string if request failed or no response.
      */
-    public function getText(): string
+    public function body(): string
     {
-        return $this->response;
+        return $this->response ?? '';
     }
 
     /**
