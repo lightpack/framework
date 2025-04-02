@@ -70,7 +70,7 @@ class LimiterTest extends TestCase
         $this->assertEquals(2, $this->limiter->getHits('test-key'));
 
         // Make cache appear expired by modifying the TTL
-        $file = $this->cacheDir . '/' . sha1('test-key');
+        $file = $this->cacheDir . '/' . sha1('limiter:test-key');
         $contents = unserialize(file_get_contents($file));
         $contents['ttl'] = time() - 60;  // Set TTL to 1 minute ago
         file_put_contents($file, serialize($contents));
