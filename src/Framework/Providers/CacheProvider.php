@@ -8,7 +8,6 @@ use Lightpack\Cache\Drivers\FileDriver;
 use Lightpack\Cache\Drivers\NullDriver;
 use Lightpack\Cache\Drivers\ArrayDriver;
 use Lightpack\Cache\Drivers\DatabaseDriver;
-use Lightpack\Cache\Drivers\MemcachedDriver;
 use Lightpack\Container\Container;
 
 class CacheProvider implements ProviderInterface
@@ -43,10 +42,6 @@ class CacheProvider implements ProviderInterface
 
         if ($cacheDriver === 'database') {
             return new DatabaseDriver($container->get('db'));
-        }
-
-        if ($cacheDriver === 'memcached') {
-            return new MemcachedDriver($container->get('memcached'));
         }
 
         throw new \Exception('Cache driver not found: ' . $cacheDriver);
