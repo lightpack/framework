@@ -28,16 +28,6 @@ class MemcachedTest extends TestCase
         $this->assertTrue($this->memcached->addServer('127.0.0.1', 11211));
     }
     
-    public function testCanAddMultipleServers()
-    {
-        $servers = [
-            ['127.0.0.1', 11211],
-            ['localhost', 11211],
-        ];
-        
-        $this->assertTrue($this->memcached->addServers($servers));
-    }
-    
     public function testCanGetStats()
     {
         $stats = $this->memcached->getStats();

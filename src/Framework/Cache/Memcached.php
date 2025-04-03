@@ -6,24 +6,26 @@ class Memcached
 {
     private $client;
     
-    public function __construct(array $servers = [['127.0.0.1', 11211]])
+    public function __construct(array $servers = [])
     {
         if (!extension_loaded('memcached')) {
             throw new \RuntimeException('Memcached extension not installed');
         }
 
         $this->client = new \Memcached();
-        $this->addServers($servers);
+        
+        if (empty($servers)) {
+            $servers = [['host' => '127.0.0.1', 'port' => 11211]];
+        }
+
+        foreach ($servers as $server) {
+            $this->addServer($server['host'], $server['port']);
+        }
     }
     
     public function getClient()
     {
         return $this->client;
-    }
-    
-    public function addServers(array $servers): bool
-    {
-        return $this->client->addServers($servers);
     }
     
     public function addServer(string $host, int $port): bool
