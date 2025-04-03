@@ -5,21 +5,20 @@ namespace Lightpack\Session\Drivers;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Cache\Cache;
 use Lightpack\Http\Cookie;
-use RuntimeException;
 
 class CacheDriver implements DriverInterface
 {
     private Cache $cache;
     private Cookie $cookie;
-    private string $sessionId;
+    private string $sessionId = '';
     private bool $started = false;
     private array $data = [];
+    private string $prefix = 'session:';
 
     public function __construct(Cache $cache, Cookie $cookie) 
     {
         $this->cache = $cache;
         $this->cookie = $cookie;
-        $this->sessionId = '';
     }
 
     public function start()
@@ -33,7 +32,7 @@ class CacheDriver implements DriverInterface
         $this->cookie->set(session_name(), $this->sessionId);
 
         // Load session data
-        $this->data = $this->cache->get($this->sessionId) ?? [];
+        $this->data = $this->cache->get($this->getCacheKey()) ?? [];
     }
 
     public function set(string $key, $value)
@@ -62,7 +61,7 @@ class CacheDriver implements DriverInterface
     public function regenerate(): bool
     {
         // Delete old session
-        $this->cache->delete($this->sessionId);
+        $this->cache->delete($this->getCacheKey());
         
         // Generate new session ID
         $this->sessionId = $this->generateSessionId();
@@ -78,7 +77,7 @@ class CacheDriver implements DriverInterface
 
     public function destroy()
     {
-        $this->cache->delete($this->sessionId);
+        $this->cache->delete($this->getCacheKey());
         $this->cookie->delete(session_name());
         $this->data = [];
         $this->started = false;
@@ -95,11 +94,17 @@ class CacheDriver implements DriverInterface
         return bin2hex(random_bytes(16));
     }
 
+    private function getCacheKey(): string
+    {
+        return $this->prefix . $this->sessionId;
+    }
+
     private function save(): void
     {
-        if ($this->sessionId === '') {
-            return; // Don't save if no valid session ID
+        if (!$this->started) {
+            return;
         }
-        $this->cache->set($this->sessionId, $this->data, 86400); // 24 hours TTL
+        
+        $this->cache->set($this->getCacheKey(), $this->data, 86400); // 24 hours TTL
     }
 }
