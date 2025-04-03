@@ -11,17 +11,7 @@ class Session
 
     public function __construct(DriverInterface $driver, string $name = 'lightpack_session')
     {
-        // Configure session cookie settings
-        ini_set('session.use_only_cookies', TRUE);
-        ini_set('session.use_trans_sid', FALSE);
-        ini_set('session.cookie_httponly', '1');
-        ini_set('session.use_strict_mode', '1');
-
-        // Only enable secure cookies in production/HTTPS
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            ini_set('session.cookie_secure', '1');
-        }
-
+        $this->configureCookie();
         session_name($name);
         
         $this->arr = new Arr();
@@ -180,5 +170,19 @@ class Session
     public function hasInvalidAgent(): bool
     {
         return !$this->verifyAgent();
+    }
+
+    private function configureCookie()
+    {
+        // Configure session cookie settings
+        ini_set('session.use_only_cookies', TRUE);
+        ini_set('session.use_trans_sid', FALSE);
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_strict_mode', '1');
+
+        // Only enable secure cookies in production/HTTPS
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', '1');
+        }
     }
 }
