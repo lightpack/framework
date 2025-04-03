@@ -8,11 +8,13 @@ class Session
 {
     private DriverInterface $driver;
     private Arr $arr;
+    private string $name;
 
-    public function __construct(DriverInterface $driver)
+    public function __construct(DriverInterface $driver, ?string $name = 'lightpack_session')
     {
-        $this->driver = $driver;
         $this->arr = new Arr();
+        $this->driver = $driver;
+        $this->name = $name;
     }
 
     /**
@@ -80,7 +82,11 @@ class Session
 
     public function verifyAgent(): bool
     {
-        return $this->driver->verifyAgent();
+        if ($this->driver->get('_user_agent') == $_SERVER['HTTP_USER_AGENT']) {
+            return true;
+        }
+
+        return false;
     }
 
     public function destroy()
@@ -162,5 +168,26 @@ class Session
     public function hasInvalidAgent(): bool
     {
         return !$this->verifyAgent();
+    }
+
+    public function setUserAgent(string $agent)
+    {
+        $this->driver->set('_user_agent', $agent);
+    }
+
+    public function configureCookie()
+    {
+        // Configure session cookie settings
+        ini_set('session.use_only_cookies', TRUE);
+        ini_set('session.use_trans_sid', FALSE);
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_strict_mode', '1');
+
+        // Only enable secure cookies in production/HTTPS
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', '1');
+        }
+
+        session_name($this->name);
     }
 }

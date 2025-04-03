@@ -32,7 +32,8 @@ class SessionDefaultDriverTest extends TestCase
         $_SESSION = [];
         $_SERVER['HTTP_USER_AGENT'] = 'PHPUnit Test Browser';
         
-        $this->driver = new DefaultDriver('test_session');
+        $this->driver = new DefaultDriver();
+        $this->driver->start();
     }
 
     protected function tearDown(): void
@@ -95,18 +96,6 @@ class SessionDefaultDriverTest extends TestCase
         $newId = session_id();
 
         $this->assertNotEquals($oldId, $newId);
-    }
-
-    public function testVerifyAgentReturnsTrueForMatchingAgent()
-    {
-        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
-        $this->assertTrue($this->driver->verifyAgent());
-    }
-
-    public function testVerifyAgentReturnsFalseForMismatchedAgent()
-    {
-        $_SESSION['user_agent'] = 'Different Browser';
-        $this->assertFalse($this->driver->verifyAgent());
     }
 
     public function testDestroyRemovesAllSessionData()

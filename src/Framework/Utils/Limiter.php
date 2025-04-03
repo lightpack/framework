@@ -8,6 +8,7 @@ use Lightpack\Container\Container;
 class Limiter 
 {
     protected Cache $cache;
+    protected string $prefix = 'limiter:';
 
     public function __construct() 
     {
@@ -16,6 +17,7 @@ class Limiter
 
     public function attempt(string $key, int $max, int $mins): bool 
     {
+        $key = $this->prefix . $key;
         $hits = (int) ($this->cache->get($key) ?? 0);
         
         if ($hits >= $max) {
@@ -29,6 +31,6 @@ class Limiter
 
     public function getHits(string $key): ?int
     {
-        return $this->cache->get($key);
+        return $this->cache->get($this->prefix . $key);
     }
 }
