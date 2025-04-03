@@ -116,7 +116,7 @@ class Http
      */
     public function json(): array
     {
-        return json_decode($this->response, true);
+        return json_decode($this->response, true) ?? [];
     }
 
     /**

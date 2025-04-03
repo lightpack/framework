@@ -6,6 +6,7 @@ use Lightpack\Session\Session;
 use Lightpack\Container\Container;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Session\Drivers\ArrayDriver;
+use Lightpack\Session\Drivers\CacheDriver;
 use Lightpack\Session\Drivers\DefaultDriver;
 
 class SessionProvider implements ProviderInterface
@@ -16,7 +17,7 @@ class SessionProvider implements ProviderInterface
 
             /** @var \Lightpack\Http\Request */
             $request = $container->get('request');
-            $driver = $this->getDriver();
+            $driver = $this->getDriver($container);
             $session = new Session($driver, get_env('SESSION_NAME'));
 
             if(!$driver instanceof ArrayDriver) {
@@ -35,27 +36,25 @@ class SessionProvider implements ProviderInterface
         $container->alias(Session::class, 'session');
     }
 
-    protected function getDriverClassname(): string
+    protected function getDriver(Container $container): DriverInterface
     {
         $sessionDriver = get_env('SESSION_DRIVER', 'default');
 
         if ($sessionDriver === 'default') {
-            return DefaultDriver::class;
+            return new DefaultDriver();
         }
 
         if ($sessionDriver === 'array') {
-            return ArrayDriver::class;
+            return new ArrayDriver();
         }
 
-        throw new \Exception('Session driver not found');
-    }
+        if ($sessionDriver === 'cache') {
+            return new CacheDriver(
+                $container->get('cache'),
+                $container->get('cookie'),
+            );
+        }
 
-    protected function getDriver(): DriverInterface
-    {
-        $sessionName = get_env('SESSION_NAME', 'lightpack_session');
-
-        $driver = $this->getDriverClassname();
-
-        return new $driver($sessionName);
+        throw new \Exception('Invalid session driver: ' . $sessionDriver);
     }
 }
