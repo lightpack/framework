@@ -77,11 +77,14 @@ class CacheDriver implements DriverInterface
 
     public function destroy()
     {
-        $this->cache->delete($this->getCacheKey());
-        $this->cookie->delete(session_name());
+        if ($this->started && $this->sessionId !== '') {
+            $this->cache->delete($this->getCacheKey());
+            $this->cookie->delete(session_name());
+        }
+        
         $this->data = [];
         $this->started = false;
-        $this->sessionId = ''; // Reset to initial state
+        $this->sessionId = '';
     }
 
     public function started(): bool
