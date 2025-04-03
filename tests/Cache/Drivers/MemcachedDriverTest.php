@@ -3,7 +3,7 @@
 namespace Lightpack\Tests\Cache\Drivers;
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Cache\Memcached\Memcached;
+use Lightpack\Cache\Memcached;
 use Lightpack\Cache\Drivers\MemcachedDriver;
 
 interface MockMemcached
