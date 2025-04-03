@@ -9,7 +9,7 @@ class SessionArrayDriverTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->driver = new ArrayDriver('test_session');
+        $this->driver = new ArrayDriver();
     }
 
     public function testSetStoresValue()

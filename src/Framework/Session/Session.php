@@ -9,8 +9,21 @@ class Session
     private DriverInterface $driver;
     private Arr $arr;
 
-    public function __construct(DriverInterface $driver)
+    public function __construct(DriverInterface $driver, string $name = 'lightpack_session')
     {
+        // Configure session cookie settings
+        ini_set('session.use_only_cookies', TRUE);
+        ini_set('session.use_trans_sid', FALSE);
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_strict_mode', '1');
+
+        // Only enable secure cookies in production/HTTPS
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', '1');
+        }
+
+        session_name($name);
+        
         $this->arr = new Arr();
         $this->driver = $driver;
         $this->driver->set('_user_agent', $_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP');

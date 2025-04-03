@@ -7,7 +7,7 @@ use RuntimeException;
 
 class DefaultDriver implements DriverInterface
 {
-    public function __construct(string $name)
+    public function __construct()
     {
         if ($this->started()) {
             return;
@@ -19,18 +19,6 @@ class DefaultDriver implements DriverInterface
             );
         }
 
-        // Always-on security settings
-        ini_set('session.use_only_cookies', TRUE);
-        ini_set('session.use_trans_sid', FALSE);
-        ini_set('session.cookie_httponly', '1');
-        ini_set('session.use_strict_mode', '1');
-
-        // Only enable secure cookies in production/HTTPS
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            ini_set('session.cookie_secure', '1');
-        }
-
-        session_name($name);
         session_start();
     }
 
@@ -57,27 +45,12 @@ class DefaultDriver implements DriverInterface
 
     public function regenerate(): bool
     {
-        return session_regenerate_id();
+        return session_regenerate_id(true);
     }
 
     public function destroy()
     {
-        session_unset();
-
-        if (ini_get('session.use_cookies')) {
-            $params = session_get_cookie_params();
-
-            setcookie(
-                session_name(),
-                '',
-                time() - 42000,
-                $params['path'],
-                $params['domain'],
-                $params['secure'],
-                $params['httponly']
-            );
-        }
-
+        $_SESSION = [];
         session_destroy();
     }
 
