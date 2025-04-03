@@ -170,21 +170,12 @@ class Session
         return !$this->verifyAgent();
     }
 
-    /**
-     * Start the session with configuration
-     */
-    public function start(): void
-    {
-        $this->configureCookie();
-        session_name($this->name);
-    }
-
     public function setUserAgent(string $agent)
     {
         $this->driver->set('_user_agent', $agent);
     }
 
-    private function configureCookie()
+    public function configureCookie()
     {
         // Configure session cookie settings
         ini_set('session.use_only_cookies', TRUE);
@@ -196,5 +187,7 @@ class Session
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             ini_set('session.cookie_secure', '1');
         }
+
+        session_name($this->name);
     }
 }

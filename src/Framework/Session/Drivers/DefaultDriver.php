@@ -7,7 +7,7 @@ use RuntimeException;
 
 class DefaultDriver implements DriverInterface
 {
-    public function __construct()
+    public function start()
     {
         if ($this->started()) {
             return;

@@ -33,6 +33,7 @@ class SessionDefaultDriverTest extends TestCase
         $_SERVER['HTTP_USER_AGENT'] = 'PHPUnit Test Browser';
         
         $this->driver = new DefaultDriver();
+        $this->driver->start();
     }
 
     protected function tearDown(): void

@@ -8,6 +8,10 @@ class ArrayDriver implements DriverInterface
 {
     protected $store = [];
 
+    public function start() {
+        // ...
+    }
+
     public function set(string $key, $value)
     {
         $this->store[$key] = $value;
