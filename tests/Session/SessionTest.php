@@ -166,16 +166,6 @@ class SessionTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testVerifyAgentCallsDriverVerifyAgent()
-    {
-        $this->driver->expects($this->once())
-            ->method('verifyAgent')
-            ->willReturn(true);
-
-        $result = $this->session->verifyAgent();
-        $this->assertTrue($result);
-    }
-
     public function testHasInvalidTokenReturnsOppositeOfVerifyToken()
     {
         $token = 'valid_token';
@@ -192,12 +182,17 @@ class SessionTest extends TestCase
         $this->assertFalse($this->session->hasInvalidToken());
     }
 
-    public function testHasInvalidAgentReturnsOppositeOfVerifyAgent()
+    public function testUserAgentVerificationCallsDriver()
     {
-        $this->driver->method('verifyAgent')
-            ->willReturn(true);
+        $key = '_user_agent';
+        $value = $_SERVER['HTTP_USER_AGENT'] = 'test-agent';
 
-        $this->assertFalse($this->session->hasInvalidAgent());
+        $this->driver->expects($this->once())
+            ->method('get')
+            ->with($key)
+            ->willReturn($value);
+
+        $this->assertTrue($this->session->verifyAgent());
     }
 
     public function testDestroyCallsDriverDestroy()

@@ -8,7 +8,6 @@ interface DriverInterface
     public function get(?string $key = null, $default = null);
     public function delete(string $key);
     public function regenerate(): bool;
-    public function verifyAgent(): bool;
     public function destroy();
     public function started(): bool;
 }

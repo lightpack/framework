@@ -32,8 +32,6 @@ class DefaultDriver implements DriverInterface
 
         session_name($name);
         session_start();
-
-        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP';
     }
 
     public function set(string $key, $value)
@@ -60,15 +58,6 @@ class DefaultDriver implements DriverInterface
     public function regenerate(): bool
     {
         return session_regenerate_id();
-    }
-
-    public function verifyAgent(): bool
-    {
-        if ($this->get('user_agent') == $_SERVER['HTTP_USER_AGENT']) {
-            return true;
-        }
-
-        return false;
     }
 
     public function destroy()

@@ -8,11 +8,6 @@ class ArrayDriver implements DriverInterface
 {
     protected $store = [];
 
-    public function __construct(string $name)
-    {
-        $this->store['user_agent'] = 'HTTP_USER_AGENT';
-    }
-
     public function set(string $key, $value)
     {
         $this->store[$key] = $value;
@@ -35,11 +30,6 @@ class ArrayDriver implements DriverInterface
     }
 
     public function regenerate(): bool
-    {
-        return true;
-    }
-
-    public function verifyAgent(): bool
     {
         return true;
     }

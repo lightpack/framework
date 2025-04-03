@@ -68,11 +68,6 @@ class SessionArrayDriverTest extends TestCase
         $this->assertTrue($this->driver->regenerate());
     }
 
-    public function testVerifyAgentAlwaysReturnsTrue()
-    {
-        $this->assertTrue($this->driver->verifyAgent());
-    }
-
     public function testDestroyRemovesAllData()
     {
         $this->driver->set('key1', 'value1');
@@ -86,10 +81,5 @@ class SessionArrayDriverTest extends TestCase
     public function testStartedAlwaysReturnsTrue()
     {
         $this->assertTrue($this->driver->started());
-    }
-
-    public function testConstructorSetsUserAgent()
-    {
-        $this->assertEquals('HTTP_USER_AGENT', $this->driver->get('user_agent'));
     }
 }

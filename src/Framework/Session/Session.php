@@ -11,8 +11,9 @@ class Session
 
     public function __construct(DriverInterface $driver)
     {
-        $this->driver = $driver;
         $this->arr = new Arr();
+        $this->driver = $driver;
+        $this->driver->set('_user_agent', $_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP');
     }
 
     /**
@@ -80,7 +81,11 @@ class Session
 
     public function verifyAgent(): bool
     {
-        return $this->driver->verifyAgent();
+        if ($this->driver->get('_user_agent') == $_SERVER['HTTP_USER_AGENT']) {
+            return true;
+        }
+
+        return false;
     }
 
     public function destroy()
