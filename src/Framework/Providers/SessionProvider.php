@@ -17,7 +17,13 @@ class SessionProvider implements ProviderInterface
             /** @var \Lightpack\Http\Request */
             $request = $container->get('request');
 
-            $session = new Session($this->getDriver());
+            $session = new Session(
+                $this->getDriver(),
+                get_env('SESSION_NAME')
+            );
+            
+            $session->start();
+            $session->setUserAgent($_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP');
 
             if($request->isGet()) {
                 $session->set('_previous_url', $request->fullUrl());

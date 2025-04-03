@@ -8,15 +8,13 @@ class Session
 {
     private DriverInterface $driver;
     private Arr $arr;
+    private string $name;
 
-    public function __construct(DriverInterface $driver, string $name = 'lightpack_session')
+    public function __construct(DriverInterface $driver, ?string $name = 'lightpack_session')
     {
-        $this->configureCookie();
-        session_name($name);
-        
         $this->arr = new Arr();
         $this->driver = $driver;
-        $this->driver->set('_user_agent', $_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP');
+        $this->name = $name;
     }
 
     /**
@@ -170,6 +168,20 @@ class Session
     public function hasInvalidAgent(): bool
     {
         return !$this->verifyAgent();
+    }
+
+    /**
+     * Start the session with configuration
+     */
+    public function start(): void
+    {
+        $this->configureCookie();
+        session_name($this->name);
+    }
+
+    public function setUserAgent(string $agent)
+    {
+        $this->driver->set('_user_agent', $agent);
     }
 
     private function configureCookie()
