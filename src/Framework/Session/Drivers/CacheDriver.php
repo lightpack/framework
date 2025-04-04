@@ -5,7 +5,6 @@ namespace Lightpack\Session\Drivers;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Cache\Cache;
 use Lightpack\Http\Cookie;
-use Lightpack\Config\Config;
 
 class CacheDriver implements DriverInterface
 {
@@ -15,15 +14,11 @@ class CacheDriver implements DriverInterface
     private bool $started = false;
     private array $data = [];
     private string $prefix = 'session:';
-    private Config $config;
-    private int $lifetime;
 
-    public function __construct(Cache $cache, Cookie $cookie, Config $config) 
+    public function __construct(Cache $cache, Cookie $cookie) 
     {
         $this->cache = $cache;
         $this->cookie = $cookie;
-        $this->config = $config;
-        $this->lifetime = (int) $this->config->get('session.lifetime', 7200);
     }
 
     public function start()
@@ -31,10 +26,10 @@ class CacheDriver implements DriverInterface
         $this->started = true;
 
         // Get or generate session ID
-        $this->sessionId = $this->cookie->get(session_name()) ?? $this->generateSessionId();
+        $this->sessionId = $this->cookie->get(session_name()) ?: $this->generateSessionId();
         
-        // Set cookie
-        $this->cookie->set(session_name(), $this->sessionId, $this->lifetime);
+        // Set cookie (lifetime is configured by Session class)
+        $this->cookie->set(session_name(), $this->sessionId);
 
         // Load session data
         $this->data = $this->cache->get($this->getCacheKey()) ?? [];
@@ -72,7 +67,7 @@ class CacheDriver implements DriverInterface
         $this->sessionId = $this->generateSessionId();
         
         // Set new cookie
-        $this->cookie->set(session_name(), $this->sessionId, $this->lifetime);
+        $this->cookie->set(session_name(), $this->sessionId);
 
         // Save current data with new ID
         $this->save();
@@ -113,6 +108,6 @@ class CacheDriver implements DriverInterface
             return;
         }
         
-        $this->cache->set($this->getCacheKey(), $this->data, $this->lifetime);
+        $this->cache->set($this->getCacheKey(), $this->data);
     }
 }

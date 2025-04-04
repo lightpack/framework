@@ -45,7 +45,7 @@ class SessionProvider implements ProviderInterface
         $driver = match($sessionDriver) {
             'default' => new DefaultDriver(),
             'array' => new ArrayDriver(),
-            'cache' => new CacheDriver($container->get('cache'), $container->get('cookie'), $config),
+            'cache' => new CacheDriver($container->get('cache'), $container->get('cookie')),
             default => throw new \Exception('Session driver not found: ' . $sessionDriver)
         };
 
