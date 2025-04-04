@@ -3,18 +3,21 @@
 namespace Lightpack\Session;
 
 use Lightpack\Utils\Arr;
+use Lightpack\Config\Config;
 
 class Session
 {
     private DriverInterface $driver;
     private Arr $arr;
     private string $name;
+    private Config $config;
 
-    public function __construct(DriverInterface $driver, ?string $name = 'lightpack_session')
+    public function __construct(DriverInterface $driver, Config $config)
     {
         $this->arr = new Arr();
         $this->driver = $driver;
-        $this->name = $name;
+        $this->config = $config;
+        $this->name = $this->config->get('session.name', 'lightpack_session');
     }
 
     /**
@@ -116,8 +119,57 @@ class Session
         return $token;
     }
 
+    /**
+     * Configure session cookie and timeout settings
+     */
+    public function configureCookie()
+    {
+        // Basic security settings
+        ini_set('session.use_only_cookies', TRUE);
+        ini_set('session.use_trans_sid', FALSE);
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_strict_mode', '1');
+        
+        // Session lifetime from config
+        $lifetime = (int) $this->config->get('session.lifetime', 7200);
+        ini_set('session.gc_maxlifetime', $lifetime);
+        ini_set('session.cookie_lifetime', $lifetime);
+
+        // Secure cookies in HTTPS
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', '1');
+        }
+
+        // SameSite setting from config
+        $sameSite = strtolower($this->config->get('session.same_site', 'lax'));
+        if (!in_array($sameSite, ['lax', 'strict', 'none'])) {
+            $sameSite = 'lax';
+        }
+        ini_set('session.cookie_samesite', $sameSite);
+
+        session_name($this->name);
+    }
+
+    /**
+     * Check if session has expired
+     */
+    public function hasExpired(): bool
+    {
+        return !$this->driver->started() || $this->driver->get() === null;
+    }
+
+    /**
+     * Verify CSRF token with proper session expiry handling
+     */
     public function verifyToken(): bool
     {
+        // First check session expiry
+        if ($this->hasExpired()) {
+            throw new \Lightpack\Exceptions\SessionExpiredException(
+                'Your session has expired. Please refresh the page and try again.'
+            );
+        }
+
         if (!$this->driver->started()) {
             return false;
         }
@@ -173,21 +225,5 @@ class Session
     public function setUserAgent(string $agent)
     {
         $this->driver->set('_user_agent', $agent);
-    }
-
-    public function configureCookie()
-    {
-        // Configure session cookie settings
-        ini_set('session.use_only_cookies', TRUE);
-        ini_set('session.use_trans_sid', FALSE);
-        ini_set('session.cookie_httponly', '1');
-        ini_set('session.use_strict_mode', '1');
-
-        // Only enable secure cookies in production/HTTPS
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            ini_set('session.cookie_secure', '1');
-        }
-
-        session_name($this->name);
     }
 }

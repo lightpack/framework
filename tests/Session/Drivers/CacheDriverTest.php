@@ -5,6 +5,7 @@ namespace Lightpack\Tests\Session\Drivers;
 use Lightpack\Cache\Cache;
 use Lightpack\Cache\Drivers\ArrayDriver;
 use Lightpack\Http\Cookie;
+use Lightpack\Config\Config;
 use Lightpack\Session\Drivers\CacheDriver;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +18,7 @@ class CacheDriverTest extends TestCase
     private CacheDriver $driver;
     private Cache $cache;
     private $cookie;
+    private $config;
     private array $cookieData = [];
 
     protected function setUp(): void
@@ -47,7 +49,14 @@ class CacheDriverTest extends TestCase
                 return true;
             });
 
-        $this->driver = new CacheDriver($this->cache, $this->cookie);
+        // Mock config
+        $this->config = $this->createMock(Config::class);
+        $this->config->method('get')
+            ->willReturnMap([
+                ['session.lifetime', 7200, 7200],
+            ]);
+
+        $this->driver = new CacheDriver($this->cache, $this->cookie, $this->config);
     }
 
     public function testStartCreatesNewSession()
@@ -123,7 +132,7 @@ class CacheDriverTest extends TestCase
         // Simulate new request
         $this->cookieData[session_name()] = $sessionId;
         
-        $newDriver = new CacheDriver($this->cache, $this->cookie);
+        $newDriver = new CacheDriver($this->cache, $this->cookie, $this->config);
         $newDriver->start();
         $this->assertEquals('value', $newDriver->get('key'));
     }

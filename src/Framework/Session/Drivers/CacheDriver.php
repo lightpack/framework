@@ -5,6 +5,7 @@ namespace Lightpack\Session\Drivers;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Cache\Cache;
 use Lightpack\Http\Cookie;
+use Lightpack\Config\Config;
 
 class CacheDriver implements DriverInterface
 {
@@ -14,11 +15,15 @@ class CacheDriver implements DriverInterface
     private bool $started = false;
     private array $data = [];
     private string $prefix = 'session:';
+    private Config $config;
+    private int $lifetime;
 
-    public function __construct(Cache $cache, Cookie $cookie) 
+    public function __construct(Cache $cache, Cookie $cookie, Config $config) 
     {
         $this->cache = $cache;
         $this->cookie = $cookie;
+        $this->config = $config;
+        $this->lifetime = (int) $this->config->get('session.lifetime', 7200);
     }
 
     public function start()
@@ -29,7 +34,7 @@ class CacheDriver implements DriverInterface
         $this->sessionId = $this->cookie->get(session_name()) ?? $this->generateSessionId();
         
         // Set cookie
-        $this->cookie->set(session_name(), $this->sessionId);
+        $this->cookie->set(session_name(), $this->sessionId, $this->lifetime);
 
         // Load session data
         $this->data = $this->cache->get($this->getCacheKey()) ?? [];
@@ -67,7 +72,7 @@ class CacheDriver implements DriverInterface
         $this->sessionId = $this->generateSessionId();
         
         // Set new cookie
-        $this->cookie->set(session_name(), $this->sessionId);
+        $this->cookie->set(session_name(), $this->sessionId, $this->lifetime);
 
         // Save current data with new ID
         $this->save();
@@ -108,6 +113,6 @@ class CacheDriver implements DriverInterface
             return;
         }
         
-        $this->cache->set($this->getCacheKey(), $this->data, 86400); // 24 hours TTL
+        $this->cache->set($this->getCacheKey(), $this->data, $this->lifetime);
     }
 }
