@@ -5,6 +5,7 @@ namespace Lightpack\Session\Drivers;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Cache\Cache;
 use Lightpack\Http\Cookie;
+use Lightpack\Config\Config;
 
 class CacheDriver implements DriverInterface
 {
@@ -14,11 +15,13 @@ class CacheDriver implements DriverInterface
     private bool $started = false;
     private array $data = [];
     private string $prefix = 'session:';
+    private Config $config;
 
-    public function __construct(Cache $cache, Cookie $cookie) 
+    public function __construct(Cache $cache, Cookie $cookie, Config $config) 
     {
         $this->cache = $cache;
         $this->cookie = $cookie;
+        $this->config = $config;
     }
 
     public function start()
@@ -31,8 +34,15 @@ class CacheDriver implements DriverInterface
         // Set cookie (lifetime is configured by Session class)
         $this->cookie->set(session_name(), $this->sessionId);
 
-        // Load session data
-        $this->data = $this->cache->get($this->getCacheKey()) ?? [];
+        // Load session data with TTL check
+        $data = $this->cache->get($this->getCacheKey());
+        
+        // If no data or TTL expired, start fresh
+        if ($data === null) {
+            $this->data = [];
+        } else {
+            $this->data = $data;
+        }
     }
 
     public function set(string $key, $value)
@@ -108,6 +118,8 @@ class CacheDriver implements DriverInterface
             return;
         }
         
-        $this->cache->set($this->getCacheKey(), $this->data);
+        // Use session lifetime from config for cache TTL
+        $lifetime = (int) $this->config->get('session.lifetime', 7200);
+        $this->cache->set($this->getCacheKey(), $this->data, $lifetime);
     }
 }
