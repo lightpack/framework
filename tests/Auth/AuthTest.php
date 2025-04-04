@@ -15,6 +15,7 @@ use Lightpack\Utils\Url;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Database\Lucid\Builder;
 use Lightpack\Database\DB;
+use Lightpack\Config\Config;
 
 class AuthTest extends TestCase
 {
@@ -36,10 +37,25 @@ class AuthTest extends TestCase
         
         // Setup session driver mock
         $this->sessionDriver = $this->createMock(DriverInterface::class);
+        $this->sessionDriver->method('started')->willReturn(true);
         Container::getInstance()->instance(DriverInterface::class, $this->sessionDriver);
         
+        // Setup config mock
+        $config = $this->createMock(Config::class);
+        $config->method('get')
+            ->will($this->returnCallback(function($key, $default = null) {
+                $values = [
+                    'session.lifetime' => 7200,
+                    'session.same_site' => 'lax',
+                    'session.name' => 'lightpack_session',
+                    'app.key' => 'test-key-32-characters-exactly!!',
+                ];
+                return $values[$key] ?? $default;
+            }));
+        Container::getInstance()->instance('config', $config);
+        
         // Setup session mock
-        $this->session = new Session($this->sessionDriver);
+        $this->session = new Session($this->sessionDriver, $config);
         Container::getInstance()->instance('session', $this->session);
         
         // Setup request mock
