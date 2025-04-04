@@ -12,7 +12,7 @@ class EncryptedDriver implements DriverInterface
         private Crypto $crypto
     ) {}
 
-    public function start(): bool
+    public function start()
     {
         return $this->driver->start();
     }
@@ -22,7 +22,7 @@ class EncryptedDriver implements DriverInterface
         return $this->driver->regenerate();
     }
 
-    public function destroy(): bool
+    public function destroy()
     {
         return $this->driver->destroy();
     }
@@ -51,12 +51,12 @@ class EncryptedDriver implements DriverInterface
         );
     }
 
-    public function set(string $key, $value): void
+    public function set(string $key, $value)
     {
         $this->driver->set($key, $this->encryptValue($value));
     }
 
-    public function delete(string $key): void
+    public function delete(string $key)
     {
         $this->driver->delete($key);
     }
