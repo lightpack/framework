@@ -8,6 +8,7 @@ use Lightpack\Session\DriverInterface;
 use Lightpack\Session\Drivers\ArrayDriver;
 use Lightpack\Session\Drivers\CacheDriver;
 use Lightpack\Session\Drivers\DefaultDriver;
+use Lightpack\Session\Drivers\EncryptedDriver;
 
 class SessionProvider implements ProviderInterface
 {
@@ -37,24 +38,21 @@ class SessionProvider implements ProviderInterface
 
     protected function getDriver(Container $container): DriverInterface
     {
-        $sessionDriver = $container->get('config')->get('session.driver', 'default');
+        $config = $container->get('config');
+        $sessionDriver = $config->get('session.driver', 'default');
+        $encrypt = $config->get('session.encrypt', false);
 
-        if ($sessionDriver === 'default') {
-            return new DefaultDriver();
+        $driver = match($sessionDriver) {
+            'default' => new DefaultDriver(),
+            'array' => new ArrayDriver(),
+            'cache' => new CacheDriver($container->get('cache'), $container->get('cookie'), $config),
+            default => throw new \Exception('Session driver not found: ' . $sessionDriver)
+        };
+
+        if ($encrypt && !$driver instanceof ArrayDriver) {
+            return new EncryptedDriver($driver, $container->get('crypto'));
         }
 
-        if($sessionDriver === 'array') {
-            return new ArrayDriver;
-        }
-
-        if ($sessionDriver === 'cache') {
-            return new CacheDriver(
-                $container->get('cache'),
-                $container->get('cookie'),
-                $container->get('config')
-            );
-        }
-
-        throw new \Exception('Session driver not found: ' . $sessionDriver);
+        return $driver;
     }
 }
