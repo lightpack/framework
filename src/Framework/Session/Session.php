@@ -20,25 +20,6 @@ class Session
         $this->name = $this->config->get('session.name', 'lightpack_session');
     }
 
-    /**
-     * Check if key uses dot notation
-     */
-    private function hasDotNotation(string $key): bool
-    {
-        return str_contains($key, '.');
-    }
-
-    /**
-     * Get data for dot notation operations
-     */
-    private function getDataForDotNotation(string $key): array
-    {
-        $topKey = explode('.', $key)[0];
-        $data = [];
-        $data[$topKey] = $this->driver->get($topKey) ?? [];
-        return [$topKey, $data];
-    }
-
     public function set(string $key, $value)
     {
         if(!$this->hasDotNotation($key)) {
@@ -139,5 +120,24 @@ class Session
     public function setUserAgent(string $agent)
     {
         $this->driver->set('_user_agent', $agent);
+    }
+
+    /**
+     * Check if key uses dot notation
+     */
+    private function hasDotNotation(string $key): bool
+    {
+        return str_contains($key, '.');
+    }
+
+    /**
+     * Get data for dot notation operations
+     */
+    private function getDataForDotNotation(string $key): array
+    {
+        $topKey = explode('.', $key)[0];
+        $data = [];
+        $data[$topKey] = $this->driver->get($topKey) ?? [];
+        return [$topKey, $data];
     }
 }
