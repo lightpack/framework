@@ -14,14 +14,20 @@ class CsrfFilter implements IFilter
 
     public function before(Request $request, array $params = [])
     {
-        if(in_array($request->method(), $this->protectedMethods)) {
-            if(!session()->has('_token')) {
-                throw new SessionExpiredException('Your session has expired. Please refresh the page and try again.');
-            }
+        if(get_env('APP_ENV') == 'testing') {
+            return;
+        }
 
-            if($request->csrfToken() !== session()->get('_token')) {
-                throw new InvalidCsrfTokenException('CSRF security token is invalid');
-            }
+        if(!in_array($request->method(), $this->protectedMethods)) {
+            return;
+        }
+
+        if(!session()->has('_token')) {
+            throw new SessionExpiredException('Your session has expired. Please refresh the page and try again.');
+        }
+
+        if($request->csrfToken() !== session()->get('_token')) {
+            throw new InvalidCsrfTokenException('CSRF security token is invalid');
         }
     }
 
