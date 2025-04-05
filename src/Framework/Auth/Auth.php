@@ -76,13 +76,7 @@ class Auth
 
     public function isGuest(): bool
     {
-        $isGuest = !$this->isLoggedIn();
-
-        if ($isGuest) {
-            session()->set('_intended_url', request()->fullUrl());
-        }
-
-        return $isGuest;
+        return !$this->isLoggedIn();
     }
 
     public function attempt(): ?Identity

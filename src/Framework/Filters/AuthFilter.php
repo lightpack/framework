@@ -13,6 +13,10 @@ class AuthFilter implements IFilter
         $type = $params[0] ?? 'web';
 
         if('web' === $type && auth()->isGuest()) {
+            if($request->isGet()) {
+                session()->set('_intended_url', request()->fullUrl());
+            }
+
             return auth()->recall();
         }
 
