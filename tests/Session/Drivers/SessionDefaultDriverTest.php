@@ -2,6 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use Lightpack\Session\Drivers\DefaultDriver;
+use Lightpack\Config\Config;
 
 /**
  * @note IMPORTANT: Run these tests with --stderr option to prevent PHPUnit output from sending headers
@@ -16,6 +17,7 @@ class SessionDefaultDriverTest extends TestCase
 {
     private $driver;
     private $sessionBackup;
+    private $config;
 
     protected function setUp(): void
     {
@@ -32,7 +34,18 @@ class SessionDefaultDriverTest extends TestCase
         $_SESSION = [];
         $_SERVER['HTTP_USER_AGENT'] = 'PHPUnit Test Browser';
         
-        $this->driver = new DefaultDriver();
+        // Mock config with session settings
+        $this->config = $this->createMock(Config::class);
+        $this->config->method('get')
+            ->willReturnMap([
+                ['session.lifetime', 7200, 7200],
+                ['session.name', 'lightpack_session', 'lightpack_session'],
+                ['session.http_only', true, true],
+                ['session.https', false, false],
+                ['session.same_site', 'lax', 'lax'],
+            ]);
+        
+        $this->driver = new DefaultDriver($this->config);
         $this->driver->start();
     }
 

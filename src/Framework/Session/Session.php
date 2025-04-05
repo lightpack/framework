@@ -119,25 +119,6 @@ class Session
         return $token;
     }
 
-    /**
-     * Configure session cookie and timeout settings
-     */
-    public function configureCookie()
-    {
-        $lifetime = (int) $this->config->get('session.lifetime', 7200);
-
-        ini_set('session.use_only_cookies', TRUE);
-        ini_set('session.use_trans_sid', FALSE);
-        ini_set('session.cookie_httponly',  $this->config->get('session.http_only'));
-        ini_set('session.use_strict_mode', '1');
-        ini_set('session.gc_maxlifetime', $lifetime);
-        ini_set('session.cookie_lifetime', $lifetime);
-        ini_set('session.cookie_secure', $this->config->get('session.https'));
-        ini_set('session.cookie_samesite', $this->config->get('session.same_site'));
-
-        session_name($this->name);
-    }
-
     public function flash(string $key, $value = null)
     {
         if ($value) {

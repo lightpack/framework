@@ -28,11 +28,27 @@ class CacheDriver implements DriverInterface
     {
         $this->started = true;
 
+        // Set session name before using it
+        $name = $this->config->get('session.name', 'lightpack_session');
+        session_name($name);
+
         // Get or generate session ID
         $this->sessionId = $this->cookie->get(session_name()) ?: $this->generateSessionId();
         
-        // Set cookie (lifetime is configured by Session class)
-        $this->cookie->set(session_name(), $this->sessionId);
+        // Set cookie with same lifetime as session
+        $lifetime = (int) $this->config->get('session.lifetime', 7200);
+        $this->cookie->set(
+            session_name(), 
+            $this->sessionId,
+            time() + $lifetime,
+            [
+                'path' => '/',
+                'domain' => '',
+                'secure' => $this->config->get('session.https'),
+                'http_only' => $this->config->get('session.http_only'),
+                'same_site' => $this->config->get('session.same_site'),
+            ]
+        );
 
         // Load session data with TTL check
         $data = $this->cache->get($this->getCacheKey());
