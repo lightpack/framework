@@ -367,6 +367,16 @@ class Request
         return substr($header, 7);
     }
 
+    public function csrfToken(): ?string
+    {
+        // Check headers first (for AJAX/API requests)
+        if (isset($_SERVER['HTTP_X_CSRF_TOKEN'])) {
+            $token = $_SERVER['HTTP_X_CSRF_TOKEN'];
+        }
+
+        return $token ?? $this->input('_token');
+    }
+
     /**
      * Get refferer from referer header.
      *

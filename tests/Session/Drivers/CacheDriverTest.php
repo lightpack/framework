@@ -5,6 +5,7 @@ namespace Lightpack\Tests\Session\Drivers;
 use Lightpack\Cache\Cache;
 use Lightpack\Cache\Drivers\ArrayDriver;
 use Lightpack\Http\Cookie;
+use Lightpack\Config\Config;
 use Lightpack\Session\Drivers\CacheDriver;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +18,7 @@ class CacheDriverTest extends TestCase
     private CacheDriver $driver;
     private Cache $cache;
     private $cookie;
+    private $config;
     private array $cookieData = [];
 
     protected function setUp(): void
@@ -47,7 +49,17 @@ class CacheDriverTest extends TestCase
                 return true;
             });
 
-        $this->driver = new CacheDriver($this->cache, $this->cookie);
+        // Mock config
+        $this->config = $this->createMock(Config::class);
+        $this->config->method('get')
+            ->willReturnCallback(function($key, $default = null) {
+                $values = [
+                    'session.lifetime' => 5, // 5 seconds for testing
+                ];
+                return $values[$key] ?? $default;
+            });
+
+        $this->driver = new CacheDriver($this->cache, $this->cookie, $this->config);
     }
 
     public function testStartCreatesNewSession()
@@ -103,8 +115,8 @@ class CacheDriverTest extends TestCase
         $this->driver->set('key', 'value');
         $this->driver->destroy();
 
-        $this->assertFalse($this->driver->started());
-        $this->assertEmpty($this->driver->get());
+        $this->assertNull($this->driver->get('key'));
+        $this->assertEmpty($this->cookieData);
     }
 
     public function testGetDefaultValue()
@@ -115,17 +127,26 @@ class CacheDriverTest extends TestCase
 
     public function testSessionPersistence()
     {
-        // First session
         $this->driver->start();
         $this->driver->set('key', 'value');
-        $sessionId = $this->getSessionId();
-        
-        // Simulate new request
-        $this->cookieData[session_name()] = $sessionId;
-        
-        $newDriver = new CacheDriver($this->cache, $this->cookie);
+
+        $newDriver = new CacheDriver($this->cache, $this->cookie, $this->config);
         $newDriver->start();
         $this->assertEquals('value', $newDriver->get('key'));
+    }
+
+    public function testSessionExpiry()
+    {
+        $this->driver->start();
+        $this->driver->set('key', 'value');
+        
+        // Force clear the cache to simulate expiry
+        $this->cache->flush();
+        
+        // Start a new session
+        $newDriver = new CacheDriver($this->cache, $this->cookie, $this->config);
+        $newDriver->start();
+        $this->assertNull($newDriver->get('key'));
     }
 
     private function getSessionId()

@@ -3,37 +3,21 @@
 namespace Lightpack\Session;
 
 use Lightpack\Utils\Arr;
+use Lightpack\Config\Config;
 
 class Session
 {
     private DriverInterface $driver;
     private Arr $arr;
     private string $name;
+    private Config $config;
 
-    public function __construct(DriverInterface $driver, ?string $name = 'lightpack_session')
+    public function __construct(DriverInterface $driver, Config $config)
     {
         $this->arr = new Arr();
         $this->driver = $driver;
-        $this->name = $name;
-    }
-
-    /**
-     * Check if key uses dot notation
-     */
-    private function hasDotNotation(string $key): bool
-    {
-        return str_contains($key, '.');
-    }
-
-    /**
-     * Get data for dot notation operations
-     */
-    private function getDataForDotNotation(string $key): array
-    {
-        $topKey = explode('.', $key)[0];
-        $data = [];
-        $data[$topKey] = $this->driver->get($topKey) ?? [];
-        return [$topKey, $data];
+        $this->config = $config;
+        $this->name = $this->config->get('session.name', 'lightpack_session');
     }
 
     public function set(string $key, $value)
@@ -116,38 +100,6 @@ class Session
         return $token;
     }
 
-    public function verifyToken(): bool
-    {
-        if (!$this->driver->started()) {
-            return false;
-        }
-
-        $token = null;
-
-        // Check headers first (for AJAX/API requests)
-        if (isset($_SERVER['HTTP_X_CSRF_TOKEN'])) {
-            $token = $_SERVER['HTTP_X_CSRF_TOKEN'];
-        }
-        // Check POST data
-        else if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $token = $_POST['_token'] ?? null;
-        }
-        // Check JSON body
-        else if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'json') !== false) {
-            $rawBody = file_get_contents('php://input');
-            if ($rawBody) {
-                $jsonData = json_decode($rawBody, true);
-                $token = $jsonData['_token'] ?? null;
-            }
-        }
-
-        if (!$token) {
-            return false;
-        }
-
-        return $this->get('_token') === $token;
-    }
-
     public function flash(string $key, $value = null)
     {
         if ($value) {
@@ -160,11 +112,6 @@ class Session
         return $flash;
     }
 
-    public function hasInvalidToken(): bool
-    {
-        return !$this->verifyToken();
-    }
-
     public function hasInvalidAgent(): bool
     {
         return !$this->verifyAgent();
@@ -175,19 +122,22 @@ class Session
         $this->driver->set('_user_agent', $agent);
     }
 
-    public function configureCookie()
+    /**
+     * Check if key uses dot notation
+     */
+    private function hasDotNotation(string $key): bool
     {
-        // Configure session cookie settings
-        ini_set('session.use_only_cookies', TRUE);
-        ini_set('session.use_trans_sid', FALSE);
-        ini_set('session.cookie_httponly', '1');
-        ini_set('session.use_strict_mode', '1');
+        return str_contains($key, '.');
+    }
 
-        // Only enable secure cookies in production/HTTPS
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            ini_set('session.cookie_secure', '1');
-        }
-
-        session_name($this->name);
+    /**
+     * Get data for dot notation operations
+     */
+    private function getDataForDotNotation(string $key): array
+    {
+        $topKey = explode('.', $key)[0];
+        $data = [];
+        $data[$topKey] = $this->driver->get($topKey) ?? [];
+        return [$topKey, $data];
     }
 }

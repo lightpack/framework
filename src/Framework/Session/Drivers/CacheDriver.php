@@ -5,6 +5,7 @@ namespace Lightpack\Session\Drivers;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Cache\Cache;
 use Lightpack\Http\Cookie;
+use Lightpack\Config\Config;
 
 class CacheDriver implements DriverInterface
 {
@@ -14,25 +15,50 @@ class CacheDriver implements DriverInterface
     private bool $started = false;
     private array $data = [];
     private string $prefix = 'session:';
+    private Config $config;
 
-    public function __construct(Cache $cache, Cookie $cookie) 
+    public function __construct(Cache $cache, Cookie $cookie, Config $config) 
     {
         $this->cache = $cache;
         $this->cookie = $cookie;
+        $this->config = $config;
     }
 
     public function start()
     {
         $this->started = true;
 
-        // Get or generate session ID
-        $this->sessionId = $this->cookie->get(session_name()) ?? $this->generateSessionId();
-        
-        // Set cookie
-        $this->cookie->set(session_name(), $this->sessionId);
+        // Set session name before using it
+        $name = $this->config->get('session.name', 'lightpack_session');
+        session_name($name);
 
-        // Load session data
-        $this->data = $this->cache->get($this->getCacheKey()) ?? [];
+        // Get or generate session ID
+        $this->sessionId = $this->cookie->get(session_name()) ?: $this->generateSessionId();
+        
+        // Set cookie with same lifetime as session
+        $lifetime = (int) $this->config->get('session.lifetime', 7200);
+        $this->cookie->set(
+            session_name(), 
+            $this->sessionId,
+            time() + $lifetime,
+            [
+                'path' => '/',
+                'domain' => '',
+                'secure' => $this->config->get('session.https'),
+                'http_only' => $this->config->get('session.http_only'),
+                'same_site' => $this->config->get('session.same_site'),
+            ]
+        );
+
+        // Load session data with TTL check
+        $data = $this->cache->get($this->getCacheKey());
+        
+        // If no data or TTL expired, start fresh
+        if ($data === null) {
+            $this->data = [];
+        } else {
+            $this->data = $data;
+        }
     }
 
     public function set(string $key, $value)
@@ -108,6 +134,8 @@ class CacheDriver implements DriverInterface
             return;
         }
         
-        $this->cache->set($this->getCacheKey(), $this->data, 86400); // 24 hours TTL
+        // Use session lifetime from config for cache TTL
+        $lifetime = (int) $this->config->get('session.lifetime', 7200);
+        $this->cache->set($this->getCacheKey(), $this->data, $lifetime);
     }
 }

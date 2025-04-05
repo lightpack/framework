@@ -3,16 +3,28 @@
 use PHPUnit\Framework\TestCase;
 use Lightpack\Session\Session;
 use Lightpack\Session\DriverInterface;
+use Lightpack\Config\Config;
 
 class SessionTest extends TestCase
 {
     private $driver;
+    private $config;
     private $session;
 
     protected function setUp(): void
     {
         $this->driver = $this->createMock(DriverInterface::class);
-        $this->session = new Session($this->driver);
+        $this->config = $this->createMock(Config::class);
+        
+        // Setup config mock to return session settings
+        $this->config->method('get')
+            ->willReturnMap([
+                ['session.name', 'lightpack_session', 'lightpack_session'],
+                ['session.lifetime', 7200, 7200],
+                ['session.same_site', 'lax', 'lax']
+            ]);
+            
+        $this->session = new Session($this->driver, $this->config);
     }
 
     public function testSetMethodCallsDriverSet()
@@ -89,44 +101,6 @@ class SessionTest extends TestCase
         $this->assertTrue(ctype_xdigit($token));
     }
 
-    public function testVerifyTokenReturnsFalseWhenSessionNotStarted()
-    {
-        $this->driver->method('started')
-            ->willReturn(false);
-
-        $this->assertFalse($this->session->verifyToken());
-    }
-
-    public function testVerifyTokenReturnsFalseWhenTokenMismatch()
-    {
-        $_POST['_token'] = 'wrong_token';
-
-        $this->driver->method('started')
-            ->willReturn(true);
-
-        $this->driver->method('get')
-            ->with('_token')
-            ->willReturn('correct_token');
-
-        $this->assertFalse($this->session->verifyToken());
-    }
-
-    public function testVerifyTokenReturnsTrueWhenTokenMatches()
-    {
-        $token = 'matching_token';
-        $_POST['_token'] = $token;
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-
-        $this->driver->method('started')
-            ->willReturn(true);
-
-        $this->driver->method('get')
-            ->with('_token')
-            ->willReturn($token);
-
-        $this->assertTrue($this->session->verifyToken());
-    }
-
     public function testFlashSetValue()
     {
         $key = 'flash_key';
@@ -164,22 +138,6 @@ class SessionTest extends TestCase
 
         $result = $this->session->regenerate();
         $this->assertTrue($result);
-    }
-
-    public function testHasInvalidTokenReturnsOppositeOfVerifyToken()
-    {
-        $token = 'valid_token';
-        $_POST['_token'] = $token;
-        $_SERVER['REQUEST_METHOD'] = 'POST';
-
-        $this->driver->method('started')
-            ->willReturn(true);
-
-        $this->driver->method('get')
-            ->with('_token')
-            ->willReturn($token);
-
-        $this->assertFalse($this->session->hasInvalidToken());
     }
 
     public function testUserAgentVerificationCallsDriver()
