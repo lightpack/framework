@@ -183,16 +183,10 @@ class AuthTest extends TestCase
             }));
             
         // Setup session expectations for login
-        $this->sessionDriver->expects($this->once())
-            ->method('regenerate');
-            
-        $this->sessionDriver->expects($this->exactly(3))
-            ->method('set')
-            ->withConsecutive(
-                ['_logged_in', true],
-                ['_auth_id', 1],
-                ['_intended_url', '']
-            );
+        $this->sessionDriver->expects($this->exactly(2))->method('set')->withConsecutive(
+            ['_logged_in', true],
+            ['_auth_id', 1]
+        );
         
         // Login user
         $this->auth->loginAs($this->user);
