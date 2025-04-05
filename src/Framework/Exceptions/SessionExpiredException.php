@@ -2,7 +2,7 @@
 
 namespace Lightpack\Exceptions;
 
-class SessionExpiredException extends \Exception
+class SessionExpiredException extends HttpException
 {
     public function __construct(
         string $message = 'Session has expired',

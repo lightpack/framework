@@ -124,80 +124,18 @@ class Session
      */
     public function configureCookie()
     {
-        // Basic security settings
+        $lifetime = (int) $this->config->get('session.lifetime', 7200);
+
         ini_set('session.use_only_cookies', TRUE);
         ini_set('session.use_trans_sid', FALSE);
-        ini_set('session.cookie_httponly', '1');
+        ini_set('session.cookie_httponly',  $this->config->get('session.http_only'));
         ini_set('session.use_strict_mode', '1');
-        
-        // Session lifetime from config
-        $lifetime = (int) $this->config->get('session.lifetime', 7200);
         ini_set('session.gc_maxlifetime', $lifetime);
         ini_set('session.cookie_lifetime', $lifetime);
-
-        // Secure cookies in HTTPS
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            ini_set('session.cookie_secure', '1');
-        }
-
-        // SameSite setting from config
-        $sameSite = strtolower($this->config->get('session.same_site', 'lax'));
-        if (!in_array($sameSite, ['lax', 'strict', 'none'])) {
-            $sameSite = 'lax';
-        }
-        ini_set('session.cookie_samesite', $sameSite);
+        ini_set('session.cookie_secure', $this->config->get('session.https'));
+        ini_set('session.cookie_samesite', $this->config->get('session.same_site'));
 
         session_name($this->name);
-    }
-
-    /**
-     * Check if session has expired
-     */
-    public function hasExpired(): bool
-    {
-        return !$this->driver->started() || $this->driver->get() === null;
-    }
-
-    /**
-     * Verify CSRF token with proper session expiry handling
-     */
-    public function verifyToken(): bool
-    {
-        // First check session expiry
-        if ($this->hasExpired()) {
-            throw new \Lightpack\Exceptions\SessionExpiredException(
-                'Your session has expired. Please refresh the page and try again.'
-            );
-        }
-
-        if (!$this->driver->started()) {
-            return false;
-        }
-
-        $token = null;
-
-        // Check headers first (for AJAX/API requests)
-        if (isset($_SERVER['HTTP_X_CSRF_TOKEN'])) {
-            $token = $_SERVER['HTTP_X_CSRF_TOKEN'];
-        }
-        // Check POST data
-        else if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $token = $_POST['_token'] ?? null;
-        }
-        // Check JSON body
-        else if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'json') !== false) {
-            $rawBody = file_get_contents('php://input');
-            if ($rawBody) {
-                $jsonData = json_decode($rawBody, true);
-                $token = $jsonData['_token'] ?? null;
-            }
-        }
-
-        if (!$token) {
-            return false;
-        }
-
-        return $this->get('_token') === $token;
     }
 
     public function flash(string $key, $value = null)
@@ -210,11 +148,6 @@ class Session
         $flash = $this->driver->get($key);
         $this->driver->delete($key);
         return $flash;
-    }
-
-    public function hasInvalidToken(): bool
-    {
-        return !$this->verifyToken();
     }
 
     public function hasInvalidAgent(): bool
