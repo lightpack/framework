@@ -155,7 +155,7 @@ class ExceptionRenderer
     {
         $statusCode = $exc->getCode() ?: 500;
         $errorTemplate = __DIR__ . '/templates/' . $this->getRequestFormat() . '/production.php';
-        $message = ($statusCode !== 500) ? $exc->getMessage() : 'We are facing some technical issues. We will be back soon.';
+        $message = $exc->getMessage() ?: 'We are facing some technical issues. We will be back soon.';
 
         if('http' == $this->getRequestFormat()) {
             if(file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
