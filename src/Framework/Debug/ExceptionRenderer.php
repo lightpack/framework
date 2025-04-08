@@ -74,11 +74,7 @@ class ExceptionRenderer
 
     private function getRequestFormat(): string
     {
-        if($_SERVER['CONTENT_TYPE'] ?? null) {
-            if($_SERVER['CONTENT_TYPE'] === 'application/json') {
-                return 'json';
-            }
-        }
+        return request()->isJson() ? 'json' : 'http';
 
         return 'http'; 
     }
@@ -157,9 +153,9 @@ class ExceptionRenderer
 
     private function renderProductionTemplate(Throwable $exc)
     {
-        $statusCode = $exc instanceof HttpException ? $exc->getCode() : 500;
+        $statusCode = $exc->getCode() ?: 500;
         $errorTemplate = __DIR__ . '/templates/' . $this->getRequestFormat() . '/production.php';
-        $message = ($statusCode !== 500) ? $exc->getMessage() : 'We are facing some technical issues. We will be back soon.';
+        $message = $exc->getMessage() ?: 'We are facing some technical issues. We will be back soon.';
 
         if('http' == $this->getRequestFormat()) {
             if(file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
@@ -217,8 +213,7 @@ class ExceptionRenderer
             $errorType = $this->getErrorType($exc->getCode());
         }
         
-        $statusCode = $exc instanceof HttpException ? $exc->getCode() : 500;
-
+        $statusCode = $exc->getCode() ?: 500;
         $relevantTrace = $this->findRelevantTrace($exc);
         
         $data['type'] = $errorType;

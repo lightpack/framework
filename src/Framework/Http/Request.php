@@ -250,9 +250,19 @@ class Request
             strcasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'xmlhttprequest') == 0;
     }
 
-    public function isJson()
+    public function isJson(): bool
     {
-        return false !== stripos($this->format(), 'json');
+        // Check if request has JSON content type
+        if (strpos($this->format(), 'application/json') !== false) {
+            return true;
+        }
+
+        // Check if request accepts JSON response
+        if ($this->hasHeader('Accept')) {
+            return strpos($this->header('Accept'), 'application/json') !== false;
+        }
+
+        return false;
     }
 
     public function isSecure(): bool

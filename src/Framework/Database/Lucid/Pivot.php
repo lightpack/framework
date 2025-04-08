@@ -39,7 +39,7 @@ class Pivot extends Builder
             $query = new Query($this->pivotTable, $this->getConnection());
 
             // Get current IDs
-            $currentIds = $query->where($this->foreignKey, '=', $this->baseModel->id)
+            $currentIds = $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))
                 ->select($this->associateKey)
                 ->all($this->associateKey);
 
@@ -53,7 +53,7 @@ class Pivot extends Builder
 
             // Delete removed IDs
             if ($idsToDelete) {
-                $query->where($this->foreignKey, '=', $this->baseModel->id)
+                $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))
                     ->whereIn($this->associateKey, $idsToDelete)
                     ->delete();
             }
@@ -62,7 +62,7 @@ class Pivot extends Builder
             if ($idsToInsert) {
                 $data = array_map(function ($id) {
                     return [
-                        $this->foreignKey => $this->baseModel->id,
+                        $this->foreignKey => $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()),
                         $this->associateKey => $id,
                     ];
                 }, $idsToInsert);
@@ -89,7 +89,7 @@ class Pivot extends Builder
         // Prepare data for pivot table
         $data = array_map(function ($id) {
             return [
-                $this->foreignKey => $this->baseModel->id,
+                $this->foreignKey => $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()),
                 $this->associateKey => $id,
             ];
         }, $ids);
@@ -115,6 +115,6 @@ class Pivot extends Builder
         $query = new Query($this->pivotTable, $this->getConnection());
 
         // Delete pivot rows
-        $query->where($this->foreignKey, '=', $this->baseModel->id)->whereIn($this->associateKey, $ids)->delete();
+        $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))->whereIn($this->associateKey, $ids)->delete();
     }
 }
