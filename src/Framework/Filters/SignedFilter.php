@@ -11,7 +11,7 @@ class SignedFilter implements IFilter
     public function before(Request $request, array $params = [])
     {
         if ($request->hasInValidSignature()) {
-            if ($request->isJson()) {
+            if ($request->expectsJson()) {
                 return response()->setStatus(403)->json([
                     'error' => 'Invalid URL signature'
                 ]);

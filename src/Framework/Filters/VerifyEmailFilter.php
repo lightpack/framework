@@ -14,7 +14,7 @@ class VerifyEmailFilter implements IFilter
         $user = auth()->user();
 
         if (!$user || !$user->email_verified_at) {
-            if ($request->isJson()) {
+            if ($request->expectsJson()) {
                 return response()->setStatus(403)->json([
                     'error' => 'Your email address is not verified.',
                 ]);

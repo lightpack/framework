@@ -27,7 +27,7 @@ abstract class FormRequest extends Request
             return;
         }
 
-        if ($this->isAjax() || $this->isJson()) {
+        if ($this->isAjax() || $this->expectsJson()) {
             $container->get('redirect')->setStatus(422)->setMessage('Unprocessable Entity')->json([
                     'success' => false,
                     'message' => 'Request validation failed',

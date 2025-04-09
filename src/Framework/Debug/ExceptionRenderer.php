@@ -72,9 +72,9 @@ class ExceptionRenderer
         return $trace;
     }
 
-    private function getRequestFormat(): string
+    private function getResponseFormat(): string
     {
-        return request()->isJson() ? 'json' : 'http';
+        return request()->expectsJson() ? 'json' : 'http';
 
         return 'http'; 
     }
@@ -119,7 +119,7 @@ class ExceptionRenderer
         if (!headers_sent()) {
             header("HTTP/1.1 $statusCode", true, $statusCode);
 
-            if($this->getRequestFormat() === 'json') {
+            if($this->getResponseFormat() === 'json') {
                 header('Content-Type:application/json');
             } else {
                 header('Content-Type:text/html');
@@ -154,10 +154,10 @@ class ExceptionRenderer
     private function renderProductionTemplate(Throwable $exc)
     {
         $statusCode = $exc->getCode() ?: 500;
-        $errorTemplate = __DIR__ . '/templates/' . $this->getRequestFormat() . '/production.php';
+        $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . '/production.php';
         $message = $exc->getMessage() ?: 'We are facing some technical issues. We will be back soon.';
 
-        if('http' == $this->getRequestFormat()) {
+        if('http' == $this->getResponseFormat()) {
             if(file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
                 $template = $statusCode;
                 $errorTemplate = DIR_VIEWS . '/errors/layout.php';
@@ -207,7 +207,7 @@ class ExceptionRenderer
 
     private function renderDevelopmentTemplate(Throwable $exc, string $errorType = 'Exception')
     {
-        $errorTemplate = __DIR__ . '/templates/' . $this->getRequestFormat() . '/development.php';
+        $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . '/development.php';
         
         if($errorType === 'Error') {
             $errorType = $this->getErrorType($exc->getCode());
@@ -222,7 +222,7 @@ class ExceptionRenderer
         $data['file'] = $exc->getFile();
         $data['line'] = $exc->getLine();
         $data['trace'] = $this->getTrace($exc);
-        $data['format'] = $this->getRequestFormat();
+        $data['format'] = $this->getResponseFormat();
         $data['environment'] = $this->environment;
         $data['code_preview'] = $this->getCodePreview($relevantTrace['file'], $relevantTrace['line']);
         $data['ex'] = $exc;
