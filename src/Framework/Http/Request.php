@@ -158,7 +158,7 @@ class Request
      */
     public function input(?string $key = null, $default = null): mixed
     {
-        // Handle JSON requests
+        // Handle JSON requests data
         if ($this->isJson()) {
             if (null === $this->jsonBody) {
                 $this->parseJson();
@@ -250,14 +250,23 @@ class Request
             strcasecmp($_SERVER['HTTP_X_REQUESTED_WITH'], 'xmlhttprequest') == 0;
     }
 
+    /**
+     * Check if the incoming data is JSON.
+     */
     public function isJson(): bool
     {
-        // Check if request has JSON content type
         if (strpos($this->format(), 'application/json') !== false) {
             return true;
         }
 
-        // Check if request accepts JSON response
+        return false;
+    }
+
+    /**
+     * Check if the client expects JSON data.
+     */
+    public function expectsJson(): bool
+    {
         if ($this->hasHeader('Accept')) {
             return strpos($this->header('Accept'), 'application/json') !== false;
         }

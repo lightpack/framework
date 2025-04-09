@@ -385,7 +385,7 @@ class Validator
         $this->setInput($input);
         $this->validate();
 
-        if($request->isAjax() || $request->isJson()) {
+        if($request->isAjax() || $request->expectsJson()) {
             return $this;
         }
 
