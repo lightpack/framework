@@ -15,12 +15,18 @@ class SessionProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->register('session', function ($container) {
+            /** @var \Lightpack\Http\Request */
+            $request = $container->get('request');
             $driver = $this->getDriver($container);
             $session = new Session($driver, $container->get('config'));
 
             if(!$driver instanceof ArrayDriver) {
                 $session->setUserAgent($_SERVER['HTTP_USER_AGENT'] ?? 'Lightpack PHP');
                 $driver->start();
+            }
+
+            if($request->isGet()) {
+                $session->set('_previous_url', $request->fullUrl());
             }
 
             return $session;
