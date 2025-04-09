@@ -73,7 +73,10 @@ class TestCase extends BaseTestCase
         $_SERVER['SCRIPT_NAME'] = '/index.php';
 
         if ($this->isJsonRequest) {
+            $_SERVER['HTTP_ACCEPT'] = 'application/json';
             $_SERVER['X_LIGHTPACK_RAW_INPUT'] = json_encode($params);
+        } else {
+            $_SERVER['HTTP_ACCEPT'] = 'text/html';
         }
 
         $this->setRequestContentType();
@@ -155,6 +158,11 @@ class TestCase extends BaseTestCase
 
         if ($this->isJsonRequest) {
             $_SERVER['CONTENT_TYPE'] = 'application/json';
+            return;
+        }
+
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
             return;
         }
 
