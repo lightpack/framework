@@ -27,7 +27,7 @@ class FileLogger implements ILogger
     private function formatLogEntry($level, $message, $context)
     {
         $level = strtoupper($level);
-        $timestamp = date('Y-m-d H:i:s') . '.' . substr(microtime(true) - time(), 2, 3);
+        $timestamp = date('Y-m-d H:i:s');
         $logEntry = str_repeat('-', 80) . PHP_EOL;
         $logEntry .= "[$timestamp] $level: $message" . PHP_EOL;
 
