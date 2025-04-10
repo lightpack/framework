@@ -101,6 +101,6 @@ class FileLogger implements ILogger
 
     private function writeLog($logEntry)
     {
-        file_put_contents($this->filename, $logEntry, FILE_APPEND);
+        file_put_contents($this->filename, $logEntry, FILE_APPEND | LOCK_EX);
     }
 }
