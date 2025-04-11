@@ -213,3 +213,44 @@ We achieve this by:
 6. Optimize performance
 
 Each step will be implemented in pure PHP, following Lightpack's philosophy of simplicity and effectiveness.
+
+## Future Implementations
+
+### 1. Environment-specific Features
+- Development mode with no caching
+- Production mode with aggressive caching
+- Different error handling per environment
+- Source map handling
+
+### 2. Performance Optimizations
+- Basic CSS/JS minification (optional, keeping it simple)
+- Gzip/Brotli compression headers
+- Advanced HTTP/2 features
+- Browser cache control headers
+
+### 3. CLI Commands
+```bash
+php lightpack asset:list        # List all registered assets
+php lightpack asset:verify      # Check if all assets exist
+php lightpack asset:clean-cache # Clean asset cache
+php lightpack asset:generate-sri # Generate SRI hashes for files
+```
+
+### 4. Asset Discovery
+- Auto-discover assets in directories
+- Pattern matching for collections
+- Auto-grouping by type
+- Manifest file generation
+
+### 5. Error Handling & Debugging
+- Missing asset detection
+- Invalid path warnings
+- Detailed error messages in dev
+- Asset load timing info
+
+Each of these features will maintain Lightpack's philosophy:
+- Pure PHP implementation
+- No external dependencies
+- Simple but effective
+- HTTP/2 optimized
+- Development friendly
