@@ -585,4 +585,40 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $this->assertCount(1, $this->csv->getErrors());
         $this->assertStringContainsString('Row 2: Failed validation', $this->csv->getErrors()[0]);
     }
+
+    public function testValidateWithLightpackValidator()
+    {
+        $data = "id,age,email,salary\n1,17,invalid,1000\n2,25,john@test.com,2000\n3,30,bob@test.com,-500\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv
+            ->validate(function($row) {
+                $validator = new \Lightpack\Validation\Validator();
+                
+                $validator
+                    ->field('age')->required()->numeric()->custom(fn($val) => $val >= 18, 'Must be 18 or older')
+                    ->field('email')->required()->email()
+                    ->field('salary')->required()->numeric()->custom(fn($val) => $val >= 0, 'Cannot be negative');
+
+                $validator->setInput($row);
+                $result = $validator->validate();
+                
+                if ($result->passes()) {
+                    return true;
+                }
+
+                return array_values($result->getErrors());
+            }, 'collect')
+            ->read($this->testFile));
+
+        $this->assertCount(3, $rows);
+        $this->assertCount(2, $this->csv->getErrors());
+        
+        // Row 1: Age < 18 and invalid email
+        $this->assertStringContainsString('Must be 18 or older', $this->csv->getErrors()[0]);
+        $this->assertStringContainsString('Must be a valid email address', $this->csv->getErrors()[0]);
+        
+        // Row 3: Negative salary
+        $this->assertStringContainsString('Cannot be negative', $this->csv->getErrors()[1]);
+    }
 }
