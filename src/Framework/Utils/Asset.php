@@ -54,6 +54,11 @@ class Asset
         'img'     // Images
     ];
 
+    /**
+     * Store preload links
+     */
+    protected array $preloadLinks = [];
+
     public function __construct(?string $publicPath = null)
     {
         $this->publicPath = $publicPath ?? DIR_ROOT . '/public';
@@ -83,12 +88,18 @@ class Asset
      */
     protected function getVersion(string $path): ?string
     {
+        $realPath = $this->publicPath . '/' . $path;
+        if (!file_exists($realPath)) {
+            return null;
+        }
+
         // Load versions if not loaded
         if (empty($this->versions)) {
             $this->loadVersions();
         }
 
-        return $this->versions[$path] ?? null;
+        // Use manifest version if available, otherwise use file modification time
+        return $this->versions[$path] ?? (string)filemtime($realPath);
     }
 
     /**
@@ -199,23 +210,42 @@ class Asset
     /**
      * Add HTTP/2 preload headers for critical assets
      */
-    public function preload(string|array $files): void
+    public function preload(string|array $files): self
     {
         $files = is_array($files) ? $files : [$files];
 
         foreach ($files as $file) {
-            $url = $this->url($file);
             $ext = pathinfo($file, PATHINFO_EXTENSION);
             
             // Special handling for fonts and modules
             if (in_array($ext, ['woff', 'woff2', 'ttf'])) {
-                header("Link: <{$url}>; rel=preload; as=font; crossorigin", false);
+                $this->preloadLinks[] = "</{$file}>; rel=preload; as=font; crossorigin";
             } elseif ($ext === 'js' && str_contains($file, 'module')) {
-                header("Link: <{$url}>; rel=modulepreload", false);
+                $this->preloadLinks[] = "</{$file}>; rel=modulepreload";
             } else {
                 $type = $this->getMimeType($ext);
-                header("Link: <{$url}>; rel=preload; as={$type}", false);
+                $this->preloadLinks[] = "</{$file}>; rel=preload; as={$type}";
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get all preload links
+     */
+    public function getPreloadLinks(): array
+    {
+        return $this->preloadLinks;
+    }
+
+    /**
+     * Send preload headers
+     */
+    public function sendPreloadHeaders(): void
+    {
+        foreach ($this->preloadLinks as $link) {
+            header("Link: {$link}", false);
         }
     }
 
