@@ -12,6 +12,10 @@ class Csv
     private array $excludes = [];
     private ?int $limit = null;
     private ?int $maxAllowed = null;
+    /** @var callable|null */
+    private $validator = null;
+    private string $onInvalid = 'skip';  // 'skip', 'collect', or 'fail'
+    private array $errors = [];
 
     /**
      * Read CSV with generators for memory efficiency.
@@ -26,6 +30,9 @@ class Csv
         if (!is_readable($file)) {
             throw new \RuntimeException("Cannot read file: {$file}");
         }
+
+        // Reset errors
+        $this->errors = [];
 
         // If max rows check is needed, count total rows first
         if ($this->maxAllowed !== null) {
@@ -49,8 +56,11 @@ class Csv
         $handle = fopen($file, 'r');
         $headers = $hasHeader ? fgetcsv($handle, 0, $this->delimiter) : null;
         $count = 0;
+        $rowNum = 0;
 
         while ($row = fgetcsv($handle, 0, $this->delimiter, $this->enclosure, $this->escape)) {
+            $rowNum++;
+            
             if ($this->limit !== null && $count >= $this->limit) {
                 break;
             }
@@ -59,8 +69,40 @@ class Csv
                 $row = array_combine($headers, $row);
                 $row = $this->applyExcludes($row);
                 $row = $this->applyMappings($row);
+                $row = $this->applyCasts($row);
             }
-            yield $this->applyCasts($row);
+
+            // Validate if validator exists
+            if ($this->validator) {
+                try {
+                    $valid = ($this->validator)($row);
+                    if (!$valid) {
+                        $error = "Row {$rowNum} failed validation";
+                        if ($this->onInvalid === 'fail') {
+                            throw new \RuntimeException($error);
+                        }
+                        if ($this->onInvalid === 'collect') {
+                            $this->errors[] = $error;
+                        }
+                        if ($this->onInvalid === 'skip') {
+                            continue;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $error = "Row {$rowNum}: " . $e->getMessage();
+                    if ($this->onInvalid === 'fail') {
+                        throw new \RuntimeException($error);
+                    }
+                    if ($this->onInvalid === 'collect') {
+                        $this->errors[] = $error;
+                    }
+                    if ($this->onInvalid === 'skip') {
+                        continue;
+                    }
+                }
+            }
+
+            yield $row;
             $count++;
         }
 
@@ -178,6 +220,29 @@ class Csv
         }
         $this->maxAllowed = $count;
         return $this;
+    }
+
+    /**
+     * Add row validator
+     */
+    public function validate(callable $validator, string $onInvalid = 'skip'): self
+    {
+        if (!in_array($onInvalid, ['skip', 'collect', 'fail'])) {
+            throw new \InvalidArgumentException(
+                "Invalid onInvalid value. Must be 'skip', 'collect', or 'fail'"
+            );
+        }
+        $this->validator = $validator;
+        $this->onInvalid = $onInvalid;
+        return $this;
+    }
+
+    /**
+     * Get validation errors (only if onInvalid is 'collect')
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 
     private function applyCasts(array $row, bool $reverse = false): array 

@@ -407,4 +407,107 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage('CSV contains 2 rows. Maximum 1 rows allowed');
         iterator_to_array($this->csv->max(1)->read($this->testFile, true));
     }
+
+    public function testValidateSkipInvalid()
+    {
+        $data = "id,age\n1,25\n2,invalid\n3,30\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv
+            ->validate(fn($row) => is_numeric($row['age']))
+            ->read($this->testFile));
+
+        // Should skip invalid row
+        $this->assertCount(2, $rows);
+        $this->assertEquals('1', $rows[0]['id']);
+        $this->assertEquals('3', $rows[1]['id']);
+    }
+
+    public function testValidateCollectErrors()
+    {
+        $data = "id,age\n1,25\n2,invalid\n3,30\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv
+            ->validate(fn($row) => is_numeric($row['age']), 'collect')
+            ->read($this->testFile));
+
+        // Should include all rows but collect errors
+        $this->assertCount(3, $rows);
+        $this->assertCount(1, $this->csv->getErrors());
+        $this->assertStringContainsString('Row 2', $this->csv->getErrors()[0]);
+    }
+
+    public function testValidateFailOnInvalid()
+    {
+        $data = "id,age\n1,25\n2,invalid\n3,30\n";
+        file_put_contents($this->testFile, $data);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Row 2 failed validation');
+
+        iterator_to_array($this->csv
+            ->validate(fn($row) => is_numeric($row['age']), 'fail')
+            ->read($this->testFile));
+    }
+
+    public function testValidateWithException()
+    {
+        $data = "id,age\n1,25\n2,30\n3,invalid\n";
+        file_put_contents($this->testFile, $data);
+
+        $validator = function($row) {
+            if ($row['age'] === 'invalid') {
+                throw new \Exception('Invalid age value');
+            }
+            return true;
+        };
+
+        // Test fail mode
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Row 3: Invalid age value');
+
+        iterator_to_array($this->csv
+            ->validate($validator, 'fail')
+            ->read($this->testFile));
+    }
+
+    public function testValidateWithInvalidMode()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->csv->validate(fn($row) => true, 'invalid_mode');
+    }
+
+    public function testValidatePartialProcessing()
+    {
+        $data = "id,age\n1,25\n2,30\n3,35\n4,40\n5,invalid\n6,45\n";
+        file_put_contents($this->testFile, $data);
+
+        // Test skip mode
+        $processed = [];
+        foreach ($this->csv->validate(fn($row) => is_numeric($row['age']))->read($this->testFile) as $row) {
+            $processed[] = $row['id'];
+        }
+        $this->assertEquals(['1', '2', '3', '4', '6'], $processed);
+
+        // Test collect mode
+        $processed = [];
+        foreach ($this->csv->validate(fn($row) => is_numeric($row['age']), 'collect')->read($this->testFile) as $row) {
+            $processed[] = $row['id'];
+        }
+        $this->assertEquals(['1', '2', '3', '4', '5', '6'], $processed);
+        $this->assertCount(1, $this->csv->getErrors());
+
+        // Test fail mode
+        $processed = [];
+        try {
+            foreach ($this->csv->validate(fn($row) => is_numeric($row['age']), 'fail')->read($this->testFile) as $row) {
+                $processed[] = $row['id'];
+            }
+            $this->fail('Should have thrown exception');
+        } catch (\RuntimeException $e) {
+            $this->assertEquals(['1', '2', '3', '4'], $processed);
+            $this->assertStringContainsString('Row 5', $e->getMessage());
+        }
+    }
 }
