@@ -451,3 +451,19 @@ if (!function_exists('asset')) {
         return $asset;
     }
 }
+
+if (!function_exists('script')) {
+    /**
+     * Get an instance of script utility provider.
+     */
+    function script(): \Lightpack\Utils\Script
+    {
+        static $script = null;
+        
+        if ($script === null) {
+            $script = new \Lightpack\Utils\Script();
+        }
+        
+        return $script;
+    }
+}
