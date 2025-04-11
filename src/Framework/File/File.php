@@ -228,6 +228,32 @@ class File
         return $found;
     }
 
+    /**
+     * Get a list of all files in a directory.
+     * 
+     * This method returns an array of SplFileInfo objects for all files in the specified
+     * directory. Note that this is a non-recursive listing - it only returns files in
+     * the immediate directory.
+     * 
+     * Use cases:
+     * - Getting a quick list of files in a directory
+     * - When you need file information (size, permissions, etc.) for each file
+     * - When you need to process files in a specific order (array can be sorted)
+     * 
+     * Example:
+     * ```php
+     * $files = $file->traverse('/path/to/dir');
+     * foreach ($files as $filename => $fileInfo) {
+     *     echo $filename . ': ' . $fileInfo->getSize();
+     * }
+     * ```
+     * 
+     * Note: For recursive directory traversal, use getRecursiveIterator() instead.
+     * 
+     * @param string $path The directory path to list files from
+     * @return array<string,SplFileInfo>|null Array of SplFileInfo objects keyed by filename,
+     *                                        or null if path is not a directory
+     */
     public function traverse(string $path): ?array
     {
         if (!$this->isDir($path)) {
