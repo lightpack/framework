@@ -250,7 +250,7 @@ class File
         return new FilesystemIterator($path);
     }
 
-    private function sanitizePath(string $path): string
+    public function sanitizePath(string $path): string
     {
         // Replace both slashes with system separator
         $path = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path);
