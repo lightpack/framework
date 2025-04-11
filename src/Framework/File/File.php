@@ -6,6 +6,8 @@ use DateTime;
 use SplFileInfo;
 use RuntimeException;
 use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 class File
 {
@@ -181,7 +183,7 @@ class File
 
         $this->makeDir($destination);
 
-        foreach ($this->getIterator($source) as $file) {
+        foreach ($this->getRecursiveIterator($source) as $file) {
             $from = $file->getRealPath();
             $to = $destination . DIRECTORY_SEPARATOR . $file->getBasename();
 
@@ -241,13 +243,55 @@ class File
         return $files;
     }
 
-    private function getIterator(string $path): ?FilesystemIterator
+    /**
+     * Get a non-recursive iterator for files in a directory.
+     * 
+     * This method returns an iterator that lists only the immediate contents
+     * of a directory (files and subdirectories) without traversing into subdirectories.
+     * It's useful for:
+     * - Simple directory listings
+     * - Performance-critical operations that only need top-level files
+     * - Controlled manual traversal of directory structures
+     * 
+     * @param string $path The directory path to iterate over
+     * @return FilesystemIterator|null Returns null if path is not a directory
+     */
+    public function getIterator(string $path): ?FilesystemIterator
     {
         if (!is_dir($path)) {
             return null;
         }
 
         return new FilesystemIterator($path);
+    }
+
+    /**
+     * Get a recursive iterator for traversing a directory structure.
+     * 
+     * This method returns an iterator that traverses through all files and subdirectories
+     * recursively. It's designed for operations that need to process the entire
+     * directory tree, such as:
+     * - File watching/monitoring
+     * - Deep directory searches
+     * - Complete directory backups
+     * - Recursive file operations
+     * 
+     * The iterator uses SELF_FIRST mode, meaning it will visit directories
+     * before their contents, which is useful for creating/copying directory structures.
+     * 
+     * @param string $path The directory path to recursively iterate over
+     * @return RecursiveIteratorIterator|null Returns null if path is not a directory
+     */
+    public function getRecursiveIterator(string $path): ?RecursiveIteratorIterator
+    {
+        if (!is_dir($path)) {
+            return null;
+        }
+
+        return new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
     }
 
     public function sanitizePath(string $path): string

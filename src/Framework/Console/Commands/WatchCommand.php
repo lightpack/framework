@@ -142,12 +142,12 @@ class WatchCommand implements ICommand
             }
             
             try {
-                $files = $this->file->traverse($path);
-                if ($files === null) {
+                $iterator = $this->file->getRecursiveIterator($path);
+                if ($iterator === null) {
                     continue;
                 }
 
-                foreach ($files as $file) {
+                foreach ($iterator as $file) {
                     if (!$file->isFile()) {
                         continue;
                     }
@@ -199,12 +199,12 @@ class WatchCommand implements ICommand
             }
 
             try {
-                $files = $this->file->traverse($path);
-                if ($files === null) {
+                $iterator = $this->file->getRecursiveIterator($path);
+                if ($iterator === null) {
                     continue;
                 }
 
-                foreach ($files as $file) {
+                foreach ($iterator as $file) {
                     if (!$file->isFile()) {
                         continue;
                     }
