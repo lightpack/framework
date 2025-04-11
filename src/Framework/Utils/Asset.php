@@ -68,6 +68,11 @@ class Asset
 
     /**
      * Get URL for an asset with optional versioning
+     * 
+     * @param string $path Path to the asset relative to public directory
+     * @param array $options Options for URL generation:
+     *                      - version: bool Enable/disable versioning or provide custom version
+     * @return string Generated asset URL
      */
     public function url(string $path, array $options = []): string
     {
@@ -247,6 +252,22 @@ class Asset
         foreach ($this->preloadLinks as $link) {
             header("Link: {$link}", false);
         }
+    }
+
+    /**
+     * Get all preload headers
+     * 
+     * @return array Array of Link headers for preloading
+     */
+    public function getPreloadHeaders(): array 
+    {
+        $headers = [];
+        
+        foreach ($this->preloadLinks as $link) {
+            $headers[] = ['Link', $link];
+        }
+        
+        return $headers;
     }
 
     /**

@@ -436,11 +436,11 @@ if (!function_exists('storage')) {
     }
 }
 
-if (!function_exists('assets')) {
+if (!function_exists('asset')) {
     /**
-     * Get asset URL or HTML
+     * Get an instance of asset utility provider.
      */
-    function assets(): \Lightpack\Utils\Asset
+    function asset(): \Lightpack\Utils\Asset
     {
         static $asset = null;
         
