@@ -176,4 +176,72 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         }
         $this->assertEquals(1000, $count);
     }
+
+    public function testMapColumns()
+    {
+        $data = "user_id,user_name\n1,john\n2,jane\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv->map([
+            'user_id' => 'id',
+            'user_name' => 'name'
+        ])->read($this->testFile));
+
+        $this->assertArrayHasKey('id', $rows[0]);
+        $this->assertArrayHasKey('name', $rows[0]);
+        $this->assertArrayNotHasKey('user_id', $rows[0]);
+        $this->assertArrayNotHasKey('user_name', $rows[0]);
+    }
+
+    public function testMapWithCallable()
+    {
+        $data = "name,age\njohn,25\njane,30\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv->map([
+            'name' => fn($v) => strtoupper($v),
+            'age' => fn($v) => (int)$v + 1
+        ])->read($this->testFile));
+
+        $this->assertEquals('JOHN', $rows[0]['name']);
+        $this->assertEquals(26, $rows[0]['age']);
+        $this->assertEquals('JANE', $rows[1]['name']);
+        $this->assertEquals(31, $rows[1]['age']);
+    }
+
+    public function testExcludeColumns()
+    {
+        $data = "id,name,password,token\n1,john,secret,abc123\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv->except(['password', 'token'])->read($this->testFile));
+
+        $this->assertArrayHasKey('id', $rows[0]);
+        $this->assertArrayHasKey('name', $rows[0]);
+        $this->assertArrayNotHasKey('password', $rows[0]);
+        $this->assertArrayNotHasKey('token', $rows[0]);
+    }
+
+    public function testChainMapExceptAndCasts()
+    {
+        $data = "user_id,user_name,age,password\n1,john,25,secret\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv
+            ->map([
+                'user_id' => 'id',
+                'user_name' => 'name'
+            ])
+            ->except(['password'])
+            ->casts(['id' => 'int', 'age' => 'int'])
+            ->read($this->testFile));
+
+        $row = $rows[0];
+        $this->assertArrayHasKey('id', $row);
+        $this->assertArrayHasKey('name', $row);
+        $this->assertArrayNotHasKey('password', $row);
+        $this->assertIsInt($row['id']);
+        $this->assertIsInt($row['age']);
+        $this->assertEquals('john', $row['name']);
+    }
 }

@@ -8,6 +8,8 @@ class Csv
     private string $enclosure = '"';
     private string $escape = '\\';
     private array $casts = [];
+    private array $mappings = [];
+    private array $excludes = [];
 
     /**
      * Read CSV with generators for memory efficiency.
@@ -29,6 +31,8 @@ class Csv
         while ($row = fgetcsv($handle, 0, $this->delimiter, $this->enclosure, $this->escape)) {
             if ($headers) {
                 $row = array_combine($headers, $row);
+                $row = $this->applyExcludes($row);
+                $row = $this->applyMappings($row);
             }
             yield $this->castTypes($row);
         }
@@ -67,6 +71,30 @@ class Csv
         }
 
         return fclose($handle);
+    }
+
+    /**
+     * Map column names or transform values.
+     * 
+     * @param array $mappings Column mappings ['old' => 'new'] or ['column' => callable]
+     * @return self
+     */
+    public function map(array $mappings): self 
+    {
+        $this->mappings = $mappings;
+        return $this;
+    }
+
+    /**
+     * Exclude specified columns.
+     * 
+     * @param array $columns Columns to exclude
+     * @return self
+     */
+    public function except(array $columns): self 
+    {
+        $this->excludes = $columns;
+        return $this;
     }
 
     /**
@@ -115,5 +143,28 @@ class Csv
             };
         }
         return $row;
+    }
+
+    private function applyMappings(array $row): array 
+    {
+        $result = [];
+        foreach ($row as $key => $value) {
+            if (isset($this->mappings[$key])) {
+                $mapping = $this->mappings[$key];
+                if (is_callable($mapping)) {
+                    $result[$key] = $mapping($value);
+                } else {
+                    $result[$mapping] = $value;
+                }
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+
+    private function applyExcludes(array $row): array 
+    {
+        return array_diff_key($row, array_flip($this->excludes));
     }
 }
