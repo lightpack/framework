@@ -34,7 +34,7 @@ class Csv
                 $row = $this->applyExcludes($row);
                 $row = $this->applyMappings($row);
             }
-            yield $this->castTypes($row);
+            yield $this->applyCasts($row);
         }
 
         fclose($handle);
@@ -61,12 +61,20 @@ class Csv
         }
 
         $handle = fopen($file, 'w');
-        
+
+        // Transform headers if mappings exist
         if ($headers) {
+            $headers = $this->transformHeaders($headers);
             fputcsv($handle, $headers, $this->delimiter, $this->enclosure, $this->escape);
         }
 
+        // Transform each row
         foreach ($data as $row) {
+            // Reverse the read transformations
+            $row = $this->applyCasts($row, true);
+            $row = $this->applyMappings($row, true);
+            $row = $this->applyExcludes($row);
+
             fputcsv($handle, $row, $this->delimiter, $this->enclosure, $this->escape);
         }
 
@@ -121,43 +129,63 @@ class Csv
         return $this;
     }
 
-    /**
-     * Cast row values to specified types.
-     * 
-     * @param array $row Row data
-     * @return array Processed row
-     */
-    protected function castTypes(array $row): array 
+    private function applyCasts(array $row, bool $reverse = false): array 
     {
         foreach ($this->casts as $column => $type) {
             if (!isset($row[$column])) {
                 continue;
             }
 
-            $row[$column] = match($type) {
-                'int' => (int) $row[$column],
-                'float' => (float) $row[$column],
-                'bool' => filter_var($row[$column], FILTER_VALIDATE_BOOLEAN),
-                'date' => strtotime($row[$column]),
-                default => $row[$column]
-            };
+            if ($reverse) {
+                // Convert back to string for CSV
+                $row[$column] = match($type) {
+                    'int', 'float' => (string) $row[$column],
+                    'bool' => $row[$column] ? 'true' : 'false',
+                    'date' => date('Y-m-d H:i:s', $row[$column]),
+                    default => $row[$column]
+                };
+            } else {
+                // Convert from string to type
+                $row[$column] = match($type) {
+                    'int' => (int) $row[$column],
+                    'float' => (float) $row[$column],
+                    'bool' => filter_var($row[$column], FILTER_VALIDATE_BOOLEAN),
+                    'date' => strtotime($row[$column]),
+                    default => $row[$column]
+                };
+            }
         }
         return $row;
     }
 
-    private function applyMappings(array $row): array 
+    private function applyMappings(array $row, bool $reverse = false): array 
     {
         $result = [];
-        foreach ($row as $key => $value) {
-            if (isset($this->mappings[$key])) {
-                $mapping = $this->mappings[$key];
-                if (is_callable($mapping)) {
-                    $result[$key] = $mapping($value);
+        if ($reverse) {
+            // Reverse the mappings for writing
+            $reverseMappings = array_flip($this->mappings);
+            foreach ($row as $key => $value) {
+                $newKey = $reverseMappings[$key] ?? $key;
+                if (is_callable($this->mappings[$newKey] ?? null)) {
+                    // Skip callable transformations on write
+                    $result[$newKey] = $value;
                 } else {
-                    $result[$mapping] = $value;
+                    $result[$newKey] = $value;
                 }
-            } else {
-                $result[$key] = $value;
+            }
+        } else {
+            // Normal mappings for reading
+            foreach ($row as $key => $value) {
+                if (isset($this->mappings[$key])) {
+                    $mapping = $this->mappings[$key];
+                    if (is_callable($mapping)) {
+                        $result[$key] = $mapping($value);
+                    } else {
+                        $result[$mapping] = $value;
+                    }
+                } else {
+                    $result[$key] = $value;
+                }
             }
         }
         return $result;
@@ -166,5 +194,13 @@ class Csv
     private function applyExcludes(array $row): array 
     {
         return array_diff_key($row, array_flip($this->excludes));
+    }
+
+    private function transformHeaders(array $headers): array 
+    {
+        $reverseMappings = array_flip($this->mappings);
+        return array_map(function($header) use ($reverseMappings) {
+            return $reverseMappings[$header] ?? $header;
+        }, $headers);
     }
 }

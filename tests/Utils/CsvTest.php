@@ -244,4 +244,108 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $this->assertIsInt($row['age']);
         $this->assertEquals('john', $row['name']);
     }
+
+    public function testWriteWithTransformations()
+    {
+        // Original data with transformed column names
+        $data = [
+            ['id' => 1, 'name' => 'JOHN', 'age' => 25],
+            ['id' => 2, 'name' => 'JANE', 'age' => 30]
+        ];
+
+        // Write with reverse transformations
+        $this->csv->map([
+            'user_id' => 'id',
+            'user_name' => 'name'
+        ])->write($this->testFile, $data, ['user_id', 'user_name', 'age']);
+
+        // Check the raw CSV content
+        $content = file_get_contents($this->testFile);
+        $expected = "user_id,user_name,age\n1,JOHN,25\n2,JANE,30\n";
+        $this->assertEquals($expected, $content);
+
+        // Read it back with transformations
+        $rows = iterator_to_array($this->csv->map([
+            'user_id' => 'id',
+            'user_name' => 'name'
+        ])->read($this->testFile));
+
+        // Verify the transformations worked both ways
+        $this->assertEquals('id', array_key_first($rows[0]));
+        $this->assertEquals(1, $rows[0]['id']);
+        $this->assertEquals('JOHN', $rows[0]['name']);
+    }
+
+    public function testWriteWithCasts()
+    {
+        $data = [
+            ['id' => 1, 'active' => true, 'price' => 10.5],
+            ['id' => 2, 'active' => false, 'price' => 20.75]
+        ];
+
+        // Write with type casting
+        $this->csv->casts([
+            'id' => 'int',
+            'active' => 'bool',
+            'price' => 'float'
+        ])->write($this->testFile, $data, ['id', 'active', 'price']);
+
+        // Check raw CSV content
+        $content = file_get_contents($this->testFile);
+        $expected = "id,active,price\n1,true,10.5\n2,false,20.75\n";
+        $this->assertEquals($expected, $content);
+
+        // Read it back with same casts
+        $rows = iterator_to_array($this->csv->casts([
+            'id' => 'int',
+            'active' => 'bool',
+            'price' => 'float'
+        ])->read($this->testFile));
+
+        // Verify types are preserved
+        $this->assertIsInt($rows[0]['id']);
+        $this->assertIsBool($rows[0]['active']);
+        $this->assertIsFloat($rows[0]['price']);
+    }
+
+    public function testWriteWithExcludes()
+    {
+        $data = [
+            ['id' => 1, 'name' => 'John', 'password' => 'secret'],
+            ['id' => 2, 'name' => 'Jane', 'password' => 'secret']
+        ];
+
+        // Write with exclusions
+        $this->csv->except(['password'])
+            ->write($this->testFile, $data, ['id', 'name']);
+
+        // Check raw CSV content
+        $content = file_get_contents($this->testFile);
+        $expected = "id,name\n1,John\n2,Jane\n";
+        $this->assertEquals($expected, $content);
+    }
+
+    public function testChainedTransformationsInWrite()
+    {
+        $data = [
+            ['id' => 1, 'name' => 'JOHN', 'age' => 25, 'password' => 'secret'],
+            ['id' => 2, 'name' => 'JANE', 'age' => 30, 'password' => 'secret']
+        ];
+
+        // Apply all transformations
+        $this->csv->map([
+            'user_id' => 'id',
+            'user_name' => 'name'
+        ])
+        ->except(['password'])
+        ->casts([
+            'age' => 'int'
+        ])
+        ->write($this->testFile, $data, ['user_id', 'user_name', 'age']);
+
+        // Verify the output
+        $content = file_get_contents($this->testFile);
+        $expected = "user_id,user_name,age\n1,JOHN,25\n2,JANE,30\n";
+        $this->assertEquals($expected, $content);
+    }
 }
