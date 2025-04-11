@@ -254,3 +254,419 @@ Each of these features will maintain Lightpack's philosophy:
 - Simple but effective
 - HTTP/2 optimized
 - Development friendly
+
+## Comprehensive Documentation for the Asset Feature with Practical Examples
+
+### Basic Usage
+
+#### 1. Loading Single Assets
+
+```php
+// In your view files
+<link href="<?= assets()->url('css/app.css') ?>" rel="stylesheet">
+<script src="<?= assets()->url('js/app.js') ?>"></script>
+<img src="<?= assets()->url('img/logo.png') ?>" alt="Logo">
+```
+
+The `url()` method:
+- Generates correct URLs with proper base path
+- Adds version query string for cache busting
+- Supports both local and CDN paths
+- Handles missing files gracefully
+
+#### 2. Helper Methods for Common Assets
+
+```php
+// CSS files - adds <link> tag with proper attributes
+<?= assets()->css('app.css') ?>
+<?= assets()->css(['base.css', 'app.css']) ?>
+
+// JavaScript files - adds <script> tag with defer
+<?= assets()->js('app.js') ?>
+<?= assets()->js(['vendor.js', 'app.js']) ?>
+
+// Images - adds <img> tag with proper attributes
+<?= assets()->img('logo.png', ['alt' => 'Logo', 'class' => 'header-logo']) ?>
+```
+
+### Asset Collections
+
+Collections help organize and load related assets together.
+
+```php
+// Define collections in your service provider or bootstrap
+assets()->collection('admin', [
+    'css/admin/base.css',
+    'css/admin/dashboard.css',
+    'js/admin/core.js',
+    'js/admin/dashboard.js',
+]);
+
+// In your admin layout
+<?= assets()->loadCollection('admin') ?>
+
+// Define multiple collections
+assets()->collection('frontend', [
+    'css/app.css',
+    'js/app.js',
+]);
+
+assets()->collection('charts', [
+    'css/charts.css',
+    'js/charts.js',
+]);
+
+// Load multiple collections
+<?= assets()->loadCollection(['frontend', 'charts']) ?>
+```
+
+### Versioning & Cache Busting
+
+Lightpack provides automatic versioning for assets:
+
+```php
+// Generates: /css/app.css?v=1712847728
+echo assets()->url('css/app.css');
+
+// Disable versioning for specific files
+echo assets()->url('css/app.css', ['version' => false]);
+
+// Version manifest for production
+// In config/assets.php
+return [
+    'manifest' => [
+        'enabled' => true,
+        'path' => 'versions.json',
+        'directories' => ['css', 'js', 'fonts', 'img'],
+    ],
+];
+
+// Generated versions.json
+{
+    "css/app.css": "1712847728",
+    "js/app.js": "1712847729"
+}
+```
+
+### HTTP/2 Optimization
+
+#### 1. Preloading Critical Assets
+
+```php
+// In your filter or service provider
+assets()->preload([
+    // Critical CSS for above-the-fold content
+    'css/critical.css',
+    
+    // Essential fonts
+    'fonts/roboto-regular.woff2',
+    
+    // Core JavaScript
+    'js/app.js',
+]);
+
+// Generate preload headers
+assets()->sendPreloadHeaders();
+```
+
+#### 2. Resource Hints
+
+```php
+// In your BeforeFilter
+class AssetFilter extends Filter 
+{
+    public function before(Request $request) 
+    {
+        // DNS prefetch for external resources
+        assets()->dnsPreconnect('https://api.example.com');
+
+        // Preconnect to origins
+        assets()->preconnect('https://cdn.example.com');
+
+        // Prefetch future resources
+        assets()->prefetch('js/comments.js');
+    }
+}
+```
+
+#### 3. Dynamic Preloading
+
+```php
+// In your filter
+class AdminAssetsFilter extends Filter 
+{
+    public function before(Request $request) 
+    {
+        if ($request->route()->hasPrefix('admin')) {
+            assets()->preload([
+                'css/admin.css',
+                'js/admin/core.js',
+            ]);
+        }
+
+        if ($request->user()->can('view-charts')) {
+            assets()->preload('js/modules/charts.js');
+        }
+    }
+}
+```
+
+#### 4. Module Preloading
+
+```php
+// Preload ES modules and dependencies
+assets()->preloadModule('js/app.js');
+
+// Preload specific module features
+assets()->preloadModule([
+    'js/features/comments.js',
+    'js/features/search.js',
+]);
+
+// With import map support
+assets()->importMap([
+    'imports' => [
+        'app' => '/js/app.js',
+        'features' => '/js/features.js',
+    ],
+]);
+assets()->preloadModule('features');
+```
+
+#### 5. Conditional Preloading
+
+```php
+// In your filter
+class ResponsiveAssetsFilter extends Filter 
+{
+    public function before(Request $request) 
+    {
+        // Preload based on device/browser capabilities
+        if ($request->isMobile()) {
+            assets()->preload('css/mobile.css');
+        } else {
+            assets()->preload('css/desktop.css');
+        }
+
+        // Preload based on feature flags
+        if (get_env('FEATURE_NEW_EDITOR')) {
+            assets()->preload('js/new-editor.js');
+        }
+    }
+}
+```
+
+### Configuration Updates
+
+```php
+// config/assets.php
+return [
+    'manifest' => [
+        // Enable version manifest in production
+        'enabled' => get_env('APP_ENV') === 'production',
+        
+        // Path to store version manifest
+        'path' => 'versions.json',
+        
+        // Directories to track for versions
+        'directories' => [
+            'css',
+            'js',
+            'fonts',
+            'img',
+        ],
+    ],
+    
+    // Preload configuration
+    'preload' => [
+        // Default preload strategy
+        'strategy' => 'critical',
+        
+        // Always preload these assets
+        'critical' => [
+            'css/app.css',
+            'js/app.js',
+            'fonts/roboto-regular.woff2',
+        ],
+        
+        // Resource hints
+        'hints' => [
+            'dns-prefetch' => [
+                'https://api.example.com',
+            ],
+            'preconnect' => [
+                'https://cdn.example.com',
+            ],
+        ],
+    ],
+];
+
+// Set environment variables
+set_env('ASSET_URL', 'https://cdn.example.com');
+set_env('APP_ENV', 'production');
+
+// Get environment variables
+$assetUrl = get_env('ASSET_URL');
+$isProd = get_env('APP_ENV') === 'production';
+```
+
+### Best Practices
+
+1. **Organize Assets Logically**
+```
+public/
+  ├── css/
+  │   ├── app.css
+  │   └── admin/
+  │       └── dashboard.css
+  ├── js/
+  │   ├── app.js
+  │   └── modules/
+  │       └── chart.js
+  ├── img/
+  │   └── logo.png
+  └── fonts/
+      └── roboto.woff2
+```
+
+2. **Use Collections for Related Assets**
+```php
+// Group admin assets
+assets()->collection('admin', [
+    'css/admin/base.css',
+    'css/admin/forms.css',
+    'js/admin/core.js',
+]);
+
+// Group chart assets
+assets()->collection('charts', [
+    'css/charts/base.css',
+    'js/modules/charts.js',
+]);
+```
+
+3. **Preload Critical Assets**
+```php
+// In your service provider or middleware
+assets()->preload([
+    'css/critical.css',
+    'fonts/roboto.woff2',
+]);
+```
+
+4. **Use Import Maps for JavaScript Dependencies**
+```php
+// Define clear module paths
+assets()->importMap([
+    'imports' => [
+        'app' => '/js/app.js',
+        'components' => '/js/components.js',
+        'alpine' => '/js/vendor/alpine.js',
+    ],
+]);
+```
+
+5. **Version Control in Production**
+```php
+// Generate version manifest
+php cli asset:versions
+
+// Assets automatically use versions from manifest
+echo assets()->url('css/app.css');
+// Output: /css/app.css?v=1712847728
+```
+
+### Advanced Usage
+
+#### 1. Conditional Asset Loading
+
+```php
+// Load assets based on conditions
+if ($user->isAdmin()) {
+    assets()->loadCollection('admin');
+}
+
+if ($page->hasCharts()) {
+    assets()->loadCollection('charts');
+}
+```
+
+#### 2. Custom Attributes
+
+```php
+// Add custom attributes to assets
+echo assets()->css('app.css', ['media' => 'print']);
+echo assets()->js('app.js', ['async' => true]);
+echo assets()->img('logo.png', ['loading' => 'lazy']);
+```
+
+### Security Considerations
+
+1. **Always validate file paths**
+```php
+// Asset class automatically:
+// - Sanitizes file paths
+// - Prevents directory traversal
+// - Checks for valid file types
+```
+
+2. **Use environment variables**
+```env
+# Keep asset URLs configurable
+ASSET_URL=https://cdn.example.com
+```
+
+3. **Version assets in production**
+```php
+// Enable version manifest
+'manifest' => [
+    'enabled' => get_env('APP_ENV') === 'production',
+],
+```
+
+### Performance Tips
+
+1. **Use collections to organize assets**
+2. **Preload critical assets**
+3. **Enable version manifest in production**
+4. **Use import maps for JavaScript modules**
+5. **Leverage HTTP/2 features**
+
+### Migration Guide
+
+If you're using the old `Url::asset()` method, migrate to the new Asset class:
+
+```php
+// Old way (still works but no versioning)
+echo Url::asset('css/app.css');
+
+// New way (recommended)
+echo assets()->url('css/app.css');  // Adds version
+echo assets()->css('app.css');      // Adds <link> tag
+```
+
+### Troubleshooting
+
+1. **Assets not loading?**
+   - Check file paths are relative to public directory
+   - Verify ASSET_URL or APP_URL environment variables
+   - Check file permissions
+
+2. **Versions not updating?**
+   - Regenerate version manifest
+   - Clear browser cache
+   - Check manifest configuration
+
+3. **Import maps not working?**
+   - Ensure browser supports import maps
+   - Check module paths are correct
+   - Verify JavaScript files are modules
+
+### CLI Commands
+
+```bash
+# Generate version manifest
+php cli asset:versions
+
+# Clear asset cache
+php cli asset:clear
