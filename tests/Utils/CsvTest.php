@@ -607,7 +607,7 @@ class CsvTest extends \PHPUnit\Framework\TestCase
                     return true;
                 }
 
-                return array_values($result->getErrors());
+                return $result->getErrors();
             }, 'collect')
             ->read($this->testFile));
 
