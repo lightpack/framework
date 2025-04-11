@@ -435,3 +435,19 @@ if (!function_exists('storage')) {
         return app('storage');
     }
 }
+
+if (!function_exists('assets')) {
+    /**
+     * Get asset URL or HTML
+     */
+    function assets(): \Lightpack\Utils\Asset
+    {
+        static $asset = null;
+        
+        if ($asset === null) {
+            $asset = new \Lightpack\Utils\Asset();
+        }
+        
+        return $asset;
+    }
+}
