@@ -26,13 +26,25 @@ class FileLogger implements ILogger
 
     private function formatLogEntry($level, $message, $context)
     {
+        $level = strtoupper($level);
         $timestamp = date('Y-m-d H:i:s');
-        $logEntry = "$timestamp $level : $message" . PHP_EOL;
+        $logEntry = str_repeat('-', 80) . PHP_EOL;
+        $logEntry .= "[$timestamp] $level: $message" . PHP_EOL;
 
         if (!empty($context)) {
-            $logEntry .= 'Context: ' . json_encode($context) . PHP_EOL;
+            if (isset($context['stack_trace'])) {
+                $trace = $context['stack_trace'];
+                unset($context['stack_trace']);
+                $logEntry .= "File: {$trace['file']}:{$trace['line']}" . PHP_EOL;
+                $logEntry .= "Stack Trace:" . PHP_EOL . $trace['trace'] . PHP_EOL;
+            }
+            
+            if (!empty($context)) {
+                $logEntry .= "Context:" . PHP_EOL;
+                $logEntry .= json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+            }
         }
-
+        
         return $logEntry;
     }
 
@@ -90,6 +102,6 @@ class FileLogger implements ILogger
 
     private function writeLog($logEntry)
     {
-        file_put_contents($this->filename, $logEntry, FILE_APPEND);
+        file_put_contents($this->filename, $logEntry, FILE_APPEND | LOCK_EX);
     }
 }
