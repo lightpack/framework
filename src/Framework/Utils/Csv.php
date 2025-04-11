@@ -75,9 +75,20 @@ class Csv
             // Validate if validator exists
             if ($this->validator) {
                 try {
-                    $valid = ($this->validator)($row);
-                    if (!$valid) {
-                        $error = "Row {$rowNum} failed validation";
+                    $result = ($this->validator)($row);
+                    
+                    // Convert result to array of errors
+                    $errors = [];
+                    if (is_string($result)) {
+                        $errors = [$result];
+                    } elseif (is_array($result)) {
+                        $errors = $result;
+                    } elseif ($result === false) {
+                        $errors = ['Failed validation'];
+                    }
+
+                    if ($errors) {
+                        $error = "Row {$rowNum}: " . implode(', ', $errors);
                         if ($this->onInvalid === 'fail') {
                             throw new \RuntimeException($error);
                         }
@@ -223,7 +234,7 @@ class Csv
     }
 
     /**
-     * Add row validator
+     * Add row validator. Return true if valid, false if invalid, or array of error messages
      */
     public function validate(callable $validator, string $onInvalid = 'skip'): self
     {

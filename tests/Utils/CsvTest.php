@@ -410,66 +410,83 @@ class CsvTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateSkipInvalid()
     {
-        $data = "id,age\n1,25\n2,invalid\n3,30\n";
+        $data = "id,age,email\n1,25,john@test\n2,invalid,bob@test\n3,30,invalid\n";
         file_put_contents($this->testFile, $data);
 
         $rows = iterator_to_array($this->csv
-            ->validate(fn($row) => is_numeric($row['age']))
+            ->validate(function($row) {
+                $errors = [];
+                if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
+                if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
+                return $errors;
+            })
             ->read($this->testFile));
 
-        // Should skip invalid row
-        $this->assertCount(2, $rows);
+        // Should skip invalid rows
+        $this->assertCount(1, $rows);
         $this->assertEquals('1', $rows[0]['id']);
-        $this->assertEquals('3', $rows[1]['id']);
     }
 
     public function testValidateCollectErrors()
     {
-        $data = "id,age\n1,25\n2,invalid\n3,30\n";
+        $data = "id,age,email\n1,25,john@test\n2,invalid,bob@test\n3,30,invalid\n";
         file_put_contents($this->testFile, $data);
 
         $rows = iterator_to_array($this->csv
-            ->validate(fn($row) => is_numeric($row['age']), 'collect')
+            ->validate(function($row) {
+                $errors = [];
+                if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
+                if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
+                return $errors;
+            }, 'collect')
             ->read($this->testFile));
 
-        // Should include all rows but collect errors
+        // Should include all rows and collect errors
         $this->assertCount(3, $rows);
-        $this->assertCount(1, $this->csv->getErrors());
-        $this->assertStringContainsString('Row 2', $this->csv->getErrors()[0]);
+        $this->assertCount(2, $this->csv->getErrors());
+        
+        // Row 2 has invalid age
+        $this->assertStringContainsString('Row 2: Invalid age', $this->csv->getErrors()[0]);
+        
+        // Row 3 has invalid email
+        $this->assertStringContainsString('Row 3: Invalid email', $this->csv->getErrors()[1]);
     }
 
     public function testValidateFailOnInvalid()
     {
-        $data = "id,age\n1,25\n2,invalid\n3,30\n";
+        $data = "id,age,email\n1,25,john@test\n2,invalid,invalid\n3,30,bob@test\n";
         file_put_contents($this->testFile, $data);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Row 2 failed validation');
+        $this->expectExceptionMessage('Row 2: Invalid age, Invalid email');
 
         iterator_to_array($this->csv
-            ->validate(fn($row) => is_numeric($row['age']), 'fail')
+            ->validate(function($row) {
+                $errors = [];
+                if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
+                if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
+                return $errors;
+            }, 'fail')
             ->read($this->testFile));
     }
 
     public function testValidateWithException()
     {
-        $data = "id,age\n1,25\n2,30\n3,invalid\n";
+        $data = "id,age,salary\n1,25,1000\n2,30,-500\n3,35,2000\n";
         file_put_contents($this->testFile, $data);
 
-        $validator = function($row) {
-            if ($row['age'] === 'invalid') {
-                throw new \Exception('Invalid age value');
-            }
-            return true;
-        };
-
-        // Test fail mode
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Row 3: Invalid age value');
-
-        iterator_to_array($this->csv
-            ->validate($validator, 'fail')
+        $rows = iterator_to_array($this->csv
+            ->validate(function($row) {
+                if ($row['salary'] < 0) {
+                    throw new \Exception('Salary cannot be negative');
+                }
+                return true;
+            }, 'collect')
             ->read($this->testFile));
+
+        $this->assertCount(3, $rows);
+        $this->assertCount(1, $this->csv->getErrors());
+        $this->assertStringContainsString('Salary cannot be negative', $this->csv->getErrors()[0]);
     }
 
     public function testValidateWithInvalidMode()
@@ -480,34 +497,92 @@ class CsvTest extends \PHPUnit\Framework\TestCase
 
     public function testValidatePartialProcessing()
     {
-        $data = "id,age\n1,25\n2,30\n3,35\n4,40\n5,invalid\n6,45\n";
+        $data = "id,age,email\n1,25,a@test\n2,30,b@test\n3,invalid,c@test\n4,40,invalid\n";
         file_put_contents($this->testFile, $data);
 
         // Test skip mode
         $processed = [];
-        foreach ($this->csv->validate(fn($row) => is_numeric($row['age']))->read($this->testFile) as $row) {
+        foreach ($this->csv
+            ->validate(function($row) {
+                $errors = [];
+                if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
+                if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
+                return $errors;
+            })
+            ->read($this->testFile) as $row) {
             $processed[] = $row['id'];
         }
-        $this->assertEquals(['1', '2', '3', '4', '6'], $processed);
+        $this->assertEquals(['1', '2'], $processed);
 
         // Test collect mode
         $processed = [];
-        foreach ($this->csv->validate(fn($row) => is_numeric($row['age']), 'collect')->read($this->testFile) as $row) {
+        foreach ($this->csv
+            ->validate(function($row) {
+                $errors = [];
+                if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
+                if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
+                return $errors;
+            }, 'collect')
+            ->read($this->testFile) as $row) {
             $processed[] = $row['id'];
         }
-        $this->assertEquals(['1', '2', '3', '4', '5', '6'], $processed);
-        $this->assertCount(1, $this->csv->getErrors());
+        $this->assertEquals(['1', '2', '3', '4'], $processed);
+        $this->assertCount(2, $this->csv->getErrors());
 
         // Test fail mode
         $processed = [];
         try {
-            foreach ($this->csv->validate(fn($row) => is_numeric($row['age']), 'fail')->read($this->testFile) as $row) {
+            foreach ($this->csv
+                ->validate(function($row) {
+                    $errors = [];
+                    if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
+                    if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
+                    return $errors;
+                }, 'fail')
+                ->read($this->testFile) as $row) {
                 $processed[] = $row['id'];
             }
             $this->fail('Should have thrown exception');
         } catch (\RuntimeException $e) {
-            $this->assertEquals(['1', '2', '3', '4'], $processed);
-            $this->assertStringContainsString('Row 5', $e->getMessage());
+            $this->assertEquals(['1', '2'], $processed);
+            $this->assertStringContainsString('Row 3: Invalid age', $e->getMessage());
         }
+    }
+
+    public function testValidateWithStringError()
+    {
+        $data = "id,age,email\n1,25,john@test\n2,-5,bob@test\n3,30,invalid\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv
+            ->validate(function($row) {
+                if ($row['age'] < 0) {
+                    return 'Age cannot be negative';
+                }
+                if (!str_contains($row['email'], '@test')) {
+                    return 'Invalid email domain';
+                }
+                return true;
+            }, 'collect')
+            ->read($this->testFile));
+
+        $this->assertCount(3, $rows);
+        $this->assertCount(2, $this->csv->getErrors());
+        $this->assertStringContainsString('Age cannot be negative', $this->csv->getErrors()[0]);
+        $this->assertStringContainsString('Invalid email domain', $this->csv->getErrors()[1]);
+    }
+
+    public function testValidateWithBooleanResult()
+    {
+        $data = "id,age\n1,25\n2,-5\n3,30\n";
+        file_put_contents($this->testFile, $data);
+
+        $rows = iterator_to_array($this->csv
+            ->validate(fn($row) => $row['age'] >= 0, 'collect')
+            ->read($this->testFile));
+
+        $this->assertCount(3, $rows);
+        $this->assertCount(1, $this->csv->getErrors());
+        $this->assertStringContainsString('Row 2: Failed validation', $this->csv->getErrors()[0]);
     }
 }
