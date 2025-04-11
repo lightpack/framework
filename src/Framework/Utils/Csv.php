@@ -11,6 +11,7 @@ class Csv
     private array $mappings = [];
     private array $excludes = [];
     private ?int $limit = null;
+    private ?int $maxAllowed = null;
 
     /**
      * Read CSV with generators for memory efficiency.
@@ -24,6 +25,25 @@ class Csv
     {
         if (!is_readable($file)) {
             throw new \RuntimeException("Cannot read file: {$file}");
+        }
+
+        // If max rows check is needed, count total rows first
+        if ($this->maxAllowed !== null) {
+            $totalRows = 0;
+            $countHandle = fopen($file, 'r');
+            if ($hasHeader) {
+                fgetcsv($countHandle); // Skip header
+            }
+            while (fgetcsv($countHandle)) {
+                $totalRows++;
+            }
+            fclose($countHandle);
+
+            if ($totalRows > $this->maxAllowed) {
+                throw new \RuntimeException(
+                    "CSV contains {$totalRows} rows. Maximum {$this->maxAllowed} rows allowed."
+                );
+            }
         }
 
         $handle = fopen($file, 'r');
@@ -145,6 +165,18 @@ class Csv
             throw new \InvalidArgumentException('Limit must be a positive number');
         }
         $this->limit = $count;
+        return $this;
+    }
+
+    /**
+     * Set maximum allowed rows (throws error if exceeded)
+     */
+    public function max(int $count): self
+    {
+        if ($count < 0) {
+            throw new \InvalidArgumentException('Maximum rows must be a positive number');
+        }
+        $this->maxAllowed = $count;
         return $this;
     }
 

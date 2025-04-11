@@ -371,4 +371,40 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->csv->limit(-1);
     }
+
+    public function testMaxEnforcement()
+    {
+        $data = "id,name\n1,john\n2,jane\n3,bob\n4,alice\n";
+        file_put_contents($this->testFile, $data);
+
+        // Should pass (4 rows, max 5)
+        $rows = iterator_to_array($this->csv->max(5)->read($this->testFile));
+        $this->assertCount(4, $rows);
+
+        // Should fail (4 rows, max 3)
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CSV contains 4 rows. Maximum 3 rows allowed');
+        iterator_to_array($this->csv->max(3)->read($this->testFile));
+    }
+
+    public function testMaxWithInvalidValue()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->csv->max(-1);
+    }
+
+    public function testMaxWithHeader()
+    {
+        $data = "id,name\n1,john\n2,jane\n";
+        file_put_contents($this->testFile, $data);
+
+        // Should pass (2 rows + header, max 3)
+        $rows = iterator_to_array($this->csv->max(3)->read($this->testFile, true));
+        $this->assertCount(2, $rows);
+
+        // Should fail (2 rows, max 1)
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CSV contains 2 rows. Maximum 1 rows allowed');
+        iterator_to_array($this->csv->max(1)->read($this->testFile, true));
+    }
 }
