@@ -351,8 +351,9 @@ class File
      * 
      * Safety features:
      * - Checks if path is actually a directory
-     * - Uses RecursiveIteratorIterator for reliable traversal
-     * - Handles permissions safely
+     * - Uses standard iterator for controlled deletion
+     * - Suppresses warnings for better error handling
+     * - Deletes in correct order (files first, then directories)
      * 
      * @param string $path Directory to remove
      * @param bool $delete Whether to delete the directory itself
@@ -382,12 +383,14 @@ class File
      * Creates a complete copy of a directory structure with these features:
      * - Creates destination directory if it doesn't exist
      * - Recursively copies all files and subdirectories
-     * - Optionally removes source after successful copy
+     * - Optionally removes source after successful copy (move operation)
      * - Preserves relative paths in the directory structure
+     * - Handles nested directories properly
+     * - Suppresses warnings during delete operations
      * 
      * @param string $source Source directory
      * @param string $destination Destination directory
-     * @param bool $delete Whether to delete source after copy
+     * @param bool $delete Whether to delete source after copy (for move operations)
      * @return bool True if copy was successful
      */
     public function copyDir(string $source, string $destination, bool $delete = false): bool
@@ -500,10 +503,10 @@ class File
      * 
      * This method returns an iterator that lists only the immediate contents
      * of a directory (files and subdirectories) without traversing into subdirectories.
-     * It's useful for:
-     * - Simple directory listings
-     * - Performance-critical operations that only need top-level files
-     * - Controlled manual traversal of directory structures
+     * Used for controlled directory operations like:
+     * - Directory deletion (removeDir)
+     * - Directory copying (copyDir)
+     * - Simple directory listings (traverse)
      * 
      * @param string $path The directory path to iterate over
      * @return FilesystemIterator|null Returns null if path is not a directory
@@ -521,15 +524,13 @@ class File
      * Get a recursive iterator for traversing a directory structure.
      * 
      * This method returns an iterator that traverses through all files and subdirectories
-     * recursively. It's designed for operations that need to process the entire
-     * directory tree, such as:
-     * - File watching/monitoring
-     * - Deep directory searches
-     * - Complete directory backups
-     * - Recursive file operations
+     * recursively. Used for operations that need the full directory tree:
+     * - Finding most recent files (recent)
+     * - Deep file searches
+     * - Complete tree traversal
      * 
-     * The iterator uses SELF_FIRST mode, meaning it will visit directories
-     * before their contents, which is useful for creating/copying directory structures.
+     * Note: For operations that need controlled directory order (like deletion),
+     * use getIterator() instead.
      * 
      * @param string $path The directory path to recursively iterate over
      * @return RecursiveIteratorIterator|null Returns null if path is not a directory
