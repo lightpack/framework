@@ -67,7 +67,8 @@ class WatchCommand implements ICommand
         while (true) {
             if ($this->checkForChanges() && $command) {
                 $this->output->info("🚀 Running command: {$command}");
-                passthru($command);
+                // Use shell_exec to support aliases and shell features
+                shell_exec("/bin/zsh -i -c '{$command}'");
             }
             sleep(1);
         }
@@ -82,6 +83,7 @@ class WatchCommand implements ICommand
         $this->output->info("  --path=<paths>     Comma-separated paths to watch");
         $this->output->info("  --ext=<extensions> Comma-separated file extensions to watch");
         $this->output->info("  --run=<command>    Command to run when changes are detected");
+        $this->output->warning("                   ⚠️  Uses shell, be careful with untrusted input");
         $this->output->info("Examples:");
         $this->output->info("  php console watch --path=app,config,routes");
         $this->output->info("  php console watch --path=app,config --ext=php,json");
@@ -91,15 +93,9 @@ class WatchCommand implements ICommand
     private function getOptionValue(array $args, string $option): ?string
     {
         foreach ($args as $arg) {
-            // Check for --option=value format
+            // Only support --option=value format
             if (strpos($arg, $option . '=') === 0) {
                 return substr($arg, strlen($option) + 1);
-            }
-            
-            // Check for --option value format
-            $index = array_search($option, $args);
-            if ($index !== false && isset($args[$index + 1])) {
-                return $args[$index + 1];
             }
         }
         
