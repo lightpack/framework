@@ -203,4 +203,59 @@ class FileTest extends TestCase
         $this->assertArrayHasKey('test.txt', $files);
         $this->assertInstanceOf(SplFileInfo::class, $files['test.txt']);
     }
+
+    public function testHashReturnsNullForNonExistentFile()
+    {
+        $this->assertNull($this->file->hash('nonexistent.txt'));
+    }
+
+    public function testHashCalculatesFileHash()
+    {
+        $content = 'test content';
+        $this->file->write($this->testFile, $content);
+        
+        // Test default SHA256
+        $expectedSha = hash('sha256', $content);
+        $this->assertEquals($expectedSha, $this->file->hash($this->testFile));
+        
+        // Test MD5
+        $expectedMd5 = hash('md5', $content);
+        $this->assertEquals($expectedMd5, $this->file->hash($this->testFile, 'md5'));
+    }
+
+    public function testAtomicWriteCreatesFile()
+    {
+        $content = 'test content';
+        $this->assertTrue($this->file->atomic($this->testFile, $content));
+        $this->assertTrue(file_exists($this->testFile));
+        $this->assertEquals($content, file_get_contents($this->testFile));
+    }
+
+    public function testAtomicWriteOverwritesExistingFile()
+    {
+        $oldContent = 'old content';
+        $newContent = 'new content';
+        
+        // Create file with old content
+        $this->file->write($this->testFile, $oldContent);
+        
+        // Overwrite with new content
+        $this->assertTrue($this->file->atomic($this->testFile, $newContent));
+        $this->assertEquals($newContent, file_get_contents($this->testFile));
+    }
+
+    public function testAtomicWriteCleansUpOnFailure()
+    {
+        // Create a directory with the same name to force rename failure
+        $this->file->makeDir($this->testFile);
+        
+        $this->assertFalse($this->file->atomic($this->testFile, 'test'));
+        
+        // No temp files should be left behind
+        $files = glob(dirname($this->testFile) . '/*.tmp.*');
+        $this->assertEmpty($files);
+        
+        // Cleanup
+        rmdir($this->testFile);
+    }
 }

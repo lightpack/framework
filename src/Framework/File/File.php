@@ -572,4 +572,72 @@ class File
 
         return $path;
     }
+
+    /**
+     * Calculate hash of a file's contents.
+     * 
+     * Generates a cryptographic hash of file contents using specified algorithm.
+     * Useful for:
+     * - File integrity verification
+     * - Cache invalidation
+     * - Finding duplicate files
+     * - Content-based file comparison
+     * 
+     * Example:
+     * ```php
+     * $hash = $file->hash('image.jpg');         // sha256 by default
+     * $hash = $file->hash('data.bin', 'md5');   // using MD5
+     * ```
+     * 
+     * @param string $path File path
+     * @param string $algo Hash algorithm (md5, sha1, sha256, etc)
+     * @return string|null Hash string or null if file doesn't exist
+     */
+    public function hash(string $path, string $algo = 'sha256'): ?string 
+    {
+        if (!$this->exists($path)) {
+            return null;
+        }
+
+        return hash_file($algo, $path);
+    }
+
+    /**
+     * Write contents to file atomically.
+     * 
+     * Ensures file writes are atomic by using a temporary file and rename.
+     * This prevents corrupted writes that can happen when:
+     * - Process crashes during write
+     * - System loses power
+     * - Disk fills up mid-write
+     * 
+     * Example:
+     * ```php
+     * // Config files stay consistent
+     * $file->atomic('config.json', $newConfig);
+     * 
+     * // Cache files never corrupt
+     * $file->atomic('cache/data.bin', $cacheData);
+     * ```
+     * 
+     * @param string $path Target file path
+     * @param string $contents File contents
+     * @return bool True if write successful
+     */
+    public function atomic(string $path, string $contents): bool
+    {
+        $temp = $path . '.tmp.' . uniqid();
+        
+        if (!$this->write($temp, $contents)) {
+            @unlink($temp);
+            return false;
+        }
+
+        if (!@rename($temp, $path)) {
+            @unlink($temp);
+            return false;
+        }
+
+        return true;
+    }
 }
