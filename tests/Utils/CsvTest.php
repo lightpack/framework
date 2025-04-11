@@ -348,4 +348,27 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $expected = "user_id,user_name,age\n1,JOHN,25\n2,JANE,30\n";
         $this->assertEquals($expected, $content);
     }
+
+    public function testReadWithLimit()
+    {
+        $data = "id,name\n1,john\n2,jane\n3,bob\n4,alice\n";
+        file_put_contents($this->testFile, $data);
+
+        // Read only first 2 rows
+        $rows = iterator_to_array($this->csv->limit(2)->read($this->testFile));
+        
+        $this->assertCount(2, $rows);
+        $this->assertEquals('1', $rows[0]['id']);
+        $this->assertEquals('2', $rows[1]['id']);
+
+        // Read with zero limit (no rows)
+        $rows = iterator_to_array($this->csv->limit(0)->read($this->testFile));
+        $this->assertCount(0, $rows);
+    }
+
+    public function testLimitWithInvalidValue()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->csv->limit(-1);
+    }
 }

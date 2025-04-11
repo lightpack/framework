@@ -10,6 +10,7 @@ class Csv
     private array $casts = [];
     private array $mappings = [];
     private array $excludes = [];
+    private ?int $limit = null;
 
     /**
      * Read CSV with generators for memory efficiency.
@@ -27,14 +28,20 @@ class Csv
 
         $handle = fopen($file, 'r');
         $headers = $hasHeader ? fgetcsv($handle, 0, $this->delimiter) : null;
+        $count = 0;
 
         while ($row = fgetcsv($handle, 0, $this->delimiter, $this->enclosure, $this->escape)) {
+            if ($this->limit !== null && $count >= $this->limit) {
+                break;
+            }
+
             if ($headers) {
                 $row = array_combine($headers, $row);
                 $row = $this->applyExcludes($row);
                 $row = $this->applyMappings($row);
             }
             yield $this->applyCasts($row);
+            $count++;
         }
 
         fclose($handle);
@@ -126,6 +133,18 @@ class Csv
     public function setDelimiter(string $delimiter): self 
     {
         $this->delimiter = $delimiter;
+        return $this;
+    }
+
+    /**
+     * Set maximum number of rows to process
+     */
+    public function limit(int $count): self
+    {
+        if ($count < 0) {
+            throw new \InvalidArgumentException('Limit must be a positive number');
+        }
+        $this->limit = $count;
         return $this;
     }
 
