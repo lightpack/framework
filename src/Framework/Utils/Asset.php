@@ -382,7 +382,7 @@ class Asset
      */
     public function module(string $path, array $options = []): string
     {
-        $url = $this->url($path, $options);
+        $url = $this->url($path);
         $type = ' type="module"';
         $defer = !empty($options['defer']) ? ' defer' : '';
         $async = !empty($options['async']) ? ' async' : '';
@@ -393,7 +393,7 @@ class Asset
     /**
      * Download and setup Google Font
      */
-    public function googleFont(string $family, array $weights = ['400']): self
+    public function googleFont(string $family, array $weights = [400]): self
     {
         $fontDir = $this->publicPath . '/fonts';
         $cssDir = $this->publicPath . '/css';
@@ -402,44 +402,83 @@ class Asset
         if (!is_dir($fontDir)) mkdir($fontDir, 0755, true);
         if (!is_dir($cssDir)) mkdir($cssDir, 0755, true);
 
-        // Build Google Fonts URL
+        // Build Google Fonts URL with user agent to get woff2 fonts
         $url = sprintf(
-            'https://fonts.googleapis.com/css2?family=%s:wght@%s&display=swap',
+            'https://fonts.googleapis.com/css2?family=%s:%s&display=swap',
             str_replace(' ', '+', $family),
-            implode(';', $weights)
+            'wght@' . implode(';', $weights)
         );
 
-        // Get and parse CSS
-        $css = file_get_contents($url);
-        preg_match_all('/url\((.*?)\)/', $css, $matches);
-        
-        // Download fonts and generate CSS
-        $localCss = '';
-        foreach ($weights as $weight) {
-            // Find matching font URL for this weight
-            $fontUrl = '';
-            foreach ($matches[1] as $url) {
-                if (strpos($url, $weight . '.woff2') !== false) {
-                    $fontUrl = $url;
-                    break;
-                }
+        // Set up context with user agent
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            ]
+        ]);
+
+        // Get CSS content
+        $css = @file_get_contents($url, false, $context);
+        if ($css === false) {
+            throw new \RuntimeException("Failed to download Google Font CSS from: {$url}");
+        }
+
+        // Parse font-face blocks
+        preg_match_all('/@font-face\s*{([^}]+)}/', $css, $blocks);
+        if (empty($blocks[1])) {
+            throw new \RuntimeException("No @font-face blocks found in Google Font CSS");
+        }
+
+        // Group fonts by weight and find the latin version (usually the smallest and most complete)
+        $fontsByWeight = [];
+        foreach ($blocks[1] as $block) {
+            // Extract properties
+            preg_match('/font-weight:\s*(\d+)/', $block, $weightMatch);
+            preg_match('/src:\s*url\((.*?)\)/', $block, $urlMatch);
+            
+            if (empty($weightMatch[1]) || empty($urlMatch[1])) {
+                continue;
             }
 
-            if (!$fontUrl) continue;
+            $weight = $weightMatch[1];
+            $url = trim($urlMatch[1], "'\" ");
 
-            // Download font
-            $fontContent = file_get_contents($fontUrl);
-            $fileName = strtolower($family) . '-' . $weight . '.woff2';
-            file_put_contents($fontDir . '/' . $fileName, $fontContent);
+            // Only store the latin version of the font (usually the last one)
+            // or update if we haven't found one yet
+            if (!isset($fontsByWeight[$weight]) || 
+                strpos($block, 'U+0000-00FF') !== false) {
+                $fontsByWeight[$weight] = $url;
+            }
+        }
 
-            // Generate CSS
+        // Generate CSS
+        $localCss = '';
+        foreach ($fontsByWeight as $weight => $url) {
+            // Download font file
+            $fontContent = @file_get_contents($url, false, $context);
+            if ($fontContent === false) {
+                throw new \RuntimeException("Failed to download font file from: {$url}");
+            }
+
+            // Save font with weight-based name
+            $fileName = sprintf('%s-%d.woff2', 
+                strtolower($family),
+                $weight
+            );
+            
+            $fontPath = $fontDir . '/' . $fileName;
+            if (!@file_put_contents($fontPath, $fontContent)) {
+                throw new \RuntimeException("Failed to save font file to: {$fontPath}");
+            }
+
             $localCss .= sprintf(
                 "@font-face {\n" .
                 "    font-family: '%s';\n" .
+                "    font-style: normal;\n" .
                 "    font-weight: %s;\n" .
+                "    font-display: swap;\n" .
                 "    src: local('%s'),\n" .
                 "         url('/fonts/%s') format('woff2');\n" .
-                "    font-display: swap;\n" .
                 "}\n\n",
                 $family,
                 $weight,
@@ -450,7 +489,9 @@ class Asset
 
         // Save CSS
         $cssFile = $cssDir . '/fonts.css';
-        file_put_contents($cssFile, $localCss);
+        if (!@file_put_contents($cssFile, $localCss)) {
+            throw new \RuntimeException("Failed to save CSS file to: {$cssFile}");
+        }
 
         // Update version manifest
         $this->generateVersions();
