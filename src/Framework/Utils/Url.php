@@ -58,6 +58,8 @@ class Url
      * Url::asset('css/styles.css');
      * Url::asset('img/favicon.png');
      * Url::asset('js/scripts.js');
+     * 
+     * @deprecated
      */
     public function asset(string $file): ?string
     {
