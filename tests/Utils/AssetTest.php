@@ -75,25 +75,56 @@ class AssetTest extends TestCase
     }
 
     /**
-     * Asset Collection Tests
+     * Collection Loading Tests
      */
-    public function testAssetCollection(): void
+    public function testLoadCollectionWithCssAndJs(): void
     {
-        $this->asset->collection('main', [
+        $this->asset->collect('main', [
             'css/app.css',
             'js/app.js'
         ]);
 
-        $urls = $this->asset->collect('main');
-        $this->assertCount(2, $urls);
-        $this->assertStringContainsString('css/app.css', $urls[0]);
-        $this->assertStringContainsString('js/app.js', $urls[1]);
+        $html = $this->asset->load('main');
+        
+        // Should contain both CSS and JS tags
+        $this->assertStringContainsString("<link rel='stylesheet'", $html);
+        $this->assertStringContainsString("<script src='", $html);
+        $this->assertStringContainsString("css/app.css", $html);
+        $this->assertStringContainsString("js/app.js", $html);
     }
 
-    public function testInvalidCollectionThrowsException(): void
+    public function testLoadCollectionWithOnlyCss(): void
+    {
+        $this->asset->collect('styles', [
+            'css/app.css',
+            'css/other.css'
+        ]);
+
+        $html = $this->asset->load('styles');
+        
+        // Should only contain CSS tags
+        $this->assertEquals(2, substr_count($html, "<link rel='stylesheet'"));
+        $this->assertStringNotContainsString("<script", $html);
+    }
+
+    public function testLoadCollectionWithOnlyJs(): void
+    {
+        $this->asset->collect('scripts', [
+            'js/app.js',
+            'js/other.js'
+        ]);
+
+        $html = $this->asset->load('scripts');
+        
+        // Should only contain JS tags
+        $this->assertEquals(2, substr_count($html, "<script"));
+        $this->assertStringNotContainsString("<link rel='stylesheet'", $html);
+    }
+
+    public function testLoadNonexistentCollectionThrowsException(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->asset->collect('nonexistent');
+        $this->asset->load('nonexistent');
     }
 
     /**

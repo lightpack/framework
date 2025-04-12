@@ -145,22 +145,32 @@ class Asset
     /**
      * Create a named collection of assets
      */
-    public function collection(string $name, array $files): self
+    public function collect(string $name, array $files): self
     {
         $this->collections[$name] = $files;
         return $this;
     }
 
     /**
-     * Get URLs for all assets in a collection
+     * Load and render all assets in a collection as HTML tags
      */
-    public function collect(string $name): array
+    public function load(string $name): string
     {
         if (!isset($this->collections[$name])) {
             throw new \InvalidArgumentException("Asset collection '{$name}' not found");
         }
 
-        return array_map(fn($file) => $this->url($file), $this->collections[$name]);
+        $html = '';
+        foreach ($this->collections[$name] as $file) {
+            $ext = pathinfo($file, PATHINFO_EXTENSION);
+            if ($ext === 'css') {
+                $html .= $this->css($file);
+            } elseif ($ext === 'js') {
+                $html .= $this->js($file);
+            }
+        }
+        
+        return $html;
     }
 
     /**
