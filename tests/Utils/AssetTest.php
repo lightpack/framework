@@ -79,12 +79,10 @@ class AssetTest extends TestCase
      */
     public function testLoadCollectionWithCssAndJs(): void
     {
-        $this->asset->collect('main', [
+        $html = $this->asset->load([
             'css/app.css',
             'js/app.js'
         ]);
-
-        $html = $this->asset->load('main');
         
         // Should contain both CSS and JS tags
         $this->assertStringContainsString("<link rel='stylesheet'", $html);
@@ -95,13 +93,11 @@ class AssetTest extends TestCase
 
     public function testLoadCollectionWithOnlyCss(): void
     {
-        $this->asset->collect('styles', [
+        $html = $this->asset->load([
             'css/app.css',
             'css/other.css'
         ]);
 
-        $html = $this->asset->load('styles');
-        
         // Should only contain CSS tags
         $this->assertEquals(2, substr_count($html, "<link rel='stylesheet'"));
         $this->assertStringNotContainsString("<script", $html);
@@ -109,22 +105,14 @@ class AssetTest extends TestCase
 
     public function testLoadCollectionWithOnlyJs(): void
     {
-        $this->asset->collect('scripts', [
+        $html = $this->asset->load([
             'js/app.js',
             'js/other.js'
         ]);
 
-        $html = $this->asset->load('scripts');
-        
         // Should only contain JS tags
         $this->assertEquals(2, substr_count($html, "<script"));
         $this->assertStringNotContainsString("<link rel='stylesheet'", $html);
-    }
-
-    public function testLoadNonexistentCollectionThrowsException(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->asset->load('nonexistent');
     }
 
     /**
@@ -132,7 +120,7 @@ class AssetTest extends TestCase
      */
     public function testCssHelper(): void
     {
-        $html = $this->asset->css('css/app.css');
+        $html = $this->asset->load('css/app.css');
         $this->assertStringContainsString("<link rel='stylesheet'", $html);
         $this->assertStringContainsString("href='", $html);
         $this->assertStringContainsString("css/app.css", $html);
@@ -140,7 +128,7 @@ class AssetTest extends TestCase
 
     public function testMultipleCssFiles(): void
     {
-        $html = $this->asset->css(['css/app.css', 'css/other.css']);
+        $html = $this->asset->load(['css/app.css', 'css/other.css']);
         $this->assertEquals(2, substr_count($html, "<link rel='stylesheet'"));
     }
 
@@ -149,15 +137,23 @@ class AssetTest extends TestCase
      */
     public function testJsHelper(): void
     {
-        $html = $this->asset->js('js/app.js');
+        $html = $this->asset->load('js/app.js');
         $this->assertStringContainsString("<script src='", $html);
         $this->assertStringContainsString("js/app.js", $html);
         $this->assertStringContainsString("defer", $html);
     }
 
+    public function testJsHelperWithAsync(): void
+    {
+        $html = $this->asset->load(['js/app.js' => 'async']);
+        $this->assertStringContainsString("<script src='", $html);
+        $this->assertStringContainsString("js/app.js", $html);
+        $this->assertStringContainsString("async", $html);
+    }
+
     public function testJsHelperWithoutDefer(): void
     {
-        $html = $this->asset->js('js/app.js', false);
+        $html = $this->asset->load(['js/app.js' => null]);
         $this->assertStringNotContainsString("defer", $html);
     }
 

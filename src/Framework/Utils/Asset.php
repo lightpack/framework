@@ -15,11 +15,6 @@ class Asset
     protected ?string $baseUrl;
 
     /**
-     * Collection of asset groups
-     */
-    protected array $collections = [];
-
-    /**
      * Import map definitions
      */
     protected array $imports = [];
@@ -143,30 +138,26 @@ class Asset
     }
 
     /**
-     * Create a named collection of assets
-     */
-    public function collect(string $name, array $files): self
-    {
-        $this->collections[$name] = $files;
-        return $this;
-    }
-
-    /**
      * Load and render all assets in a collection as HTML tags
      */
-    public function load(string $name): string
+    public function load(string|array $assets): string
     {
-        if (!isset($this->collections[$name])) {
-            throw new \InvalidArgumentException("Asset collection '{$name}' not found");
+        if(is_string($assets)) {
+            $assets = [$assets];
         }
 
         $html = '';
-        foreach ($this->collections[$name] as $file) {
+        foreach ($assets as $file => $options) {
+            if (is_numeric($file)) {
+                $file = $options;
+                $options = 'defer'; // default to defer for better performance
+            }
+
             $ext = pathinfo($file, PATHINFO_EXTENSION);
             if ($ext === 'css') {
                 $html .= $this->css($file);
             } elseif ($ext === 'js') {
-                $html .= $this->js($file);
+                $html .= $this->js($file, $options);
             }
         }
         
@@ -176,7 +167,7 @@ class Asset
     /**
      * Get HTML for CSS files
      */
-    public function css(string|array $files): string
+    protected function css(string|array $files): string
     {
         $files = is_array($files) ? $files : [$files];
         $html = '';
@@ -192,18 +183,16 @@ class Asset
     /**
      * Get HTML for JS files
      */
-    public function js(string|array $files, bool $defer = true): string
+    protected function js(string $file, ?string $mode = 'defer'): string
     {
-        $files = is_array($files) ? $files : [$files];
-        $html = '';
-
-        foreach ($files as $file) {
-            $url = $this->url($file);
-            $defer = $defer ? ' defer' : '';
-            $html .= "<script src='{$url}'{$defer}></script>\n";
-        }
-
-        return $html;
+        $url = $this->url($file);
+        $attribute = match($mode) {
+            'async' => ' async',
+            'defer' => ' defer',
+            null => '',     // No attribute = blocking script
+            default => ' defer'
+        };
+        return "<script src='{$url}'{$attribute}></script>\n";
     }
 
     /**
