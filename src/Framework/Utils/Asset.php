@@ -70,18 +70,17 @@ class Asset
      * Get URL for an asset with optional versioning
      * 
      * @param string $path Path to the asset relative to public directory
-     * @param array $options Options for URL generation:
-     *                      - version: bool Enable/disable versioning or provide custom version
+     * @param bool $version Enable/disable versioning
      * @return string Generated asset URL
      */
-    public function url(string $path, array $options = []): string
+    public function url(string $path, bool $version = true): string
     {
         $path = trim($path, '/ ');
         
-        if (($options['version'] ?? true)) {
-            $version = $this->getVersion($path);
-            if ($version) {
-                $path .= '?v=' . $version;
+        if ($version) {
+            $versionStamp = $this->getVersion($path);
+            if ($versionStamp) {
+                $path .= '?v=' . $versionStamp;
             }
         }
 
@@ -294,7 +293,8 @@ class Asset
             $url = $path;
         } else {
             // Local file, add version and base URL
-            $url = $this->url($path, $options);
+            $shouldVersion = $options['version'] ?? true;
+            $url = $this->url($path, $shouldVersion);
         }
 
         $this->imports[$name] = [

@@ -61,7 +61,7 @@ class AssetTest extends TestCase
 
     public function testAssetUrlWithoutVersioning(): void
     {
-        $url = $this->asset->url('css/app.css', ['version' => false]);
+        $url = $this->asset->url('css/app.css', false);
         $this->assertEquals('/css/app.css', $url);
     }
 
@@ -69,7 +69,7 @@ class AssetTest extends TestCase
     {
         putenv('ASSET_URL=https://cdn.example.com');
         $asset = new Asset($this->publicPath);
-        $url = $asset->url('css/app.css', ['version' => false]);
+        $url = $asset->url('css/app.css', false);
         $this->assertEquals('https://cdn.example.com/css/app.css', $url);
         putenv('ASSET_URL');
     }
