@@ -283,6 +283,31 @@ class Asset
     }
 
     /**
+     * Generate script tag for module(s)
+     */
+    public function module(string|array $paths): string
+    {
+        if (is_string($paths)) {
+            $paths = [$paths => null];
+        }
+
+        $html = '';
+        foreach ($paths as $path => $mode) {
+            if (is_numeric($path)) {
+                $path = $mode;
+                $mode = null;
+            }
+            
+            $url = $this->url($path);
+            $type = ' type="module"';
+            $async = $mode === 'async' ? ' async' : '';
+            $html .= "<script{$type} src='{$url}'{$async}></script>\n";
+        }
+        
+        return $html;
+    }
+
+    /**
      * Add imports to the import map
      * 
      * @param array<string,mixed> $imports Array of imports where key is specifier and value is URL or options array
@@ -321,18 +346,6 @@ class Asset
             "<script type='importmap'>\n%s\n</script>",
             json_encode($map, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
-    }
-
-    /**
-     * Generate script tag for module
-     */
-    public function module(string $path, string $mode = 'defer'): string
-    {
-        $url = $this->url($path);
-        $type = ' type="module"';
-        $async = $mode == 'async' ? ' async' : '';
-        
-        return "<script{$type} src='{$url}'{$async}></script>\n";
     }
 
     /**

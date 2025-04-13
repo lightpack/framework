@@ -162,16 +162,30 @@ class AssetTest extends TestCase
         $html = $this->asset->module('js/app.js');
         $this->assertStringContainsString('<script type="module"', $html);
         $this->assertStringContainsString("js/app.js", $html);
-        $this->assertStringNotContainsString("defer", $html); // modules are deferred by default
+        $this->assertStringNotContainsString("async", $html);
     }
 
     public function testJsModuleScriptWithAsync(): void
     {
-        $html = $this->asset->module('js/app.js', 'async');
+        $html = $this->asset->module(['js/app.js' => 'async']);
         $this->assertStringContainsString('<script type="module"', $html);
         $this->assertStringContainsString("js/app.js", $html);
         $this->assertStringContainsString("async", $html);
-        $this->assertStringNotContainsString("defer", $html);
+    }
+
+    public function testMultipleJsModuleScripts(): void
+    {
+        $html = $this->asset->module([
+            'js/app.js',
+            'js/utils.js' => 'async',
+            'js/vendor.js'
+        ]);
+        
+        $this->assertEquals(3, substr_count($html, '<script type="module"'));
+        $this->assertEquals(1, substr_count($html, 'async'));
+        $this->assertStringContainsString("js/app.js", $html);
+        $this->assertStringContainsString("js/utils.js", $html);
+        $this->assertStringContainsString("js/vendor.js", $html);
     }
 
     /**
