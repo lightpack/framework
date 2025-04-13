@@ -452,18 +452,18 @@ if (!function_exists('asset')) {
     }
 }
 
-if (!function_exists('script')) {
+if (!function_exists('js')) {
     /**
-     * Get an instance of script utility provider.
+     * Get an instance of Js utility provider.
      */
-    function script(): \Lightpack\Utils\Script
+    function script(): \Lightpack\Utils\Js
     {
-        static $script = null;
+        static $js = null;
         
-        if ($script === null) {
-            $script = new \Lightpack\Utils\Script();
+        if ($js === null) {
+            $js = new \Lightpack\Utils\Js();
         }
         
-        return $script;
+        return $js;
     }
 }

@@ -2,12 +2,12 @@
 
 namespace Lightpack\Utils;
 
-class Script 
+class Js 
 {
     /**
      * Convert PHP variable to safe JavaScript code
      */
-    public function toJs(mixed $data, bool $asObject = true): string 
+    public function encode(mixed $data, bool $asObject = true): string 
     {
         // Convert to JSON with proper escaping
         $json = json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP | 
@@ -21,7 +21,7 @@ class Script
      */
     public function var(string $name, mixed $value): string 
     {
-        return "var {$name} = " . $this->toJs($value) . ";";
+        return "var {$name} = " . $this->encode($value) . ";";
     }
 
     /**
@@ -29,7 +29,7 @@ class Script
      */
     public function const(string $name, mixed $value): string 
     {
-        return "const {$name} = " . $this->toJs($value) . ";";
+        return "const {$name} = " . $this->encode($value) . ";";
     }
 
     /**
@@ -37,6 +37,6 @@ class Script
      */
     public function let(string $name, mixed $value): string 
     {
-        return "let {$name} = " . $this->toJs($value) . ";";
+        return "let {$name} = " . $this->encode($value) . ";";
     }
 }
