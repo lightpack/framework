@@ -379,14 +379,13 @@ class Asset
     /**
      * Generate script tag for module
      */
-    public function module(string $path, array $options = []): string
+    public function module(string $path, string $mode = 'defer'): string
     {
         $url = $this->url($path);
         $type = ' type="module"';
-        $defer = !empty($options['defer']) ? ' defer' : '';
-        $async = !empty($options['async']) ? ' async' : '';
+        $async = $mode == 'async' ? ' async' : '';
         
-        return "<script{$type} src='{$url}'{$defer}{$async}></script>\n";
+        return "<script{$type} src='{$url}'{$async}></script>\n";
     }
 
     /**

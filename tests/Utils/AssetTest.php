@@ -157,6 +157,23 @@ class AssetTest extends TestCase
         $this->assertStringNotContainsString("defer", $html);
     }
 
+    public function testJsModuleScript(): void
+    {
+        $html = $this->asset->module('js/app.js');
+        $this->assertStringContainsString('<script type="module"', $html);
+        $this->assertStringContainsString("js/app.js", $html);
+        $this->assertStringNotContainsString("defer", $html); // modules are deferred by default
+    }
+
+    public function testJsModuleScriptWithAsync(): void
+    {
+        $html = $this->asset->module('js/app.js', 'async');
+        $this->assertStringContainsString('<script type="module"', $html);
+        $this->assertStringContainsString("js/app.js", $html);
+        $this->assertStringContainsString("async", $html);
+        $this->assertStringNotContainsString("defer", $html);
+    }
+
     /**
      * Image Helper Tests
      */
