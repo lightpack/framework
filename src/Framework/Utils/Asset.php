@@ -15,16 +15,6 @@ class Asset
     protected ?string $baseUrl;
 
     /**
-     * Import map definitions
-     */
-    protected array $imports = [];
-
-    /**
-     * CDN fallbacks for modules
-     */
-    protected array $fallbacks = [];
-
-    /**
      * Modules to preload
      */
     protected array $preloadModules = [];
@@ -320,16 +310,20 @@ class Asset
         // Process imports
         foreach ($imports as $name => $options) {
             if (is_string($options)) {
-                $map['imports'][$name] = $options;
+                $map['imports'][$name] = $this->url($options);
             } else {
-                $map['imports'][$name] = $options['url'];
+                $map['imports'][$name] = filter_var($options['url'], FILTER_VALIDATE_URL) 
+                    ? $options['url'] 
+                    : $this->url($options['url']);
                 
                 // Handle fallback
                 if (!empty($options['fallback'])) {
                     if (!isset($map['fallbacks'])) {
                         $map['fallbacks'] = [];
                     }
-                    $map['fallbacks'][$name] = $options['fallback'];
+                    $map['fallbacks'][$name] = filter_var($options['fallback'], FILTER_VALIDATE_URL)
+                        ? $options['fallback']
+                        : $this->url($options['fallback']);
                 }
                 
                 // Handle integrity
