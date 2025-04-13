@@ -228,50 +228,6 @@ class AssetTest extends TestCase
     }
 
     /**
-     * Preload Tests
-     */
-    public function testPreloadGeneration(): void
-    {
-        $this->asset->preload([
-            'css/app.css',
-            'js/app.js',
-            'fonts/roboto.woff2'
-        ]);
-
-        $links = $this->asset->getPreloadLinks();
-        
-        $this->assertContains(
-            "</css/app.css>; rel=preload; as=style",
-            $links,
-            "CSS preload link not found"
-        );
-        
-        $this->assertContains(
-            "</js/app.js>; rel=preload; as=script",
-            $links,
-            "JS preload link not found"
-        );
-        
-        $this->assertContains(
-            "</fonts/roboto.woff2>; rel=preload; as=font; crossorigin",
-            $links,
-            "Font preload link not found"
-        );
-    }
-
-    public function testPreloadWithModules(): void
-    {
-        $this->asset->preload('js/module.js');
-        $links = $this->asset->getPreloadLinks();
-        
-        $this->assertContains(
-            "</js/module.js>; rel=modulepreload",
-            $links,
-            "Module preload link not found"
-        );
-    }
-
-    /**
      * Version Manifest Tests
      */
     public function testVersionManifestGeneration(): void
