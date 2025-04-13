@@ -283,97 +283,44 @@ class Asset
     }
 
     /**
-     * Define a module import
+     * Add imports to the import map
+     * 
+     * @param array<string,mixed> $imports Array of imports where key is specifier and value is URL or options array
+     * @return string Import map script tag
      */
-    public function import(string $name, string $path, array $options = []): self
-    {
-        // If it's a full URL, use as is
-        if (filter_var($path, FILTER_VALIDATE_URL)) {
-            $url = $path;
-        } else {
-            // Local file, add version and base URL
-            $shouldVersion = $options['version'] ?? true;
-            $url = $this->url($path, $shouldVersion);
-        }
-
-        $this->imports[$name] = [
-            'url' => $url,
-            'integrity' => $options['integrity'] ?? null,
-        ];
-
-        // If preload is requested
-        if (!empty($options['preload'])) {
-            $this->preloadModules[] = $name;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Define a CDN fallback for a module
-     */
-    public function fallback(string $name, string $cdnUrl, ?string $integrity = null): self
-    {
-        $this->fallbacks[$name] = [
-            'url' => $cdnUrl,
-            'integrity' => $integrity,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Generate the import map script tag
-     */
-    public function importMap(): string
+    public function importMap(array $imports = []): string
     {
         $map = ['imports' => []];
 
-        // Add primary imports
-        foreach ($this->imports as $name => $import) {
-            $map['imports'][$name] = $import['url'];
-        }
-
-        // Add fallbacks if defined
-        if (!empty($this->fallbacks)) {
-            $map['fallbacks'] = [];
-            foreach ($this->fallbacks as $name => $fallback) {
-                $map['fallbacks'][$name] = $fallback['url'];
-            }
-        }
-
-        // Add integrity data if any exists
-        $hasIntegrity = false;
-        foreach ($this->imports as $import) {
-            if (!empty($import['integrity'])) {
-                $hasIntegrity = true;
-                break;
-            }
-        }
-
-        if ($hasIntegrity) {
-            $map['integrity'] = [];
-            foreach ($this->imports as $name => $import) {
-                if (!empty($import['integrity'])) {
-                    $map['integrity'][$name] = $import['integrity'];
+        // Process imports
+        foreach ($imports as $name => $options) {
+            if (is_string($options)) {
+                $map['imports'][$name] = $options;
+            } else {
+                $map['imports'][$name] = $options['url'];
+                
+                // Handle fallback
+                if (!empty($options['fallback'])) {
+                    if (!isset($map['fallbacks'])) {
+                        $map['fallbacks'] = [];
+                    }
+                    $map['fallbacks'][$name] = $options['fallback'];
+                }
+                
+                // Handle integrity
+                if (!empty($options['integrity'])) {
+                    if (!isset($map['integrity'])) {
+                        $map['integrity'] = [];
+                    }
+                    $map['integrity'][$name] = $options['integrity'];
                 }
             }
         }
-
-        // Generate preload tags for modules
-        $preloads = '';
-        foreach ($this->preloadModules as $name) {
-            if (isset($this->imports[$name])) {
-                $url = $this->imports[$name]['url'];
-                $integrity = $this->imports[$name]['integrity'] ?? '';
-                $integrityAttr = $integrity ? " integrity='{$integrity}'" : '';
-                $preloads .= "<link rel='modulepreload' href='{$url}'{$integrityAttr}>\n";
-            }
-        }
-
-        // Generate the import map script
-        $json = json_encode($map, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        return $preloads . "<script type='importmap'>\n{$json}\n</script>";
+        
+        return sprintf(
+            "<script type='importmap'>\n%s\n</script>",
+            json_encode($map, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
     }
 
     /**

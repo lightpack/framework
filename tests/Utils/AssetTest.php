@@ -190,24 +190,29 @@ class AssetTest extends TestCase
      */
     public function testImportMapGeneration(): void
     {
-        $this->asset->import('alpine', 'js/alpine.js')
-                   ->import('htmx', 'https://unpkg.com/htmx.org', [
-                       'integrity' => 'sha384-test'
-                   ]);
+        $html = $this->asset->importMap([
+            'uikit' => 'js/uikit.js',
+            'htmx' => [
+                'url' => 'https://unpkg.com/htmx.org',
+                'integrity' => 'sha384-test'
+            ]
+        ]);
 
-        $html = $this->asset->importMap();
         $this->assertStringContainsString('type=\'importmap\'', $html);
-        $this->assertStringContainsString('"alpine":', $html);
+        $this->assertStringContainsString('"uikit":', $html);
         $this->assertStringContainsString('"htmx":', $html);
         $this->assertStringContainsString('integrity', $html);
     }
 
     public function testImportMapWithFallbacks(): void
     {
-        $this->asset->import('htmx', 'https://unpkg.com/htmx.org')
-                   ->fallback('htmx', '/js/htmx.min.js');
+        $html = $this->asset->importMap([
+            'htmx' => [
+                'url' => 'https://unpkg.com/htmx.org',
+                'fallback' => '/js/htmx.min.js'
+            ]
+        ]);
 
-        $html = $this->asset->importMap();
         $this->assertStringContainsString('"fallbacks":', $html);
         $this->assertStringContainsString('/js/htmx.min.js', $html);
     }
