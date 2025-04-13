@@ -206,29 +206,25 @@ class AssetTest extends TestCase
     {
         $html = $this->asset->importMap([
             'uikit' => 'js/uikit.js',
-            'htmx' => [
-                'url' => 'https://unpkg.com/htmx.org',
-                'integrity' => 'sha384-test'
-            ]
+            'app' => 'js/app.js'
         ]);
 
-        $this->assertStringContainsString('type=\'importmap\'', $html);
+        $this->assertStringContainsString('"imports":', $html);
         $this->assertStringContainsString('"uikit":', $html);
-        $this->assertStringContainsString('"htmx":', $html);
-        $this->assertStringContainsString('integrity', $html);
+        $this->assertStringContainsString('"app":', $html);
+        $this->assertStringContainsString('/js/uikit.js', $html);
+        $this->assertStringContainsString('/js/app.js', $html);
     }
 
-    public function testImportMapWithFallbacks(): void
+    public function testImportMapWithSingleImport(): void
     {
         $html = $this->asset->importMap([
-            'htmx' => [
-                'url' => 'https://unpkg.com/htmx.org',
-                'fallback' => '/js/htmx.min.js'
-            ]
+            'app' => 'js/app.js'
         ]);
 
-        $this->assertStringContainsString('"fallbacks":', $html);
-        $this->assertStringContainsString('/js/htmx.min.js', $html);
+        $this->assertStringContainsString('"imports":', $html);
+        $this->assertStringContainsString('"app":', $html);
+        $this->assertStringContainsString('/js/app.js', $html);
     }
 
     /**

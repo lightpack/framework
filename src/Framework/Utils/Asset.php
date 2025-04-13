@@ -300,7 +300,7 @@ class Asset
     /**
      * Add imports to the import map
      * 
-     * @param array<string,mixed> $imports Array of imports where key is specifier and value is URL or options array
+     * @param array<string,mixed> $imports Array of imports where key is specifier and value is path to local file
      * @return string Import map script tag
      */
     public function importMap(array $imports = []): string
@@ -308,32 +308,8 @@ class Asset
         $map = ['imports' => []];
 
         // Process imports
-        foreach ($imports as $name => $options) {
-            if (is_string($options)) {
-                $map['imports'][$name] = $this->url($options);
-            } else {
-                $map['imports'][$name] = filter_var($options['url'], FILTER_VALIDATE_URL) 
-                    ? $options['url'] 
-                    : $this->url($options['url']);
-                
-                // Handle fallback
-                if (!empty($options['fallback'])) {
-                    if (!isset($map['fallbacks'])) {
-                        $map['fallbacks'] = [];
-                    }
-                    $map['fallbacks'][$name] = filter_var($options['fallback'], FILTER_VALIDATE_URL)
-                        ? $options['fallback']
-                        : $this->url($options['fallback']);
-                }
-                
-                // Handle integrity
-                if (!empty($options['integrity'])) {
-                    if (!isset($map['integrity'])) {
-                        $map['integrity'] = [];
-                    }
-                    $map['integrity'][$name] = $options['integrity'];
-                }
-            }
+        foreach ($imports as $name => $path) {
+            $map['imports'][$name] = $this->url($path);
         }
         
         return sprintf(
