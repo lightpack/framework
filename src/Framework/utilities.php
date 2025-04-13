@@ -416,11 +416,11 @@ if (!function_exists('error')) {
     }
 }
 
-if(!function_exists('method_input')) {
+if(!function_exists('spoof_input')) {
     /**
      * Returns a hidden input field for the spoofed request method.
      */
-    function method_input(string $method): string
+    function spoof_input(string $method): string
     {
         return '<input type="hidden" name="_method" value="' . $method . '">';
     }
