@@ -39,11 +39,6 @@ class Asset
         'img'     // Images
     ];
 
-    /**
-     * Store preload links
-     */
-    protected array $preloadLinks = [];
-
     public function __construct(?string $publicPath = null)
     {
         $this->publicPath = $publicPath ?? DIR_ROOT . '/public';
