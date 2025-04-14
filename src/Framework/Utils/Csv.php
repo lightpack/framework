@@ -39,9 +39,9 @@ class Csv
             $totalRows = 0;
             $countHandle = fopen($file, 'r');
             if ($hasHeader) {
-                fgetcsv($countHandle); // Skip header
+                fgetcsv($countHandle, 0, $this->delimiter, $this->enclosure, $this->escape); // Skip header
             }
-            while (fgetcsv($countHandle)) {
+            while (fgetcsv($countHandle, 0, $this->delimiter, $this->enclosure, $this->escape)) {
                 $totalRows++;
             }
             fclose($countHandle);
@@ -54,7 +54,7 @@ class Csv
         }
 
         $handle = fopen($file, 'r');
-        $headers = $hasHeader ? fgetcsv($handle, 0, $this->delimiter) : null;
+        $headers = $hasHeader ? fgetcsv($handle, 0, $this->delimiter, $this->enclosure, $this->escape) : null;
         $count = 0;
         $rowNum = 0;
 

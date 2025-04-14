@@ -114,7 +114,7 @@ class ExceptionRenderer
         return $preview;
     }
 
-    private function sendHeaders(int $statusCode)
+    private function sendHeaders(int|string $statusCode)
     {
         if (!headers_sent()) {
             header("HTTP/1.1 $statusCode", true, $statusCode);
