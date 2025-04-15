@@ -92,6 +92,16 @@ class Response
     protected string $redirectUrl = '';
 
     /**
+     * Represents HTTP response stream callback.
+     */
+    protected $streamCallback;
+
+    /**
+     * Test mode flag to prevent exit() during tests
+     */
+    protected $testMode = false;
+
+    /**
      * Return HTTP response status code.
      */
     public function getStatus(): int
@@ -323,6 +333,15 @@ class Response
     }
 
     /**
+     * Enable test mode to prevent exit() during tests
+     */
+    public function setTestMode(bool $enabled = true): self
+    {
+        $this->testMode = $enabled;
+        return $this;
+    }
+
+    /**
      * This method sends the response to the client.
      */
     public function send(): void
@@ -335,7 +354,9 @@ class Response
             $this->sendContent();
         }
 
-        exit;
+        if (!$this->testMode) {
+            exit;
+        }
     }
 
     /**
@@ -364,7 +385,24 @@ class Response
      */
     private function sendContent(): void
     {
-        echo $this->body;
+        if (isset($this->streamCallback)) {
+            // For streaming responses
+            call_user_func($this->streamCallback);
+        } else {
+            // For regular responses
+            echo $this->body;
+        }
+    }
+
+    /**
+     * Stream content using a callback function.
+     * 
+     * @param callable $callback Function that writes to output
+     */
+    public function stream(callable $callback): self
+    {
+        $this->streamCallback = $callback;
+        return $this;
     }
 
     /**

@@ -12,6 +12,7 @@ final class ResponseTest extends TestCase
     public function setUp(): void
     {
         $this->response = new \Lightpack\Http\Response(new Url);
+        $this->response->setTestMode(true);
     }
     
     public function testResponseSetStatusMethod()
@@ -200,5 +201,47 @@ final class ResponseTest extends TestCase
         $this->assertEquals('SAMEORIGIN', $headers['X-Frame-Options']);
         $this->assertEquals('1; mode=block', $headers['X-XSS-Protection']);
         $this->assertEquals('strict-origin-when-cross-origin', $headers['Referrer-Policy']);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testStreamMethod()
+    {
+        $output = null;
+        $this->response->stream(function() use (&$output) {
+            $output = "Hello Stream";
+            echo $output;
+        });
+
+        // Test output by sending response
+        ob_start();
+        $this->response->send();
+        $result = ob_get_clean();
+        
+        $this->assertEquals($output, $result);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testStreamMethodWithHeaders()
+    {
+        $this->response
+            ->setHeader('Content-Type', 'text/csv')
+            ->stream(function() {
+                echo "data,more data";
+            });
+
+        // Verify headers are set correctly
+        $headers = $this->response->getHeaders();
+        $this->assertEquals('text/csv', $headers['Content-Type']);
+        
+        // Test output by sending response
+        ob_start();
+        $this->response->send();
+        $result = ob_get_clean();
+        
+        $this->assertEquals("data,more data", $result);
     }
 }
