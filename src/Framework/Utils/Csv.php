@@ -142,7 +142,7 @@ class Csv
 
         $handle = fopen($file, 'w');
 
-        // Transform headers if mappings exist
+        // Write headers first
         if ($headers) {
             $headers = $this->transformHeaders($headers);
             fputcsv($handle, $headers, $this->delimiter, $this->enclosure, $this->escape);
@@ -150,10 +150,19 @@ class Csv
 
         // Transform each row
         foreach ($data as $row) {
-            // Reverse the read transformations
+            // Apply transformations
             $row = $this->applyCasts($row, true);
             $row = $this->applyMappings($row, true);
             $row = $this->applyExcludes($row);
+
+            // Create a new row with ordered values
+            if ($headers) {
+                $orderedRow = [];
+                foreach ($headers as $header) {
+                    $orderedRow[] = $row[$header] ?? '';
+                }
+                $row = $orderedRow;
+            }
 
             fputcsv($handle, $row, $this->delimiter, $this->enclosure, $this->escape);
         }

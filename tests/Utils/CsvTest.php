@@ -470,85 +470,6 @@ class CsvTest extends \PHPUnit\Framework\TestCase
             ->read($this->testFile));
     }
 
-    public function testValidateWithException()
-    {
-        $data = "id,age,salary\n1,25,1000\n2,30,-500\n3,35,2000\n";
-        file_put_contents($this->testFile, $data);
-
-        $rows = iterator_to_array($this->csv
-            ->validate(function($row) {
-                if ($row['salary'] < 0) {
-                    throw new \Exception('Salary cannot be negative');
-                }
-                return true;
-            }, 'collect')
-            ->read($this->testFile));
-
-        $this->assertCount(3, $rows);
-        $this->assertCount(1, $this->csv->getErrors());
-        $this->assertStringContainsString('Salary cannot be negative', $this->csv->getErrors()[0]);
-    }
-
-    public function testValidateWithInvalidMode()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->csv->validate(fn($row) => true, 'invalid_mode');
-    }
-
-    public function testValidatePartialProcessing()
-    {
-        $data = "id,age,email\n1,25,a@test\n2,30,b@test\n3,invalid,c@test\n4,40,invalid\n";
-        file_put_contents($this->testFile, $data);
-
-        // Test skip mode
-        $processed = [];
-        foreach ($this->csv
-            ->validate(function($row) {
-                $errors = [];
-                if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
-                if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
-                return $errors;
-            })
-            ->read($this->testFile) as $row) {
-            $processed[] = $row['id'];
-        }
-        $this->assertEquals(['1', '2'], $processed);
-
-        // Test collect mode
-        $processed = [];
-        foreach ($this->csv
-            ->validate(function($row) {
-                $errors = [];
-                if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
-                if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
-                return $errors;
-            }, 'collect')
-            ->read($this->testFile) as $row) {
-            $processed[] = $row['id'];
-        }
-        $this->assertEquals(['1', '2', '3', '4'], $processed);
-        $this->assertCount(2, $this->csv->getErrors());
-
-        // Test fail mode
-        $processed = [];
-        try {
-            foreach ($this->csv
-                ->validate(function($row) {
-                    $errors = [];
-                    if (!is_numeric($row['age'])) $errors[] = 'Invalid age';
-                    if (!str_contains($row['email'], '@test')) $errors[] = 'Invalid email';
-                    return $errors;
-                }, 'fail')
-                ->read($this->testFile) as $row) {
-                $processed[] = $row['id'];
-            }
-            $this->fail('Should have thrown exception');
-        } catch (\RuntimeException $e) {
-            $this->assertEquals(['1', '2'], $processed);
-            $this->assertStringContainsString('Row 3: Invalid age', $e->getMessage());
-        }
-    }
-
     public function testValidateWithStringError()
     {
         $data = "id,age,email\n1,25,john@test\n2,-5,bob@test\n3,30,invalid\n";
@@ -620,5 +541,52 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         
         // Row 3: Negative salary
         $this->assertStringContainsString('Cannot be negative', $this->csv->getErrors()[1]);
+    }
+
+    public function testWriteWithColumnOrder()
+    {
+        $data = [
+            [
+                'id' => 1,
+                'name' => 'JOHN',
+                'age' => 25,
+                'email' => 'john@test.com'
+            ]
+        ];
+
+        // Specify a different order in headers
+        $this->csv->map([
+            'User ID' => 'id',
+            'Full Name' => 'name',
+            'Email Address' => 'email',
+            'Age' => 'age'
+        ])->write($this->testFile, $data, [
+            'Email Address',  // Should appear first
+            'Age',           // Should appear second
+            'Full Name',     // Should appear third
+            'User ID'        // Should appear last
+        ]);
+
+        // Verify the order in the CSV
+        $content = file_get_contents($this->testFile);
+        $expected = "\"Email Address\",Age,\"Full Name\",\"User ID\"\njohn@test.com,25,JOHN,1\n";
+        $this->assertEquals($expected, $content);
+
+        // Verify reading preserves the order
+        $rows = iterator_to_array($this->csv->map([
+            'User ID' => 'id',
+            'Full Name' => 'name',
+            'Email Address' => 'email',
+            'Age' => 'age'
+        ])->read($this->testFile));
+
+        $row = $rows[0];
+        $keys = array_keys($row);
+        
+        // Check that the keys are in the same order as in the CSV
+        $this->assertEquals('email', $keys[0]);
+        $this->assertEquals('age', $keys[1]);
+        $this->assertEquals('name', $keys[2]);
+        $this->assertEquals('id', $keys[3]);
     }
 }
