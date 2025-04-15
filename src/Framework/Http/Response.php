@@ -480,4 +480,18 @@ class Response
 
         return $this->setHeader('Last-Modified', gmdate('D, d M Y H:i:s', $time) . ' GMT');
     }
+
+    /**
+     * Stream response as CSV.
+     *
+     * @param callable $callback Function that writes CSV data
+     * @param string $filename Name of the CSV file to download
+     */
+    public function streamCsv(callable $callback, string $filename = 'export.csv'): self
+    {
+        return $this
+            ->setHeader('Content-Type', 'text/csv')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->stream($callback);
+    }
 }

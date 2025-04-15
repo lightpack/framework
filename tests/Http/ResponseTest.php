@@ -244,4 +244,28 @@ final class ResponseTest extends TestCase
         
         $this->assertEquals("data,more data", $result);
     }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testStreamCsvMethod()
+    {
+        $output = null;
+        $this->response->streamCsv(function() use (&$output) {
+            $output = "Name,Email\nJohn,john@example.com\n";
+            echo $output;
+        }, 'users.csv');
+
+        // Verify headers
+        $headers = $this->response->getHeaders();
+        $this->assertEquals('text/csv', $headers['Content-Type']);
+        $this->assertEquals('attachment; filename="users.csv"', $headers['Content-Disposition']);
+
+        // Verify content
+        ob_start();
+        $this->response->send();
+        $result = ob_get_clean();
+
+        $this->assertEquals($output, $result);
+    }
 }

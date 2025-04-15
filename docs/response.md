@@ -154,6 +154,41 @@ The streaming response is particularly useful when dealing with large datasets. 
        });
    ```
 
+## CSV Streaming
+
+The `streamCsv()` method provides a memory-efficient way to stream large CSV data:
+
+```php
+public function exportUsers()
+{
+    if (!User::query()->exists()) {
+        return redirect()->back()->with('error', 'No users to export');
+    }
+
+    return response()->streamCsv(function() {
+        // Write CSV headers
+        fputcsv(STDOUT, ['Name', 'Email', 'Created At']);
+
+        // Stream users in chunks
+        User::query()->chunk(1000, function($users) {
+            foreach ($users as $user) {
+                fputcsv(STDOUT, [
+                    $user->name,
+                    $user->email,
+                    $user->created_at
+                ]);
+            }
+        });
+    }, 'users.csv');
+}
+```
+
+The `streamCsv()` method:
+1. Sets correct CSV content type
+2. Sets download headers with filename
+3. Streams data efficiently in chunks
+4. Keeps memory usage low for large exports
+
 ## Security Headers
 
 ```php
@@ -169,4 +204,3 @@ response()->cache(3600)->json($data);
 
 // Disable caching
 response()->noCache()->json($data);
-```
