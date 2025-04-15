@@ -171,6 +171,18 @@ class Csv
     }
 
     /**
+     * Stream CSV data to output.
+     *
+     * @param iterable $data Data to write
+     * @param array $headers Optional headers
+     * @return bool
+     */
+    public function stream(iterable $data, array $headers = []): bool
+    {
+        return $this->write('php://output', $data, $headers);
+    }
+
+    /**
      * Map column names or transform values.
      * 
      * @param array $mappings Column mappings ['old' => 'new'] or ['column' => callable]
