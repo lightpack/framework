@@ -183,6 +183,25 @@ class Csv
     }
 
     /**
+     * Stream CSV data in chunks.
+     *
+     * @param callable $callback Function that yields chunks of data
+     * @param array $headers Optional headers
+     * @return bool
+     */
+    public function streamChunks(callable $callback, array $headers = []): bool
+    {
+        $isFirstChunk = true;
+
+        foreach ($callback() as $chunk) {
+            $this->write('php://output', $chunk, $isFirstChunk ? $headers : []);
+            $isFirstChunk = false;
+        }
+
+        return true;
+    }
+
+    /**
      * Map column names or transform values.
      * 
      * @param array $mappings Column mappings ['old' => 'new'] or ['column' => callable]
