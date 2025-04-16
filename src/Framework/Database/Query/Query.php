@@ -589,14 +589,16 @@ class Query
 
     public function chunk(int $chunkSize, callable $callback)
     {
-        $records = $this->limit($chunkSize)->offset($page = 1)->all();
+        $page = 0;
+        $records = $this->limit($chunkSize)->offset($page * $chunkSize)->all();
 
         while (count($records) > 0) {
             if (false === call_user_func($callback, $records)) {
                 return;
             }
 
-            $records = $this->limit($chunkSize)->offset(++$page)->all();
+            $page++;
+            $records = $this->limit($chunkSize)->offset($page * $chunkSize)->all();
         }
     }
 
