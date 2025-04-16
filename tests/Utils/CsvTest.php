@@ -607,4 +607,39 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $expected = "Name,Email\nJohn,john@example.com\nJane,jane@example.com\n";
         $this->assertEquals($expected, $output);
     }
+
+    public function testMultipleStreamCalls()
+    {
+        $headers = ['Name', 'Email'];
+        $this->csv->map([
+            'Name' => 'name',
+            'Email' => 'email'
+        ]);
+
+        // First call with headers
+        ob_start();
+        $this->csv->stream([
+            ['name' => 'John', 'email' => 'john@example.com'],
+        ], $headers);
+        
+        // Second call with headers (should ignore headers)
+        $this->csv->stream([
+            ['name' => 'Jane', 'email' => 'jane@example.com'],
+        ], $headers);
+        
+        // Third call with headers (should ignore headers)
+        $this->csv->stream([
+            ['name' => 'Bob', 'email' => 'bob@example.com'],
+        ], $headers);
+        
+        $output = ob_get_clean();
+
+        // Headers should only appear once at the beginning
+        $expected = "Name,Email\nJohn,john@example.com\nJane,jane@example.com\nBob,bob@example.com\n";
+        $this->assertEquals($expected, $output);
+        
+        // Verify line count
+        $lineCount = substr_count($output, "\n");
+        $this->assertEquals(4, $lineCount); // 1 header + 3 data rows
+    }
 }
