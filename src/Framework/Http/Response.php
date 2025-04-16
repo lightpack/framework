@@ -304,6 +304,61 @@ class Response
     }
 
     /**
+     * This method streams a file download to the client in chunks, 
+     * which is memory-efficient for large files.
+     *
+     * @param string $path  The path of file to download.
+     * @param string $name  Custom name for downloaded file.
+     * @param array $headers  Additional headers for download response.
+     * @param int $chunkSize  Size of each chunk in bytes (default: 1MB)
+     */
+    public function downloadStream(string $path, ?string $name = null, array $headers = [], int $chunkSize = 1048576): self
+    {
+        if (!file_exists($path)) {
+            throw new \RuntimeException("File not found: {$path}");
+        }
+        
+        $name = $name ?? basename($path);
+
+        $headers = array_merge([
+            'Content-Type'              => MimeTypes::getMime($path),
+            'Content-Disposition'       => 'attachment; filename="' . $name . '"',
+            'Content-Transfer-Encoding' => 'binary',
+            'Expires'                   => 0,
+            'Cache-Control'             => 'private',
+            'Pragma'                    => 'private',
+            'Content-Length'            => filesize($path),
+        ], $headers);
+
+        $this->setHeaders($headers);
+        
+        // Use a streaming callback instead of loading the entire file
+        $this->stream(function() use ($path, $chunkSize) {
+            $handle = fopen($path, 'rb');
+            
+            // Disable output buffering to prevent memory build-up
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            // Send the file in chunks to keep memory usage low
+            while (!feof($handle)) {
+                echo fread($handle, $chunkSize);
+                flush();
+                
+                // Allow the script to be terminated if the client disconnects
+                if (connection_status() !== CONNECTION_NORMAL) {
+                    break;
+                }
+            }
+            
+            fclose($handle);
+        });
+        
+        return $this;
+    }
+
+    /**
      * This method display a file directly in the browser instead of downloading.
      *
      * @param string $path  The path of file to download.
