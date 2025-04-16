@@ -590,26 +590,6 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('id', $keys[3]);
     }
 
-    public function testStreamMethod()
-    {
-        $data = [
-            ['name' => 'John', 'email' => 'john@example.com'],
-            ['name' => 'Jane', 'email' => 'jane@example.com'],
-        ];
-
-        $this->csv->map([
-            'Name' => 'name',
-            'Email' => 'email'
-        ]);
-
-        ob_start();
-        $this->csv->stream($data, ['Name', 'Email']);
-        $output = ob_get_clean();
-
-        $expected = "Name,Email\nJohn,john@example.com\nJane,jane@example.com\n";
-        $this->assertEquals($expected, $output);
-    }
-
     public function testStreamChunksMethod()
     {
         $this->csv->map([
@@ -618,10 +598,10 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         ]);
 
         ob_start();
-        $this->csv->streamChunks(function() {
-            yield [['name' => 'John', 'email' => 'john@example.com']];
-            yield [['name' => 'Jane', 'email' => 'jane@example.com']];
-        }, ['Name', 'Email']);
+        $this->csv->stream([
+            ['name' => 'John', 'email' => 'john@example.com'],
+            ['name' => 'Jane', 'email' => 'jane@example.com'],
+        ], ['Name', 'Email']);
         $output = ob_get_clean();
 
         $expected = "Name,Email\nJohn,john@example.com\nJane,jane@example.com\n";

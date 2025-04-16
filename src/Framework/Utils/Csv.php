@@ -16,6 +16,7 @@ class Csv
     private $validator = null;
     private string $onInvalid = 'skip';  // 'skip', 'collect', or 'fail'
     private array $errors = [];
+    private bool $headersWritten = false;
 
     /**
      * Read CSV with generators for memory efficiency.
@@ -171,32 +172,16 @@ class Csv
     }
 
     /**
-     * Stream CSV data to output.
+     * Stream chunks of data to output.
      *
-     * @param iterable $data Data to write
+     * @param iterable $chunks Iterable that yields chunks of data
      * @param array $headers Optional headers
      * @return bool
      */
-    public function stream(iterable $data, array $headers = []): bool
+    public function stream(iterable $chunks, array $headers = []): bool
     {
-        return $this->write('php://output', $data, $headers);
-    }
-
-    /**
-     * Stream CSV data in chunks.
-     *
-     * @param callable $callback Function that yields chunks of data
-     * @param array $headers Optional headers
-     * @return bool
-     */
-    public function streamChunks(callable $callback, array $headers = []): bool
-    {
-        $isFirstChunk = true;
-
-        foreach ($callback() as $chunk) {
-            $this->write('php://output', $chunk, $isFirstChunk ? $headers : []);
-            $isFirstChunk = false;
-        }
+        $this->write('php://output', $chunks, $this->headersWritten ? [] : $headers);
+        $this->headersWritten = true;
 
         return true;
     }
