@@ -17,6 +17,7 @@ class Csv
     private string $onInvalid = 'skip';  // 'skip', 'collect', or 'fail'
     private array $errors = [];
     private bool $headersWritten = false;
+    private array $cachedHeaders = [];
 
     /**
      * Read CSV with generators for memory efficiency.
@@ -141,12 +142,20 @@ class Csv
             throw new \RuntimeException("Cannot write to directory: {$dir}");
         }
 
-        $handle = fopen($file, 'w');
+        // For streaming to output, we need to append rather than truncate
+        $mode = ($file === 'php://output') ? 'a' : 'w';
+        $handle = fopen($file, $mode);
 
         // Write headers first
         if ($headers) {
             $headers = $this->transformHeaders($headers);
             fputcsv($handle, $headers, $this->delimiter, $this->enclosure, $this->escape);
+        }
+
+        // Store headers for consistent row ordering
+        $orderHeaders = $headers ?: $this->cachedHeaders;
+        if ($headers) {
+            $this->cachedHeaders = $headers;
         }
 
         // Transform each row
@@ -156,10 +165,10 @@ class Csv
             $row = $this->applyMappings($row, true);
             $row = $this->applyExcludes($row);
 
-            // Create a new row with ordered values
-            if ($headers) {
+            // Create a new row with ordered values if we have headers
+            if ($orderHeaders) {
                 $orderedRow = [];
-                foreach ($headers as $header) {
+                foreach ($orderHeaders as $header) {
                     $orderedRow[] = $row[$header] ?? '';
                 }
                 $row = $orderedRow;
