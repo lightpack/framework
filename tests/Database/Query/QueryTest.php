@@ -893,6 +893,90 @@ final class QueryTest extends TestCase
         $this->assertEquals('Product 1', $names[4]);
     }
 
+    public function testQueryChunkWithZeroChunkSize()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert a few records
+        foreach(range(1, 5) as $item) {
+            $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with zero chunk size (should default to some reasonable behavior)
+        $callbackExecuted = false;
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->query->chunk(0, fn() => '');
+    }
+
+    public function testQueryChunkWithExactlyOneChunkSize()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert exactly 5 records
+        foreach(range(1, 5) as $item) {
+            $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with chunk size exactly matching record count
+        $chunkedRecords = [];
+
+        $this->query->chunk(5, function($records) use (&$chunkedRecords) {
+            $chunkedRecords[] = $records;
+        });
+
+        // Should have exactly 1 chunk with 5 records
+        $this->assertCount(1, $chunkedRecords);
+        $this->assertCount(5, $chunkedRecords[0]);
+    }
+
+    public function testQueryChunkWithWhereCondition()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert records with different colors
+        foreach(range(1, 10) as $item) {
+            $color = $item <= 5 ? 'red' : 'blue';
+            $records[] = ['name' => 'Product ' . $item, 'color' => $color];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with where condition
+        $chunkedRecords = [];
+        $query = $this->query->where('color', 'red');
+        
+        $query->chunk(2, function($records) use (&$chunkedRecords) {
+            $chunkedRecords[] = $records;
+        });
+
+        // Should have 3 chunks: 2, 2, and 1 (total 5 red records)
+        $this->assertCount(3, $chunkedRecords);
+        
+        // Count total records across all chunks
+        $totalRecords = 0;
+        foreach($chunkedRecords as $chunk) {
+            $totalRecords += count($chunk);
+        }
+        
+        // Should have exactly 5 red records in total
+        $this->assertEquals(5, $totalRecords);
+        
+        // All records should have color = red
+        foreach ($chunkedRecords as $chunk) {
+            foreach ($chunk as $record) {
+                $this->assertEquals('red', $record->color);
+            }
+        }
+    }
+
     public function testItProducesCorrectSyntaxForAggregateQueries()
     {
         // Test 1

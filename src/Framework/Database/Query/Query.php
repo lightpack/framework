@@ -589,6 +589,10 @@ class Query
 
     public function chunk(int $chunkSize, callable $callback)
     {
+        if ($chunkSize <= 0) {
+            throw new \InvalidArgumentException('Chunk size must be a positive integer');
+        }
+        
         $page = 0;
         $records = $this->limit($chunkSize)->offset($page * $chunkSize)->all();
 
