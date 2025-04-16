@@ -822,6 +822,83 @@ final class QueryTest extends TestCase
         }
     }
 
+    public function testQueryChunkWithEmptyTable()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Process chunk query on empty table
+        $callbackExecuted = false;
+
+        $this->query->chunk(5, function($records) use (&$callbackExecuted) {
+            $callbackExecuted = true;
+        });
+
+        // Callback should not execute on empty table
+        $this->assertFalse($callbackExecuted);
+    }
+
+    public function testQueryChunkWithNonStandardChunkSize()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert 10 records
+        foreach(range(1, 10) as $item) {
+            $records[] = ['name' => 'Product name', 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with chunk size 3
+        $chunkedRecords = [];
+
+        $this->query->chunk(3, function($records) use (&$chunkedRecords) {
+            $chunkedRecords[] = $records;
+        });
+
+        // Should have 4 chunks: 3, 3, 3, and 1
+        $this->assertCount(4, $chunkedRecords);
+        $this->assertCount(3, $chunkedRecords[0]);
+        $this->assertCount(3, $chunkedRecords[1]);
+        $this->assertCount(3, $chunkedRecords[2]);
+        $this->assertCount(1, $chunkedRecords[3]);
+    }
+
+    public function testQueryChunkWithOrderBy()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert records with different names
+        foreach(range(1, 10) as $item) {
+            $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with ordering
+        $names = [];
+
+        $this->query->orderBy('id', 'DESC')->chunk(5, function($records) use (&$names) {
+            foreach($records as $record) {
+                $names[] = $record->name;
+            }
+        });
+
+        // First name should be the highest (Product 9, Product 8, etc.)
+        $this->assertEquals('Product 9', $names[0]);
+        
+        // Names should be in descending order
+        $previousName = null;
+        foreach($names as $name) {
+            if($previousName !== null) {
+                $this->assertTrue($previousName >= $name, "Names are not in descending order: $previousName, $name");
+            }
+            $previousName = $name;
+        }
+    }
+
     public function testItProducesCorrectSyntaxForAggregateQueries()
     {
         // Test 1
