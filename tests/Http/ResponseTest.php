@@ -364,4 +364,64 @@ final class ResponseTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->response->downloadStream('/path/to/non-existent-file.txt');
     }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testFileStreamMethod()
+    {
+        // Create a temporary test file
+        $tempFile = sys_get_temp_dir() . '/test_file_' . uniqid() . '.txt';
+        $testContent = str_repeat('Test content line ' . PHP_EOL, 100);
+        file_put_contents($tempFile, $testContent);
+        
+        try {
+            // Test the fileStream method
+            $this->response->fileStream($tempFile, 'test-view.txt');
+            
+            // Verify headers
+            $headers = $this->response->getHeaders();
+            $this->assertEquals('text/plain', $headers['Content-Type']);
+            $this->assertEquals('inline; filename=test-view.txt', $headers['Content-Disposition']);
+            $this->assertEquals('binary', $headers['Content-Transfer-Encoding']);
+            $this->assertEquals(filesize($tempFile), $headers['Content-Length']);
+            
+            // Verify streaming callback was set
+            $this->assertNotNull($this->response->getStreamCallback());
+        } finally {
+            // Clean up
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testFileStreamMethodWithCustomHeaders()
+    {
+        // Create a temporary test file
+        $tempFile = sys_get_temp_dir() . '/test_file_' . uniqid() . '.txt';
+        file_put_contents($tempFile, 'Test content');
+        
+        try {
+            // Test with custom headers
+            $customHeaders = [
+                'X-Custom-Header' => 'Custom Value'
+            ];
+            
+            $this->response->fileStream($tempFile, 'test-view.txt', $customHeaders);
+            
+            // Verify headers
+            $headers = $this->response->getHeaders();
+            $this->assertEquals('inline; filename=test-view.txt', $headers['Content-Disposition']);
+            $this->assertEquals('Custom Value', $headers['X-Custom-Header']);
+        } finally {
+            // Clean up
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
 }

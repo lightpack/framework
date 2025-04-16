@@ -377,6 +377,26 @@ class Response
     }
 
     /**
+     * This method streams a file to be displayed directly in the browser,
+     * which is memory-efficient for large files.
+     *
+     * @param string $path  The path of file to display.
+     * @param string $name  Custom name for the file.
+     * @param array $headers  Additional headers for the response.
+     * @param int $chunkSize  Size of each chunk in bytes (default: 1MB)
+     */
+    public function fileStream(string $path, ?string $name = null, array $headers = [], int $chunkSize = 1048576): self
+    {
+        $name = $name ?? basename($path);
+
+        $headers = array_merge([
+            'Content-Disposition' => 'inline; filename=' . $name
+        ], $headers);
+
+        return $this->downloadStream($path, $name, $headers, $chunkSize);
+    }
+
+    /**
      * This method sets the HTTP response content as HTML.
      */
     public function view(string $file, array $data = []): self
