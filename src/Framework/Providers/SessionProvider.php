@@ -8,6 +8,7 @@ use Lightpack\Session\DriverInterface;
 use Lightpack\Session\Drivers\ArrayDriver;
 use Lightpack\Session\Drivers\CacheDriver;
 use Lightpack\Session\Drivers\DefaultDriver;
+use Lightpack\Session\Drivers\RedisDriver;
 use Lightpack\Session\Drivers\EncryptedDriver;
 
 class SessionProvider implements ProviderInterface
@@ -45,6 +46,7 @@ class SessionProvider implements ProviderInterface
             'array' => new ArrayDriver(),
             'default' => new DefaultDriver($config),
             'cache' => new CacheDriver($container->get('cache'), $container->get('cookie'), $config),
+            'redis' => $this->createRedisDriver($container),
             default => throw new \Exception('Session driver not found: ' . $sessionDriver)
         };
 
@@ -53,5 +55,19 @@ class SessionProvider implements ProviderInterface
         }
 
         return $driver;
+    }
+    
+    /**
+     * Create a Redis session driver instance
+     */
+    protected function createRedisDriver(Container $container): RedisDriver
+    {
+        $config = $container->get('config');
+        $redis = $container->get('redis');
+        $prefix = $config->get('redis.session.prefix', 'session:');
+        $lifetime = $config->get('redis.session.lifetime', 7200);
+        $name = $config->get('session.name', 'lightpack_session');
+        
+        return new RedisDriver($redis, $name, $lifetime, $prefix);
     }
 }
