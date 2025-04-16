@@ -461,6 +461,16 @@ class Response
     }
 
     /**
+     * Get the stream callback function.
+     * 
+     * @return callable|null The stream callback function
+     */
+    public function getStreamCallback()
+    {
+        return $this->streamCallback;
+    }
+
+    /**
      * Apply recommended security headers to the response
      */
     public function secure(array $customHeaders = []): self
