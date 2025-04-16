@@ -642,4 +642,76 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $lineCount = substr_count($output, "\n");
         $this->assertEquals(4, $lineCount); // 1 header + 3 data rows
     }
+
+    public function testHeaderCachingForConsistentOrdering()
+    {
+        // Create a new instance to reset state
+        $this->csv = new Csv();
+        
+        $headers = ['First', 'Last'];
+        
+        // First call with headers
+        ob_start();
+        $this->csv->stream([
+            ['First' => 'John', 'Last' => 'Doe', 'Extra' => 'Value'],
+        ], $headers);
+        
+        // Second call without headers but with different column order
+        $this->csv->stream([
+            ['Last' => 'Smith', 'First' => 'Jane', 'Extra' => 'Value2'],
+        ]);
+        
+        $output = ob_get_clean();
+        
+        // Verify the second row maintains the same column order as defined by headers
+        $lines = explode("\n", trim($output));
+        $this->assertEquals('First,Last', $lines[0]);
+        $this->assertEquals('John,Doe', $lines[1]);
+        $this->assertEquals('Jane,Smith', $lines[2]); // Order should match headers, not input
+    }
+
+    public function testFileAppendModeForStreaming()
+    {
+        // Test that multiple stream calls correctly append data
+        // This test specifically verifies the 'a' (append) mode for php://output
+        
+        // Create a fresh instance
+        $csv = new Csv();
+        
+        // Set up column mappings
+        $csv->map([
+            'Name' => 'name',
+            'Email' => 'email'
+        ]);
+        
+        // Start output buffering
+        ob_start();
+        
+        // First call - should write headers and first row
+        $csv->stream([
+            ['name' => 'John', 'email' => 'john@example.com'],
+        ], ['Name', 'Email']);
+        
+        // Second call - should only write data, no headers
+        $csv->stream([
+            ['name' => 'Jane', 'email' => 'jane@example.com'],
+        ]);
+        
+        // Get the complete output
+        $output = ob_get_clean();
+        
+        // Expected output should have headers only once
+        $expected = "Name,Email\nJohn,john@example.com\nJane,jane@example.com\n";
+        
+        // Verify output has the correct format
+        $this->assertEquals($expected, $output);
+        
+        // Verify headers appear exactly once
+        $headerCount = substr_count($output, "Name,Email");
+        $this->assertEquals(1, $headerCount, "Headers should appear exactly once");
+        
+        // Verify we have the correct number of lines
+        $lineCount = substr_count($output, "\n");
+        $this->assertEquals(3, $lineCount, "Output should have 3 lines (header + 2 data rows)");
+    }
 }
