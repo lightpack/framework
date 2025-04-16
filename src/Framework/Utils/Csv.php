@@ -213,7 +213,7 @@ class Csv
      * @param array $columns Columns to exclude
      * @return self
      */
-    public function except(array $columns): self 
+    public function exclude(array $columns): self 
     {
         $this->excludes = $columns;
         return $this;

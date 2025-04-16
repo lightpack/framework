@@ -214,7 +214,7 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         $data = "id,name,password,token\n1,john,secret,abc123\n";
         file_put_contents($this->testFile, $data);
 
-        $rows = iterator_to_array($this->csv->except(['password', 'token'])->read($this->testFile));
+        $rows = iterator_to_array($this->csv->exclude(['password', 'token'])->read($this->testFile));
 
         $this->assertArrayHasKey('id', $rows[0]);
         $this->assertArrayHasKey('name', $rows[0]);
@@ -232,7 +232,7 @@ class CsvTest extends \PHPUnit\Framework\TestCase
                 'user_id' => 'id',
                 'user_name' => 'name'
             ])
-            ->except(['password'])
+            ->exclude(['password'])
             ->casts(['id' => 'int', 'age' => 'int'])
             ->read($this->testFile));
 
@@ -316,7 +316,7 @@ class CsvTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Write with exclusions
-        $this->csv->except(['password'])
+        $this->csv->exclude(['password'])
             ->write($this->testFile, $data, ['id', 'name']);
 
         // Check raw CSV content
@@ -337,7 +337,7 @@ class CsvTest extends \PHPUnit\Framework\TestCase
             'user_id' => 'id',
             'user_name' => 'name'
         ])
-        ->except(['password'])
+        ->exclude(['password'])
         ->casts([
             'age' => 'int'
         ])
