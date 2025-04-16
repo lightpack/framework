@@ -4,6 +4,7 @@ namespace Lightpack\Jobs;
 
 use Lightpack\Jobs\Engines\NullEngine;
 use Lightpack\Jobs\Engines\SyncEngine;
+use Lightpack\Jobs\Engines\RedisEngine;
 use Lightpack\Jobs\Engines\DatabaseEngine;
 
 class Connection
@@ -30,6 +31,10 @@ class Connection
                 return self::$engine = new SyncEngine;
             case 'database':
                 return self::$engine = new DatabaseEngine;
+            case 'redis':
+                $redis = app('redis');
+                $prefix = get_env('REDIS_JOB_PREFIX', 'jobs:');
+                return self::$engine = new RedisEngine($redis, $prefix);
             default:
                 fputs(STDERR, "Unsupported job engine type: {$engineType}");
                 exit(1);

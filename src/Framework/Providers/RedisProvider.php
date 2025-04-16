@@ -6,6 +6,7 @@ use Lightpack\Container\Container;
 use Lightpack\Redis\Redis;
 use Lightpack\Cache\Drivers\RedisDriver as CacheRedisDriver;
 use Lightpack\Session\Drivers\RedisDriver as SessionRedisDriver;
+use Lightpack\Jobs\Engines\RedisEngine as JobsRedisEngine;
 
 class RedisProvider
 {
@@ -37,6 +38,15 @@ class RedisProvider
             $name = $config->get('session.name', 'lightpack_session');
             
             return new SessionRedisDriver($redis, $name, $lifetime, $prefix);
+        });
+        
+        // Register Redis job engine
+        $container->register('job.engine.redis', function ($container) {
+            $config = $container->get('config');
+            $redis = $container->get('redis');
+            $prefix = $config->get('redis.jobs.prefix', 'jobs:');
+            
+            return new JobsRedisEngine($redis, $prefix);
         });
     }
 }

@@ -52,4 +52,20 @@ return [
         'prefix' => 'session:',
         'lifetime' => 7200, // 2 hours
     ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Redis Job Queue Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure Redis job queue settings. These will be used when the job engine
+    | is set to 'redis' in your environment configuration.
+    |
+    */
+    
+    'jobs' => [
+        'connection' => 'default',
+        'prefix' => $_ENV['REDIS_JOB_PREFIX'] ?? 'jobs:',
+        'database' => $_ENV['REDIS_JOB_DB'] ?? 0,
+    ],
 ];
