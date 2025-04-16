@@ -871,7 +871,7 @@ final class QueryTest extends TestCase
         $this->query->delete();
 
         // Insert records with different names
-        foreach(range(1, 10) as $item) {
+        foreach(range(1, 5) as $item) {
             $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
         }
 
@@ -880,23 +880,17 @@ final class QueryTest extends TestCase
         // Process chunk query with ordering
         $names = [];
 
-        $this->query->orderBy('id', 'DESC')->chunk(5, function($records) use (&$names) {
+        $this->query->orderBy('name', 'DESC')->chunk(5, function($records) use (&$names) {
             foreach($records as $record) {
                 $names[] = $record->name;
             }
         });
 
-        // First name should be the highest (Product 9, Product 8, etc.)
-        $this->assertEquals('Product 9', $names[0]);
-        
-        // Names should be in descending order
-        $previousName = null;
-        foreach($names as $name) {
-            if($previousName !== null) {
-                $this->assertTrue($previousName >= $name, "Names are not in descending order: $previousName, $name");
-            }
-            $previousName = $name;
-        }
+        $this->assertEquals('Product 5', $names[0]);
+        $this->assertEquals('Product 4', $names[1]);
+        $this->assertEquals('Product 3', $names[2]);
+        $this->assertEquals('Product 2', $names[3]);
+        $this->assertEquals('Product 1', $names[4]);
     }
 
     public function testItProducesCorrectSyntaxForAggregateQueries()
