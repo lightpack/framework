@@ -13,7 +13,7 @@ use Lightpack\Session\Drivers\RedisDriver;
  * 2. Sessions must be started before any headers are sent
  * 3. Using --stderr prevents PHPUnit's output from triggering headers
  */
-class RedisDriverTest extends TestCase
+class SessionRedisDriverTestSessionRedisDriverTest extends TestCase
 {
     private $redis;
     private $driver;
