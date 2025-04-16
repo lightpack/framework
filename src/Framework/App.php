@@ -104,6 +104,7 @@ final class App
             \Lightpack\Providers\CryptoProvider::class,
             \Lightpack\Providers\ScheduleProvider::class,
             \Lightpack\Providers\ValidationProvider::class,
+            \Lightpack\Providers\RedisProvider::class,
         ];
     }
 
