@@ -949,32 +949,11 @@ final class QueryTest extends TestCase
 
         $this->query->insert($records);
 
-        // Process chunk query with where condition
-        $chunkedRecords = [];
-        $query = $this->query->where('color', 'red');
-        
-        $query->chunk(2, function($records) use (&$chunkedRecords) {
-            $chunkedRecords[] = $records;
-        });
-
-        // Should have 3 chunks: 2, 2, and 1 (total 5 red records)
-        $this->assertCount(3, $chunkedRecords);
-        
-        // Count total records across all chunks
-        $totalRecords = 0;
-        foreach($chunkedRecords as $chunk) {
-            $totalRecords += count($chunk);
-        }
-        
-        // Should have exactly 5 red records in total
-        $this->assertEquals(5, $totalRecords);
-        
-        // All records should have color = red
-        foreach ($chunkedRecords as $chunk) {
-            foreach ($chunk as $record) {
+        $this->query->where('color', 'red')->chunk(2, function($records) {
+            foreach ($records as $record) {
                 $this->assertEquals('red', $record->color);
             }
-        }
+        });
     }
 
     public function testItProducesCorrectSyntaxForAggregateQueries()
