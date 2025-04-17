@@ -51,7 +51,7 @@ class DatabaseDriver implements DriverInterface
     public function getMessages(string $channel, ?int $lastId = null): array
     {
         $query = $this->db->table($this->table)
-            ->select(['id', 'event', 'payload', 'created_at'])
+            ->select('id', 'event', 'payload', 'created_at')
             ->where('channel', $channel);
             
         if ($lastId) {
@@ -60,7 +60,7 @@ class DatabaseDriver implements DriverInterface
         
         $messages = $query->orderBy('id', 'asc')
             ->limit(100)
-            ->get();
+            ->all();
             
         // Parse JSON payload
         foreach ($messages as &$message) {
