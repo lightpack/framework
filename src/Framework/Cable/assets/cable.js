@@ -23,6 +23,7 @@
             this.reconnectAttempts = 0;
             this.lastIds = {};
             this.subscriptions = {};
+            this.pollingIntervals = {};
         }
         
         /**
@@ -41,21 +42,27 @@
             if (!this.subscriptions[channel]) {
                 this.subscriptions[channel] = {
                     events: {},
-                    lastId: 0
+                    lastId: 0,
+                    pollInterval: this.options.pollInterval,
+                    lastPollTime: 0
                 };
+                
+                // Start polling for this channel
+                this.startChannelPolling(channel);
             }
             
-            return {
+            const subscription = {
                 on: (event, callback) => {
                     if (!this.subscriptions[channel].events[event]) {
                         this.subscriptions[channel].events[event] = [];
                     }
                     
                     this.subscriptions[channel].events[event].push(callback);
-                    return this;
+                    return subscription; // Return subscription object for chaining
                 },
                 filter: (filterFn) => {
                     this.subscriptions[channel].filter = filterFn;
+                    
                     return {
                         on: (event, callback) => {
                             if (!this.subscriptions[channel].events[event]) {
@@ -70,11 +77,13 @@
                             };
                             
                             this.subscriptions[channel].events[event].push(wrappedCallback);
-                            return this;
+                            return subscription; // Return subscription object for chaining
                         }
                     };
                 }
             };
+            
+            return subscription;
         }
         
         /**
@@ -83,50 +92,75 @@
         startPolling() {
             if (!this.connected) return;
             
-            this.poll();
-            
-            this.pollingInterval = setInterval(() => {
-                this.poll();
-            }, this.options.pollInterval);
+            // Start polling for each channel
+            Object.keys(this.subscriptions).forEach(channel => {
+                this.startChannelPolling(channel);
+            });
         }
         
         /**
-         * Poll for updates
+         * Start polling for a specific channel
+         */
+        startChannelPolling(channel) {
+            if (!this.connected || !this.subscriptions[channel]) return;
+            
+            // Clear any existing interval
+            if (this.pollingIntervals[channel]) {
+                clearInterval(this.pollingIntervals[channel]);
+            }
+            
+            // Poll immediately
+            this.pollChannel(channel);
+            
+            // Set up interval for this channel
+            const interval = this.subscriptions[channel].pollInterval;
+            this.pollingIntervals[channel] = setInterval(() => {
+                this.pollChannel(channel);
+            }, interval);
+        }
+        
+        /**
+         * Poll for updates for a specific channel
+         */
+        pollChannel(channel) {
+            if (!this.connected || !this.subscriptions[channel]) return;
+            
+            const subscription = this.subscriptions[channel];
+            subscription.lastPollTime = Date.now();
+            
+            fetch(`${this.options.endpoint}?channel=${encodeURIComponent(channel)}&lastId=${subscription.lastId}`)
+                .then(response => {
+                    if (response.status === 304) {
+                        return []; // No new messages
+                    }
+                    return response.json();
+                })
+                .then(messages => {
+                    if (messages.length > 0) {
+                        // Update last ID
+                        subscription.lastId = messages[messages.length - 1].id;
+                        
+                        // Process messages
+                        messages.forEach(message => {
+                            this.processMessage(channel, message);
+                        });
+                    }
+                    
+                    // Reset reconnect attempts on success
+                    this.reconnectAttempts = 0;
+                })
+                .catch(error => {
+                    console.error(`Cable polling error for channel ${channel}:`, error);
+                    this.handleError(channel);
+                });
+        }
+        
+        /**
+         * Poll for updates (legacy method, now just polls all channels)
          */
         poll() {
             const channels = Object.keys(this.subscriptions);
-            
-            if (channels.length === 0) return;
-            
-            channels.forEach(channel => {
-                const subscription = this.subscriptions[channel];
-                
-                fetch(`${this.options.endpoint}?channel=${encodeURIComponent(channel)}&lastId=${subscription.lastId}`)
-                    .then(response => {
-                        if (response.status === 304) {
-                            return []; // No new messages
-                        }
-                        return response.json();
-                    })
-                    .then(messages => {
-                        if (messages.length > 0) {
-                            // Update last ID
-                            subscription.lastId = messages[messages.length - 1].id;
-                            
-                            // Process messages
-                            messages.forEach(message => {
-                                this.processMessage(channel, message);
-                            });
-                        }
-                        
-                        // Reset reconnect attempts on success
-                        this.reconnectAttempts = 0;
-                    })
-                    .catch(error => {
-                        console.error('Cable polling error:', error);
-                        this.handleError();
-                    });
-            });
+            channels.forEach(channel => this.pollChannel(channel));
         }
         
         /**
@@ -173,21 +207,21 @@
         /**
          * Handle connection error
          */
-        handleError() {
+        handleError(channel) {
             this.reconnectAttempts++;
             
             if (this.reconnectAttempts <= this.options.maxReconnectAttempts) {
                 // Exponential backoff
                 const delay = this.options.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1);
                 
-                console.log(`Cable reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+                console.log(`Cable reconnecting channel ${channel} in ${delay}ms (attempt ${this.reconnectAttempts})`);
                 
                 setTimeout(() => {
-                    this.poll();
+                    this.pollChannel(channel);
                 }, delay);
             } else {
-                console.error('Cable max reconnect attempts reached');
-                this.disconnect();
+                console.error(`Cable max reconnect attempts reached for channel ${channel}`);
+                this.disconnectChannel(channel);
             }
         }
         
@@ -196,7 +230,22 @@
          */
         disconnect() {
             this.connected = false;
-            clearInterval(this.pollingInterval);
+            
+            // Clear all polling intervals
+            Object.keys(this.pollingIntervals).forEach(channel => {
+                clearInterval(this.pollingIntervals[channel]);
+                delete this.pollingIntervals[channel];
+            });
+        }
+        
+        /**
+         * Disconnect a specific channel
+         */
+        disconnectChannel(channel) {
+            if (this.pollingIntervals[channel]) {
+                clearInterval(this.pollingIntervals[channel]);
+                delete this.pollingIntervals[channel];
+            }
         }
         
         /**
@@ -225,16 +274,19 @@
          * Set polling interval for a channel
          */
         setPollInterval(channel, interval) {
-            // Store channel-specific interval
             if (!this.subscriptions[channel]) {
                 this.subscriptions[channel] = {
                     events: {},
                     lastId: 0,
-                    pollInterval: interval
+                    pollInterval: interval,
+                    lastPollTime: 0
                 };
             } else {
                 this.subscriptions[channel].pollInterval = interval;
             }
+            
+            // Restart polling with new interval
+            this.startChannelPolling(channel);
         }
     }
     
