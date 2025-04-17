@@ -25,6 +25,7 @@ coverage/
 *.log
 storage/*
 :memory
+php:
 
 # Project specific
 notes.txt
