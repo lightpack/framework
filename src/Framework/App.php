@@ -105,6 +105,7 @@ final class App
             \Lightpack\Providers\ScheduleProvider::class,
             \Lightpack\Providers\ValidationProvider::class,
             \Lightpack\Providers\RedisProvider::class,
+            \Lightpack\Providers\CableProvider::class,
         ];
     }
 
