@@ -95,8 +95,8 @@ class Presence
     /**
      * Clean up stale presence records
      */
-    public function cleanup(): int
+    public function cleanup(): void
     {
-        return $this->driver->cleanup();
+        $this->driver->cleanup();
     }
 }

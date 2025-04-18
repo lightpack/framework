@@ -38,5 +38,5 @@ interface PresenceDriverInterface
     /**
      * Clean up stale presence records
      */
-    public function cleanup(): int;
+    public function cleanup(): void;
 }

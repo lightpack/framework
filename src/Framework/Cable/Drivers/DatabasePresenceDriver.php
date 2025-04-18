@@ -136,11 +136,11 @@ class DatabasePresenceDriver implements PresenceDriverInterface
     /**
      * Clean up stale presence records
      */
-    public function cleanup(): int
+    public function cleanup(): void
     {
         $cutoff = date('Y-m-d H:i:s', time() - $this->timeout);
         
-        return $this->db->table($this->table)
+        $this->db->table($this->table)
             ->where('last_seen', '<', $cutoff)
             ->delete();
     }
