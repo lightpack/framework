@@ -8,7 +8,8 @@ use Lightpack\Http\Response;
 /**
  * Cable Controller
  * 
- * This controller handles polling requests from clients.
+ * This controller handles polling requests from clients
+ * for real-time communication.
  */
 class CableController
 {

@@ -427,11 +427,85 @@
             if (typeof batchEndpoint === 'string') this._batchEndpoint = batchEndpoint;
             if (typeof csrfToken === 'string') this._csrfToken = csrfToken;
         }
+        
+        presence(channel, userId) {
+            return {
+                // Join a presence channel
+                join: (endpoint = '/cable/presence/join') => {
+                    return fetch(endpoint, {
+                        method: 'POST',
+                        headers: this._getHeaders(),
+                        body: JSON.stringify({ channel, userId })
+                    }).then(response => response.json());
+                },
+                
+                // Leave a presence channel
+                leave: (endpoint = '/cable/presence/leave') => {
+                    return fetch(endpoint, {
+                        method: 'POST',
+                        headers: this._getHeaders(),
+                        body: JSON.stringify({ channel, userId })
+                    }).then(response => response.json());
+                },
+                
+                // Start heartbeat
+                startHeartbeat: (interval = 20000, endpoint = '/cable/presence/heartbeat') => {
+                    if (this._heartbeatInterval) {
+                        clearInterval(this._heartbeatInterval);
+                    }
+                    
+                    this._heartbeatInterval = setInterval(() => {
+                        fetch(endpoint, {
+                            method: 'POST',
+                            headers: this._getHeaders(),
+                            body: JSON.stringify({ channel, userId })
+                        });
+                    }, interval);
+                    
+                    return this;
+                },
+                
+                // Stop heartbeat
+                stopHeartbeat: () => {
+                    if (this._heartbeatInterval) {
+                        clearInterval(this._heartbeatInterval);
+                        this._heartbeatInterval = null;
+                    }
+                    return this;
+                },
+                
+                // Get users in channel
+                getUsers: (endpoint = '/cable/presence/users') => {
+                    return fetch(endpoint, {
+                        method: 'POST',
+                        headers: this._getHeaders(),
+                        body: JSON.stringify({ channel })
+                    }).then(response => response.json());
+                }
+            };
+        }
+        
+        _getHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Add CSRF token if available
+            const token = document.querySelector('meta[name="csrf-token"]');
+            if (token) {
+                headers['X-CSRF-TOKEN'] = token.getAttribute('content');
+            }
+            
+            return headers;
+        }
     }
     
     // Export to window
     window.cable = {
-        connect: function(options) {
+        /**
+         * Connect to the server
+         */
+        connect(options) {
             return new Cable(options).connect();
         }
     };
