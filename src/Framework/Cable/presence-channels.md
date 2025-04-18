@@ -9,7 +9,7 @@ Presence channels allow you to track which users are online in real-time channel
 First, run the migration to create the `cable_presence` table:
 
 ```bash
-php lightpack migrate create_cable_presence_table
+php lightpack migrate CreateCablePresenceTable
 ```
 
 ### 2. Register the Provider
@@ -69,7 +69,7 @@ $presence->cleanup();
 // Initialize Cable
 const cable = window.cable.connect();
 
-// Subscribe to a presence channel
+// Subscribe to a presence channel with object-style handlers
 cable.subscribe('room-1', {
     // Handle presence updates
     'presence:update': function(data) {
@@ -80,11 +80,45 @@ cable.subscribe('room-1', {
         updateOnlineUsersList(data.users);
     },
     
+    // Handle join events
+    'presence:join': function(data) {
+        console.log('Users joined:', data.users);
+        data.users.forEach(userId => {
+            showNotification(`User ${userId} joined the room`);
+        });
+    },
+    
+    // Handle leave events
+    'presence:leave': function(data) {
+        console.log('Users left:', data.users);
+        data.users.forEach(userId => {
+            showNotification(`User ${userId} left the room`);
+        });
+    },
+    
     // Handle other events
     'chatMessage': function(data) {
         // Handle chat messages
     }
 });
+
+// Alternative chained syntax
+cable.subscribe('room-1')
+    .on('presence:update', function(data) {
+        updateOnlineUsersList(data.users);
+    })
+    .on('presence:join', function(data) {
+        // Handle joins
+    })
+    .on('presence:leave', function(data) {
+        // Handle leaves
+    });
+
+// Check if a user is present
+const isOnline = cable.isUserPresent('room-1', 123);
+
+// Get all users in a presence channel
+const onlineUsers = cable.getPresenceUsers('room-1');
 ```
 
 ## Common Use Cases
@@ -111,30 +145,19 @@ function updateOnlineUsersList(users) {
 
 ### Join/Leave Notifications
 
-Detect when users join or leave by comparing previous and current user lists:
+The Cable client now automatically detects and triggers events when users join or leave:
 
 ```js
-let previousUsers = [];
-
 cable.subscribe('room-1', {
-    'presence:update': function(data) {
-        // Find new users (joined)
-        const joinedUsers = data.users.filter(userId => !previousUsers.includes(userId));
-        
-        // Find users who left
-        const leftUsers = previousUsers.filter(userId => !data.users.includes(userId));
-        
-        // Show notifications
-        joinedUsers.forEach(userId => {
+    'presence:join': function(data) {
+        data.users.forEach(userId => {
             showNotification(`User ${userId} joined the room`);
         });
-        
-        leftUsers.forEach(userId => {
+    },
+    'presence:leave': function(data) {
+        data.users.forEach(userId => {
             showNotification(`User ${userId} left the room`);
         });
-        
-        // Update previous users list
-        previousUsers = [...data.users];
     }
 });
 ```
@@ -193,3 +216,38 @@ $driver->setTimeout(60); // 1 minute
 - For high-traffic applications with thousands of concurrent users, use the RedisDriver.
 - Run `$presence->cleanup()` periodically (e.g., via a cron job) to remove stale presence records when using the DatabaseDriver.
 - Redis automatically handles expiry via TTL, so cleanup is not needed.
+
+## Heartbeats
+
+For long-lived presence, implement heartbeats to keep users marked as present:
+
+```js
+// Frontend heartbeat
+setInterval(() => {
+    fetch('/presence/heartbeat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            channel: 'room-1',
+            userId: currentUserId
+        })
+    });
+}, 20000); // Every 20 seconds
+```
+
+```php
+// Backend heartbeat endpoint
+public function heartbeat(Request $request)
+{
+    $channel = $request->input('channel');
+    $userId = $request->input('userId');
+    
+    $presence = app()->resolve('presence');
+    $presence->heartbeat($userId, $channel);
+    
+    return response()->json(['status' => 'ok']);
+}
+```
