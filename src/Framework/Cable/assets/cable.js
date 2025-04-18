@@ -24,6 +24,14 @@
             this.lastIds = {};
             this.subscriptions = {};
             this.pollingIntervals = {};
+            
+            // --- Outgoing Event Batching Support ---
+            this._outgoingBatch = [];
+            this._batchSize = 10; // Default batch size
+            this._batchInterval = 5000; // Default flush interval in ms
+            this._batchEndpoint = '/api/batch-events'; // Default API endpoint
+            this._batchIntervalId = null;
+            this._csrfToken = null;
         }
         
         /**
@@ -287,6 +295,66 @@
             
             // Restart polling with new interval
             this.startChannelPolling(channel);
+        }
+        
+        // --- Outgoing Event Batching Support ---
+        
+        _initBatching() {
+            if (this._batchIntervalId) return; // Prevent multiple intervals
+            this._batchIntervalId = setInterval(() => {
+                this.flushOutgoingBatch();
+            }, this._batchInterval);
+        }
+        
+        emitBatched(channel, event, payload) {
+            this._outgoingBatch.push({ channel, event, payload });
+            if (this._outgoingBatch.length >= this._batchSize) {
+                this.flushOutgoingBatch();
+            }
+            this._initBatching();
+        }
+        
+        flushOutgoingBatch() {
+            if (this._outgoingBatch.length === 0) return;
+            // Determine CSRF token: use option, then meta tag, else error
+            let csrfToken = this._csrfToken;
+            if (!csrfToken) {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) {
+                    csrfToken = meta.getAttribute('content');
+                }
+            }
+            if (!csrfToken) {
+                console.error('CSRF token not found. Cannot send batch POST.');
+                return;
+            }
+            fetch(this._batchEndpoint, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ events: this._outgoingBatch }),
+            })
+            .catch(err => {
+                // Optionally handle errors (could retry, etc.)
+                console.error('Failed to send batched events:', err);
+            });
+            this._outgoingBatch = [];
+        }
+        
+        setBatchOptions({ batchSize, batchInterval, batchEndpoint, csrfToken } = {}) {
+            if (typeof batchSize === 'number') this._batchSize = batchSize;
+            if (typeof batchInterval === 'number') {
+                this._batchInterval = batchInterval;
+                if (this._batchIntervalId) {
+                    clearInterval(this._batchIntervalId);
+                    this._batchIntervalId = null;
+                }
+                this._initBatching();
+            }
+            if (typeof batchEndpoint === 'string') this._batchEndpoint = batchEndpoint;
+            if (typeof csrfToken === 'string') this._csrfToken = csrfToken;
         }
     }
     
