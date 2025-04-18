@@ -57,8 +57,8 @@ class DatabasePresenceDriver implements PresenceDriverInterface
      */
     public function join($userId, string $channel)
     {
-        // Upsert presence record
-        $this->db->table($this->table)->replace([
+        // Use upsert to insert or update the record
+        $this->db->table($this->table)->upsert([
             'channel' => $channel,
             'user_id' => $userId,
             'last_seen' => date('Y-m-d H:i:s'),
@@ -96,11 +96,19 @@ class DatabasePresenceDriver implements PresenceDriverInterface
     {
         $cutoff = date('Y-m-d H:i:s', time() - $this->timeout);
         
-        return $this->db->table($this->table)
+        $results = $this->db->table($this->table)
             ->select('user_id')
             ->where('channel', $channel)
             ->where('last_seen', '>', $cutoff)
-            ->pluck('user_id');
+            ->all();
+            
+        // Extract user_id values from results
+        $users = [];
+        foreach ($results as $row) {
+            $users[] = $row->user_id;
+        }
+        
+        return $users;
     }
     
     /**
@@ -110,11 +118,19 @@ class DatabasePresenceDriver implements PresenceDriverInterface
     {
         $cutoff = date('Y-m-d H:i:s', time() - $this->timeout);
         
-        return $this->db->table($this->table)
+        $results = $this->db->table($this->table)
             ->select('channel')
             ->where('user_id', $userId)
             ->where('last_seen', '>', $cutoff)
-            ->pluck('channel');
+            ->all();
+            
+        // Extract channel values from results
+        $channels = [];
+        foreach ($results as $row) {
+            $channels[] = $row->channel;
+        }
+        
+        return $channels;
     }
     
     /**
