@@ -18,28 +18,21 @@ class RedisPresenceDriver implements PresenceDriverInterface
     /**
      * @var string
      */
-    protected $prefix = 'cable:presence:';
+    protected $prefix;
     
     /**
      * @var int
      */
-    protected $timeout = 30; // seconds
+    protected $timeout;
     
     /**
      * Create a new Redis presence driver
      */
-    public function __construct($redis)
+    public function __construct($redis, $prefix = 'cable:presence:', $timeout = 30)
     {
         $this->redis = $redis;
-    }
-    
-    /**
-     * Set the key prefix
-     */
-    public function setPrefix(string $prefix): self
-    {
         $this->prefix = $prefix;
-        return $this;
+        $this->timeout = $timeout;
     }
     
     /**

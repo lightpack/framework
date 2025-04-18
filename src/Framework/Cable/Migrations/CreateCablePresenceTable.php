@@ -17,10 +17,7 @@ class CreateCablePresenceTable extends Migration
             $table->column('user_id')->type('bigint');
             $table->datetime('last_seen');
             
-            // Add unique constraint to prevent duplicates
             $table->unique(['channel', 'user_id']);
-            
-            // Add indexes for fast lookups
             $table->index('channel');
             $table->index('last_seen');
         });

@@ -40,6 +40,29 @@ return [
     
     /*
     |--------------------------------------------------------------------------
+    | Presence Channel Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the presence channel settings. Presence channels
+    | allow you to track which users are online in real-time.
+    |
+    */
+    'presence' => [
+        'driver' => get_env('CABLE_PRESENCE_DRIVER', 'database'),
+        
+        'database' => [
+            'table' => 'cable_presence',
+            'timeout' => 30, // seconds
+        ],
+        
+        'redis' => [
+            'prefix' => 'cable:presence:',
+            'timeout' => 30, // seconds
+        ],
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
     | Client Configuration
     |--------------------------------------------------------------------------
     |

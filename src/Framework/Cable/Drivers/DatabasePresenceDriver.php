@@ -27,9 +27,11 @@ class DatabasePresenceDriver implements PresenceDriverInterface
     /**
      * Create a new database presence driver
      */
-    public function __construct($db)
+    public function __construct($db, $table = 'cable_presence', $timeout = 30)
     {
         $this->db = $db;
+        $this->table = $table;
+        $this->timeout = $timeout;
     }
     
     /**
