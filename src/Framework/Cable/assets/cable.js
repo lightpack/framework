@@ -502,11 +502,106 @@
     
     // Export to window
     window.cable = {
+        // Track if user has interacted with the page
+        _userInteracted: false,
+        
+        // Queue of sounds to play once interaction happens
+        _soundQueue: [],
+        
         /**
          * Connect to the server
          */
         connect(options) {
             return new Cable(options).connect();
+        },
+        
+        /**
+         * Play a sound file
+         * @param {string} url - URL to the sound file
+         * @param {number} volume - Volume from 0 to 1 (default: 1)
+         * @return {Promise} - Resolves when the sound starts playing, rejects on error
+         */
+        playSound(url, volume = 1) {
+            // If user hasn't interacted yet, queue the sound for later
+            if (!this._userInteracted) {
+                console.log(`Sound queued until user interaction: ${url}`);
+                this._soundQueue.push({ url, volume });
+                return Promise.resolve(); // Return resolved promise to prevent errors
+            }
+            
+            return new Promise((resolve, reject) => {
+                try {
+                    const audio = new Audio(url);
+                    audio.volume = volume;
+                    
+                    // Handle errors
+                    audio.onerror = (e) => {
+                        console.error(`Error playing sound from ${url}:`, e);
+                        reject(e);
+                    };
+                    
+                    // Resolve when the sound starts playing
+                    audio.onplay = () => resolve(audio);
+                    
+                    // Play the sound
+                    const playPromise = audio.play();
+                    
+                    // Modern browsers return a promise from play()
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error(`Browser blocked sound from ${url}:`, error);
+                            reject(error);
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Failed to play sound from ${url}:`, error);
+                    reject(error);
+                }
+            });
+        },
+        
+        /**
+         * Initialize sound system - call this when the page loads
+         */
+        initSounds() {
+            // Set up event listeners to detect user interaction
+            const interactionEvents = ['click', 'touchstart', 'keydown', 'scroll'];
+            
+            const handleInteraction = () => {
+                if (this._userInteracted) return;
+                
+                console.log('User interaction detected, sounds enabled');
+                this._userInteracted = true;
+                
+                // Play any queued sounds
+                if (this._soundQueue.length > 0) {
+                    console.log(`Playing ${this._soundQueue.length} queued sounds`);
+                    
+                    // Play only the most recent sound to avoid sound spam
+                    const sound = this._soundQueue[this._soundQueue.length - 1];
+                    this.playSound(sound.url, sound.volume);
+                    
+                    // Clear the queue
+                    this._soundQueue = [];
+                }
+                
+                // Remove event listeners
+                interactionEvents.forEach(event => {
+                    document.removeEventListener(event, handleInteraction);
+                });
+            };
+            
+            // Add event listeners
+            interactionEvents.forEach(event => {
+                document.addEventListener(event, handleInteraction);
+            });
+            
+            return this;
         }
     };
+    
+    // Initialize sounds when the script loads
+    window.addEventListener('DOMContentLoaded', () => {
+        window.cable.initSounds();
+    });
 })(window);
