@@ -103,9 +103,8 @@ class RedisPresenceDriver implements PresenceDriverInterface
      * 
      * Note: Redis automatically handles expiry, so this is a no-op
      */
-    public function cleanup(): int
+    public function cleanup(): void
     {
         // Redis handles expiry automatically via the TTL
-        return 0;
     }
 }
