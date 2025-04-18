@@ -233,21 +233,6 @@ route()->post('/cable/presence/users', PresenceController::class, 'users')->name
 
 Cable includes several optimizations for high-performance applications:
 
-### Channel Grouping
-
-Group channels to reduce database load:
-
-```php
-// Server-side
-$channelManager = app()->resolve('cable.channels');
-$channelManager->group('chat-rooms', ['room-1', 'room-2', 'room-3']);
-
-// Emit to all channels in the group
-$channelManager->emitToGroup('chat-rooms', 'new-message', [
-    'text' => 'Hello, everyone!'
-]);
-```
-
 ### Message Batching
 
 Batch multiple messages for fewer database writes:
