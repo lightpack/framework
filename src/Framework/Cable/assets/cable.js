@@ -46,7 +46,7 @@
         /**
          * Subscribe to a channel
          */
-        subscribe(channel) {
+        subscribe(channel, handlers = {}) {
             if (!this.subscriptions[channel]) {
                 this.subscriptions[channel] = {
                     events: {},
@@ -57,6 +57,18 @@
                 
                 // Start polling for this channel
                 this.startChannelPolling(channel);
+            }
+            
+            // Handle object-style event handlers
+            if (typeof handlers === 'object' && handlers !== null) {
+                Object.keys(handlers).forEach(event => {
+                    if (typeof handlers[event] === 'function') {
+                        if (!this.subscriptions[channel].events[event]) {
+                            this.subscriptions[channel].events[event] = [];
+                        }
+                        this.subscriptions[channel].events[event].push(handlers[event]);
+                    }
+                });
             }
             
             const subscription = {
@@ -195,6 +207,28 @@
                 return;
             }
             
+            // Handle presence updates
+            if (event === 'presence:update' && Array.isArray(payload.users)) {
+                // Store previous users list for join/leave detection
+                const previousUsers = this._getPresenceUsers(channel) || [];
+                
+                // Update presence state
+                this._setPresenceUsers(channel, payload.users);
+                
+                // Detect joins and leaves
+                const joined = payload.users.filter(id => !previousUsers.includes(id));
+                const left = previousUsers.filter(id => !payload.users.includes(id));
+                
+                // Trigger presence events
+                if (joined.length > 0) {
+                    this.triggerEvent(channel, 'presence:join', { users: joined });
+                }
+                
+                if (left.length > 0) {
+                    this.triggerEvent(channel, 'presence:leave', { users: left });
+                }
+            }
+            
             // Call event handlers
             this.triggerEvent(channel, event, payload);
         }
@@ -295,6 +329,43 @@
             
             // Restart polling with new interval
             this.startChannelPolling(channel);
+        }
+        
+        // --- Presence Channel Support ---
+        
+        /**
+         * Get users present in a channel
+         */
+        getPresenceUsers(channel) {
+            return this._getPresenceUsers(channel) || [];
+        }
+        
+        /**
+         * Check if a user is present in a channel
+         */
+        isUserPresent(channel, userId) {
+            const users = this._getPresenceUsers(channel);
+            return users ? users.includes(userId) : false;
+        }
+        
+        /**
+         * Internal: Get presence users from channel state
+         */
+        _getPresenceUsers(channel) {
+            if (!this.subscriptions[channel]) return null;
+            if (!this.subscriptions[channel].presence) return null;
+            return this.subscriptions[channel].presence.users;
+        }
+        
+        /**
+         * Internal: Set presence users in channel state
+         */
+        _setPresenceUsers(channel, users) {
+            if (!this.subscriptions[channel]) return;
+            if (!this.subscriptions[channel].presence) {
+                this.subscriptions[channel].presence = {};
+            }
+            this.subscriptions[channel].presence.users = users;
         }
         
         // --- Outgoing Event Batching Support ---
