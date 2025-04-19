@@ -4,6 +4,9 @@
  * This library provides a Socket.io-like API for real-time communication
  * using efficient polling.
  */
+// --- GLOBAL AUDIO CACHE FOR NOTIFICATION SOUNDS ---
+const _audioCache = {};
+
 (function(window) {
     'use strict';
     
@@ -522,36 +525,30 @@
          * @return {Promise} - Resolves when the sound starts playing, rejects on error
          */
         playSound(url, volume = 1) {
-            // If user hasn't interacted yet, queue the sound for later
             if (!this._userInteracted) {
                 console.log(`Sound queued until user interaction: ${url}`);
                 this._soundQueue.push({ url, volume });
-                return Promise.resolve(); // Return resolved promise to prevent errors
+                return Promise.resolve();
             }
-            
             return new Promise((resolve, reject) => {
                 try {
-                    const audio = new Audio(url);
+                    let audio = _audioCache[url];
+                    if (!audio) {
+                        audio = new Audio(url);
+                        _audioCache[url] = audio;
+                    }
+                    audio.pause();
+                    audio.currentTime = 0;
                     audio.volume = volume;
-                    
-                    // Handle errors
-                    audio.onerror = (e) => {
-                        console.error(`Error playing sound from ${url}:`, e);
-                        reject(e);
-                    };
-                    
-                    // Resolve when the sound starts playing
-                    audio.onplay = () => resolve(audio);
-                    
                     // Play the sound
                     const playPromise = audio.play();
-                    
-                    // Modern browsers return a promise from play()
                     if (playPromise !== undefined) {
-                        playPromise.catch(error => {
+                        playPromise.then(() => resolve(audio)).catch(error => {
                             console.error(`Browser blocked sound from ${url}:`, error);
                             reject(error);
                         });
+                    } else {
+                        resolve(audio);
                     }
                 } catch (error) {
                     console.error(`Failed to play sound from ${url}:`, error);
