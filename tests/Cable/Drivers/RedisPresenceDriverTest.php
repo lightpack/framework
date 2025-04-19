@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Lightpack\Cable\Drivers\RedisPresenceDriver;
-use Redis; // Import the Redis class
+use Lightpack\Redis\Redis;
 
 final class RedisPresenceDriverTest extends TestCase
 {
