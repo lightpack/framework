@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Cable\Drivers;
+namespace Lightpack\Cable;
 
 /**
  * Presence Driver Interface

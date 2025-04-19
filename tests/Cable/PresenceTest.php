@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 use Lightpack\Cable\Presence;
 use Lightpack\Cable\Cable;
-use Lightpack\Cable\Drivers\PresenceDriverInterface;
+use Lightpack\Cable\PresenceDriverInterface;
 
 final class PresenceTest extends TestCase
 {

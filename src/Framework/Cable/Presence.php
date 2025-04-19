@@ -2,7 +2,7 @@
 
 namespace Lightpack\Cable;
 
-use Lightpack\Cable\Drivers\PresenceDriverInterface;
+use Lightpack\Cable\PresenceDriverInterface;
 
 /**
  * Presence

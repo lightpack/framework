@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use Lightpack\Cable\Cable;
-use Lightpack\Cable\DriverInterface;
+use Lightpack\Cable\CableDriverInterface;
 
 final class CableTest extends TestCase
 {
@@ -12,7 +12,7 @@ final class CableTest extends TestCase
     public function setUp(): void
     {
         // Create a mock driver
-        $this->mockDriver = $this->createMock(DriverInterface::class);
+        $this->mockDriver = $this->createMock(CableDriverInterface::class);
         
         // Create Cable instance with mock driver
         $this->cable = new Cable($this->mockDriver);

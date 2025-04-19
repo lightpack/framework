@@ -2,7 +2,7 @@
 
 namespace Lightpack\Cable\Drivers;
 
-use Lightpack\Cable\DriverInterface;
+use Lightpack\Cable\CableDriverInterface;
 use Lightpack\Redis\Redis;
 
 /**
@@ -11,7 +11,7 @@ use Lightpack\Redis\Redis;
  * This driver uses Redis to store and retrieve messages,
  * providing better performance for high-traffic applications.
  */
-class RedisDriver implements DriverInterface
+class RedisCableDriver implements CableDriverInterface
 {
     /**
      * @var Redis

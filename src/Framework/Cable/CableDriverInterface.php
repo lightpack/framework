@@ -7,7 +7,7 @@ namespace Lightpack\Cable;
  * 
  * This interface defines the methods that all Cable drivers must implement.
  */
-interface DriverInterface
+interface CableDriverInterface
 {
     /**
      * Emit an event to a channel

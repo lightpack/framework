@@ -2,6 +2,8 @@
 
 namespace Lightpack\Cable\Drivers;
 
+use Lightpack\Cable\PresenceDriverInterface;
+
 /**
  * Redis Presence Driver
  * 

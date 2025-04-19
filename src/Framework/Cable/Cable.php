@@ -12,7 +12,7 @@ namespace Lightpack\Cable;
 class Cable
 {
     /**
-     * @var DriverInterface
+     * @var CableDriverInterface
      */
     protected $driver;
     
@@ -24,7 +24,7 @@ class Cable
     /**
      * Create a new Cable instance
      */
-    public function __construct(DriverInterface $driver)
+    public function __construct(CableDriverInterface $driver)
     {
         $this->driver = $driver;
     }
@@ -65,7 +65,7 @@ class Cable
     /**
      * Get the driver instance
      */
-    public function getDriver(): DriverInterface
+    public function getDriver(): CableDriverInterface
     {
         return $this->driver;
     }

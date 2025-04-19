@@ -2,7 +2,7 @@
 
 namespace Lightpack\Cable\Drivers;
 
-use Lightpack\Cable\DriverInterface;
+use Lightpack\Cable\CableDriverInterface;
 use Lightpack\Database\Database;
 use Lightpack\Database\DB;
 
@@ -11,7 +11,7 @@ use Lightpack\Database\DB;
  * 
  * This driver uses the database to store and retrieve messages.
  */
-class DatabaseDriver implements DriverInterface
+class DatabaseCableDriver implements CableDriverInterface
 {
     /**
      * @var Database

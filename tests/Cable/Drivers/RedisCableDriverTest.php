@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Cable\Drivers\RedisDriver;
+use Lightpack\Cable\Drivers\RedisCableDriver;
 use Lightpack\Redis\Redis;
 
 final class RedisCableDriverTest extends TestCase
@@ -24,7 +24,7 @@ final class RedisCableDriverTest extends TestCase
             $redisClient = new Redis();
             
             // Create driver with test prefix
-            $this->driver = new RedisDriver($redisClient, $this->prefix);
+            $this->driver = new RedisCableDriver($redisClient, $this->prefix);
             
             // Get native Redis connection for test verification
             $this->redis = $redisClient->connection();

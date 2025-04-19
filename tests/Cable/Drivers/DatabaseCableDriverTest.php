@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Adapters\Mysql;
-use Lightpack\Cable\Drivers\DatabaseDriver;
+use Lightpack\Cable\Drivers\DatabaseCableDriver;
 
 final class DatabaseCableDriverTest extends TestCase
 {
@@ -30,7 +30,7 @@ final class DatabaseCableDriverTest extends TestCase
             ");
             
             // Initialize the driver with our test table
-            $this->driver = new DatabaseDriver($this->db, $this->table);
+            $this->driver = new DatabaseCableDriver($this->db, $this->table);
         } catch (\Exception $e) {
             $this->markTestSkipped('Could not connect to database: ' . $e->getMessage());
         }
