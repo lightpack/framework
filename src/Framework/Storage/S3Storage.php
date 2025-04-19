@@ -221,4 +221,40 @@ class S3Storage implements Storage
     {
         return trim($path, '/');
     }
+    
+    /**
+     * Get the underlying S3Client instance
+     * 
+     * This provides access to S3-specific functionality not covered by the Storage interface.
+     * 
+     * Example:
+     * ```php
+     * // When you need S3-specific functionality
+     * if ($storage instanceof S3Storage) {
+     *     $s3Client = $storage->getClient();
+     *     
+     *     // Now use any S3Client method
+     *     $presignedPost = $s3Client->createPresignedPost([
+     *         'Bucket' => 'your-bucket',
+     *         'Key' => 'uploads/user-file.jpg',
+     *     ]);
+     * }
+     * ```
+     * 
+     * @return S3Client The AWS S3 client instance
+     */
+    public function getClient(): S3Client
+    {
+        return $this->client;
+    }
+    
+    /**
+     * Get the S3 bucket name
+     * 
+     * @return string The bucket name
+     */
+    public function getBucket(): string
+    {
+        return $this->bucket;
+    }
 }

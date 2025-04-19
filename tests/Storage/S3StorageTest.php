@@ -102,4 +102,18 @@ class S3StorageTest extends TestCase
         $result = $this->storage->delete('test.txt');
         $this->assertTrue($result);
     }
+    
+    public function testGetClient()
+    {
+        // Test that getClient returns the S3Client instance
+        $client = $this->storage->getClient();
+        $this->assertSame($this->s3Client, $client);
+    }
+    
+    public function testGetBucket()
+    {
+        // Test that getBucket returns the correct bucket name
+        $bucket = $this->storage->getBucket();
+        $this->assertEquals('test-bucket', $bucket);
+    }
 }
