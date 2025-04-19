@@ -59,6 +59,8 @@ class Presence
     public function heartbeat($userId, string $channel): self
     {
         $this->driver->heartbeat($userId, $channel);
+        $this->broadcast($channel);
+
         return $this;
     }
     
