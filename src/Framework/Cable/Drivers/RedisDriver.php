@@ -38,7 +38,7 @@ class RedisDriver implements DriverInterface
     public function emit(string $channel, string $event, array $payload): void
     {
         $message = json_encode([
-            'id' => microtime(true),
+            'id' => (int)(microtime(true) * 1000), // Convert to milliseconds integer
             'event' => $event,
             'payload' => $payload,
             'created_at' => date('Y-m-d H:i:s')
@@ -47,7 +47,7 @@ class RedisDriver implements DriverInterface
         // Add to sorted set with score as timestamp
         $this->redis->zAdd(
             $this->getChannelKey($channel),
-            microtime(true),
+            (int)(microtime(true) * 1000), // Use same integer timestamp as score
             $message
         );
         
@@ -60,7 +60,9 @@ class RedisDriver implements DriverInterface
      */
     public function getMessages(string $channel, ?int $lastId = null): array
     {
-        $score = $lastId ? $lastId : '-inf';
+        // For exclusive range (> lastId), we need to add 1
+        // This ensures we don't get duplicate messages when polling
+        $score = $lastId ? ($lastId + 1) : '-inf';
         
         $messages = $this->redis->zRangeByScore(
             $this->getChannelKey($channel),
