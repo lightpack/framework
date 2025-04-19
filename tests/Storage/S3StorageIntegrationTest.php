@@ -193,7 +193,9 @@ class S3StorageIntegrationTest extends TestCase
         
         // URL should contain the bucket and file path
         $this->assertStringContainsString($this->storage->getBucket(), $url);
-        $this->assertStringContainsString(urlencode($testFile), $url);
+        
+        // Check that URL contains the path (AWS S3 uses / not %2F in URLs)
+        $this->assertStringContainsString($this->testDir . '/test-url.txt', $url);
         
         // Clean up
         $this->storage->delete($testFile);
