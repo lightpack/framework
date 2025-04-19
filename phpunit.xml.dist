@@ -18,8 +18,8 @@
         <!-- MySQL Test Config -->
         <env name="MYSQL_HOST" value="localhost" />
         <env name="MYSQL_PORT" value="3306" />
-        <env name="MYSQL_USER" value="phpmyadmin" />
-        <env name="MYSQL_PASSWORD" value="phpmyadmin" />
+        <env name="MYSQL_USER" value="root" />
+        <env name="MYSQL_PASSWORD" value="root" />
         <env name="MYSQL_DB" value="test_lightpack" />
         
         <!-- AWS S3 Test Config (for S3StorageIntegrationTest) -->
