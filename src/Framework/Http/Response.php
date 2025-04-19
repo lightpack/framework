@@ -92,6 +92,16 @@ class Response
     protected string $redirectUrl = '';
 
     /**
+     * Represents HTTP response stream callback.
+     */
+    protected $streamCallback;
+
+    /**
+     * Test mode flag to prevent exit() during tests
+     */
+    protected $testMode = false;
+
+    /**
      * Return HTTP response status code.
      */
     public function getStatus(): int
@@ -294,6 +304,61 @@ class Response
     }
 
     /**
+     * This method streams a file download to the client in chunks, 
+     * which is memory-efficient for large files.
+     *
+     * @param string $path  The path of file to download.
+     * @param string $name  Custom name for downloaded file.
+     * @param array $headers  Additional headers for download response.
+     * @param int $chunkSize  Size of each chunk in bytes (default: 1MB)
+     */
+    public function downloadStream(string $path, ?string $name = null, array $headers = [], int $chunkSize = 1048576): self
+    {
+        if (!file_exists($path)) {
+            throw new \RuntimeException("File not found: {$path}");
+        }
+        
+        $name = $name ?? basename($path);
+
+        $headers = array_merge([
+            'Content-Type'              => MimeTypes::getMime($path),
+            'Content-Disposition'       => 'attachment; filename="' . $name . '"',
+            'Content-Transfer-Encoding' => 'binary',
+            'Expires'                   => 0,
+            'Cache-Control'             => 'private',
+            'Pragma'                    => 'private',
+            'Content-Length'            => filesize($path),
+        ], $headers);
+
+        $this->setHeaders($headers);
+        
+        // Use a streaming callback instead of loading the entire file
+        $this->stream(function() use ($path, $chunkSize) {
+            $handle = fopen($path, 'rb');
+            
+            // Disable output buffering to prevent memory build-up
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            // Send the file in chunks to keep memory usage low
+            while (!feof($handle)) {
+                echo fread($handle, $chunkSize);
+                flush();
+                
+                // Allow the script to be terminated if the client disconnects
+                if (connection_status() !== CONNECTION_NORMAL) {
+                    break;
+                }
+            }
+            
+            fclose($handle);
+        });
+        
+        return $this;
+    }
+
+    /**
      * This method display a file directly in the browser instead of downloading.
      *
      * @param string $path  The path of file to download.
@@ -312,6 +377,26 @@ class Response
     }
 
     /**
+     * This method streams a file to be displayed directly in the browser,
+     * which is memory-efficient for large files.
+     *
+     * @param string $path  The path of file to display.
+     * @param string $name  Custom name for the file.
+     * @param array $headers  Additional headers for the response.
+     * @param int $chunkSize  Size of each chunk in bytes (default: 1MB)
+     */
+    public function fileStream(string $path, ?string $name = null, array $headers = [], int $chunkSize = 1048576): self
+    {
+        $name = $name ?? basename($path);
+
+        $headers = array_merge([
+            'Content-Disposition' => 'inline; filename=' . $name
+        ], $headers);
+
+        return $this->downloadStream($path, $name, $headers, $chunkSize);
+    }
+
+    /**
      * This method sets the HTTP response content as HTML.
      */
     public function view(string $file, array $data = []): self
@@ -319,6 +404,15 @@ class Response
         $template = app('template')->setData($data)->render($file);
 
         $this->setBody($template);
+        return $this;
+    }
+
+    /**
+     * Enable test mode to prevent exit() during tests
+     */
+    public function setTestMode(bool $enabled = true): self
+    {
+        $this->testMode = $enabled;
         return $this;
     }
 
@@ -335,7 +429,9 @@ class Response
             $this->sendContent();
         }
 
-        exit;
+        if (!$this->testMode) {
+            exit;
+        }
     }
 
     /**
@@ -364,7 +460,34 @@ class Response
      */
     private function sendContent(): void
     {
-        echo $this->body;
+        if (isset($this->streamCallback)) {
+            // For streaming responses
+            call_user_func($this->streamCallback);
+        } else {
+            // For regular responses
+            echo $this->body;
+        }
+    }
+
+    /**
+     * Stream content using a callback function.
+     * 
+     * @param callable $callback Function that writes to output
+     */
+    public function stream(callable $callback): self
+    {
+        $this->streamCallback = $callback;
+        return $this;
+    }
+
+    /**
+     * Get the stream callback function.
+     * 
+     * @return callable|null The stream callback function
+     */
+    public function getStreamCallback()
+    {
+        return $this->streamCallback;
     }
 
     /**
@@ -441,5 +564,19 @@ class Response
         }
 
         return $this->setHeader('Last-Modified', gmdate('D, d M Y H:i:s', $time) . ' GMT');
+    }
+
+    /**
+     * Stream response as CSV.
+     *
+     * @param callable $callback Function that writes CSV data
+     * @param string $filename Name of the CSV file to download
+     */
+    public function streamCsv(callable $callback, string $filename = 'export.csv'): self
+    {
+        return $this
+            ->setHeader('Content-Type', 'text/csv')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->stream($callback);
     }
 }

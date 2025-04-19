@@ -589,15 +589,33 @@ class Query
 
     public function chunk(int $chunkSize, callable $callback)
     {
-        $records = $this->limit($chunkSize)->offset($page = 1)->all();
-
-        while (count($records) > 0) {
+        if ($chunkSize <= 0) {
+            throw new \InvalidArgumentException('Chunk size must be a positive integer');
+        }
+        
+        // Clone the current query to preserve all conditions (where, join, etc.)
+        $baseQuery = clone $this;
+        
+        $page = 0;
+        
+        do {
+            // Apply pagination to a clone of the base query
+            $query = clone $baseQuery;
+            $records = $query->limit($chunkSize)->offset($page * $chunkSize)->all();
+            
+            // Exit the loop if no records were found
+            if (count($records) === 0) {
+                break;
+            }
+            
+            // Process the records and check if we should stop
             if (false === call_user_func($callback, $records)) {
                 return;
             }
-
-            $records = $this->limit($chunkSize)->offset(++$page)->all();
-        }
+            
+            $page++;
+            
+        } while (true);
     }
 
     public function getCompiledSelect()

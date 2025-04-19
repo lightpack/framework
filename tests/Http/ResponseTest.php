@@ -12,6 +12,7 @@ final class ResponseTest extends TestCase
     public function setUp(): void
     {
         $this->response = new \Lightpack\Http\Response(new Url);
+        $this->response->setTestMode(true);
     }
     
     public function testResponseSetStatusMethod()
@@ -200,5 +201,227 @@ final class ResponseTest extends TestCase
         $this->assertEquals('SAMEORIGIN', $headers['X-Frame-Options']);
         $this->assertEquals('1; mode=block', $headers['X-XSS-Protection']);
         $this->assertEquals('strict-origin-when-cross-origin', $headers['Referrer-Policy']);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testStreamMethod()
+    {
+        $output = null;
+        $this->response->stream(function() use (&$output) {
+            $output = "Hello Stream";
+            echo $output;
+        });
+
+        // Test output by sending response
+        ob_start();
+        $this->response->send();
+        $result = ob_get_clean();
+        
+        $this->assertEquals($output, $result);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testStreamMethodWithHeaders()
+    {
+        $this->response
+            ->setHeader('Content-Type', 'text/csv')
+            ->stream(function() {
+                echo "data,more data";
+            });
+
+        // Verify headers are set correctly
+        $headers = $this->response->getHeaders();
+        $this->assertEquals('text/csv', $headers['Content-Type']);
+        
+        // Test output by sending response
+        ob_start();
+        $this->response->send();
+        $result = ob_get_clean();
+        
+        $this->assertEquals("data,more data", $result);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testStreamCsvMethod()
+    {
+        $output = null;
+        $this->response->streamCsv(function() use (&$output) {
+            $output = "Name,Email\nJohn,john@example.com\n";
+            echo $output;
+        }, 'users.csv');
+
+        // Verify headers
+        $headers = $this->response->getHeaders();
+        $this->assertEquals('text/csv', $headers['Content-Type']);
+        $this->assertEquals('attachment; filename="users.csv"', $headers['Content-Disposition']);
+
+        // Verify content
+        ob_start();
+        $this->response->send();
+        $result = ob_get_clean();
+
+        $this->assertEquals($output, $result);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testDownloadStreamMethod()
+    {
+        // Create a temporary test file
+        $tempFile = sys_get_temp_dir() . '/test_download_' . uniqid() . '.txt';
+        $testContent = str_repeat('Test content line ' . PHP_EOL, 100); // Create some content
+        file_put_contents($tempFile, $testContent);
+        
+        try {
+            // Test the downloadStream method
+            $this->response->downloadStream($tempFile, 'test-download.txt');
+            
+            // Verify headers
+            $headers = $this->response->getHeaders();
+            $this->assertEquals('text/plain', $headers['Content-Type']);
+            $this->assertEquals('attachment; filename="test-download.txt"', $headers['Content-Disposition']);
+            $this->assertEquals('binary', $headers['Content-Transfer-Encoding']);
+            $this->assertEquals(filesize($tempFile), $headers['Content-Length']);
+            
+            // Verify streaming callback was set (we can't easily test the actual streaming)
+            $this->assertNotNull($this->response->getStreamCallback());
+        } finally {
+            // Clean up the temporary file
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testDownloadStreamMethodWithCustomChunkSize()
+    {
+        // Create a temporary test file
+        $tempFile = sys_get_temp_dir() . '/test_download_' . uniqid() . '.txt';
+        $testContent = str_repeat('Test content line ' . PHP_EOL, 100);
+        file_put_contents($tempFile, $testContent);
+        
+        try {
+            // Test with custom chunk size
+            $this->response->downloadStream($tempFile, 'test-download.txt', [], 512);
+            
+            // We need to add a getter for the stream callback to properly test this
+            // For now, we just verify the method doesn't throw exceptions
+            $this->assertTrue(true);
+        } finally {
+            // Clean up
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testDownloadStreamMethodWithCustomHeaders()
+    {
+        // Create a temporary test file
+        $tempFile = sys_get_temp_dir() . '/test_download_' . uniqid() . '.txt';
+        file_put_contents($tempFile, 'Test content');
+        
+        try {
+            // Test with custom headers
+            $customHeaders = [
+                'Cache-Control' => 'no-cache',
+                'X-Custom-Header' => 'Custom Value'
+            ];
+            
+            $this->response->downloadStream($tempFile, 'test-download.txt', $customHeaders);
+            
+            // Verify headers
+            $headers = $this->response->getHeaders();
+            $this->assertEquals('no-cache', $headers['Cache-Control']);
+            $this->assertEquals('Custom Value', $headers['X-Custom-Header']);
+        } finally {
+            // Clean up
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+    
+    /**
+     * @runInSeparateProcess
+     * @expectedException \RuntimeException
+     */
+    public function testDownloadStreamMethodWithNonExistentFile()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->response->downloadStream('/path/to/non-existent-file.txt');
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testFileStreamMethod()
+    {
+        // Create a temporary test file
+        $tempFile = sys_get_temp_dir() . '/test_file_' . uniqid() . '.txt';
+        $testContent = str_repeat('Test content line ' . PHP_EOL, 100);
+        file_put_contents($tempFile, $testContent);
+        
+        try {
+            // Test the fileStream method
+            $this->response->fileStream($tempFile, 'test-view.txt');
+            
+            // Verify headers
+            $headers = $this->response->getHeaders();
+            $this->assertEquals('text/plain', $headers['Content-Type']);
+            $this->assertEquals('inline; filename=test-view.txt', $headers['Content-Disposition']);
+            $this->assertEquals('binary', $headers['Content-Transfer-Encoding']);
+            $this->assertEquals(filesize($tempFile), $headers['Content-Length']);
+            
+            // Verify streaming callback was set
+            $this->assertNotNull($this->response->getStreamCallback());
+        } finally {
+            // Clean up
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testFileStreamMethodWithCustomHeaders()
+    {
+        // Create a temporary test file
+        $tempFile = sys_get_temp_dir() . '/test_file_' . uniqid() . '.txt';
+        file_put_contents($tempFile, 'Test content');
+        
+        try {
+            // Test with custom headers
+            $customHeaders = [
+                'X-Custom-Header' => 'Custom Value'
+            ];
+            
+            $this->response->fileStream($tempFile, 'test-view.txt', $customHeaders);
+            
+            // Verify headers
+            $headers = $this->response->getHeaders();
+            $this->assertEquals('inline; filename=test-view.txt', $headers['Content-Disposition']);
+            $this->assertEquals('Custom Value', $headers['X-Custom-Header']);
+        } finally {
+            // Clean up
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
     }
 }

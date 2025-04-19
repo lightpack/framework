@@ -416,11 +416,11 @@ if (!function_exists('error')) {
     }
 }
 
-if(!function_exists('method_input')) {
+if(!function_exists('spoof_input')) {
     /**
      * Returns a hidden input field for the spoofed request method.
      */
-    function method_input(string $method): string
+    function spoof_input(string $method): string
     {
         return '<input type="hidden" name="_method" value="' . $method . '">';
     }
@@ -433,5 +433,37 @@ if (!function_exists('storage')) {
     function storage(): \Lightpack\Storage\Storage
     {
         return app('storage');
+    }
+}
+
+if (!function_exists('asset')) {
+    /**
+     * Get an instance of asset utility provider.
+     */
+    function asset(): \Lightpack\Utils\Asset
+    {
+        static $asset = null;
+        
+        if ($asset === null) {
+            $asset = new \Lightpack\Utils\Asset();
+        }
+        
+        return $asset;
+    }
+}
+
+if (!function_exists('js')) {
+    /**
+     * Get an instance of Js utility provider.
+     */
+    function script(): \Lightpack\Utils\Js
+    {
+        static $js = null;
+        
+        if ($js === null) {
+            $js = new \Lightpack\Utils\Js();
+        }
+        
+        return $js;
     }
 }

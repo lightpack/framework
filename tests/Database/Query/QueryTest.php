@@ -822,6 +822,140 @@ final class QueryTest extends TestCase
         }
     }
 
+    public function testQueryChunkWithEmptyTable()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Process chunk query on empty table
+        $callbackExecuted = false;
+
+        $this->query->chunk(5, function($records) use (&$callbackExecuted) {
+            $callbackExecuted = true;
+        });
+
+        // Callback should not execute on empty table
+        $this->assertFalse($callbackExecuted);
+    }
+
+    public function testQueryChunkWithNonStandardChunkSize()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert 10 records
+        foreach(range(1, 10) as $item) {
+            $records[] = ['name' => 'Product name', 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with chunk size 3
+        $chunkedRecords = [];
+
+        $this->query->chunk(3, function($records) use (&$chunkedRecords) {
+            $chunkedRecords[] = $records;
+        });
+
+        // Should have 4 chunks: 3, 3, 3, and 1
+        $this->assertCount(4, $chunkedRecords);
+        $this->assertCount(3, $chunkedRecords[0]);
+        $this->assertCount(3, $chunkedRecords[1]);
+        $this->assertCount(3, $chunkedRecords[2]);
+        $this->assertCount(1, $chunkedRecords[3]);
+    }
+
+    public function testQueryChunkWithOrderBy()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert records with different names
+        foreach(range(1, 5) as $item) {
+            $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with ordering
+        $names = [];
+
+        $this->query->orderBy('name', 'DESC')->chunk(5, function($records) use (&$names) {
+            foreach($records as $record) {
+                $names[] = $record->name;
+            }
+        });
+
+        $this->assertEquals('Product 5', $names[0]);
+        $this->assertEquals('Product 4', $names[1]);
+        $this->assertEquals('Product 3', $names[2]);
+        $this->assertEquals('Product 2', $names[3]);
+        $this->assertEquals('Product 1', $names[4]);
+    }
+
+    public function testQueryChunkWithZeroChunkSize()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert a few records
+        foreach(range(1, 5) as $item) {
+            $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with zero chunk size (should default to some reasonable behavior)
+        $callbackExecuted = false;
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->query->chunk(0, fn() => '');
+    }
+
+    public function testQueryChunkWithExactlyOneChunkSize()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert exactly 5 records
+        foreach(range(1, 5) as $item) {
+            $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
+        }
+
+        $this->query->insert($records);
+
+        // Process chunk query with chunk size exactly matching record count
+        $chunkedRecords = [];
+
+        $this->query->chunk(5, function($records) use (&$chunkedRecords) {
+            $chunkedRecords[] = $records;
+        });
+
+        // Should have exactly 1 chunk with 5 records
+        $this->assertCount(1, $chunkedRecords);
+        $this->assertCount(5, $chunkedRecords[0]);
+    }
+
+    public function testQueryChunkWithWhereCondition()
+    {
+        // Make sure we have no records
+        $this->query->delete();
+
+        // Insert records with different colors
+        foreach(range(1, 10) as $item) {
+            $color = $item <= 5 ? 'red' : 'blue';
+            $records[] = ['name' => 'Product ' . $item, 'color' => $color];
+        }
+
+        $this->query->insert($records);
+
+        $this->query->where('color', 'red')->chunk(2, function($records) {
+            foreach ($records as $record) {
+                $this->assertEquals('red', $record->color);
+            }
+        });
+    }
+
     public function testItProducesCorrectSyntaxForAggregateQueries()
     {
         // Test 1

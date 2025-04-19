@@ -114,7 +114,7 @@ class ExceptionRenderer
         return $preview;
     }
 
-    private function sendHeaders(int $statusCode)
+    private function sendHeaders(int|string $statusCode)
     {
         if (!headers_sent()) {
             header("HTTP/1.1 $statusCode", true, $statusCode);
@@ -154,6 +154,7 @@ class ExceptionRenderer
     private function renderProductionTemplate(Throwable $exc)
     {
         $statusCode = $exc->getCode() ?: 500;
+        $statusCode = (int) $statusCode;
         $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . '/production.php';
         $message = $exc->getMessage() ?: 'We are facing some technical issues. We will be back soon.';
 
@@ -214,6 +215,7 @@ class ExceptionRenderer
         }
         
         $statusCode = $exc->getCode() ?: 500;
+        $statusCode = (int) $statusCode;
         $relevantTrace = $this->findRelevantTrace($exc);
         
         $data['type'] = $errorType;

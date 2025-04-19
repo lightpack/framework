@@ -24,6 +24,7 @@ use Lightpack\Console\Commands\GenerateAppKey;
 use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ScheduleEvents;
 use Lightpack\Console\Commands\ServeCommand;
+use Lightpack\Console\Commands\WatchCommand;
 
 class Console
 {
@@ -50,6 +51,7 @@ class Console
         'schedule:events' => ScheduleEvents::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
+        'watch' => WatchCommand::class,
     ];
 
     public static function register(string $command, ICommand $handler)
