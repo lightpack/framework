@@ -64,9 +64,11 @@ class RedisEngine extends BaseEngine
         $queues = $queue ? [$queue] : $this->getQueues();
         
         foreach ($queues as $queueName) {
+            $queueKey = $this->getQueueKey($queueName);
+            
             // Get jobs scheduled before or at current time
             $jobIds = $this->redis->zRangeByScore(
-                $this->getQueueKey($queueName),
+                $queueKey,
                 0,
                 $now,
                 ['limit' => [0, 1]]
@@ -79,15 +81,36 @@ class RedisEngine extends BaseEngine
             $jobId = $jobIds[0];
             $jobKey = $this->getJobKey($jobId);
             
-            // Get the job
+            // Use Redis transaction to ensure atomicity
+            $this->redis->watch($queueKey);
+            
+            // Check if job still exists in queue (could have been taken by another worker)
+            $score = $this->redis->zScore($queueKey, $jobId);
+            if ($score === false) {
+                $this->redis->unwatch();
+                continue;
+            }
+            
+            // Start transaction
+            $tx = $this->redis->multi();
+            
+            // Remove from queue
+            $tx->zRem($queueKey, $jobId);
+            
+            // Execute transaction
+            $result = $tx->exec();
+            
+            // If transaction failed (another worker took the job), try next queue
+            if ($result === false || $result[0] === 0) {
+                continue;
+            }
+            
+            // Get the job data
             $job = $this->redis->get($jobKey);
             
             if (!$job) {
                 continue;
             }
-            
-            // Remove from queue
-            $this->redis->zRem($this->getQueueKey($queueName), $jobId);
             
             // Update job status and attempts
             $job['status'] = 'queued';
