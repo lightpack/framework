@@ -23,6 +23,8 @@ class S3StorageIntegrationTest extends TestCase
 {
     private ?S3Storage $storage = null;
     private string $testDir;
+    private S3Client $s3Client;
+    private string $bucket;
     
     protected function setUp(): void
     {
@@ -31,9 +33,9 @@ class S3StorageIntegrationTest extends TestCase
         // Skip tests if AWS credentials are not set
         $key = getenv('AWS_ACCESS_KEY');
         $secret = getenv('AWS_SECRET_KEY');
-        $bucket = getenv('AWS_BUCKET');
+        $this->bucket = getenv('AWS_BUCKET');
         
-        if (empty($key) || empty($secret) || empty($bucket)) {
+        if (empty($key) || empty($secret) || empty($this->bucket)) {
             $this->markTestSkipped(
                 'AWS credentials not found. Set AWS_ACCESS_KEY, AWS_SECRET_KEY, and AWS_BUCKET environment variables to run this test.'
             );
@@ -42,7 +44,7 @@ class S3StorageIntegrationTest extends TestCase
         $region = getenv('AWS_REGION') ?: 'us-east-1';
         
         // Create S3 client
-        $s3Client = new S3Client([
+        $this->s3Client = new S3Client([
             'version' => 'latest',
             'region' => $region,
             'credentials' => [
@@ -52,7 +54,7 @@ class S3StorageIntegrationTest extends TestCase
         ]);
         
         // Create storage instance
-        $this->storage = new S3Storage($s3Client, $bucket);
+        $this->storage = new S3Storage($this->s3Client, $this->bucket);
         
         // Create a unique test directory to avoid conflicts
         $this->testDir = 'test-' . date('Ymd-His') . '-' . uniqid();
@@ -212,5 +214,38 @@ class S3StorageIntegrationTest extends TestCase
         $bucket = $this->storage->getBucket();
         $this->assertIsString($bucket);
         $this->assertNotEmpty($bucket);
+        $this->assertEquals($this->bucket, $bucket);
+    }
+    
+    /**
+     * Clean up any leftover test files after each test
+     */
+    protected function tearDown(): void
+    {
+        // Only run cleanup if we have the necessary objects
+        if (isset($this->s3Client, $this->bucket, $this->testDir)) {
+            try {
+                // List all objects in the test directory
+                $objects = $this->s3Client->listObjects([
+                    'Bucket' => $this->bucket,
+                    'Prefix' => $this->testDir,
+                ]);
+                
+                // Delete each object
+                if (isset($objects['Contents']) && count($objects['Contents']) > 0) {
+                    foreach ($objects['Contents'] as $object) {
+                        $this->s3Client->deleteObject([
+                            'Bucket' => $this->bucket,
+                            'Key' => $object['Key'],
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't fail the test
+                error_log('Error during S3 test cleanup: ' . $e->getMessage());
+            }
+        }
+        
+        parent::tearDown();
     }
 }
