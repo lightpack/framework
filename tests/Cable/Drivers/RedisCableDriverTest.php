@@ -88,7 +88,7 @@ final class RedisCableDriverTest extends TestCase
         // Add two test messages with different timestamps
         $channelKey = $this->prefix . 'test-channel';
         
-        $timestamp1 = (int)microtime(true);
+        $timestamp1 = (int)(microtime(true) * 1000); // Convert to milliseconds integer
         $message1 = json_encode([
             'id' => $timestamp1,
             'event' => 'event-1',
@@ -97,7 +97,7 @@ final class RedisCableDriverTest extends TestCase
         ]);
         
         // Make sure timestamp2 is greater than timestamp1
-        $timestamp2 = $timestamp1 + 1;
+        $timestamp2 = $timestamp1 + 100; // 100 milliseconds later
         $message2 = json_encode([
             'id' => $timestamp2,
             'event' => 'event-2',
@@ -108,21 +108,22 @@ final class RedisCableDriverTest extends TestCase
         $this->redis->zAdd($channelKey, $timestamp1, $message1);
         $this->redis->zAdd($channelKey, $timestamp2, $message2);
         
-        // Get messages with lastId = timestamp1 (inclusive)
-        // This should return both messages since Redis zRangeByScore is inclusive
-        $events = $this->driver->getMessages('test-channel', $timestamp1);
-        
-        // This should return 2 messages (both of them)
+        // Test 1: Get all messages (no lastId)
+        $events = $this->driver->getMessages('test-channel');
         $this->assertCount(2, $events);
         $this->assertEquals('event-1', $events[0]->event);
         $this->assertEquals('event-2', $events[1]->event);
         
-        // Now get all messages with ID > timestamp1 by using timestamp1+1
-        $events = $this->driver->getMessages('test-channel', $timestamp1 + 1);
-        
-        // This should return 1 message (only the second one)
+        // Test 2: Get messages with lastId = timestamp1
+        // This should return only the second message (exclusive range)
+        $events = $this->driver->getMessages('test-channel', $timestamp1);
         $this->assertCount(1, $events);
         $this->assertEquals('event-2', $events[0]->event);
+        
+        // Test 3: Get messages with lastId = timestamp2
+        // This should return no messages
+        $events = $this->driver->getMessages('test-channel', $timestamp2);
+        $this->assertCount(0, $events);
     }
     
     public function testCleanup(): void
