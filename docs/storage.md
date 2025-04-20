@@ -230,6 +230,181 @@ The URL generation behavior depends on the storage driver and the file path:
    php lightpack link:storage
    ```
 
+### Controller for Private Files
+
+For private files stored with local storage, you need to implement a controller to serve these files with proper access control:
+
+#### 1. Create the FileController
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use Lightpack\Http\Controller;
+
+class FileController
+{
+    public function serve()
+    {
+        // Get the file path from the request
+        $path = request()->query('path');
+        
+        // Security check: Ensure path is within allowed directories
+        if (!$this->isPathAllowed($path)) {
+            return response()->withStatus(403)->setMessage('Access denied');
+        }
+        
+        // Authorization check (implement your access control logic)
+        if (!$this->userCanAccessFile($path)) {
+            return response()->withStatus(403)->setMessage('Access denied');
+        }
+        
+        // Get the full file path
+        $fullPath = DIR_STORAGE' . '/' . $path;
+        
+        // Check if file exists
+        if (!file_exists($fullPath)) {
+            return response()->withStatus(404)->setMessage('File not found');
+        }
+
+        return response()->download();
+    }
+    
+    /**
+     * Check if the requested path is allowed
+     * 
+     * This prevents directory traversal attacks and ensures
+     * only files in the private uploads directory are accessible.
+     */
+    private function isPathAllowed(string $path): bool
+    {
+        // Normalize the path
+        $path = str_replace('\\', '/', $path);
+        
+        // Only allow paths in the uploads/private directory
+        if (strpos($path, 'uploads/private/') !== 0) {
+            return false;
+        }
+        
+        // Prevent directory traversal
+        if (strpos($path, '../') !== false || strpos($path, '..\\') !== false) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Check if the current user can access the requested file
+     * 
+     * Implement your application-specific access control logic here.
+     * This could involve checking user roles, ownership, or other permissions.
+     */
+    private function userCanAccessFile(string $path): bool
+    {
+        return true;
+    }
+}
+```
+
+#### 2. Register the Route
+
+Add this route to your `routes.php` file:
+
+```php
+route->get('/files/serve', FileController::class, 'serve');
+```
+
+#### 3. Security Considerations
+
+The controller implementation above includes several important security measures:
+
+- **Path Validation**: Ensures only files in the `uploads/private` directory are accessible
+- **Directory Traversal Prevention**: Blocks attempts to access files outside the intended directory
+- **Access Control**: Provides a framework for implementing your application-specific permissions
+- **MIME Type Detection**: Sets the correct Content-Type header for the file
+- **Error Handling**: Returns appropriate HTTP status codes for different error conditions
+
+#### 4. Customizing Access Control
+
+The `userCanAccessFile()` method is where you implement your application's access control logic. This could be based on:
+
+- **User Ownership**: Check if the file belongs to the current user
+- **Role-Based Access**: Allow access based on user roles (admin, editor, etc.)
+- **Token-Based Access**: Validate access tokens for temporary access
+- **Business Rules**: Apply any other business-specific access rules
+
+For example, if your private files follow a path structure like `uploads/private/users/{user_id}/documents/{filename}`, you could extract the user ID from the path and compare it with the current user:
+
+```php
+private function userCanAccessFile(string $path): bool
+{
+    // Extract user ID from path
+    preg_match('/uploads\/private\/users\/(\d+)\//', $path, $matches);
+    $fileUserId = $matches[1] ?? null;
+    
+    if (!$fileUserId) {
+        return false;
+    }
+    
+    // Check if current user owns the file or is an admin
+    $currentUser = $this->auth->user();
+    return $currentUser->id == $fileUserId || $currentUser->isAdmin();
+}
+```
+
+#### 5. Temporary Access Links
+
+You might want to generate temporary access links for private files. This can be implemented by adding a token parameter to the URL:
+
+```php
+public function generateTemporaryUrl(string $path, int $expiresIn = 3600): string
+{
+    $expires = time() + $expiresIn;
+    $token = $this->generateToken($path, $expires);
+    
+    return '/files/serve?path=' . urlencode($path) . '&expires=' . $expires . '&token=' . $token;
+}
+
+private function generateToken(string $path, int $expires): string
+{
+    // Use a secret key to sign the path and expiration
+    $secret = config('app.key');
+    return hash_hmac('sha256', $path . $expires, $secret);
+}
+```
+
+Then update the `serve` method to validate the token:
+
+```php
+public function serve()
+{
+    $path = $this->request->get('path');
+    $expires = $this->request->get('expires');
+    $token = $this->request->get('token');
+    
+    // Validate token if provided
+    if ($token && $expires) {
+        $expectedToken = hash_hmac('sha256', $path . $expires, config('app.key'));
+        
+        if (time() > $expires || !hash_equals($expectedToken, $token)) {
+            return response()->withStatus(403)->write('Link expired or invalid');
+        }
+        
+        // Token is valid, skip other access checks
+    } else {
+        // Perform regular access checks
+        if (!$this->userCanAccessFile($path)) {
+            return response()->withStatus(403)->write('Access denied');
+        }
+    }
+    
+    // Rest of the method remains the same
+    // ...
+}
+```
+
 ### S3 Storage Setup
 
 1. Install the AWS SDK for PHP:
