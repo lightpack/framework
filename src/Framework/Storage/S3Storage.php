@@ -156,6 +156,9 @@ class S3Storage implements Storage
     public function store(string $source, string $destination): void
     {
         $destination = $this->getFullPath($destination);
+        
+        // Determine if this is a public file based on the path
+        $isPublic = strpos($destination, 'uploads/public/') === 0;
 
         try {
             // Read the uploaded file
@@ -170,7 +173,7 @@ class S3Storage implements Storage
                 'Bucket' => $this->bucket,
                 'Key' => $destination,
                 'Body' => $contents,
-                'ACL' => 'private',
+                'ACL' => $isPublic ? 'public-read' : 'private',
             ]);
 
             if (!$result) {
@@ -189,7 +192,13 @@ class S3Storage implements Storage
     public function url(string $path, int $expiration = 3600): string
     {
         $path = $this->getFullPath($path);
-
+        
+        // For public files, return a direct URL
+        if (strpos($path, 'uploads/public/') === 0) {
+            return "https://{$this->bucket}.s3.amazonaws.com/{$path}";
+        }
+        
+        // For private files, generate a pre-signed URL
         $command = $this->client->getCommand('GetObject', [
             'Bucket' => $this->bucket,
             'Key' => $path,

@@ -40,4 +40,16 @@ interface Storage
      * @throws FileUploadException on failure
      */
     public function store(string $source, string $destination): void;
+    
+    /**
+     * Get a URL for accessing the file
+     * 
+     * For public files, this returns a direct URL
+     * For private files, this returns a temporary URL with the specified expiration
+     * 
+     * @param string $path The path to the file
+     * @param int $expiration Expiration time in seconds (for private files)
+     * @return string The URL to access the file
+     */
+    public function url(string $path, int $expiration = 3600): string;
 }

@@ -23,4 +23,26 @@ class LocalStorage extends File implements Storage
             throw new FileUploadException('Could not upload the file.');
         }
     }
+    
+    /**
+     * Get a URL for accessing the file
+     * 
+     * For local storage, this assumes files in storage/uploads/public are
+     * accessible via /uploads in the web root (via symlink)
+     * 
+     * @param string $path The path to the file
+     * @param int $expiration Expiration time in seconds (ignored for local storage)
+     * @return string The URL to access the file
+     */
+    public function url(string $path, int $expiration = 3600): string
+    {
+        // If path starts with 'uploads/public', make it accessible via /uploads
+        if (strpos($path, 'uploads/public/') === 0) {
+            return '/uploads/' . substr($path, strlen('uploads/public/'));
+        }
+        
+        // For other paths, return a route to a controller that can serve the file
+        // with proper access control
+        return '/files/serve?path=' . urlencode($path);
+    }
 }

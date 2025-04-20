@@ -101,8 +101,9 @@ class UploadedFile
      *                      - unique: Generate unique filename (bool)
      *                      - preserve_name: Keep original name as prefix when unique (bool)
      * @throws FileUploadException If file cannot be uploaded or directory issues
+     * @return string The path where the file was stored
      */
-    public function store(string $destination, array $options = []): void
+    public function store(string $destination, array $options = []): string
     {
         // Default options
         $options = array_merge([
@@ -122,6 +123,44 @@ class UploadedFile
         }
 
         $this->storage->store($this->tmpName, $targetPath);
+        
+        // Return the path where the file was stored
+        return $targetPath;
+    }
+    
+    /**
+     * Store the uploaded file in the public uploads directory
+     * Files stored with this method will be directly accessible via URL
+     * 
+     * @param string $path Path within the public uploads directory
+     * @param array $options Storage options
+     * @return string The URL to access the file
+     * @throws FileUploadException If file cannot be uploaded
+     */
+    public function storePublic(string $path = '', array $options = []): string
+    {
+        $path = trim($path, '/\\');
+        $storagePath = 'uploads/public/' . ($path ? $path . '/' : '');
+        $fullPath = $this->store($storagePath, $options);
+        
+        // Return URL to access the file
+        return $this->storage->url($fullPath);
+    }
+    
+    /**
+     * Store the uploaded file in the private uploads directory
+     * Files stored with this method require access control
+     * 
+     * @param string $path Path within the private uploads directory
+     * @param array $options Storage options
+     * @return string The path where the file was stored
+     * @throws FileUploadException If file cannot be uploaded
+     */
+    public function storePrivate(string $path = '', array $options = []): string
+    {
+        $path = trim($path, '/\\');
+        $storagePath = 'uploads/private/' . ($path ? $path . '/' : '');
+        return $this->store($storagePath, $options);
     }
 
     private function resolveFilename(array $options): string 
