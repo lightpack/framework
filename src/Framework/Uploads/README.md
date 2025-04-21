@@ -167,6 +167,54 @@ $user->attach('avatar', [
 // And accessible via: /uploads/media/{id}/filename.jpg
 ```
 
+### Public vs Private Uploads
+
+The framework supports both public and private uploads:
+
+1. **Public Uploads** (default)
+   - Stored in `uploads/public/...`
+   - Directly accessible via URL: `/uploads/...`
+   - Suitable for images, public documents, etc.
+
+2. **Private Uploads**
+   - Stored in `uploads/private/...`
+   - Accessible only through a controller: `/files/serve?path=...`
+   - Requires authentication/authorization
+   - Suitable for sensitive documents, private files, etc.
+
+To use private uploads, you need to set up your own controller to serve the files with proper access control. The UploadModel's URL method will automatically generate the correct URL format based on the storage path.
+
+### URL Structure
+
+The URL structure depends on the storage location:
+
+```php
+// For public uploads
+// Stored at: uploads/public/media/123/avatar.jpg
+// URL: /uploads/media/123/avatar.jpg
+
+// For transformed versions
+// Stored at: uploads/public/media/123/thumbnail/avatar.jpg
+// URL: /uploads/media/123/thumbnail/avatar.jpg
+```
+
+### Customizing Upload Paths
+
+By default, files are stored in `uploads/public/media/{model_id}/{filename}`, but you can customize this:
+
+```php
+$user->attach('avatar', [
+    'collection' => 'profile',
+    'path' => 'users/' . $user->id . '/avatars',
+]);
+
+// Results in:
+// Storage path: uploads/public/users/123/avatars/image.jpg
+// URL: /uploads/users/123/avatars/image.jpg
+```
+
+This allows you to organize files in a way that makes sense for your application.
+
 ### Listing Files in a Directory
 
 The Storage system provides a `files()` method to list all files in a directory:
@@ -181,17 +229,6 @@ foreach ($files as $file) {
 ```
 
 This works consistently across different storage backends (local filesystem, S3, etc.).
-
-### Customizing Upload Paths
-
-By default, files are stored in `uploads/public/media/{model_id}/{filename}`, but you can customize this:
-
-```php
-$user->attach('avatar', [
-    'collection' => 'profile',
-    'path' => 'users/' . $user->id . '/avatars',
-]);
-```
 
 ## Metadata and Validation
 
