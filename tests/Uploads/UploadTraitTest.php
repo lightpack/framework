@@ -46,7 +46,7 @@ class TestHasUploads
     }
 }
 
-class HasUploadsTest extends TestCase
+class UploadTraitTest extends TestCase
 {
     protected $model;
     protected $uploadService;

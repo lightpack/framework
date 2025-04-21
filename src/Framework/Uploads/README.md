@@ -24,14 +24,14 @@ php lightpack migrate Lightpack\\Uploads\\Migration\\CreateUploadsTable
 
 ### Preparing Your Model
 
-Add the `HasUploads` trait to any model that needs file upload capabilities:
+Add the `UploadTrait` trait to any model that needs file upload capabilities:
 
 ```php
-use Lightpack\Uploads\HasUploads;
+use Lightpack\Uploads\UploadTrait;
 
 class User extends Model
 {
-    use HasUploads;
+    use UploadTrait;
     
     // ...
 }
