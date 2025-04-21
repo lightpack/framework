@@ -57,13 +57,12 @@ class UploadModel extends Model
     {
         $path = $this->getPath();
         $filename = $this->getFilename();
-        $disk = $this->disk ?? 'public';
         
         if ($variant) {
-            return $this->storage()->url("uploads/{$disk}/{$path}/{$variant}/{$filename}");
+            return $this->storage()->url("uploads/public/{$path}/{$variant}/{$filename}");
         }
         
-        return $this->storage()->url("uploads/{$disk}/{$path}/{$filename}");
+        return $this->storage()->url("uploads/public/{$path}/{$filename}");
     }
     
     /**
@@ -76,13 +75,12 @@ class UploadModel extends Model
     {
         $path = $this->getPath();
         $filename = $this->getFilename();
-        $disk = $this->disk ?? 'public';
         
         if ($variant) {
-            return "uploads/{$disk}/{$path}/{$variant}/{$filename}";
+            return "uploads/public/{$path}/{$variant}/{$filename}";
         }
         
-        return "uploads/{$disk}/{$path}/{$filename}";
+        return "uploads/public/{$path}/{$filename}";
     }
     
     /**

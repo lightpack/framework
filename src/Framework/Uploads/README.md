@@ -155,22 +155,17 @@ You can specify different dimensions for each variant:
 
 ## File Storage System
 
-### Storage Disks
-
-The Uploads module uses the concept of "disks" to determine where files are stored:
+The Uploads module uses Lightpack's Storage system to store files in a consistent way:
 
 ```php
-$user->attach('document', [
-    'collection' => 'documents',
-    'disk' => 'private', // Use a private disk instead of public
+// Public files (accessible via URL)
+$user->attach('avatar', [
+    'collection' => 'profile',
 ]);
-```
 
-Available disks:
-- `public` (default) - For publicly accessible files
-- `private` - For files that require authentication
-- `s3` - For files stored on Amazon S3
-- Custom disks defined in your storage configuration
+// Files are stored in: uploads/public/media/{id}/filename.jpg
+// And accessible via: /uploads/media/{id}/filename.jpg
+```
 
 ### Listing Files in a Directory
 
@@ -189,7 +184,7 @@ This works consistently across different storage backends (local filesystem, S3,
 
 ### Customizing Upload Paths
 
-By default, files are stored in `uploads/{disk}/{model_id}/{filename}`, but you can customize this:
+By default, files are stored in `uploads/public/media/{model_id}/{filename}`, but you can customize this:
 
 ```php
 $user->attach('avatar', [

@@ -180,13 +180,12 @@ class UploadService
         // Delete the file and any transformations
         $path = $upload->getPath();
         $filename = $upload->getFilename();
-        $disk = $upload->disk ?? 'public';
         
         // Delete the original file
-        $this->storage->delete("uploads/{$disk}/{$path}/{$filename}");
+        $this->storage->delete("uploads/public/{$path}/{$filename}");
         
         // Delete any transformed versions (look for files with prefixes)
-        $files = $this->storage->files("uploads/{$disk}/{$path}");
+        $files = $this->storage->files("uploads/public/{$path}");
         foreach ($files as $file) {
             $this->storage->delete($file);
         }
@@ -203,11 +202,20 @@ class UploadService
      */
     public function deleteAllUploadsForModel($model, string $collection)
     {
-        $uploads = $this->uploadModel->where([
-            'model_type' => get_class($model),
-            'model_id' => $model->{$model->getPrimaryKey()},
-            'collection' => $collection,
-        ])->get();
+        // Find all uploads for this model and collection
+        $modelType = get_class($model);
+        $modelId = $model->{$model->getPrimaryKey()};
+        
+        // Use the query builder to get uploads
+        $uploads = UploadModel::query()
+            ->where('model_type', $modelType)
+            ->where('model_id', $modelId)
+            ->where('collection', $collection)
+            ->all();
+        
+        if (empty($uploads)) {
+            return true;
+        }
         
         foreach ($uploads as $upload) {
             $this->delete($upload->id);
@@ -298,7 +306,6 @@ class UploadService
         $upload->mime_type = $meta['mime_type'];
         $upload->extension = $meta['extension'];
         $upload->size = $meta['size'];
-        $upload->disk = 'public';
         
         $upload->save();
         
