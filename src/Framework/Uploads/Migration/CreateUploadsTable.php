@@ -15,8 +15,8 @@ class CreateUploadsTable extends Migration
     {
         $this->schema->createTable('uploads', function($table) {
             $table->id();
-            $table->column('model_id')->type('bigint')->attribute('unsigned');
             $table->varchar('model_type');
+            $table->column('model_id')->type('bigint')->attribute('unsigned');
             $table->varchar('collection')->default('default');
             $table->varchar('name');
             $table->varchar('file_name');
