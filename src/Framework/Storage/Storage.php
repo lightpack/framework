@@ -52,4 +52,12 @@ interface Storage
      * @return string The URL to access the file
      */
     public function url(string $path, int $expiration = 3600): string;
+    
+    /**
+     * List all files in a directory
+     * 
+     * @param string $directory The directory path to list files from
+     * @return array An array of file paths within the directory
+     */
+    public function files(string $directory): array;
 }

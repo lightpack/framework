@@ -170,6 +170,7 @@ class UploadService
      */
     public function delete(int $uploadId)
     {
+        /** @var UploadModel */
         $upload = $this->uploadModel->find($uploadId);
         
         if (!$upload) {

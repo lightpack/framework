@@ -45,4 +45,28 @@ class LocalStorage extends File implements Storage
         // with proper access control
         return '/files/serve?path=' . urlencode($path);
     }
+    
+    /**
+     * List all files in a directory
+     * 
+     * @param string $directory The directory path to list files from
+     * @return array An array of file paths within the directory
+     */
+    public function files(string $directory): array
+    {
+        if (!is_dir($directory)) {
+            return [];
+        }
+        
+        $files = [];
+        $dir = new \DirectoryIterator($directory);
+        
+        foreach ($dir as $fileInfo) {
+            if (!$fileInfo->isDot() && !$fileInfo->isDir()) {
+                $files[] = $directory . '/' . $fileInfo->getFilename();
+            }
+        }
+        
+        return $files;
+    }
 }

@@ -266,4 +266,43 @@ class S3Storage implements Storage
     {
         return $this->bucket;
     }
+
+    /**
+     * List all files in a directory
+     * 
+     * @param string $directory The directory path to list files from
+     * @return array An array of file paths within the directory
+     */
+    public function files(string $directory): array
+    {
+        try {
+            // Ensure directory ends with a trailing slash if not empty
+            if (!empty($directory) && substr($directory, -1) !== '/') {
+                $directory .= '/';
+            }
+            
+            $result = $this->client->listObjects([
+                'Bucket' => $this->bucket,
+                'Prefix' => $directory,
+                'Delimiter' => '/',
+            ]);
+            
+            $files = [];
+            
+            // Get the objects (files)
+            if (isset($result['Contents'])) {
+                foreach ($result['Contents'] as $object) {
+                    // Skip the directory itself
+                    if ($object['Key'] !== $directory) {
+                        $files[] = $object['Key'];
+                    }
+                }
+            }
+            
+            return $files;
+        } catch (S3Exception $e) {
+            // Log error or handle exception
+            return [];
+        }
+    }
 }
