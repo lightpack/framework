@@ -2,7 +2,7 @@
 
 namespace Lightpack\Uploads\Migration;
 
-use Lightpack\Database\Migration\Migration;
+use Lightpack\Database\Migrations\Migration;
 
 class CreateUploadsTable extends Migration
 {
@@ -13,19 +13,19 @@ class CreateUploadsTable extends Migration
      */
     public function up(): void
     {
-        $this->schema->create('uploads', function($table) {
+        $this->schema->createTable('uploads', function($table) {
             $table->id();
-            $table->string('model_type');
-            $table->integer('model_id');
-            $table->string('collection')->default('default');
-            $table->string('name');
-            $table->string('file_name');
-            $table->string('mime_type');
-            $table->string('extension');
-            $table->bigInteger('size');
-            $table->string('disk')->default('public');
-            $table->string('path');
-            $table->json('meta')->nullable();
+            $table->column('model_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('model_type');
+            $table->varchar('collection')->default('default');
+            $table->varchar('name');
+            $table->varchar('file_name');
+            $table->varchar('mime_type');
+            $table->varchar('extension');
+            $table->column('size')->type('bigint');
+            $table->varchar('disk')->default('public');
+            $table->varchar('path');
+            $table->column('meta')->type('json')->nullable();
             $table->timestamps();
             
             $table->index(['model_type', 'model_id']);
@@ -40,6 +40,6 @@ class CreateUploadsTable extends Migration
      */
     public function down(): void
     {
-        $this->schema->drop('uploads');
+        $this->schema->dropTable('uploads');
     }
 }
