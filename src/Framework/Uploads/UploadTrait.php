@@ -4,12 +4,7 @@ namespace Lightpack\Uploads;
 
 use Lightpack\Container\Container;
 
-/**
- * HasUploads Trait
- * 
- * Provides file upload functionality to models.
- */
-trait HasUploads
+trait UploadTrait
 {
     /**
      * Define the relationship between the model and its uploads.

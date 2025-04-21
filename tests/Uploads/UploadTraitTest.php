@@ -3,7 +3,7 @@
 namespace Lightpack\Tests\Uploads;
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Uploads\HasUploads;
+use Lightpack\Uploads\UploadTrait;
 use Lightpack\Uploads\UploadService;
 use Lightpack\Container\Container;
 use Lightpack\Http\UploadedFile;
@@ -31,7 +31,7 @@ class MockQueryBuilder
 // Standalone test implementation of HasUploads trait
 class TestHasUploads
 {
-    use HasUploads;
+    use UploadTrait;
     
     public $id = 1;
     
