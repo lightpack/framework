@@ -3,8 +3,6 @@
 namespace Lightpack\Uploads;
 
 use Lightpack\Http\Request;
-use Lightpack\Database\Lucid\Model;
-use Lightpack\Storage\Storage;
 use Lightpack\Container\Container;
 
 /**

@@ -134,11 +134,11 @@ $mediumUrl = $avatar->url('medium');
 
 ### How Transformations Work
 
-Transformations are processed by the `TransformJob` class, which:
+Transformations are processed automatically when you attach a file with transformations defined:
 
-1. Loads the original image
-2. Applies the requested transformations
-3. Saves the transformed versions to the appropriate storage location
+1. The original image is loaded
+2. Each transformation is applied
+3. Transformed versions are saved to the appropriate storage location
 
 You can specify different dimensions for each variant:
 
