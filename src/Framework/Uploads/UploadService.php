@@ -319,7 +319,7 @@ class UploadService
      * @param string $mimeType
      * @return string
      */
-    protected function getFileType(string $mimeType): string
+    public function getFileType(string $mimeType): string
     {
         $types = [
             'image' => ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'],
