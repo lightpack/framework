@@ -231,21 +231,4 @@ class UploadModel extends Model
     {
         return $this->getFileType() === 'archive';
     }
-    
-    /**
-     * Get a preview URL for the file.
-     * For images, returns the image URL.
-     * For other file types, returns null (frontend can show appropriate icon).
-     *
-     * @param string|null $variant The variant name for images (e.g., 'thumbnail')
-     * @return string|null
-     */
-    public function getPreviewUrl(?string $variant = null): ?string
-    {
-        if ($this->isImage()) {
-            return $this->url($variant);
-        }
-        
-        return null;
-    }
 }
