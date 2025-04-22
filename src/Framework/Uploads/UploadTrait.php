@@ -14,7 +14,7 @@ trait UploadTrait
     public function uploads(?string $collection = null)
     {
         $query = $this->hasMany(UploadModel::class, 'model_id')
-            ->where('model_type', get_class($this));
+            ->where('model_type', $this->getTableName());
             
         if ($collection) {
             $query->where('collection', $collection);

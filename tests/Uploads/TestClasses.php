@@ -14,7 +14,7 @@ class TestModel
         return 'id';
     }
     
-    public function getTable()
+    public function getTableName()
     {
         return 'test_models';
     }
@@ -36,6 +36,11 @@ class TestUploadModel
     public $size;
     public $disk = 'public';
     public $path;
+
+    public function getTableName()
+    {
+        return 'test_models';
+    }
     
     public function save()
     {

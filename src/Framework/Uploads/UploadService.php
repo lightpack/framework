@@ -201,7 +201,7 @@ class UploadService
     public function deleteAllUploadsForModel($model, string $collection)
     {
         // Find all uploads for this model and collection
-        $modelType = get_class($model);
+        $modelType = $model->getTableName();
         $modelId = $model->{$model->getPrimaryKey()};
         
         // Use the query builder to get uploads

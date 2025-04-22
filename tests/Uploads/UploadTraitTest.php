@@ -34,6 +34,11 @@ class TestHasUploads
     use UploadTrait;
     
     public $id = 1;
+
+    public function getTableName(): string
+    {
+        return 'test_models';
+    }
     
     public function hasMany($class, $foreignKey)
     {
