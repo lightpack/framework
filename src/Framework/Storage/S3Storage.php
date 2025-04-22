@@ -64,7 +64,7 @@ class S3Storage implements Storage
                 'Bucket' => $this->bucket,
                 'Key' => $path,
                 'Body' => $contents,
-                'ACL' => 'private',
+                // 'ACL' => 'private',
             ]);
 
             return true;
@@ -127,7 +127,7 @@ class S3Storage implements Storage
                 'Bucket' => $this->bucket,
                 'CopySource' => "{$this->bucket}/{$source}",
                 'Key' => $destination,
-                'ACL' => 'private',
+                // 'ACL' => 'private',
             ]);
 
             return true;
@@ -173,7 +173,7 @@ class S3Storage implements Storage
                 'Bucket' => $this->bucket,
                 'Key' => $destination,
                 'Body' => $contents,
-                'ACL' => $isPublic ? 'public-read' : 'private',
+                // 'ACL' => $isPublic ? 'public-read' : 'private',
             ]);
 
             if (!$result) {
@@ -193,12 +193,6 @@ class S3Storage implements Storage
     {
         $path = $this->getFullPath($path);
         
-        // For public files, return a direct URL
-        if (strpos($path, 'uploads/public/') === 0) {
-            return "https://{$this->bucket}.s3.amazonaws.com/{$path}";
-        }
-        
-        // For private files, generate a pre-signed URL
         $command = $this->client->getCommand('GetObject', [
             'Bucket' => $this->bucket,
             'Key' => $path,
