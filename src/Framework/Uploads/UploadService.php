@@ -74,6 +74,7 @@ class UploadService
         $storedPath = $file->storePublic($path);
         
         // Update the path in the upload record
+        $upload->file_name = basename($storedPath);
         $upload->path = $path;
         $upload->save();
         
@@ -112,6 +113,7 @@ class UploadService
             $storedPath = $file->storePublic($path);
             
             // Update the path in the upload record
+            $upload->file_name = basename($storedPath);
             $upload->path = $path;
             $upload->save();
             
@@ -155,6 +157,7 @@ class UploadService
         }
         
         // Update the path in the upload record
+        $upload->file_name = $filename;
         $upload->path = $path;
         $upload->save();
         
