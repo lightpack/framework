@@ -55,14 +55,7 @@ class UploadModel extends Model
      */
     public function url(?string $variant = null): string
     {
-        $path = $this->getPath();
-        $filename = $this->getFilename();
-        
-        if ($variant) {
-            return $this->storage()->url("uploads/public/{$path}/{$variant}/{$filename}");
-        }
-        
-        return $this->storage()->url("uploads/public/{$path}/{$filename}");
+        return $this->storage()->url($this->getPath($variant));
     }
     
     /**

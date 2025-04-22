@@ -134,17 +134,19 @@ class UploadedFile
      * 
      * @param string $path Path within the public uploads directory
      * @param array $options Storage options
-     * @return string The URL to access the file
+     * @return string The relative path where the file was stored
      * @throws FileUploadException If file cannot be uploaded
      */
     public function storePublic(string $path = '', array $options = []): string
     {
         $path = trim($path, '/\\');
         $storagePath = 'uploads/public/' . ($path ? $path . '/' : '');
-        $fullPath = $this->store($storagePath, $options);
-        
-        // Return URL to access the file
-        return $this->storage->url($fullPath);
+
+        if($this->storage instanceof LocalStorage) {
+            $storagePath = DIR_STORAGE . '/' . $storagePath;
+        }
+
+        return $this->store($storagePath, $options);
     }
     
     /**
@@ -153,13 +155,18 @@ class UploadedFile
      * 
      * @param string $path Path within the private uploads directory
      * @param array $options Storage options
-     * @return string The path where the file was stored
+     * @return string The relative path where the file was stored
      * @throws FileUploadException If file cannot be uploaded
      */
     public function storePrivate(string $path = '', array $options = []): string
     {
         $path = trim($path, '/\\');
         $storagePath = 'uploads/private/' . ($path ? $path . '/' : '');
+
+        if($this->storage instanceof LocalStorage) {
+            $storagePath = DIR_STORAGE . '/' . $storagePath;
+        }
+
         return $this->store($storagePath, $options);
     }
 

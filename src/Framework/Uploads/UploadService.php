@@ -72,7 +72,6 @@ class UploadService
         // Store the file
         $path = "media/{$upload->id}";
         $storedPath = $file->storePublic($path);
-        
         // Update the path in the upload record
         $upload->file_name = basename($storedPath);
         $upload->path = $path;
