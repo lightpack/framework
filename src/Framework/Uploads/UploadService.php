@@ -328,6 +328,7 @@ class UploadService
             'document' => ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
             'spreadsheet' => ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
             'presentation' => ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+            'archive' => ['application/zip', 'application/x-rar-compressed', 'application/x-tar', 'application/gzip', 'application/x-7z-compressed', 'application/x-bzip2'],
         ];
         
         foreach ($types as $type => $mimeTypes) {
@@ -337,5 +338,54 @@ class UploadService
         }
         
         return 'other';
+    }
+    
+    /**
+     * Get a filename from a MIME type (for extension checking).
+     *
+     * @param string $mimeType
+     * @return string
+     */
+    protected function getFilenameFromMimeType(string $mimeType): string
+    {
+        $map = [
+            'image/jpeg' => 'file.jpg',
+            'image/png' => 'file.png',
+            'image/gif' => 'file.gif',
+            'image/svg+xml' => 'file.svg',
+            'image/webp' => 'file.webp',
+            'video/mp4' => 'file.mp4',
+            'video/mpeg' => 'file.mpeg',
+            'video/quicktime' => 'file.mov',
+            'video/webm' => 'file.webm',
+            'audio/mpeg' => 'file.mp3',
+            'audio/wav' => 'file.wav',
+            'audio/ogg' => 'file.ogg',
+            'application/pdf' => 'file.pdf',
+            'application/msword' => 'file.doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'file.docx',
+            'application/vnd.ms-excel' => 'file.xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'file.xlsx',
+            'application/vnd.ms-powerpoint' => 'file.ppt',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'file.pptx',
+            'application/zip' => 'file.zip',
+            'application/x-rar-compressed' => 'file.rar',
+            'application/x-tar' => 'file.tar',
+            'application/gzip' => 'file.gz',
+            'application/x-7z-compressed' => 'file.7z',
+            'application/x-bzip2' => 'file.bz2',
+            'text/html' => 'file.html',
+            'text/css' => 'file.css',
+            'application/javascript' => 'file.js',
+            'application/json' => 'file.json',
+            'text/xml' => 'file.xml',
+            'application/xml' => 'file.xml',
+            'text/x-php' => 'file.php',
+            'text/x-python' => 'file.py',
+            'text/x-java' => 'file.java',
+            'text/plain' => 'file.txt',
+        ];
+        
+        return $map[$mimeType] ?? 'file';
     }
 }

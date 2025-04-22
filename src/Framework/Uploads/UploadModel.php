@@ -156,4 +156,103 @@ class UploadModel extends Model
         
         return $this->meta[$key] ?? $default;
     }
+    
+    /**
+     * Get the file type based on MIME type.
+     * 
+     * @return string One of: 'image', 'video', 'audio', 'document', 'spreadsheet', 'presentation', 'archive', 'code', 'other'
+     */
+    public function getFileType(): string
+    {
+        $uploadService = Container::getInstance()->resolve(UploadService::class);
+        
+        return $uploadService->getFileType($this->mime_type);
+    }
+    
+    /**
+     * Check if the file is an image.
+     *
+     * @return bool
+     */
+    public function isImage(): bool
+    {
+        return $this->getFileType() === 'image';
+    }
+    
+    /**
+     * Check if the file is a document.
+     *
+     * @return bool
+     */
+    public function isDocument(): bool
+    {
+        return $this->getFileType() === 'document';
+    }
+    
+    /**
+     * Check if the file is a video.
+     *
+     * @return bool
+     */
+    public function isVideo(): bool
+    {
+        return $this->getFileType() === 'video';
+    }
+    
+    /**
+     * Check if the file is an audio file.
+     *
+     * @return bool
+     */
+    public function isAudio(): bool
+    {
+        return $this->getFileType() === 'audio';
+    }
+    
+    /**
+     * Check if the file is a spreadsheet.
+     *
+     * @return bool
+     */
+    public function isSpreadsheet(): bool
+    {
+        return $this->getFileType() === 'spreadsheet';
+    }
+    
+    /**
+     * Check if the file is a presentation.
+     *
+     * @return bool
+     */
+    public function isPresentation(): bool
+    {
+        return $this->getFileType() === 'presentation';
+    }
+    
+    /**
+     * Check if the file is an archive.
+     *
+     * @return bool
+     */
+    public function isArchive(): bool
+    {
+        return $this->getFileType() === 'archive';
+    }
+    
+    /**
+     * Get a preview URL for the file.
+     * For images, returns the image URL.
+     * For other file types, returns null (frontend can show appropriate icon).
+     *
+     * @param string|null $variant The variant name for images (e.g., 'thumbnail')
+     * @return string|null
+     */
+    public function getPreviewUrl(?string $variant = null): ?string
+    {
+        if ($this->isImage()) {
+            return $this->url($variant);
+        }
+        
+        return null;
+    }
 }
