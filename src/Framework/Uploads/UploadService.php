@@ -56,7 +56,7 @@ class UploadService
         }
         
         // Get collection name
-        $collection = $config['collection'] ?? 'default';
+        $collection = empty($config['collection']) ? 'default' : $config['collection'];
         
         // Check if this is a singleton upload (only one per collection)
         if (isset($config['singleton']) && $config['singleton']) {
@@ -99,7 +99,7 @@ class UploadService
         
         foreach ($files as $index => $file) {
             // Get collection name
-            $collection = $config['collection'] ?? 'default';
+            $collection = empty($config['collection']) ? 'default' : $config['collection'];
             
             // Get file metadata
             $meta = $this->getUploadedFileMeta($file);
@@ -134,7 +134,7 @@ class UploadService
         $meta = $this->downloadFileFromUrl($url);
         
         // Get collection name
-        $collection = $config['collection'] ?? 'default';
+        $collection = empty($config['collection']) ? 'default' : $config['collection'];
         
         // Check if this is a singleton upload (only one per collection)
         if (isset($config['singleton']) && $config['singleton']) {
