@@ -23,7 +23,6 @@ class CreateUploadsTable extends Migration
             $table->varchar('mime_type');
             $table->varchar('extension');
             $table->column('size')->type('bigint');
-            $table->varchar('disk')->default('public');
             $table->varchar('path');
             $table->column('meta')->type('json')->nullable();
             $table->timestamps();
