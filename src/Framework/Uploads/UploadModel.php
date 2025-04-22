@@ -71,9 +71,9 @@ class UploadModel extends Model
      * @param string|null $variant The variant name (e.g., 'thumbnail')
      * @return string
      */
-    public function path(?string $variant = null): string
+    public function getPath(?string $variant = null): string
     {
-        $path = $this->getPath();
+        $path = $this->path ?? "media/{$this->id}";
         $filename = $this->getFilename();
         
         if ($variant) {
@@ -81,16 +81,6 @@ class UploadModel extends Model
         }
         
         return "uploads/public/{$path}/{$filename}";
-    }
-    
-    /**
-     * Get the path for the file.
-     *
-     * @return string
-     */
-    public function getPath(): string
-    {
-        return $this->path ?? "media/{$this->id}";
     }
     
     /**
@@ -122,10 +112,10 @@ class UploadModel extends Model
      */
     public function exists(?string $variant = null): bool
     {
-        $path = $this->path();
+        $path = $this->getPath();
         
         if ($variant) {
-            $path = $this->path($variant);
+            $path = $this->getPath($variant);
         }
         
         return $this->storage()->exists($path);

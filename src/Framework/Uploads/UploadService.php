@@ -296,7 +296,7 @@ class UploadService
     {
         $upload = new UploadModel();
         
-        $upload->model_type = get_class($model);
+        $upload->model_type = $model->getTableName();
         $upload->model_id = $model->{$model->getPrimaryKey()};
         $upload->collection = $collection;
         $upload->name = $meta['name'];
@@ -304,6 +304,9 @@ class UploadService
         $upload->mime_type = $meta['mime_type'];
         $upload->extension = $meta['extension'];
         $upload->size = $meta['size'];
+        
+        // Set the path - this is required by the database schema
+        $upload->path = "media/{$upload->id}";
         
         $upload->save();
         
