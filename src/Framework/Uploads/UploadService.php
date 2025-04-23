@@ -113,7 +113,7 @@ class UploadService
         $upload = $this->createUploadEntry($model, $meta, $collection, $key);
         
         // Store the file
-        $path = "media/{$upload->id}";
+        $path = $upload->path;
         $filename = $meta['filename'];
         
         // Determine if this is a private file
@@ -282,7 +282,7 @@ class UploadService
         $upload->size = $meta['size'];
         
         // Set the path - this is required by the database schema
-        $upload->path = "media/{$upload->id}";
+        $upload->path = "media/" . $model->{$model->getPrimaryKey()};
         
         $upload->save();
         
@@ -310,7 +310,7 @@ class UploadService
         $upload = $this->createUploadEntry($model, $meta, $collection, $key);
         
         // Store the file
-        $path = "media/{$upload->id}";
+        $path = $upload->path;
         
         // Check if this should be stored privately
         $isPrivate = !empty($config['private']);
