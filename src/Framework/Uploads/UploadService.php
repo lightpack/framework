@@ -55,29 +55,13 @@ class UploadService
             throw new \RuntimeException("No file uploaded with key: {$key}");
         }
         
-        // Get collection name
-        $collection = empty($config['collection']) ? 'default' : $config['collection'];
-        
         // Check if this is a singleton upload (only one per collection)
         if (isset($config['singleton']) && $config['singleton']) {
+            $collection = empty($config['collection']) ? 'default' : $config['collection'];
             $this->deleteAllUploadsForModel($model, $collection);
         }
         
-        // Get file metadata
-        $meta = $this->getUploadedFileMeta($file);
-        
-        // Create the upload record
-        $upload = $this->createUploadEntry($model, $meta, $collection, $key);
-        
-        // Store the file
-        $path = "media/{$upload->id}";
-        $storedPath = $file->storePublic($path);
-        // Update the path in the upload record
-        $upload->file_name = basename($storedPath);
-        $upload->path = $path;
-        $upload->save();
-        
-        return $upload;
+        return $this->saveFile($model, $file, array_merge($config, ['key' => $key]));
     }
     
     /**
@@ -98,25 +82,7 @@ class UploadService
         $uploads = [];
         
         foreach ($files as $index => $file) {
-            // Get collection name
-            $collection = empty($config['collection']) ? 'default' : $config['collection'];
-            
-            // Get file metadata
-            $meta = $this->getUploadedFileMeta($file);
-            
-            // Create the upload record
-            $upload = $this->createUploadEntry($model, $meta, $collection, "{$key}_{$index}");
-            
-            // Store the file
-            $path = "media/{$upload->id}";
-            $storedPath = $file->storePublic($path);
-            
-            // Update the path in the upload record
-            $upload->file_name = basename($storedPath);
-            $upload->path = $path;
-            $upload->save();
-            
-            $uploads[] = $upload;
+            $uploads[] = $this->saveFile($model, $file, array_merge($config, ['key' => "{$key}_{$index}"]));
         }
         
         return $uploads;
@@ -310,6 +276,38 @@ class UploadService
         // Set the path - this is required by the database schema
         $upload->path = "media/{$upload->id}";
         
+        $upload->save();
+        
+        return $upload;
+    }
+    
+    /**
+     * Internal method to save a file and create an upload record.
+     *
+     * @param object $model The model to attach the upload to
+     * @param \Lightpack\Http\UploadedFile $file The uploaded file
+     * @param array $config Configuration options
+     * @return \Lightpack\Uploads\UploadModel
+     */
+    protected function saveFile($model, $file, array $config = [])
+    {
+        // Get collection name
+        $collection = empty($config['collection']) ? 'default' : $config['collection'];
+        
+        // Get file metadata
+        $meta = $this->getUploadedFileMeta($file);
+        
+        // Create the upload record
+        $key = $config['key'] ?? 'default';
+        $upload = $this->createUploadEntry($model, $meta, $collection, $key);
+        
+        // Store the file
+        $path = "media/{$upload->id}";
+        $storedPath = $file->storePublic($path);
+        
+        // Update the path in the upload record
+        $upload->file_name = basename($storedPath);
+        $upload->path = $path;
         $upload->save();
         
         return $upload;
