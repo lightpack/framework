@@ -65,32 +65,6 @@ class UploadService
     }
     
     /**
-     * Save a single file upload for a model as private.
-     * Private files require access control and are not directly accessible via URL.
-     *
-     * @param object $model The model to attach the upload to
-     * @param string $key The form field name
-     * @param array $config Configuration options
-     */
-    public function savePrivate($model, string $key, array $config = [])
-    {
-        // Get the uploaded file
-        $file = $this->getUploadedFile($key);
-        
-        if (!$file) {
-            throw new \RuntimeException("No file uploaded with key: {$key}");
-        }
-        
-        // Check if this is a singleton upload (only one per collection)
-        if (isset($config['singleton']) && $config['singleton']) {
-            $collection = empty($config['collection']) ? 'default' : $config['collection'];
-            $this->deleteAllUploadsForModel($model, $collection);
-        }
-        
-        return $this->saveFile($model, $file, array_merge($config, ['key' => $key, 'private' => true]));
-    }
-    
-    /**
      * Save multiple file uploads for a model.
      *
      * @param object $model The model to attach the uploads to
@@ -109,31 +83,6 @@ class UploadService
         
         foreach ($files as $index => $file) {
             $uploads[] = $this->saveFile($model, $file, array_merge($config, ['key' => "{$key}_{$index}"]));
-        }
-        
-        return $uploads;
-    }
-    
-    /**
-     * Save multiple file uploads for a model as private.
-     * Private files require access control and are not directly accessible via URL.
-     *
-     * @param object $model The model to attach the uploads to
-     * @param string $key The form field name
-     * @param array $config Configuration options
-     */
-    public function saveMultiplePrivate($model, string $key, array $config = [])
-    {
-        $files = $this->request->files($key);
-        
-        if (empty($files)) {
-            throw new \RuntimeException("No files uploaded with key: {$key}");
-        }
-        
-        $uploads = [];
-        
-        foreach ($files as $index => $file) {
-            $uploads[] = $this->saveFile($model, $file, array_merge($config, ['key' => "{$key}_{$index}", 'private' => true]));
         }
         
         return $uploads;
@@ -186,19 +135,6 @@ class UploadService
         $upload->save();
         
         return $upload;
-    }
-    
-    /**
-     * Save a file from a URL as private.
-     * Private files require access control and are not directly accessible via URL.
-     *
-     * @param object $model The model to attach the upload to
-     * @param string $url The URL to download from
-     * @param array $config Configuration options
-     */
-    public function saveFromUrlPrivate($model, string $url, array $config = [])
-    {
-        return $this->saveFromUrl($model, $url, array_merge($config, ['private' => true]));
     }
     
     /**

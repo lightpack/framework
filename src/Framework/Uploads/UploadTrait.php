@@ -39,6 +39,10 @@ trait UploadTrait
      *
      * @param string $key The form field name
      * @param array $config Configuration options
+     *                      - collection: The collection name (default: 'default')
+     *                      - singleton: Whether to replace existing uploads in this collection (default: false)
+     *                      - private: Whether to store the file privately, requiring access control (default: false)
+     *                      - transformations: Array of image transformations to apply
      * @return \Lightpack\Uploads\UploadModel
      */
     public function attach(string $key, array $config = [])
@@ -55,31 +59,13 @@ trait UploadTrait
     }
     
     /**
-     * Attach a file to the model as private.
-     * Private files require access control and are not directly accessible via URL.
-     *
-     * @param string $key The form field name
-     * @param array $config Configuration options
-     * @return \Lightpack\Uploads\UploadModel
-     */
-    public function attachPrivate(string $key, array $config = [])
-    {
-        $service = $this->getUploadService();
-        $upload = $service->savePrivate($this, $key, $config);
-        
-        // Process transformations if defined
-        if (isset($config['transformations'])) {
-            $this->transformUpload($upload, $config['transformations']);
-        }
-        
-        return $upload;
-    }
-    
-    /**
      * Attach multiple files to the model.
      *
      * @param string $key The form field name
      * @param array $config Configuration options
+     *                      - collection: The collection name (default: 'default')
+     *                      - private: Whether to store the files privately, requiring access control (default: false)
+     *                      - transformations: Array of image transformations to apply
      * @return array Array of UploadModel instances
      */
     public function attachMultiple(string $key, array $config = [])
@@ -98,60 +84,20 @@ trait UploadTrait
     }
     
     /**
-     * Attach multiple files to the model as private.
-     * Private files require access control and are not directly accessible via URL.
-     *
-     * @param string $key The form field name
-     * @param array $config Configuration options
-     * @return array Array of UploadModel instances
-     */
-    public function attachMultiplePrivate(string $key, array $config = [])
-    {
-        $service = $this->getUploadService();
-        $uploads = $service->saveMultiplePrivate($this, $key, $config);
-        
-        // Process transformations if defined
-        if (isset($config['transformations'])) {
-            foreach ($uploads as $upload) {
-                $this->transformUpload($upload, $config['transformations']);
-            }
-        }
-        
-        return $uploads;
-    }
-    
-    /**
      * Attach a file from a URL.
      *
      * @param string $url The URL to download from
      * @param array $config Configuration options
+     *                      - collection: The collection name (default: 'default')
+     *                      - singleton: Whether to replace existing uploads in this collection (default: false)
+     *                      - private: Whether to store the file privately, requiring access control (default: false)
+     *                      - transformations: Array of image transformations to apply
      * @return \Lightpack\Uploads\UploadModel
      */
     public function attachFromUrl(string $url, array $config = [])
     {
         $service = $this->getUploadService();
         $upload = $service->saveFromUrl($this, $url, $config);
-        
-        // Process transformations if defined
-        if (isset($config['transformations'])) {
-            $this->transformUpload($upload, $config['transformations']);
-        }
-        
-        return $upload;
-    }
-    
-    /**
-     * Attach a file from a URL as private.
-     * Private files require access control and are not directly accessible via URL.
-     *
-     * @param string $url The URL to download from
-     * @param array $config Configuration options
-     * @return \Lightpack\Uploads\UploadModel
-     */
-    public function attachFromUrlPrivate(string $url, array $config = [])
-    {
-        $service = $this->getUploadService();
-        $upload = $service->saveFromUrlPrivate($this, $url, $config);
         
         // Process transformations if defined
         if (isset($config['transformations'])) {

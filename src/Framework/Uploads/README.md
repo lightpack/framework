@@ -56,9 +56,10 @@ $user->attach('avatar', [
 ]);
 
 // Attach a file as private (requires access control)
-$user->attachPrivate('document', [
+$user->attach('document', [
     'collection' => 'confidential',
     'singleton' => true,
+    'private' => true,
 ]);
 ```
 
@@ -71,8 +72,9 @@ $photos = $user->attachMultiple('photos', [
 ]);
 
 // Attach multiple files as private
-$documents = $user->attachMultiplePrivate('documents', [
+$documents = $user->attachMultiple('documents', [
     'collection' => 'private-documents',
+    'private' => true,
 ]);
 ```
 
@@ -85,8 +87,9 @@ $user->attachFromUrl('https://example.com/image.jpg', [
 ]);
 
 // Attach a file from a URL as private
-$user->attachFromUrlPrivate('https://example.com/confidential.pdf', [
+$user->attachFromUrl('https://example.com/confidential.pdf', [
     'collection' => 'private-remote',
+    'private' => true,
 ]);
 ```
 
@@ -208,7 +211,7 @@ Public uploads are stored in `uploads/public/` and are directly accessible via U
 - Any files that don't require access control
 
 ```php
-// Public uploads
+// Public uploads (default)
 $model->attach('image');
 $model->attachMultiple('photos');
 $model->attachFromUrl('https://example.com/image.jpg');
@@ -223,10 +226,10 @@ Private uploads are stored in `uploads/private/` and require access control. The
 - Any files that should not be publicly accessible
 
 ```php
-// Private uploads
-$model->attachPrivate('document');
-$model->attachMultiplePrivate('files');
-$model->attachFromUrlPrivate('https://example.com/confidential.pdf');
+// Private uploads (using the 'private' flag)
+$model->attach('document', ['private' => true]);
+$model->attachMultiple('files', ['private' => true]);
+$model->attachFromUrl('https://example.com/confidential.pdf', ['private' => true]);
 ```
 
 ### Serving Private Files
@@ -258,8 +261,8 @@ class FileController
         
         // Create a response with the file contents
         $response = response();
-        $response->setHeader('Content-Type', $upload->getMimeType());
-        $response->setHeader('Content-Disposition', 'inline; filename="' . $upload->getFilename() . '"');
+        $response->setHeader('Content-Type', $upload->mime_type);
+        $response->setHeader('Content-Disposition', 'inline; filename="' . $upload->file_name . '"');
         
         return $response->send($contents);
     }
