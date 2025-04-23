@@ -9,8 +9,9 @@ A flexible, model-based file upload system for the Lightpack framework.
 - Remote file uploads from URLs
 - Image transformations (resize)
 - Collection-based organization
-- Works with both local and cloud storage
-- Public and private file storage
+- Works with both local and cloud storage (S3, CloudFront)
+- Public and private file storage with access control
+- SEO-friendly URLs for public assets
 - Clean, intuitive API
 
 ## Installation
@@ -312,6 +313,114 @@ $user->attach('avatar', [
 
 This allows you to organize files in a way that makes sense for your application.
 
+## Cloud Storage Integration
+
+Lightpack's upload system works seamlessly with cloud storage providers like Amazon S3 and CloudFront.
+
+### Amazon S3 Storage
+
+When configured to use S3, Lightpack will:
+- Store public files in the `uploads/public/` prefix
+- Store private files in the `uploads/private/` prefix
+- Generate appropriate URLs for each type
+
+Configuration example:
+
+```php
+// config/storage.php
+return [
+    'default' => 's3',
+    'drivers' => [
+        's3' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'bucket' => env('AWS_BUCKET'),
+            'base_path' => env('AWS_BASE_PATH', ''),
+        ],
+    ],
+];
+```
+
+### CloudFront Integration
+
+For optimal performance and SEO, Lightpack supports CloudFront integration:
+
+- Public files (`uploads/public/*`) are served via permanent CloudFront URLs
+- Private files (`uploads/private/*`) can be served via signed CloudFront URLs
+
+Configuration example:
+
+```php
+// config/storage.php
+return [
+    // ... S3 configuration ...
+    
+    'cloudfront' => [
+        'domain' => env('CLOUDFRONT_DOMAIN'),
+        'key_pair_id' => env('CLOUDFRONT_KEY_PAIR_ID'),
+        'private_key' => env('CLOUDFRONT_PRIVATE_KEY_PATH'),
+    ],
+];
+```
+
+#### CloudFront Best Practices
+
+1. **For SEO-friendly URLs**:
+   - Configure CloudFront to serve your `uploads/public/*` files
+   - Set appropriate cache behaviors for different file types
+   - Use permanent URLs for public content
+
+2. **For Private Content**:
+   - Configure CloudFront with Origin Access Identity (OAI) to restrict direct S3 access
+   - Use CloudFront signed URLs with appropriate expiration times
+   - Set up path patterns to restrict access to `uploads/private/*`
+
+3. **For Video Content**:
+   - Use CloudFront for global distribution
+   - Configure appropriate cache behaviors for video files
+   - Consider using signed URLs with short expiration for premium content
+
+### Serving Private Files with CloudFront
+
+For private files, you can create a controller that generates signed URLs:
+
+```php
+class PrivateFileController
+{
+    public function serve(int $id)
+    {
+        // Get the upload
+        $upload = (new UploadModel())->find($id);
+        
+        if (!$upload || !$upload->exists() || !$upload->is_private) {
+            return response()->setStatus(404)->send('File not found');
+        }
+        
+        // Check if the current user has permission to access this file
+        if (!$this->userCanAccessFile($upload)) {
+            return response()->setStatus(403)->send('Unauthorized');
+        }
+        
+        // Get the storage service
+        $storage = app('storage');
+        
+        // Generate a signed URL (works with both S3 and CloudFront)
+        $signedUrl = $storage->url($upload->getPath(), 3600); // 1 hour expiration
+        
+        // Redirect to the signed URL
+        return response()->redirect($signedUrl);
+    }
+    
+    protected function userCanAccessFile(UploadModel $upload): bool
+    {
+        // Implement your access control logic here
+        return true; // Replace with actual logic
+    }
+}
+```
+
 ### Listing Files in a Directory
 
 The Storage system provides a `files()` method to list all files in a directory:
@@ -380,6 +489,67 @@ public function uploadDocument(Request $request)
     return redirect()->back()->withSuccess('Document uploaded successfully.');
 }
 ```
+
+## Best Practices
+
+### Security
+
+1. **Always use private uploads for sensitive content**
+   ```php
+   $user->attach('tax_document', ['private' => true]);
+   ```
+
+2. **Implement proper access control in your controllers**
+   ```php
+   if (!$this->userCanAccessFile($upload)) {
+       return response()->setStatus(403);
+   }
+   ```
+
+3. **Use short expiration times for signed URLs**
+   ```php
+   // 15 minutes is often sufficient for most use cases
+   $signedUrl = $storage->url($upload->getPath(), 900);
+   ```
+
+### Performance
+
+1. **Use CloudFront for global content delivery**
+   - Configure your storage to use CloudFront for improved load times
+
+2. **Implement appropriate caching headers**
+   ```php
+   $response->setHeader('Cache-Control', 'public, max-age=31536000');
+   ```
+
+3. **Use appropriate image transformations**
+   ```php
+   // Don't serve original images directly to users
+   $user->attach('product_image', [
+       'transformations' => [
+           'thumbnail' => ['resize' => [200, 200]],
+           'medium' => ['resize' => [600, 600]],
+           'large' => ['resize' => [1200, 1200]],
+       ],
+   ]);
+   ```
+
+### SEO
+
+1. **Use public uploads for content that should be indexed**
+   ```php
+   $product->attach('featured_image');
+   ```
+
+2. **Configure CloudFront for permanent, SEO-friendly URLs**
+   - This avoids temporary URLs that search engines won't index
+
+3. **Use descriptive filenames**
+   ```php
+   $product->attachFromUrl($imageUrl, [
+       'filename' => 'blue-denim-jeans-product-front-view.jpg',
+   ]);
+   ```
 
 ## Advanced Configuration
 
