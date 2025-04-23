@@ -35,7 +35,7 @@ class TestUploadModel
     public $extension;
     public $size;
     public $disk = 'public';
-    public $path;
+    public $path = 'media/123';
 
     public function getTableName()
     {
