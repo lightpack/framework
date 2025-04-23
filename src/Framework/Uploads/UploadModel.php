@@ -55,6 +55,11 @@ class UploadModel extends Model
      */
     public function url(?string $variant = null): string
     {
+        // Private files don't have direct URLs - they should be accessed through a controller
+        if ($this->is_private) {
+            return '';
+        }
+        
         return $this->storage()->url($this->getPath($variant));
     }
     
@@ -69,11 +74,14 @@ class UploadModel extends Model
         $path = $this->path ?? "media/{$this->id}";
         $filename = $this->getFilename();
         
+        // Determine if this is a private or public file
+        $visibility = $this->is_private ? 'private' : 'public';
+        
         if ($variant) {
-            return "uploads/public/{$path}/{$variant}/{$filename}";
+            return "uploads/{$visibility}/{$path}/{$variant}/{$filename}";
         }
         
-        return "uploads/public/{$path}/{$filename}";
+        return "uploads/{$visibility}/{$path}/{$filename}";
     }
     
     /**

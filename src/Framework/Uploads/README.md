@@ -10,6 +10,7 @@ A flexible, model-based file upload system for the Lightpack framework.
 - Image transformations (resize)
 - Collection-based organization
 - Works with both local and cloud storage
+- Public and private file storage
 - Clean, intuitive API
 
 ## Installation
@@ -18,6 +19,12 @@ The Uploads module is included with Lightpack framework. To set up the database 
 
 ```php
 php lightpack migrate Lightpack\\Uploads\\Migration\\CreateUploadsTable
+```
+
+If you're upgrading to add private uploads support, run the additional migration:
+
+```php
+php lightpack migrate Lightpack\\Uploads\\Migration\\AddIsPrivateToUploadsTable
 ```
 
 ## Basic Usage
@@ -42,28 +49,44 @@ class User extends Model
 #### Single File Upload
 
 ```php
-// Attach a file from a form upload
+// Attach a file from a form upload (public)
 $user->attach('avatar', [
     'collection' => 'profile',
     'singleton' => true, // Only keep one file in this collection
+]);
+
+// Attach a file as private (requires access control)
+$user->attachPrivate('document', [
+    'collection' => 'confidential',
+    'singleton' => true,
 ]);
 ```
 
 #### Multiple File Upload
 
 ```php
-// Attach multiple files from a form upload
+// Attach multiple files from a form upload (public)
 $photos = $user->attachMultiple('photos', [
     'collection' => 'gallery',
+]);
+
+// Attach multiple files as private
+$documents = $user->attachMultiplePrivate('documents', [
+    'collection' => 'private-documents',
 ]);
 ```
 
 #### Remote File Upload
 
 ```php
-// Attach a file from a URL
+// Attach a file from a URL (public)
 $user->attachFromUrl('https://example.com/image.jpg', [
     'collection' => 'remote',
+]);
+
+// Attach a file from a URL as private
+$user->attachFromUrlPrivate('https://example.com/confidential.pdf', [
+    'collection' => 'private-remote',
 ]);
 ```
 
@@ -80,18 +103,23 @@ $avatar = $user->firstUpload('profile');
 ### Working with Upload Models
 
 ```php
-// Get the URL to the file
+// Get the URL to the file (returns empty string for private files)
 $url = $avatar->url();
 
 // Get the URL to a transformed version
 $thumbnailUrl = $avatar->url('thumbnail');
 
 // Get the file path
-$path = $avatar->path();
+$path = $avatar->getPath();
 
 // Check if a file exists
 if ($avatar->exists('thumbnail')) {
     // ...
+}
+
+// Check if a file is private
+if ($avatar->is_private) {
+    // Handle private file access
 }
 
 // Get file metadata
@@ -169,20 +197,86 @@ $user->attach('avatar', [
 
 ### Public vs Private Uploads
 
-The framework supports both public and private uploads:
+Lightpack supports both public and private file uploads:
 
-1. **Public Uploads** (default)
-   - Stored in `uploads/public/...`
-   - Directly accessible via URL: `/uploads/...`
-   - Suitable for images, public documents, etc.
+### Public Uploads
 
-2. **Private Uploads**
-   - Stored in `uploads/private/...`
-   - Accessible only through a controller: `/files/serve?path=...`
-   - Requires authentication/authorization
-   - Suitable for sensitive documents, private files, etc.
+Public uploads are stored in `uploads/public/` and are directly accessible via URL. Use these for:
 
-To use private uploads, you need to set up your own controller to serve the files with proper access control. The UploadModel's URL method will automatically generate the correct URL format based on the storage path.
+- Images displayed on your website
+- Public documents
+- Any files that don't require access control
+
+```php
+// Public uploads
+$model->attach('image');
+$model->attachMultiple('photos');
+$model->attachFromUrl('https://example.com/image.jpg');
+```
+
+### Private Uploads
+
+Private uploads are stored in `uploads/private/` and require access control. They are not directly accessible via URL. Use these for:
+
+- Confidential documents
+- User-specific files that require authentication
+- Any files that should not be publicly accessible
+
+```php
+// Private uploads
+$model->attachPrivate('document');
+$model->attachMultiplePrivate('files');
+$model->attachFromUrlPrivate('https://example.com/confidential.pdf');
+```
+
+### Serving Private Files
+
+To serve private files, you need to create a controller that implements access control:
+
+```php
+class FileController
+{
+    public function serve(int $id)
+    {
+        // Get the upload
+        $upload = (new UploadModel())->find($id);
+        
+        if (!$upload || !$upload->exists()) {
+            return response()->setStatus(404)->send('File not found');
+        }
+        
+        // Check if the current user has permission to access this file
+        if ($upload->is_private && !$this->userCanAccessFile($upload)) {
+            return response()->setStatus(403)->send('Unauthorized');
+        }
+        
+        // Get the storage service
+        $storage = app('storage');
+        
+        // Get the file contents
+        $contents = $storage->read($upload->getPath());
+        
+        // Create a response with the file contents
+        $response = response();
+        $response->setHeader('Content-Type', $upload->getMimeType());
+        $response->setHeader('Content-Disposition', 'inline; filename="' . $upload->getFilename() . '"');
+        
+        return $response->send($contents);
+    }
+    
+    protected function userCanAccessFile(UploadModel $upload): bool
+    {
+        // Implement your access control logic here
+        return true; // Replace with actual logic
+    }
+}
+```
+
+Then set up a route to this controller:
+
+```php
+$router->get('/files/{id}', 'FileController@serve');
+```
 
 ### URL Structure
 
