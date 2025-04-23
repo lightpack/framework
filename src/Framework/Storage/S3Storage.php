@@ -5,6 +5,7 @@ namespace Lightpack\Storage;
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use Aws\CloudFront\UrlSigner;
+use Lightpack\Container\Container;
 use Lightpack\Exceptions\FileUploadException;
 
 class S3Storage implements Storage
@@ -195,7 +196,8 @@ class S3Storage implements Storage
         $path = $this->getFullPath($path);
         
         // Check if CloudFront is configured and if this is a public file
-        $config = config('storage.s3.cloudfront') ?? [];
+        $config = Container::getInstance()->get('config');
+        $config = $config->get('storage.s3.cloudfront') ?? [];
         $cloudfrontDomain = $config['domain'] ?? null;
         $isPublicFile = strpos($path, 'uploads/public/') === 0;
         
