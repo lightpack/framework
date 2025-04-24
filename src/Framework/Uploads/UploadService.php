@@ -318,10 +318,10 @@ class UploadService
         // Store the file in the appropriate location
         if ($isPrivate) {
             $storedPath = $file->storePrivate($path);
-            $upload->is_private = true;
+            $upload->is_private = 1;
         } else {
             $storedPath = $file->storePublic($path);
-            $upload->is_private = false;
+            $upload->is_private = 0;
         }
         
         // Update the path in the upload record
