@@ -57,7 +57,8 @@ interface Storage
      * List all files in a directory
      * 
      * @param string $directory The directory path to list files from
+     * @param bool $recursive Whether to include files in subdirectories
      * @return array An array of file paths within the directory
      */
-    public function files(string $directory): array;
+    public function files(string $directory, bool $recursive = true): array;
 }

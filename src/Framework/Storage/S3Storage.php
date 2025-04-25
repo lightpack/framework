@@ -294,9 +294,10 @@ class S3Storage implements Storage
      * List all files in a directory
      * 
      * @param string $directory The directory path to list files from
+     * @param bool $recursive Whether to include files in subdirectories
      * @return array An array of file paths within the directory
      */
-    public function files(string $directory): array
+    public function files(string $directory, bool $recursive = true): array
     {
         try {
             // Ensure directory ends with a trailing slash if not empty
@@ -306,11 +307,17 @@ class S3Storage implements Storage
             
             $directory = $this->getFullPath($directory);
             
-            $result = $this->client->listObjects([
+            $params = [
                 'Bucket' => $this->bucket,
                 'Prefix' => $directory,
-                // Removing the Delimiter parameter to list all objects recursively
-            ]);
+            ];
+            
+            // Add delimiter for non-recursive listing (only current directory)
+            if (!$recursive) {
+                $params['Delimiter'] = '/';
+            }
+            
+            $result = $this->client->listObjects($params);
             
             $files = [];
             

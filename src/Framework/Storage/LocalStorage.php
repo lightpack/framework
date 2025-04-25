@@ -50,9 +50,10 @@ class LocalStorage extends File implements Storage
      * List all files in a directory
      * 
      * @param string $directory The directory path to list files from
+     * @param bool $recursive Whether to include files in subdirectories
      * @return array An array of file paths within the directory
      */
-    public function files(string $directory): array
+    public function files(string $directory, bool $recursive = true): array
     {
         if (!is_dir($directory)) {
             return [];
@@ -60,15 +61,26 @@ class LocalStorage extends File implements Storage
         
         $files = [];
         
-        // Use RecursiveIteratorIterator to get all files recursively
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST
-        );
-        
-        foreach ($iterator as $fileInfo) {
-            if (!$fileInfo->isDir()) {
-                $files[] = $fileInfo->getPathname();
+        if ($recursive) {
+            // Use RecursiveIteratorIterator to get all files recursively
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+            
+            foreach ($iterator as $fileInfo) {
+                if (!$fileInfo->isDir()) {
+                    $files[] = $fileInfo->getPathname();
+                }
+            }
+        } else {
+            // Only get files in the current directory
+            $dir = new \DirectoryIterator($directory);
+            
+            foreach ($dir as $fileInfo) {
+                if (!$fileInfo->isDot() && !$fileInfo->isDir()) {
+                    $files[] = $directory . '/' . $fileInfo->getFilename();
+                }
             }
         }
         
