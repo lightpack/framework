@@ -81,7 +81,11 @@ class TransformJob
     {
         $storage = $this->getStorage();
         $transformedFilePath = $this->upload->getPath($variant);
-        
+
+        if($storage instanceof LocalStorage) {
+            $transformedFilePath = DIR_STORAGE . '/' . $transformedFilePath;
+        }
+
         // Create a temporary file
         $tempFile = tempnam(sys_get_temp_dir(), 'transform_');
         file_put_contents($tempFile, $fileContent);
@@ -96,12 +100,19 @@ class TransformJob
             }
         }
         
-        // Save the transformed image to a temporary file
+        // Determine the extension based on mime type
+        $extension = $this->getExtensionFromMimeType();
+        
+        // Save the transformed image to a temporary file with proper extension
         $transformedTempFile = tempnam(sys_get_temp_dir(), 'transformed_');
-        $image->save($transformedTempFile);
+        $transformedTempFileWithExt = $transformedTempFile . '.' . $extension;
+        rename($transformedTempFile, $transformedTempFileWithExt);
+        
+        // Save the image with the proper extension
+        $image->save($transformedTempFileWithExt);
         
         // Store the transformed file
-        $transformedContent = file_get_contents($transformedTempFile);
+        $transformedContent = file_get_contents($transformedTempFileWithExt);
         $storage->write($transformedFilePath, $transformedContent);
         
         // Clean up temporary files
@@ -109,8 +120,8 @@ class TransformJob
             unlink($tempFile);
         }
         
-        if (file_exists($transformedTempFile)) {
-            unlink($transformedTempFile);
+        if (file_exists($transformedTempFileWithExt)) {
+            unlink($transformedTempFileWithExt);
         }
     }
     
@@ -122,10 +133,7 @@ class TransformJob
      */
     protected function createImage(string $path): object
     {
-        $image = Container::getInstance()->resolve(Image::class);
-        $image->load($path);
-        
-        return $image;
+        return new Image($path);
     }
     
     /**
@@ -149,5 +157,23 @@ class TransformJob
     protected function getStorage(): Storage
     {
         return Container::getInstance()->resolve('storage');
+    }
+    
+    /**
+     * Get file extension from MIME type.
+     *
+     * @return string
+     */
+    protected function getExtensionFromMimeType(): string
+    {
+        $mimeType = $this->upload->getMimeType();
+
+        return match($mimeType) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            default => 'jpg', // Default to jpg if unknown
+        };
     }
 }
