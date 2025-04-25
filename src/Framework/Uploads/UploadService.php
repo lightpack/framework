@@ -4,6 +4,7 @@ namespace Lightpack\Uploads;
 
 use Lightpack\Http\Request;
 use Lightpack\Container\Container;
+use Lightpack\Storage\LocalStorage;
 
 /**
  * UploadService
@@ -154,6 +155,10 @@ class UploadService
         // Get the directory path for this upload
         $visibility = $upload->is_private ? 'private' : 'public';
         $directory = "uploads/{$visibility}/" . $upload->path;
+
+        if($this->storage instanceof LocalStorage) {
+            $directory = DIR_STORAGE . '/' . $directory;
+        }
         
         // Delete all files in the directory (including transformations)
         $files = $this->storage->files($directory);
@@ -161,6 +166,11 @@ class UploadService
             $this->storage->delete($file);
         }
         
+        // for local storage, remove the empty directories as well
+        if($this->storage instanceof LocalStorage) {
+            $this->storage->removeDir($directory);
+        }
+
         // Delete the database record
         return $upload->delete();
     }
