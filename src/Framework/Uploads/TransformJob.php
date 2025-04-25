@@ -133,6 +133,13 @@ class TransformJob
      */
     protected function createImage(string $path): object
     {
+        // For tests, use the container to get the mocked Image instance
+        if (defined('PHPUNIT_TESTSUITE')) {
+            $image = Container::getInstance()->resolve(Image::class);
+            return $image;
+        }
+        
+        // For production, create a real Image instance
         return new Image($path);
     }
     

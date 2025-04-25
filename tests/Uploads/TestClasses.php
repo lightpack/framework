@@ -83,11 +83,9 @@ class TestUploadModel
  */
 class TestImage
 {
-    public function __construct() {}
-    
-    public function load($path)
+    public function __construct(string $filepath = null) 
     {
-        return $this;
+        // No-op for testing, but we need to match the signature
     }
     
     public function resize($width, $height)
