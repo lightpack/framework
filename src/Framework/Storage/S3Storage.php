@@ -304,10 +304,12 @@ class S3Storage implements Storage
                 $directory .= '/';
             }
             
+            $directory = $this->getFullPath($directory);
+            
             $result = $this->client->listObjects([
                 'Bucket' => $this->bucket,
                 'Prefix' => $directory,
-                'Delimiter' => '/',
+                // Removing the Delimiter parameter to list all objects recursively
             ]);
             
             $files = [];

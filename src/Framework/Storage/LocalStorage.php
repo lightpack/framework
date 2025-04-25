@@ -59,11 +59,16 @@ class LocalStorage extends File implements Storage
         }
         
         $files = [];
-        $dir = new \DirectoryIterator($directory);
         
-        foreach ($dir as $fileInfo) {
-            if (!$fileInfo->isDot() && !$fileInfo->isDir()) {
-                $files[] = $directory . '/' . $fileInfo->getFilename();
+        // Use RecursiveIteratorIterator to get all files recursively
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+        
+        foreach ($iterator as $fileInfo) {
+            if (!$fileInfo->isDir()) {
+                $files[] = $fileInfo->getPathname();
             }
         }
         
