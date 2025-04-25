@@ -5,6 +5,7 @@ namespace Lightpack\Uploads;
 use Lightpack\Storage\Storage;
 use Lightpack\Utils\Image;
 use Lightpack\Container\Container;
+use Lightpack\Storage\LocalStorage;
 
 /**
  * TransformJob
@@ -49,6 +50,10 @@ class TransformJob
         
         $storage = $this->getStorage();
         $originalFilePath = $this->upload->getPath();
+
+        if($storage instanceof LocalStorage) {
+            $originalFilePath = DIR_STORAGE . '/' . $originalFilePath;
+        }
         
         // Check if the file exists
         if (!$storage->exists($originalFilePath)) {
@@ -130,14 +135,7 @@ class TransformJob
      */
     protected function isImage(): bool
     {
-        // If the upload model has a getMimeType method, use it
-        if (method_exists($this->upload, 'getMimeType')) {
-            $mimeType = $this->upload->getMimeType();
-        } else {
-            // Otherwise, try to access the mime_type property directly
-            $mimeType = $this->upload->mime_type ?? 'application/octet-stream';
-        }
-        
+        $mimeType = $this->upload->getMimeType();
         $imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         
         return in_array($mimeType, $imageTypes);
