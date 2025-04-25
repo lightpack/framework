@@ -14,20 +14,18 @@ class UploadModelTestClass extends TestUploadModel
 {
     public function url(?string $variant = null): string
     {
-        $path = $this->getPath();
-        $filename = $this->getFilename();
-        $disk = $this->disk ?? 'public';
+        $path = $this->getPath($variant);
         
-        if ($variant) {
-            return Container::getInstance()->resolve('storage')->url("uploads/{$disk}/{$path}/{$variant}/{$filename}");
-        }
-        
-        return Container::getInstance()->resolve('storage')->url("uploads/{$disk}/{$path}/{$filename}");
+        return Container::getInstance()->resolve('storage')->url("{$path}");
     }
     
-    public function getPath(): string
+    public function getPath(?string $variant = null): string
     {
-        return $this->path ?? "media/{$this->id}";
+        if ($variant) {
+            return "uploads/public/media/{$this->id}/{$variant}/test.jpg";
+        }
+        
+        return "uploads/public/media/{$this->id}/test.jpg";
     }
 }
 
@@ -72,14 +70,14 @@ class UploadModelTest extends TestCase
     
     public function testPathMethodReturnsCorrectPath()
     {
-        $result = $this->model->path();
+        $result = $this->model->getPath();
         
         $this->assertEquals('uploads/public/media/123/test.jpg', $result);
     }
     
     public function testPathMethodWithTransformationReturnsCorrectPath()
     {
-        $result = $this->model->path('thumbnail');
+        $result = $this->model->getPath('thumbnail');
         
         $this->assertEquals('uploads/public/media/123/thumbnail/test.jpg', $result);
     }

@@ -48,7 +48,7 @@ class TransformJob
         }
         
         $storage = $this->getStorage();
-        $originalFilePath = $this->upload->path();
+        $originalFilePath = $this->upload->getPath();
         
         // Check if the file exists
         if (!$storage->exists($originalFilePath)) {
@@ -75,7 +75,7 @@ class TransformJob
     protected function processTransformation(string $variant, array $options, string $fileContent): void
     {
         $storage = $this->getStorage();
-        $transformedFilePath = $this->upload->path($variant);
+        $transformedFilePath = $this->upload->getPath($variant);
         
         // Create a temporary file
         $tempFile = tempnam(sys_get_temp_dir(), 'transform_');

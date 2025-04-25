@@ -58,7 +58,7 @@ class TestUploadModel
         return true;
     }
     
-    public function path($variant = null)
+    public function getPath(?string $variant = null): string
     {
         if ($variant) {
             return "uploads/public/media/{$this->id}/{$variant}/test.jpg";
