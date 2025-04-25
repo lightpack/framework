@@ -153,14 +153,13 @@ class UploadService
         
         // Delete the file and any transformations
         $path = $upload->getPath();
-        $filename = $upload->getFilename();
         $visibility = $upload->is_private ? 'private' : 'public';
         
         // Delete the original file
-        $this->storage->delete("uploads/{$visibility}/{$path}/{$filename}");
+        $this->storage->delete($path);
         
         // Delete any transformed versions (look for files with prefixes)
-        $files = $this->storage->files("uploads/{$visibility}/{$path}");
+        $files = $this->storage->files("uploads/{$visibility}/" . $upload->path);
         foreach ($files as $file) {
             $this->storage->delete($file);
         }
