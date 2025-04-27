@@ -5,7 +5,6 @@ namespace Lightpack\Uploads;
 use Lightpack\Storage\Storage;
 use Lightpack\Utils\Image;
 use Lightpack\Container\Container;
-use Lightpack\Storage\LocalStorage;
 
 /**
  * TransformJob
@@ -15,7 +14,7 @@ use Lightpack\Storage\LocalStorage;
 class TransformJob
 {
     /**
-     * @var object The upload model instance
+     * @var \Lightpack\Uploads\UploadModel
      */
     protected $upload;
     
@@ -90,10 +89,8 @@ class TransformJob
             }
         }
         
-        // Determine the extension based on mime type
-        $extension = $this->getExtensionFromMimeType();
-        
         // Save the transformed image to a temporary file with proper extension
+        $extension = $this->upload->extension;
         $transformedTempFile = tempnam(sys_get_temp_dir(), 'transformed_');
         $transformedTempFileWithExt = $transformedTempFile . '.' . $extension;
         rename($transformedTempFile, $transformedTempFileWithExt);
@@ -127,7 +124,7 @@ class TransformJob
     }
     
     /**
-     * Check if the upload is an image.
+     * Check if the upload is one of the supported image formats.
      *
      * @return bool
      */
@@ -147,23 +144,5 @@ class TransformJob
     protected function getStorage(): Storage
     {
         return Container::getInstance()->resolve('storage');
-    }
-    
-    /**
-     * Get file extension from MIME type.
-     *
-     * @return string
-     */
-    protected function getExtensionFromMimeType(): string
-    {
-        $mimeType = $this->upload->getMimeType();
-
-        return match($mimeType) {
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/webp' => 'webp',
-            default => 'jpg', // Default to jpg if unknown
-        };
     }
 }

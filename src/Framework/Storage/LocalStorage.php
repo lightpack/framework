@@ -19,7 +19,8 @@ class LocalStorage extends File implements Storage
      */
     public function store(string $source, string $destination): void
     {
-        $destination = $this->storageDir . '/' . trim($destination);
+        $destination = $this->storageDir . '/' . $destination;
+        $this->ensureDirectoryChecks($destination);
 
         // For test purposes.
         $success = isset($_SERVER['X_LIGHTPACK_TEST_UPLOAD']) 
@@ -126,5 +127,19 @@ class LocalStorage extends File implements Storage
         $this->storageDir . '/' . trim($path);
 
         return parent::write($path, $contents, $flags);
+    }
+
+    private function ensureDirectoryChecks(string $destination)
+    {
+        // Remove the end filename portion to get the target directory
+        $targetDir = dirname($destination);
+
+        if (is_dir($targetDir)) {
+            if (!is_writable($targetDir)) {
+                throw new FileUploadException('Storage directory does not have sufficient write permission: ' . $targetDir);
+            }
+        } elseif (!mkdir($targetDir, 0777, true)) {
+            throw new FileUploadException('Could not create storage directory: ' . $targetDir);
+        }
     }
 }

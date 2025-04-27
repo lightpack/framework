@@ -3,7 +3,6 @@
 namespace Lightpack\Uploads;
 
 use Lightpack\Database\Lucid\Model;
-use Lightpack\Storage\Storage;
 use Lightpack\Container\Container;
 
 /**
@@ -59,7 +58,7 @@ class UploadModel extends Model
     }
     
     /**
-     * Get the relative storage path for the file.
+     * Get the relative storage path for the uploaded file.
      *
      * @param string|null $variant The variant name (e.g., 'thumbnail')
      * @return string
@@ -75,6 +74,24 @@ class UploadModel extends Model
         }
         
         return "uploads/{$visibility}/{$path}/{$filename}";
+    }
+
+    /**
+     * Get the relative storage directory for the upload.
+     *
+     * @param string|null $variant The variant name (e.g., 'thumbnail')
+     * @return string
+     */
+    public function getDir(?string $variant = null): string
+    {
+        $path = "media/{$this->id}";
+        $visibility = $this->visibility ? 'private' : 'public';
+        
+        if ($variant) {
+            return "uploads/{$visibility}/{$path}/{$variant}";
+        }
+        
+        return "uploads/{$visibility}/{$path}";
     }
     
     /**

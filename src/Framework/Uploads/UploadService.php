@@ -145,9 +145,7 @@ class UploadService
      */
     public function delete(UploadModel $upload)
     {
-        $visibility = $upload->visibility;
-        $directory = "uploads/{$visibility}/" . $upload->path;
-        $this->storage->removeDir($directory);
+        $this->storage->removeDir($upload->getDir());
         $upload->delete();
     }
     
@@ -258,10 +256,6 @@ class UploadService
         $upload->extension = $meta['extension'];
         $upload->size = $meta['size'];
         $upload->type = $this->getFileType($meta['mime_type']);
-        
-        // Set the path - this is required by the database schema
-        $upload->path = "media/" . $model->{$model->getPrimaryKey()};
-        
         $upload->save();
         
         return $upload;
@@ -280,15 +274,16 @@ class UploadService
         $meta = $this->getUploadedFileMeta($file);
         $upload = $this->createUploadEntry($model, $meta, $collection);
         
-        $path = $upload->path;
+        $path = "media/" . $upload->id;
         $visibility = $config['visibility'] ?? 'public';
         
         if ($visibility == 'private') {
-            $storedPath = $file->storePrivate($path);
+            $storedPath = $file->storePrivate($path, $config);
         } else {
-            $storedPath = $file->storePublic($path);
+            $storedPath = $file->storePublic($path, $config);
         }
 
+        // update upload model
         $upload->visibility = $visibility;
         $upload->file_name = basename($storedPath);
         $upload->save();

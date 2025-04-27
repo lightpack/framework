@@ -158,9 +158,6 @@ class S3Storage implements Storage
     public function store(string $source, string $destination): void
     {
         $destination = $this->getFullPath($destination);
-        
-        // Determine if this is a public file based on the path
-        $isPublic = strpos($destination, 'uploads/public/') === 0;
 
         try {
             // Read the uploaded file

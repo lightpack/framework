@@ -95,7 +95,7 @@ class UploadedFile
     /**
      * Store the uploaded file in the specified destination
      * 
-     * @param string $destination Target directory or full path
+     * @param string $destination Relative path of target directory
      * @param array $options Storage options:
      *                      - name: Custom filename (string|callable)
      *                      - unique: Generate unique filename (bool)
@@ -117,11 +117,6 @@ class UploadedFile
 
         // Build full path
         $targetPath = rtrim($destination, '\\/') . '/' . $filename;
-
-        if($this->storage instanceof LocalStorage) {
-            $this->ensureDirectoryChecks($destination);
-        }
-
         $this->storage->store($this->tmpName, $targetPath);
         
         // Return the path where the file was stored
@@ -142,10 +137,6 @@ class UploadedFile
         $path = trim($path, '/\\');
         $storagePath = 'uploads/public/' . ($path ? $path . '/' : '');
 
-        if($this->storage instanceof LocalStorage) {
-            $storagePath = DIR_STORAGE . '/' . $storagePath;
-        }
-
         return $this->store($storagePath, $options);
     }
     
@@ -162,10 +153,6 @@ class UploadedFile
     {
         $path = trim($path, '/\\');
         $storagePath = 'uploads/private/' . ($path ? $path . '/' : '');
-
-        if($this->storage instanceof LocalStorage) {
-            $storagePath = DIR_STORAGE . '/' . $storagePath;
-        }
 
         return $this->store($storagePath, $options);
     }
@@ -203,45 +190,5 @@ class UploadedFile
 
         // Combine name and extension
         return $name . '.' . $ext;
-    }
-
-    /**
-     * @deprecated use store() method
-     */
-    public function move(string $destination, ?string $name = null): void
-    {
-        $this->ensureDirectoryChecks($destination);
-
-        $this->processUpload($name ?? $this->name, $destination);
-    }
-
-    /**
-     * @deprecated
-     */
-    private function processUpload(string $name, string $destination): void
-    {
-        $targetPath = rtrim($destination, '\\/') . '/' . $name;
-
-        // For test purposes.
-        if(isset($_SERVER['X_LIGHTPACK_TEST_UPLOAD'])) {
-            $success = copy($this->tmpName, $targetPath);
-        } else {
-            $success = move_uploaded_file($this->tmpName, $targetPath);
-        }
-
-        if (!$success) {
-            throw new FileUploadException('Could not upload the file.');
-        }
-    }
-
-    private function ensureDirectoryChecks(string $destination)
-    {
-        if (is_dir($destination)) {
-            if (!is_writable($destination)) {
-                throw new FileUploadException('Upload directory does not have sufficient write permission: ' . $destination);
-            }
-        } elseif (!mkdir($destination, 0777, true)) {
-            throw new FileUploadException('Could not create upload directory: ' . $destination);
-        }
     }
 }
