@@ -257,6 +257,7 @@ class UploadService
         $upload->mime_type = $meta['mime_type'];
         $upload->extension = $meta['extension'];
         $upload->size = $meta['size'];
+        $upload->type = $this->getFileType($meta['mime_type']);
         
         // Set the path - this is required by the database schema
         $upload->path = "media/" . $model->{$model->getPrimaryKey()};

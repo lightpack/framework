@@ -62,7 +62,7 @@ trait UploadTrait
      *                      - transformations: Array of image transformations to apply
      * @return array Array of UploadModel instances
      */
-    public function attachMultiple(string $key, array $config = [])
+    public function attachMultiple(string $key, array $config = []): array
     {
         $uploads = $this->getUploadService()->saveMultiple($this, $key, $config);
         
