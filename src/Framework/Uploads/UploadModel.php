@@ -67,7 +67,7 @@ class UploadModel extends Model
     {
         $path = "media/{$this->id}";
         $filename = $this->file_name;
-        $visibility = $this->visibility ? 'private' : 'public';
+        $visibility = $this->visibility;
         
         if ($variant) {
             return "uploads/{$visibility}/{$path}/{$variant}/{$filename}";
@@ -85,7 +85,7 @@ class UploadModel extends Model
     public function getDir(?string $variant = null): string
     {
         $path = "media/{$this->id}";
-        $visibility = $this->visibility ? 'private' : 'public';
+        $visibility = $this->visibility;
         
         if ($variant) {
             return "uploads/{$visibility}/{$path}/{$variant}";
