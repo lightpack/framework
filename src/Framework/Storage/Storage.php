@@ -61,4 +61,16 @@ interface Storage
      * @return array An array of file paths within the directory
      */
     public function files(string $directory, bool $recursive = true): array;
+
+    /**
+     * Remove a directory and its contents.
+     *
+     * Recursively deletes all files and subdirectories within the given directory.
+     * For remote storage (e.g., S3), deletes all objects with the specified prefix.
+     *
+     * @param string $directory The directory path or prefix to remove
+     * @param bool $delete Whether to remove the directory itself (if applicable)
+     * @return void
+     */
+    public function removeDir(string $directory, bool $delete = true): void;
 }

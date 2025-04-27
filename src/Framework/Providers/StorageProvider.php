@@ -18,7 +18,7 @@ class StorageProvider implements ProviderInterface
             
             return match ($driver) {
                 's3' => $this->createS3Driver($config->get('storage.s3')),
-                default => new LocalStorage(),
+                default => new LocalStorage(DIR_STORAGE),
             };
         });
 

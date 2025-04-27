@@ -7,6 +7,11 @@ use Lightpack\File\File;
 
 class LocalStorage extends File implements Storage
 {
+    public function __construct(protected string $storageDir)
+    {
+        // ...
+    }
+
     /**
      * Store an uploaded file using move_uploaded_file() for security
      * 
@@ -14,6 +19,8 @@ class LocalStorage extends File implements Storage
      */
     public function store(string $source, string $destination): void
     {
+        $destination = $this->storageDir . '/' . trim($destination);
+
         // For test purposes.
         $success = isset($_SERVER['X_LIGHTPACK_TEST_UPLOAD']) 
             ? copy($source, $destination)
@@ -36,6 +43,8 @@ class LocalStorage extends File implements Storage
      */
     public function url(string $path, int $expiration = 3600): string
     {
+        $path = $this->storageDir . '/' . trim($path);
+
         // If path starts with 'uploads/public', make it accessible via /uploads
         if (strpos($path, 'uploads/public/') === 0) {
             return '/uploads/' . substr($path, strlen('uploads/public/'));
@@ -55,6 +64,8 @@ class LocalStorage extends File implements Storage
      */
     public function files(string $directory, bool $recursive = true): array
     {
+        $directory = $this->storageDir . '/' . trim($directory);
+        
         if (!is_dir($directory)) {
             return [];
         }

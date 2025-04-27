@@ -59,14 +59,14 @@ class UploadModel extends Model
     }
     
     /**
-     * Get the full path for the file.
+     * Get the relative storage path for the file.
      *
      * @param string|null $variant The variant name (e.g., 'thumbnail')
      * @return string
      */
     public function getPath(?string $variant = null): string
     {
-        $path = $this->path ?? "media/{$this->id}";
+        $path = "media/{$this->id}";
         $filename = $this->getFilename();
         
         // Determine if this is a private or public file

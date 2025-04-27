@@ -344,7 +344,7 @@ class File
     }
 
     /**
-     * Remove a directory and optionally its contents.
+     * Remove a directory.
      * 
      * Recursively removes files and subdirectories. If $delete is true,
      * removes the directory itself; if false, only removes its contents.
@@ -358,7 +358,7 @@ class File
      * @param string $path Directory to remove
      * @param bool $delete Whether to delete the directory itself
      */
-    public function removeDir(string $path, bool $delete = true)
+    public function removeDir(string $path, bool $delete = true): void
     {
         if (!is_dir($path)) {
             return;

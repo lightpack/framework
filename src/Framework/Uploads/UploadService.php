@@ -4,6 +4,8 @@ namespace Lightpack\Uploads;
 
 use Lightpack\Http\Request;
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\Model;
+use Lightpack\Http\UploadedFile;
 use Lightpack\Storage\LocalStorage;
 
 /**
@@ -36,7 +38,6 @@ class UploadService
     public function __construct(Request $request)
     {
         $this->request = $request;
-        $this->uploadModel = new UploadModel();
         $this->storage = Container::getInstance()->resolve('storage');
     }
     
@@ -44,10 +45,10 @@ class UploadService
      * Save a single file upload for a model.
      *
      * @param object $model The model to attach the upload to
-     * @param string $key The form field name
+     * @param string $field The form field name
      * @param array $config Configuration options
      */
-    public function save($model, string $key, array $config = [])
+    public function save(Model $model, string $key, array $config = [])
     {
         // Get the uploaded file
         $file = $this->getUploadedFile($key);
@@ -57,7 +58,7 @@ class UploadService
         }
         
         // Check if this is a singleton upload (only one per collection)
-        if (isset($config['singleton']) && $config['singleton']) {
+        if (isset($config['singleton']) && $config['singleton'] == true) {
             $collection = empty($config['collection']) ? 'default' : $config['collection'];
             $this->deleteAllUploadsForModel($model, $collection);
         }
@@ -71,8 +72,10 @@ class UploadService
      * @param object $model The model to attach the uploads to
      * @param string $key The form field name
      * @param array $config Configuration options
+     * 
+     * @return \Lightpack\Uploads\UploadModel[] Array of UploadModel instances
      */
-    public function saveMultiple($model, string $key, array $config = [])
+    public function saveMultiple($model, string $key, array $config = []): array
     {
         $files = $this->request->files($key);
         
@@ -139,40 +142,14 @@ class UploadService
     }
     
     /**
-     * Delete an upload by ID.
-     *
-     * @param int $uploadId
+     * Delete an upload model and its associated uploads.
      */
-    public function delete(int $uploadId)
+    public function delete(UploadModel $upload)
     {
-        /** @var UploadModel */
-        $upload = $this->uploadModel->find($uploadId);
-        
-        if (!$upload) {
-            return false;
-        }
-        
-        // Get the directory path for this upload
         $visibility = $upload->is_private ? 'private' : 'public';
         $directory = "uploads/{$visibility}/" . $upload->path;
-
-        if($this->storage instanceof LocalStorage) {
-            $directory = DIR_STORAGE . '/' . $directory;
-        }
-        
-        // Delete all files in the directory (including transformations)
-        $files = $this->storage->files($directory);
-        foreach ($files as $file) {
-            $this->storage->delete($file);
-        }
-        
-        // for local storage, remove the empty directories as well
-        if($this->storage instanceof LocalStorage) {
-            $this->storage->removeDir($directory);
-        }
-
-        // Delete the database record
-        return $upload->delete();
+        $this->storage->removeDir($directory);
+        $upload->delete();
     }
     
     /**
@@ -181,7 +158,7 @@ class UploadService
      * @param object $model The model to delete uploads for
      * @param string $collection
      */
-    public function deleteAllUploadsForModel($model, string $collection)
+    public function deleteAllUploadsForModel(Model $model, string $collection)
     {
         // Find all uploads for this model and collection
         $modelType = $model->getTableName();
@@ -194,24 +171,19 @@ class UploadService
             ->where('collection', $collection)
             ->all();
         
-        if (empty($uploads)) {
-            return true;
+        if ($uploads->isEmpty()) {
+            return;
         }
         
         foreach ($uploads as $upload) {
-            $this->delete($upload->id);
+            $this->delete($upload);
         }
-        
-        return true;
     }
     
     /**
      * Get an uploaded file from the request.
-     *
-     * @param string $key
-     * @return \Lightpack\Http\UploadedFile|null
      */
-    protected function getUploadedFile(string $key)
+    protected function getUploadedFile(string $key): ?UploadedFile
     {
         return $this->request->file($key);
     }
@@ -273,9 +245,8 @@ class UploadService
      * @param object $model The model to create an upload for
      * @param array $meta
      * @param string $collection
-     * @param string $key
      */
-    protected function createUploadEntry($model, array $meta, string $collection, string $key)
+    protected function createUploadEntry($model, array $meta, string $collection)
     {
         $upload = new UploadModel();
         
@@ -300,40 +271,26 @@ class UploadService
      * Internal method to save a file and create an upload record.
      *
      * @param object $model The model to attach the upload to
-     * @param \Lightpack\Http\UploadedFile $file The uploaded file
+     * @param $file The uploaded file
      * @param array $config Configuration options
-     * @return \Lightpack\Uploads\UploadModel
      */
-    protected function saveFile($model, $file, array $config = [])
+    protected function saveFile(Model $model, UploadedFile $file, array $config = []): UploadModel
     {
-        // Get collection name
         $collection = empty($config['collection']) ? 'default' : $config['collection'];
-        
-        // Get file metadata
         $meta = $this->getUploadedFileMeta($file);
-        
-        // Create the upload record
-        $key = $config['key'] ?? 'default';
-        $upload = $this->createUploadEntry($model, $meta, $collection, $key);
-        
-        // Store the file
+        $upload = $this->createUploadEntry($model, $meta, $collection);
         $path = $upload->path;
-        
-        // Check if this should be stored privately
         $isPrivate = !empty($config['private']);
         
-        // Store the file in the appropriate location
         if ($isPrivate) {
-            $storedPath = $file->storePrivate($path);
             $upload->is_private = 1;
+            $storedPath = $file->storePrivate($path);
         } else {
-            $storedPath = $file->storePublic($path);
             $upload->is_private = 0;
+            $storedPath = $file->storePublic($path);
         }
         
-        // Update the path in the upload record
         $upload->file_name = basename($storedPath);
-        $upload->path = $path;
         $upload->save();
         
         return $upload;

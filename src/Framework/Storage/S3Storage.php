@@ -291,11 +291,7 @@ class S3Storage implements Storage
     }
 
     /**
-     * List all files in a directory
-     * 
-     * @param string $directory The directory path to list files from
-     * @param bool $recursive Whether to include files in subdirectories
-     * @return array An array of file paths within the directory
+     * @inheritDoc
      */
     public function files(string $directory, bool $recursive = true): array
     {
@@ -333,8 +329,20 @@ class S3Storage implements Storage
             
             return $files;
         } catch (S3Exception $e) {
-            // Log error or handle exception
+            logger()->error($e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeDir(string $directory, bool $delete = true): void
+    {
+        $files = $this->files($directory);
+
+        foreach ($files as $file) {
+            $this->delete($file);
         }
     }
 }

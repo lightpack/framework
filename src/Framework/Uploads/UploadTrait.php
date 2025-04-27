@@ -3,15 +3,14 @@
 namespace Lightpack\Uploads;
 
 use Lightpack\Container\Container;
+use Lightpack\Database\Query\Query;
 
 trait UploadTrait
 {
     /**
      * Define the relationship between the model and its uploads.
-     *
-     * @return \Lightpack\Database\Query\Builder
      */
-    public function uploads(?string $collection = null)
+    public function uploads(?string $collection = null): Query
     {
         $query = $this->hasMany(UploadModel::class, 'model_id')
             ->where('model_type', $this->getTableName());
@@ -25,11 +24,8 @@ trait UploadTrait
     
     /**
      * Get the first upload for a specific collection.
-     *
-     * @param string|null $collection
-     * @return \Lightpack\Uploads\UploadModel|null
      */
-    public function firstUpload(?string $collection = null)
+    public function firstUpload(?string $collection = null): ?UploadModel
     {
         return $this->uploads($collection)->one();
     }
@@ -43,12 +39,10 @@ trait UploadTrait
      *                      - singleton: Whether to replace existing uploads in this collection (default: false)
      *                      - private: Whether to store the file privately, requiring access control (default: false)
      *                      - transformations: Array of image transformations to apply
-     * @return \Lightpack\Uploads\UploadModel
      */
-    public function attach(string $key, array $config = [])
+    public function attach(string $key, array $config = []): UploadModel
     {
-        $service = $this->getUploadService();
-        $upload = $service->save($this, $key, $config);
+        $upload = $this->getUploadService()->save($this, $key, $config);
         
         // Process transformations if defined
         if (isset($config['transformations'])) {
@@ -70,8 +64,7 @@ trait UploadTrait
      */
     public function attachMultiple(string $key, array $config = [])
     {
-        $service = $this->getUploadService();
-        $uploads = $service->saveMultiple($this, $key, $config);
+        $uploads = $this->getUploadService()->saveMultiple($this, $key, $config);
         
         // Process transformations if defined
         if (isset($config['transformations'])) {
@@ -92,12 +85,10 @@ trait UploadTrait
      *                      - singleton: Whether to replace existing uploads in this collection (default: false)
      *                      - private: Whether to store the file privately, requiring access control (default: false)
      *                      - transformations: Array of image transformations to apply
-     * @return \Lightpack\Uploads\UploadModel
      */
-    public function attachFromUrl(string $url, array $config = [])
+    public function attachFromUrl(string $url, array $config = []): UploadModel
     {
-        $service = $this->getUploadService();
-        $upload = $service->saveFromUrl($this, $url, $config);
+        $upload = $this->getUploadService()->saveFromUrl($this, $url, $config);
         
         // Process transformations if defined
         if (isset($config['transformations'])) {
@@ -111,33 +102,26 @@ trait UploadTrait
      * Detach an upload from the model.
      *
      * @param int $uploadId The upload ID to detach
-     * @return bool
      */
     public function detach(int $uploadId)
     {
-        $service = $this->getUploadService();
-        return $service->delete($uploadId);
+        $upload = new UploadModel($uploadId);
+        $this->getUploadService()->delete($upload);
     }
     
     /**
      * Transform an upload according to the specified configurations.
-     *
-     * @param $upload
-     * @param array $transformations
-     * @return void
      */
-    protected function transformUpload($upload, array $transformations): void
+    protected function transformUpload(UploadModel $upload, array $transformations)
     {
         $job = new TransformJob($upload, $transformations);
-        $job->handle(); // Direct execution for now, could be queued in the future
+        $job->handle(); // TODO: direct execution for now, refactor it to queue
     }
     
     /**
      * Get the upload service instance.
-     *
-     * @return \Lightpack\Uploads\UploadService
      */
-    protected function getUploadService()
+    protected function getUploadService(): UploadService
     {
         return Container::getInstance()->resolve(UploadService::class);
     }
