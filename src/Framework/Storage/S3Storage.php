@@ -55,7 +55,7 @@ class S3Storage implements Storage
     }
 
     /**
-     * Write contents to a file
+     * @inheritDoc
      */
     public function write(string $path, string $contents): bool
     {
@@ -99,7 +99,7 @@ class S3Storage implements Storage
     }
 
     /**
-     * Check if a file exists
+     * @inheritDoc
      */
     public function exists(string $path): bool
     {

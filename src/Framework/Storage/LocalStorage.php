@@ -97,4 +97,34 @@ class LocalStorage extends File implements Storage
         
         return $files;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function exists(string $path): bool
+    {
+        return parent::exists(
+            $this->storageDir . '/' . trim($path)
+        );
+    }
+
+    /**
+     * @inhertiDoc
+     */
+    public function read(string $path): ?string
+    {
+        return parent::read(
+            $this->storageDir . '/' . trim($path)
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function write(string $path, string $contents, $flags = LOCK_EX): bool
+    {
+        $this->storageDir . '/' . trim($path);
+
+        return parent::write($path, $contents, $flags);
+    }
 }

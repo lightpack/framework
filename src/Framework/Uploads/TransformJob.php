@@ -51,16 +51,10 @@ class TransformJob
         $storage = $this->getStorage();
         $originalFilePath = $this->upload->getPath();
 
-        if($storage instanceof LocalStorage) {
-            $originalFilePath = DIR_STORAGE . '/' . $originalFilePath;
-        }
-        
-        // Check if the file exists
         if (!$storage->exists($originalFilePath)) {
             return;
         }
         
-        // Get the file content
         $fileContent = $storage->read($originalFilePath);
         
         // Process each transformation
@@ -81,10 +75,6 @@ class TransformJob
     {
         $storage = $this->getStorage();
         $transformedFilePath = $this->upload->getPath($variant);
-
-        if($storage instanceof LocalStorage) {
-            $transformedFilePath = DIR_STORAGE . '/' . $transformedFilePath;
-        }
 
         // Create a temporary file
         $tempFile = tempnam(sys_get_temp_dir(), 'transform_');
@@ -133,13 +123,6 @@ class TransformJob
      */
     protected function createImage(string $path): object
     {
-        // For tests, use the container to get the mocked Image instance
-        if (defined('PHPUNIT_TESTSUITE')) {
-            $image = Container::getInstance()->resolve(Image::class);
-            return $image;
-        }
-        
-        // For production, create a real Image instance
         return new Image($path);
     }
     

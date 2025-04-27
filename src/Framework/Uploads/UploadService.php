@@ -115,17 +115,16 @@ class UploadService
         // Create the upload record
         $key = $config['key'] ?? basename($url);
         $upload = $this->createUploadEntry($model, $meta, $collection, $key);
-        
-        // Store the file
+
         $path = $upload->path;
         $filename = $meta['filename'];
-        
-        // Determine if this is a private file
-        $isPrivate = !empty($config['private']);
-        $visibility = $isPrivate ? 'private' : 'public';
+        $visibility = $config['visibility'] ?? 'public';
         
         // Store the file in the appropriate location
-        $this->storage->write("uploads/{$visibility}/{$path}/{$filename}", file_get_contents($meta['temp_filepath']));
+        $this->storage->write(
+            "uploads/{$visibility}/{$path}/{$filename}", 
+            file_get_contents($meta['temp_filepath'])
+        );
         
         // Clean up temp file
         if (file_exists($meta['temp_filepath'])) {
@@ -135,7 +134,7 @@ class UploadService
         // Update the path in the upload record
         $upload->file_name = $filename;
         $upload->path = $path;
-        $upload->is_private = $isPrivate;
+        $upload->visibility = $visibility;
         $upload->save();
         
         return $upload;
@@ -146,7 +145,7 @@ class UploadService
      */
     public function delete(UploadModel $upload)
     {
-        $visibility = $upload->is_private ? 'private' : 'public';
+        $visibility = $upload->visibility;
         $directory = "uploads/{$visibility}/" . $upload->path;
         $this->storage->removeDir($directory);
         $upload->delete();
@@ -279,17 +278,17 @@ class UploadService
         $collection = empty($config['collection']) ? 'default' : $config['collection'];
         $meta = $this->getUploadedFileMeta($file);
         $upload = $this->createUploadEntry($model, $meta, $collection);
-        $path = $upload->path;
-        $isPrivate = !empty($config['private']);
         
-        if ($isPrivate) {
-            $upload->is_private = 1;
+        $path = $upload->path;
+        $visibility = $config['visibility'] ?? 'public';
+        
+        if ($visibility == 'private') {
             $storedPath = $file->storePrivate($path);
         } else {
-            $upload->is_private = 0;
             $storedPath = $file->storePublic($path);
         }
-        
+
+        $upload->visibility = $visibility;
         $upload->file_name = basename($storedPath);
         $upload->save();
         

@@ -68,9 +68,7 @@ class UploadModel extends Model
     {
         $path = "media/{$this->id}";
         $filename = $this->getFilename();
-        
-        // Determine if this is a private or public file
-        $visibility = $this->is_private ? 'private' : 'public';
+        $visibility = $this->visibility ? 'private' : 'public';
         
         if ($variant) {
             return "uploads/{$visibility}/{$path}/{$variant}/{$filename}";

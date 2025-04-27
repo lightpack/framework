@@ -37,7 +37,7 @@ trait UploadTrait
      * @param array $config Configuration options
      *                      - collection: The collection name (default: 'default')
      *                      - singleton: Whether to replace existing uploads in this collection (default: false)
-     *                      - private: Whether to store the file privately, requiring access control (default: false)
+     *                      - visibility: private or public
      *                      - transformations: Array of image transformations to apply
      */
     public function attach(string $key, array $config = []): UploadModel
@@ -58,7 +58,7 @@ trait UploadTrait
      * @param string $key The form field name
      * @param array $config Configuration options
      *                      - collection: The collection name (default: 'default')
-     *                      - private: Whether to store the files privately, requiring access control (default: false)
+     *                      - visibility: private or public
      *                      - transformations: Array of image transformations to apply
      * @return array Array of UploadModel instances
      */
@@ -83,7 +83,7 @@ trait UploadTrait
      * @param array $config Configuration options
      *                      - collection: The collection name (default: 'default')
      *                      - singleton: Whether to replace existing uploads in this collection (default: false)
-     *                      - private: Whether to store the file privately, requiring access control (default: false)
+     *                      - visibility: private or public
      *                      - transformations: Array of image transformations to apply
      */
     public function attachFromUrl(string $url, array $config = []): UploadModel
