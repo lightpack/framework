@@ -364,14 +364,14 @@ class File
             return;
         }
 
-        foreach ($this->getIterator($path) as $file) {
+        foreach ($this->getRecursiveIterator($path, RecursiveIteratorIterator::CHILD_FIRST) as $file) {
             if ($file->isDir()) {
-                $this->removeDir($file->getRealPath());
+                @rmdir($file->getRealPath());
             } else {
                 @unlink($file->getRealPath());
             }
         }
-
+    
         if ($delete) {
             @rmdir($path);
         }
@@ -535,7 +535,7 @@ class File
      * @param string $path The directory path to recursively iterate over
      * @return RecursiveIteratorIterator|null Returns null if path is not a directory
      */
-    public function getRecursiveIterator(string $path): ?RecursiveIteratorIterator
+    public function getRecursiveIterator(string $path, int $mode = RecursiveIteratorIterator::SELF_FIRST): ?RecursiveIteratorIterator
     {
         if (!is_dir($path)) {
             return null;
@@ -543,7 +543,7 @@ class File
 
         return new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::SELF_FIRST
+            $mode
         );
     }
 
