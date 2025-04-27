@@ -102,9 +102,11 @@ class LocalStorage extends File implements Storage
      */
     public function exists(string $path): bool
     {
-        return parent::exists(
-            $this->storageDir . '/' . trim($path, '/')
-        );
+        if (str_starts_with($path, $this->storageDir)) {
+            return parent::exists($path);
+        }
+
+        return parent::exists($this->storageDir . '/' . ltrim($path, '/'));
     }
 
     /**
