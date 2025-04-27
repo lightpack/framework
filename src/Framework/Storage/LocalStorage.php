@@ -44,8 +44,6 @@ class LocalStorage extends File implements Storage
      */
     public function url(string $path, int $expiration = 3600): string
     {
-        $path = $this->storageDir . '/' . trim($path);
-
         // If path starts with 'uploads/public', make it accessible via /uploads
         if (strpos($path, 'uploads/public/') === 0) {
             return '/uploads/' . substr($path, strlen('uploads/public/'));

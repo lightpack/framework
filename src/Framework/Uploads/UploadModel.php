@@ -66,7 +66,7 @@ class UploadModel extends Model
     public function getPath(?string $variant = null): string
     {
         $path = "media/{$this->id}";
-        $filename = $this->getFilename();
+        $filename = $this->file_name;
         $visibility = $this->visibility ? 'private' : 'public';
         
         if ($variant) {
@@ -95,27 +95,6 @@ class UploadModel extends Model
     }
     
     /**
-     * Get the filename, optionally with a variant prefix.
-     *
-     * @param string|null $variant The variant name (e.g., 'thumbnail')
-     * @return string
-     */
-    public function getFilename(): string
-    {
-        return $this->file_name;
-    }
-    
-    /**
-     * Get the file extension.
-     *
-     * @return string
-     */
-    public function getExtension(): string
-    {
-        return $this->extension;
-    }
-    
-    /**
      * Check if the file exists.
      *
      * @param string|null $variant The variant name (e.g., 'thumbnail')
@@ -130,26 +109,6 @@ class UploadModel extends Model
         }
         
         return $this->storage()->exists($path);
-    }
-    
-    /**
-     * Get the file's MIME type.
-     *
-     * @return string
-     */
-    public function getMimeType(): string
-    {
-        return $this->mime_type;
-    }
-    
-    /**
-     * Get the file size in bytes.
-     *
-     * @return int
-     */
-    public function getSize(): int
-    {
-        return $this->size;
     }
     
     /**
@@ -169,25 +128,13 @@ class UploadModel extends Model
     }
     
     /**
-     * Get the file type based on MIME type.
-     * 
-     * @return string One of: 'image', 'video', 'audio', 'document', 'spreadsheet', 'presentation', 'archive', 'code', 'other'
-     */
-    public function getFileType(): string
-    {
-        $uploadService = Container::getInstance()->resolve(UploadService::class);
-        
-        return $uploadService->getFileType($this->mime_type);
-    }
-    
-    /**
      * Check if the file is an image.
      *
      * @return bool
      */
     public function isImage(): bool
     {
-        return $this->getFileType() === 'image';
+        return $this->type === 'image';
     }
     
     /**
@@ -197,7 +144,7 @@ class UploadModel extends Model
      */
     public function isDocument(): bool
     {
-        return $this->getFileType() === 'document';
+        return $this->type === 'document';
     }
     
     /**
@@ -207,7 +154,7 @@ class UploadModel extends Model
      */
     public function isVideo(): bool
     {
-        return $this->getFileType() === 'video';
+        return $this->type === 'video';
     }
     
     /**
@@ -217,7 +164,7 @@ class UploadModel extends Model
      */
     public function isAudio(): bool
     {
-        return $this->getFileType() === 'audio';
+        return $this->type === 'audio';
     }
     
     /**
@@ -227,7 +174,7 @@ class UploadModel extends Model
      */
     public function isSpreadsheet(): bool
     {
-        return $this->getFileType() === 'spreadsheet';
+        return $this->type === 'spreadsheet';
     }
     
     /**
@@ -237,7 +184,7 @@ class UploadModel extends Model
      */
     public function isPresentation(): bool
     {
-        return $this->getFileType() === 'presentation';
+        return $this->type === 'presentation';
     }
     
     /**
@@ -247,6 +194,6 @@ class UploadModel extends Model
      */
     public function isArchive(): bool
     {
-        return $this->getFileType() === 'archive';
+        return $this->type === 'archive';
     }
 }

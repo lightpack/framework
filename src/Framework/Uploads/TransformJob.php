@@ -130,7 +130,7 @@ class TransformJob
      */
     protected function isImage(): bool
     {
-        $mimeType = $this->upload->getMimeType();
+        $mimeType = $this->upload->mime_type;
         $imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         
         return in_array($mimeType, $imageTypes);
