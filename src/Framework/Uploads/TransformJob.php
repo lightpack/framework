@@ -49,13 +49,12 @@ class TransformJob
         
         $storage = $this->getStorage();
         $originalFilePath = $this->upload->getPath();
-
-        if (!$storage->exists($originalFilePath)) {
-            return;
-        }
-        
         $fileContent = $storage->read($originalFilePath);
         
+        if(!$fileContent) {
+            return;
+        }
+
         // Process each transformation
         foreach ($this->transformations as $variant => $options) {
             $this->processTransformation($variant, $options, $fileContent);
