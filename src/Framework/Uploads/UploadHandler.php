@@ -9,11 +9,9 @@ use Lightpack\Http\UploadedFile;
 use Lightpack\Storage\LocalStorage;
 
 /**
- * UploadService
- * 
  * Handles file uploads, storage, and database record creation.
  */
-class UploadService
+class UploadHandler
 {
     /**
      * @var \Lightpack\Http\Request

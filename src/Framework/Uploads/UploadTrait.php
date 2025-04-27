@@ -121,8 +121,8 @@ trait UploadTrait
     /**
      * Get the upload service instance.
      */
-    protected function getUploadService(): UploadService
+    protected function getUploadService(): UploadHandler
     {
-        return Container::getInstance()->resolve(UploadService::class);
+        return Container::getInstance()->resolve(UploadHandler::class);
     }
 }
