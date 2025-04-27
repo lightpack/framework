@@ -63,7 +63,7 @@ class LocalStorage extends File implements Storage
      */
     public function files(string $directory, bool $recursive = true): array
     {
-        $directory = $this->storageDir . '/' . trim($directory);
+        $directory = $this->storageDir . '/' . trim($directory, '/');
         
         if (!is_dir($directory)) {
             return [];
@@ -103,7 +103,7 @@ class LocalStorage extends File implements Storage
     public function exists(string $path): bool
     {
         return parent::exists(
-            $this->storageDir . '/' . trim($path)
+            $this->storageDir . '/' . trim($path, '/')
         );
     }
 
@@ -113,7 +113,7 @@ class LocalStorage extends File implements Storage
     public function read(string $path): ?string
     {
         return parent::read(
-            $this->storageDir . '/' . trim($path)
+            $this->storageDir . '/' . trim($path, '/')
         );
     }
 
@@ -122,9 +122,19 @@ class LocalStorage extends File implements Storage
      */
     public function write(string $path, string $contents, $flags = LOCK_EX): bool
     {
-        $this->storageDir . '/' . trim($path);
+        $path = $this->storageDir . '/' . trim($path, '/');
 
         return parent::write($path, $contents, $flags);
+    }
+
+     /**
+     * @inheritDoc
+     */
+    public function removeDir(string $directory, bool $delete = true): void
+    {
+        $directory = $this->storageDir . '/' . trim($directory, '/');
+
+        parent::removeDir($directory);
     }
 
     private function ensureDirectoryChecks(string $destination)
