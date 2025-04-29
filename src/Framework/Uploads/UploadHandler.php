@@ -270,19 +270,14 @@ class UploadHandler
     {
         $collection = empty($config['collection']) ? 'default' : $config['collection'];
         $meta = $this->getUploadedFileMeta($file);
+
         $upload = $this->createUploadEntry($model, $meta, $collection);
-        
-        $path = "media/" . $upload->id;
-        $visibility = $config['visibility'] ?? 'public';
-        
-        if ($visibility == 'private') {
-            $storedPath = $file->storePrivate($path, $config);
-        } else {
-            $storedPath = $file->storePublic($path, $config);
-        }
+        $upload->visibility = $config['visibility'] ?? 'public';
+
+        // store the file
+        $storedPath = $file->store($upload->getDir(), $config);
 
         // update upload model
-        $upload->visibility = $visibility;
         $upload->file_name = basename($storedPath);
         $upload->save();
         

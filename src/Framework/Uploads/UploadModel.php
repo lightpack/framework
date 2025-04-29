@@ -65,15 +65,7 @@ class UploadModel extends Model
      */
     public function getPath(?string $variant = null): string
     {
-        $path = "media/{$this->id}";
-        $filename = $this->file_name;
-        $visibility = $this->visibility;
-        
-        if ($variant) {
-            return "uploads/{$visibility}/{$path}/{$variant}/{$filename}";
-        }
-        
-        return "uploads/{$visibility}/{$path}/{$filename}";
+        return $this->getDir($variant) . "/{$this->file_name}";
     }
 
     /**
@@ -84,14 +76,13 @@ class UploadModel extends Model
      */
     public function getDir(?string $variant = null): string
     {
-        $path = "media/{$this->id}";
-        $visibility = $this->visibility;
-        
+        $path = "uploads/{$this->visibility}/attachments/{$this->id}";
+
         if ($variant) {
-            return "uploads/{$visibility}/{$path}/{$variant}";
+            return "{$path}/{$variant}";
         }
         
-        return "uploads/{$visibility}/{$path}";
+        return $path;
     }
     
     /**
