@@ -114,8 +114,10 @@ trait UploadTrait
      */
     protected function transformUpload(UploadModel $upload, array $transformations)
     {
-        $job = new TransformJob($upload, $transformations);
-        $job->handle(); // TODO: direct execution for now, refactor it to queue
+        (new TransformJob)->dispatch([
+            'upload_id' => $upload->id, 
+            'transformations' => $transformations
+        ]);
     }
     
     /**

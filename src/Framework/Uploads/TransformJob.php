@@ -5,14 +5,30 @@ namespace Lightpack\Uploads;
 use Lightpack\Storage\Storage;
 use Lightpack\Utils\Image;
 use Lightpack\Container\Container;
+use Lightpack\Jobs\Job;
 
 /**
  * TransformJob
  * 
  * Handles image transformations for uploaded files.
  */
-class TransformJob
+class TransformJob extends Job
 {
+    /**
+     * @inheritdoc
+     */
+    protected $queue = 'uploads';
+
+    /**
+     * @inheritdoc
+     */
+    protected $attempts = 3;
+
+    /**
+     * @inheritdoc
+     */
+    protected $retryAfter = '60 seconds';
+
     /**
      * @var \Lightpack\Uploads\UploadModel
      */
@@ -24,24 +40,15 @@ class TransformJob
     protected $transformations;
     
     /**
-     * Create a new transform job instance.
-     *
-     * @param object $upload The upload model instance
-     * @param array $transformations
-     */
-    public function __construct($upload, array $transformations)
-    {
-        $this->upload = $upload;
-        $this->transformations = $transformations;
-    }
-    
-    /**
      * Execute the job.
      *
      * @return void
      */
-    public function handle(): void
+    public function run()
     {
+        $this->upload = new UploadModel($this->payload['id']);
+        $this->transformations = $this->payload['transformations'];
+
         // Only process image files
         if (!$this->isImage()) {
             return;
