@@ -46,7 +46,7 @@ class TransformJob extends Job
      */
     public function run()
     {
-        $this->upload = new UploadModel($this->payload['id']);
+        $this->upload = new UploadModel($this->payload['upload_id']);
         $this->transformations = $this->payload['transformations'];
 
         // Only process image files
