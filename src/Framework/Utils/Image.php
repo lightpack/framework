@@ -189,7 +189,8 @@ class Image
      * @param array $sizes Sizes to generate (small, medium, large)
      * @return array Array of generated file paths
      */
-    public function avatar(string $filename, array $sizes = ['small', 'medium', 'large']): array {
+    public function avatar(string $filename, array $sizes = ['small', 'medium', 'large']): array 
+    {
         $paths = [];
         
         foreach ($sizes as $size) {
@@ -218,7 +219,8 @@ class Image
      * @param array $sizes Sizes to generate (sm, md, lg)
      * @return array Array of generated file paths
      */
-    public function thumbnail(string $filename, array $sizes = ['sm', 'md']): array {
+    public function thumbnail(string $filename, array $sizes = ['sm', 'md']): array 
+    {
         $paths = [];
         
         foreach ($sizes as $size) {
