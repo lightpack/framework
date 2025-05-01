@@ -168,6 +168,9 @@ class Image
 
     private function saveImageByExtension(string $extension, string $file, int $quality): void
     {
+        if ($extension === 'webp' && !function_exists('imagewebp')) {
+            throw new \Exception('WebP support is not enabled in your PHP GD extension.');
+        }
         $result = match($extension) {
             'jpg', 'jpeg' => imagejpeg($this->loadedImage, $file, $quality),
             'png' => imagepng($this->loadedImage, $file, (int)(9 - min(9, $quality / 10))), // Convert quality to PNG compression (0-9)
@@ -189,8 +192,7 @@ class Image
      * @param array $sizes Sizes to generate (small, medium, large)
      * @return array Array of generated file paths
      */
-    public function avatar(string $filename, array $sizes = ['small', 'medium', 'large']): array 
-    {
+    public function avatar(string $filename, array $sizes = ['small', 'medium', 'large']): array {
         $paths = [];
         
         foreach ($sizes as $size) {
@@ -219,8 +221,7 @@ class Image
      * @param array $sizes Sizes to generate (sm, md, lg)
      * @return array Array of generated file paths
      */
-    public function thumbnail(string $filename, array $sizes = ['sm', 'md']): array 
-    {
+    public function thumbnail(string $filename, array $sizes = ['sm', 'md']): array {
         $paths = [];
         
         foreach ($sizes as $size) {
