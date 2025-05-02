@@ -280,7 +280,7 @@ class ImageTest extends TestCase
         // Test default sizes
         $paths = $image->thumbnail($this->outputDir . '/photo123');
         
-        $this->assertCount(2, $paths);
+        $this->assertCount(3, $paths);
         $this->assertStringEndsWith('_thumb_small.jpg', $paths['small']);
         $this->assertStringEndsWith('_thumb_medium.jpg', $paths['medium']);
         

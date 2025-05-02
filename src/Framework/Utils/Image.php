@@ -18,7 +18,13 @@ class Image
     private const THUMBNAIL_SIZES = [
         'small' => ['width' => 300, 'height' => 300],
         'medium' => ['width' => 600, 'height' => 400],
+        'large' => ['width' => 1200, 'height' => 800],
     ];
+
+    // Default quality settings for all images
+    private int $defaultJpegQuality = 80;
+    private int $defaultWebpQuality = 80;
+    private int $defaultPngCompression = 7; // 0 (none) - 9 (max)
 
     public function __construct(string $filepath)
     {
@@ -68,7 +74,7 @@ class Image
         return $this;
     }
 
-    public function save(string $file, int $quality = 90): void
+    public function save(string $file, ?int $quality = null): void
     {
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         
@@ -87,6 +93,21 @@ class Image
         $this->saveImageByExtension($extension, $file, $quality);
         imagedestroy($this->loadedImage);
         $this->loadedImage = null;
+    }
+
+    public function setDefaultJpegQuality(int $quality): void
+    {
+        $this->defaultJpegQuality = $quality;
+    }
+
+    public function setDefaultWebpQuality(int $quality): void
+    {
+        $this->defaultWebpQuality = $quality;
+    }
+
+    public function setDefaultPngCompression(int $compression): void
+    {
+        $this->defaultPngCompression = max(0, min(9, $compression));
     }
 
     private function loadImage(string $file): void
@@ -176,15 +197,27 @@ class Image
         $this->height = $height;
     }
 
-    private function saveImageByExtension(string $extension, string $file, int $quality): void
+    private function saveImageByExtension(string $extension, string $file, ?int $quality = null): void
     {
         if ($extension === 'webp' && !function_exists('imagewebp')) {
             throw new \Exception('WebP support is not enabled in your PHP GD extension.');
         }
         $result = match($extension) {
-            'jpg', 'jpeg' => imagejpeg($this->loadedImage, $file, $quality),
-            'png' => imagepng($this->loadedImage, $file, (int)(9 - min(9, $quality / 10))), // Convert quality to PNG compression (0-9)
-            'webp' => imagewebp($this->loadedImage, $file, $quality),
+            'jpg', 'jpeg' => imagejpeg(
+                $this->loadedImage,
+                $file,
+                $quality !== null ? $quality : $this->defaultJpegQuality
+            ),
+            'png' => imagepng(
+                $this->loadedImage,
+                $file,
+                $this->defaultPngCompression
+            ),
+            'webp' => imagewebp(
+                $this->loadedImage,
+                $file,
+                $quality !== null ? $quality : $this->defaultWebpQuality
+            ),
             default => throw new \Exception('Unsupported image extension: ' . $extension),
         };
 
@@ -231,7 +264,7 @@ class Image
      * @param array $sizes Sizes to generate (small, medium, large)
      * @return array Array of generated file paths
      */
-    public function thumbnail(string $filename, array $sizes = ['small', 'medium']): array {
+    public function thumbnail(string $filename, array $sizes = ['small', 'medium', 'large']): array {
         $paths = [];
         
         foreach ($sizes as $size) {
