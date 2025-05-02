@@ -10,15 +10,15 @@ class Image
     private string $mime;
 
     private const AVATAR_SIZES = [
-        'small'  => ['size' => 48],   // Comments, lists
-        'medium' => ['size' => 96],   // Profile preview
-        'large'  => ['size' => 192]   // Profile page
+        'small'  => ['width' => 48, 'height' => 48],   // Comments, lists
+        'medium' => ['width' => 96, 'height' => 96],   // Profile preview
+        'large'  => ['width' => 192, 'height' => 192]   // Profile page
     ];
     
     private const THUMBNAIL_SIZES = [
-        'small' => ['width' => 300, 'height' => 300],
-        'medium' => ['width' => 600, 'height' => 400],
-        'large' => ['width' => 1200, 'height' => 800],
+        'small' => ['width' => 300, 'height' => 0],
+        'medium' => ['width' => 600, 'height' => 0],
+        'large' => ['width' => 1200, 'height' => 0],
     ];
 
     // Default quality settings for all images
@@ -253,7 +253,7 @@ class Image
             
             // Clone image to avoid modifying original
             $clone = clone $this;
-            $clone->resize($dimensions['size'], $dimensions['size'])
+            $clone->resize($dimensions['width'], $dimensions['height'])
                   ->save($outputPath);
                   
             $paths[$size] = $outputPath;

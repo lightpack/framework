@@ -290,11 +290,9 @@ class ImageTest extends TestCase
         // Verify dimensions
         list($width, $height) = getimagesize($paths['small']);
         $this->assertEquals(300, $width);
-        $this->assertEquals(300, $height);
         
         list($width, $height) = getimagesize($paths['medium']);
         $this->assertEquals(600, $width);
-        $this->assertEquals(400, $height);
         
         // Test all sizes
         $paths = $image->thumbnail($this->outputDir . '/photo456', ['small', 'medium']);
@@ -303,7 +301,6 @@ class ImageTest extends TestCase
         
         list($width, $height) = getimagesize($paths['medium']);
         $this->assertEquals(600, $width);
-        $this->assertEquals(400, $height);
         
         // Test invalid size
         $this->expectException(\InvalidArgumentException::class);
