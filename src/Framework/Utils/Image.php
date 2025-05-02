@@ -422,4 +422,108 @@ class Image
         }
         return $this;
     }
+
+    /**
+     * Colorize (tint) the image with RGB values.
+     */
+    public function colorize(int $red, int $green, int $blue): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_COLORIZE, $red, $green, $blue)) {
+            throw new \Exception('Failed to colorize image.');
+        }
+        return $this;
+    }
+
+    /**
+     * Apply sepia effect.
+     */
+    public function sepia(): self
+    {
+        $this->grayscale();
+        $this->colorize(90, 60, 30);
+        return $this;
+    }
+
+    /**
+     * Invert the image colors.
+     */
+    public function invert(): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_NEGATE)) {
+            throw new \Exception('Failed to invert image.');
+        }
+        return $this;
+    }
+
+    /**
+     * Pixelate the image.
+     */
+    public function pixelate(int $blockSize = 10): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_PIXELATE, $blockSize, true)) {
+            throw new \Exception('Failed to pixelate image.');
+        }
+        return $this;
+    }
+
+    /**
+     * Emboss the image.
+     */
+    public function emboss(): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_EMBOSS)) {
+            throw new \Exception('Failed to emboss image.');
+        }
+        return $this;
+    }
+
+    /**
+     * Edge detect the image.
+     */
+    public function edgedetect(): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_EDGEDETECT)) {
+            throw new \Exception('Failed to apply edge detect.');
+        }
+        return $this;
+    }
+
+    /**
+     * Overlay a PNG watermark image at (x, y) with given opacity (0-100).
+     */
+    public function watermark(string $watermarkPath, int $x = 0, int $y = 0, int $opacity = 50): self
+    {
+        $wm = imagecreatefrompng($watermarkPath);
+        if (!$wm) {
+            throw new \Exception('Failed to load watermark image.');
+        }
+        $wmWidth = imagesx($wm);
+        $wmHeight = imagesy($wm);
+        imagecopymerge($this->loadedImage, $wm, $x, $y, 0, 0, $wmWidth, $wmHeight, $opacity);
+        imagedestroy($wm);
+        return $this;
+    }
+
+    /**
+     * Overlay text using a TTF font.
+     */
+    public function text(string $text, int $x, int $y, int $size = 12, string $color = '#000000', string $font = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'): self
+    {
+        $rgb = sscanf($color, '#%02x%02x%02x');
+        $col = imagecolorallocate($this->loadedImage, ...$rgb);
+        imagettftext($this->loadedImage, $size, 0, $x, $y, $col, $font, $text);
+        return $this;
+    }
+
+    /**
+     * Posterize (reduce color tones) - simulated via mean removal.
+     */
+    public function posterize(int $levels = 4): self
+    {
+        // GD doesn't have direct posterize, so use mean removal for stylized effect
+        if (!imagefilter($this->loadedImage, IMG_FILTER_MEAN_REMOVAL)) {
+            throw new \Exception('Failed to posterize image.');
+        }
+        return $this;
+    }
 }
