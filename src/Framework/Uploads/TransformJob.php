@@ -88,12 +88,22 @@ class TransformJob extends Job
         // Create image instance
         $image = $this->createImage($tempFile);
 
-        // Expect: [method, param1, param2, ...]
-        $method = $options[0];
-        $params = array_slice($options, 1);
-
-        if (method_exists($image, $method)) {
-            $image->{$method}(...$params);
+        // Expect: [method, param1, param2, ...] OR chained: [[method, ...], [method, ...], ...]
+        if (isset($options[0]) && is_array($options[0])) {
+            // Chained transformations
+            foreach ($options as $step) {
+                $method = $step[0];
+                $params = array_slice($step, 1);
+                if (method_exists($image, $method)) {
+                    $image->{$method}(...$params);
+                }
+            }
+        } else {
+            $method = $options[0];
+            $params = array_slice($options, 1);
+            if (method_exists($image, $method)) {
+                $image->{$method}(...$params);
+            }
         }
         
         // Save the transformed image to a temporary file with proper extension

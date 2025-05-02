@@ -302,4 +302,90 @@ class Image
         
         $this->loadedImage = $newImage;
     }
+
+    /**
+     * Crop the image to the given width/height at (x, y).
+     */
+    public function crop(int $width, int $height, int $x = 0, int $y = 0): self
+    {
+        $cropped = imagecrop($this->loadedImage, [
+            'x' => $x,
+            'y' => $y,
+            'width' => $width,
+            'height' => $height
+        ]);
+        if ($cropped === false) {
+            throw new \Exception('Failed to crop image.');
+        }
+        imagedestroy($this->loadedImage);
+        $this->loadedImage = $cropped;
+        $this->width = $width;
+        $this->height = $height;
+        return $this;
+    }
+
+    /**
+     * Rotate the image by the given angle (degrees).
+     * Positive values rotate counter-clockwise.
+     */
+    public function rotate(float $angle, int $bgColor = 0): self
+    {
+        $rotated = imagerotate($this->loadedImage, $angle, $bgColor);
+        if ($rotated === false) {
+            throw new \Exception('Failed to rotate image.');
+        }
+        imagedestroy($this->loadedImage);
+        $this->loadedImage = $rotated;
+        // Swap width/height if angle is 90 or 270
+        if (abs($angle) % 180 === 90) {
+            [$this->width, $this->height] = [$this->height, $this->width];
+        }
+        return $this;
+    }
+
+    /**
+     * Flip the image horizontally or vertically.
+     * @param string $direction 'horizontal' or 'vertical'
+     */
+    public function flip(string $direction = 'horizontal'): self
+    {
+        $mode = $direction === 'vertical' ? IMG_FLIP_VERTICAL : IMG_FLIP_HORIZONTAL;
+        if (!imageflip($this->loadedImage, $mode)) {
+            throw new \Exception('Failed to flip image.');
+        }
+        return $this;
+    }
+
+    /**
+     * Convert the image to grayscale.
+     */
+    public function grayscale(): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_GRAYSCALE)) {
+            throw new \Exception('Failed to apply grayscale filter.');
+        }
+        return $this;
+    }
+
+    /**
+     * Adjust brightness (-255 to 255).
+     */
+    public function brightness(int $level): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_BRIGHTNESS, $level)) {
+            throw new \Exception('Failed to adjust brightness.');
+        }
+        return $this;
+    }
+
+    /**
+     * Adjust contrast (-100 to 100).
+     */
+    public function contrast(int $level): self
+    {
+        if (!imagefilter($this->loadedImage, IMG_FILTER_CONTRAST, $level)) {
+            throw new \Exception('Failed to adjust contrast.');
+        }
+        return $this;
+    }
 }
