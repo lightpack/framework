@@ -16,9 +16,9 @@ class Image
     ];
     
     private const THUMBNAIL_SIZES = [
-        'sm' => ['width' => 300, 'height' => 300],
-        'md' => ['width' => 600, 'height' => 400],
-        'lg' => ['width' => 1200, 'height' => 800]
+        'small' => ['width' => 300, 'height' => 300],
+        'medium' => ['width' => 600, 'height' => 400],
+        'large' => ['width' => 1200, 'height' => 800]
     ];
 
     public function __construct(string $filepath)
@@ -218,10 +218,10 @@ class Image
      * Generate thumbnail images in standard sizes
      *
      * @param string $filename Base filename without extension
-     * @param array $sizes Sizes to generate (sm, md, lg)
+     * @param array $sizes Sizes to generate (small, medium, large)
      * @return array Array of generated file paths
      */
-    public function thumbnail(string $filename, array $sizes = ['sm', 'md']): array {
+    public function thumbnail(string $filename, array $sizes = ['small', 'medium', 'large']): array {
         $paths = [];
         
         foreach ($sizes as $size) {
