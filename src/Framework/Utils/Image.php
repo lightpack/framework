@@ -206,7 +206,7 @@ class Image
             // Clone image to avoid modifying original
             $clone = clone $this;
             $clone->resize($dimensions['size'], $dimensions['size'])
-                  ->save($outputPath, 90);
+                  ->save($outputPath);
                   
             $paths[$size] = $outputPath;
         }
@@ -235,7 +235,7 @@ class Image
             // Clone image to avoid modifying original
             $clone = clone $this;
             $clone->resize($dimensions['width'], $dimensions['height'])
-                  ->save($outputPath, 85);
+                  ->save($outputPath);
                   
             $paths[$size] = $outputPath;
         }
