@@ -93,29 +93,7 @@ class TransformJob extends Job
         $params = array_slice($options, 1);
 
         if (method_exists($image, $method)) {
-            if (in_array($method, ['avatar', 'thumbnail'])) {
-                // Batch transformation: generate multiple variants
-                $baseFilename = tempnam(sys_get_temp_dir(), $method . '_');
-                $results = $image->{$method}($baseFilename, ...$params); // returns array of file paths
-                foreach ($results as $variantSuffix => $filePath) {
-                    // Detect extension from filePath
-                    $ext = pathinfo($filePath, PATHINFO_EXTENSION);
-                    $variantKey = $variant . '_' . $variantSuffix;
-                    // Ensure the storage path ends with the correct extension
-                    $storagePath = preg_replace('/\.[^.]+$/', '', $this->upload->getPath($variantKey)) . '.' . $ext;
-                    $transformedContent = file_get_contents($filePath);
-                    $storage->write($storagePath, $transformedContent);
-                    unlink($filePath); // cleanup
-                }
-                // Remove the base temp file (not used directly)
-                if (file_exists($baseFilename)) {
-                    unlink($baseFilename);
-                }
-                // Batch methods handle their own output, skip further processing
-                return;
-            } else {
-                $image->{$method}(...$params);
-            }
+            $image->{$method}(...$params);
         }
         
         // Save the transformed image to a temporary file with proper extension
