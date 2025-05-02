@@ -16,9 +16,9 @@ class Image
     ];
     
     private const THUMBNAIL_SIZES = [
-        'small' => ['width' => 300, 'height' => 0],
-        'medium' => ['width' => 600, 'height' => 0],
-        'large' => ['width' => 1200, 'height' => 0],
+        'small'  => ['width' => 300,  'height' => 0], // Blog post preview, gallery grid
+        'medium' => ['width' => 600,  'height' => 0], // Article main image, cards
+        'large'  => ['width' => 1200, 'height' => 0], // Feature banners, full-width sections
     ];
 
     // Default quality settings for all images
