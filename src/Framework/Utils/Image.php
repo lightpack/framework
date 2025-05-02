@@ -388,4 +388,38 @@ class Image
         }
         return $this;
     }
+
+    /**
+     * Apply a simple Gaussian blur to the image.
+     * @param int $passes Number of times to apply the blur (default 1)
+     */
+    public function blur(int $passes = 1): self
+    {
+        for ($i = 0; $i < $passes; $i++) {
+            if (!imagefilter($this->loadedImage, IMG_FILTER_GAUSSIAN_BLUR)) {
+                throw new \Exception('Failed to apply blur.');
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Sharpen the image using a convolution matrix.
+     * @param float $amount Sharpen amount (default 1.0)
+     */
+    public function sharpen(float $amount = 1.0): self
+    {
+        // Basic sharpen matrix
+        $matrix = [
+            [-1, -1, -1],
+            [-1, 8 + $amount, -1],
+            [-1, -1, -1],
+        ];
+        $divisor = array_sum(array_map('array_sum', $matrix));
+        if ($divisor == 0) $divisor = 1;
+        if (!imageconvolution($this->loadedImage, $matrix, $divisor, 0)) {
+            throw new \Exception('Failed to sharpen image.');
+        }
+        return $this;
+    }
 }
