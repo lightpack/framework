@@ -171,13 +171,18 @@ class Image
             $newHeight = $height;
         } elseif ($width > 0) {
             $newWidth = $width;
-            $newHeight = $width / $aspectRatio;
+            $newHeight = (int) round($width / $aspectRatio);
         } elseif ($height > 0) {
             $newHeight = $height;
-            $newWidth = $height * $aspectRatio;
+            $newWidth = (int) round($height * $aspectRatio);
         } else {
             $newWidth = $this->width;
             $newHeight = $this->height;
+        }
+
+        // Final sanity check
+        if ($newWidth <= 0 || $newHeight <= 0) {
+            throw new \Exception('Calculated dimensions are invalid. Please check your resize parameters.');
         }
 
         return [
