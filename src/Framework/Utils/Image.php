@@ -34,14 +34,18 @@ class Image
     public function resize(int $width, int $height): self
     {
         $newDimensions = $this->calculateNewDimensions($width, $height);
-        $resizedImage = imagecreatetruecolor($newDimensions['width'], $newDimensions['height']);
 
-        if ($this->mime == 'image/png') {
-            imagealphablending($resizedImage, false);
-            imagesavealpha($resizedImage, true);
-            $background = imagecolorallocatealpha($resizedImage, 255, 255, 255, 127);
-            imagecolortransparent($resizedImage, $background);
-        } elseif ($this->mime == 'image/webp') {
+        // No-op optimization: skip if dimensions unchanged
+        if ($newDimensions['width'] === $this->width && $newDimensions['height'] === $this->height) {
+            return $this;
+        }
+
+        $resizedImage = imagecreatetruecolor($newDimensions['width'], $newDimensions['height']);
+        if ($resizedImage === false) {
+            throw new \Exception('Failed to create new image resource for resizing.');
+        }
+
+        if (in_array($this->mime, ['image/png', 'image/webp'])) {
             imagealphablending($resizedImage, false);
             imagesavealpha($resizedImage, true);
             $background = imagecolorallocatealpha($resizedImage, 255, 255, 255, 127);
@@ -50,11 +54,18 @@ class Image
             $background = imagecolorallocate($resizedImage, 255, 255, 255);
         }
 
-        imagefilledrectangle($resizedImage, 0, 0, $width, $height, $background);
-        imagecopyresampled($resizedImage, $this->loadedImage, 0, 0, 0, 0, $newDimensions['width'], $newDimensions['height'], $this->width, $this->height);
+        imagefilledrectangle($resizedImage, 0, 0, $newDimensions['width'], $newDimensions['height'], $background);
+
+        if (!imagecopyresampled(
+            $resizedImage, $this->loadedImage,
+            0, 0, 0, 0,
+            $newDimensions['width'], $newDimensions['height'],
+            $this->width, $this->height
+        )) {
+            throw new \Exception('Failed to resize image.');
+        }
 
         $this->replaceCurrentImage($resizedImage, $newDimensions['width'], $newDimensions['height']);
-        
         return $this;
     }
 
