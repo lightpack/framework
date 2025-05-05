@@ -25,6 +25,7 @@ final class UploadTraitTest extends TestCase
     private Schema $schema;
     private string $uploadsDir;
     private string $fixturesDir;
+    private TestModel $model;
 
     protected function setUp(): void
     {
@@ -92,6 +93,11 @@ final class UploadTraitTest extends TestCase
         if (!file_exists($this->fixturesDir . '/test.pdf')) {
             file_put_contents($this->fixturesDir . '/test.pdf', '%PDF-1.4\n%Test PDF');
         }
+
+        // Create and save a reusable test model instance for uploads
+        $this->model = $this->db->model(TestModel::class);
+        $this->model->name = 'test';
+        $this->model->save();
     }
 
     protected function tearDown(): void
@@ -124,6 +130,8 @@ final class UploadTraitTest extends TestCase
      */
     private function setTestFile(string $field, string $fixtureName, string $mimeType = 'text/plain')
     {
+        // Copies a file from test fixtures directory to a real temporary file 
+        // (simulating what PHP does for real uploads).
         $src = $this->fixturesDir . '/' . $fixtureName;
         $tmp = tempnam(sys_get_temp_dir(), 'upload_');
         copy($src, $tmp);
@@ -141,12 +149,7 @@ final class UploadTraitTest extends TestCase
 
     public function test_single_file_upload_and_retrieval() {
         $this->setTestFile('file', 'test.txt', 'text/plain');
-
-        /** @var TestModel */
-        $model = $this->db->model(TestModel::class);
-        $model->name = 'test';
-        $model->save();
-        $upload = $model->attach('file', [
+        $upload = $this->model->attach('file', [
             'collection' => 'test',
         ]);
 
