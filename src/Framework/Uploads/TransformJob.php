@@ -20,14 +20,28 @@ class TransformJob extends Job
     protected $queue = 'uploads';
 
     /**
-     * @inheritdoc
+     * Override onQueue() to use config value.
      */
-    protected $attempts = 3;
+    public function onQueue(): string
+    {
+        return config('uploads.queue', 'default');
+    }
 
     /**
-     * @inheritdoc
+     * Override maxAttempts to use config value.
      */
-    protected $retryAfter = '60 seconds';
+    public function maxAttempts(): int
+    {
+        return config('uploads.max_attempts', 1);
+    }
+
+    /**
+     * Override retryAfter to use config value.
+     */
+    public function retryAfter(): string
+    {
+        return config('uploads.retry_after', '60 seconds');
+    }
 
     /**
      * @var \Lightpack\Uploads\UploadModel
