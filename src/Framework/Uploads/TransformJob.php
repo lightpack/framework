@@ -34,7 +34,7 @@ class TransformJob extends Job
      */
     public function maxAttempts(): int
     {
-        return Container::getInstance()
+        return (int) Container::getInstance()
             ->get('config')
             ->get('uploads.max_attempts', 1);
     }
