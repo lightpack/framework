@@ -79,7 +79,7 @@ class UploadHandler
         $files = $this->request->files()->get($key);
         
         if (empty($files)) {
-            throw new \RuntimeException("No files uploaded with key: {$key}");
+            throw new FileUploadException("No files uploaded with key: {$key}");
         }
         
         $uploads = [];

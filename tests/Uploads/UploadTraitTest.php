@@ -27,9 +27,11 @@ final class UploadTraitTest extends TestCase
     private string $uploadsDir;
     private string $fixturesDir;
     private TestModel $model;
+    private Container $container;
 
     protected function setUp(): void
     {
+        $_FILES = [];
         parent::setUp();
         $_SERVER['X_LIGHTPACK_TEST_UPLOAD'] = true;
         $config = require __DIR__ . '/../Database/tmp/mysql.config.php';
@@ -59,14 +61,14 @@ final class UploadTraitTest extends TestCase
         });
 
         // Setup container
-        $container = Container::getInstance();
-        $container->register('db', fn() => $this->db);
-        $container->register('logger', fn() => new class {
+        $this->container = Container::getInstance();
+        $this->container->register('db', fn() => $this->db);
+        $this->container->register('logger', fn() => new class {
             public function error($message, $context = []) {}
             public function critical($message, $context = []) {}
         });
-        $container->register('request', fn() => new Request());
-        $container->alias(Request::class, 'request');
+        $this->container->register('request', fn() => new Request());
+        $this->container->alias(Request::class, 'request');
 
         // Setup uploads directory
         $this->uploadsDir = sys_get_temp_dir() . '/lightpack_uploads_test';
@@ -74,7 +76,7 @@ final class UploadTraitTest extends TestCase
             mkdir($this->uploadsDir, 0777, true);
         }
         // Point storage to temp uploads dir
-        $container->register('storage', fn() => new LocalStorage($this->uploadsDir));
+        $this->container->register('storage', fn() => new LocalStorage($this->uploadsDir));
 
         // Prepare fixtures dir
         $this->fixturesDir = __DIR__ . '/fixtures';
@@ -106,6 +108,7 @@ final class UploadTraitTest extends TestCase
         $this->schema->dropTable('uploads');
         $this->schema->dropTable('test_models');
         $this->db = null;
+        $this->container->destroy();
         // Clean up uploads dir
         if (is_dir($this->uploadsDir)) {
             $this->rrmdir($this->uploadsDir);
@@ -197,7 +200,7 @@ final class UploadTraitTest extends TestCase
         $this->assertEquals('test', $upload->collection);
     }
 
-    public function _test_multiple_file_uploads_and_retrieval() {
+    public function test_multiple_file_uploads_and_retrieval() {
         $this->setTestFilesArray('files', [
             ['fixture' => 'test.txt', 'mime' => 'text/plain'],
             ['fixture' => 'test.pdf', 'mime' => 'application/pdf'],
