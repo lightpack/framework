@@ -258,5 +258,57 @@ final class UploadTraitTest extends TestCase
         $this->model->attach('no_file', ['collection' => 'fail']);
     }
 
-    // Transformations and upload from URL tests would require more setup (e.g., image fixtures, mocking remote fetch), which can be added if needed.
+    public function test_image_upload_with_transformations() {
+        $this->setTestFile('file', 'test.jpg', 'image/jpeg');
+        $transformations = [
+            'thumb_small' => ['resize', 'width' => 48, 'height' => 48],
+            'thumb_large' => ['resize', 'width' => 200, 'height' => 200],
+        ];
+        $upload = $this->model->attach('file', [
+            'collection' => 'images',
+            'transformations' => $transformations,
+        ]);
+        // Assert original file exists
+        $this->assertFileExists($this->uploadsDir . '/' . $upload->getPath());
+        // Assert transformed variants exist and have expected dimensions
+        foreach ($transformations as $variant => $opts) {
+            $variantPath = $this->uploadsDir . '/' . $upload->getPath($variant);
+            $this->assertFileExists($variantPath, "Variant file missing: $variantPath");
+            
+            // Assert check dimensions
+            $imageInfo = getimagesize($variantPath);
+            $this->assertEquals($opts['width'], $imageInfo[0], "Width mismatch for $variant");
+            if ($opts['height'] > 0) {
+                $this->assertEquals($opts['height'], $imageInfo[1], "Height mismatch for $variant");
+            }
+        }
+    }
+
+    public function test_multiple_image_uploads_with_transformations() {
+        $this->setTestFilesArray('images', [
+            ['fixture' => 'test.jpg', 'mime' => 'image/jpeg'],
+            ['fixture' => 'test.jpg', 'mime' => 'image/jpeg'],
+        ], false);
+        $transformations = [
+            'thumb' => ['resize', 'width' => 48, 'height' => 48],
+            'medium' => ['resize', 'width' => 200, 'height' => 200],
+        ];
+        $uploads = $this->model->attachMultiple('images', [
+            'collection' => 'images',
+            'transformations' => $transformations,
+        ]);
+        $this->assertCount(2, $uploads);
+        foreach ($uploads as $upload) {
+            $this->assertFileExists($this->uploadsDir . '/' . $upload->getPath());
+            foreach ($transformations as $variant => $opts) {
+                $variantPath = $this->uploadsDir . '/' . $upload->getPath($variant);
+                $this->assertFileExists($variantPath, "Variant file missing: $variantPath");
+                $imageInfo = getimagesize($variantPath);
+                $this->assertEquals($opts['width'], $imageInfo[0], "Width mismatch for $variant");
+                if ($opts['height'] > 0) {
+                    $this->assertEquals($opts['height'], $imageInfo[1], "Height mismatch for $variant");
+                }
+            }
+        }
+    }
 }
