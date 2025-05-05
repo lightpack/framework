@@ -85,6 +85,9 @@ class NativeCaptcha implements CaptchaInterface
      */
     public function verify(string $input): bool
     {
-        return $input === $this->session->get('_captcha');
+        $expected = $this->session->get('_captcha');
+        $this->session->delete('_captcha');
+        
+        return $input === $expected;
     }
 }
