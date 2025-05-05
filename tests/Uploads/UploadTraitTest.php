@@ -8,6 +8,7 @@ use Lightpack\Database\DB;
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
+use Lightpack\Exceptions\FileUploadException;
 use Lightpack\Http\Request;
 use Lightpack\Storage\LocalStorage;
 use Lightpack\Uploads\UploadTrait;
@@ -147,6 +148,38 @@ final class UploadTraitTest extends TestCase
         ];
     }
 
+    /**
+     * Helper to setup $_FILES for multiple file uploads (array syntax)
+     */
+    private function setTestFilesArray(string $field, array $files, bool $withArraySuffix = false)
+    {
+        $names = [];
+        $types = [];
+        $tmp_names = [];
+        $errors = [];
+        $sizes = [];
+        foreach ($files as $file) {
+            $src = $this->fixturesDir . '/' . $file['fixture'];
+            $tmp = tempnam(sys_get_temp_dir(), 'upload_');
+            copy($src, $tmp);
+            $names[] = $file['fixture'];
+            $types[] = $file['mime'];
+            $tmp_names[] = $tmp;
+            $errors[] = UPLOAD_ERR_OK;
+            $sizes[] = filesize($src);
+        }
+        $targetField = $withArraySuffix ? $field . '[]' : $field;
+        $_FILES = [
+            $targetField => [
+                'name' => $names,
+                'type' => $types,
+                'tmp_name' => $tmp_names,
+                'error' => $errors,
+                'size' => $sizes,
+            ]
+        ];
+    }
+
     public function test_single_file_upload_and_retrieval() {
         $this->setTestFile('file', 'test.txt', 'text/plain');
         $upload = $this->model->attach('file', [
@@ -164,5 +197,63 @@ final class UploadTraitTest extends TestCase
         $this->assertEquals('test', $upload->collection);
     }
 
-    // Additional tests for multiple uploads, private uploads, singleton, detach, transformations, edge cases will follow here...
+    public function _test_multiple_file_uploads_and_retrieval() {
+        $this->setTestFilesArray('files', [
+            ['fixture' => 'test.txt', 'mime' => 'text/plain'],
+            ['fixture' => 'test.pdf', 'mime' => 'application/pdf'],
+        ], false);
+        $uploads = $this->model->attachMultiple('files', ['collection' => 'docs']);
+        $this->assertCount(2, $uploads);
+        foreach ($uploads as $upload) {
+            $fullPath = $this->uploadsDir . '/' . $upload->getPath();
+            $this->assertFileExists($fullPath);
+            $this->assertTrue($upload->exists());
+            $this->assertEquals('docs', $upload->collection);
+        }
+    }
+
+    public function test_private_upload_and_visibility() {
+        $this->setTestFile('file', 'test.txt', 'text/plain');
+        $upload = $this->model->attach('file', [
+            'collection' => 'secret',
+            'visibility' => 'private',
+        ]);
+        $fullPath = $this->uploadsDir . '/' . $upload->getPath();
+        $this->assertFileExists($fullPath);
+        $this->assertEquals('private', $upload->visibility);
+        $this->assertStringContainsString('/private/', $upload->getPath());
+    }
+
+    public function test_singleton_upload_replaces_previous() {
+        $this->setTestFile('file', 'test.txt', 'text/plain');
+        $upload1 = $this->model->attach('file', [
+            'collection' => 'avatar',
+            'singleton' => true,
+        ]);
+        $this->assertFileExists($this->uploadsDir . '/' . $upload1->getPath());
+        $this->setTestFile('file', 'test.pdf', 'application/pdf');
+        $upload2 = $this->model->attach('file', [
+            'collection' => 'avatar',
+            'singleton' => true,
+        ]);
+        $this->assertFileExists($this->uploadsDir . '/' . $upload2->getPath());
+        $this->assertFalse(file_exists($this->uploadsDir . '/' . $upload1->getPath()));
+        $this->assertNotEquals($upload1->id, $upload2->id);
+    }
+
+    public function test_upload_and_detach_file() {
+        $this->setTestFile('file', 'test.txt', 'text/plain');
+        $upload = $this->model->attach('file', ['collection' => 'temp']);
+        $fullPath = $this->uploadsDir . '/' . $upload->getPath();
+        $this->assertFileExists($fullPath);
+        $this->model->detach((int)$upload->id);
+        $this->assertFalse(file_exists($fullPath));
+    }
+
+    public function test_upload_non_existent_file_throws_exception() {
+        $this->expectException(FileUploadException::class);
+        $this->model->attach('no_file', ['collection' => 'fail']);
+    }
+
+    // Transformations and upload from URL tests would require more setup (e.g., image fixtures, mocking remote fetch), which can be added if needed.
 }

@@ -5,6 +5,7 @@ namespace Lightpack\Uploads;
 use Lightpack\Http\Request;
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Model;
+use Lightpack\Exceptions\FileUploadException;
 use Lightpack\Http\UploadedFile;
 use Lightpack\Storage\LocalStorage;
 
@@ -52,7 +53,7 @@ class UploadHandler
         $file = $this->getUploadedFile($key);
         
         if (!$file) {
-            throw new \RuntimeException("No file uploaded with key: {$key}");
+            throw new FileUploadException("No file uploaded with key: {$key}");
         }
         
         // Check if this is a singleton upload (only one per collection)
@@ -75,7 +76,7 @@ class UploadHandler
      */
     public function saveMultiple($model, string $key, array $config = []): array
     {
-        $files = $this->request->files($key);
+        $files = $this->request->files()->get($key);
         
         if (empty($files)) {
             throw new \RuntimeException("No files uploaded with key: {$key}");
