@@ -13,6 +13,18 @@ use Lightpack\Http\Request;
 use Lightpack\Storage\LocalStorage;
 use Lightpack\Uploads\UploadTrait;
 
+// Test config class for jobs that need config values
+class TestConfig {
+    protected $data = [
+        'uploads.queue' => 'test-queue',
+        'uploads.max_attempts' => 2,
+        'uploads.retry_after' => '5 seconds',
+    ];
+    public function get($key, $default = null) {
+        return $this->data[$key] ?? $default;
+    }
+}
+
 // Minimal test model for uploads
 class TestModel extends Model {
     use UploadTrait;
@@ -67,6 +79,7 @@ final class UploadTraitTest extends TestCase
             public function error($message, $context = []) {}
             public function critical($message, $context = []) {}
         });
+        $this->container->register('config', fn() => new TestConfig());
         $this->container->register('request', fn() => new Request());
         $this->container->alias(Request::class, 'request');
 

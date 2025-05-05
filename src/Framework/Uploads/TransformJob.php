@@ -24,7 +24,9 @@ class TransformJob extends Job
      */
     public function onQueue(): string
     {
-        return config('uploads.queue', 'default');
+        return Container::getInstance()
+            ->get('config')
+            ->get('uploads.queue', 'default');
     }
 
     /**
@@ -32,7 +34,9 @@ class TransformJob extends Job
      */
     public function maxAttempts(): int
     {
-        return config('uploads.max_attempts', 1);
+        return Container::getInstance()
+            ->get('config')
+            ->get('uploads.max_attempts', 1);
     }
 
     /**
@@ -40,7 +44,9 @@ class TransformJob extends Job
      */
     public function retryAfter(): string
     {
-        return config('uploads.retry_after', '60 seconds');
+        return Container::getInstance()
+            ->get('config')
+            ->get('uploads.retry_after', '60 seconds');
     }
 
     /**
