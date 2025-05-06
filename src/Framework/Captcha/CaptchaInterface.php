@@ -11,9 +11,9 @@ interface CaptchaInterface
     public function generate(): string;
 
     /**
-     * Verify the CAPTCHA response
-     * @param mixed $input User input or request data
+     * Verify the captcha response from the request.
+     *
      * @return bool
      */
-    public function verify(string $input): bool;
+    public function verify(): bool;
 }

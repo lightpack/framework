@@ -4,34 +4,30 @@ namespace Lightpack\Captcha;
 
 class CloudflareTurnstile implements CaptchaInterface
 {
+    private $request;
     private string $siteKey;
     private string $secretKey;
 
-    public function __construct(string $siteKey, string $secretKey)
+    public function __construct($request, string $siteKey, string $secretKey)
     {
+        $this->request = $request;
         $this->siteKey = $siteKey;
         $this->secretKey = $secretKey;
     }
 
     public function generate(): string
     {
-        return '<div class="cf-turnstile" data-sitekey="' . htmlspecialchars($this->siteKey) . '"></div>';
+        return '<div class="cf-turnstile" data-sitekey="' . htmlspecialchars($this->siteKey) . '"></div>' .
+               '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
     }
 
-    protected function fetchVerifyResponse($data)
+    public function verify(): bool
     {
-        $options = [
-            'http' => [
-                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-                'method'  => 'POST',
-                'content' => http_build_query($data),
-            ],
-        ];
-        $context = stream_context_create($options);
-        return file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $context);
+        $input = $this->request->input('cf-turnstile-response');
+        return $this->verifyInput($input);
     }
 
-    public function verify(string $input): bool
+    protected function verifyInput($input): bool
     {
         if (empty($input)) {
             return false;
@@ -40,8 +36,20 @@ class CloudflareTurnstile implements CaptchaInterface
             'secret' => $this->secretKey,
             'response' => $input,
         ];
-        $result = $this->fetchVerifyResponse($data);
-        $result = json_decode($result, true);
-        return isset($result['success']) && $result['success'] === true;
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($data),
+            ],
+        ];
+        $result = $this->fetchVerifyResponse('https://challenges.cloudflare.com/turnstile/v0/siteverify', $options);
+        $response = json_decode($result, true);
+        return isset($response['success']) && $response['success'] === true;
+    }
+
+    protected function fetchVerifyResponse($url, $options = [])
+    {
+        return file_get_contents($url, false, $options ? stream_context_create($options) : null);
     }
 }

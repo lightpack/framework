@@ -3,17 +3,23 @@
 namespace Lightpack\Captcha;
 
 use Lightpack\Session\Session;
+use Lightpack\Http\Request;
 
 class NativeCaptcha implements CaptchaInterface
 {
+    protected const SESSION_KEY = '_captcha_text';
+
     private int $width = 150;
     private int $height = 50;
     private string $font;
     private ?string $text = null;
+    private Request $request;
+    private Session $session;
 
-    public function __construct(protected Session $session)
+    public function __construct(Request $request, Session $session)
     {
-        // ...
+        $this->request = $request;
+        $this->session = $session;
     }
 
     public function width(int $width): self
@@ -50,7 +56,7 @@ class NativeCaptcha implements CaptchaInterface
         }
 
         $text = $this->text ?? substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6);
-        $this->session->set('_captcha', $text); // Store in session
+        $this->session->set(self::SESSION_KEY, $text);
 
         $im = imagecreatetruecolor($this->width, $this->height);
         imagesavealpha($im, true);
@@ -83,11 +89,19 @@ class NativeCaptcha implements CaptchaInterface
      * Verify the user input against the generated captcha text
      * stored in session or cache for statelessness.
      */
-    public function verify(string $input): bool
+    public function verify(): bool
     {
-        $expected = $this->session->get('_captcha');
-        $this->session->delete('_captcha');
-        
+        $input = $this->request->input('captcha');
+        return $this->verifyInput($input);
+    }
+
+    protected function verifyInput($input): bool
+    {
+        $expected = $this->session->get(self::SESSION_KEY);
+        if ($expected === null) {
+            return false;
+        }
+        $this->session->delete(self::SESSION_KEY);
         return $input === $expected;
     }
 }

@@ -3,6 +3,7 @@
 namespace Lightpack\Captcha;
 
 use Lightpack\Config\Config;
+use Lightpack\Http\Request;
 use Lightpack\Session\Drivers\ArrayDriver;
 use Lightpack\Session\Session;
 use PHPUnit\Framework\TestCase;
@@ -13,10 +14,13 @@ class NativeCaptchaTest extends TestCase
     private Config $config;
     private $driver;
     private Session $session;
+    private $request;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $_POST = [];
+        $_SERVER['REQUEST_METHOD'] = 'POST';
         // Ensure DIR_CONFIG is defined for Config loading
         if (!defined('DIR_CONFIG')) {
             define('DIR_CONFIG', __DIR__ . '/tmp');
@@ -28,11 +32,19 @@ class NativeCaptchaTest extends TestCase
         $this->config = new Config();
         $this->driver = new ArrayDriver();
         $this->session = new Session($this->driver, $this->config);
+        $this->request = new Request();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        $_POST = [];
+        unset($_SERVER['REQUEST_METHOD']);
     }
 
     private function getCaptchaInstance(): NativeCaptcha
     {
-        return new NativeCaptcha($this->session);
+        return new NativeCaptcha($this->request, $this->session);
     }
 
     public function testCaptchaGenerationStoresTextInSession()
@@ -41,7 +53,7 @@ class NativeCaptchaTest extends TestCase
             ->font($this->font)
             ->generate();
         $this->assertStringStartsWith('data:image/png;base64,', $captcha);
-        $this->assertNotEmpty($this->session->get('_captcha'));
+        $this->assertNotEmpty($this->session->get('_captcha_text'));
     }
 
     public function testCustomTextIsStoredAndRendered()
@@ -50,7 +62,7 @@ class NativeCaptchaTest extends TestCase
             ->font($this->font)
             ->text('TEST12')
             ->generate();
-        $this->assertEquals('TEST12', $this->session->get('_captcha'));
+        $this->assertEquals('TEST12', $this->session->get('_captcha_text'));
         $this->assertStringStartsWith('data:image/png;base64,', $captcha);
     }
 
@@ -67,7 +79,7 @@ class NativeCaptchaTest extends TestCase
     public function testThrowsIfFontMissing()
     {
         $this->expectException(\Exception::class);
-        $this->getCaptchaInstance()->generate();
+        (new NativeCaptcha($this->request, $this->session))->generate();
     }
 
     public function testVerifyReturnsTrueForCorrectInput()
@@ -76,7 +88,8 @@ class NativeCaptchaTest extends TestCase
             ->font($this->font)
             ->text('ABC123');
         $captcha->generate();
-        $this->assertTrue($captcha->verify('ABC123'));
+        $_POST['captcha'] = 'ABC123';
+        $this->assertTrue($captcha->verify());
     }
 
     public function testVerifyReturnsFalseForIncorrectInput()
@@ -85,7 +98,8 @@ class NativeCaptchaTest extends TestCase
             ->font($this->font)
             ->text('ABC123');
         $captcha->generate();
-        $this->assertFalse($captcha->verify('WRONG'));
+        $_POST['captcha'] = 'WRONG';
+        $this->assertFalse($captcha->verify());
     }
 
     public function testVerifyIsCaseSensitive()
@@ -94,12 +108,14 @@ class NativeCaptchaTest extends TestCase
             ->font($this->font)
             ->text('AbC123');
         $captcha->generate();
-        $this->assertFalse($captcha->verify('abc123'));
+        $_POST['captcha'] = 'abc123';
+        $this->assertFalse($captcha->verify());
     }
 
     public function testVerifyFailsIfNoCaptchaInSession()
     {
         $captcha = $this->getCaptchaInstance();
-        $this->assertFalse($captcha->verify('ANY'));
+        $_POST['captcha'] = 'ANY';
+        $this->assertFalse($captcha->verify());
     }
 }
