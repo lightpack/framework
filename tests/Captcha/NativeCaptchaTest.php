@@ -2,34 +2,37 @@
 
 namespace Lightpack\Captcha;
 
-use Lightpack\Container\Container;
+use Lightpack\Config\Config;
 use Lightpack\Session\Drivers\ArrayDriver;
+use Lightpack\Session\Session;
 use PHPUnit\Framework\TestCase;
 
 class NativeCaptchaTest extends TestCase
 {
     private string $font;
-    private Container $container;
-    private ArrayDriver $session;
+    private Config $config;
+    private $driver;
+    private Session $session;
 
     protected function setUp(): void
     {
         parent::setUp();
+        // Ensure DIR_CONFIG is defined for Config loading
+        if (!defined('DIR_CONFIG')) {
+            define('DIR_CONFIG', __DIR__ . '/tmp');
+        }
         $this->font = __DIR__ . '/FreeSans.ttf';
         if (!file_exists($this->font)) {
             $this->markTestSkipped('Test font not found: ' . $this->font);
         }
-        $this->container = Container::getInstance();
-        $this->container->register('session', function() {
-            return new ArrayDriver;
-        });
+        $this->config = new Config();
+        $this->driver = new ArrayDriver();
+        $this->session = new Session($this->driver, $this->config);
     }
 
     private function getCaptchaInstance(): NativeCaptcha
     {
-        return new NativeCaptcha(
-            $this->container->get('session')
-        );
+        return new NativeCaptcha($this->session);
     }
 
     public function testCaptchaGenerationStoresTextInSession()
