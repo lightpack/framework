@@ -22,9 +22,9 @@ class CaptchaProvider implements ProviderInterface
             return match ($type) {
                 'null'      => new NullCaptcha($request),
                 'native'    => new NativeCaptcha($request, $container->get('session')),
-                'recaptcha' => new GoogleReCaptcha($request, $config->get('recaptcha.site_key'), $config->get('recaptcha.secret_key')),
-                'turnstile' => new CloudflareTurnstile($request, $config->get('turnstile.site_key'), $config->get('turnstile.secret_key')),
-                default     => new NullCaptcha($request),
+                'recaptcha' => new GoogleReCaptcha($request, $config->get('captcha.recaptcha.site_key'), $config->get('captcha.recaptcha.secret_key')),
+                'turnstile' => new CloudflareTurnstile($request, $config->get('captcha.turnstile.site_key'), $config->get('captcha.turnstile.secret_key')),
+                default     => throw new \Exception("Unknown captcha driver: {$type}"),
             };
         });
 
