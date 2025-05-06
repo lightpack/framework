@@ -16,7 +16,7 @@ class CaptchaProvider implements ProviderInterface
     {
         $container->register('captcha', function ($container) {
             $config = $container->get('config');
-            $type = $config->get('driver');
+            $type = $config->get('captcha.driver');
 
             return match ($type) {
                 'null' => new NullCaptcha(),
