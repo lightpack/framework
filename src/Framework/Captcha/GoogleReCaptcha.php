@@ -18,14 +18,18 @@ class GoogleReCaptcha implements CaptchaInterface
         return '<div class="g-recaptcha" data-sitekey="' . htmlspecialchars($this->siteKey) . '"></div>';
     }
 
+    protected function fetchVerifyResponse($url)
+    {
+        return file_get_contents($url);
+    }
+
     public function verify(string $input): bool
     {
         if (empty($input)) {
             return false;
         }
-        $response = file_get_contents(
-            'https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode($this->secretKey) . '&response=' . urlencode($input)
-        );
+        $url = 'https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode($this->secretKey) . '&response=' . urlencode($input);
+        $response = $this->fetchVerifyResponse($url);
         $result = json_decode($response, true);
         return isset($result['success']) && $result['success'] === true;
     }

@@ -18,6 +18,19 @@ class CloudflareTurnstile implements CaptchaInterface
         return '<div class="cf-turnstile" data-sitekey="' . htmlspecialchars($this->siteKey) . '"></div>';
     }
 
+    protected function fetchVerifyResponse($data)
+    {
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($data),
+            ],
+        ];
+        $context = stream_context_create($options);
+        return file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $context);
+    }
+
     public function verify(string $input): bool
     {
         if (empty($input)) {
@@ -27,15 +40,7 @@ class CloudflareTurnstile implements CaptchaInterface
             'secret' => $this->secretKey,
             'response' => $input,
         ];
-        $options = [
-            'http' => [
-                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-                'method'  => 'POST',
-                'content' => http_build_query($data),
-            ],
-        ];
-        $context = stream_context_create($options);
-        $result = file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $context);
+        $result = $this->fetchVerifyResponse($data);
         $result = json_decode($result, true);
         return isset($result['success']) && $result['success'] === true;
     }
