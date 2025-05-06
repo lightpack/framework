@@ -9,12 +9,12 @@ class NativeCaptcha implements CaptchaInterface
 {
     protected const SESSION_KEY = '_captcha_text';
 
-    private int $width = 150;
-    private int $height = 50;
-    private string $font;
-    private ?string $text = null;
-    private Request $request;
-    private Session $session;
+    protected int $width = 150;
+    protected int $height = 50;
+    protected string $font;
+    protected ?string $text = null;
+    protected Request $request;
+    protected Session $session;
 
     public function __construct(Request $request, Session $session)
     {

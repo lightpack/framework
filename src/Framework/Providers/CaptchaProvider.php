@@ -7,6 +7,7 @@ use Lightpack\Providers\ProviderInterface;
 use Lightpack\Captcha\CaptchaInterface;
 use Lightpack\Captcha\NativeCaptcha;
 use Lightpack\Captcha\GoogleReCaptcha;
+use Lightpack\Captcha\GoogleReCaptchaInvisible;
 use Lightpack\Captcha\CloudflareTurnstile;
 use Lightpack\Captcha\NullCaptcha;
 
@@ -23,6 +24,7 @@ class CaptchaProvider implements ProviderInterface
                 'null'      => new NullCaptcha($request),
                 'native'    => new NativeCaptcha($request, $container->get('session')),
                 'recaptcha' => new GoogleReCaptcha($request, $config->get('captcha.recaptcha.site_key'), $config->get('captcha.recaptcha.secret_key')),
+                'recaptcha_invisible' => new GoogleReCaptchaInvisible($request, $config->get('captcha.recaptcha.site_key'), $config->get('captcha.recaptcha.secret_key')),
                 'turnstile' => new CloudflareTurnstile($request, $config->get('captcha.turnstile.site_key'), $config->get('captcha.turnstile.secret_key')),
                 default     => throw new \Exception("Unknown captcha driver: {$type}"),
             };

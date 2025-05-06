@@ -4,7 +4,7 @@ namespace Lightpack\Captcha;
 
 class NullCaptcha implements CaptchaInterface
 {
-    private $request;
+    protected $request;
 
     public function __construct($request)
     {

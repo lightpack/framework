@@ -4,9 +4,9 @@ namespace Lightpack\Captcha;
 
 class CloudflareTurnstile implements CaptchaInterface
 {
-    private $request;
-    private string $siteKey;
-    private string $secretKey;
+    protected $request;
+    protected string $siteKey;
+    protected string $secretKey;
 
     public function __construct($request, string $siteKey, string $secretKey)
     {
