@@ -94,7 +94,7 @@ class Job
             static::class,
             $this->payload,
             $this->delay,
-            $this->queue
+            $this->onQueue(),
         );
     }
 
@@ -106,6 +106,11 @@ class Job
     public function dispatchSync(array $payload)
     {
         return (new static)->setPayload($payload)->run();
+    }
+
+    public function onQueue(): string
+    {
+        return $this->queue;
     }
 
     public function maxAttempts(): int

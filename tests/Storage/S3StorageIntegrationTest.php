@@ -3,8 +3,14 @@
 namespace Lightpack\Tests\Storage;
 
 use Aws\S3\S3Client;
+use Lightpack\Config\Config;
+use Lightpack\Container\Container;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Storage\S3Storage;
+
+if(!defined('DIR_CONFIG')) {
+    define('DIR_CONFIG', __DIR__ . '/tmp');
+}
 
 /**
  * Integration tests for S3Storage with real AWS
@@ -58,6 +64,11 @@ class S3StorageIntegrationTest extends TestCase
         
         // Create a unique test directory to avoid conflicts
         $this->testDir = 'test-' . date('Ymd-His') . '-' . uniqid();
+
+        // register config
+        Container::getInstance()->register('config', function() {
+            return new Config;
+        });
     }
     
     public function testWrite()

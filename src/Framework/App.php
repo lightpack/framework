@@ -106,6 +106,7 @@ final class App
             \Lightpack\Providers\ValidationProvider::class,
             \Lightpack\Providers\RedisProvider::class,
             \Lightpack\Providers\CableProvider::class,
+            \Lightpack\Providers\CaptchaProvider::class,
         ];
     }
 

@@ -4,6 +4,8 @@ namespace Lightpack\Storage;
 
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
+use Aws\CloudFront\UrlSigner;
+use Lightpack\Container\Container;
 use Lightpack\Exceptions\FileUploadException;
 
 class S3Storage implements Storage
@@ -53,7 +55,7 @@ class S3Storage implements Storage
     }
 
     /**
-     * Write contents to a file
+     * @inheritDoc
      */
     public function write(string $path, string $contents): bool
     {
@@ -64,7 +66,7 @@ class S3Storage implements Storage
                 'Bucket' => $this->bucket,
                 'Key' => $path,
                 'Body' => $contents,
-                'ACL' => 'private',
+                // 'ACL' => 'private',
             ]);
 
             return true;
@@ -97,7 +99,7 @@ class S3Storage implements Storage
     }
 
     /**
-     * Check if a file exists
+     * @inheritDoc
      */
     public function exists(string $path): bool
     {
@@ -127,7 +129,7 @@ class S3Storage implements Storage
                 'Bucket' => $this->bucket,
                 'CopySource' => "{$this->bucket}/{$source}",
                 'Key' => $destination,
-                'ACL' => 'private',
+                // 'ACL' => 'private',
             ]);
 
             return true;
@@ -170,7 +172,7 @@ class S3Storage implements Storage
                 'Bucket' => $this->bucket,
                 'Key' => $destination,
                 'Body' => $contents,
-                'ACL' => 'private',
+                // 'ACL' => $isPublic ? 'public-read' : 'private',
             ]);
 
             if (!$result) {
@@ -189,7 +191,34 @@ class S3Storage implements Storage
     public function url(string $path, int $expiration = 3600): string
     {
         $path = $this->getFullPath($path);
-
+        
+        // Check if CloudFront is configured and if this is a public file
+        $config = Container::getInstance()->get('config');
+        $config = $config->get('storage.s3.cloudfront') ?? [];
+        $cloudfrontDomain = $config['domain'] ?? null;
+        $isPublicFile = strpos($path, 'uploads/public/') === 0;
+        
+        // Use CloudFront for public files if configured
+        if ($cloudfrontDomain && $isPublicFile) {
+            return 'https://' . $cloudfrontDomain . '/' . $path;
+        }
+        
+        // Use CloudFront signed URLs for private files if configured and key is available
+        $cloudfrontKeyPairId = $config['key_pair_id'] ?? null;
+        $cloudfrontPrivateKey = $config['private_key'] ?? null;
+        
+        if ($cloudfrontDomain && $cloudfrontKeyPairId && $cloudfrontPrivateKey && !$isPublicFile) {
+            // Use the dedicated UrlSigner class for better performance and cleaner API
+            if (class_exists(UrlSigner::class)) {
+                $signer = new UrlSigner($cloudfrontKeyPairId, $cloudfrontPrivateKey);
+                return $signer->getSignedUrl(
+                    'https://' . $cloudfrontDomain . '/' . $path,
+                    time() + $expiration
+                );
+            }
+        }
+        
+        // Fallback to S3 presigned URL
         $command = $this->client->getCommand('GetObject', [
             'Bucket' => $this->bucket,
             'Key' => $path,
@@ -256,5 +285,61 @@ class S3Storage implements Storage
     public function getBucket(): string
     {
         return $this->bucket;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function files(string $directory, bool $recursive = true): array
+    {
+        try {
+            // Ensure directory ends with a trailing slash if not empty
+            if (!empty($directory) && substr($directory, -1) !== '/') {
+                $directory .= '/';
+            }
+            
+            $directory = $this->getFullPath($directory);
+            
+            $params = [
+                'Bucket' => $this->bucket,
+                'Prefix' => $directory,
+            ];
+            
+            // Add delimiter for non-recursive listing (only current directory)
+            if (!$recursive) {
+                $params['Delimiter'] = '/';
+            }
+            
+            $result = $this->client->listObjects($params);
+            
+            $files = [];
+            
+            // Get the objects (files)
+            if (isset($result['Contents'])) {
+                foreach ($result['Contents'] as $object) {
+                    // Skip the directory itself
+                    if ($object['Key'] !== $directory) {
+                        $files[] = $object['Key'];
+                    }
+                }
+            }
+            
+            return $files;
+        } catch (S3Exception $e) {
+            logger()->error($e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeDir(string $directory, bool $delete = true): void
+    {
+        $files = $this->files($directory);
+
+        foreach ($files as $file) {
+            $this->delete($file);
+        }
     }
 }

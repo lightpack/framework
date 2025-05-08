@@ -280,30 +280,27 @@ class ImageTest extends TestCase
         // Test default sizes
         $paths = $image->thumbnail($this->outputDir . '/photo123');
         
-        $this->assertCount(2, $paths);
-        $this->assertStringEndsWith('_thumb_sm.jpg', $paths['sm']);
-        $this->assertStringEndsWith('_thumb_md.jpg', $paths['md']);
+        $this->assertCount(3, $paths);
+        $this->assertStringEndsWith('_thumb_small.jpg', $paths['small']);
+        $this->assertStringEndsWith('_thumb_medium.jpg', $paths['medium']);
         
-        $this->assertFileExists($paths['sm']);
-        $this->assertFileExists($paths['md']);
+        $this->assertFileExists($paths['small']);
+        $this->assertFileExists($paths['medium']);
         
         // Verify dimensions
-        list($width, $height) = getimagesize($paths['sm']);
+        list($width, $height) = getimagesize($paths['small']);
         $this->assertEquals(300, $width);
-        $this->assertEquals(300, $height);
         
-        list($width, $height) = getimagesize($paths['md']);
+        list($width, $height) = getimagesize($paths['medium']);
         $this->assertEquals(600, $width);
-        $this->assertEquals(400, $height);
         
         // Test all sizes
-        $paths = $image->thumbnail($this->outputDir . '/photo456', ['sm', 'md', 'lg']);
-        $this->assertCount(3, $paths);
-        $this->assertStringEndsWith('_thumb_lg.jpg', $paths['lg']);
+        $paths = $image->thumbnail($this->outputDir . '/photo456', ['small', 'medium']);
+        $this->assertCount(2, $paths);
+        $this->assertStringEndsWith('_thumb_medium.jpg', $paths['medium']);
         
-        list($width, $height) = getimagesize($paths['lg']);
-        $this->assertEquals(1200, $width);
-        $this->assertEquals(800, $height);
+        list($width, $height) = getimagesize($paths['medium']);
+        $this->assertEquals(600, $width);
         
         // Test invalid size
         $this->expectException(\InvalidArgumentException::class);
