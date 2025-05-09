@@ -100,12 +100,12 @@ class SocialAuthController
         return redirect()->route('login');
     }
 
-    protected function getProvider(string $provider)
+    protected function getProvider(string $providerKey)
     {
-        $providerClass = config('auth.social.providers.' . $provider);
+        $providerClass = config('social.providers.' . $providerKey . '.provider');
 
         if (!$providerClass) {
-            throw new RuntimeException('Unsupported authentication provider: ' . $provider, 400);
+            throw new RuntimeException('Unsupported authentication provider: ' . $providerKey, 400);
         }
 
         return app()->resolve($providerClass);
@@ -123,7 +123,7 @@ class SocialAuthController
         }
 
         // Create new user if not exists
-        $userClass = config('auth.social.user');
+        $userClass = config('social.user.provider');
 
         $user = (new $userClass)::query()
             ->where('email', $providerUser['email'])
