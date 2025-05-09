@@ -2,19 +2,20 @@
 
 namespace Lightpack\SocialAuth\Providers;
 
+use Lightpack\Config\Config;
 use RuntimeException;
 use Lightpack\Http\Http;
 use Lightpack\SocialAuth\SocialAuth;
 
 class LinkedInProvider implements SocialAuth
 {
-    private array $config;
-    private Http $http;
-    private bool $stateless = false;
+    protected array $config;
+    protected Http $http;
+    protected bool $stateless = false;
 
-    public function __construct()
+    public function __construct(Config $config)
     {
-        $this->config = config('social.providers.linkedin');
+        $this->config = $config->get('social.providers.linkedin');
         $this->http = new Http;
         
         if (empty($this->config['client_id']) || empty($this->config['client_secret'])) {

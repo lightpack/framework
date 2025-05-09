@@ -5,18 +5,19 @@ namespace Lightpack\SocialAuth\Providers;
 use Google\Client as GoogleClient;
 use Google\Service\Oauth2;
 use Google\Service\Oauth2\Userinfo;
+use Lightpack\Config\Config;
 use Lightpack\SocialAuth\SocialAuth;
 use RuntimeException;
 
 class GoogleProvider implements SocialAuth
 {
-    private GoogleClient $client;
-    private array $config;
-    private bool $stateless = false;
+    protected array $config;
+    protected GoogleClient $client;
+    protected bool $stateless = false;
 
-    public function __construct()
+    public function __construct(Config $config)
     {
-        $this->config = config('social.providers.google');
+        $this->config = $config->get('social.providers.google');
         
         if (empty($this->config['client_id']) || empty($this->config['client_secret'])) {
             throw new RuntimeException('Google OAuth credentials not configured');
