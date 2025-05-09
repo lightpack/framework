@@ -17,7 +17,7 @@ class SocialAccountModel extends Model
 
     public function user()
     {
-        return $this->belongsTo(config('auth.social.model'), 'user_id');
+        return $this->belongsTo(config('auth.social.user'), 'user_id');
     }
 
     public function scopeProvider($query, $provider)
