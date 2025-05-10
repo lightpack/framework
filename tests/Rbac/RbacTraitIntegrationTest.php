@@ -78,19 +78,11 @@ class RbacTraitIntegrationTest extends TestCase
     }
 
     protected function getRoleModelInstance() {
-        return new class extends \Lightpack\Database\Lucid\Model {
-            protected $table = 'roles';
-            protected $primaryKey = 'id';
-            public $timestamps = true;
-        };
+        return new class extends \Lightpack\Rbac\Models\Role {};
     }
 
     protected function getPermissionModelInstance() {
-        return new class extends \Lightpack\Database\Lucid\Model {
-            protected $table = 'permissions';
-            protected $primaryKey = 'id';
-            public $timestamps = true;
-        };
+        return new class extends \Lightpack\Rbac\Models\Permission {};
     }
 
     protected function seedRbacData()
@@ -206,7 +198,9 @@ class RbacTraitIntegrationTest extends TestCase
     public function testRemovePermissionFromRole()
     {
         $this->seedRbacData();
-        $this->db->table('role_permission')->where('role_id', '=', 1)->where('permission_id', '=', 10)->delete();
+        $role = $this->getRoleModelInstance();
+        $role->find(1);
+        $role->permissions()->detach(10);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertFalse($user->can('edit_post'));
