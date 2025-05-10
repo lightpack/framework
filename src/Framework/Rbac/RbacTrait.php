@@ -1,9 +1,9 @@
 <?php
 
-namespace Lightpack\Framework\Rbac;
+namespace Lightpack\Rbac;
 
-use Lightpack\Framework\Rbac\Models\Role;
-use Lightpack\Framework\Rbac\Models\Permission;
+use Lightpack\Rbac\Models\Role;
+use Lightpack\Rbac\Models\Permission;
 
 trait RbacTrait
 {
@@ -57,7 +57,7 @@ trait RbacTrait
             $roles[$r->id] = $r->name;
         }
         $permissions = [];
-        foreach ($this->permissions as $p) {
+        foreach ($this->permissions()->all() as $p) {
             $permissions[$p->id] = $p->name;
         }
         $cache = ['roles' => $roles, 'permissions' => $permissions];
@@ -92,7 +92,7 @@ trait RbacTrait
     public function permissions()
     {
         return Permission::query()
-            ->join('role_permission', 'permissions.id', '=', 'role_permission.permission_id')
+            ->join('role_permission', 'permissions.id', 'role_permission.permission_id')
             ->whereIn('role_permission.role_id', $this->roles->ids())
             ->select('permissions.*')
             ->groupBy('permissions.id');

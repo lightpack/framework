@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Framework\Rbac\Models;
+namespace Lightpack\Rbac\Models;
 
 use Lightpack\Database\Lucid\Model;
 

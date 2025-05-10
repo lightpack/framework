@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Framework\Rbac;
+namespace Lightpack\Rbac;
 
 use Lightpack\Database\Schema\Table;
 use Lightpack\Database\Migrations\Migration;
