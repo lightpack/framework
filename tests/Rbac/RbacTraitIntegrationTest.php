@@ -221,4 +221,19 @@ class RbacTraitIntegrationTest extends TestCase
         $user->find(99);
         $this->assertTrue($user->hasRole('admin'));
     }
+
+    public function testRbacMethodsWithNoRolesOrPermissions()
+    {
+        // Create a user but do not insert any roles or permissions
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Empty User', 'rbac_cache' => null]);
+        $user = $this->getUserModelInstance();
+        $user->find(100);
+        $this->assertFalse($user->hasRole('admin'));
+        $this->assertFalse($user->hasRole(1));
+        $this->assertFalse($user->isSuperAdmin());
+        $this->assertFalse($user->can('edit_post'));
+        $this->assertFalse($user->can(10));
+        $this->assertTrue($user->cannot('edit_post'));
+        $this->assertTrue($user->cannot(10));
+    }
 }

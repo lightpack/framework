@@ -57,7 +57,7 @@ trait RbacTrait
             $roles[$r->id] = $r->name;
         }
         $permissions = [];
-        foreach ($this->permissions()->all() as $p) {
+        foreach ($this->permissions as $p) {
             $permissions[$p->id] = $p->name;
         }
         $cache = ['roles' => $roles, 'permissions' => $permissions];
