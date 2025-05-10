@@ -74,6 +74,8 @@ trait RbacTrait
     public function assignRole(int $roleId): void
     {
         $this->roles()->attach($roleId);
+        $this->rbac_cache = null;
+        $this->save();
     }
 
     /**
@@ -84,6 +86,8 @@ trait RbacTrait
     public function removeRole(int $roleId): void
     {
         $this->roles()->detach($roleId);
+        $this->rbac_cache = null;
+        $this->save();
     }
 
     /**

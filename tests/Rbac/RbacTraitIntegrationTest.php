@@ -120,31 +120,111 @@ class RbacTraitIntegrationTest extends TestCase
         ]);
     }
 
-    public function testRbacCacheIntegration()
+    public function testAssignRole()
     {
         $this->seedRbacData();
-
-        // Load user model (anonymous)
         $user = $this->getUserModelInstance();
         $user->find(99);
+        $user->removeRole(2); // Ensure editor is not assigned
+        $user->assignRole(2);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->hasRole('editor'));
+    }
 
-        // RBAC checks (should trigger cache population)
+    public function testRemoveRole()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
         $this->assertTrue($user->hasRole('admin'));
-        $this->assertTrue($user->hasRole(3));
-        $this->assertTrue($user->isSuperAdmin());
-        $this->assertTrue($user->can('edit_post'));
-        $this->assertTrue($user->can(11));
-        $this->assertFalse($user->can('nonexistent_permission'));
-
-        // Clear cache and check repopulation
-        $user->rbac_cache = null;
-        $this->assertFalse($user->hasRole('editor'));
-        $this->assertTrue($user->can('edit_post'));
-
-        // Remove a role and check cache invalidation
-        $this->db->table('user_role')->where('user_id', '=', 99)->where('role_id', '=', 1)->delete();
+        $user->removeRole(1);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertFalse($user->hasRole('admin'));
+    }
+
+    public function testHasRoleByNameAndId()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->hasRole('admin'));
+        $this->assertTrue($user->hasRole(3));
+        $this->assertFalse($user->hasRole('editor'));
+    }
+
+    public function testSuperAdminRole()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->isSuperAdmin());
+        $user->removeRole(3);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertFalse($user->isSuperAdmin());
+    }
+
+    public function testCanCheckPermissionByNameAndId()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->can('edit_post'));
+        $this->assertTrue($user->can(11));
+        $this->assertFalse($user->can('nonexistent_permission'));
+    }
+
+    public function testCacheInvalidationOnRoleChange()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $user->hasRole('admin'); // populate cache
+        $user->removeRole(1);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertFalse($user->hasRole('admin'));
+        $user->assignRole(1);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->hasRole('admin'));
+    }
+
+    public function testAssignPermissionToRole()
+    {
+        $this->seedRbacData();
+        $this->db->table('role_permission')->insert([
+            ['role_id' => 1, 'permission_id' => 11]
+        ]);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->can('delete_post'));
+    }
+
+    public function testRemovePermissionFromRole()
+    {
+        $this->seedRbacData();
+        $this->db->table('role_permission')->where('role_id', '=', 1)->where('permission_id', '=', 10)->delete();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertFalse($user->can('edit_post'));
+    }
+
+    public function testEdgeCases()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        // Remove a role not assigned
+        $user->removeRole(2); // Should not error
+        $this->assertFalse($user->hasRole('editor'));
+        // Assign same role twice
+        $user->assignRole(1);
+        $user->assignRole(1);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->hasRole('admin'));
     }
 }
