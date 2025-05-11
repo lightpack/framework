@@ -239,7 +239,6 @@ class RbacTraitIntegrationTest extends TestCase
 
     public function testPermissionStillGrantedIfUserHasMultipleRolesWithSamePermission()
     {
-        // User has admin and editor roles, both will be given 'edit_post' permission
         $this->seedRbacData();
         // Assign 'edit_post' permission to editor role as well
         $this->db->table('role_permission')->insert([
