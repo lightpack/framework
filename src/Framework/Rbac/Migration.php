@@ -38,10 +38,16 @@ return new class extends Migration
             $table->foreignKey('role_id')->references('id')->on('roles');
             $table->foreignKey('permission_id')->references('id')->on('permissions');
         });
+
+        $this->alter('users')->add(function (Table $table) {
+            $table->text('rbac_cache')->nullable();
+        });
     }
 
     public function down(): void
     {
+        $this->alter('users')->dropColumn('rbac_cache');
+
         $this->drop('role_permission');
         $this->drop('user_role');
         $this->drop('permissions');
