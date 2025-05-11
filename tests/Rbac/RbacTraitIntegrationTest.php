@@ -237,6 +237,71 @@ class RbacTraitIntegrationTest extends TestCase
         $this->assertTrue($user->cannot(10));
     }
 
+    public function testFilterUsersByRoleName()
+    {
+        $this->seedRbacData();
+        // Add another user with a different role
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
+        $users = $this->getUserModelInstance()::filters(['role' => 'admin'])->all();
+        $userIds = $users->column('user_id');
+        $this->assertContains(99, $userIds);
+        $this->assertNotContains(100, $userIds);
+    }
+
+    public function testFilterUsersByRoleId()
+    {
+        $this->seedRbacData();
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
+        $users = $this->getUserModelInstance()::filters(['role' => 2])->all();
+        $userIds = $users->column('user_id');
+        $this->assertContains(100, $userIds);
+        $this->assertNotContains(99, $userIds);
+    }
+
+    public function testFilterUsersByPermissionName()
+    {
+        $this->seedRbacData();
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
+        $users = $this->getUserModelInstance()::filters(['permission' => 'edit_post'])->all();
+        $userIds = $users->column('user_id');
+        $this->assertContains(99, $userIds);
+        $this->assertNotContains(100, $userIds);
+    }
+
+    public function testFilterUsersByPermissionId()
+    {
+        $this->seedRbacData();
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
+        $users = $this->getUserModelInstance()::filters(['permission' => 10])->all();
+        $userIds =$users->column('user_id');
+        $this->assertContains(99, $userIds);
+        $this->assertNotContains(100, $userIds);
+    }
+
+    public function testFilterUsersByNonExistentRoleOrPermission()
+    {
+        $this->seedRbacData();
+        $users = $this->getUserModelInstance()::filters(['role' => 'nonexistent'])->all();
+        $this->assertEmpty($users);
+        $users = $this->getUserModelInstance()::filters(['permission' => 'nonexistent'])->all();
+        $this->assertEmpty($users);
+    }
+
+    public function testFilterUsersByMultipleRoleAndPermission()
+    {
+        $this->seedRbacData();
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
+        $users = $this->getUserModelInstance()::filters(['role' => 'admin', 'permission' => 'edit_post'])->all();
+        $userIds = $users->column('user_id');
+        $this->assertContains(99, $userIds);
+        $this->assertNotContains(100, $userIds);
+    }
+
     public function testPermissionStillGrantedIfUserHasMultipleRolesWithSamePermission()
     {
         $this->seedRbacData();

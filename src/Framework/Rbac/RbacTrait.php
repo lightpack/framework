@@ -126,4 +126,36 @@ trait RbacTrait
     {
         return !$this->can($permission);
     }
+
+    /**
+     * Scope: Filter users by role (name or id).
+     * Usage: User::filters(['role' => 'admin'])
+     */
+    public function scopeRole($builder, $role)
+    {
+        $builder->join('user_role AS ur1', 'users.id', 'ur1.user_id')
+                ->join('roles AS r1', 'ur1.role_id', 'r1.id');
+        if (is_numeric($role)) {
+            $builder->where('r1.id', $role);
+        } else {
+            $builder->where('r1.name', $role);
+        }
+    }
+
+    /**
+     * Scope: Filter users by permission (name or id).
+     * Usage: User::filters(['permission' => 'edit_post'])
+     */
+    public function scopePermission($builder, $permission)
+    {
+        $builder->join('user_role AS ur2', 'users.id', 'ur2.user_id')
+                ->join('roles AS r2', 'ur2.role_id', 'r2.id')
+                ->join('role_permission', 'r2.id', 'role_permission.role_id')
+                ->join('permissions', 'role_permission.permission_id', 'permissions.id');
+        if (is_numeric($permission)) {
+            $builder->where('permissions.id', $permission);
+        } else {
+            $builder->where('permissions.name', $permission);
+        }
+    }
 }
