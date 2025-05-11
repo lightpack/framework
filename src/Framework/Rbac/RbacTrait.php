@@ -65,25 +65,25 @@ trait RbacTrait
     }
 
     /**
-     * Assign a role to the user (by id).
-     * @param int $roleId
-     * @return self
+     * Assign one or more roles to the user.
+     * @param int|array $roleIds Role ID or array of role IDs.
+     * @return void
      */
-    public function assignRole(int $roleId): void
+    public function assignRole($roleIds): void
     {
-        $this->roles()->attach($roleId);
+        $this->roles()->attach($roleIds);
         $this->rbac_cache = null;
         $this->save();
     }
 
     /**
-     * Remove a role from the user (by id).
-     * @param int $roleId
-     * @return self
+     * Remove one or more roles from the user.
+     * @param int|array $roleIds Role ID or array of role IDs.
+     * @return void
      */
-    public function removeRole(int $roleId): void
+    public function removeRole($roleIds): void
     {
-        $this->roles()->detach($roleId);
+        $this->roles()->detach($roleIds);
         $this->rbac_cache = null;
         $this->save();
     }

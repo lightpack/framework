@@ -352,5 +352,55 @@ class RbacTraitIntegrationTest extends TestCase
         $role->permissions()->detach(9999); // Should not throw
         $this->assertFalse($user->can(9999));
     }
+
+    public function testBulkAssignAndRemoveRoles()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        // Remove all roles first
+        $user->removeRole([1, 2, 3]);
+        $this->assertFalse($user->hasRole('admin'));
+        $this->assertFalse($user->hasRole('editor'));
+        $this->assertFalse($user->hasRole('superadmin'));
+        // Assign multiple roles at once
+        $user->assignRole([1, 2]);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->hasRole('admin'));
+        $this->assertTrue($user->hasRole('editor'));
+        $this->assertFalse($user->hasRole('superadmin'));
+        // Remove multiple roles at once
+        $user->removeRole([1, 2]);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertFalse($user->hasRole('admin'));
+        $this->assertFalse($user->hasRole('editor'));
+    }
+
+    public function testBulkAssignAndRemovePermissionsForRole()
+    {
+        $this->seedRbacData();
+        $role = $this->getRoleModelInstance();
+        $role->find(1); // admin
+        // Remove all permissions
+        $role->permissions()->detach([10, 11]);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertFalse($user->can('edit_post'));
+        $this->assertFalse($user->can('delete_post'));
+        // Assign multiple permissions at once
+        $role->permissions()->attach([10, 11]);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->can('edit_post'));
+        $this->assertTrue($user->can('delete_post'));
+        // Remove multiple permissions at once
+        $role->permissions()->detach([10, 11]);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertFalse($user->can('edit_post'));
+        $this->assertFalse($user->can('delete_post'));
+    }
 }
 
