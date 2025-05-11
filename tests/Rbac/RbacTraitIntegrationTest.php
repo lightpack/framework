@@ -236,4 +236,54 @@ class RbacTraitIntegrationTest extends TestCase
         $this->assertTrue($user->cannot('edit_post'));
         $this->assertTrue($user->cannot(10));
     }
+
+    public function testPermissionStillGrantedIfUserHasMultipleRolesWithSamePermission()
+    {
+        // User has admin and editor roles, both will be given 'edit_post' permission
+        $this->seedRbacData();
+        // Assign 'edit_post' permission to editor role as well
+        $this->db->table('role_permission')->insert([
+            ['role_id' => 2, 'permission_id' => 10]
+        ]);
+        // Assign 'editor' role to user 99
+        $this->db->table('user_role')->insert([
+            ['user_id' => 99, 'role_id' => 2]
+        ]);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->can('edit_post'));
+        // Remove admin and superadmin role, should still have permission via editor
+        $user->removeRole(1);
+        $user->removeRole(3);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertTrue($user->can('edit_post'));
+        // Remove editor role, should lose permission
+        $user->removeRole(2);
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        $this->assertFalse($user->can('edit_post'));
+    }
+
+    public function testAssigningRemovingNonExistentRolesOrPermissions()
+    {
+        $this->seedRbacData();
+        $user = $this->getUserModelInstance();
+        $user->find(99);
+        // Try assigning a non-existent role
+        $user->assignRole(9999); // Should not throw
+        $this->assertFalse($user->hasRole(9999));
+        // Try removing a non-existent role
+        $user->removeRole(9999); // Should not throw
+        $this->assertFalse($user->hasRole(9999));
+        // Try assigning a non-existent permission to a real role
+        $role = $this->getRoleModelInstance();
+        $role->find(1);
+        $role->permissions()->attach(9999); // Should not throw
+        $this->assertFalse($user->can(9999));
+        // Try removing a non-existent permission
+        $role->permissions()->detach(9999); // Should not throw
+        $this->assertFalse($user->can(9999));
+    }
 }
+
