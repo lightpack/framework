@@ -47,9 +47,7 @@ trait RbacTrait
     protected function getRbacCache(): array
     {
         if (!empty($this->rbac_cache)) {
-            return is_string($this->rbac_cache)
-                ? json_decode($this->rbac_cache, true)
-                : $this->rbac_cache;
+            return $this->rbac_cache;
         }
         // Not cached: build from DB
         $roles = [];
@@ -61,7 +59,7 @@ trait RbacTrait
             $permissions[$p->id] = $p->name;
         }
         $cache = ['roles' => $roles, 'permissions' => $permissions];
-        $this->rbac_cache = json_encode($cache);
+        $this->rbac_cache = $cache;
         $this->save(); // persist to DB
         return $cache;
     }

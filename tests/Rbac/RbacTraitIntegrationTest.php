@@ -74,6 +74,9 @@ class RbacTraitIntegrationTest extends TestCase
             protected $table = 'users';
             protected $primaryKey = 'id';
             public $timestamps = true;
+            protected $casts = [
+                'rbac_cache' => 'array',
+            ];
         };
     }
 
