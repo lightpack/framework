@@ -11,5 +11,5 @@ class Permission extends Model
 {
     protected $table = 'permissions';
     protected $primaryKey = 'id';
-    public $timestamps = true;
+    protected $timestamps = true;
 }

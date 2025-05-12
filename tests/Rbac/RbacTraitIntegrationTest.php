@@ -35,7 +35,6 @@ class RbacTraitIntegrationTest extends TestCase
         $this->schema->createTable('users', function(Table $table) {
             $table->id();
             $table->varchar('name');
-            $table->text('rbac_cache')->nullable();
             $table->timestamps();
         });
         $this->schema->createTable('roles', function(Table $table) {
@@ -74,9 +73,6 @@ class RbacTraitIntegrationTest extends TestCase
             protected $table = 'users';
             protected $primaryKey = 'id';
             public $timestamps = true;
-            protected $casts = [
-                'rbac_cache' => 'array',
-            ];
         };
     }
 
@@ -102,7 +98,7 @@ class RbacTraitIntegrationTest extends TestCase
             ['id' => 11, 'name' => 'delete_post'],
         ]);
         // Insert user
-        $this->db->table('users')->insert(['id' => 99, 'name' => 'Test User', 'rbac_cache' => null]);
+        $this->db->table('users')->insert(['id' => 99, 'name' => 'Test User']);
         // Assign roles to user
         $this->db->table('user_role')->insert([
             ['user_id' => 99, 'role_id' => 1],
@@ -228,7 +224,7 @@ class RbacTraitIntegrationTest extends TestCase
     public function testRbacMethodsWithNoRolesOrPermissions()
     {
         // Create a user but do not insert any roles or permissions
-        $this->db->table('users')->insert(['id' => 100, 'name' => 'Empty User', 'rbac_cache' => null]);
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Empty User']);
         $user = $this->getUserModelInstance();
         $user->find(100);
         $this->assertFalse($user->hasRole('admin'));
@@ -244,7 +240,7 @@ class RbacTraitIntegrationTest extends TestCase
     {
         $this->seedRbacData();
         // Add another user with a different role
-        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User']);
         $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
         $users = $this->getUserModelInstance()::filters(['role' => 'admin'])->all();
         $userIds = $users->column('user_id');
@@ -255,7 +251,7 @@ class RbacTraitIntegrationTest extends TestCase
     public function testFilterUsersByRoleId()
     {
         $this->seedRbacData();
-        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User']);
         $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
         $users = $this->getUserModelInstance()::filters(['role' => 2])->all();
         $userIds = $users->column('user_id');
@@ -266,7 +262,7 @@ class RbacTraitIntegrationTest extends TestCase
     public function testFilterUsersByPermissionName()
     {
         $this->seedRbacData();
-        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User']);
         $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
         $users = $this->getUserModelInstance()::filters(['permission' => 'edit_post'])->all();
         $userIds = $users->column('user_id');
@@ -277,7 +273,7 @@ class RbacTraitIntegrationTest extends TestCase
     public function testFilterUsersByPermissionId()
     {
         $this->seedRbacData();
-        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User']);
         $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
         $users = $this->getUserModelInstance()::filters(['permission' => 10])->all();
         $userIds =$users->column('user_id');
@@ -297,7 +293,7 @@ class RbacTraitIntegrationTest extends TestCase
     public function testFilterUsersByMultipleRoleAndPermission()
     {
         $this->seedRbacData();
-        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User', 'rbac_cache' => null]);
+        $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User']);
         $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
         $users = $this->getUserModelInstance()::filters(['role' => 'admin', 'permission' => 'edit_post'])->all();
         $userIds = $users->column('user_id');

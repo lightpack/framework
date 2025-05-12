@@ -11,7 +11,7 @@ class Role extends Model
 {
     protected $table = 'roles';
     protected $primaryKey = 'id';
-    public $timestamps = true;
+    protected $timestamps = true;
 
     /**
      * Get the permissions relationship for this role.

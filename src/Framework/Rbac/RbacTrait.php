@@ -18,50 +18,29 @@ trait RbacTrait
     }
 
     /**
-     * Check if the user has a specific role (by name or id) using rbac_cache.
+     * Check if the user has a specific role (by name or id).
      */
     public function hasRole($role): bool
     {
-        $cache = $this->getRbacCache();
+        $this->roles;
+
         if (is_int($role)) {
-            return array_key_exists($role, $cache['roles']);
+            return in_array($role, $this->roles->ids());
         }
+
         if (is_string($role)) {
-            return in_array($role, $cache['roles'], true);
+            return in_array($role, $this->roles->column('name'), true);
         }
+
         return false;
     }
 
     /**
-     * Super admin check using rbac_cache.
+     * Check if the user is assigned superadmin role.
      */
     public function isSuperAdmin(): bool
     {
-        $cache = $this->getRbacCache();
-        return in_array('superadmin', $cache['roles'], true);
-    }
-
-    /**
-     * Get RBAC cache (roles and permissions) from property or DB.
-     */
-    protected function getRbacCache(): array
-    {
-        if (!empty($this->rbac_cache)) {
-            return $this->rbac_cache;
-        }
-        // Not cached: build from DB
-        $roles = [];
-        foreach ($this->roles as $r) {
-            $roles[$r->id] = $r->name;
-        }
-        $permissions = [];
-        foreach ($this->permissions as $p) {
-            $permissions[$p->id] = $p->name;
-        }
-        $cache = ['roles' => $roles, 'permissions' => $permissions];
-        $this->rbac_cache = $cache;
-        $this->save(); // persist to DB
-        return $cache;
+        return in_array('superadmin', $this->roles->column('name'), true);
     }
 
     /**
@@ -72,8 +51,6 @@ trait RbacTrait
     public function assignRole($roleIds): void
     {
         $this->roles()->attach($roleIds);
-        $this->rbac_cache = null;
-        $this->save();
     }
 
     /**
@@ -84,8 +61,6 @@ trait RbacTrait
     public function removeRole($roleIds): void
     {
         $this->roles()->detach($roleIds);
-        $this->rbac_cache = null;
-        $this->save();
     }
 
     /**
@@ -101,17 +76,20 @@ trait RbacTrait
     }
 
     /**
-     * Check if the user has a specific permission (by name or id) using rbac_cache.
+     * Check if the user has a specific permission (by name or id).
      */
     public function can($permission): bool
     {
-        $cache = $this->getRbacCache();
+        $this->permissions;
+
         if (is_int($permission)) {
-            return array_key_exists($permission, $cache['permissions']);
+            return in_array($permission, $this->permissions->ids());
         }
+
         if (is_string($permission)) {
-            return in_array($permission, $cache['permissions'], true);
+            return in_array($permission, $this->permissions->column('name'), true);
         }
+
         return false;
     }
 

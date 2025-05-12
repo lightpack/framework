@@ -9,9 +9,8 @@ A minimal, efficient, and modular Role-Based Access Control (RBAC) implementatio
 - **ORM-Centric:** All relationships return query or collection objects for full chaining and efficiency.
 - **Pivot Table Management:** Assign and remove roles/permissions using expressive, ORM-native methods.
 - **Integrated Filtering:** Filter users by role or permission with scope methods (`scopeRole`, `scopePermission`).
-- **Migration Included:** Instantly set up all necessary tables for roles, permissions, user-role, role-permission, and the `rbac_cache` column.
+- **Migration Included:** Instantly set up all necessary tables for roles, permissions, user-role, role-permission.
 - **Highly Readable API:** Methods like `can`, `hasRole`, `assignRole`, etc., are clear and intuitive.
-- **Cache for Performance:** User RBAC state is cached in the `rbac_cache` column for fast access.
 - **Fully Tested:** Comprehensive integration tests covering all features and edge cases.
 - **Modular:** RBAC is opt-in. No pollution of the base user model.
 
@@ -24,17 +23,12 @@ Tables created by the included migration:
 - `permissions`: Stores all permissions.
 - `user_role`: Pivot table linking users and roles.
 - `role_permission`: Pivot table linking roles and permissions.
-- **`users.rbac_cache`**: JSON/text column for user RBAC cache (added via migration).
 
 ---
 
 ## Quick Start
 
 1. **Run the Migration:**
-   ```bash
-   php lightpack migrate src/Framework/Rbac/Migration.php
-   ```
-   This creates all RBAC tables and adds the `rbac_cache` column to `users`.
 
 2. **Add RbacTrait to Your User Model:**
    ```php
@@ -42,9 +36,6 @@ Tables created by the included migration:
 
    class User extends Model {
        use RbacTrait;
-       protected $casts = [
-           'rbac_cache' => 'array', // Required for seamless RBAC cache
-       ];
        // ...
    }
    ```
@@ -104,14 +95,6 @@ Tables created by the included migration:
 
 ---
 
-## RBAC Cache (`rbac_cache`)
-- The `rbac_cache` column stores a JSON array of user roles and permissions for fast access.
-- **Casting Required:** Always set `protected $casts = ['rbac_cache' => 'array'];` in your user model for seamless usage.
-- The cache is automatically rebuilt and saved when roles/permissions change.
-- All permission/role checks (`can`, `hasRole`, etc.) use the cache for efficiency.
-
----
-
 ## Example Usage
 
 ```php
@@ -142,22 +125,16 @@ $canEdit = User::filters(['permission' => 'edit_post'])->all();
 
 ## Migration Details
 
-See `Migration.php` in this folder for the full schema. To roll back:
-```bash
-php lightpack migrate:rollback src/Framework/Rbac/Migration.php
-```
-
-This migration:
+See `Migration.php` in this folder for the full schema. This migration:
 - Creates all RBAC tables (`roles`, `permissions`, `user_role`, `role_permission`)
-- Adds the `rbac_cache` column to the `users` table
-- Drops all tables and removes the cache column on rollback
+- Drops all tables.
 
 ---
 
 ## Integration Testing
 
 - See `tests/Rbac/RbacTraitIntegrationTest.php` for comprehensive, real-world test coverage.
-- All edge cases are covered: multiple roles, overlapping permissions, cache invalidation, filtering, and more.
+- All edge cases are covered: multiple roles, overlapping permissions, filtering, and more.
 - Use these tests as a reference for correct usage and extension.
 
 ---
@@ -167,8 +144,6 @@ This migration:
 - Add direct user-permission assignment by extending the trait.
 - Build admin UIs, APIs, or CLIs for managing roles and permissions.
 - Write additional tests as needed using Lightpack’s testing facilities.
-- Customize cache logic if you need more advanced scenarios.
-
 ---
 
 ## Troubleshooting
@@ -176,10 +151,6 @@ This migration:
 **Database connection errors:**
 - Ensure your database config is correct and the DB server is running.
 - The migration expects a `users` table to exist.
-
-**rbac_cache is always null or not an array:**
-- Make sure you set `protected $casts = ['rbac_cache' => 'array'];` in your user model.
-- Do not manually JSON encode/decode the cache in your trait or model.
 
 **Filters not working as expected:**
 - Check that your `scopeRole` and `scopePermission` methods use table aliases to avoid SQL conflicts.
