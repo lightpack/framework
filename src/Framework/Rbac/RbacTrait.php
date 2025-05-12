@@ -44,26 +44,6 @@ trait RbacTrait
     }
 
     /**
-     * Assign one or more roles to the user.
-     * @param int|array $roleIds Role ID or array of role IDs.
-     * @return void
-     */
-    public function assignRole($roleIds): void
-    {
-        $this->roles()->attach($roleIds);
-    }
-
-    /**
-     * Remove one or more roles from the user.
-     * @param int|array $roleIds Role ID or array of role IDs.
-     * @return void
-     */
-    public function removeRole($roleIds): void
-    {
-        $this->roles()->detach($roleIds);
-    }
-
-    /**
      * Get the permissions relationship for this user (via roles).
      */
     public function permissions()

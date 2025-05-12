@@ -116,8 +116,8 @@ class RbacTraitIntegrationTest extends TestCase
         $this->seedRbacData();
         $user = $this->getUserModelInstance();
         $user->find(99);
-        $user->removeRole(2); // Ensure editor is not assigned
-        $user->assignRole(2);
+        $user->roles()->detach(2); // Ensure editor is not assigned
+        $user->roles()->attach(2);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertTrue($user->hasRole('editor'));
@@ -129,7 +129,7 @@ class RbacTraitIntegrationTest extends TestCase
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertTrue($user->hasRole('admin'));
-        $user->removeRole(1);
+        $user->roles()->detach(1);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertFalse($user->hasRole('admin'));
@@ -151,7 +151,7 @@ class RbacTraitIntegrationTest extends TestCase
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertTrue($user->isSuperAdmin());
-        $user->removeRole(3);
+        $user->roles()->detach(3);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertFalse($user->isSuperAdmin());
@@ -173,11 +173,11 @@ class RbacTraitIntegrationTest extends TestCase
         $user = $this->getUserModelInstance();
         $user->find(99);
         $user->hasRole('admin'); // populate cache
-        $user->removeRole(1);
+        $user->roles()->detach(1);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertFalse($user->hasRole('admin'));
-        $user->assignRole(1);
+        $user->roles()->attach(1);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertTrue($user->hasRole('admin'));
@@ -211,11 +211,11 @@ class RbacTraitIntegrationTest extends TestCase
         $user = $this->getUserModelInstance();
         $user->find(99);
         // Remove a role not assigned
-        $user->removeRole(2); // Should not error
+        $user->roles()->detach(2); // Should not error
         $this->assertFalse($user->hasRole('editor'));
         // Assign same role twice
-        $user->assignRole(1);
-        $user->assignRole(1);
+        $user->roles()->attach(1);
+        $user->roles()->attach(1);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertTrue($user->hasRole('admin'));
@@ -316,13 +316,13 @@ class RbacTraitIntegrationTest extends TestCase
         $user->find(99);
         $this->assertTrue($user->can('edit_post'));
         // Remove admin and superadmin role, should still have permission via editor
-        $user->removeRole(1);
-        $user->removeRole(3);
+        $user->roles()->detach(1);
+        $user->roles()->detach(3);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertTrue($user->can('edit_post'));
         // Remove editor role, should lose permission
-        $user->removeRole(2);
+        $user->roles()->detach(2);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertFalse($user->can('edit_post'));
@@ -334,10 +334,10 @@ class RbacTraitIntegrationTest extends TestCase
         $user = $this->getUserModelInstance();
         $user->find(99);
         // Try assigning a non-existent role
-        $user->assignRole(9999); // Should not throw
+        $user->roles()->attach(9999); // Should not throw
         $this->assertFalse($user->hasRole(9999));
         // Try removing a non-existent role
-        $user->removeRole(9999); // Should not throw
+        $user->roles()->detach(9999); // Should not throw
         $this->assertFalse($user->hasRole(9999));
         // Try assigning a non-existent permission to a real role
         $role = $this->getRoleModelInstance();
@@ -355,19 +355,19 @@ class RbacTraitIntegrationTest extends TestCase
         $user = $this->getUserModelInstance();
         $user->find(99);
         // Remove all roles first
-        $user->removeRole([1, 2, 3]);
+        $user->roles()->detach([1, 2, 3]);
         $this->assertFalse($user->hasRole('admin'));
         $this->assertFalse($user->hasRole('editor'));
         $this->assertFalse($user->hasRole('superadmin'));
         // Assign multiple roles at once
-        $user->assignRole([1, 2]);
+        $user->roles()->attach([1, 2]);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertTrue($user->hasRole('admin'));
         $this->assertTrue($user->hasRole('editor'));
         $this->assertFalse($user->hasRole('superadmin'));
         // Remove multiple roles at once
-        $user->removeRole([1, 2]);
+        $user->roles()->detach([1, 2]);
         $user = $this->getUserModelInstance();
         $user->find(99);
         $this->assertFalse($user->hasRole('admin'));
@@ -383,7 +383,7 @@ class RbacTraitIntegrationTest extends TestCase
         $role->permissions()->detach([10, 11]);
         $user = $this->getUserModelInstance();
         $user->find(99);
-        $user->removeRole(3); // remove superadmin role
+        $user->roles()->detach(3); // remove superadmin role
         $this->assertFalse($user->can('edit_post'));
         $this->assertFalse($user->can('delete_post'));
         // Assign multiple permissions at once
