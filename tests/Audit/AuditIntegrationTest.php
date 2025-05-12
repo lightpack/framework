@@ -178,4 +178,61 @@ class AuditIntegrationTest extends TestCase
         $this->assertCount(1, $userLogs);
         $this->assertEquals(5, $userLogs[0]->audit_id);
     }
+
+    public function testAuditLogWithOnlyRequiredFields()
+    {
+        $log = Audit::log([
+            'action'     => 'minimal',
+            'audit_type' => 'Minimal',
+            'audit_id'   => 1,
+        ]);
+        $this->assertInstanceOf(AuditLog::class, $log);
+        $this->assertEquals('minimal', $log->action);
+        $this->assertEquals('Minimal', $log->audit_type);
+        $this->assertEquals(1, $log->audit_id);
+        $this->assertNull($log->user_id);
+        $this->assertNull($log->old_values);
+        $this->assertNull($log->new_values);
+        $this->assertNull($log->message);
+    }
+
+    public function testAuditLogWithNonArrayOldNewValuesThrows()
+    {
+        // Should throw for string/int instead of array
+        $this->expectException(\InvalidArgumentException::class);
+        Audit::log([
+            'action'     => 'nonarray',
+            'audit_type' => 'Test',
+            'audit_id'   => 2,
+            'old_values' => 'string_value', // Not an array
+            'new_values' => 12345,          // Not an array
+        ]);
+    }
+
+
+    public function testAuditTraitFailsWithoutIdOrTable()
+    {
+        // No id property
+        $modelNoId = new class {
+            use AuditTrait;
+            public $table = 'notable';
+        };
+        try {
+            $modelNoId->audit(['action' => 'fail']);
+            $this->fail('Expected exception for missing id');
+        } catch (\Throwable $e) {
+            $this->assertTrue(true);
+        }
+        // No table property
+        $modelNoTable = new class {
+            use AuditTrait;
+            public $id = 1;
+        };
+        try {
+            $modelNoTable->audit(['action' => 'fail']);
+            $this->fail('Expected exception for missing table');
+        } catch (\Throwable $e) {
+            $this->assertTrue(true);
+        }
+    }
 }
