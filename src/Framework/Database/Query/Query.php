@@ -235,6 +235,12 @@ class Query
             return $this;
         }
 
+        // Handle empty/null values: always false condition
+        if (empty($values)) {
+            $this->whereRaw('1=0', [], $joiner);
+            return $this;
+        }
+
         $operator = 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
         $this->bindings = array_merge($this->bindings, $values);
@@ -251,6 +257,12 @@ class Query
     {
         if ($values instanceof Closure) {
             $this->where($column, 'NOT IN', $values, $joiner);
+            return $this;
+        }
+
+        // Handle empty/null values: always true condition
+        if (empty($values)) {
+            $this->whereRaw('1=1', [], $joiner);
             return $this;
         }
 
