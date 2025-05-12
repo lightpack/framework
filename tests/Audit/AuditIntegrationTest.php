@@ -48,11 +48,20 @@ class AuditIntegrationTest extends TestCase
             $table->varchar('user_agent', 255)->nullable();
             $table->timestamps();
         });
+        // users schema
+        $this->schema->createTable('users', function(Table $table) {
+            $table->id();
+            $table->varchar('email', 150);
+            $table->varchar('password', 255);
+            $table->varchar('name', 100)->nullable();
+            $table->timestamps();
+        });
     }
 
     protected function tearDown(): void
     {
         $this->schema->dropTable('audit_logs');
+        $this->schema->dropTable('users');
         $this->db = null;
     }
 
@@ -234,5 +243,77 @@ class AuditIntegrationTest extends TestCase
         } catch (\Throwable $e) {
             $this->assertTrue(true);
         }
+    }
+
+    public function testAuditLogUserRelation()
+    {
+        // Create a user in AuthUser table
+        $this->db->table('users')->insert([
+            'id' => 42,
+            'email' => 'test@example.com',
+            'password' => 'secret',
+            'name' => 'Test User',
+        ]);
+        $log = Audit::log([
+            'user_id'    => 42,
+            'action'     => 'login',
+            'audit_type' => 'AuthUser',
+            'audit_id'   => 42,
+            'message'    => 'User logged in',
+        ]);
+        $fetched = AuditLog::query()->where('user_id', 42)->one();
+        $this->assertNotNull($fetched->user);
+        $this->assertEquals('Test User', $fetched->user->name);
+    }
+
+    public function testAuditLogDiffMethod()
+    {
+        $old = ['foo' => 'bar', 'x' => 1, 'y' => 2];
+        $new = ['foo' => 'baz', 'x' => 1, 'z' => 3];
+        $log = Audit::log([
+            'user_id'    => 1,
+            'action'     => 'update',
+            'audit_type' => 'Test',
+            'audit_id'   => 1,
+            'old_values' => $old,
+            'new_values' => $new,
+        ]);
+        $diff = $log->diff();
+        $this->assertEquals(['foo' => 'baz', 'z' => 3], $diff['added']);
+        $this->assertEquals(['foo' => 'bar', 'y' => 2], $diff['removed']);
+    }
+
+    public function testAuditLogScopes()
+    {
+        // Insert multiple logs
+        Audit::log([
+            'user_id'    => 10,
+            'action'     => 'create',
+            'audit_type' => 'Post',
+            'audit_id'   => 1,
+        ]);
+        Audit::log([
+            'user_id'    => 20,
+            'action'     => 'update',
+            'audit_type' => 'Post',
+            'audit_id'   => 2,
+        ]);
+        Audit::log([
+            'user_id'    => 10,
+            'action'     => 'delete',
+            'audit_type' => 'Comment',
+            'audit_id'   => 3,
+        ]);
+
+        // Test user scope for user_id 10
+        $userLogs = AuditLog::filters(['user' => 10])->all();
+        $this->assertCount(2, $userLogs);
+        // Test action scope
+        $updateLogs = AuditLog::filters(['action' => 'update'])->all();
+        $this->assertCount(1, $updateLogs);
+        $this->assertEquals(20, $updateLogs[0]->user_id);
+        // Test auditType scope
+        $postLogs = AuditLog::filters(['auditType' => 'Post'])->all();
+        $this->assertCount(2, $postLogs);
     }
 }
