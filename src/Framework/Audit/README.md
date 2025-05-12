@@ -151,6 +151,55 @@ foreach ($permissions as $permission) {
 
 ---
 
+## AuditLog Helpers for Building Audit Views
+
+The audit facility provides several helpers to make building audit log screens and APIs easier:
+
+### 1. Resolving User Information: `user()`
+
+The `AuditLog` model provides a `user()` relation that resolves the `user_id` field to an `AuthUser` instance.
+
+```php
+$log = AuditLog::query()->where('user_id', 5)->one();
+echo $log->user->name; // Outputs the user's name
+```
+
+If the action was performed by the system (no user), `$log->user` will be `null`.
+
+### 2. Computing Changes: `diff()`
+
+You can compute the difference between `old_values` and `new_values` using the `diff()` method:
+
+```php
+$log = AuditLog::query()->where('id', 123)->one();
+$diff = $log->diff();
+// $diff['added'] contains fields added or changed
+// $diff['removed'] contains fields removed or changed
+```
+
+### 3. Query Scopes & Filters
+
+You can filter audit logs by user, action, or audit type using the `filters()` method:
+
+```php
+// By user
+$logs = AuditLog::filters(['user' => 5])->all();
+// By action
+$logs = AuditLog::filters(['action' => 'update'])->all();
+// By audit type
+$logs = AuditLog::filters(['auditType' => 'User'])->all();
+// Combine filters
+$logs = AuditLog::filters([
+    'user' => 5,
+    'action' => 'delete',
+    'auditType' => 'Post',
+])->all();
+```
+
+These helpers make it much easier to build rich, user-friendly audit log screens and APIs.
+
+---
+
 ## Schema
 
 The `audit_logs` table has the following fields:
@@ -180,10 +229,10 @@ Use the `AuditLog` model to fetch audit records:
 use Lightpack\Audit\AuditLog;
 
 // Get all audits for a user
-$auditLogs = AuditLog::where('user_id', $userId)->all();
+$auditLogs = AuditLog::query()where('user_id', $userId)->all();
 
-// Get all audits for a specific model
-$auditLogs = AuditLog::where('audit_type', User::class)
+// Get all audits for a specific table
+$auditLogs = AuditLog::query()where('audit_type', User::class)
                     ->where('audit_id', $userId)
                     ->all();
 ```
@@ -204,6 +253,3 @@ $auditLogs = AuditLog::where('audit_type', User::class)
 - UI for browsing and filtering audits
 
 ---
-
-## License
-MIT
