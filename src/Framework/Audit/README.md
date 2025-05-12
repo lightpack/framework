@@ -115,6 +115,42 @@ Audit::log([
 
 ---
 
+## Best Practice: Logging Multi-Entity Actions
+
+If a single action (such as deleting a role) causes changes in multiple tables or entities (e.g., roles and their attached permissions), **log a separate audit entry for each impacted entity**. This ensures your audit trail is complete and granular.
+
+### Example: Cascading Delete (Role and Permissions)
+
+Suppose you delete a role and it cascades to permissions:
+
+```php
+// Log the role deletion
+Audit::log([
+    'user_id'    => $adminId,
+    'action'     => 'delete',
+    'audit_type' => 'Role',
+    'audit_id'   => $role->id,
+    'old_values' => $role->toArray(),
+    'message'    => 'Role deleted by admin',
+]);
+
+// Log each affected permission
+foreach ($permissions as $permission) {
+    Audit::log([
+        'user_id'    => $adminId,
+        'action'     => 'cascade_delete',
+        'audit_type' => 'Permission',
+        'audit_id'   => $permission->id,
+        'old_values' => $permission->toArray(),
+        'message'    => 'Permission unlinked/deleted due to role deletion',
+    ]);
+}
+```
+
+> Each audit entry's `audit_type` and `audit_id` point to the precise entity affected, making querying and reporting straightforward.
+
+---
+
 ## Schema
 
 The `audit_logs` table has the following fields:
