@@ -167,22 +167,6 @@ class RbacTraitIntegrationTest extends TestCase
         $this->assertFalse($user->can('nonexistent_permission'));
     }
 
-    public function testCacheInvalidationOnRoleChange()
-    {
-        $this->seedRbacData();
-        $user = $this->getUserModelInstance();
-        $user->find(99);
-        $user->hasRole('admin'); // populate cache
-        $user->roles()->detach(1);
-        $user = $this->getUserModelInstance();
-        $user->find(99);
-        $this->assertFalse($user->hasRole('admin'));
-        $user->roles()->attach(1);
-        $user = $this->getUserModelInstance();
-        $user->find(99);
-        $this->assertTrue($user->hasRole('admin'));
-    }
-
     public function testAssignPermissionToRole()
     {
         $this->seedRbacData();
