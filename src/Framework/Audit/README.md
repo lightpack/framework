@@ -16,6 +16,33 @@ Auditing is essential for security, compliance, debugging, and accountability. W
 
 ---
 
+## Practical Use Cases for Audit Logging
+
+Lightpack's audit facility is ideal for a wide range of real-world scenarios, including:
+
+1. **User Account Changes:**
+   - Track profile updates, password changes, email changes, and other user modifications.
+2. **Role & Permission Management:**
+   - Audit who assigned or removed roles/permissions to users for security and compliance.
+3. **Sensitive Data Access:**
+   - Log when users view, export, or download sensitive data (e.g., financial, medical records).
+4. **CRUD Operations on Core Entities:**
+   - Record creation, update, and deletion of business-critical records (posts, orders, invoices, etc.).
+5. **System-Generated Events:**
+   - Capture background jobs, scheduled tasks, or automated cleanups (e.g., token expiry, cron jobs).
+6. **Security Events:**
+   - Log logins, failed logins, password resets, and suspicious activity for audit and investigation.
+7. **Multi-Entity Actions:**
+   - Track cascading deletes/updates (e.g., deleting a user and all their posts or permissions).
+8. **Regulatory Compliance:**
+   - Provide a full audit trail for GDPR, HIPAA, SOX, or other compliance requirements.
+9. **Admin Actions:**
+   - Monitor all admin panel actions for accountability and transparency.
+10. **API Usage:**
+    - Log API calls that mutate data, including which user or system performed them.
+
+---
+
 ## Installation
 1. **Run the Migration**
    - Ensure your database is configured.
