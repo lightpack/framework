@@ -177,6 +177,32 @@ $diff = $log->diff();
 // $diff['removed'] contains fields removed or changed
 ```
 
+#### Example
+Suppose:
+```php
+$log->old_values = ['name' => 'Alice', 'email' => 'alice@old.com', 'status' => 'active'];
+$log->new_values = ['name' => 'Alice B.', 'email' => 'alice@new.com', 'role' => 'admin'];
+$diff = $log->diff();
+```
+Result:
+```php
+[
+    'added' => [
+        'name' => 'Alice B.',         // changed value
+        'email' => 'alice@new.com',   // changed value
+        'role' => 'admin',            // new field
+    ],
+    'removed' => [
+        'name' => 'Alice',                // old value
+        'email' => 'alice@old.com',       // old value
+        'status' => 'active',             // removed field
+    ]
+]
+```
+- Fields present in both but changed appear in both `added` (new value) and `removed` (old value).
+- Fields only in `old_values` are in `removed`.
+- Fields only in `new_values` are in `added`.
+
 ### 3. Query Scopes & Filters
 
 You can filter audit logs by user, action, or audit type using the `filters()` method:
