@@ -383,6 +383,7 @@ class RbacTraitIntegrationTest extends TestCase
         $role->permissions()->detach([10, 11]);
         $user = $this->getUserModelInstance();
         $user->find(99);
+        $user->removeRole(3); // remove superadmin role
         $this->assertFalse($user->can('edit_post'));
         $this->assertFalse($user->can('delete_post'));
         // Assign multiple permissions at once
