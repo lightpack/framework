@@ -14,10 +14,6 @@ trait AuditTrait
     {
         $data['audit_type'] = $this->table;
         $data['audit_id'] = $this->id;
-
-        if (!isset($data['new_values'])) {
-            $data['new_values'] = $this->toArray();
-        }
         
         return Audit::log($data);
     }
