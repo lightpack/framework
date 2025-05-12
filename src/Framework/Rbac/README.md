@@ -10,7 +10,7 @@ A minimal, efficient, and modular Role-Based Access Control (RBAC) implementatio
 - **Pivot Table Management:** Assign and remove roles/permissions using expressive, ORM-native methods.
 - **Integrated Filtering:** Filter users by role or permission with scope methods (`scopeRole`, `scopePermission`).
 - **Migration Included:** Instantly set up all necessary tables for roles, permissions, user-role, role-permission.
-- **Highly Readable API:** Methods like `can`, `hasRole`, `assignRole`, etc., are clear and intuitive.
+- **Highly Readable API:** Methods like `can`, `hasRole`, etc., are clear and intuitive.
 - **Fully Tested:** Comprehensive integration tests covering all features and edge cases.
 - **Modular:** RBAC is opt-in. No pollution of the base user model.
 
@@ -42,8 +42,8 @@ Tables created by the included migration:
 
 3. **Assign Roles to Users:**
    ```php
-   $user->assignRole($roleId); // Attach a role by ID
-   $user->removeRole($roleId); // Remove a role by ID
+   $user->roles()->atatch($roleId); // Attach a role by ID
+   $user->roles()->detach($roleId); // Remove a role by ID
    ```
 
 4. **Check Roles & Permissions:**
@@ -81,8 +81,6 @@ Tables created by the included migration:
 ### User (RbacTrait) Methods
 - `roles()` — Returns a pivot relationship for user roles (chainable query).
 - `hasRole($role)` — Checks if user has a role by name or ID.
-- `assignRole($roleId)` — Assigns a role to the user.
-- `removeRole($roleId)` — Removes a role from the user.
 - `permissions()` — Returns a query object for all permissions via user roles.
 - `can($permission)` — Checks if user has a permission by name or ID.
 - `cannot($permission)` — Checks if user does NOT have a permission.
@@ -98,10 +96,6 @@ Tables created by the included migration:
 ## Example Usage
 
 ```php
-// Assign and remove roles
-$user->assignRole(2);
-$user->removeRole(2);
-
 // Check roles and permissions
 if ($user->hasRole('admin')) {
     // ...
