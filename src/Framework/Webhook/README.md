@@ -79,7 +79,7 @@ class StripeWebhookHandler extends BaseWebhookHandler
     public function handle(): Response
     {
         // Custom event processing
-        return response()->text('processed');
+        return response()->json(['status' => 'ok'], 200);
     }
 }
 ```
