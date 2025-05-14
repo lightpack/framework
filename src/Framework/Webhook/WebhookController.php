@@ -25,6 +25,6 @@ class WebhookController
         $handlerClass = $config[$provider]['handler'];
         $handler = new $handlerClass($config[$provider], $provider);
 
-        return $handler->handle();
+        return $handler->verifySignature()->handle();
     }
 }
