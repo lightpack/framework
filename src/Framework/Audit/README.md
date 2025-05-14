@@ -299,6 +299,64 @@ $auditLogs = AuditLog::query()where('audit_type', User::class)
 
 ---
 
+## Content Versioning with Audit
+
+### What is Content Versioning?
+Content versioning is the practice of tracking, storing, and (optionally) restoring previous states of your application's data. This is essential for features like undo/redo, rollback, historical inspection, and regulatory compliance. Versioning is especially valuable for business-critical records (posts, orders, invoices, etc.) where you may need to see or revert changes over time.
+
+### Why Content Versioning?
+- **Accountability:** Know exactly what changed, when, and by whom.
+- **Recovery:** Restore previous versions after mistakes or unwanted edits.
+- **Auditability:** Demonstrate compliance with regulations by showing historical changes.
+- **Transparency:** Enable users/admins to review or compare past versions.
+
+### How to Achieve Content Versioning in Lightpack
+Lightpack's Audit module already provides the foundation for content versioning, thanks to its ability to log both `old_values` and `new_values` for every change. With minimal extra code, you can leverage these audit logs to implement versioning for any model or entity.
+
+#### Basic Versioning Pattern
+1. **Log Changes:** Use `Audit::log()` to record every create, update, or delete, including full `old_values` and `new_values`.
+2. **Fetch Versions:** Use the `AuditLog` model to retrieve all audit entries for a given record (by `audit_type` and `audit_id`).
+3. **Restore a Version:** To "roll back" to a previous state, fetch the desired audit log and set your model's attributes to the `old_values` (for undo) or `new_values` (for redo), then save.
+
+#### Example: Restoring a Previous Version
+```php
+// Fetch the audit log entry you want to restore
+$auditLog = AuditLog::query()
+    ->where('audit_type', User::class)
+    ->where('audit_id', $user->id)
+    ->where('id', $auditLogId)
+    ->one();
+
+// Restore the old values
+$user->fill($auditLog->old_values);
+$user->save();
+```
+
+#### Making It Reusable: HasVersions Trait (Optional)
+You can encapsulate this logic in a simple trait for your models:
+```php
+trait HasVersions {
+    public function getVersions() {
+        return AuditLog::query()
+            ->where('audit_type', static::class)
+            ->where('audit_id', $this->id)
+            ->all();
+    }
+    public function restoreVersion($auditLogId) {
+        $log = AuditLog::query()
+            ->where('audit_type', static::class)
+            ->where('audit_id', $this->id)
+            ->where('id', $auditLogId)
+            ->one();
+        $this->fill($log->old_values);
+        $this->save();
+    }
+}
+```
+> This approach keeps versioning explicit, opt-in, and fully compatible with Lightpack's philosophy of no magic and full developer control.
+
+---
+
 ## Future Enhancements
 - Traits for auto-auditing model changes
 - CLI tools for audit log analysis
