@@ -137,7 +137,80 @@ class WebhookReceiverTest extends TestCase
             $this->assertEquals('failed', $event->status);
         }
     }
+
+    public function testUnknownProviderReturns404()
+    {
+        $payload = json_encode(['id' => 'evt_unknown']);
+        $signature = hash_hmac('sha256', $payload, 'testsecret');
+        $this->setRequest($payload, $signature);
+        $controller = $this->getWebhookControllerInstance();
+        $response = $controller->handle('not_in_config');
+        $this->assertEquals(404, $response->getStatus());
+        $this->assertStringContainsString('Unknown or unconfigured provider', $response->getBody());
+    }
+
+    public function testMissingEventIdIsStoredWithNull()
+    {
+        $payload = json_encode(['foo' => 'bar']); // No 'id' field
+        $signature = hash_hmac('sha256', $payload, 'testsecret');
+        $this->setRequest($payload, $signature);
+        $controller = $this->getWebhookControllerInstance();
+        $response = $controller->handle('dummy');
+        $this->assertEquals(200, $response->getStatus());
+
+        // Assert event is stored with event_id = null
+        $event = WebhookEvent::query()->one();
+        $this->assertNotNull($event);
+        $this->assertNull($event->event_id);
+
+        // Assert that another event with null event_id can be stored (no idempotency)
+        $this->setRequest($payload, $signature);
+        $controller->handle('dummy');
+        $count = WebhookEvent::query()->count();
+        $this->assertGreaterThan(1, $count);
+    }
+
+    public function testMalformedPayloadFailsGracefully()
+    {
+        $payload = '{invalid_json:';
+        $signature = hash_hmac('sha256', $payload, 'testsecret');
+        $this->setRequest($payload, $signature);
+        $controller = $this->getWebhookControllerInstance();
+        $this->expectException(\Throwable::class); // Could be a decode or input error
+        $controller->handle('dummy');
+    }
+
+    public function testMultiProviderConfigIsolation()
+    {
+        // Add a second provider
+        $this->testConfig['webhook']['github'] = [
+            'secret' => 'othersecret',
+            'algo' => 'hmac',
+            'id' => 'delivery',
+            'handler' => DummyWebhookHandler::class,
+        ];
+        // Stripe (dummy)
+        $payload1 = json_encode(['id' => 'evt_stripe']);
+        $signature1 = hash_hmac('sha256', $payload1, 'testsecret');
+        $this->setRequest($payload1, $signature1);
+        $controller = $this->getWebhookControllerInstance();
+        $response1 = $controller->handle('dummy');
+        $this->assertEquals(200, $response1->getStatus());
+        // GitHub
+        $payload2 = json_encode(['delivery' => 'evt_github']);
+        $signature2 = hash_hmac('sha256', $payload2, 'othersecret');
+        $this->setRequest($payload2, $signature2);
+        $controller = $this->getWebhookControllerInstance();
+        $response2 = $controller->handle('github');
+        $this->assertEquals(200, $response2->getStatus());
+        // Check both events stored
+        $event1 = WebhookEvent::query()->where('event_id', 'evt_stripe')->one();
+        $event2 = WebhookEvent::query()->where('event_id', 'evt_github')->one();
+        $this->assertNotNull($event1);
+        $this->assertNotNull($event2);
+    }
 }
+
 
 // Dummy handler for successful processing
 class DummyWebhookHandler extends BaseWebhookHandler
