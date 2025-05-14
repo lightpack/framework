@@ -328,7 +328,7 @@ $auditLog = AuditLog::query()
     ->one();
 
 // Restore the old values
-$user->fill($auditLog->old_values);
+$user->setAttributes($auditLog->old_values);
 $user->save();
 ```
 
@@ -348,7 +348,7 @@ trait HasVersions {
             ->where('audit_id', $this->id)
             ->where('id', $auditLogId)
             ->one();
-        $this->fill($log->old_values);
+        $this->setAttributes($log->old_values);
         $this->save();
     }
 }
