@@ -1,7 +1,6 @@
 <?php
-namespace Lightpack\Webhook;
 
-use Lightpack\Http\Request;
+namespace Lightpack\Webhook;
 
 class WebhookController
 {
@@ -13,11 +12,19 @@ class WebhookController
     {
         $config = config('webhook');
 
-        if (!isset($config[$provider]) || !isset($config[$provider]['handler']) || !class_exists($config[$provider]['handler'])) {
-            return response()->setStatus(404)->setBody('Unknown or unconfigured provider');
+        if (
+            !isset($config[$provider]) ||
+            !isset($config[$provider]['handler']) ||
+            !class_exists($config[$provider]['handler'])
+        ) {
+            return response()
+                ->setStatus(404)
+                ->setBody('Unknown or unconfigured provider');
         }
+
         $handlerClass = $config[$provider]['handler'];
         $handler = new $handlerClass($config[$provider], $provider);
+
         return $handler->handle();
     }
 }
