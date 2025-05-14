@@ -22,9 +22,22 @@ class WebhookController
                 ->setBody('Unknown or unconfigured provider');
         }
 
+        $eventId = request()->input($config['provider']['id']);
         $handlerClass = $config[$provider]['handler'];
         $handler = new $handlerClass($config[$provider], $provider);
+        $handler->verifySignature();
+        $webhookEvent = $handler->storeEvent($eventId);
 
-        return $handler->verifySignature()->handle();
+        try {
+            $response = $handler->handle();
+            $webhookEvent->status = 'processed';
+            $webhookEvent->save();
+        } catch (\Throwable $e) {
+            $webhookEvent->status = 'failed';
+            $webhookEvent->save();
+            throw $e;
+        }
+
+        return $response;
     }
 }

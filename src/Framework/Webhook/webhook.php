@@ -4,12 +4,12 @@ return [
     'stripe' => [
         'secret' => get_env('STRIPE_WEBHOOK_SECRET'),
         'algo' => 'hmac',
-        'log_events' => true,
+        'id' => 'id',
     ],
     'github' => [
         'secret' => get_env('GITHUB_WEBHOOK_SECRET'),
         'algo' => 'hmac',
-        'log_events' => true,
+        'id' => 'delivery',
     ],
     // Add more providers as needed
 ];

@@ -2,8 +2,8 @@
 
 namespace Lightpack\Webhook;
 
-use Lightpack\Exceptions\HttpException;
 use Lightpack\Http\Response;
+use Lightpack\Exceptions\HttpException;
 
 abstract class BaseWebhookHandler
 {
@@ -17,7 +17,7 @@ abstract class BaseWebhookHandler
     ) {}
 
     /**
-     * Handle the webhook event.
+     * Handle the webhook request.
      *
      * This method must be implemented by subclasses to process the webhook payload
      * and return an HTTP response.
@@ -25,6 +25,22 @@ abstract class BaseWebhookHandler
      * @return Response HTTP response to be sent to the webhook provider
      */
     abstract public function handle(): Response;
+
+    /**
+     * Store the webhook event and ensure idempotency.
+     *
+     * @param string|null $eventId Unique event identifier from the provider (if available).
+     * @return \Lightpack\Webhook\WebhookEvent Returns the stored event.
+     * @throws \Lightpack\Exceptions\HttpException If a duplicate event is detected (idempotency).
+     */
+    public function storeEvent(?string $eventId): WebhookEvent
+    {
+        if ($eventId) {
+            $this->enforceEventIdempotency($eventId);
+        }
+
+        return $this->storeNewWebhookEvent($eventId);
+    }
 
     /**
      * Verify the webhook signature for authenticity.
@@ -64,5 +80,29 @@ abstract class BaseWebhookHandler
         }
 
         return $this;
+    }
+
+    protected function enforceEventIdempotency(?string $eventId)
+    {
+        $existing = WebhookEvent::query()
+            ->where('provider', $this->provider)
+            ->where('event_id', $eventId)
+            ->exists();
+
+        if ($existing) {
+            throw new HttpException('Duplicate webhook event', 200);
+        }
+    }
+
+    protected function storeNewWebhookEvent(?string $eventId): WebhookEvent
+    {
+        $event = new WebhookEvent;
+        $event->provider = $this->provider;
+        $event->event_id = $eventId;
+        $event->payload = request()->getRawBody();
+        $event->headers = json_encode(request()->headers());
+        $event->save();
+
+        return $event;
     }
 }
