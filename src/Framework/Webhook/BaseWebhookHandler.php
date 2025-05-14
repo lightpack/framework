@@ -4,6 +4,7 @@ namespace Lightpack\Webhook;
 
 use Lightpack\Http\Response;
 use Lightpack\Exceptions\HttpException;
+use Lightpack\Http\Request;
 
 abstract class BaseWebhookHandler
 {
@@ -12,6 +13,7 @@ abstract class BaseWebhookHandler
      * @param string $provider The provider key (e.g., 'stripe', 'github').
      */
     public function __construct(
+        protected Request $request,
         protected array $config,
         protected string $provider
     ) {}
@@ -57,7 +59,7 @@ abstract class BaseWebhookHandler
     {
         $verified = true;
         $header = $this->config['signature_header'] ?? 'X-Webhook-Signature';
-        $providedSignature = request()->header($header);
+        $providedSignature = $this->request->header($header);
         $secret = $this->config['secret'] ?? null;
         $algo = $this->config['algo'] ?? null;
 
@@ -67,7 +69,7 @@ abstract class BaseWebhookHandler
 
         if ($algo === 'hmac') {
             // Do HMAC verification
-            $payload = request()->getRawBody();
+            $payload = $this->request->getRawBody();
             $computed = hash_hmac('sha256', $payload, $secret);
             $verified = hash_equals($computed, $providedSignature);
         } else {
@@ -99,8 +101,8 @@ abstract class BaseWebhookHandler
         $event = new WebhookEvent;
         $event->provider = $this->provider;
         $event->event_id = $eventId;
-        $event->payload = request()->getRawBody();
-        $event->headers = json_encode(request()->headers());
+        $event->payload = $this->request->input();
+        $event->headers = $this->request->headers();
         $event->save();
 
         return $event;

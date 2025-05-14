@@ -9,27 +9,6 @@ use Lightpack\Webhook\WebhookEvent;
 use Lightpack\Webhook\BaseWebhookHandler;
 use Lightpack\Http\Response;
 
-// mock config
-if (!function_exists('config')) {
-    function config($key) {
-        return new \Lightpack\Config\Config;
-    }
-}
-
-// mock request
-if (!function_exists('request')) {
-    function request() {
-        return new \Lightpack\Http\Request();
-    }
-}
-
-// mock response()
-if (!function_exists('response')) {
-    function response($status = 200, $headers = [], $body = '') {
-        return new \Lightpack\Http\Response($status, $headers, $body);
-    }
-}
-
 class WebhookReceiverTest extends TestCase
 {
     private $db;
@@ -63,7 +42,11 @@ class WebhookReceiverTest extends TestCase
         });
 
         $this->createWebhookEventsTable();
-        $this->container->register('config', fn() => fn($key) => $this->testConfig[$key] ?? []);
+
+        // Ensure DIR_CONFIG is defined for Config loading
+        if (!defined('DIR_CONFIG')) {
+            define('DIR_CONFIG', __DIR__ . '/tmp');
+        }
     }
 
     protected function tearDown(): void
@@ -89,11 +72,20 @@ class WebhookReceiverTest extends TestCase
 
     private function setRequest($payload, $signature, $header = 'X-Webhook-Signature')
     {
-        // Simulate Lightpack's request() global
+        $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SERVER['HTTP_' . str_replace('-', '_', strtoupper($header))] = $signature;
-        $_POST = json_decode($payload, true) ?? [];
-        // Optionally set request()->getRawBody() if needed (depends on Lightpack implementation)
-        $GLOBALS['__RAW_BODY__'] = $payload;
+        $_POST = json_decode($payload, true);
+        $_SERVER['X_LIGHTPACK_RAW_INPUT'] = $payload;
+    }
+
+    private function getWebhookControllerInstance()
+    {
+        $config = new \Lightpack\Config\Config();
+        $config->set('webhook', $this->testConfig['webhook']);
+        $request = new \Lightpack\Http\Request();
+        $response = new \Lightpack\Http\Response();
+
+        return new \Lightpack\Webhook\WebhookController($config, $request, $response);
     }
 
     public function testValidWebhookIsProcessedAndStored()
@@ -101,7 +93,7 @@ class WebhookReceiverTest extends TestCase
         $payload = json_encode(['id' => 'evt_123', 'foo' => 'bar']);
         $signature = hash_hmac('sha256', $payload, 'testsecret');
         $this->setRequest($payload, $signature);
-        $controller = new WebhookController();
+        $controller = $this->getWebhookControllerInstance();
         $response = $controller->handle('dummy');
         $this->assertEquals(200, $response->getStatus());
         $event = WebhookEvent::query()->where('event_id', 'evt_123')->one();
@@ -113,7 +105,7 @@ class WebhookReceiverTest extends TestCase
     {
         $payload = json_encode(['id' => 'evt_456']);
         $this->setRequest($payload, 'invalidsig');
-        $controller = new WebhookController();
+        $controller = $this->getWebhookControllerInstance();
         $this->expectException(\Lightpack\Exceptions\HttpException::class);
         $controller->handle('dummy');
     }
@@ -123,12 +115,12 @@ class WebhookReceiverTest extends TestCase
         $payload = json_encode(['id' => 'evt_789']);
         $signature = hash_hmac('sha256', $payload, 'testsecret');
         $this->setRequest($payload, $signature);
-        $controller = new WebhookController();
+        $controller = $this->getWebhookControllerInstance();
         $controller->handle('dummy');
         // Second call with same event_id
         $this->setRequest($payload, $signature);
         $this->expectException(\Lightpack\Exceptions\HttpException::class);
-        $controller->handle('summy');
+        $controller->handle('dummy');
     }
 
     public function testEventStatusIsFailedOnException()
@@ -137,7 +129,7 @@ class WebhookReceiverTest extends TestCase
         $signature = hash_hmac('sha256', $payload, 'testsecret');
         $this->setRequest($payload, $signature);
         $this->testConfig['webhook']['dummy']['handler'] = ExceptionThrowingWebhookHandler::class;
-        $controller = new WebhookController();
+        $controller = $this->getWebhookControllerInstance();
         try {
             $controller->handle('dummy');
         } catch (\Throwable $e) {
