@@ -103,6 +103,90 @@ if ($mfa->validate($user, $inputCode)) {
 
 ---
 
+## Integrating MFA in Your Lightpack Application
+
+Here's how you can enable and use Multi-Factor Authentication in your Lightpack-based app:
+
+### 1. Update Your User Model
+Add the `MfaTrait` to your User model:
+```php
+use Lightpack\Mfa\MfaTrait;
+
+class User
+{
+    use MfaTrait;
+    // ...
+}
+```
+
+### 2. Run the Migration
+Ensure your `users` table has the required fields (see migration section above). Run your migrations:
+
+### 3. Configure MFA
+Edit your `config/mfa.php` to suit your app's needs (OTP length, type, TTL, etc.). Example:
+```php
+return [
+    'default' => 'email',
+    'factors' => ['email'],
+    'email' => [
+        'code_length' => 6,
+        'code_type' => 'numeric',
+        'ttl' => 300,
+        // ...
+    ],
+];
+```
+
+### 4. Sending an MFA Challenge
+In your login (or sensitive action) controller:
+```php
+// After password authentication:
+if ($user->mfa_enabled) {
+    $user->sendMfa();
+    // Redirect to MFA verification page
+}
+```
+
+### 5. Verifying the MFA Code
+On your MFA verification page/controller:
+```php
+if ($user->validateMfa($inputCode)) {
+    // Grant access
+    session()->set('mfa_passed', true),
+} else {
+    // Show error, allow retry
+}
+```
+
+### 6. Middleware Example
+You can create a filter to enforce MFA after login:
+```php
+{
+    public function before(Request $request, array $params = []))
+    {
+        $user = auth()->user();
+        if ($user && $user->mfa_enabled && !session()->get('mfa_passed')) {
+            // Redirect to MFA verification
+        }
+        return $next($request);
+    }
+}
+```
+
+### 7. User Experience Flow
+- **Enable MFA:** User enables MFA in their profile/settings.
+- **Challenge:** After login (or on sensitive action), system calls `$user->sendMfa()`.
+- **Verify:** User enters code; system calls `$user->validateMfa($input)`.
+- **Access:** On success, grant access and optionally set a session flag.
+
+### 8. Production Tips
+- **Email/SMS Providers:** Ensure jobs/notifications are configured for your environment.
+- **Bypass Code:** Never set `bypass_code` in production.
+- **Rate Limiting:** Implement rate limiting on verification attempts.
+- **Backup Codes:** Consider providing backup/recovery codes for users.
+
+---
+
 ## Using `MfaTrait` for Seamless MFA Integration
 
 The `MfaTrait` provides convenience methods to add MFA functionality directly to your User model (or any model that represents an authenticatable entity).
