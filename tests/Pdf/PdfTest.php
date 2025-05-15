@@ -142,20 +142,22 @@ class PdfTest extends TestCase
 
     public function testSaveWritesPdfToStorage()
     {
-        Container::getInstance()->register('storage', function() {
-            return new LocalStorage(__DIR__);
-        });
+        $tempDir = sys_get_temp_dir();
+        $storage = new LocalStorage($tempDir);
+
+        Container::getInstance()->register('storage', fn() => $storage);
 
         $this->pdf->html('<h1>Save PDF</h1>');
         $path = 'test-save.pdf';
         $result = $this->pdf->save($path);
         $this->assertTrue($result);
 
-        $storage = Container::getInstance()->get('storage');
-        $this->assertTrue($storage->exists($path));
-        $content = $storage->read($path);
+        $fullPath = $tempDir . DIRECTORY_SEPARATOR . $path;
+        $this->assertFileExists($fullPath);
+        $content = file_get_contents($fullPath);
         $this->assertStringStartsWith('%PDF', $content);
+
         // Cleanup
-        $storage->delete($path);
+        unlink($fullPath);
     }
 }
