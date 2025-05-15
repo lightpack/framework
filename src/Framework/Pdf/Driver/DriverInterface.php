@@ -30,14 +30,6 @@ interface DriverInterface
     public function render(): string;
 
     /**
-     * Output the PDF to browser or file.
-     * @param string|null $filename
-     * @param string $dest ("I"=inline, "D"=download, "F"=file, "S"=string)
-     * @return void|string
-     */
-    public function output(?string $filename = null, string $dest = 'I');
-
-    /**
      * Get the underlying PDF driver instance for advanced usage.
      * @return object
      */

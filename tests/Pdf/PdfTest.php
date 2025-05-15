@@ -99,14 +99,6 @@ class PdfTest extends TestCase
         $this->assertStringContainsString('%PDF', $content);
     }
 
-    public function testOutputInvalidFilePathThrows()
-    {
-        $this->pdf->html('<p>Test</p>');
-        $invalidPath = '/root/invalid_dir/test.pdf';
-        $this->expectException(\Exception::class);
-        $this->pdf->output($invalidPath, 'F');
-    }
-
     public function testCustomPaperSizeAndOrientation()
     {
         $driver = $this->pdf->getDriver();

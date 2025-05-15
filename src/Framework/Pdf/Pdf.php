@@ -1,8 +1,12 @@
 <?php
+
 namespace Lightpack\Pdf;
 
+use Lightpack\Http\Response;
 use Lightpack\View\Template;
+use Lightpack\Container\Container;
 use Lightpack\Pdf\Driver\DriverInterface;
+use Lightpack\Storage\Storage;
 
 /**
  * Lightpack PDF Service
@@ -29,8 +33,8 @@ class Pdf
      * @param array $options            Optional driver options.
      */
     public function __construct(
-        protected DriverInterface $driver, 
-        protected Template $template, 
+        protected DriverInterface $driver,
+        protected Template $template,
         protected array $options = []
     ) {}
 
@@ -121,15 +125,53 @@ class Pdf
     }
 
     /**
-     * Output the PDF to the browser, download, file, or as a string.
+     * Make the PDF downloadable by the user as an HTTP response.
      *
-     * @param string|null $filename   Output filename (optional)
-     * @param string $dest            Output destination: 'I' (inline), 'D' (download), 'F' (file), 'S' (string)
-     * @return mixed                  Output depends on destination
+     * @param string $filename The filename for the downloaded PDF.
+     * @return \Lightpack\Http\Response
      */
-    public function output(?string $filename = null, string $dest = 'I')
+    public function download(string $filename = 'document.pdf'): Response
     {
-        return $this->driver->output($filename, $dest);
+        $content = $this->render();
+
+        return (new Response)
+            ->setType('application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setHeader('Content-Length', strlen($content))
+            ->setBody($content);
+    }
+
+    /**
+     * Stream the generated PDF to the browser as an HTTP response.
+     *
+     * @param string $filename The filename for the streamed PDF (for Content-Disposition header).
+     * @return Response
+     */
+    public function stream(string $filename = 'document.pdf'): Response
+    {
+        $callback = function () {
+            echo $this->render();
+        };
+
+        return (new Response)
+            ->setType('application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+            ->stream($callback);
+    }
+
+    /**
+     * Save the generated PDF to storage.
+     *
+     * @param string $path Path to save the PDF (relative to storage root)
+     * @return bool True on success, false on failure
+     */
+    public function save(string $path): bool
+    {
+        /** @var Storage */
+        $storage = Container::getInstance('storage');
+        $content = $this->render();
+        
+        return $storage->write($path, $content);
     }
 
     /**

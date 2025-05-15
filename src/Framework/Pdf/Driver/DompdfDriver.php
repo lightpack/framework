@@ -41,14 +41,6 @@ class DompdfDriver implements DriverInterface
         return $this->dompdf->output();
     }
 
-    public function output(?string $filename = null, string $dest = 'I')
-    {
-        $this->applyMeta();
-        $this->dompdf->render();
-        return $this->dompdf->stream($filename, [
-            'Attachment' => ($dest === 'D')
-        ]);
-    }
 
     protected function applyMeta()
     {
