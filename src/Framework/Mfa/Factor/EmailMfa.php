@@ -3,6 +3,7 @@ namespace Lightpack\Mfa\Factor;
 
 use Lightpack\Cache\Cache;
 use Lightpack\Mail\Mail;
+use Lightpack\Mfa\Job\EmailMfaJob;
 use Lightpack\Mfa\MfaInterface;
 
 /**
@@ -10,13 +11,11 @@ use Lightpack\Mfa\MfaInterface;
  */
 class EmailMfa implements MfaInterface
 {
-    protected $mailer;
     protected $cache;
     protected $codeTtl = 300; // 5 minutes
 
-    public function __construct(Mail $mailer, Cache $cache)
+    public function __construct(Cache $cache)
     {
-        $this->mailer = $mailer;
         $this->cache = $cache;
     }
 
@@ -26,9 +25,10 @@ class EmailMfa implements MfaInterface
         $key = $this->getCacheKey($user);
         $this->cache->set($key, $code, $this->codeTtl);
 
-        $subject = 'Your MFA Code';
-        $body = "Your verification code is: {$code}";
-        $this->mailer->to($user->email)->subject($subject)->body($body)->send();
+        (new EmailMfaJob)->dispatch([
+            'user' => $user->toArray(),
+            'mfa_code' => $code,
+        ]);
     }
 
     public function validate($user, $input): bool

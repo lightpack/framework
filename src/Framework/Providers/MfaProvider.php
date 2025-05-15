@@ -8,7 +8,6 @@ use Lightpack\Mfa\Mfa;
 use Lightpack\Mfa\Factor\NullMfa;
 use Lightpack\Mfa\Factor\EmailMfa;
 use Lightpack\Cache\Cache;
-use Lightpack\Mail\Mail;
 
 class MfaProvider implements ProviderInterface
 {
@@ -18,9 +17,7 @@ class MfaProvider implements ProviderInterface
             $service = new Mfa();
 
             // Email MFA
-            $mailer = $container->get('config')->get('mfa.email.mailer', Mail::class);
             $service->registerFactor(new EmailMfa(
-                new $mailer,
                 $container->get(Cache::class)
             ));
 
