@@ -61,6 +61,11 @@ class EmailMfa implements MfaInterface
 
     protected function generateCode(): string
     {
+        $bypass = $this->config->get('mfa.email.bypass_code');
+        if ($bypass) {
+            return $bypass;
+        }
+
         return $this->otp
             ->length($this->config->get('mfa.email.code_length', 6))
             ->type($this->config->get('mfa.email.code_type', 'numeric'))
