@@ -2,8 +2,10 @@
 
 namespace Tests\Pdf;
 
+use Lightpack\Container\Container;
 use Lightpack\Pdf\Pdf;
 use Lightpack\Pdf\Driver\DompdfDriver;
+use Lightpack\Storage\LocalStorage;
 use Lightpack\View\Template;
 use PHPUnit\Framework\TestCase;
 
@@ -109,5 +111,51 @@ class PdfTest extends TestCase
         $this->pdf->html('<h1>Landscape PDF</h1>');
         $content = $this->pdf->render();
         $this->assertStringContainsString('%PDF', $content);
+    }
+
+    public function testDownloadReturnsPdfResponse()
+    {
+        $this->pdf->html('<h1>Download PDF</h1>');
+        $response = $this->pdf->download('test-download.pdf');
+        $this->assertInstanceOf(\Lightpack\Http\Response::class, $response);
+        $this->assertEquals('application/pdf', $response->getType());
+        $this->assertStringContainsString('attachment; filename="test-download.pdf"', $response->getHeader('Content-Disposition'));
+        $this->assertStringStartsWith('%PDF', $response->getBody());
+    }
+
+    public function testStreamReturnsPdfResponse()
+    {
+        $this->pdf->html('<h1>Stream PDF</h1>');
+        $response = $this->pdf->stream('test-stream.pdf');
+        $this->assertInstanceOf(\Lightpack\Http\Response::class, $response);
+        $this->assertEquals('application/pdf', $response->getType());
+        $this->assertStringContainsString('inline; filename="test-stream.pdf"', $response->getHeader('Content-Disposition'));
+        $this->assertIsCallable($response->getStreamCallback());
+
+        // test the callback output
+        ob_start();
+        $callback = $response->getStreamCallback();
+        $callback();
+        $output = ob_get_clean();
+        $this->assertStringStartsWith('%PDF', $output);
+    }
+
+    public function testSaveWritesPdfToStorage()
+    {
+        Container::getInstance()->register('storage', function() {
+            return new LocalStorage(__DIR__);
+        });
+
+        $this->pdf->html('<h1>Save PDF</h1>');
+        $path = 'test-save.pdf';
+        $result = $this->pdf->save($path);
+        $this->assertTrue($result);
+
+        $storage = Container::getInstance()->get('storage');
+        $this->assertTrue($storage->exists($path));
+        $content = $storage->read($path);
+        $this->assertStringStartsWith('%PDF', $content);
+        // Cleanup
+        $storage->delete($path);
     }
 }

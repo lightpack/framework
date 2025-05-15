@@ -168,7 +168,7 @@ class Pdf
     public function save(string $path): bool
     {
         /** @var Storage */
-        $storage = Container::getInstance('storage');
+        $storage = Container::getInstance()->get('storage');
         $content = $this->render();
         
         return $storage->write($path, $content);
