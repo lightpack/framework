@@ -3,8 +3,10 @@
 namespace Lightpack\Mfa\Factor;
 
 use Lightpack\Cache\Cache;
+use Lightpack\Config\Config;
 use Lightpack\Mfa\MfaInterface;
 use Lightpack\Mfa\Job\EmailMfaJob;
+use Lightpack\Mfa\Otp;
 
 /**
  * Email-based MFA factor implementation.
@@ -13,14 +15,17 @@ class EmailMfa implements MfaInterface
 {
     public function __construct(
         protected Cache $cache,
-        protected int $codeTtl
+        protected Config $config,
+        protected Otp $otp,
     ) {}
 
     public function send($user): void
     {
-        $code = random_int(100000, 999999);
-        $key = $this->getCacheKey($user);
-        $this->cache->set($key, $code, $this->codeTtl);
+        $this->cache->set(
+            $this->getCacheKey($user),
+            $code = $this->otp->generate('email'),
+            $this->config->get('mfa.email.ttl')
+        );
 
         (new EmailMfaJob)->dispatch([
             'user' => $user->toArray(),
