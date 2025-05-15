@@ -6,7 +6,7 @@ use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
 use Lightpack\Mfa\MfaInterface;
 use Lightpack\Mfa\Job\EmailMfaJob;
-use Lightpack\Mfa\Otp;
+use Lightpack\Utils\Otp;
 
 /**
  * Email-based MFA factor implementation.
@@ -23,7 +23,7 @@ class EmailMfa implements MfaInterface
     {
         $this->cache->set(
             $this->getCacheKey($user),
-            $code = $this->otp->generate('email'),
+            $code = $this->generateCode(),
             $this->config->get('mfa.email.ttl')
         );
 
@@ -52,5 +52,13 @@ class EmailMfa implements MfaInterface
     protected function getCacheKey($user): string
     {
         return 'mfa_email_' . $user->id;
+    }
+
+    protected function generateCode(): string
+    {
+        return $this->otp
+            ->length($this->config->get('mfa.email.code_length', 6))
+            ->type($this->config->get('mfa.email.code_type', 'numeric'))
+            ->generate();
     }
 }
