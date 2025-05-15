@@ -2,6 +2,7 @@
 
 namespace Lightpack\Mfa\Factor;
 
+use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
 use Lightpack\Mfa\MfaInterface;
@@ -19,7 +20,7 @@ class EmailMfa implements MfaInterface
         protected Otp $otp,
     ) {}
 
-    public function send($user): void
+    public function send(AuthUser $user): void
     {
         $this->cache->set(
             $this->getCacheKey($user),
@@ -33,8 +34,12 @@ class EmailMfa implements MfaInterface
         ]);
     }
 
-    public function validate($user, $input): bool
+    public function validate(AuthUser $user, ?string $input): bool
     {
+        if(!$input) {
+            return false;
+        }
+
         $key = $this->getCacheKey($user);
         $code = $this->cache->get($key);
         if ($code && $input == $code) {
