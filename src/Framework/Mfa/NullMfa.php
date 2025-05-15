@@ -5,7 +5,7 @@ namespace Lightpack\Mfa;
 /**
  * Null MFA factor for testing or when MFA is disabled.
  */
-class NullMfaFactor implements MfaInterface
+class NullMfa implements MfaInterface
 {
     public function send($user): void
     {

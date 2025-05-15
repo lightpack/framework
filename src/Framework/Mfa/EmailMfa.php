@@ -7,7 +7,7 @@ use Lightpack\Mail\Mail;
 /**
  * Email-based MFA factor implementation.
  */
-class EmailMfaFactor implements MfaInterface
+class EmailMfa implements MfaInterface
 {
     protected $mailer;
     protected $cache;

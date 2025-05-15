@@ -5,9 +5,10 @@ namespace Lightpack\Providers;
 use Lightpack\Container\Container;
 use Lightpack\Providers\ProviderInterface;
 use Lightpack\Mfa\MfaService;
-use Lightpack\Mfa\EmailMfaFactor;
+use Lightpack\Mfa\EmailMfa;
 use Lightpack\Cache\Cache;
 use Lightpack\Mail\Mail;
+use Lightpack\Mfa\NullMfa;
 
 class MfaProvider implements ProviderInterface
 {
@@ -17,13 +18,13 @@ class MfaProvider implements ProviderInterface
             $service = new MfaService();
 
             // Email MFA
-            $service->registerFactor(new EmailMfaFactor(
+            $service->registerFactor(new EmailMfa(
                 $container->get(Mail::class),
                 $container->get(Cache::class)
             ));
 
             // Null MFA
-            $service->registerFactor(new \Lightpack\Mfa\NullMfaFactor());
+            $service->registerFactor(new NullMfa());
 
             return $service;
         });
