@@ -33,21 +33,6 @@ class OtpTest extends TestCase
         $this->assertMatchesRegularExpression('/^[ABC123]{5}$/', $code);
     }
 
-    public function testDemoCodeIsReturnedWhenDemoFlagTrue()
-    {
-        $otp = (new Otp)->length(6)->type('numeric')->demo('123456');
-        $code = $otp->generate(true);
-        $this->assertEquals('123456', $code);
-    }
-
-    public function testDemoCodeIsIgnoredWhenDemoFlagFalse()
-    {
-        $otp = (new Otp)->length(6)->type('numeric')->demo('123456');
-        $code = $otp->generate(false);
-        $this->assertNotEquals('123456', $code);
-        $this->assertMatchesRegularExpression('/^[0-9]{6}$/', $code);
-    }
-
     public function testInvalidLengthDefaultsToSix()
     {
         $otp = (new Otp)->length(0)->type('numeric');

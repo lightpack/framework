@@ -10,7 +10,6 @@ class Otp
     protected int $length = 6;
     protected string $type = 'numeric'; // 'numeric', 'alpha', 'alnum', 'custom'
     protected ?string $charset = null;
-    protected ?string $demo = null;
 
     public function length(int $length): self
     {
@@ -30,23 +29,12 @@ class Otp
         return $this;
     }
 
-    public function demo(string $code): self
-    {
-        $this->demo = $code;
-        return $this;
-    }
-
     /**
      * Generate the OTP/code.
-     * @param bool $isDemo Optional: pass true to always use demo code
      * @return string
      */
-    public function generate(bool $isDemo = false): string
+    public function generate(): string
     {
-        if ($this->demo !== null && $isDemo) {
-            return $this->demo;
-        }
-
         $length = $this->length;
         if ($length < 1 || $length > 32) {
             $length = 6;
