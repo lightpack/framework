@@ -35,13 +35,6 @@ class PdfTest extends TestCase
         $this->assertTrue(true);
     }
 
-    public function testCanSetTitleAndAuthor()
-    {
-        $this->pdf->setTitle('My Title');
-        $this->pdf->setAuthor('Author Name');
-        $this->assertTrue(true);
-    }
-
     public function testCanWriteHtml()
     {
         $this->pdf->html('<h1>Hello</h1>');

@@ -52,32 +52,6 @@ class Pdf
     }
 
     /**
-     * Set the document title metadata.
-     *
-     * @param string $title
-     * @return self
-     */
-    public function setTitle(string $title): self
-    {
-        $this->meta['title'] = $title;
-        $this->driver->setMeta($this->meta);
-        return $this;
-    }
-
-    /**
-     * Set the document author metadata.
-     *
-     * @param string $author
-     * @return self
-     */
-    public function setAuthor(string $author): self
-    {
-        $this->meta['author'] = $author;
-        $this->driver->setMeta($this->meta);
-        return $this;
-    }
-
-    /**
      * Add a new page to the PDF document.
      *
      * @return self
