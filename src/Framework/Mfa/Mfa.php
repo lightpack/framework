@@ -4,7 +4,7 @@ namespace Lightpack\Mfa;
 /**
  * MFA Service orchestrates registration and usage of MFA factors.
  */
-class MfaService
+class Mfa
 {
     /** @var MfaInterface[] */
     protected $factors = [];
