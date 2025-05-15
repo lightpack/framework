@@ -2,9 +2,8 @@
 namespace Lightpack\Mfa\Factor;
 
 use Lightpack\Cache\Cache;
-use Lightpack\Mail\Mail;
-use Lightpack\Mfa\Job\EmailMfaJob;
 use Lightpack\Mfa\MfaInterface;
+use Lightpack\Mfa\Job\EmailMfaJob;
 
 /**
  * Email-based MFA factor implementation.
