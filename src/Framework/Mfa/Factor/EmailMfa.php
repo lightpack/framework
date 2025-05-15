@@ -1,4 +1,5 @@
 <?php
+
 namespace Lightpack\Mfa\Factor;
 
 use Lightpack\Cache\Cache;
@@ -10,13 +11,10 @@ use Lightpack\Mfa\Job\EmailMfaJob;
  */
 class EmailMfa implements MfaInterface
 {
-    protected $cache;
-    protected $codeTtl = 300; // 5 minutes
-
-    public function __construct(Cache $cache)
-    {
-        $this->cache = $cache;
-    }
+    public function __construct(
+        protected Cache $cache,
+        protected int $codeTtl
+    ) {}
 
     public function send($user): void
     {

@@ -18,11 +18,12 @@ class MfaProvider implements ProviderInterface
 
             // Email MFA
             $service->registerFactor(new EmailMfa(
-                $container->get(Cache::class)
+                $container->get(Cache::class),
+                config('mfa.email.ttl')
             ));
 
             // Null MFA
-            $service->registerFactor(new NullMfa());
+            $service->registerFactor(new NullMfa);
 
             return $service;
         });
