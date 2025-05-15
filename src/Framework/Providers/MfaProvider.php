@@ -18,8 +18,9 @@ class MfaProvider implements ProviderInterface
             $service = new Mfa();
 
             // Email MFA
+            $mailer = $container->get('config')->get('mfa.email.mailer', Mail::class);
             $service->registerFactor(new EmailMfa(
-                new Mail,
+                new $mailer,
                 $container->get(Cache::class)
             ));
 
