@@ -24,20 +24,20 @@ class EmailMfaJob extends Job
 
     protected function getMailer(): Mail
     {
-        $mailer = config('mfa.email.mailer', Mail::class);
+        $mailer = config('mfa.email.mailer');
+
+        if (!$mailer) {
+            return (new Mail)
+                ->to($this->payload['user']['email'])
+                ->subject('Your MFA Code')
+                ->body('Your verification code is: ' . $this->payload['mfa_code']);
+        }
 
         return new $mailer;
     }
 
     public function run(): void
     {
-        $subject = 'Your MFA Code';
-        $body = "Your verification code is: " . $this->payload['mfa_code'];
-
-        $this->getMailer()
-            ->to($this->payload['user']['email'])
-            ->subject($subject)
-            ->body($body)
-            ->send();
+        $this->getMailer()->send();
     }
 }
