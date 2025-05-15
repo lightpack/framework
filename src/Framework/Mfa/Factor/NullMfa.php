@@ -1,6 +1,8 @@
 <?php
 
-namespace Lightpack\Mfa;
+namespace Lightpack\Mfa\Factor;
+
+use Lightpack\Mfa\MfaInterface;
 
 /**
  * Null MFA factor for testing or when MFA is disabled.

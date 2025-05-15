@@ -1,8 +1,9 @@
 <?php
-namespace Lightpack\Mfa;
+namespace Lightpack\Mfa\Factor;
 
 use Lightpack\Cache\Cache;
 use Lightpack\Mail\Mail;
+use Lightpack\Mfa\MfaInterface;
 
 /**
  * Email-based MFA factor implementation.
