@@ -64,4 +64,14 @@ class Pdf
     {
         return $this->driver->output($filename, $dest);
     }
+
+    public function getDriver(): DriverInterface
+    {
+        return $this->driver;
+    }
+
+    public function getDriverInstance(): object
+    {
+        return $this->driver->getInstance();
+    }
 }

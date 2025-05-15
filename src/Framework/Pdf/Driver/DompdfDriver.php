@@ -6,8 +6,8 @@ use Dompdf\Options;
 
 class DompdfDriver implements DriverInterface
 {
-    protected $dompdf;
-    protected $meta = [];
+    protected Dompdf $dompdf;
+    protected array $meta = [];
 
     public function __construct(array $options = [])
     {
@@ -64,5 +64,10 @@ class DompdfDriver implements DriverInterface
         if (isset($this->meta['keywords'])) {
             $this->dompdf->addInfo('Keywords', $this->meta['keywords']);
         }
+    }
+
+    public function getInstance(): object
+    {
+        return $this->dompdf;
     }
 }

@@ -36,4 +36,10 @@ interface DriverInterface
      * @return void|string
      */
     public function output(?string $filename = null, string $dest = 'I');
+
+    /**
+     * Get the underlying PDF driver instance for advanced usage.
+     * @return object
+     */
+    public function getInstance(): object;
 }

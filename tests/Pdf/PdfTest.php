@@ -53,4 +53,69 @@ class PdfTest extends TestCase
         $content = $this->pdf->render();
         $this->assertStringContainsString('%PDF', $content);
     }
+
+    public function testRenderEmptyHtml()
+    {
+        $this->pdf->html('');
+        $content = $this->pdf->render();
+        $this->assertStringContainsString('%PDF', $content);
+    }
+
+    public function testRenderLargeContent()
+    {
+        $largeHtml = str_repeat('<p>Lightpack PDF</p>', 5000); // Large content
+        $this->pdf->html($largeHtml);
+        $content = $this->pdf->render();
+        $this->assertStringContainsString('%PDF', $content);
+    }
+
+    public function testRenderInvalidHtml()
+    {
+        $this->pdf->html('<div><span>Broken'); // Not closed properly
+        $content = $this->pdf->render();
+        $this->assertStringContainsString('%PDF', $content);
+    }
+
+    public function testMissingTemplateThrows()
+    {
+        $this->expectException(\Exception::class);
+        $this->pdf->template('not_a_real_template');
+        $this->pdf->render();
+    }
+
+    public function testUnicodeAndSpecialCharacters()
+    {
+        $this->pdf->html('<p>Unicode: 你好, мир, 😀, café</p>');
+        $content = $this->pdf->render();
+        $this->assertStringContainsString('%PDF', $content);
+    }
+
+    public function testImageEmbedding()
+    {
+        // Use a small PNG data URI for portability
+        $img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
+        $this->pdf->html('<img src="' . $img . '" alt="dot" />');
+        $content = $this->pdf->render();
+        $this->assertStringContainsString('%PDF', $content);
+    }
+
+    public function testOutputInvalidFilePathThrows()
+    {
+        $this->pdf->html('<p>Test</p>');
+        $invalidPath = '/root/invalid_dir/test.pdf';
+        $this->expectException(\Exception::class);
+        $this->pdf->output($invalidPath, 'F');
+    }
+
+    public function testCustomPaperSizeAndOrientation()
+    {
+        $driver = $this->pdf->getDriver();
+        if ($driver instanceof DompdfDriver) {
+            $dompdf = $driver->getInstance();
+            $dompdf->setPaper('A4', 'landscape');
+        }
+        $this->pdf->html('<h1>Landscape PDF</h1>');
+        $content = $this->pdf->render();
+        $this->assertStringContainsString('%PDF', $content);
+    }
 }
