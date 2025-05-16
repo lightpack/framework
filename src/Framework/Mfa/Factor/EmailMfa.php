@@ -23,22 +23,14 @@ class EmailMfa implements MfaInterface
 
     public function send(AuthUser $user): void
     {
-        // --- Built-in resend rate limiting ---
-        $resendMax = $this->config->get('mfa.email.resend_max', 1); // default: 1
-        $resendInterval = $this->config->get('mfa.email.resend_interval', 10); // default: 10 seconds
-        $limiter = new Limiter();
-        $limiterKey = 'mfa_resend_' . $user->id;
+        $this->enforceResendRateLimit($user);
 
-        if (!$limiter->attempt($limiterKey, $resendMax, $resendInterval)) {
-            throw new \RuntimeException("Please wait before requesting a new MFA code.");
-        }
-        // --- End rate limiting ---
-        
         $this->cache->set(
             $this->getCacheKey($user),
             $code = $this->generateCode(),
             $this->config->get('mfa.email.ttl')
         );
+        
         (new EmailMfaJob)->dispatch([
             'user' => $user->toArray(),
             'mfa_code' => $code,
@@ -81,5 +73,21 @@ class EmailMfa implements MfaInterface
             ->length($this->config->get('mfa.email.code_length', 6))
             ->type($this->config->get('mfa.email.code_type', 'numeric'))
             ->generate();
+    }
+
+    /**
+     * Enforces the resend rate limit for MFA code requests.
+     * Throws a RuntimeException if the user must wait before resending.
+     */
+    protected function enforceResendRateLimit(AuthUser $user): void
+    {
+        $maxAttempts = $this->config->get('mfa.email.resend_max', 1);
+        $intervalSeconds = $this->config->get('mfa.email.resend_interval', 10);
+        $limiter = new Limiter();
+        $key = 'mfa_resend_' . $user->id;
+
+        if (!$limiter->attempt($key, $maxAttempts, $intervalSeconds)) {
+            throw new \RuntimeException("Please wait before requesting a new MFA code.");
+        }
     }
 }
