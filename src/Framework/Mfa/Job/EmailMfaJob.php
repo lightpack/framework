@@ -26,8 +26,8 @@ class EmailMfaJob extends Job
     {
         $mail = config('mfa.email.mailer');
 
-        (new $mail)->dispatch([
-            $this->payload
-        ]);
+        (new $mail)->dispatch(
+            $this->payload,
+        );
     }
 }
