@@ -27,7 +27,7 @@ class LimitFilter implements IFilter
         $key = $this->resolveKey($request);
         
         // Check rate limit
-        if (!$this->limiter->attempt($key, $this->max, $this->mins)) {
+        if (!$this->limiter->attempt($key, $this->max, $this->mins * 60)) {
             $hits = (int) ($this->limiter->getHits($key) ?? 0);
             
             $exception = new TooManyRequestsException(

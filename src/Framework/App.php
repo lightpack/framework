@@ -107,6 +107,8 @@ final class App
             \Lightpack\Providers\RedisProvider::class,
             \Lightpack\Providers\CableProvider::class,
             \Lightpack\Providers\CaptchaProvider::class,
+            \Lightpack\Providers\PdfProvider::class,
+            \Lightpack\Providers\MfaProvider::class
         ];
     }
 
