@@ -22,22 +22,12 @@ class EmailMfaJob extends Job
         return config('mfa.email.retry_after', '60 seconds');
     }
 
-    protected function getMailer(): Mail
-    {
-        $mailer = config('mfa.email.mailer');
-
-        if (!$mailer) {
-            return (new Mail)
-                ->to($this->payload['user']['email'])
-                ->subject('Your MFA Code')
-                ->body('Your verification code is: ' . $this->payload['mfa_code']);
-        }
-
-        return new $mailer;
-    }
-
     public function run(): void
     {
-        $this->getMailer()->send();
+        $mail = config('mfa.email.mailer');
+
+        (new $mail)->dispatch([
+            $this->payload
+        ]);
     }
 }
