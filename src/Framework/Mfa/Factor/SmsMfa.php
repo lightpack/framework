@@ -6,9 +6,8 @@ use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
 use Lightpack\Sms\Sms;
 use Lightpack\Config\Config;
-use Lightpack\Mfa\MfaInterface;
+use Lightpack\Mfa\Job\SmsMfaJob;
 use Lightpack\Utils\Otp;
-use RuntimeException;
 
 /**
  * Email-based MFA factor implementation.
@@ -33,7 +32,11 @@ class SmsMfa extends BaseMfaFactor
     {
         $message = $this->config->get('mfa.sms.message', 'Your verification code is: {code}');
         $message = str_replace('{code}', $code, $message);
-        $this->sms->send($user->phone, $message);
+
+        (new SmsMfaJob)->dispatch([
+            'phone' => $user->phone,
+            'message' => $message,
+        ]);
     }
 
 }

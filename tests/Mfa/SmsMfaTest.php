@@ -33,6 +33,7 @@ class SmsMfaTest extends TestCase
 
         Container::getInstance()->register('config', fn() => $this->config);
         Container::getInstance()->register('cache', fn() => $this->cache);
+        Container::getInstance()->register('sms', fn() => $this->sms);
     }
 
     public function testSendSetsCodeInCache()
@@ -44,6 +45,7 @@ class SmsMfaTest extends TestCase
                 ['mfa.sms.ttl', null, 300],
                 ['mfa.sms.ttl', 300, 300],
                 ['mfa.sms.bypass_code', null, null],
+                ['mfa.sms.queue', 'default', 'default'],
                 ['mfa.sms.message', 'Your verification code is: {code}', 'Your verification code is: {code}'],
                 ['mfa.sms.resend_max', 1, 1],
                 ['mfa.sms.resend_interval', 10, 10],
