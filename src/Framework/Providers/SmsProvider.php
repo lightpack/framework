@@ -7,6 +7,7 @@ use Lightpack\Container\Container;
 use Lightpack\Sms\SmsProviderInterface;
 use Lightpack\Sms\Providers\LogSmsProvider;
 use Lightpack\Sms\Providers\NullSmsProvider;
+use Lightpack\Sms\Providers\TwilioProvider;
 use Lightpack\Providers\ProviderInterface;
 
 class SmsProvider implements ProviderInterface
@@ -14,12 +15,17 @@ class SmsProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->register('sms', function ($container) {
-            $config = $container->get('config')->get('sms');
-            $type = $config['provider'] ?? 'null';
+            $type = config('sms.provider') ?? 'null';
 
             $provider = match ($type) {
-                'log'  => new LogSmsProvider($container->get('logger')),
-                'null' => new NullSmsProvider(),
+                'null'   => new NullSmsProvider(),
+                'log'    => new LogSmsProvider(
+                    $container->get('logger')
+                ),
+                'twilio' => new TwilioProvider(
+                    $container->get('logger'),
+                    config('sms.twilio') ?? []
+                ),
                 default => throw new \Exception("Unknown SMS provider: {$type}"),
             };
 
