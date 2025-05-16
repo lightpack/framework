@@ -108,7 +108,8 @@ final class App
             \Lightpack\Providers\CableProvider::class,
             \Lightpack\Providers\CaptchaProvider::class,
             \Lightpack\Providers\PdfProvider::class,
-            \Lightpack\Providers\MfaProvider::class
+            \Lightpack\Providers\SmsProvider::class,
+            \Lightpack\Providers\MfaProvider::class,
         ];
     }
 
