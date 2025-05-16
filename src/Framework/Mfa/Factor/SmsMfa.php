@@ -4,36 +4,40 @@ namespace Lightpack\Mfa\Factor;
 
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
+use Lightpack\Sms\Sms;
 use Lightpack\Config\Config;
-use Lightpack\Mfa\MfaInterface;
-use Lightpack\Mfa\Job\EmailMfaJob;
-use Lightpack\Utils\Limiter;
+use Lightpack\Mfa\Job\SmsMfaJob;
 use Lightpack\Utils\Otp;
 
 /**
  * Email-based MFA factor implementation.
  */
-class EmailMfa extends BaseMfaFactor
+class SmsMfa extends BaseMfaFactor
 {
     public function __construct(
         Cache $cache,
         Config $config,
         Otp $otp,
+        protected Sms $sms,
     ) {
         parent::__construct($cache, $config, $otp);
     }
 
     protected function getType(): string
     {
-        return 'email';
+        return 'sms';
     }
 
     protected function doSend(AuthUser $user, string $code): void
     {
-        (new EmailMfaJob)->dispatch([
-            'user' => $user->toArray(),
-            'mfa_code' => $code,
+        $message = $this->config->get('mfa.sms.message', 'Your verification code is: {code}');
+        $message = str_replace('{code}', $code, $message);
+
+        (new SmsMfaJob)->dispatch([
+            'phone' => $user->phone,
+            'message' => $message,
         ]);
     }
 
 }
+

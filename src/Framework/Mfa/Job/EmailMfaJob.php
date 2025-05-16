@@ -3,7 +3,6 @@
 namespace Lightpack\Mfa\Job;
 
 use Lightpack\Jobs\Job;
-use Lightpack\Mail\Mail;
 
 class EmailMfaJob extends Job
 {
