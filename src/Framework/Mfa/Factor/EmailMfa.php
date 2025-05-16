@@ -7,6 +7,7 @@ use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
 use Lightpack\Mfa\MfaInterface;
 use Lightpack\Mfa\Job\EmailMfaJob;
+use Lightpack\Utils\Limiter;
 use Lightpack\Utils\Otp;
 
 /**
@@ -22,12 +23,22 @@ class EmailMfa implements MfaInterface
 
     public function send(AuthUser $user): void
     {
+        // --- Built-in resend rate limiting ---
+        $resendMax = $this->config->get('mfa.email.resend_max', 1); // default: 1
+        $resendInterval = $this->config->get('mfa.email.resend_interval', 10); // default: 10 seconds
+        $limiter = new Limiter();
+        $limiterKey = 'mfa_resend_' . $user->id;
+
+        if (!$limiter->attempt($limiterKey, $resendMax, $resendInterval)) {
+            throw new \RuntimeException("Please wait before requesting a new MFA code.");
+        }
+        // --- End rate limiting ---
+        
         $this->cache->set(
             $this->getCacheKey($user),
             $code = $this->generateCode(),
             $this->config->get('mfa.email.ttl')
         );
-
         (new EmailMfaJob)->dispatch([
             'user' => $user->toArray(),
             'mfa_code' => $code,

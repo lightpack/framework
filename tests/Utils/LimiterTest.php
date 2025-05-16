@@ -38,12 +38,14 @@ class LimiterTest extends TestCase
 
     public function testFirstAttemptSucceeds()
     {
+        // 1-second window
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
         $this->assertEquals(1, $this->limiter->getHits('test-key'));
     }
 
     public function testMultipleAttemptsWithinLimit()
     {
+        // 1-second window
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
@@ -52,7 +54,7 @@ class LimiterTest extends TestCase
 
     public function testExceedingLimitFails()
     {
-        // First 3 attempts should succeed
+        // First 3 attempts should succeed (1-second window)
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
@@ -64,7 +66,7 @@ class LimiterTest extends TestCase
 
     public function testLimitResetsAfterExpiry()
     {
-        // Use up all attempts
+        // Use up all attempts (2 attempts in 1-second window)
         $this->limiter->attempt('test-key', 2, 1);
         $this->limiter->attempt('test-key', 2, 1);
         $this->assertEquals(2, $this->limiter->getHits('test-key'));
@@ -82,10 +84,19 @@ class LimiterTest extends TestCase
 
     public function testDifferentKeysTrackedSeparately()
     {
+        // 1-second window
         $this->assertTrue($this->limiter->attempt('key1', 2, 1));
         $this->assertTrue($this->limiter->attempt('key2', 2, 1));
 
         $this->assertEquals(1, $this->limiter->getHits('key1'));
         $this->assertEquals(1, $this->limiter->getHits('key2'));
+    }
+
+    public function testSubMinuteWindow()
+    {
+        // 2-second window
+        $this->assertTrue($this->limiter->attempt('submin-key', 2, 2));
+        $this->assertTrue($this->limiter->attempt('submin-key', 2, 2));
+        $this->assertFalse($this->limiter->attempt('submin-key', 2, 2));
     }
 }

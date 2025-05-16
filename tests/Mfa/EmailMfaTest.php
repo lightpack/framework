@@ -33,8 +33,8 @@ class EmailMfaTest extends TestCase
         $this->user->email = 'user@example.com';
         $this->factor = new EmailMfa($this->cache, $this->config, $this->otp);
 
-        // Patch the IoC container so app('config') returns our config mock
         Container::getInstance()->register('config', fn() => $this->config);
+        Container::getInstance()->register('cache', fn() => $this->cache);
     }
 
     public function testSendSetsCodeInCache()
@@ -47,16 +47,27 @@ class EmailMfaTest extends TestCase
                 ['mfa.email.bypass_code', null, null],
                 ['mfa.email.queue', 'default', 'default'],
                 ['mfa.email.mailer', null, 'Lightpack\\Tests\\Mfa\\Mail'],
+                ['mfa.email.resend_max', 1, 1],
+                ['mfa.email.resend_interval', 10, 10],
             ]));
 
-        $this->cache->expects($this->once())
+        // expect two cache set() calls in order:
+        $this->cache->expects($this->exactly(2))
             ->method('set')
-            ->with(
-                'mfa_email_42',
-                $this->callback(function($code) {
-                    return is_string($code) && strlen($code) === 6;
-                }),
-                300
+            ->withConsecutive(
+                // First: the limiter key (for rate limiting)
+                [
+                    $this->equalTo('limiter:mfa_resend_42'),
+                    $this->equalTo(1),
+                    $this->equalTo(10),
+                    $this->equalTo(false)
+                ],
+                // Second: the actual MFA code key
+                [
+                    $this->equalTo('mfa_email_42'),
+                    $this->isType('string'),
+                    $this->equalTo(300)
+                ]
             );
 
         $this->factor->send($this->user);
