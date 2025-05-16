@@ -92,9 +92,14 @@ class EmailMfaTest extends TestCase
                 ['mfa.email.code_length', 6, 6],
                 ['mfa.email.code_type', 'numeric', 'numeric'],
             ]));
-        $code = (new class($this->cache, $this->config, $this->otp) extends EmailMfa {
-            public function publicGenerateCode() { return $this->generateCode(); }
-        })->publicGenerateCode();
+        $code = (new EmailMfaTestProxy($this->cache, $this->config, $this->otp))->publicGenerateCode();
         $this->assertEquals('999999', $code);
+    }
+}
+
+// Proxy class for testing protected methods
+class EmailMfaTestProxy extends EmailMfa {
+    public function publicGenerateCode() {
+        return $this->generateCode();
     }
 }
