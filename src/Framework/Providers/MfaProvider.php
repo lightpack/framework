@@ -7,8 +7,6 @@ use Lightpack\Providers\ProviderInterface;
 use Lightpack\Mfa\Mfa;
 use Lightpack\Mfa\Factor\NullMfa;
 use Lightpack\Mfa\Factor\EmailMfa;
-use Lightpack\Cache\Cache;
-use Lightpack\Config\Config;
 use Lightpack\Utils\Otp;
 
 class MfaProvider implements ProviderInterface
@@ -21,8 +19,8 @@ class MfaProvider implements ProviderInterface
 
             // Email MFA
             $service->registerFactor(new EmailMfa(
-                $container->get(Cache::class),
-                $container->get(Config::class),
+                $container->get('cache'),
+                $container->get('config'),
                 new Otp()
             ));
 
