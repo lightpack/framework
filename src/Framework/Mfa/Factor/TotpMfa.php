@@ -17,10 +17,12 @@ class TotpMfa implements MfaInterface
 
     public function validate(AuthUser $user, ?string $input): bool
     {
-        if (!$input || empty($user->mfa_totp_secret)) {
+        $secret = $user->mfa_totp_secret;
+
+        if (!$input || empty($secret)) {
             return false;
         }
-        $totp = TOTP::create($user->mfa_totp_secret);
+        $totp = TOTP::create($secret);
         return $totp->verify($input);
     }
 

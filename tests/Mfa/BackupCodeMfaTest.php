@@ -29,7 +29,7 @@ class BackupCodeMfaTest extends TestCase
 
     public function testValidateReturnsFalseIfNoCodes()
     {
-        $this->user->mfa_backup_codes = null;
+        $this->user->mfa_backup_codes = '';
         $this->assertFalse($this->factor->validate($this->user, 'code1'));
     }
 

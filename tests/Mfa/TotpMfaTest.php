@@ -1,0 +1,56 @@
+<?php
+
+namespace Lightpack\Tests\Mfa;
+
+use PHPUnit\Framework\TestCase;
+use Lightpack\Mfa\Factor\TotpMfa;
+use Lightpack\Auth\Models\AuthUser;
+use OTPHP\TOTP;
+
+class TotpMfaTest extends TestCase
+{
+    protected $user;
+    protected $factor;
+    protected $secret;
+    protected $totp;
+
+    protected function setUp(): void
+    {
+        $this->factor = new TotpMfa();
+        $this->user = $this->getMockBuilder(AuthUser::class)
+            ->onlyMethods(['save'])
+            ->getMock();
+        $this->secret = 'JBSWY3DPEHPK3PXP'; // Example base32 secret
+        $this->user->mfa_totp_secret = $this->secret;
+        $this->totp = TOTP::create($this->secret);
+    }
+
+    public function testValidateReturnsFalseIfNoInput()
+    {
+        $this->assertFalse($this->factor->validate($this->user, null));
+        $this->assertFalse($this->factor->validate($this->user, ''));
+    }
+
+    public function testValidateReturnsFalseIfNoSecret()
+    {
+        $this->user->mfa_totp_secret = null;
+        $code = $this->totp->now();
+        $this->assertFalse($this->factor->validate($this->user, $code));
+    }
+
+    public function testValidateReturnsFalseForInvalidCode()
+    {
+        $this->assertFalse($this->factor->validate($this->user, '123456'));
+    }
+
+    public function testValidateReturnsTrueForValidCode()
+    {
+        $code = $this->totp->now();
+        $this->assertTrue($this->factor->validate($this->user, $code));
+    }
+
+    public function testGetName()
+    {
+        $this->assertSame('totp', $this->factor->getName());
+    }
+}
