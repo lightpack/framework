@@ -8,6 +8,7 @@ use Lightpack\Mfa\Mfa;
 use Lightpack\Mfa\Factor\NullMfa;
 use Lightpack\Mfa\Factor\EmailMfa;
 use Lightpack\Mfa\Factor\SmsMfa;
+use Lightpack\Mfa\Factor\BackupCodeMfa;
 use Lightpack\Utils\Otp;
 
 class MfaProvider implements ProviderInterface
@@ -35,6 +36,9 @@ class MfaProvider implements ProviderInterface
                 new Otp(),
                 $container->get('sms')
             ));
+
+            // Backup Code MFA
+            $service->registerFactor(new BackupCodeMfa());
 
             return $service;
         });
