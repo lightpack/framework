@@ -17,11 +17,14 @@ class BackupCodeMfa implements MfaInterface
 
     public function validate(AuthUser $user, ?string $input): bool
     {
-        if (!$input || empty($user->mfa_backup_codes)) {
+        $codes = json_decode($user->mfa_backup_codes);
+
+        if (!$input || empty($codes)) {
             return false;
         }
-        $codes = json_decode($user->mfa_backup_codes, true);
+
         [$valid, $codes] = BackupCodeHelper::verifyAndRemoveCode($codes, $input);
+
         if ($valid) {
             $user->mfa_backup_codes = json_encode($codes);
             $user->save();
