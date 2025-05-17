@@ -22,7 +22,7 @@ class TotpSetupHelper
         return $tfa->createSecret();
     }
 
-    public static function getQrUri(string $secret, string $userEmail, string $appName): string
+    public static function getQrUri(string $secret, string $userEmail): string
     {
         $tfa = self::getTotpInstance();
 
