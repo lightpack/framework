@@ -5,7 +5,8 @@ namespace Lightpack\Tests\Mfa;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Mfa\Factor\TotpMfa;
 use Lightpack\Auth\Models\AuthUser;
-use RobThree\Auth\TwoFactorAuth;
+use Lightpack\Container\Container;
+use Lightpack\Mfa\TotpSetupHelper;
 
 class TotpMfaTest extends TestCase
 {
@@ -16,14 +17,24 @@ class TotpMfaTest extends TestCase
 
     protected function setUp(): void
     {
+        Container::getInstance()->register('config', function() {
+            return new class {
+                public function get($key, $default = null) {
+                    if ($key === 'app.name') {
+                        return 'Test App';
+                    }
+                    return $default;
+                }
+            };
+        });
+
         $this->factor = new TotpMfa();
         $this->user = $this->getMockBuilder(AuthUser::class)
             ->onlyMethods(['save'])
             ->getMock();
         $this->secret = 'JBSWY3DPEHPK3PXP'; // Example base32 secret
         $this->user->mfa_totp_secret = $this->secret;
-        $qrcodeProvider = new \RobThree\Auth\Providers\Qr\QRServerProvider();
-        $this->tfa = new TwoFactorAuth($qrcodeProvider, 'LightpackApp');
+        $this->tfa = TotpSetupHelper::getTotpInstance();
     }
 
     public function testValidateReturnsFalseIfNoInput()
