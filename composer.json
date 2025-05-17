@@ -38,7 +38,7 @@
         "phpmailer/phpmailer": "^6.9.2",
         "dompdf/dompdf": "dev-master",
         "twilio/sdk": "dev-main",
-        "spomky-labs/otphp": "11.4.x-dev"
+        "robthree/twofactorauth": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5.10",

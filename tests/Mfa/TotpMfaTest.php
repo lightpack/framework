@@ -5,14 +5,14 @@ namespace Lightpack\Tests\Mfa;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Mfa\Factor\TotpMfa;
 use Lightpack\Auth\Models\AuthUser;
-use OTPHP\TOTP;
+use RobThree\Auth\TwoFactorAuth;
 
 class TotpMfaTest extends TestCase
 {
     protected $user;
     protected $factor;
     protected $secret;
-    protected $totp;
+    protected $tfa;
 
     protected function setUp(): void
     {
@@ -22,7 +22,8 @@ class TotpMfaTest extends TestCase
             ->getMock();
         $this->secret = 'JBSWY3DPEHPK3PXP'; // Example base32 secret
         $this->user->mfa_totp_secret = $this->secret;
-        $this->totp = TOTP::create($this->secret);
+        $qrcodeProvider = new \RobThree\Auth\Providers\Qr\QRServerProvider();
+        $this->tfa = new TwoFactorAuth($qrcodeProvider, 'LightpackApp');
     }
 
     public function testValidateReturnsFalseIfNoInput()
@@ -34,7 +35,7 @@ class TotpMfaTest extends TestCase
     public function testValidateReturnsFalseIfNoSecret()
     {
         $this->user->mfa_totp_secret = null;
-        $code = $this->totp->now();
+        $code = $this->tfa->getCode('JBSWY3DPEHPK3PXP');
         $this->assertFalse($this->factor->validate($this->user, $code));
     }
 
@@ -45,7 +46,7 @@ class TotpMfaTest extends TestCase
 
     public function testValidateReturnsTrueForValidCode()
     {
-        $code = $this->totp->now();
+        $code = $this->tfa->getCode($this->secret);
         $this->assertTrue($this->factor->validate($this->user, $code));
     }
 

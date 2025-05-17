@@ -3,7 +3,8 @@ namespace Lightpack\Mfa\Factor;
 
 use Lightpack\Mfa\MfaInterface;
 use Lightpack\Auth\Models\AuthUser;
-use OTPHP\TOTP;
+use RobThree\Auth\TwoFactorAuth;
+use RobThree\Auth\Providers\Qr\QRServerProvider;
 
 /**
  * MFA Factor for TOTP (Authenticator Apps)
@@ -22,8 +23,11 @@ class TotpMfa implements MfaInterface
         if (!$input || empty($secret)) {
             return false;
         }
-        $totp = TOTP::create($secret);
-        return $totp->verify($input);
+        $qrcodeProvider = new QRServerProvider();
+        $tfa = new TwoFactorAuth($qrcodeProvider, 'LightpackApp');
+        return $tfa->verifyCode($secret, $input);
+
+
     }
 
     public function getName(): string
