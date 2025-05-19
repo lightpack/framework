@@ -4,10 +4,10 @@ namespace Lightpack\Providers;
 
 use Lightpack\Container\Container;
 use Lightpack\Cable\Cable;
+use Lightpack\Cable\Drivers\DatabaseCableDriver;
 use Lightpack\Cable\Presence;
-use Lightpack\Cable\Drivers\DatabaseDriver;
-use Lightpack\Cable\Drivers\RedisDriver;
 use Lightpack\Cable\Drivers\DatabasePresenceDriver;
+use Lightpack\Cable\Drivers\RedisCableDriver;
 use Lightpack\Cable\Drivers\RedisPresenceDriver;
 
 /**
@@ -51,14 +51,14 @@ class CableProvider implements ProviderInterface
         $driver = $config->get('cable.driver', 'database');
         
         if ($driver === 'database') {
-            return new DatabaseDriver(
+            return new DatabaseCableDriver(
                 $container->get('db'),
                 $config->get('cable.database.table', 'cable_messages')
             );
         }
         
         if ($driver === 'redis') {
-            return new RedisDriver(
+            return new RedisCableDriver(
                 $container->get('redis'),
                 $config->get('cable.redis.prefix', 'cable:')
             );
