@@ -54,11 +54,19 @@ class OpenAIProvider implements ProviderInterface
         ];
 
         try {
-            $response = $this->http->post('https://api.openai.com/v1/chat/completions', [
-                'headers' => $headers,
-                'json' => $body,
-                'timeout' => $this->config->get('ai.providers.openai.timeout', 15),
-            ]);
+            $response = $this->http
+                ->headers($headers)
+                ->timeout($this->config->get('ai.providers.openai.timeout', 15))
+                ->post('https://api.openai.com/v1/chat/completions', $body);
+
+            if ($response->failed()) {
+                $errorMsg = $response->error() ?: 'HTTP error ' . $response->status();
+                if ($this->logger) {
+                    $this->logger->error('OpenAI API error: ' . $errorMsg);
+                }
+                throw new \Exception('OpenAI API error: ' . $errorMsg);
+            }
+
             $result = json_decode($response->body(), true);
             $output = $result['choices'][0]['message']['content'] ?? '';
             if ($this->cache) {
