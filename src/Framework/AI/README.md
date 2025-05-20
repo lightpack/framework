@@ -332,6 +332,54 @@ Even when instructed, AI models may sometimes add explanations or formatting. Th
 
 ---
 
+### 🚀 Further Advanced: Extract Multiple JSON Blobs & Fallback Strategies
+
+Sometimes, an AI response might contain more than one JSON blob (e.g., an object and an array, or multiple arrays), or you may want to ensure you always get *something* usable. Here’s how to handle these scenarios:
+
+#### Extract All JSON Arrays or Objects
+```php
+$result = $ai->generate([
+    'prompt' => "Suggest 5 blog titles and 5 SEO tips for ecommerce. Respond with two JSON arrays: one for titles, one for tips.",
+]);
+
+// Extract all JSON arrays from the response
+preg_match_all('/\[.*?\]/s', $result, $matches); // Non-greedy match for arrays
+
+if (!empty($matches[0])) {
+    $titles = json_decode($matches[0][0], true); // First array
+    $tips = isset($matches[0][1]) ? json_decode($matches[0][1], true) : [];
+    if (is_array($titles)) {
+        echo "Blog Titles:\n";
+        foreach ($titles as $title) {
+            echo "- $title\n";
+        }
+    }
+    if (is_array($tips)) {
+        echo "\nSEO Tips:\n";
+        foreach ($tips as $tip) {
+            echo "- $tip\n";
+        }
+    }
+} else {
+    echo $result; // Fallback
+}
+```
+
+#### Extract All JSON Objects
+```php
+preg_match_all('/\{.*?\}/s', $result, $objMatches); // For objects
+// Process as needed
+```
+
+#### Fallback Strategies
+- **Partial Extraction:** If only one array/object is found, use it and log a warning.
+- **Graceful Degradation:** If nothing is found, display the raw response or a user-friendly error.
+
+**Tip:**
+Always log or alert if extraction fails, so you can improve your prompts or handling logic over time.
+
+---
+
 ## ❤️ Lightpack Philosophy
 - Simple, explicit, and practical
 - No magic, no hidden state
