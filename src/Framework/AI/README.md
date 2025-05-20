@@ -547,6 +547,85 @@ Respond as JSON: {"destination": <destination>, "date": <date>}
 
 ---
 
+## 🛠️ Advanced: SlotFiller Helper Class for Multi-Turn Conversations
+
+For more advanced conversational AI, you can encapsulate slot filling logic in a reusable helper class. This makes it easy to manage state, validation, and user prompts across multiple turns—Lightpack style!
+
+### SlotFiller Example (PHP Pseudocode)
+
+```php
+namespace Lightpack\AI;
+
+class SlotFiller
+{
+    protected $ai;
+    protected $requiredSlots;
+    protected $slots = [];
+
+    public function __construct($ai, array $requiredSlots)
+    {
+        $this->ai = $ai;
+        $this->requiredSlots = $requiredSlots;
+    }
+
+    public function fill($userInput)
+    {
+        $prompt = "Extract the following slots from the user message: " . implode(', ', $this->requiredSlots) . ".\nMessage: \"$userInput\"\nRespond as JSON: {" . implode(': <value>, ', $this->requiredSlots) . ': <value>}';
+        $result = $this->ai->generate([
+            'prompt' => $prompt,
+            'temperature' => 0,
+            'max_tokens' => 50,
+        ]);
+        $entities = json_decode($result, true);
+        if (is_array($entities)) {
+            $this->slots = array_merge($this->slots, array_filter($entities));
+        }
+        return $this->slots;
+    }
+
+    public function missingSlots()
+    {
+        return array_diff($this->requiredSlots, array_keys(array_filter($this->slots)));
+    }
+
+    public function isComplete()
+    {
+        return empty($this->missingSlots());
+    }
+
+    public function reset()
+    {
+        $this->slots = [];
+    }
+}
+```
+
+### Usage Example
+
+```php
+$requiredSlots = ['destination', 'date'];
+$slotFiller = new \Lightpack\AI\SlotFiller($ai, $requiredSlots);
+
+while (!$slotFiller->isComplete()) {
+    $userInput = getUserInput(); // however you get user input
+    $slots = $slotFiller->fill($userInput);
+    $missing = $slotFiller->missingSlots();
+    if (!empty($missing)) {
+        $next = reset($missing);
+        echo "Please provide your $next.\n";
+    }
+}
+echo "Booking a flight to {$slots['destination']} on {$slots['date']}!";
+```
+
+### Add Validation
+You can extend the class with validation methods for each slot (e.g., date format, allowed destinations) before accepting the value.
+
+### Store State
+For real apps, store `$slotFiller->slots` in the session or conversation context between requests.
+
+---
+
 ## ❤️ Lightpack Philosophy
 - Simple, explicit, and practical
 - No magic, no hidden state
