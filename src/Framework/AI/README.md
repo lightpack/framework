@@ -5,7 +5,14 @@ Welcome to the Lightpack AI module! This guide will help you understand, configu
 ---
 
 ## 🚀 What is this?
-This module lets you connect your Lightpack app to AI/ML providers like OpenAI, so you can generate text, ideas, summaries, and more with just a few lines of code. The architecture is pluggable: start with OpenAI, add more providers as you grow.
+This module lets you connect your Lightpack app to AI/ML providers like OpenAI, so you can generate text, ideas, summaries, and more with just a few lines of code.
+
+**What’s under the hood?**
+- This integration is built on the OpenAI **Chat Completions API** (using models like `gpt-3.5-turbo`, `gpt-4`, etc.).
+- It is perfect for text generation, Q&A, summarization, content suggestions, and any prompt-based text task.
+- Other OpenAI APIs (image generation, audio transcription, embeddings, moderation) are **not included by default**, but the architecture is fully pluggable—so you can add these by implementing new providers when needed.
+
+The design is simple, explicit, and extensible—true to Lightpack’s philosophy. Start with OpenAI, and add more providers as you grow.
 
 ---
 
