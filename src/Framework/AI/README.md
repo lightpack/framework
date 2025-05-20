@@ -387,6 +387,86 @@ Always log or alert if extraction fails, so you can improve your prompts or hand
 
 ---
 
+## 🚦 Intent Detection with Lightpack AI
+
+Intent detection classifies user input (like "Book me a flight to Paris") into predefined categories (intents), just like Dialogflow Essentials. With your Lightpack AI integration, you can build this easily using prompt engineering!
+
+### 1. Define Your Intents
+
+```php
+$intents = [
+    'BookFlight',
+    'CancelBooking',
+    'GetWeather',
+    'SmallTalk',
+];
+```
+
+### 2. Basic Intent Detection Prompt
+
+```php
+$userInput = "I want to fly to Paris next week.";
+
+$prompt = "Classify the following user message into one of these intents: " . implode(', ', $intents) . ".\nMessage: \"$userInput\"\nIntent:";
+
+$result = $ai->generate([
+    'prompt' => $prompt,
+    'temperature' => 0, // deterministic output
+    'max_tokens' => 10,
+]);
+$intent = trim($result);
+```
+
+### 3. JSON Output with Confidence
+
+```php
+$prompt = "Classify the user message into one of these intents: " . implode(', ', $intents) . ".\nMessage: \"$userInput\"\nRespond as JSON: {\"intent\": <intent>, \"confidence\": <0-1>}";
+
+$result = $ai->generate([
+    'prompt' => $prompt,
+    'temperature' => 0,
+    'max_tokens' => 30,
+]);
+$data = json_decode($result, true);
+$intent = $data['intent'] ?? 'Unknown';
+$confidence = $data['confidence'] ?? null;
+```
+
+### 4. Advanced: Add Training Examples to the Prompt
+
+```php
+$prompt = <<<PROMPT
+Classify the user message into one of: BookFlight, CancelBooking, GetWeather, SmallTalk.
+
+Examples:
+Message: "I want to fly to Paris" → Intent: BookFlight
+Message: "Cancel my reservation" → Intent: CancelBooking
+Message: "What's the weather in Mumbai?" → Intent: GetWeather
+Message: "Hello!" → Intent: SmallTalk
+
+Message: "$userInput"
+Intent:
+PROMPT;
+
+$result = $ai->generate([
+    'prompt' => $prompt,
+    'temperature' => 0,
+    'max_tokens' => 10,
+]);
+$intent = trim($result);
+```
+
+### 5. How to Organize in Lightpack
+- Store intents in config, database, or code.
+- Add a helper like `$ai->detectIntent($userInput, $intents)` for reuse.
+- Route to the right handler/controller based on the detected intent.
+
+### 📝 Summary
+- LLMs + prompt engineering = flexible, accurate intent detection (no need for Dialogflow or proprietary platforms)
+- Extend with entity extraction, slot filling, or context as needed
+
+---
+
 ## ❤️ Lightpack Philosophy
 - Simple, explicit, and practical
 - No magic, no hidden state
