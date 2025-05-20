@@ -247,6 +247,55 @@ $ai = new AI($config, $http, $logger, $cache);
 
 ---
 
+### 🏆 Pro Tip: Get Structured (JSON) Responses
+
+You can ask the AI to return structured data, like a JSON array or object. This is super useful for lists, FAQs, or anything you want to process in code!
+
+**Example: Get 5 Blog Titles as JSON**
+
+```php
+$result = $ai->generate([
+    'prompt' => "Suggest 5 catchy blog titles for ecommerce. Respond ONLY with a JSON array of strings.",
+    // You can add 'temperature', 'max_tokens', etc. as needed
+]);
+
+$titles = json_decode($result, true);
+
+if (json_last_error() === JSON_ERROR_NONE && is_array($titles)) {
+    foreach ($titles as $title) {
+        echo "- $title\n";
+    }
+} else {
+    // Fallback: print raw result if not valid JSON
+    echo $result;
+}
+```
+
+**Prompting Tips:**
+- Be explicit: “Respond ONLY with a JSON array of 5 blog titles, no explanation.”
+- For objects: “Return a JSON object with keys as numbers and values as blog titles.”
+- For complex data, describe the exact structure you want.
+
+**Always validate the response** before using it in your app, as AI models may sometimes output extra text. If needed, use regex or string manipulation to extract the JSON.
+
+**Sample Prompt:**
+```
+Suggest 5 catchy blog titles for ecommerce. Respond ONLY with a JSON array of strings.
+```
+
+**Sample AI Response:**
+```json
+[
+  "10 Secrets to Skyrocket Your Ecommerce Sales",
+  "The Ultimate Guide to Online Store Success",
+  "Boost Your Brand with These Ecommerce Strategies",
+  "How to Turn Browsers into Buyers",
+  "Top Trends Shaping Ecommerce in 2025"
+]
+```
+
+---
+
 ## ❤️ Lightpack Philosophy
 - Simple, explicit, and practical
 - No magic, no hidden state
