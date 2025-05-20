@@ -296,6 +296,42 @@ Suggest 5 catchy blog titles for ecommerce. Respond ONLY with a JSON array of st
 
 ---
 
+### 🤓 Advanced: Extract JSON from Mixed Output
+
+Sometimes, even with clear prompts, AI models may return extra text before or after the JSON (like explanations or greetings). Here’s how you can robustly extract the JSON part:
+
+```php
+$result = $ai->generate([
+    'prompt' => "Suggest 5 catchy blog titles for ecommerce. Respond ONLY with a JSON array of strings.",
+]);
+
+// Try to extract JSON from mixed output
+preg_match('/\[.*\]/s', $result, $matches); // For a JSON array
+
+if (!empty($matches)) {
+    $titles = json_decode($matches[0], true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($titles)) {
+        foreach ($titles as $title) {
+            echo "- $title\n";
+        }
+    } else {
+        echo $result;
+    }
+} else {
+    echo $result; // Fallback: print as-is
+}
+```
+
+**Tips:**
+- Adjust the regex if you expect a JSON object: `/\{.*\}/s`
+- For complex structures, you can use more sophisticated parsing or libraries.
+- Always validate the decoded data before using it in your app.
+
+**Why does this happen?**
+Even when instructed, AI models may sometimes add explanations or formatting. This pattern ensures your app remains robust!
+
+---
+
 ## ❤️ Lightpack Philosophy
 - Simple, explicit, and practical
 - No magic, no hidden state
