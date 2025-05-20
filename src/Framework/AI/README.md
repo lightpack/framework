@@ -467,6 +467,86 @@ $intent = trim($result);
 
 ---
 
+## 🧩 Entity Extraction & Slot Filling with Lightpack AI
+
+Beyond intent detection, you can use LLMs for extracting structured data (entities) and filling required slots for tasks like booking, ordering, or Q&A—just like Dialogflow or Rasa!
+
+### 1. What is Entity Extraction?
+Entity extraction means pulling out key information from user input (like dates, locations, names).
+
+**Example:**
+- User: "Book a flight to Paris on June 5th"
+- Entities: {"destination": "Paris", "date": "June 5th"}
+
+### 2. What is Slot Filling?
+Slot filling means collecting all required pieces of info for an action. If something is missing, you prompt the user for it.
+
+**Example:**
+- Required slots: destination, date
+- If date is missing, ask: "When do you want to fly?"
+
+### 3. Entity Extraction with LLMs (Code Example)
+
+```php
+$userInput = "Book a flight to Paris on June 5th";
+$slots = ['destination', 'date'];
+
+$prompt = "Extract the following slots from the user message: " . implode(', ', $slots) . ".\nMessage: \"$userInput\"\nRespond as JSON: {\"destination\": <destination>, \"date\": <date>}";
+
+$result = $ai->generate([
+    'prompt' => $prompt,
+    'temperature' => 0,
+    'max_tokens' => 50,
+]);
+$entities = json_decode($result, true);
+```
+
+### 4. Slot Filling Example (with Follow-up)
+
+```php
+function fillSlots($userInput, $requiredSlots, $currentSlots = []) {
+    $missing = array_diff($requiredSlots, array_keys(array_filter($currentSlots)));
+    if (empty($missing)) {
+        return $currentSlots;
+    }
+    $prompt = "Extract the following slots from the user message: " . implode(', ', $requiredSlots) . ".\nMessage: \"$userInput\"\nRespond as JSON: {" . implode(': <value>, ', $requiredSlots) . ': <value>}';
+    $result = $ai->generate([
+        'prompt' => $prompt,
+        'temperature' => 0,
+        'max_tokens' => 50,
+    ]);
+    $entities = json_decode($result, true);
+    $filled = array_merge($currentSlots, array_filter($entities));
+    $missing = array_diff($requiredSlots, array_keys(array_filter($filled)));
+    if (!empty($missing)) {
+        // Ask user for the next missing slot
+        $next = reset($missing);
+        echo "Please provide your $next.";
+    }
+    return $filled;
+}
+```
+
+### 5. Prompt Engineering Tips
+- Always ask for JSON output for easy parsing.
+- List required slots explicitly in the prompt.
+- Provide examples for clarity if needed.
+- Use temperature 0 for deterministic extraction.
+
+### 6. Example Prompt for Extraction
+```
+Extract the following slots from the user message: destination, date.
+Message: "Book a flight to Paris on June 5th"
+Respond as JSON: {"destination": <destination>, "date": <date>}
+```
+
+**Sample AI Response:**
+```json
+{"destination": "Paris", "date": "June 5th"}
+```
+
+---
+
 ## ❤️ Lightpack Philosophy
 - Simple, explicit, and practical
 - No magic, no hidden state
