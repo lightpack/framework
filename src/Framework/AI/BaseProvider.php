@@ -55,5 +55,22 @@ abstract class BaseProvider implements ProviderInterface
         ksort($data);
         return md5(json_encode($data));
     }
+
+    /**
+     * Start a fluent AI task builder for this provider.
+     */
+    public function task()
+    {
+        return new AiTaskBuilder($this);
+    }
+
+    /**
+     * Simple Q&A: Ask a question and get a plain answer string.
+     */
+    public function ask(string $question): string
+    {
+        $result = $this->task()->prompt($question)->run();
+        return $result['raw'];
+    }
 }
 
