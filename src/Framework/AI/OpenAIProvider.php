@@ -39,7 +39,7 @@ class OpenAIProvider extends BaseProvider
         ];
 
         // Use endpoint from config, allow override
-        $endpoint = $this->config->get('ai.providers.openai.endpoint', 'https://api.openai.com/v1/chat/completions');
+        $endpoint = $this->config->get('ai.providers.openai.endpoint_chat', 'https://api.openai.com/v1/chat/completions');
 
         try {
             $response = $this->http
