@@ -26,6 +26,7 @@ abstract class BaseProvider implements ProviderInterface
 
             if ($response->failed()) {
                 $errorMsg = $response->error() ?: 'HTTP error ' . $response->status();
+                $this->logger->error(static::class . ' API response: ' . $response->body());
                 throw new \Exception(static::class . ' API error: ' . $errorMsg);
             }
 

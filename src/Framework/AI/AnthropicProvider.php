@@ -63,6 +63,7 @@ class AnthropicProvider extends BaseProvider
     protected function prepareHeaders(): array
     {
         return [
+            'anthropic-version' => $this->config->get('ai.providers.anthropic.version'),
             'x-api-key' => $this->config->get('ai.providers.anthropic.key'),
             'Content-Type' => 'application/json',
         ];
