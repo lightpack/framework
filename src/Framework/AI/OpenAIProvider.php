@@ -61,7 +61,7 @@ class OpenAIProvider implements ProviderInterface
         ];
 
         // Use config default for http_timeout, allow per-call override
-        $httpTimeout = $params['timeout'] ?? $this->config->get('ai.http_timeout', $this->config->get('ai.providers.openai.timeout', 15));
+        $httpTimeout = $params['timeout'] ?? $this->config->get('ai.http_timeout', 10);
         $httpOptions = array_merge([
             'timeout' => $httpTimeout,
         ], $options);
