@@ -8,7 +8,7 @@ class OpenAIProvider extends BaseProvider
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
         $useCache = $params['cache'] ?? true;
         $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl', 3600);
-        $cacheKey = md5($params['model'] . json_encode($params['messages']) . $params['temperature'] . $params['max_tokens']);
+        $cacheKey = $this->generateCacheKey($params);
 
         // Check cache first (unless bypassed)
         if ($useCache) {

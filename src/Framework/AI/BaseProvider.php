@@ -35,4 +35,24 @@ abstract class BaseProvider implements ProviderInterface
             throw $e;
         }
     }
+
+    /**
+     * Generate a robust, order-independent cache key from selected params.
+     * @param array $params The input parameters to consider
+     * @param array $fields The list of keys to include in the cache key
+     * @return string
+     */
+    protected function generateCacheKey(array $params): string
+    {
+        $data = [];
+        $fields = ['model', 'messages', 'temperature', 'max_tokens', 'system'];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $params)) {
+                $data[$field] = $params[$field];
+            }
+        }
+        ksort($data);
+        return md5(json_encode($data));
+    }
 }
+
