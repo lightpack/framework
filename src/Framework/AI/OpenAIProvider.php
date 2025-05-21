@@ -47,21 +47,13 @@ class OpenAIProvider extends BaseProvider
 
     protected function prepareRequestBody(array $params): array
     {
-        $model = $params['model'] ?? $this->config->get('ai.providers.openai.model', 'gpt-3.5-turbo');
-        $system = $params['system'] ?? '';
-        $messages = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $temperature = $params['temperature'] ?? $this->config->get('ai.providers.openai.temperature', 0.7);
-        $maxTokens = $params['max_tokens'] ?? $this->config->get('ai.providers.openai.max_tokens', 256);
-        $body = [
-            'model' => $model,
-            'messages' => $messages,
-            'temperature' => $temperature,
-            'max_tokens' => $maxTokens,
+        return [
+            'system' => $params['system'] ?? '',
+            'messages' => $params['messages'],
+            'model' => $params['model'] ?? $this->config->get('ai.providers.openai.model'),
+            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.openai.temperature'),
+            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.openai.max_tokens'),
         ];
-
-        if ($system) {
-            $body['system'] = $system;
-        }
 
         return $body;
     }
