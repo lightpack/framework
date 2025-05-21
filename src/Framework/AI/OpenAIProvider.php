@@ -47,15 +47,25 @@ class OpenAIProvider extends BaseProvider
 
     protected function prepareRequestBody(array $params): array
     {
+        $messages = $params['messages'];
+        
+        if (!empty($params['system'])) {
+            array_unshift($messages, ['role' => 'system', 'content' => $params['system']]);
+        }
+
+        $messages = array_map(function($msg) {
+            return [
+                'role' => $msg['role'],
+                'content' => is_array($msg['content']) ? implode("\n", $msg['content']) : $msg['content'],
+            ];
+        }, $messages);
+        
         return [
-            'system' => $params['system'] ?? '',
-            'messages' => $params['messages'],
+            'messages' => $messages,
             'model' => $params['model'] ?? $this->config->get('ai.providers.openai.model'),
             'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.openai.temperature'),
             'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.openai.max_tokens'),
         ];
-
-        return $body;
     }
 
     protected function prepareHeaders(): array
