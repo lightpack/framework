@@ -18,7 +18,7 @@ class OpenAIProvider extends BaseProvider
         }
 
         $result = $this->makeApiRequest(
-            $this->config->get('ai.providers.openai.endpoint_chat'),
+            $this->config->get('ai.providers.openai.endpoint'),
             $this->prepareRequestBody($params), 
             $this->prepareHeaders(), 
             $this->config->get('ai.http_timeout')

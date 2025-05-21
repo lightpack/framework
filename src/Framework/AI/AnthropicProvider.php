@@ -16,7 +16,7 @@ class AnthropicProvider extends BaseProvider
         }
 
         $result = $this->makeApiRequest(
-            $this->config->get('ai.providers.anthropic.endpoint', 'https://api.anthropic.com/v1/messages'),
+            $this->config->get('ai.providers.anthropic.endpoint'),
             $this->prepareRequestBody($params),
             $this->prepareHeaders(),
             $this->config->get('ai.http_timeout', 10)
