@@ -1,27 +1,8 @@
 <?php
 namespace Lightpack\AI;
 
-use Lightpack\AI\ProviderInterface;
-use Lightpack\Config\Config;
-use Lightpack\Http\Http;
-use Lightpack\Logger\Logger;
-use Lightpack\Cache\Cache;
-
-class OpenAIProvider implements ProviderInterface
+class OpenAIProvider extends BaseProvider
 {
-    protected $config;
-    protected $http;
-    protected $logger;
-    protected $cache;
-
-    public function __construct(Config $config, Http $http, Logger $logger, Cache $cache)
-    {
-        $this->config = $config;
-        $this->http = $http;
-        $this->logger = $logger;
-        $this->cache = $cache;
-    }
-
     public function generate(array $params)
     {
         $apiKey = $this->config->get('ai.providers.openai.key');
@@ -30,17 +11,14 @@ class OpenAIProvider implements ProviderInterface
         $messages = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
         $temperature = $params['temperature'] ?? $this->config->get('ai.providers.openai.temperature', 0.7);
         $maxTokens = $params['max_tokens'] ?? $this->config->get('ai.providers.openai.max_tokens', 256);
-        $options = $params['options'] ?? [];
         $cacheKey = md5($model . json_encode($messages) . $temperature . $maxTokens);
         $useCache = $params['cache'] ?? true;
-        // Use config default for cache_ttl, allow per-call override
         $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl', 3600);
 
         // Check cache first (unless bypassed)
-        if ($useCache && $this->cache) {
-            $cached = $this->cache->get($cacheKey);
-            if ($cached !== null) {
-                return $cached;
+        if ($useCache) {
+            if ($this->cache->has($cacheKey)) {
+                return $this->cache->get($cacheKey);
             }
         }
 
@@ -60,43 +38,36 @@ class OpenAIProvider implements ProviderInterface
             'Content-Type' => 'application/json',
         ];
 
-        // Use config default for http_timeout, allow per-call override
-        $httpTimeout = $params['timeout'] ?? $this->config->get('ai.http_timeout', 10);
-        $httpOptions = array_merge([
-            'timeout' => $httpTimeout,
-        ], $options);
+        // Use endpoint from config, allow override
+        $endpoint = $this->config->get('ai.providers.openai.endpoint', 'https://api.openai.com/v1/chat/completions');
 
         try {
             $response = $this->http
                 ->headers($headers)
-                ->options($httpOptions)
-                ->post('https://api.openai.com/v1/chat/completions', $body);
+                ->timeout($this->config->get('ai.http_timeout', 10))
+                ->post($endpoint, $body);
 
             if ($response->failed()) {
                 $errorMsg = $response->error() ?: 'HTTP error ' . $response->status();
-                if ($this->logger) {
-                    $this->logger->error('OpenAI API error: ' . $errorMsg);
-                }
+                $this->logger->error('OpenAI API error: ' . $errorMsg);
                 throw new \Exception('OpenAI API error: ' . $errorMsg);
             }
 
             $result = json_decode($response->body(), true);
+            $choice = $result['choices'][0] ?? [];
             $output = [
-                'text' => $result['choices'][0]['message']['content'] ?? '',
-                'finish_reason' => $result['choices'][0]['finish_reason'] ?? '',
+                'text' => $choice['message']['content'] ?? '',
+                'finish_reason' => $choice['finish_reason'] ?? '',
                 'usage' => $result['usage'] ?? [],
                 'raw' => $result,
             ];
-
             // Write to cache unless bypassed
-            if ($useCache && $this->cache) {
+            if ($useCache) {
                 $this->cache->set($cacheKey, $output, $cacheTtl);
             }
             return $output;
         } catch (\Exception $e) {
-            if ($this->logger) {
-                $this->logger->error('OpenAI API error: ' . $e->getMessage());
-            }
+            $this->logger->error('OpenAI API error: ' . $e->getMessage());
             throw $e;
         }
     }
