@@ -37,7 +37,16 @@ class AiTaskBuilder
 
     public function expect(array $schema)
     {
-        $this->expectSchema = $schema;
+        // If $schema is a list of keys (numeric), default all types to 'string'
+        $normalized = [];
+        foreach ($schema as $key => $type) {
+            if (is_int($key)) {
+                $normalized[$type] = 'string';
+            } else {
+                $normalized[$key] = $type;
+            }
+        }
+        $this->expectSchema = $normalized;
         return $this;
     }
 
