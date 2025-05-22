@@ -88,20 +88,44 @@ class AiTaskBuilder
 
     public function run(): array
     {
+        $params = $this->buildParams();
+        $result = $this->provider->generate($params);
+        $this->rawResponse = $result['text'] ?? '';
+
+        $data = $this->extractAndDecodeJson($this->rawResponse);
+        $success = false;
+
+        if ($this->expectArrayKey && is_array($data)) {
+            $data = $this->coerceSchemaOnArray($data);
+            $success = true;
+        } elseif ($this->expectSchema && is_array($data)) {
+            $data = $this->coerceSchemaOnObject($data);
+            $success = true;
+        }
+
+        return [
+            'success' => $success,
+            'data' => $success ? $data : null,
+            'raw' => $this->rawResponse,
+        ];
+    }
+
+    /**
+     * Build request parameters for the provider.
+     */
+    protected function buildParams(): array
+    {
         $params = [];
-        // If messages are present, use chat mode
         if (!empty($this->messages)) {
             $params['messages'] = $this->messages;
             if ($this->system) {
                 array_unshift($params['messages'], ['role' => 'system', 'content' => $this->system]);
             }
-            // Auto-inject strong schema instructions as a system message if needed
             if (($this->expectSchema || $this->expectArrayKey)) {
                 $schemaInstruction = $this->buildSchemaInstruction();
                 array_unshift($params['messages'], ['role' => 'system', 'content' => $schemaInstruction]);
             }
         } else {
-            // Fallback: build prompt as single user message
             $finalPrompt = $this->prompt;
             if (($this->expectSchema || $this->expectArrayKey)) {
                 $finalPrompt .= ' ' . $this->buildSchemaInstruction();
@@ -114,43 +138,49 @@ class AiTaskBuilder
         if ($this->model) $params['model'] = $this->model;
         if ($this->temperature) $params['temperature'] = $this->temperature;
         if ($this->maxTokens) $params['max_tokens'] = $this->maxTokens;
+        return $params;
+    }
 
-        $result = $this->provider->generate($params);
-        $this->rawResponse = $result['text'] ?? '';
+    /**
+     * Extract and decode JSON from the raw LLM response.
+     */
+    protected function extractAndDecodeJson(string $text)
+    {
+        $json = $this->extractJson($text) ?? $text;
+        return json_decode($json, true);
+    }
 
-        // Try to extract and decode JSON (handles messy LLM outputs)
-        $json = $this->extractJson($this->rawResponse) ?? $this->rawResponse;
-        $data = json_decode($json, true);
-        $success = false;
-        if ($this->expectArrayKey && is_array($data)) {
-            // If it's an array of objects, coerce schema for each item
-            foreach ($data as &$item) {
-                if (is_array($item) && $this->expectSchema) {
-                    foreach ($this->expectSchema as $key => $type) {
-                        if (!array_key_exists($key, $item)) {
-                            $item[$key] = null;
-                        }
-                        settype($item[$key], $type);
+    /**
+     * Coerce schema on an array of objects.
+     */
+    protected function coerceSchemaOnArray(array $data): array
+    {
+        foreach ($data as &$item) {
+            if (is_array($item) && $this->expectSchema) {
+                foreach ($this->expectSchema as $key => $type) {
+                    if (!array_key_exists($key, $item)) {
+                        $item[$key] = null;
                     }
+                    settype($item[$key], $type);
                 }
             }
-            unset($item);
-            $success = true;
-        } elseif ($this->expectSchema && is_array($data)) {
-            // Single object
-            foreach ($this->expectSchema as $key => $type) {
-                if (!array_key_exists($key, $data)) {
-                    $data[$key] = null;
-                }
-                settype($data[$key], $type);
-            }
-            $success = true;
         }
-        return [
-            'success' => $success,
-            'data' => $success ? $data : null,
-            'raw' => $this->rawResponse,
-        ];
+        unset($item);
+        return $data;
+    }
+
+    /**
+     * Coerce schema on a single object.
+     */
+    protected function coerceSchemaOnObject(array $data): array
+    {
+        foreach ($this->expectSchema as $key => $type) {
+            if (!array_key_exists($key, $data)) {
+                $data[$key] = null;
+            }
+            settype($data[$key], $type);
+        }
+        return $data;
     }
 
     public function raw(): string
@@ -181,12 +211,20 @@ class AiTaskBuilder
     }
 
     /**
-     * Extract the first JSON object or array from a string (for messy LLM outputs).
+     * Extract JSON array, multi-object, or object from a string (for messy LLM outputs).
      */
     protected function extractJson(string $text): ?string
     {
-        // Try to extract the first JSON array or object from the text
-        if (preg_match('/(\{.*\}|\[.*\])/s', $text, $matches)) {
+        // Try to extract a JSON array first
+        if (preg_match('/(\[.*\])/s', $text, $matches)) {
+            return $matches[0];
+        }
+        // If multiple JSON objects separated by newlines or not wrapped, wrap them as an array
+        if (preg_match_all('/\{.*?\}/s', $text, $matches) && count($matches[0]) > 1) {
+            return '[' . implode(',', $matches[0]) . ']';
+        }
+        // Fallback: single JSON object
+        if (preg_match('/\{.*\}/s', $text, $matches)) {
             return $matches[0];
         }
         return null;
