@@ -213,20 +213,42 @@ class AiTaskBuilder
     /**
      * Extract JSON array, multi-object, or object from a string (for messy LLM outputs).
      */
+    /**
+     * Attempt to extract valid JSON (array or object) from messy LLM output.
+     * Handles the most common LLM output quirks:
+     *
+     *   1. JSON array:
+     *      - Example input: 'Here is your data: [{"a":1},{"b":2}]'
+     *      - Extracted:      '[{"a":1},{"b":2}]'
+     *
+     *   2. Multiple JSON objects (newline or space separated):
+     *      - Example input: '{"a":1}\n{"b":2}\n{"c":3}'
+     *      - Extracted:      '[{"a":1},{"b":2},{"c":3}]'
+     *
+     *   3. Single JSON object:
+     *      - Example input: 'Result: {"a":1, "b":2}'
+     *      - Extracted:      '{"a":1, "b":2}'
+     *
+     *   4. If nothing found, returns null.
+     *
+     * This makes the builder robust to unpredictable LLM output formatting.
+     */
     protected function extractJson(string $text): ?string
     {
-        // Try to extract a JSON array first
+        // 1. Try to extract a JSON array (most robust, preferred format)
         if (preg_match('/(\[.*\])/s', $text, $matches)) {
             return $matches[0];
         }
-        // If multiple JSON objects separated by newlines or not wrapped, wrap them as an array
+        // 2. If multiple JSON objects (e.g., separated by newlines), wrap as array
         if (preg_match_all('/\{.*?\}/s', $text, $matches) && count($matches[0]) > 1) {
+            // Join all found objects into a valid JSON array
             return '[' . implode(',', $matches[0]) . ']';
         }
-        // Fallback: single JSON object
+        // 3. Fallback: extract a single JSON object
         if (preg_match('/\{.*\}/s', $text, $matches)) {
             return $matches[0];
         }
+        // 4. Nothing found: return null
         return null;
     }
 }
