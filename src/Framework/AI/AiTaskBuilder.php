@@ -96,14 +96,14 @@ class AiTaskBuilder
                 array_unshift($params['messages'], ['role' => 'system', 'content' => $this->system]);
             }
             // Auto-inject strong schema instructions as a system message if needed
-            if (($this->expectSchema || $this->expectArrayKey) && !$this->hasStrongSchemaInstruction($params['messages'])) {
+            if (($this->expectSchema || $this->expectArrayKey)) {
                 $schemaInstruction = $this->buildSchemaInstruction();
                 array_unshift($params['messages'], ['role' => 'system', 'content' => $schemaInstruction]);
             }
         } else {
             // Fallback: build prompt as single user message
             $finalPrompt = $this->prompt;
-            if (($this->expectSchema || $this->expectArrayKey) && !$this->hasStrongSchemaInstruction([$finalPrompt])) {
+            if (($this->expectSchema || $this->expectArrayKey)) {
                 $finalPrompt .= ' ' . $this->buildSchemaInstruction();
             }
             $params['prompt'] = $finalPrompt;
@@ -156,16 +156,6 @@ class AiTaskBuilder
     public function raw(): string
     {
         return $this->rawResponse;
-    }
-
-    // --- Helpers for schema instruction injection ---
-    protected function hasStrongSchemaInstruction($messagesOrPrompt): bool
-    {
-        // Very basic check—customize as needed
-        $text = is_array($messagesOrPrompt)
-            ? implode(' ', array_map(fn($m) => is_array($m) ? ($m['content'] ?? '') : $m, $messagesOrPrompt))
-            : $messagesOrPrompt;
-        return stripos($text, 'respond only as a json') !== false;
     }
 
     protected function buildSchemaInstruction(): string
