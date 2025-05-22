@@ -84,21 +84,18 @@ class AiTaskBuilder
         if (!empty($this->messages)) {
             $params['messages'] = $this->messages;
             if ($this->system) {
-                // Optionally prepend a system message if set via .system()
                 array_unshift($params['messages'], ['role' => 'system', 'content' => $this->system]);
+            }
+            // Auto-inject strong schema instructions as a system message if needed
+            if (($this->expectSchema || $this->expectArrayKey) && !$this->hasStrongSchemaInstruction($params['messages'])) {
+                $schemaInstruction = $this->buildSchemaInstruction();
+                array_unshift($params['messages'], ['role' => 'system', 'content' => $schemaInstruction]);
             }
         } else {
             // Fallback: build prompt as single user message
             $finalPrompt = $this->prompt;
-            if ($this->expectSchema) {
-                $keys = implode("', '", array_keys($this->expectSchema));
-                $finalPrompt .= " Respond ONLY as a JSON object with keys: '$keys'.";
-            }
-            if ($this->expectArrayKey) {
-                $finalPrompt .= " Respond ONLY as a JSON array of $this->expectArrayKey objects.";
-            }
-            if ($this->example) {
-                $finalPrompt .= " Example: " . json_encode($this->example);
+            if (($this->expectSchema || $this->expectArrayKey) && !$this->hasStrongSchemaInstruction([$finalPrompt])) {
+                $finalPrompt .= ' ' . $this->buildSchemaInstruction();
             }
             $params['prompt'] = $finalPrompt;
             if ($this->system) {
@@ -112,20 +109,32 @@ class AiTaskBuilder
         $result = $this->provider->generate($params);
         $this->rawResponse = $result['text'] ?? '';
 
-        // Try to decode as JSON
-        $data = json_decode($this->rawResponse, true);
+        // Try to extract and decode JSON (handles messy LLM outputs)
+        $json = $this->extractJson($this->rawResponse) ?? $this->rawResponse;
+        $data = json_decode($json, true);
         $success = false;
-        if ($this->expectSchema && is_array($data)) {
-            // Ensure all keys exist, coerce types
+        if ($this->expectArrayKey && is_array($data)) {
+            // If it's an array of objects, coerce schema for each item
+            foreach ($data as &$item) {
+                if (is_array($item) && $this->expectSchema) {
+                    foreach ($this->expectSchema as $key => $type) {
+                        if (!array_key_exists($key, $item)) {
+                            $item[$key] = null;
+                        }
+                        settype($item[$key], $type);
+                    }
+                }
+            }
+            unset($item);
+            $success = true;
+        } elseif ($this->expectSchema && is_array($data)) {
+            // Single object
             foreach ($this->expectSchema as $key => $type) {
                 if (!array_key_exists($key, $data)) {
                     $data[$key] = null;
                 }
                 settype($data[$key], $type);
             }
-            $success = true;
-        }
-        if ($this->expectArrayKey && is_array($data)) {
             $success = true;
         }
         return [
@@ -139,4 +148,50 @@ class AiTaskBuilder
     {
         return $this->rawResponse;
     }
+
+    // --- Helpers for schema instruction injection ---
+    protected function hasStrongSchemaInstruction($messagesOrPrompt): bool
+    {
+        // Very basic check—customize as needed
+        $text = is_array($messagesOrPrompt)
+            ? implode(' ', array_map(fn($m) => is_array($m) ? ($m['content'] ?? '') : $m, $messagesOrPrompt))
+            : $messagesOrPrompt;
+        return stripos($text, 'respond only as a json') !== false;
+    }
+
+    protected function buildSchemaInstruction(): string
+    {
+        if ($this->expectSchema) {
+            $keys = implode('", "', array_keys($this->expectSchema));
+            $example = $this->example ?? $this->autoExampleFromSchema();
+            return 'Respond ONLY as a JSON object with keys: "' . $keys . '". No markdown, no extra text. Example: ' . json_encode($example);
+        }
+        if ($this->expectArrayKey) {
+            return 'Respond ONLY as a JSON array of ' . $this->expectArrayKey . ' objects. No markdown, no extra text.';
+        }
+        return '';
+    }
+
+    protected function autoExampleFromSchema(): array
+    {
+        $example = [];
+        foreach ($this->expectSchema as $key => $type) {
+            $example[$key] = $type === 'string' ? 'example' : ($type === 'int' ? 0 : null);
+        }
+        return $example;
+    }
+
+    /**
+     * Extract the first JSON object or array from a string (for messy LLM outputs).
+     */
+    protected function extractJson(string $text): ?string
+    {
+        // Try to extract the first JSON array or object from the text
+        if (preg_match('/(\{.*\}|\[.*\])/s', $text, $matches)) {
+            return $matches[0];
+        }
+        return null;
+    }
 }
+
+
