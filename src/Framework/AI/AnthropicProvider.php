@@ -39,7 +39,13 @@ class AnthropicProvider extends BaseProvider
     protected function prepareRequestBody(array $params): array
     {
         $messages = $params['messages'];
-        
+
+        // Remove any 'system' role messages (Anthropic only accepts 'user' and 'assistant')
+        $messages = array_filter($messages, function($msg) {
+            return $msg['role'] !== 'system';
+        });
+        $messages = array_values($messages); // reindex
+
         $messages = array_map(function($msg) {
             return [
                 'role' => $msg['role'],
