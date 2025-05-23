@@ -110,6 +110,7 @@ final class App
             \Lightpack\Providers\PdfProvider::class,
             \Lightpack\Providers\SmsProvider::class,
             \Lightpack\Providers\MfaProvider::class,
+            \Lightpack\Providers\AiProvider::class,
         ];
     }
 
