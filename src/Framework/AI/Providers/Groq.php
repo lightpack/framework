@@ -52,8 +52,8 @@ class Groq extends AI
         return [
             'model' => $params['model'] ?? $this->config->get('ai.providers.groq.model'),
             'messages' => $messages,
-            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.groq.temperature'),
-            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.groq.max_tokens'),
+            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.temperature'),
+            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.max_tokens'),
         ];
     }
 

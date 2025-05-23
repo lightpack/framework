@@ -59,8 +59,8 @@ class Anthropic extends AI
             'system' => $params['system'] ?? '',
             'messages' => $messages,
             'model' => $params['model'] ?? $this->config->get('ai.providers.anthropic.model'),
-            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.anthropic.temperature'),
-            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.anthropic.max_tokens'),
+            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.temperature'),
+            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.max_tokens'),
         ];
     }
 

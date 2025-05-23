@@ -52,8 +52,8 @@ class Mistral extends AI
         return [
             'model' => $params['model'] ?? $this->config->get('ai.providers.mistral.model', 'mistral-medium'),
             'messages' => $messages,
-            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.mistral.temperature', 0.7),
-            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.mistral.max_tokens', 256),
+            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.temperature', 0.7),
+            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.max_tokens', 256),
         ];
     }
 
