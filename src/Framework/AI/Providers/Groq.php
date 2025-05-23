@@ -1,19 +1,18 @@
 <?php
-namespace Lightpack\AI;
+namespace Lightpack\AI\Providers;
 
 use Lightpack\AI\BaseProvider;
-use Lightpack\AI\ProviderInterface;
 
-class MistralProvider extends BaseProvider implements ProviderInterface
+class Groq extends BaseProvider
 {
     /**
-     * Generate a response from the Mistral API.
+     * Generate a response from the Groq API.
      */
     public function generate(array $params): array
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
         $useCache = $params['cache'] ?? true;
-        $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl',);
+        $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl');
         $cacheKey = $this->generateCacheKey($params);
 
         // Check cache first
@@ -22,7 +21,7 @@ class MistralProvider extends BaseProvider implements ProviderInterface
         }
 
         $result = $this->makeApiRequest(
-            $this->config->get('ai.providers.mistral.endpoint'),
+            $this->config->get('ai.providers.groq.endpoint'),
             $this->prepareRequestBody($params),
             $this->prepareHeaders(),
             $this->config->get('ai.http_timeout')
@@ -38,11 +37,11 @@ class MistralProvider extends BaseProvider implements ProviderInterface
     }
 
     /**
-     * Prepare the request body for Mistral's API.
+     * Prepare the request body for Groq's API.
      */
     protected function prepareRequestBody(array $params): array
     {
-        $messages = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
+        $messages = $params['messages'];
         $messages = array_map(function($msg) {
             return [
                 'role' => $msg['role'],
@@ -51,26 +50,26 @@ class MistralProvider extends BaseProvider implements ProviderInterface
         }, $messages);
 
         return [
-            'model' => $params['model'] ?? $this->config->get('ai.providers.mistral.model', 'mistral-medium'),
+            'model' => $params['model'] ?? $this->config->get('ai.providers.groq.model'),
             'messages' => $messages,
-            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.mistral.temperature', 0.7),
-            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.mistral.max_tokens', 256),
+            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.groq.temperature'),
+            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.groq.max_tokens'),
         ];
     }
 
     /**
-     * Prepare headers for Mistral API.
+     * Prepare headers for Groq API.
      */
     protected function prepareHeaders(): array
     {
         return [
-            'Authorization' => 'Bearer ' . $this->config->get('ai.providers.mistral.key'),
+            'Authorization' => 'Bearer ' . $this->config->get('ai.providers.groq.key'),
             'Content-Type' => 'application/json',
         ];
     }
 
     /**
-     * Parse the output from Mistral API response.
+     * Parse the output from Groq API response.
      */
     protected function parseOutput($result): array
     {

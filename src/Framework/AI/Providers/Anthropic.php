@@ -1,7 +1,9 @@
 <?php
-namespace Lightpack\AI;
+namespace Lightpack\AI\Providers;
 
-class AnthropicProvider extends BaseProvider
+use Lightpack\AI\BaseProvider;
+
+class Anthropic extends BaseProvider
 {
     public function generate(array $params)
     {
