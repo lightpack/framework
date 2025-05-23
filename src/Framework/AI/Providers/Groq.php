@@ -1,9 +1,9 @@
 <?php
 namespace Lightpack\AI\Providers;
 
-use Lightpack\AI\BaseProvider;
+use Lightpack\AI\AI;
 
-class Groq extends BaseProvider
+class Groq extends AI
 {
     /**
      * Generate a response from the Groq API.

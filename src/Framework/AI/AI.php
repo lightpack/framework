@@ -7,7 +7,7 @@ use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
 use Lightpack\Logger\Logger;
 
-abstract class BaseProvider implements ProviderInterface
+abstract class AI
 {
     public function __construct(
         protected Http $http,
@@ -15,6 +15,48 @@ abstract class BaseProvider implements ProviderInterface
         protected Config $config,
         protected Logger $logger,
     ) {}
+
+    /**
+     * Generate a completion or response from the provider.
+     * 
+     * @param array $params Supported keys (provider may use subset):
+     *   - prompt: string (single prompt for simple completion)
+     *   - system: string (system prompt/persona)
+     *   - messages: array (conversation history, each with ['role' => ..., 'content' => ...])
+     *   - temperature: float
+     *   - max_tokens: int
+     *   - model: string (model name)
+     *   - timeout: int (seconds)
+     *   - ... (provider-specific keys)
+     *
+     * @return array {
+     *   @type string $text           The generated text/completion.
+     *   @type string $finish_reason  Why the generation stopped (if available).
+     *   @type array  $usage          Token usage stats (if available).
+     *   @type mixed  $raw            The full raw provider response.
+     * }
+     *
+     * @param array $params See interface docblock for supported keys.
+     * @return array See interface docblock for return structure.
+     */
+    abstract public function generate(array $params);
+
+    /**
+     * Start a fluent AI task builder for this provider.
+     */
+    public function task()
+    {
+        return new AiTaskBuilder($this);
+    }
+
+    /**
+     * Simple Q&A: Ask a question and get a plain answer string.
+     */
+    public function ask(string $question): string
+    {
+        $result = $this->task()->prompt($question)->run();
+        return $result['raw'];
+    }
 
     protected function makeApiRequest(string $endpoint, array $body, array $headers = [], int $timeout = 10)
     {
@@ -55,22 +97,4 @@ abstract class BaseProvider implements ProviderInterface
         ksort($data);
         return md5(json_encode($data));
     }
-
-    /**
-     * Start a fluent AI task builder for this provider.
-     */
-    public function task()
-    {
-        return new AiTaskBuilder($this);
-    }
-
-    /**
-     * Simple Q&A: Ask a question and get a plain answer string.
-     */
-    public function ask(string $question): string
-    {
-        $result = $this->task()->prompt($question)->run();
-        return $result['raw'];
-    }
 }
-

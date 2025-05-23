@@ -1,9 +1,9 @@
 <?php
 namespace Lightpack\AI\Providers;
 
-use Lightpack\AI\BaseProvider;
+use Lightpack\AI\AI;
 
-class OpenAI extends BaseProvider
+class OpenAI extends AI
 {
     public function generate(array $params)
     {

@@ -1,9 +1,9 @@
 <?php
 namespace Lightpack\AI\Providers;
 
-use Lightpack\AI\BaseProvider;
+use Lightpack\AI\AI;
 
-class Mistral extends BaseProvider
+class Mistral extends AI
 {
     /**
      * Generate a response from the Mistral API.

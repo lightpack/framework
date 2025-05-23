@@ -2,13 +2,13 @@
 
 namespace Lightpack\Providers;
 
-use Lightpack\Container\Container;
 use Lightpack\Providers\ProviderInterface;
-use Lightpack\AI\Providers\OpenAI;
-use Lightpack\AI\Providers\Anthropic;
-use Lightpack\AI\Providers\Mistral;
+use Lightpack\Container\Container;
+use Lightpack\AI\AI;
 use Lightpack\AI\Providers\Groq;
-use Lightpack\AI\ProviderInterface as AIProviderInterface;
+use Lightpack\AI\Providers\OpenAI;
+use Lightpack\AI\Providers\Mistral;
+use Lightpack\AI\Providers\Anthropic;
 
 class AiProvider implements ProviderInterface
 {
@@ -18,7 +18,7 @@ class AiProvider implements ProviderInterface
             $config = $container->get('config');
             $type = $config->get('ai.driver');
 
-            $deps = [
+            $dependencies = [
                 $container->get('http'),
                 $container->get('cache'),
                 $container->get('config'),
@@ -26,14 +26,14 @@ class AiProvider implements ProviderInterface
             ];
 
             return match ($type) {
-                'openai'    => new OpenAI(...$deps),
-                'anthropic' => new Anthropic(...$deps),
-                'mistral'   => new Mistral(...$deps),
-                'groq'      => new Groq(...$deps),
+                'openai'    => new OpenAI(...$dependencies),
+                'anthropic' => new Anthropic(...$dependencies),
+                'mistral'   => new Mistral(...$dependencies),
+                'groq'      => new Groq(...$dependencies),
                 default     => throw new \Exception("Unknown AI driver: {$type}"),
             };
         });
 
-        $container->alias(AIProviderInterface::class, 'ai');
+        $container->alias(AI::class, 'ai');
     }
 }
