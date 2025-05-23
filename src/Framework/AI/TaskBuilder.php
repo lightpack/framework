@@ -1,7 +1,7 @@
 <?php
 namespace Lightpack\AI;
 
-class AiTaskBuilder
+class TaskBuilder
 {
     protected array $messages = [];
     protected $provider;

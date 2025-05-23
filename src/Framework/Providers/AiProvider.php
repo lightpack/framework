@@ -9,6 +9,7 @@ use Lightpack\AI\Providers\Groq;
 use Lightpack\AI\Providers\OpenAI;
 use Lightpack\AI\Providers\Mistral;
 use Lightpack\AI\Providers\Anthropic;
+use Lightpack\Http\Http;
 
 class AiProvider implements ProviderInterface
 {
@@ -19,7 +20,7 @@ class AiProvider implements ProviderInterface
             $type = $config->get('ai.driver');
 
             $dependencies = [
-                $container->get('http'),
+                new Http,
                 $container->get('cache'),
                 $container->get('config'),
                 $container->get('logger'),

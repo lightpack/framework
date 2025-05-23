@@ -46,7 +46,7 @@ abstract class AI
      */
     public function task()
     {
-        return new AiTaskBuilder($this);
+        return new TaskBuilder($this);
     }
 
     /**
