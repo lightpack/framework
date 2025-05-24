@@ -65,8 +65,8 @@ class OpenAI extends AI
         return [
             'messages' => $messages,
             'model' => $params['model'] ?? $this->config->get('ai.providers.openai.model'),
-            'temperature' => $params['temperature'] ?? $this->config->get('ai.providers.temperature'),
-            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.providers.max_tokens'),
+            'temperature' => $params['temperature'] ?? $this->config->get('ai.temperature'),
+            'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.max_tokens'),
         ];
     }
 
