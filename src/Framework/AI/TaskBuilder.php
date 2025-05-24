@@ -120,15 +120,16 @@ class TaskBuilder
 
         // Check required fields BEFORE coercion
         if ($success && !empty($this->requiredFields)) {
-            foreach ($this->requiredFields as $field) {
-                if (!array_key_exists($field, $originalData) || $originalData[$field] === null) {
-                    $this->errors[] = "Missing required field: $field";
-                }
+            if ($this->expectArrayKey && is_array($originalData)) {
+                $this->validateRequiredFieldsInArray($originalData);
+            } else {
+                $this->validateRequiredFieldsInObject($originalData);
             }
             if (!empty($this->errors)) {
                 $success = false;
             }
         }
+
 
         return [
             'success' => $success,
@@ -228,6 +229,33 @@ class TaskBuilder
         }
         return '';
     }
+
+    /**
+     * Validate required fields in a single object.
+     */
+    private function validateRequiredFieldsInObject(array $data): void
+    {
+        foreach ($this->requiredFields as $field) {
+            if (!array_key_exists($field, $data) || $data[$field] === null) {
+                $this->errors[] = "Missing required field: $field";
+            }
+        }
+    }
+
+    /**
+     * Validate required fields in an array of objects.
+     */
+    private function validateRequiredFieldsInArray(array $items): void
+    {
+        foreach ($items as $i => $item) {
+            foreach ($this->requiredFields as $field) {
+                if (!array_key_exists($field, $item) || $item[$field] === null) {
+                    $this->errors[] = "Item $i: Missing required field: $field";
+                }
+            }
+        }
+    }
+
 
     protected function autoExampleFromSchema(): array
     {
