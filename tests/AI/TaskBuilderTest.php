@@ -70,4 +70,22 @@ class TaskBuilderTest extends TestCase
         $this->assertContains('Item 2: Missing required field: rating', $result['errors']);
         $this->assertContains('Item 2: Missing required field: summary', $result['errors']);
     }
+
+    public function testAllItemsValid()
+    {
+        $builder = new TaskBuilder(new class {
+            public function generate($params)
+            {
+                return ['text' => '[{"title":"Inception","rating":10,"summary":"A"},{"title":"Matrix","rating":9,"summary":"B"}]'];
+            }
+        });
+        $result = $builder
+            ->expect(['title' => 'string', 'rating' => 'int', 'summary' => 'string'])
+            ->required('title', 'rating', 'summary')
+            ->expectArray('movie')
+            ->run();
+
+        $this->assertTrue($result['success']);
+        $this->assertEmpty($result['errors']);
+    }
 }
