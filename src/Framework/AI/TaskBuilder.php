@@ -8,6 +8,8 @@ class TaskBuilder
     protected ?string $prompt = null;
     protected ?array $expectSchema = null;
     protected ?string $expectArrayKey = null;
+    protected array $requiredFields = [];
+    protected array $errors = [];
     protected ?array $example = null;
     protected ?string $model = null;
     protected ?float $temperature = null;
@@ -47,6 +49,15 @@ class TaskBuilder
             }
         }
         $this->expectSchema = $normalized;
+        return $this;
+    }
+
+    /**
+     * Specify required fields for the result.
+     */
+    public function required(string ...$fields)
+    {
+        $this->requiredFields = $fields;
         return $this;
     }
 
@@ -94,6 +105,10 @@ class TaskBuilder
 
         $data = $this->extractAndDecodeJson($this->rawResponse);
         $success = false;
+        $this->errors = [];
+
+        // Store original data for required field check
+        $originalData = is_array($data) ? $data : [];
 
         if ($this->expectArrayKey && is_array($data)) {
             $data = $this->coerceSchemaOnArray($data);
@@ -103,10 +118,23 @@ class TaskBuilder
             $success = true;
         }
 
+        // Check required fields BEFORE coercion
+        if ($success && !empty($this->requiredFields)) {
+            foreach ($this->requiredFields as $field) {
+                if (!array_key_exists($field, $originalData) || $originalData[$field] === null) {
+                    $this->errors[] = "Missing required field: $field";
+                }
+            }
+            if (!empty($this->errors)) {
+                $success = false;
+            }
+        }
+
         return [
             'success' => $success,
             'data' => $success ? $data : null,
             'raw' => $this->rawResponse,
+            'errors' => $this->errors,
         ];
     }
 

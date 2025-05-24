@@ -40,8 +40,11 @@ class TaskBuilderTest extends TestCase
                 'name' => 'string',
                 'age'  => 'int',
             ])
+            ->required('name', 'age')
             ->run();
 
-        $this->assertTrue($result['success']);
+        $this->assertFalse($result['success']);
+        $this->assertContains('Missing required field: name', $result['errors']);
+        $this->assertContains('Missing required field: age', $result['errors']);
     }
 }
