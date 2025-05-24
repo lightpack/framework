@@ -250,7 +250,7 @@ class TaskBuilder
         foreach ($items as $i => $item) {
             foreach ($this->requiredFields as $field) {
                 if (!array_key_exists($field, $item) || $item[$field] === null) {
-                    $this->errors[] = "Item $i: Missing required field: $field";
+                    $this->errors[] = "Item " . ($i + 1) . ": Missing required field: $field";
                 }
             }
         }

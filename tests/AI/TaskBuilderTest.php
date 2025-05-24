@@ -66,8 +66,8 @@ class TaskBuilderTest extends TestCase
             ->run();
 
         $this->assertFalse($result['success']);
-        $this->assertContains('Item 0: Missing required field: summary', $result['errors']);
-        $this->assertContains('Item 1: Missing required field: rating', $result['errors']);
         $this->assertContains('Item 1: Missing required field: summary', $result['errors']);
+        $this->assertContains('Item 2: Missing required field: rating', $result['errors']);
+        $this->assertContains('Item 2: Missing required field: summary', $result['errors']);
     }
 }
