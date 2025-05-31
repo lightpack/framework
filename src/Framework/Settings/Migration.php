@@ -9,10 +9,10 @@ return new class extends Migration
     {
         $this->create('settings', function (Table $table) {
             $table->id();
-            $table->varchar('key', 191);
+            $table->varchar('key', 150);
             $table->text('value');
-            $table->varchar('type', 32)->nullable();
-            $table->varchar('model_type', 64);
+            $table->varchar('type', 150)->nullable();
+            $table->varchar('model_type', 150);
             $table->column('model_id')->type('bigint')->attribute('unsigned');
             $table->timestamps();
             $table->index(['model_type', 'model_id', 'key']);
