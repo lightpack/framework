@@ -10,12 +10,12 @@ return new class extends Migration
         $this->create('settings', function (Table $table) {
             $table->id();
             $table->varchar('key', 150);
+            $table->varchar('key_type', 25)->nullable();
             $table->text('value');
-            $table->varchar('type', 150)->nullable();
-            $table->varchar('model_type', 150);
-            $table->column('model_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('group', 150)->default('global');
+            $table->column('owner_id')->type('bigint')->attribute('unsigned')->nullable();
             $table->timestamps();
-            $table->index(['model_type', 'model_id', 'key']);
+            $table->index(['group', 'owner', 'key']);
         });
     }
 

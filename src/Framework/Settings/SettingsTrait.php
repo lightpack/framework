@@ -1,11 +1,13 @@
 <?php
 
-namespace Framework\Settings;
+namespace Lightpack\Settings;
 
 trait HasSettings
 {
-    public function settings()
+    public function settings(): Settings
     {
-        return new Settings($this->table, $this->id, app('cache'));
+        return app('settings')
+            ->group($this->table)
+            ->owner($this->{$this->primaryKey});
     }
 }

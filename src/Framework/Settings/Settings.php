@@ -1,6 +1,6 @@
 <?php
 
-namespace Framework\Settings;
+namespace Lightpack\Settings;
 
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
@@ -8,23 +8,56 @@ use Lightpack\Database\DB;
 
 class Settings
 {
-    protected string $modelType;
-    protected int $modelId;
-    protected string $cacheKey;
+    /**
+     * The logical group or namespace for the settings.
+     * E.g. 'global', 'users', 'orgs', etc.
+     * @var string
+     */
+    protected string $group = 'global';
+
+    /**
+     * The owner id within the group, or null for global/group-level settings.
+     * @var int|null
+     */
+    protected ?int $ownerId = null;
+
     protected DB $db;
     protected Cache $cache;
     protected Config $config;
 
-    public function __construct(string $modelType, int $modelId, DB $db, Cache $cache, Config $config)
+    public function __construct(DB $db, Cache $cache, Config $config)
     {
-        $this->modelType = $modelType;
-        $this->modelId = $modelId;
         $this->db = $db;
         $this->cache = $cache;
         $this->config = $config;
-        $this->cacheKey = $this->makeCacheKey();
     }
 
+    /**
+     * Set the group and owner for this settings instance (fluent API).
+     *
+     * @param string $group
+     * @param int|null $ownerId
+     * @return $this
+     */
+    public function group(string $group): self
+    {
+        $this->group = $group;
+        return $this;
+    }
+
+    public function owner(int $ownerId): self
+    {
+        $this->ownerId = $ownerId;
+        return $this;
+    }
+
+    /**
+     * Get a settings value by key.
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed The value if found, or $default if not set.
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         $settings = $this->all();
@@ -34,6 +67,14 @@ class Settings
         return $settings[$key]['value'];
     }
 
+    /**
+     * Set a settings value by key.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param string|null $type Optional type hint
+     * @return void
+     */
     public function set(string $key, mixed $value, $type = null)
     {
         // Type detection if not provided
@@ -45,53 +86,73 @@ class Settings
         $this->db->table('settings')->upsert([
             [
                 'key' => $key,
+                'key_type' => $type,
                 'value' => $castedValue,
-                'type' => $type,
-                'model_type' => $this->modelType,
-                'model_id' => $this->modelId,
+                'group' => $this->group,
+                'owner' => $this->ownerId,
                 'updated_at' => $now,
             ]
-        ], ['value', 'type', 'updated_at']);
+        ], ['value', 'key_type', 'updated_at']);
         $this->invalidateCache();
     }
 
+    /**
+     * Get all settings for this group/owner.
+     *
+     * @return array<string, array{value:mixed, key_type:string|null, updated_at:string}>
+     *         Associative array keyed by setting key.
+     */
     public function all(): array
     {
         if ($this->config->get('settings.cache')) {
-            $settings = $this->cache->get($this->cacheKey);
+            $settings = $this->cache->get($this->makeCacheKey());
             if ($settings !== null) {
                 return $settings;
             }
         }
-        $rows = $this->db->table('settings')
-            ->where('model_type', $this->modelType)
-            ->where('model_id', $this->modelId)
-            ->all();
+        $query = $this->db->table('settings')
+            ->where('group', $this->group);
+        if ($this->ownerId === null) {
+            $query->whereNull('owner');
+        } else {
+            $query->where('owner', $this->ownerId);
+        }
+        $rows = $query->all();
         $settings = [];
         foreach ($rows as $row) {
             $settings[$row['key']] = [
-                'value' => $this->castValue($row['value'], $row['type']),
-                'type' => $row['type'],
+                'value' => $this->castValue($row['value'], $row['key_type']),
+                'key_type' => $row['key_type'],
                 'updated_at' => $row['updated_at'],
             ];
         }
         if ($this->cache) {
             $this->cache->set(
-                $this->cacheKey, 
-                $settings, 
+                $this->makeCacheKey(),
+                $settings,
                 $this->config->get('settings.ttl')
             );
         }
         return $settings;
     }
 
+    /**
+     * Delete a settings value by key.
+     *
+     * @param string $key
+     * @return void
+     */
     public function forget($key)
     {
-        $this->db->table('settings')
-            ->where('model_type', $this->modelType)
-            ->where('model_id', $this->modelId)
-            ->where('key', $key)
-            ->delete();
+        $query = $this->db->table('settings')
+            ->where('group', $this->group)
+            ->where('key', $key);
+        if ($this->ownerId === null) {
+            $query->whereNull('owner');
+        } else {
+            $query->where('owner', $this->ownerId);
+        }
+        $query->delete();
         $this->invalidateCache();
     }
 
@@ -134,15 +195,15 @@ class Settings
         return 'string';
     }
 
-    protected function makeCacheKey()
+    protected function makeCacheKey(): string
     {
-        return 'settings:' . $this->modelType . ':' . $this->modelId;
+        return 'settings:' . $this->group . ':' . ($this->ownerId ?? 'null');
     }
 
     protected function invalidateCache()
     {
         if ($this->cache) {
-            $this->cache->delete($this->cacheKey);
+            $this->cache->delete($this->makeCacheKey());
         }
     }
 }
