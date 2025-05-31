@@ -2,9 +2,9 @@
 
 namespace Lightpack\Providers;
 
+use Lightpack\Settings\Settings;
 use Lightpack\Container\Container;
 use Lightpack\Providers\ProviderInterface;
-use Lightpack\Settings\Settings;
 
 class SettingsProvider implements ProviderInterface
 {
