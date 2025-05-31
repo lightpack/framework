@@ -79,7 +79,7 @@ class Settings
             $this->cache->set(
                 $this->cacheKey, 
                 $settings, 
-                $this->config->get('settings.ttl', 3600)
+                $this->config->get('settings.ttl')
             );
         }
         return $settings;
