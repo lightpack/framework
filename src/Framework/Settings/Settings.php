@@ -45,7 +45,7 @@ class Settings
         return $this;
     }
 
-    public function owner(int $ownerId): self
+    public function owner(?int $ownerId): self
     {
         $this->ownerId = $ownerId;
         return $this;
