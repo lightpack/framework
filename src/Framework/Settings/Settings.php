@@ -2,32 +2,30 @@
 
 namespace Framework\Settings;
 
-use Lightpack\Database\DB;
 use Lightpack\Cache\Cache;
+use Lightpack\Config\Config;
+use Lightpack\Database\DB;
 
 class Settings
 {
-    protected $modelType;
-    protected $modelId;
-    protected $cache;
-    protected $cacheKey;
-    protected $db;
+    protected string $modelType;
+    protected int $modelId;
+    protected string $cacheKey;
+    protected DB $db;
+    protected Cache $cache;
+    protected Config $config;
 
-    public function __construct($modelType, $modelId, ?Cache $cache = null)
+    public function __construct(string $modelType, int $modelId, DB $db, Cache $cache, Config $config)
     {
         $this->modelType = $modelType;
         $this->modelId = $modelId;
+        $this->db = $db;
         $this->cache = $cache;
+        $this->config = $config;
         $this->cacheKey = $this->makeCacheKey();
-        $this->db = app('db');
     }
 
-    public static function for($modelType, $modelId = null)
-    {
-        return new static($modelType, $modelId, app('cache'));
-    }
-
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         $settings = $this->all();
         if (!array_key_exists($key, $settings)) {
@@ -36,7 +34,7 @@ class Settings
         return $settings[$key]['value'];
     }
 
-    public function set($key, $value, $type = null)
+    public function set(string $key, mixed $value, $type = null)
     {
         // Type detection if not provided
         if ($type === null) {
@@ -57,9 +55,9 @@ class Settings
         $this->invalidateCache();
     }
 
-    public function all()
+    public function all(): array
     {
-        if ($this->cache) {
+        if ($this->config->get('settings.cache')) {
             $settings = $this->cache->get($this->cacheKey);
             if ($settings !== null) {
                 return $settings;
@@ -78,7 +76,11 @@ class Settings
             ];
         }
         if ($this->cache) {
-            $this->cache->set($this->cacheKey, $settings, 3600); // 1 hour cache
+            $this->cache->set(
+                $this->cacheKey, 
+                $settings, 
+                $this->config->get('settings.ttl', 3600)
+            );
         }
         return $settings;
     }
