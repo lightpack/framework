@@ -111,6 +111,7 @@ final class App
             \Lightpack\Providers\SmsProvider::class,
             \Lightpack\Providers\MfaProvider::class,
             \Lightpack\Providers\AiProvider::class,
+            \Lightpack\Providers\SettingsProvider::class,
         ];
     }
 

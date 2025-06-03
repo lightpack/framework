@@ -25,19 +25,19 @@ class TaskBuilder
     /**
      * Add a message to the chat history (role: user, system, assistant).
      */
-    public function message(string $role, string $content)
+    public function message(string $role, string $content): self
     {
         $this->messages[] = ['role' => $role, 'content' => $content];
         return $this;
     }
 
-    public function prompt(string $prompt)
+    public function prompt(string $prompt): self
     {
         $this->prompt = $prompt;
         return $this;
     }
 
-    public function expect(array $schema)
+    public function expect(array $schema): self
     {
         // If $schema is a list of keys (numeric), default all types to 'string'
         $normalized = [];
@@ -55,43 +55,43 @@ class TaskBuilder
     /**
      * Specify required fields for the result.
      */
-    public function required(string ...$fields)
+    public function required(string ...$fields): self
     {
         $this->requiredFields = $fields;
         return $this;
     }
 
-    public function expectArray(string $key = 'item')
+    public function expectArray(string $key = 'item'): self
     {
         $this->expectArrayKey = $key;
         return $this;
     }
 
-    public function example(array $example)
+    public function example(array $example): self
     {
         $this->example = $example;
         return $this;
     }
 
-    public function model(string $model)
+    public function model(string $model): self
     {
         $this->model = $model;
         return $this;
     }
 
-    public function temperature(float $temperature)
+    public function temperature(float $temperature): self
     {
         $this->temperature = $temperature;
         return $this;
     }
 
-    public function maxTokens(int $maxTokens)
+    public function maxTokens(int $maxTokens): self
     {
         $this->maxTokens = $maxTokens;
         return $this;
     }
 
-    public function system(string $system)
+    public function system(string $system): self
     {
         $this->system = $system;
         return $this;
