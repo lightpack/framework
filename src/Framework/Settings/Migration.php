@@ -15,7 +15,7 @@ return new class extends Migration
             $table->varchar('group', 150)->default('global');
             $table->column('owner_id')->type('bigint')->attribute('unsigned')->nullable();
             $table->timestamps();
-            $table->index(['group', 'owner', 'key']);
+            $table->index(['group', 'owner_id', 'key']);
         });
     }
 

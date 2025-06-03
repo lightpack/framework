@@ -2,11 +2,14 @@
 
 namespace Lightpack\Settings;
 
-trait HasSettings
+use Lightpack\Container\Container;
+
+trait SettingsTrait
 {
     public function settings(): Settings
     {
-        return app('settings')
+        return Container::getInstance()
+            ->get('settings')
             ->group($this->table)
             ->owner($this->{$this->primaryKey});
     }

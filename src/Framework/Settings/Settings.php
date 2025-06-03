@@ -75,8 +75,21 @@ class Settings
      * @param string|null $type Optional type hint
      * @return void
      */
+    /**
+     * Set a settings value for a given key.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param string|null $type Optional type hint
+     * @throws \InvalidArgumentException If $value is null. Use delete() to remove a key instead.
+     * @return void
+     */
     public function set(string $key, mixed $value, $type = null)
     {
+        // Disallow setting null values
+        if ($value === null) {
+            throw new \InvalidArgumentException('Cannot set null value. Use delete() to remove a key.');
+        }
         // Type detection if not provided
         if ($type === null) {
             $type = $this->detectType($value);
@@ -89,7 +102,7 @@ class Settings
                 'key_type' => $type,
                 'value' => $castedValue,
                 'group' => $this->group,
-                'owner' => $this->ownerId,
+                'owner_id' => $this->ownerId,
                 'updated_at' => $now,
             ]
         ], ['value', 'key_type', 'updated_at']);
@@ -113,19 +126,23 @@ class Settings
         $query = $this->db->table('settings')
             ->where('group', $this->group);
         if ($this->ownerId === null) {
-            $query->whereNull('owner');
+            $query->whereNull('owner_id');
         } else {
-            $query->where('owner', $this->ownerId);
+            $query->where('owner_id', $this->ownerId);
         }
         $rows = $query->all();
         $settings = [];
         foreach ($rows as $row) {
-            $settings[$row['key']] = [
-                'value' => $this->castValue($row['value'], $row['key_type']),
-                'key_type' => $row['key_type'],
-                'updated_at' => $row['updated_at'],
+            $settings[$row->key] = [
+                'value' => $this->castValue($row->value, $row->key_type),
+                'key_type' => $row->key_type,
+                'group' => $row->group,
+                'owner_id' => $row->owner_id,
+                'created_at' => $row->created_at,
+                'updated_at' => $row->updated_at,
             ];
         }
+        
         if ($this->cache) {
             $this->cache->set(
                 $this->makeCacheKey(),
@@ -148,9 +165,9 @@ class Settings
             ->where('group', $this->group)
             ->where('key', $key);
         if ($this->ownerId === null) {
-            $query->whereNull('owner');
+            $query->whereNull('owner_id');
         } else {
-            $query->where('owner', $this->ownerId);
+            $query->where('owner_id', $this->ownerId);
         }
         $query->delete();
         $this->invalidateCache();
