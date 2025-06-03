@@ -142,7 +142,7 @@ class Settings
                 'updated_at' => $row->updated_at,
             ];
         }
-        
+
         if ($this->cache) {
             $this->cache->set(
                 $this->makeCacheKey(),
