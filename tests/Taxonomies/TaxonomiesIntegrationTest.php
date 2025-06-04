@@ -408,7 +408,7 @@ class TaxonomiesIntegrationTest extends TestCase
     {
         $this->seedTaxonomyTree();
         // Reorder children of root 1: child-1-2 (id 3) before child-1-1 (id 2)
-        Taxonomy::bulkUpdateOrder([
+        Taxonomy::reorder([
             2 => 2, // child-1-1
             3 => 1, // child-1-2
         ]);
@@ -436,7 +436,7 @@ class TaxonomiesIntegrationTest extends TestCase
     {
         $this->seedTaxonomyTree();
         // Set custom order for roots
-        Taxonomy::bulkUpdateOrder([
+        Taxonomy::reorder([
             1 => 2,
             10 => 1,
             20 => 3,

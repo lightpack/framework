@@ -116,12 +116,12 @@ class Taxonomy extends Model
     }
 
     /**
-     * Bulk update the sort_order for multiple taxonomy nodes.
+     * Reorder multiple taxonomy nodes by sort_order.
      *
      * @param array $idOrderMap [taxonomy_id => sort_order, ...]
      * @return void
      */
-    public static function bulkUpdateOrder(array $idOrderMap): void
+    public static function reorder(array $idOrderMap): void
     {
         foreach ($idOrderMap as $id => $order) {
             self::query()->where('id', '=', $id)->update(['sort_order' => $order]);
