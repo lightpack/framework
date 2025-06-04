@@ -55,4 +55,11 @@ trait TaxonomyTrait
             'model_type' => $this->table
         ]);
     }
+
+    public function scopeTaxonomies($builder, array $taxonomyIds = [])
+    {
+        $builder->join('taxonomy_models AS tx_any', $builder->getTable() . '.id', 'tx_any.model_id')
+            ->where('tx_any.model_type', $this->table)
+            ->whereIn('tx_any.taxonomy_id', $taxonomyIds);
+    }
 }

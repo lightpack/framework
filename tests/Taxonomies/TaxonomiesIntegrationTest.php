@@ -30,12 +30,12 @@ class TaxonomiesIntegrationTest extends TestCase
 
         // Create tables
         $this->schema = new Schema($this->db);
-        $this->schema->createTable('posts', function(Table $table) {
+        $this->schema->createTable('posts', function (Table $table) {
             $table->id();
             $table->varchar('title');
             $table->timestamps();
         });
-        $this->schema->createTable('taxonomies', function(Table $table) {
+        $this->schema->createTable('taxonomies', function (Table $table) {
             $table->id();
             $table->varchar('name');
             $table->varchar('slug');
@@ -43,7 +43,7 @@ class TaxonomiesIntegrationTest extends TestCase
             $table->column('parent_id')->type('bigint')->attribute('unsigned')->nullable();
             $table->timestamps();
         });
-        $this->schema->createTable('taxonomy_models', function(Table $table) {
+        $this->schema->createTable('taxonomy_models', function (Table $table) {
             $table->column('taxonomy_id')->type('bigint')->attribute('unsigned');
             $table->column('model_id')->type('bigint')->attribute('unsigned');
             $table->varchar('model_type', 191);
@@ -59,7 +59,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->db = null;
     }
 
-    protected function getPostModelInstance() {
+    protected function getPostModelInstance()
+    {
         return new class extends Model {
             use TaxonomyTrait;
             protected $table = 'posts';
@@ -68,7 +69,8 @@ class TaxonomiesIntegrationTest extends TestCase
         };
     }
 
-    protected function getTaxonomyModelInstance() {
+    protected function getTaxonomyModelInstance()
+    {
         return new class extends Taxonomy {};
     }
 
@@ -177,5 +179,40 @@ class TaxonomiesIntegrationTest extends TestCase
         $post = $this->getPostModelInstance();
         $post->find(201);
         $this->assertCount(0, $post->taxonomies()->all());
+    }
+
+    public function testScopeTaxonomiesFiltersBySingleTaxonomy()
+    {
+        $this->seedTaxonomiesData();
+        $postModel = $this->getPostModelInstance();
+        $posts = $postModel::filters(['taxonomies' => [1]])->all();
+        $postIds = array_column($posts->toArray(), 'id');
+        $this->assertContains(101, $postIds);
+        $this->assertNotContains(102, $postIds);
+        $this->assertNotContains(103, $postIds);
+    }
+
+    public function testScopeTaxonomiesFiltersByMultipleTaxonomies()
+    {
+        $this->seedTaxonomiesData();
+        $postModel = $this->getPostModelInstance();
+        $posts = $postModel::filters(['taxonomies' => [2, 3]])->all();
+        $postIds = array_column($posts->toArray(), 'id');
+        $this->assertContains(101, $postIds);
+        $this->assertContains(102, $postIds);
+        $this->assertContains(103, $postIds);
+    }
+
+    public function testScopeTaxonomiesPolymorphicIsolation()
+    {
+        $this->seedTaxonomiesData();
+        // Insert taxonomy for a different model_type
+        $this->db->table('taxonomy_models')->insert([
+            ['taxonomy_id' => 1, 'model_id' => 999, 'model_type' => 'other_model'],
+        ]);
+        $postModel = $this->getPostModelInstance();
+        $posts = $postModel::filters(['taxonomies' => [1]])->all();
+        $postIds = array_column($posts->toArray(), 'id');
+        $this->assertNotContains(999, $postIds);
     }
 }
