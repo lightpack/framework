@@ -12,7 +12,7 @@ use Lightpack\Database\Lucid\Model;
 class Taxonomy extends Model
 {
     protected $table = 'taxonomies';
-    
+
     protected $primaryKey = 'id';
 
     public $timestamps = true;
@@ -97,6 +97,20 @@ class Taxonomy extends Model
             $node['children'] = $children;
         }
         return $node;
+    }
+
+    /**
+     * Get the full hierarchical slug for this taxonomy (e.g., 'root/child/grandchild').
+     *
+     * @param string $separator
+     * @return string
+     */
+    public function fullSlug(string $seperator = '/'): string
+    {
+        $slugs = array_map(fn($node) => $node->slug, $this->ancestors()->getItems());
+        $slugs[] = $this->slug;
+        $slugs = array_filter($slugs, fn($slug) => (string)$slug !== '');
+        return implode($seperator, $slugs);
     }
 
     /**

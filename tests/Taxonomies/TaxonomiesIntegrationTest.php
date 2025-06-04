@@ -480,5 +480,24 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->assertEquals('#ff0', $taxonomy->meta['color']);
         $this->assertEquals('Root category', $taxonomy->meta['description']);
     }
+
+    public function testFullSlugGeneration()
+    {
+        // Build a tree: root (slug 'root') -> child (slug 'child') -> grandchild (slug 'grand')
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'name' => 'Root', 'slug' => 'root', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'name' => 'Child', 'slug' => 'child', 'type' => 'category', 'parent_id' => 1],
+            ['id' => 3, 'name' => 'Grandchild', 'slug' => 'grand', 'type' => 'category', 'parent_id' => 2],
+        ]);
+        $grandchild = new Taxonomy(3);
+        $this->assertEquals('root/child/grand', $grandchild->fullSlug());
+        $this->assertEquals('root-child-grand', $grandchild->fullSlug('-'));
+        $this->assertEquals('root > child > grand', $grandchild->fullSlug(' > '));
+
+        // Test with empty slug in the chain
+        $this->db->table('taxonomies')->where('id', 2)->update(['slug' => '']);
+        $grandchild = new Taxonomy(3);
+        $this->assertEquals('root/grand', $grandchild->fullSlug());
+    }
 }
 
