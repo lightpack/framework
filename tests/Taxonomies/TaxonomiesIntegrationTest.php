@@ -240,10 +240,10 @@ class TaxonomiesIntegrationTest extends TestCase
         $grandchild2 = new Taxonomy(5);
         $grandchild3 = new Taxonomy(6);
 
-        $this->assertEquals([2, 4, 5, 3, 6], array_map(fn($t) => $t->id, $root->getDescendants()));
-        $this->assertEquals([4, 5], array_map(fn($t) => $t->id, $child1->getDescendants()));
-        $this->assertEquals([6], array_map(fn($t) => $t->id, $child2->getDescendants()));
-        $this->assertEquals([], $grandchild1->getDescendants());
+        $this->assertEquals([2, 4, 5, 3, 6], array_map(fn($t) => $t->id, $root->descendants()));
+        $this->assertEquals([4, 5], array_map(fn($t) => $t->id, $child1->descendants()));
+        $this->assertEquals([6], array_map(fn($t) => $t->id, $child2->descendants()));
+        $this->assertEquals([], $grandchild1->descendants());
     }
 
     public function testTaxonomyAncestors()
@@ -253,16 +253,16 @@ class TaxonomiesIntegrationTest extends TestCase
         $grandchild1 = new Taxonomy(4);
         $grandchild3 = new Taxonomy(6);
 
-        $this->assertEquals([], $root->getAncestors());
-        $this->assertEquals([1, 2], array_map(fn($t) => $t->id, $grandchild1->getAncestors()));
-        $this->assertEquals([1, 3], array_map(fn($t) => $t->id, $grandchild3->getAncestors()));
+        $this->assertEquals([], $root->ancestors());
+        $this->assertEquals([1, 2], array_map(fn($t) => $t->id, $grandchild1->ancestors()));
+        $this->assertEquals([1, 3], array_map(fn($t) => $t->id, $grandchild3->ancestors()));
     }
 
-    public function testTaxonomyHierarchy()
+    public function testTaxonomyTree()
     {
         $this->seedTaxonomyTree();
         $root = new Taxonomy(1);
-        $tree = $root->getHierarchy();
+        $tree = $root->tree();
         $this->assertEquals(1, $tree['id']);
         $this->assertCount(2, $tree['children']);
         $this->assertEquals(2, $tree['children'][0]['id']);
@@ -271,5 +271,30 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->assertEquals(4, $tree['children'][0]['children'][0]['id']);
         $this->assertEquals(5, $tree['children'][0]['children'][1]['id']);
         $this->assertEquals(6, $tree['children'][1]['children'][0]['id']);
+    }
+
+    public function testTaxonomySiblings()
+    {
+        $this->seedTaxonomyTree();
+        $root = new Taxonomy(1);
+        $child1 = new Taxonomy(2);
+        $child2 = new Taxonomy(3);
+        $grandchild1 = new Taxonomy(4);
+        $grandchild2 = new Taxonomy(5);
+        $grandchild3 = new Taxonomy(6);
+
+        // Root node: no siblings (if only one root), or test with multiple roots if you add more
+        $this->assertEquals([], $root->siblings()->ids());
+
+        // Siblings for child1 and child2 (should be each other)
+        $this->assertEquals([3], $child1->siblings()->ids());
+        $this->assertEquals([2], $child2->siblings()->ids());
+
+        // Siblings for grandchild1 and grandchild2 (should be each other)
+        $this->assertEquals([5], $grandchild1->siblings()->ids());
+        $this->assertEquals([4], $grandchild2->siblings()->ids());
+
+        // Grandchild3 is only child under child2
+        $this->assertEquals([], $grandchild3->siblings()->ids());
     }
 }
