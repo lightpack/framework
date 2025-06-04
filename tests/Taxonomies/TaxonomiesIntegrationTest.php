@@ -514,5 +514,38 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->assertEquals([1, 2, 3], array_map(fn($node) => $node->id, $trail));
         $this->assertEquals(['Root', 'Child', 'Grandchild'], array_map(fn($node) => $node->name, $trail));
     }
+
+    public function testFullSlugAndBreadcrumbsEdgeCases()
+    {
+        // Empty tree: no nodes
+        $this->assertTrue(true); // Should not error
+
+        // Single node (root)
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'name' => 'Root', 'slug' => 'root', 'type' => 'category', 'parent_id' => null],
+        ]);
+        $root = new Taxonomy(1);
+        $this->assertEquals('root', $root->fullSlug());
+        $this->assertEquals([1], array_map(fn($n) => $n->id, $root->breadcrumbs()));
+
+        // Node with missing slug
+        $this->db->table('taxonomies')->insert([
+            ['id' => 2, 'name' => 'NoSlug', 'slug' => '', 'type' => 'category', 'parent_id' => 1],
+        ]);
+        $noslug = new Taxonomy(2);
+        $this->assertEquals('root', $noslug->fullSlug()); // Only root slug appears
+        $trail = $noslug->breadcrumbs();
+        $this->assertEquals([1, 2], array_map(fn($n) => $n->id, $trail));
+        $this->assertEquals(['Root', 'NoSlug'], array_map(fn($n) => $n->name, $trail));
+
+        // Deep chain with some missing slugs
+        $this->db->table('taxonomies')->insert([
+            ['id' => 3, 'name' => 'Mid', 'slug' => '', 'type' => 'category', 'parent_id' => 2],
+            ['id' => 4, 'name' => 'Leaf', 'slug' => 'leaf', 'type' => 'category', 'parent_id' => 3],
+        ]);
+        $leaf = new Taxonomy(4);
+        $this->assertEquals('root/leaf', $leaf->fullSlug());
+        $this->assertEquals([1, 2, 3, 4], array_map(fn($n) => $n->id, $leaf->breadcrumbs()));
+    }
 }
 
