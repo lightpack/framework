@@ -43,6 +43,7 @@ class TaxonomiesIntegrationTest extends TestCase
             $table->varchar('type');
             $table->column('parent_id')->type('bigint')->attribute('unsigned')->nullable();
             $table->column('sort_order')->type('integer')->default(0);
+            $table->text('meta')->nullable();
             $table->timestamps();
         });
         $this->schema->createTable('taxonomy_models', function (Table $table) {
@@ -461,6 +462,23 @@ class TaxonomiesIntegrationTest extends TestCase
         ]);
         $roots = Taxonomy::roots();
         $this->assertEqualsCanonicalizing([1, 10, 20], $roots->ids());
+    }
+
+    public function testCustomMetaFields()
+    {
+        $this->seedTaxonomyTree();
+        $taxonomy = new Taxonomy(1);
+        $taxonomy->meta = [
+            'icon' => 'fa-star',
+            'color' => '#ff0',
+            'description' => 'Root category',
+        ];
+        $taxonomy->save();
+
+        $taxonomy = new Taxonomy(1); // reload
+        $this->assertEquals('fa-star', $taxonomy->meta['icon']);
+        $this->assertEquals('#ff0', $taxonomy->meta['color']);
+        $this->assertEquals('Root category', $taxonomy->meta['description']);
     }
 }
 

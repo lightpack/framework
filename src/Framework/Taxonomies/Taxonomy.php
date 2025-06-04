@@ -12,8 +12,14 @@ use Lightpack\Database\Lucid\Model;
 class Taxonomy extends Model
 {
     protected $table = 'taxonomies';
+    
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
+    protected $casts = [
+        'meta' => 'array',
+    ];
 
     /**
      * Get the parent taxonomy node (if any) relation.
