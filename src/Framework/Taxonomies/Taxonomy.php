@@ -43,30 +43,34 @@ class Taxonomy extends Model
         } else {
             $query->where('parent_id', '=', $this->parent_id);
         }
-        
+
         $query->where('id', '!=', $this->id);
         return $query->all();
     }
 
-    public function descendants(): array
-    {
-        $descendants = [];
-        foreach ($this->children()->all() as $child) {
-            $descendants[] = $child;
-            $descendants = array_merge($descendants, $child->descendants());
-        }
-        return $descendants;
-    }
-
-    public function ancestors(): array
+    public function ancestors(): Collection
     {
         $ancestors = [];
         $parent = $this->parent()->one();
+
         while ($parent) {
             $ancestors[] = $parent;
             $parent = $parent->parent()->one();
         }
-        return array_reverse($ancestors);
+        
+        return new Collection(array_reverse($ancestors));
+    }
+
+    public function descendants(): Collection
+    {
+        $descendants = [];
+        foreach ($this->children()->all() as $child) {
+            $descendants[] = $child;
+            foreach ($child->descendants() as $descendant) {
+                $descendants[] = $descendant;
+            }
+        }
+        return new Collection($descendants);
     }
 
     public function tree(): array
