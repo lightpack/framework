@@ -9,16 +9,17 @@ return new class extends Migration
     {
         $this->create('tags', function (Table $table) {
             $table->id();
-            $table->varchar('name', 191)->unique();
-            $table->varchar('slug', 191)->unique();
+            $table->varchar('name', 150)->unique();
+            $table->varchar('slug', 150)->unique();
             $table->timestamps();
         });
 
         $this->create('taggables', function (Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
             $table->column('taggable_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('taggable_type', 150);
 
-            $table->primary(['tag_id', 'taggable_id']);
+            $table->primary(['tag_id', 'taggable_id', 'taggable_type']);
             $table->foreignKey('tag_id')->references('id')->on('tags')->cascadeOnDelete();
         });
     }

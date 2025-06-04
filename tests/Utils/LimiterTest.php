@@ -18,7 +18,7 @@ class LimiterTest extends TestCase
         parent::setUp();
 
         $this->cacheDir = __DIR__ . '/tmp';
-        mkdir($this->cacheDir);
+        @mkdir($this->cacheDir);
 
         $container = Container::getInstance();
 

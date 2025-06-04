@@ -33,9 +33,14 @@ class Pivot extends Builder
      * This method will sync records in the pivot table. It will delete 
      * records that are not in the array and insert new records.
      */
-    public function sync(array $ids)
+    /**
+     * Sync records in the pivot table, supporting extra columns.
+     * @param array $ids IDs to sync.
+     * @param array $attributes Extra columns to add to each row (optional).
+     */
+    public function sync(array $ids, array $attributes = [])
     {
-        $this->getConnection()->transaction(function () use ($ids) {
+        $this->getConnection()->transaction(function () use ($ids, $attributes) {
             $query = new Query($this->pivotTable, $this->getConnection());
 
             // Get current IDs
@@ -54,17 +59,20 @@ class Pivot extends Builder
             // Delete removed IDs
             if ($idsToDelete) {
                 $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))
-                    ->whereIn($this->associateKey, $idsToDelete)
-                    ->delete();
+                    ->whereIn($this->associateKey, $idsToDelete);
+                foreach ($attributes as $key => $value) {
+                    $query->where($key, $value);
+                }
+                $query->delete();
             }
 
             // Insert new IDs
             if ($idsToInsert) {
-                $data = array_map(function ($id) {
-                    return [
+                $data = array_map(function ($id) use ($attributes) {
+                    return array_merge([
                         $this->foreignKey => $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()),
                         $this->associateKey => $id,
-                    ];
+                    ], $attributes);
                 }, $idsToInsert);
 
                 $query->insert($data);
@@ -77,24 +85,26 @@ class Pivot extends Builder
      * 
      * @param array $ids One or more ids to add.
      */
-    public function attach($ids)
+    /**
+     * Add new records in the pivot table, supporting extra columns.
+     * @param array|int $ids One or more ids to add.
+     * @param array $attributes Extra columns to add to each row (optional).
+     */
+    public function attach($ids, array $attributes = [])
     {
         if (!is_array($ids)) {
             $ids = [$ids];
         }
 
-        // Get query builder for pivot table
         $query = new Query($this->pivotTable, $this->getConnection());
 
-        // Prepare data for pivot table
-        $data = array_map(function ($id) {
-            return [
+        $data = array_map(function ($id) use ($attributes) {
+            return array_merge([
                 $this->foreignKey => $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()),
                 $this->associateKey => $id,
-            ];
+            ], $attributes);
         }, $ids);
 
-        // Insert new pivot rows ignoring existing ones
         if ($data) {
             $query->insertIgnore($data);
         }
@@ -105,16 +115,23 @@ class Pivot extends Builder
      * 
      * @param mixed $ids One or more ids to remove.
      */
-    public function detach($ids)
+    /**
+     * Remove records in the pivot table, supporting extra columns as additional where filters.
+     * @param array|int $ids One or more ids to remove.
+     * @param array $attributes Extra columns to filter by (optional).
+     */
+    public function detach($ids, array $attributes = [])
     {
         if (!is_array($ids)) {
             $ids = [$ids];
         }
 
-        // Get query builder for pivot table
         $query = new Query($this->pivotTable, $this->getConnection());
-
-        // Delete pivot rows
-        $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))->whereIn($this->associateKey, $ids)->delete();
+        $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))
+            ->whereIn($this->associateKey, $ids);
+        foreach ($attributes as $key => $value) {
+            $query->where($key, $value);
+        }
+        $query->delete();
     }
 }

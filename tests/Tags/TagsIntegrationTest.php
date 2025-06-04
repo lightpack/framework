@@ -44,7 +44,8 @@ class TagsIntegrationTest extends TestCase
         $this->schema->createTable('taggables', function(Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
             $table->column('taggable_id')->type('bigint')->attribute('unsigned');
-            $table->primary(['tag_id', 'taggable_id']);
+            $table->varchar('taggable_type', 191);
+            $table->primary(['tag_id', 'taggable_id', 'taggable_type']);
         });
     }
 
@@ -85,10 +86,10 @@ class TagsIntegrationTest extends TestCase
         ]);
         // Tag posts
         $this->db->table('taggables')->insert([
-            ['tag_id' => 1, 'taggable_id' => 101], //, 'taggable_type' => 'posts'],
-            ['tag_id' => 2, 'taggable_id' => 101], //, 'taggable_type' => 'posts'],
-            ['tag_id' => 2, 'taggable_id' => 102], //, 'taggable_type' => 'posts'],
-            ['tag_id' => 3, 'taggable_id' => 103], //, 'taggable_type' => 'posts'],
+            ['tag_id' => 1, 'taggable_id' => 101, 'taggable_type' => 'posts'],
+            ['tag_id' => 2, 'taggable_id' => 101, 'taggable_type' => 'posts'],
+            ['tag_id' => 2, 'taggable_id' => 102, 'taggable_type' => 'posts'],
+            ['tag_id' => 3, 'taggable_id' => 103, 'taggable_type' => 'posts'],
         ]);
     }
 
@@ -97,9 +98,9 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->tags()->detach(1);
+        $post->detachTags([1]);
         $this->assertCount(1, $post->tags()->all());
-        $post->tags()->attach(1);
+        $post->attachTags([1]);
         $this->assertCount(2, $post->tags()->all());
     }
 
@@ -108,7 +109,7 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->tags()->sync([3]);
+        $post->syncTags([3]);
         $tagIds = array_column($post->tags()->all()->toArray(), 'id');
         $this->assertEquals([3], $tagIds);
     }
@@ -128,7 +129,7 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->tags()->detach(9999); // Should not error
+        $post->detachTags([9999]); // Should not error
         $this->assertCount(2, $post->tags()->all());
     }
 
@@ -137,7 +138,7 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->tags()->attach(1);
+        $post->attachTags([1]);
         $this->assertCount(2, $post->tags()->all());
     }
 
@@ -146,12 +147,12 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->tags()->attach([1, 3]);
+        $post->attachTags([1, 3]);
         $tagIds = array_column($post->tags()->all()->toArray(), 'id');
         $this->assertContains(1, $tagIds);
         $this->assertContains(2, $tagIds);
         $this->assertContains(3, $tagIds);
-        $post->tags()->detach([1, 2]);
+        $post->detachTags([1, 2]);
         $tagIds = array_column($post->tags()->all()->toArray(), 'id');
         $this->assertNotContains(1, $tagIds);
         $this->assertNotContains(2, $tagIds);
@@ -190,10 +191,26 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->tags()->sync([1, 3]);
+        $post->syncTags([1, 3]);
         $tagIds = array_column($post->tags()->all()->toArray(), 'id');
         $this->assertContains(1, $tagIds);
         $this->assertContains(3, $tagIds);
         $this->assertNotContains(2, $tagIds);
+    }
+
+    public function testTaggableTypeIsolation()
+    {
+        $this->seedTagsData();
+        // Add a different taggable type
+        $this->db->table('posts')->insert([
+            'id' => 201,
+            'title' => 'Fake Post for Isolation',
+        ]);
+        $this->db->table('taggables')->insert([
+            ['tag_id' => 1, 'taggable_id' => 201, 'taggable_type' => 'other_model'],
+        ]);
+        $post = $this->getPostModelInstance();
+        $post->find(201);
+        $this->assertCount(0, $post->tags()->all());
     }
 }
