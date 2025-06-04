@@ -547,5 +547,25 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->assertEquals('root/leaf', $leaf->fullSlug());
         $this->assertEquals([1, 2, 3, 4], array_map(fn($n) => $n->id, $leaf->breadcrumbs()));
     }
-}
 
+    public function testBulkMove()
+    {
+        // Build: root (1), child1 (2), child2 (3), grandchild (4)
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'name' => 'Root', 'slug' => 'root', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'name' => 'Child1', 'slug' => 'c1', 'type' => 'category', 'parent_id' => 1],
+            ['id' => 3, 'name' => 'Child2', 'slug' => 'c2', 'type' => 'category', 'parent_id' => 1],
+            ['id' => 4, 'name' => 'Grandchild', 'slug' => 'g', 'type' => 'category', 'parent_id' => 1],
+        ]);
+        // Move child1 and child2 under grandchild
+        Taxonomy::bulkMove([2, 3], 4);
+        $this->assertEquals(4, (new Taxonomy(2))->parent_id);
+        $this->assertEquals(4, (new Taxonomy(3))->parent_id);
+        // Grandchild's parent should still be 2 (not affected)
+        $this->assertEquals(1, (new Taxonomy(4))->parent_id);
+
+        // Should throw if trying to move ancestor under its descendant (cycle)
+        $this->expectException(\InvalidArgumentException::class);
+        Taxonomy::bulkMove([4], 2); // 4 (grandchild) moved under 2 (its own descendant) should throw
+    }
+}

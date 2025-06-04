@@ -131,7 +131,7 @@ class Taxonomy extends Model
      * @param int|null $newParentId
      * @return void
      */
-    public function moveTo($newParentId): void
+    public function moveTo(?int $newParentId = null): void
     {
         if ($newParentId === $this->id) {
             throw new \InvalidArgumentException("A taxonomy cannot be its own parent.");
@@ -167,6 +167,21 @@ class Taxonomy extends Model
     {
         foreach ($idOrderMap as $id => $order) {
             self::query()->where('id', '=', $id)->update(['sort_order' => $order]);
+        }
+    }
+
+    /**
+     * Move multiple taxonomy nodes under a new parent.
+     *
+     * @param array $ids Array of taxonomy IDs to move.
+     * @param int|null $newParentId The new parent ID (or null for root).
+     * @return void
+     */
+    public static function bulkMove(array $ids, ?int $newParentId = null): void
+    {
+        foreach ($ids as $id) {
+            $node = new self($id);
+            $node->moveTo($newParentId);
         }
     }
 
