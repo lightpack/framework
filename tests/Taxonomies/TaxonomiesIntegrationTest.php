@@ -499,5 +499,20 @@ class TaxonomiesIntegrationTest extends TestCase
         $grandchild = new Taxonomy(3);
         $this->assertEquals('root/grand', $grandchild->fullSlug());
     }
+
+    public function testBreadcrumbs()
+    {
+        // Build a tree: root (id 1) -> child (id 2) -> grandchild (id 3)
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'name' => 'Root', 'slug' => 'root', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'name' => 'Child', 'slug' => 'child', 'type' => 'category', 'parent_id' => 1],
+            ['id' => 3, 'name' => 'Grandchild', 'slug' => 'grand', 'type' => 'category', 'parent_id' => 2],
+        ]);
+        $grandchild = new Taxonomy(3);
+        $trail = $grandchild->breadcrumbs();
+        $this->assertCount(3, $trail);
+        $this->assertEquals([1, 2, 3], array_map(fn($node) => $node->id, $trail));
+        $this->assertEquals(['Root', 'Child', 'Grandchild'], array_map(fn($node) => $node->name, $trail));
+    }
 }
 

@@ -105,12 +105,24 @@ class Taxonomy extends Model
      * @param string $separator
      * @return string
      */
-    public function fullSlug(string $seperator = '/'): string
+    public function fullSlug(string $separator = '/'): string
     {
         $slugs = array_map(fn($node) => $node->slug, $this->ancestors()->getItems());
         $slugs[] = $this->slug;
         $slugs = array_filter($slugs, fn($slug) => (string)$slug !== '');
-        return implode($seperator, $slugs);
+        return implode($separator, $slugs);
+    }
+
+    /**
+     * Get an array of taxonomy nodes from root to this node (breadcrumb trail).
+     *
+     * @return array
+     */
+    public function breadcrumbs(): array
+    {
+        $trail = $this->ancestors()->getItems();
+        $trail[] = $this;
+        return $trail;
     }
 
     /**
