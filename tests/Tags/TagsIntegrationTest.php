@@ -8,7 +8,7 @@ use Lightpack\Database\Schema\Table;
 use Lightpack\Logger\Drivers\NullLogger;
 use Lightpack\Logger\Logger;
 use Lightpack\Tags\Tag;
-use Lightpack\Tags\Taggable;
+use Lightpack\Tags\TagsTrait;
 
 class TagsIntegrationTest extends TestCase
 {
@@ -41,17 +41,17 @@ class TagsIntegrationTest extends TestCase
             $table->varchar('slug');
             $table->timestamps();
         });
-        $this->schema->createTable('taggables', function(Table $table) {
+        $this->schema->createTable('tag_models', function(Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
-            $table->column('taggable_id')->type('bigint')->attribute('unsigned');
-            $table->varchar('taggable_type', 191);
-            $table->primary(['tag_id', 'taggable_id', 'taggable_type']);
+            $table->column('model_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('model_type', 191);
+            $table->primary(['tag_id', 'model_id', 'model_type']);
         });
     }
 
     protected function tearDown(): void
     {
-        $this->schema->dropTable('taggables');
+        $this->schema->dropTable('tag_models');
         $this->schema->dropTable('tags');
         $this->schema->dropTable('posts');
         $this->db = null;
@@ -59,7 +59,7 @@ class TagsIntegrationTest extends TestCase
 
     protected function getPostModelInstance() {
         return new class extends Model {
-            use Taggable;
+            use TagsTrait;
             protected $table = 'posts';
             protected $primaryKey = 'id';
             public $timestamps = true;
@@ -85,11 +85,11 @@ class TagsIntegrationTest extends TestCase
             ['id' => 103, 'title' => 'Third Post'],
         ]);
         // Tag posts
-        $this->db->table('taggables')->insert([
-            ['tag_id' => 1, 'taggable_id' => 101, 'taggable_type' => 'posts'],
-            ['tag_id' => 2, 'taggable_id' => 101, 'taggable_type' => 'posts'],
-            ['tag_id' => 2, 'taggable_id' => 102, 'taggable_type' => 'posts'],
-            ['tag_id' => 3, 'taggable_id' => 103, 'taggable_type' => 'posts'],
+        $this->db->table('tag_models')->insert([
+            ['tag_id' => 1, 'model_id' => 101, 'model_type' => 'posts'],
+            ['tag_id' => 2, 'model_id' => 101, 'model_type' => 'posts'],
+            ['tag_id' => 2, 'model_id' => 102, 'model_type' => 'posts'],
+            ['tag_id' => 3, 'model_id' => 103, 'model_type' => 'posts'],
         ]);
     }
 
@@ -206,8 +206,8 @@ class TagsIntegrationTest extends TestCase
             'id' => 201,
             'title' => 'Fake Post for Isolation',
         ]);
-        $this->db->table('taggables')->insert([
-            ['tag_id' => 1, 'taggable_id' => 201, 'taggable_type' => 'other_model'],
+        $this->db->table('tag_models')->insert([
+            ['tag_id' => 1, 'model_id' => 201, 'model_type' => 'other_model'],
         ]);
         $post = $this->getPostModelInstance();
         $post->find(201);
