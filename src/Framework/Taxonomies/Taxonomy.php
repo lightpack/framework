@@ -101,6 +101,16 @@ class Taxonomy extends Model
      */
     public function moveTo($newParentId): void
     {
+        if ($newParentId === $this->id) {
+            throw new \InvalidArgumentException("A taxonomy cannot be its own parent.");
+        }
+
+        // Check for cycles: ensure new parent is not a descendant of this node
+        $descendantIds = $this->descendants()->ids();
+        if (in_array($newParentId, $descendantIds, true)) {
+            throw new \InvalidArgumentException("Cannot move taxonomy under its own descendant (would create a cycle).");
+        }
+
         $this->parent_id = $newParentId;
         $this->save();
     }

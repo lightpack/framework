@@ -432,6 +432,24 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->assertContains(2, $children);
     }
 
+    public function testMoveToPreventsCycles()
+    {
+        $this->seedTaxonomyTree();
+        $root = new Taxonomy(1);
+        $child = new Taxonomy(2);
+        $grandchild = new Taxonomy(4);
+
+        // Cannot set as own parent
+        $this->expectException(\InvalidArgumentException::class);
+        $root->moveTo(1);
+
+        // Reset for next check
+        $root = new Taxonomy(1);
+        // Cannot move to descendant
+        $this->expectException(\InvalidArgumentException::class);
+        $root->moveTo(4); // 4 is a descendant of 1
+    }
+
     public function testBulkUpdateOrder()
     {
         $this->seedTaxonomyTree();
