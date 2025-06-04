@@ -1,6 +1,7 @@
 <?php
 
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\Collection;
 use Lightpack\Database\Lucid\Model;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Schema\Schema;
@@ -101,14 +102,17 @@ class TaxonomiesIntegrationTest extends TestCase
 
     protected function seedTaxonomyTree()
     {
-        // Build tree: (1 -> 2,3) ; (2 -> 4,5) ; (3 -> 6)
+        // Build forest: (1 -> 2,3) ; (2 -> 4,5) ; (3 -> 6) ; (10 -> 11) ; (20)
         $this->db->table('taxonomies')->insert([
-            ['id' => 1, 'name' => 'Root', 'slug' => 'root', 'type' => 'category', 'parent_id' => null],
-            ['id' => 2, 'name' => 'Child 1', 'slug' => 'child-1', 'type' => 'category', 'parent_id' => 1],
-            ['id' => 3, 'name' => 'Child 2', 'slug' => 'child-2', 'type' => 'category', 'parent_id' => 1],
-            ['id' => 4, 'name' => 'Grandchild 1', 'slug' => 'grandchild-1', 'type' => 'category', 'parent_id' => 2],
-            ['id' => 5, 'name' => 'Grandchild 2', 'slug' => 'grandchild-2', 'type' => 'category', 'parent_id' => 2],
-            ['id' => 6, 'name' => 'Grandchild 3', 'slug' => 'grandchild-3', 'type' => 'category', 'parent_id' => 3],
+            ['id' => 1, 'name' => 'Root 1', 'slug' => 'root-1', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'name' => 'Child 1-1', 'slug' => 'child-1-1', 'type' => 'category', 'parent_id' => 1],
+            ['id' => 3, 'name' => 'Child 1-2', 'slug' => 'child-1-2', 'type' => 'category', 'parent_id' => 1],
+            ['id' => 4, 'name' => 'Grandchild 1-1-1', 'slug' => 'grandchild-1-1-1', 'type' => 'category', 'parent_id' => 2],
+            ['id' => 5, 'name' => 'Grandchild 1-1-2', 'slug' => 'grandchild-1-1-2', 'type' => 'category', 'parent_id' => 2],
+            ['id' => 6, 'name' => 'Grandchild 1-2-1', 'slug' => 'grandchild-1-2-1', 'type' => 'category', 'parent_id' => 3],
+            ['id' => 10, 'name' => 'Root 2', 'slug' => 'root-2', 'type' => 'category', 'parent_id' => null],
+            ['id' => 11, 'name' => 'Child 2-1', 'slug' => 'child-2-1', 'type' => 'category', 'parent_id' => 10],
+            ['id' => 20, 'name' => 'Root 3', 'slug' => 'root-3', 'type' => 'category', 'parent_id' => null],
         ]);
     }
 
@@ -309,8 +313,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $grandchild2 = new Taxonomy(5);
         $grandchild3 = new Taxonomy(6);
 
-        // Root node: no siblings (if only one root), or test with multiple roots if you add more
-        $this->assertEquals([], $root->siblings()->ids());
+        // Root node: siblings are all other roots (10, 20)
+        $this->assertEqualsCanonicalizing([10, 20], $root->siblings()->ids());
 
         // Siblings for child1 and child2 (should be each other)
         $this->assertEquals([3], $child1->siblings()->ids());
@@ -322,5 +326,80 @@ class TaxonomiesIntegrationTest extends TestCase
 
         // Grandchild3 is only child under child2
         $this->assertEquals([], $grandchild3->siblings()->ids());
+    }
+
+    public function testRootsReturnsAllRootNodes()
+    {
+        $this->seedTaxonomyTree();
+        $roots = Taxonomy::roots();
+        $rootIds = $roots->ids();
+        // Expecting 3 roots: 1, 10, 20
+        $this->assertEqualsCanonicalizing([1, 10, 20], $rootIds);
+    }
+
+    public function testForestReturnsAllTrees()
+    {
+        $this->seedTaxonomyTree();
+        $forest = Taxonomy::forest();
+        $this->assertCount(3, $forest); // Three roots: 1, 10, 20
+
+        // Root 1
+        $root1 = $forest[0];
+        $this->assertEquals('Root 1', $root1['name']);
+        $this->assertCount(2, $root1['children']);
+        $this->assertEquals('Child 1-1', $root1['children'][0]['name']);
+        $this->assertEquals('Child 1-2', $root1['children'][1]['name']);
+        $this->assertEquals('Grandchild 1-1-1', $root1['children'][0]['children'][0]['name']);
+        $this->assertEquals('Grandchild 1-1-2', $root1['children'][0]['children'][1]['name']);
+        $this->assertEquals('Grandchild 1-2-1', $root1['children'][1]['children'][0]['name']);
+
+        // Root 2
+        $root2 = $forest[1];
+        $this->assertEquals('Root 2', $root2['name']);
+        $this->assertCount(1, $root2['children']);
+        $this->assertEquals('Child 2-1', $root2['children'][0]['name']);
+        $this->assertArrayNotHasKey('children', $root2['children'][0]);
+
+        // Root 3
+        $root3 = $forest[2];
+        $this->assertEquals('Root 3', $root3['name']);
+        $this->assertArrayNotHasKey('children', $root3);
+    }
+
+    public function testForestHandlesEmptyState()
+    {
+        $forest = Taxonomy::forest();
+        $this->assertIsArray($forest);
+        $this->assertCount(0, $forest);
+    }
+
+    public function testRootsHandlesEmptyState()
+    {
+        $roots = Taxonomy::roots();
+        $this->assertInstanceOf(Collection::class, $roots);
+        $this->assertCount(0, $roots);
+    }
+
+    public function testForestWithSingleNode()
+    {
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'name' => 'Lonely Root', 'slug' => 'lonely', 'type' => 'category', 'parent_id' => null],
+        ]);
+        $forest = Taxonomy::forest();
+        $this->assertCount(1, $forest);
+        $this->assertEquals('Lonely Root', $forest[0]['name']);
+        $this->assertArrayNotHasKey('children', $forest[0]);
+    }
+
+    public function testRootsAfterDeletingRoot()
+    {
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'name' => 'Root', 'slug' => 'root', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'name' => 'Child', 'slug' => 'child', 'type' => 'category', 'parent_id' => 1],
+        ]);
+        // Delete root
+        $this->db->table('taxonomies')->where('id', 1)->delete();
+        $roots = Taxonomy::roots();
+        $this->assertCount(0, $roots);
     }
 }

@@ -85,4 +85,26 @@ class Taxonomy extends Model
         }
         return $node;
     }
+
+    /**
+     * Get a collection of all root taxonomy nodes (parent_id is null).
+     *
+     * @return Collection
+     */
+    public static function roots(): Collection
+    {
+        return self::query()->whereNull('parent_id')->all();
+    }
+
+    /**
+     * Get the full taxonomy forest as an array of nested trees (one per root node).
+     * Each tree is a nested array as produced by tree().
+     *
+     * @return array
+     */
+    public static function forest(): array
+    {
+        $roots = self::roots();
+        return array_map(fn($root) => $root->tree(), $roots->getItems());
+    }
 }
