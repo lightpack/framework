@@ -15,6 +15,7 @@ return new class extends Migration
             $table->varchar('slug', 150);
             $table->varchar('type', 50); // e.g., 'category', 'tag', 'menu'
             $table->column('parent_id')->type('bigint')->attribute('unsigned')->nullable();
+            $table->column('sort_order')->type('integer')->default(0);
             $table->timestamps();
             $table->foreignKey('parent_id')->references('id')->on('taxonomies')->cascadeOnDelete();
             $table->unique(['type', 'slug']); // Enforce unique slugs per type

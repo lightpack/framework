@@ -26,13 +26,19 @@ class Taxonomy extends Model
     /**
      * Get the child taxonomy nodes relation.
      */
+    /**
+     * Get the child taxonomy nodes relation, ordered by sort_order then id.
+     */
     public function children()
     {
-        return $this->hasMany(self::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order')->orderBy('id');
     }
 
     /**
      * Get the sibling taxonomy nodes (excluding the current node).
+     */
+    /**
+     * Get the sibling taxonomy nodes (excluding the current node), ordered by sort_order then id.
      */
     public function siblings(): Collection
     {
@@ -45,6 +51,7 @@ class Taxonomy extends Model
         }
 
         $query->where('id', '!=', $this->id);
+        $query->orderBy('sort_order')->orderBy('id');
         return $query->all();
     }
 
@@ -57,7 +64,7 @@ class Taxonomy extends Model
             $ancestors[] = $parent;
             $parent = $parent->parent()->one();
         }
-        
+
         return new Collection(array_reverse($ancestors));
     }
 
@@ -87,13 +94,38 @@ class Taxonomy extends Model
     }
 
     /**
+     * Move this taxonomy node (and its subtree) under a new parent.
+     *
+     * @param int|null $newParentId
+     * @return void
+     */
+    public function moveTo($newParentId): void
+    {
+        $this->parent_id = $newParentId;
+        $this->save();
+    }
+
+    /**
      * Get a collection of all root taxonomy nodes (parent_id is null).
      *
      * @return Collection
      */
     public static function roots(): Collection
     {
-        return self::query()->whereNull('parent_id')->all();
+        return self::query()->whereNull('parent_id')->orderBy('sort_order')->orderBy('id')->all();
+    }
+
+    /**
+     * Bulk update the sort_order for multiple taxonomy nodes.
+     *
+     * @param array $idOrderMap [taxonomy_id => sort_order, ...]
+     * @return void
+     */
+    public static function bulkUpdateOrder(array $idOrderMap): void
+    {
+        foreach ($idOrderMap as $id => $order) {
+            self::query()->where('id', '=', $id)->update(['sort_order' => $order]);
+        }
     }
 
     /**

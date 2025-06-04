@@ -42,6 +42,7 @@ class TaxonomiesIntegrationTest extends TestCase
             $table->varchar('slug');
             $table->varchar('type');
             $table->column('parent_id')->type('bigint')->attribute('unsigned')->nullable();
+            $table->column('sort_order')->type('integer')->default(0);
             $table->timestamps();
         });
         $this->schema->createTable('taxonomy_models', function (Table $table) {
@@ -402,4 +403,46 @@ class TaxonomiesIntegrationTest extends TestCase
         $roots = Taxonomy::roots();
         $this->assertCount(0, $roots);
     }
+
+    public function testChildrenAndSiblingsAreOrderedBySortOrder()
+    {
+        $this->seedTaxonomyTree();
+        // Reorder children of root 1: child-1-2 (id 3) before child-1-1 (id 2)
+        Taxonomy::bulkUpdateOrder([
+            2 => 2, // child-1-1
+            3 => 1, // child-1-2
+        ]);
+        $root = new Taxonomy(1);
+        $children = $root->children->ids();
+        $this->assertEquals([3, 2], $children); // child-1-2, child-1-1
+        // Siblings of child-1-1 (id 2) should also be ordered
+        $child1 = new Taxonomy(2);
+        $siblings = $child1->siblings()->ids();
+        $this->assertEquals([3], $siblings);
+    }
+
+    public function testMoveToChangesParent()
+    {
+        $this->seedTaxonomyTree();
+        $child = new Taxonomy(2);
+        $child->moveTo(10); // Move child-1-1 under root 2
+        $this->assertEquals(10, (new Taxonomy(2))->parent_id);
+        $root2 = new Taxonomy(10);
+        $children = $root2->children->ids();
+        $this->assertContains(2, $children);
+    }
+
+    public function testBulkUpdateOrder()
+    {
+        $this->seedTaxonomyTree();
+        // Set custom order for roots
+        Taxonomy::bulkUpdateOrder([
+            1 => 2,
+            10 => 1,
+            20 => 3,
+        ]);
+        $roots = Taxonomy::roots();
+        $this->assertEqualsCanonicalizing([1, 10, 20], $roots->ids());
+    }
 }
+
