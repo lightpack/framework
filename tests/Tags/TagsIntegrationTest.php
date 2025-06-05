@@ -62,7 +62,7 @@ class TagsIntegrationTest extends TestCase
             use TagsTrait;
             protected $table = 'posts';
             protected $primaryKey = 'id';
-            public $timestamps = true;
+            protected $timestamps = true;
         };
     }
 

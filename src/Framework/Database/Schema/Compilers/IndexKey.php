@@ -14,11 +14,22 @@ class IndexKey
         return $this->compileCompositeIndex($columns, $indexType, $indexName);
     }
 
+    private function escapeColumn(string $column): string
+    {
+        // If already backticked, return as is
+        if (str_starts_with($column, '`') && str_ends_with($column, '`')) {
+            return $column;
+        }
+        return '`' . str_replace('`', '', $column) . '`';
+    }
+
     private function compileSingleIndex(string $column, string $indexType, ?string $indexName = null): string
     {
         if(is_null($indexName)) {
             $indexName = $column . '_' . strtolower($indexType);
         }
+
+        $column = $this->escapeColumn($column);
 
         $sql = "{$indexType} {$indexName} ({$column})";
 
@@ -35,6 +46,7 @@ class IndexKey
             $indexName = implode('_', $columns) . '_' . strtolower($indexType);
         }
 
+        $columns = array_map([$this, 'escapeColumn'], $columns);
         $columns = implode(', ', $columns);
 
         $sql = "{$indexType} {$indexName} ({$columns})";
