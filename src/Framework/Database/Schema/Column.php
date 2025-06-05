@@ -141,17 +141,19 @@ class Column
         $index = "{$this->columnIndexType}";
 
         if ($this->columnIndexName) {
-            $index .= " $this->columnIndexName";
+            $escapedIndexName = IdentifierEscaper::escape($this->columnIndexName);
+            $index .= " $escapedIndexName";
         }
 
-        $index .= " ($this->columnName)";
+        $escapedColumnName = IdentifierEscaper::escape($this->columnName);
+        $index .= " ($escapedColumnName)";
         
         return $index;
     }
 
     public function compileColumn()
     {
-        $column = "{$this->columnName} {$this->columnType}";
+        $column = IdentifierEscaper::escape($this->columnName) . " {$this->columnType}";
 
         if ($this->columnLength) {
             $column .= "($this->columnLength)";
