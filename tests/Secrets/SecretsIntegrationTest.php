@@ -1,7 +1,5 @@
 <?php
 
-use Lightpack\Cache\Cache;
-use Lightpack\Cache\Drivers\ArrayDriver;
 use Lightpack\Config\Config;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
@@ -28,7 +26,6 @@ class SecretsIntegrationTest extends TestCase
 
         $this->container = Container::getInstance();
         $this->container->register('db', fn() => $this->db);
-        $this->container->register('cache', fn() => new Cache(new ArrayDriver));
         $this->container->register('logger', fn() => new Logger(new NullLogger));
         if (!defined('DIR_CONFIG')) {
             define('DIR_CONFIG', __DIR__ . '/tmp');
@@ -40,7 +37,6 @@ class SecretsIntegrationTest extends TestCase
             $crypto = new Crypto(str_repeat('a', 32));
             return new Secrets(
                 $this->container->get('db'),
-                $this->container->get('cache'),
                 $this->container->get('config'),
                 $crypto
             );
@@ -105,17 +101,6 @@ class SecretsIntegrationTest extends TestCase
         $secrets->group('users')->owner(9)->set('token', 'light');
         $this->assertEquals('dark', $secrets->group('users')->owner(8)->get('token'));
         $this->assertEquals('light', $secrets->group('users')->owner(9)->get('token'));
-    }
-
-    public function testCacheHitMissAndInvalidation()
-    {
-        $secrets = $this->getSecretsInstance();
-        $secrets->group('users')->owner(10)->set('foo', 'bar');
-        $this->assertEquals('bar', $secrets->group('users')->owner(10)->get('foo'));
-        $secrets->group('users')->owner(10)->set('foo', 'baz');
-        $this->assertEquals('baz', $secrets->group('users')->owner(10)->get('foo'));
-        $secrets->group('users')->owner(10)->delete('foo');
-        $this->assertNull($secrets->group('users')->owner(10)->get('foo'));
     }
 
     public function testGlobalVsScopedSecrets()
