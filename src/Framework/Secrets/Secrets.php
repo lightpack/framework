@@ -41,7 +41,7 @@ class Secrets
             ->where('key', $key)
             ->where('group', $this->group);
 
-        if($this->ownerId) {
+        if ($this->ownerId) {
             $query->where('owner_id', $this->ownerId);
         }
 
@@ -74,5 +74,41 @@ class Secrets
             ->delete();
     }
 
+    /**
+     * Rotates all secrets in the database from an old encryption key to a new one.
+     *
+     * @param string $oldKey The previous encryption key.
+     * @param string $newKey The new encryption key to use.
+     * @return array Summary of rotation: ['success' => int, 'fail' => int]
+     * @throws \InvalidArgumentException If either key is missing.
+     */
+    public function rotateKey(string $oldKey, string $newKey): array
+    {
+        if (empty($oldKey) || empty($newKey)) {
+            throw new \InvalidArgumentException('Both old and new keys must be provided for key rotation.');
+        }
 
+        $oldCrypto = new Crypto($oldKey);
+        $newCrypto = new Crypto($newKey);
+        $secrets = $this->db->table('secrets')->all();
+        $success = 0;
+        $fail = 0;
+
+        foreach ($secrets as $secret) {
+            $decrypted = $oldCrypto->decrypt($secret->value);
+            if ($decrypted === false) {
+                $fail++;
+                continue;
+            }
+            $reencrypted = $newCrypto->encrypt($decrypted);
+            $updated = $this->db->table('secrets')->where('id', $secret->id)->update(['value' => $reencrypted]);
+            if ($updated) {
+                $success++;
+            } else {
+                $fail++;
+            }
+        }
+
+        return ['success' => $success, 'fail' => $fail];
+    }
 }

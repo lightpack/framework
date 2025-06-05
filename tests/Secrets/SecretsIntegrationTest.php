@@ -144,8 +144,77 @@ class SecretsIntegrationTest extends TestCase
 
         // Direct DB check: should not be stored as plain text
         $row = $this->db->table('secrets')->where('key', 'enc')->where('group', 'global')->one();
-        
+
         $this->assertNotEquals('encryptme', $row->value);
         $this->assertEquals('encryptme', $secrets->group('global')->owner(null)->get('enc'));
+    }
+
+    public function testRotateKeySuccessfully()
+    {
+        $secrets = $this->getSecretsInstance();
+        $secrets->group('global')->owner(null)->set('foo', 'bar');
+        $secrets->group('users')->owner(1)->set('token', 'tok1');
+        $secrets->group('users')->owner(2)->set('token', 'tok2');
+
+        $oldKey = str_repeat('a', 32);
+        $newKey = str_repeat('b', 32);
+        $result = $secrets->rotateKey($oldKey, $newKey);
+        $this->assertEquals(['success' => 3, 'fail' => 0], $result);
+
+        // Now secrets instance is still using old key, so get will fail
+        $this->assertNull($secrets->group('global')->owner(null)->get('foo'));
+
+        // Swap crypto to new key and verify
+        $crypto = new Crypto($newKey);
+        $secretsNew = new Secrets($this->db, $this->container->get('config'), $crypto);
+        $this->assertEquals('bar', $secretsNew->group('global')->owner(null)->get('foo'));
+        $this->assertEquals('tok1', $secretsNew->group('users')->owner(1)->get('token'));
+        $this->assertEquals('tok2', $secretsNew->group('users')->owner(2)->get('token'));
+    }
+
+    public function testRotateKeyWithInvalidOldKey()
+    {
+        $secrets = $this->getSecretsInstance();
+        $secrets->group('global')->owner(null)->set('foo', 'bar');
+        $secrets->group('users')->owner(1)->set('token', 'tok1');
+
+        $oldKey = str_repeat('x', 32); // wrong key
+        $newKey = str_repeat('b', 32);
+        $result = $secrets->rotateKey($oldKey, $newKey);
+        // Should fail to decrypt both
+        $this->assertEquals(['success' => 0, 'fail' => 2], $result);
+
+        // Values should not be updated, still decryptable with original key
+        $crypto = new Crypto(str_repeat('a', 32));
+        $secretsOrig = new Secrets($this->db, $this->container->get('config'), $crypto);
+        $this->assertEquals('bar', $secretsOrig->group('global')->owner(null)->get('foo'));
+        $this->assertEquals('tok1', $secretsOrig->group('users')->owner(1)->get('token'));
+    }
+
+    public function testRotateKeyWithEmptyKeysThrows()
+    {
+        $secrets = $this->getSecretsInstance();
+        $this->expectException(InvalidArgumentException::class);
+        $secrets->rotateKey('', str_repeat('b', 32));
+        $this->expectException(InvalidArgumentException::class);
+        $secrets->rotateKey(str_repeat('a', 32), '');
+    }
+
+    public function testRotateKeySummaryCounts()
+    {
+        $secrets = $this->getSecretsInstance();
+        // One good, one bad
+        $secrets->group('global')->owner(null)->set('foo', 'bar');
+        // Insert a fake/bad record that can't be decrypted
+        $this->db->table('secrets')->insert([
+            'key' => 'bad',
+            'value' => 'not-encrypted',
+            'group' => 'global',
+            'owner_id' => null,
+        ]);
+        $oldKey = str_repeat('a', 32);
+        $newKey = str_repeat('b', 32);
+        $result = $secrets->rotateKey($oldKey, $newKey);
+        $this->assertEquals(['success' => 1, 'fail' => 1], $result);
     }
 }
