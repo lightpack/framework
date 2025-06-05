@@ -158,7 +158,7 @@ class SecretsIntegrationTest extends TestCase
 
         $oldKey = str_repeat('a', 32);
         $newKey = str_repeat('b', 32);
-        $result = $secrets->rotateKey($oldKey, $newKey);
+        $result = $secrets->rotateKey($oldKey, $newKey, 2);
         $this->assertEquals(['success' => 3, 'fail' => 0], $result);
 
         // Now secrets instance is still using old key, so get will fail

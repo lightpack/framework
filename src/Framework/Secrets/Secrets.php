@@ -79,10 +79,11 @@ class Secrets
      *
      * @param string $oldKey The previous encryption key.
      * @param string $newKey The new encryption key to use.
+     * @param int $batchSize Number of secrets to process per batch (default 500).
      * @return array Summary of rotation: ['success' => int, 'fail' => int]
      * @throws \InvalidArgumentException If either key is missing.
      */
-    public function rotateKey(string $oldKey, string $newKey): array
+    public function rotateKey(string $oldKey, string $newKey, int $batchSize = 500): array
     {
         if (empty($oldKey) || empty($newKey)) {
             throw new \InvalidArgumentException('Both old and new keys must be provided for key rotation.');
@@ -90,24 +91,25 @@ class Secrets
 
         $oldCrypto = new Crypto($oldKey);
         $newCrypto = new Crypto($newKey);
-        $secrets = $this->db->table('secrets')->all();
         $success = 0;
         $fail = 0;
 
-        foreach ($secrets as $secret) {
-            $decrypted = $oldCrypto->decrypt($secret->value);
-            if ($decrypted === false) {
-                $fail++;
-                continue;
+        $this->db->table('secrets')->chunk($batchSize, function ($secrets) use (&$success, &$fail, $oldCrypto, $newCrypto) {
+            foreach ($secrets as $secret) {
+                $decrypted = $oldCrypto->decrypt($secret->value);
+                if ($decrypted === false) {
+                    $fail++;
+                    continue;
+                }
+                $reencrypted = $newCrypto->encrypt($decrypted);
+                $updated = $this->db->table('secrets')->where('id', $secret->id)->update(['value' => $reencrypted]);
+                if ($updated) {
+                    $success++;
+                } else {
+                    $fail++;
+                }
             }
-            $reencrypted = $newCrypto->encrypt($decrypted);
-            $updated = $this->db->table('secrets')->where('id', $secret->id)->update(['value' => $reencrypted]);
-            if ($updated) {
-                $success++;
-            } else {
-                $fail++;
-            }
-        }
+        });
 
         return ['success' => $success, 'fail' => $fail];
     }
