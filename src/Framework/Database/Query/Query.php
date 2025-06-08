@@ -14,9 +14,11 @@ class Query
     protected $components = [
         'alias' => null,
         'columns' => [],
+        'select_raw' => [], // for selectRaw expressions
         'distinct' => false,
         'join' => [],
         'where' => [],
+        'having' => [],
         'group' => [],
         'order' => [],
         'lock' => [],
@@ -137,6 +139,96 @@ class Query
     {
         $this->components['columns'] = $columns;
         return $this;
+    }
+
+    /**
+     * Add a raw select expression to the query, with optional bindings.
+     *
+     * Note: All columns added via selectRaw() are output first (in the order called),
+     * followed by all columns added via select() (also in the order called).
+     * This is a Lightpack design for explicit and predictable SQL generation.
+     *
+     * Example:
+     *   $query->selectRaw('SUM(score) > ? AS high', [100])->select('name');
+     *   // Generates: SELECT SUM(score) > ? AS high, `name` FROM ...
+     *
+     * @param string $expression Raw select SQL expression (may include parameter placeholders)
+     * @param array $bindings Bindings for parameter placeholders in the expression
+     * @return static
+     */
+    public function selectRaw(string $expression, array $bindings = []): static
+    {
+        $this->components['select_raw'][] = $expression;
+        if ($bindings) {
+            $this->bindings = array_merge($this->bindings, $bindings);
+        }
+        return $this;
+    }
+
+    /**
+     * Add a HAVING clause to the query.
+     *
+     * @param string|Closure $column
+     * @param string|null $operator
+     * @param mixed $value
+     * @param string $joiner
+     * @return static
+     */
+    public function having($column, string $operator = '=', $value = null, string $joiner = 'AND'): static
+    {
+        // Operators that don't require a value
+        $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
+
+        if (!in_array($operator, $operators)) {
+            if ($value === null) {
+                $value = $operator;
+                $operator = '=';
+            }
+            $this->bindings[] = $value;
+        }
+
+        $this->components['having'][] = compact('column', 'operator', 'value', 'joiner');
+        return $this;
+    }
+
+    /**
+     * Add an OR HAVING clause to the query.
+     * @param string|Closure $column
+     * @param string|null $operator
+     * @param mixed $value
+     * @return static
+     */
+    public function orHaving($column, ?string $operator = null, $value = null): static
+    {
+        return $this->having($column, $operator, $value, 'OR');
+    }
+
+    /**
+     * Add a raw HAVING clause to the query.
+     * @param string $having
+     * @param array $values
+     * @param string $joiner
+     * @return static
+     */
+    public function havingRaw(string $having, array $values = [], string $joiner = 'AND'): static
+    {
+        $type = 'having_raw';
+        $this->components['having'][] = compact('type', 'having', 'values', 'joiner');
+        if ($values) {
+            $this->bindings = array_merge($this->bindings, $values);
+        }
+        return $this;
+    }
+
+    /**
+     * Add a raw OR HAVING clause to the query.
+     * @param string $having
+     * @param array $values
+     * @return static
+     */
+    public function orHavingRaw(string $having, array $values = []): static
+    {
+        return $this->havingRaw($having, $values, 'OR');
     }
 
     /**
@@ -604,29 +696,28 @@ class Query
         if ($chunkSize <= 0) {
             throw new \InvalidArgumentException('Chunk size must be a positive integer');
         }
-        
+
         // Clone the current query to preserve all conditions (where, join, etc.)
         $baseQuery = clone $this;
-        
+
         $page = 0;
-        
+
         do {
             // Apply pagination to a clone of the base query
             $query = clone $baseQuery;
             $records = $query->limit($chunkSize)->offset($page * $chunkSize)->all();
-            
+
             // Exit the loop if no records were found
             if (count($records) === 0) {
                 break;
             }
-            
+
             // Process the records and check if we should stop
             if (false === call_user_func($callback, $records)) {
                 return;
             }
-            
+
             $page++;
-            
         } while (true);
     }
 
@@ -651,6 +742,7 @@ class Query
     {
         $this->components['alias'] = null;
         $this->components['columns'] = [];
+        $this->components['select_raw'] = [];
         $this->components['distinct'] = false;
         $this->components['where'] = [];
         $this->components['join'] = [];
@@ -730,6 +822,19 @@ class Query
         return $this;
     }
 
+    /**
+     * Insert or update records using MySQL's ON DUPLICATE KEY UPDATE.
+     *
+     * Requirements:
+     * - Table must have a single, auto-incrementing primary key.
+     * - Columns for upsert must be unique or primary key columns.
+     * - $data must be an associative array or array of associative arrays.
+     * - $updateColumns should be columns present in $data (optional).
+     *
+     * @param array $data Row or rows to insert/update.
+     * @param array|null $updateColumns Columns to update on duplicate key.
+     * @return mixed Query result.
+     */
     public function upsert(array $data, ?array $updateColumns = null)
     {
         if (empty($data)) {

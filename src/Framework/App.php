@@ -112,6 +112,7 @@ final class App
             \Lightpack\Providers\MfaProvider::class,
             \Lightpack\Providers\AiProvider::class,
             \Lightpack\Providers\SettingsProvider::class,
+            \Lightpack\Providers\SecretsProvider::class,
         ];
     }
 

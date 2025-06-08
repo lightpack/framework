@@ -79,8 +79,8 @@ class ForeignKey
 
     public function compile()
     {
-        $constraint[] = "FOREIGN KEY ({$this->foreignKey})";
-        $constraint[] = "REFERENCES {$this->parentTable}({$this->parentColumn})";
+        $constraint[] = "FOREIGN KEY (" . IdentifierEscaper::escape($this->foreignKey) . ")";
+        $constraint[] = "REFERENCES " . IdentifierEscaper::escape($this->parentTable) . "(" . IdentifierEscaper::escape($this->parentColumn) . ")";
 
         if ($this->deleteAction) {
             $constraint[] = "ON DELETE {$this->deleteAction}";

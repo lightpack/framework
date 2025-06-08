@@ -19,6 +19,7 @@ class Compiler
         $sql[] = $this->join();
         $sql[] = $this->where();
         $sql[] = $this->groupBy();
+        $sql[] = $this->having();
         $sql[] = $this->orderBy();
         $sql[] = $this->limit();
         $sql[] = $this->offset();
@@ -38,6 +39,7 @@ class Compiler
         $sql[] = $this->join();
         $sql[] = $this->where();
         $sql[] = $this->groupBy();
+        $sql[] = $this->having(); // Insert HAVING after GROUP BY
 
         $sql = array_filter($sql, function ($v) {
             return empty($v) === false;
@@ -73,7 +75,7 @@ class Compiler
             }
         }
 
-        $quotedColumns = array_map(function($col) {
+        $quotedColumns = array_map(function ($col) {
             return $this->query->getConnection()->quoteIdentifier($col);
         }, $columns);
 
@@ -96,7 +98,7 @@ class Compiler
             }
         }
 
-        $quotedColumns = array_map(function($col) {
+        $quotedColumns = array_map(function ($col) {
             return $this->query->getConnection()->quoteIdentifier($col);
         }, $columns);
 
@@ -105,7 +107,7 @@ class Compiler
         $table = $this->query->getConnection()->quoteIdentifier($this->query->table);
 
         // Compile the ON DUPLICATE KEY UPDATE part
-        $updates = array_map(function($col) {
+        $updates = array_map(function ($col) {
             $quotedCol = $this->query->getConnection()->quoteIdentifier($col);
             return "{$quotedCol} = ?";
         }, $updateColumns);
@@ -157,19 +159,27 @@ class Compiler
 
     private function columns(): string
     {
-        if (!$this->query->columns) {
+        // Merge select_raw and columns, preserving order: select_raw first, then columns
+        $raws = $this->query->select_raw ?? [];
+        $columns = $this->query->columns ?? [];
+
+        $allColumns = [];
+        // Add all select_raw expressions as-is
+        foreach ($raws as $raw) {
+            $allColumns[] = $raw;
+        }
+        // Add normal columns, with wrapping/aggregate handling
+        foreach ($columns as $column) {
+            if (strpos($column, 'COUNT') !== false || strpos($column, 'SUM') !== false || strpos($column, 'AVG') !== false || strpos($column, 'MIN') !== false || strpos($column, 'MAX') !== false) {
+                $allColumns[] = $column;
+            } else {
+                $allColumns[] = $this->wrapColumn($column);
+            }
+        }
+        if (empty($allColumns)) {
             return '*';
         }
-
-        $columns = array_map(function ($column) {
-            if (strpos($column, 'COUNT') !== false || strpos($column, 'SUM') !== false || strpos($column, 'AVG') !== false || strpos($column, 'MIN') !== false || strpos($column, 'MAX') !== false) {
-                return $column;
-            }
-
-            return $this->wrapColumn($column);
-        }, $this->query->columns);
-
-        return implode(', ', $columns);
+        return implode(', ', $allColumns);
     }
 
     private function from(): string
@@ -299,6 +309,50 @@ class Compiler
         return 'GROUP BY ' . implode(', ', $columns);
     }
 
+    /**
+     * Compile the HAVING clause for the query.
+     */
+    private function having()
+    {
+        if (!$this->query->having) {
+            return '';
+        }
+
+        $havings = [];
+
+        foreach ($this->query->having as $having) {
+            // Raw HAVING
+            if (isset($having['type']) && $having['type'] === 'having_raw') {
+                $havings[] = strtoupper($having['joiner']) . ' ' . $having['having'];
+                continue;
+            }
+
+            // Standard HAVING
+            $statement = strtoupper($having['joiner']) . ' ' . $this->wrapColumn($having['column']);
+            if (isset($having['operator'])) {
+                $statement .= ' ' . trim($having['operator']);
+            }
+            if (array_key_exists('value', $having) && $having['value'] !== null) {
+                if (
+                    isset($having['operator']) &&
+                    in_array(strtoupper($having['operator']), ['IN', 'NOT IN']) &&
+                    is_array($having['value'])
+                ) {
+                    $statement .= ' ' . $this->parameterize(count($having['value']));
+                } else {
+                    $statement .= ' ?';
+                }
+            }
+            $havings[] = $statement;
+        }
+
+        $havings = trim(implode(' ', $havings));
+        if (strpos($havings, 'AND') === 0) {
+            $havings = trim(substr($havings, 3));
+        }
+        return $havings ? 'HAVING ' . $havings : '';
+    }
+
     private function orderBy()
     {
         if (!$this->query->order) {
@@ -343,11 +397,11 @@ class Compiler
 
         $fragment = '';
 
-        if($this->query->lock['for_update'] ?? false) {
+        if ($this->query->lock['for_update'] ?? false) {
             $fragment .= 'FOR UPDATE';
         }
 
-        if($this->query->lock['skip_locked'] ?? false) {
+        if ($this->query->lock['skip_locked'] ?? false) {
             $fragment .= ' SKIP LOCKED';
         }
 
@@ -372,7 +426,6 @@ class Compiler
             $parts = explode(' ', $table);
             return $this->wrap($parts[0]) . ' AS ' . $this->wrap($parts[2]);
         }
-
         return $this->wrap($table);
     }
 
@@ -381,17 +434,22 @@ class Compiler
         if (is_numeric($column)) {
             return $column;
         }
-        
+        // Do not wrap aggregate or function expressions (e.g., COUNT(*), SUM(price), etc.)
+        if (preg_match('/^[A-Z_]+\s*\(.*\)$/i', trim($column))) {
+            return $column;
+        }
+        // Do not wrap raw expressions (if user already provided backticks or quotes)
+        if (preg_match('/[`\(]/', $column)) {
+            return $column;
+        }
+
         if (strpos(strtolower($column), ' as ') !== false) {
             $parts = explode(' ', $column);
-
             foreach ($parts as &$part) {
                 $part = $this->wrap($part);
             }
-
             return $parts[0] . ' AS ' . $parts[2];
         }
-
         return $this->wrap($column);
     }
 
@@ -400,13 +458,10 @@ class Compiler
         if ('*' === $value) {
             return $value;
         }
-
         $segments = explode('.', $value);
-
         if (count($segments) == 2) {
             return $this->wrap($segments[0]) . '.' . $this->wrap($segments[1]);
         }
-
         return '`' . str_replace('`', '``', $value) . '`';
     }
 }
