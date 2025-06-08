@@ -14,7 +14,7 @@ final class MigratorTest extends TestCase
 
     protected function setUp(): void
     {
-        $config = require __DIR__ . '/Schema/../tmp/mysql.config.php';
+        $config = require __DIR__ . '/tmp/mysql.config.php';
         $this->connection = new Mysql($config);
         $this->schema = new Schema($this->connection);
         $this->migrator = new Migrator($this->connection);
