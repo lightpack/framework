@@ -76,9 +76,24 @@ class RouteRegistry
     public function group(array $options, callable $callback): void
     {
         $oldOptions = $this->options;
-        $options['prefix'] = $options['prefix'] ?? '';
-        $this->options = \array_merge($oldOptions, $options);
-        $this->options['prefix'] = $oldOptions['prefix'] . $this->options['prefix'];
+        // Merge prefix
+        $options['prefix'] = ($oldOptions['prefix'] ?? '') . ($options['prefix'] ?? '');
+        // Merge filters (cumulative array, unique)
+        if (isset($options['filter']) && isset($oldOptions['filter'])) {
+            $options['filter'] = array_unique(array_merge((array)$oldOptions['filter'], (array)$options['filter']));
+        } elseif (isset($oldOptions['filter'])) {
+            $options['filter'] = array_unique((array)$oldOptions['filter']);
+        }
+        // Inherit host if not set
+        if (!isset($options['host']) && isset($oldOptions['host'])) {
+            $options['host'] = $oldOptions['host'];
+        }
+        // Merge all options
+        $merged = $oldOptions;
+        foreach ($options as $key => $value) {
+            $merged[$key] = $value;
+        }
+        $this->options = $merged;
         $callback($this);
         $this->options = $oldOptions;
     }

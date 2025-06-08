@@ -28,7 +28,7 @@ final class RouteRegistryTest extends TestCase
     public function testRoutePathException()
     {
         $routeRegistry = $this->getRouteRegistry();
-        
+
         $this->expectException('\\Exception');
         $routeRegistry->get('', 'UserController', 'index');
         $this->fail('Empty route path');
@@ -98,7 +98,7 @@ final class RouteRegistryTest extends TestCase
         );
 
         $_SERVER['REQUEST_METHOD'] = self::HTTP_POST;
-        $routeRegistry = $this->getRouteRegistry();        
+        $routeRegistry = $this->getRouteRegistry();
         $routeRegistry->post('/users/:num/profile', 'UserController', 'submitForm');
 
         $this->assertTrue(
@@ -110,7 +110,7 @@ final class RouteRegistryTest extends TestCase
     public function testRouteShouldMapMultipleVerbs()
     {
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
-        $routeRegistry = $this->getRouteRegistry();  
+        $routeRegistry = $this->getRouteRegistry();
         $routeRegistry->map(['GET', 'POST'], '/users/:num', 'UserController', 'index');
 
         $this->assertTrue(
@@ -119,7 +119,7 @@ final class RouteRegistryTest extends TestCase
         );
 
         $_SERVER['REQUEST_METHOD'] = self::HTTP_POST;
-        $routeRegistry = $this->getRouteRegistry();  
+        $routeRegistry = $this->getRouteRegistry();
         $routeRegistry->map(['GET', 'POST'], '/users/:num', 'UserController', 'index');
 
         $this->assertTrue(
@@ -128,7 +128,7 @@ final class RouteRegistryTest extends TestCase
         );
 
         $_SERVER['REQUEST_METHOD'] = self::HTTP_PUT;
-        $routeRegistry = $this->getRouteRegistry();  
+        $routeRegistry = $this->getRouteRegistry();
         $routeRegistry->map(['GET', 'POST'], '/users/:num', 'UserController', 'index');
 
         $this->assertFalse(
@@ -145,7 +145,7 @@ final class RouteRegistryTest extends TestCase
     {
         foreach ($this->verbs as $verb) {
             $_SERVER['REQUEST_METHOD'] = $verb;
-            $routeRegistry = $this->getRouteRegistry();  
+            $routeRegistry = $this->getRouteRegistry();
             $routeRegistry->any('/users/:num', 'UserController', 'index');
 
             $this->assertTrue(
@@ -216,12 +216,12 @@ final class RouteRegistryTest extends TestCase
         $container->instance('request', $request);
         $routeRegistry = new RouteRegistry($container);
 
-        $routeRegistry->group(['prefix' => '/admin'], function ($route) {
-            $route->group(['prefix' => '/posts'], function ($route) {
+        $routeRegistry->group(['prefix' => '/admin', 'filter' => ['auth']], function ($route) {
+            $route->group(['prefix' => '/posts', 'filter' => ['auth', 'admin']], function ($route) {
                 $route->get('/edit/:num', 'PostController', 'edit');
             });
-            $route->group(['prefix' => '/dashboard'], function ($route) {
-                $route->group(['prefix' => '/charts'], function ($route) {
+            $route->group(['prefix' => '/dashboard', 'filter' => ['staff']], function ($route) {
+                $route->group(['prefix' => '/charts', 'filter' => ['charts', 'staff']], function ($route) {
                     $route->get('/:num', 'ChartController', 'index');
                 });
             });
@@ -229,6 +229,23 @@ final class RouteRegistryTest extends TestCase
 
         // non prefix
         $routeRegistry->get('/users/:num/profile', 'UserController', 'profile');
+
+        // Assert filters are merged for nested groups and are unique
+        $route = $routeRegistry->matches('/admin/posts/edit/23');
+        $this->assertEquals(['auth', 'admin'], $route->getFilters(), 'Filters for /admin/posts/edit/:num should be unique and merged from parent and child');
+        $route = $routeRegistry->matches('/admin/dashboard/charts/23');
+        $this->assertEquals(['auth', 'staff', 'charts'], $route->getFilters(), 'Filters for /admin/dashboard/charts/:num should be unique and merged from all levels');
+
+        // Test a case where the same filter appears at every level
+        $routeRegistry->group(['prefix' => '/dupe', 'filter' => ['auth']], function ($route) {
+            $route->group(['prefix' => '/foo', 'filter' => ['auth']], function ($route) {
+                $route->group(['prefix' => '/bar', 'filter' => ['auth']], function ($route) {
+                    $route->get('/baz', 'BazController', 'index');
+                });
+            });
+        });
+        $route = $routeRegistry->matches('/dupe/foo/bar/baz');
+        $this->assertEquals(['auth'], $route->getFilters(), 'Duplicate filters should only appear once, preserving order');
 
         $this->assertTrue(
             $routeRegistry->matches('/admin/posts/edit/23') instanceof Route,
