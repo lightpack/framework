@@ -696,29 +696,28 @@ class Query
         if ($chunkSize <= 0) {
             throw new \InvalidArgumentException('Chunk size must be a positive integer');
         }
-        
+
         // Clone the current query to preserve all conditions (where, join, etc.)
         $baseQuery = clone $this;
-        
+
         $page = 0;
-        
+
         do {
             // Apply pagination to a clone of the base query
             $query = clone $baseQuery;
             $records = $query->limit($chunkSize)->offset($page * $chunkSize)->all();
-            
+
             // Exit the loop if no records were found
             if (count($records) === 0) {
                 break;
             }
-            
+
             // Process the records and check if we should stop
             if (false === call_user_func($callback, $records)) {
                 return;
             }
-            
+
             $page++;
-            
         } while (true);
     }
 
@@ -823,6 +822,19 @@ class Query
         return $this;
     }
 
+    /**
+     * Insert or update records using MySQL's ON DUPLICATE KEY UPDATE.
+     *
+     * Requirements:
+     * - Table must have a single, auto-incrementing primary key.
+     * - Columns for upsert must be unique or primary key columns.
+     * - $data must be an associative array or array of associative arrays.
+     * - $updateColumns should be columns present in $data (optional).
+     *
+     * @param array $data Row or rows to insert/update.
+     * @param array|null $updateColumns Columns to update on duplicate key.
+     * @return mixed Query result.
+     */
     public function upsert(array $data, ?array $updateColumns = null)
     {
         if (empty($data)) {
