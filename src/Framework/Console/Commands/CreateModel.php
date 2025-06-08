@@ -4,14 +4,16 @@ namespace Lightpack\Console\Commands;
 
 use Lightpack\Console\ICommand;
 use Lightpack\Console\Views\ModelView;
+use Lightpack\Console\Output;
 use Lightpack\Utils\Str;
 
 class CreateModel implements ICommand
 {
     public function run(array $arguments = [])
     {
+        $output = new Output();
         if (empty($arguments)) {
-            fputs(STDERR, "Please provide one or more model class names.\n\n");
+            $output->error("Please provide a model class name.\n");
             return;
         }
 
@@ -29,28 +31,33 @@ class CreateModel implements ICommand
             }
         }
         if ($className === null) {
-            fputs(STDERR, "Please provide a model class name.\n\n");
+            $output->error("Please provide a model class name.\n");
             return;
         }
 
         // Support subdirectories, e.g., Admin/User => app/Models/Admin/User.php
         $relativePath = str_replace('\\', '/', $className);
-        $relativePath = str_replace('.', '/', $relativePath); // Support dot notation
+        if (strpos($relativePath, '.') !== false) {
+            $output->error("Dot notation is not allowed in model names. Use slashes for subdirectories (e.g., Admin/User).");
+            return;
+        }
         $parts = explode('/', $relativePath);
         $baseName = array_pop($parts);
         $subdir = implode('/', $parts);
         $directory = DIR_ROOT . '/app/Models' . ($subdir ? '/' . $subdir : '');
         $filePath = $directory . '/' . $baseName . '.php';
 
-        // Validate class name (only allow alnum and underscore)
-        if (!preg_match('/^[A-Za-z0-9_]+$/', $baseName)) {
-            fputs(STDERR, "Invalid model class name: {$className}\n");
-            return;
+        // Validate all namespace/class segments
+        foreach (array_merge($parts, [$baseName]) as $segment) {
+            if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $segment)) {
+                $output->error("Invalid model or namespace segment: {$segment}. Each segment must start with a letter and contain only letters, numbers, or underscores.");
+                return;
+            }
         }
 
         // Check if file exists
         if (file_exists($filePath)) {
-            fputs(STDERR, "Skipped: Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php\n");
+            $output->warning("Skipped: Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
             return;
         }
 
@@ -75,7 +82,7 @@ class CreateModel implements ICommand
         );
 
         file_put_contents($filePath, $template);
-        fputs(STDOUT, "✓ Model created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php\n");
+        $output->success("✓ Model created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
     }
     
     private function createTableName(string $text)
