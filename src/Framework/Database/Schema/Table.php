@@ -160,6 +160,187 @@ class Table
 
 
     /**
+     * Add an INT column.
+     */
+    public function int(string $name, int $length = 11): Column
+    {
+        $column = new Column($name);
+        $column->type('INT')->length($length);
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a BIGINT column.
+     */
+    public function bigint(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('BIGINT');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a SMALLINT column.
+     */
+    public function smallint(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('SMALLINT');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a TINYINT column.
+     */
+    public function tinyint(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('TINYINT');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a DATE column.
+     */
+    public function date(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('DATE');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a TIME column.
+     */
+    public function time(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('TIME');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a TIMESTAMP column.
+     */
+    public function timestamp(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('TIMESTAMP');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a JSON column.
+     */
+    public function json(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('JSON');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a CHAR column (fixed-length string).
+     *
+     * CHAR columns store strings of a fixed length. If the value is shorter than the specified length,
+     * it is padded with spaces. This is different from VARCHAR, which stores variable-length strings
+     * and uses only as much space as needed for the value.
+     *
+     * Use CHAR for values that are always the same length (e.g., country codes, status flags, fixed-format IDs)
+     * for optimal storage and performance. For variable-length strings, use VARCHAR instead.
+     *
+     * @param string $name   The column name.
+     * @param int    $length The fixed length of the CHAR column (default 255).
+     * @return Column
+     */
+    public function char(string $name, int $length = 255): Column
+    {
+        $column = new Column($name);
+        $column->type('CHAR')->length($length);
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a TINYTEXT column.
+     */
+    public function tinytext(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('TINYTEXT');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a MEDIUMTEXT column.
+     */
+    public function mediumtext(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('MEDIUMTEXT');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a LONGTEXT column.
+     */
+    public function longtext(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('LONGTEXT');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add an IP address column (VARCHAR(45) for IPv4/IPv6).
+     */
+    public function ipAddress(string $name = 'ip_address'): Column
+    {
+        $column = new Column($name);
+        $column->type('VARCHAR')->length(45);
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add a MAC address column (VARCHAR(17)).
+     */
+    public function macAddress(string $name = 'mac_address'): Column
+    {
+        $column = new Column($name);
+        $column->type('VARCHAR')->length(17);
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
+     * Add morphs columns for polymorphic relations: {name}_id (BIGINT UNSIGNED), {name}_type (VARCHAR(255)).
+     */
+    public function morphs(string $name): array
+    {
+        $idColumn = new Column($name . '_id');
+        $idColumn->type('BIGINT')->attribute('UNSIGNED');
+        $this->tableColumns->add($idColumn);
+
+        $typeColumn = new Column($name . '_type');
+        $typeColumn->type('VARCHAR')->length(255);
+        $this->tableColumns->add($typeColumn);
+
+        return [$idColumn, $typeColumn];
+    }
+
+    /**
      * This method will add 'created_at' and 'updated_at' columns to the table.
      */
     public function timestamps(): void

@@ -75,4 +75,130 @@ final class CreateTableTest extends TestCase
 
         $this->assertEquals($expected, $sql);
     }
+
+    public function testCompilerCanCreateCharColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->char('flag', 2);
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`flag` CHAR(2) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateTinytextColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->tinytext('shortnote');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`shortnote` TINYTEXT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateMediumtextColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->mediumtext('content');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`content` MEDIUMTEXT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateLongtextColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->longtext('bigcontent');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`bigcontent` LONGTEXT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateBigintColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->bigint('bigid');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`bigid` BIGINT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateSmallintColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->smallint('smallid');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`smallid` SMALLINT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateTinyintColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->tinyint('tinyflag');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`tinyflag` TINYINT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateDateColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->date('published_on');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`published_on` DATE NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateTimeColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->time('alarm');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`alarm` TIME NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateTimestampColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->timestamp('created_at');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`created_at` TIMESTAMP NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateJsonColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->json('meta');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`meta` JSON NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateIpAddressColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->ipAddress('ip');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`ip` VARCHAR(45) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateMacAddressColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->macAddress('mac');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`mac` VARCHAR(17) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
+    public function testCompilerCanCreateMorphsColumns()
+    {
+        $table = new Table('test', $this->connection);
+        $table->morphs('attachable');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`attachable_id` BIGINT UNSIGNED NOT NULL, `attachable_type` VARCHAR(255) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
 }
