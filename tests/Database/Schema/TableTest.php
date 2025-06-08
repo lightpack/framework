@@ -7,14 +7,14 @@ use Lightpack\Database\Schema\Compilers\RenameColumn;
 use Lightpack\Database\Schema\Table;
 use PHPUnit\Framework\TestCase;
 
-final class CreateTableTest extends TestCase
+final class TableTest extends TestCase
 {
     /** @var \Lightpack\Database\DB */
     private $connection;
 
     public function setUp(): void
     {
-        $config = require __DIR__ . '/../../tmp/mysql.config.php';
+        $config = require __DIR__ . '/../tmp/mysql.config.php';
 
         $this->connection = new Lightpack\Database\Adapters\Mysql($config);
     }
