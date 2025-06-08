@@ -16,7 +16,7 @@ class Event
     /**
      * Set a new cron instance useful for setting mock Cron instance while testing.
      */
-    public function setCronInstance(Cron $cron) 
+    public function setCronInstance(Cron $cron)
     {
         $this->cron = $cron;
     }
@@ -75,5 +75,124 @@ class Event
     public function previousDueAt(): ?\DateTime
     {
         return $this->cron->previousDueAt(new \DateTime());
+    }
+
+    /**
+     * Set the event to run every day at midnight.
+     */
+    public function daily(): self
+    {
+        return $this->cron('0 0 * * *');
+    }
+
+    /**
+     * Set the event to run every hour at minute 0.
+     */
+    public function hourly(): self
+    {
+        return $this->cron('0 * * * *');
+    }
+
+    /**
+     * Set the event to run every week on Sunday at midnight.
+     */
+    public function weekly(): self
+    {
+        return $this->cron('0 0 * * 0');
+    }
+
+    /**
+     * Set the event to run every month on the 1st at midnight.
+     */
+    public function monthly(): self
+    {
+        return $this->cron('0 0 1 * *');
+    }
+
+    /**
+     * Set the event to run every N minutes.
+     */
+    public function everyMinutes(int $minutes): self
+    {
+        return $this->cron("*/{$minutes} * * * *");
+    }
+
+
+    /**
+     * Update the event to run at a specific time (HH:MM), keeping day/month/weekday unchanged.
+     *
+     * Usage: $event->fridays()->at('17:00') // Every Friday at 17:00
+     */
+    public function at(string $time): self
+    {
+        [$hour, $minute] = explode(':', $time);
+        $parts = explode(' ', $this->cronExpression);
+        if (count($parts) !== 5) {
+            throw new \RuntimeException('Invalid cron expression for at() helper: ' . $this->cronExpression);
+        }
+        $parts[0] = (string)(int)$minute;
+        $parts[1] = (string)(int)$hour;
+
+        return $this->cron(implode(' ', $parts));
+    }
+
+    /**
+     * Set the event to run on Monday at midnight.
+     */
+    public function mondays(): self
+    {
+        return $this->cron('0 0 * * 1');
+    }
+    /**
+     * Set the event to run on Tuesday at midnight.
+     */
+    public function tuesdays(): self
+    {
+        return $this->cron('0 0 * * 2');
+    }
+    /**
+     * Set the event to run on Wednesday at midnight.
+     */
+    public function wednesdays(): self
+    {
+        return $this->cron('0 0 * * 3');
+    }
+    /**
+     * Set the event to run on Thursday at midnight.
+     */
+    public function thursdays(): self
+    {
+        return $this->cron('0 0 * * 4');
+    }
+    /**
+     * Set the event to run on Friday at midnight.
+     */
+    public function fridays(): self
+    {
+        return $this->cron('0 0 * * 5');
+    }
+    /**
+     * Set the event to run on Saturday at midnight.
+     */
+    public function saturdays(): self
+    {
+        return $this->cron('0 0 * * 6');
+    }
+    /**
+     * Set the event to run on Sunday at midnight.
+     */
+    public function sundays(): self
+    {
+        return $this->cron('0 0 * * 0');
+    }
+
+    /**
+     * Set the event to run monthly on a specific day and time (default 00:00).
+     */
+    public function monthlyOn(int $day, string $time = '00:00'): self
+    {
+        [$hour, $minute] = explode(':', $time);
+        // Cast to int to remove leading zeros
+        return $this->cron(((int)$minute) . ' ' . ((int)$hour) . " {$day} * *");
     }
 }

@@ -132,10 +132,9 @@ class Model implements JsonSerializable
         if ($this->strictMode && !in_array($key, $this->allowedLazyRelations)) {
             throw new \RuntimeException(
                 sprintf(
-                    "Strict Mode: Relation '%s' must be eager loaded. Use %s::with('%s')->get()",
+                    "Strict Mode: Relation '%s' on %s must be eager loaded.",
                     $key,
-                    get_class($this),
-                    $key
+                    get_class($this)
                 )
             );
         }

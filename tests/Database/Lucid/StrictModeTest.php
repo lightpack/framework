@@ -54,7 +54,7 @@ class StrictModeTest extends TestCase
 
         // Should throw exception when accessing non-eager loaded relation
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Strict Mode: Relation 'owner' must be eager loaded");
+        $this->expectExceptionMessageMatches("/Strict Mode: Relation 'owner' on .+ must be eager loaded/");
         $strictProduct->owner;
     }
 
@@ -77,7 +77,7 @@ class StrictModeTest extends TestCase
 
         // Should throw exception for non-whitelisted relation
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Strict Mode: Relation 'owner' must be eager loaded");
+        $this->expectExceptionMessageMatches("/Strict Mode: Relation 'owner' on .+ must be eager loaded/");
         $strictProduct->owner;
     }
 
@@ -145,7 +145,7 @@ class StrictModeTest extends TestCase
 
         // Should throw exception initially
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Strict Mode: Relation 'owner' must be eager loaded");
+        $this->expectExceptionMessageMatches("/Strict Mode: Relation 'owner' on .+ must be eager loaded/");
         $products[0]->owner;
 
         // Should work after explicitly loading the relation
