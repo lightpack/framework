@@ -29,8 +29,12 @@ final class QueryTest extends TestCase
 
         // Configure container
         $container = Container::getInstance();
-        $container->register('db', function() { return $this->db; });
-        $container->register('request', function() { return new Request(); });
+        $container->register('db', function () {
+            return $this->db;
+        });
+        $container->register('request', function () {
+            return new Request();
+        });
 
         // Set Request URI
         $_SERVER['REQUEST_URI'] = '/lightpack';
@@ -84,10 +88,10 @@ final class QueryTest extends TestCase
         $this->assertTrue(isset($product->id));
         $this->query->resetQuery();
 
-         // Test 2
-         $product = $this->query->one();
-         $this->assertTrue(isset($product->id));
-         $this->query->resetQuery();
+        // Test 2
+        $product = $this->query->one();
+        $this->assertTrue(isset($product->id));
+        $this->query->resetQuery();
 
         // Test 3
         $product = $this->query->where('color', '=', 'maroon')->one();
@@ -428,7 +432,7 @@ final class QueryTest extends TestCase
     {
         // Test 1
         $sql = 'SELECT * FROM `products` WHERE (`color` = ? OR `color` = ?)';
-        $this->query->where(function($q) {
+        $this->query->where(function ($q) {
             $q->where('color', '=', '#000')->orWhere('color', '=', '#FFF');
         });
         $this->assertEquals($sql, $this->query->toSql());
@@ -436,7 +440,7 @@ final class QueryTest extends TestCase
 
         // Test 2
         $sql = 'SELECT * FROM `products` WHERE `id` = ? AND (`color` = ? OR `color` = ?)';
-        $this->query->where('id', '=', 1)->where(function($q) {
+        $this->query->where('id', '=', 1)->where(function ($q) {
             $q->where('color', '=', '#000')->orWhere('color', '=', '#FFF');
         });
         $this->assertEquals($sql, $this->query->toSql());
@@ -447,7 +451,7 @@ final class QueryTest extends TestCase
     {
         // Test 1
         $sql = 'SELECT * FROM `products` WHERE (`color` IN (?, ?) OR `color` IN (?, ?))';
-        $this->query->where(function($q) {
+        $this->query->where(function ($q) {
             $q->whereIn('color', ['#000', '#FFF'])->orWhereIn('color', ['#000', '#FFF']);
         });
         $this->assertEquals($sql, $this->query->toSql());
@@ -455,8 +459,8 @@ final class QueryTest extends TestCase
 
         // Test 2
         $sql = 'SELECT * FROM `products` WHERE `size` IN (SELECT `id` FROM `sizes`)';
-        $this->query->whereIn('size', function($q) {
-                $q->select('id')->from('sizes');
+        $this->query->whereIn('size', function ($q) {
+            $q->select('id')->from('sizes');
         });
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
@@ -465,9 +469,9 @@ final class QueryTest extends TestCase
         $sql = 'SELECT * FROM `products` WHERE `color` IN (?, ?, ?) AND `size` IN (SELECT `id` FROM `sizes` WHERE `is_active` = ?)';
         $this->query
             ->whereIn('color', ['#000', '#FFF', '#CCC'])
-            ->whereIn('size', function($q) {
+            ->whereIn('size', function ($q) {
                 $q->select('id')->from('sizes')->where('is_active', '=', 1);
-        });
+            });
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
 
@@ -475,7 +479,7 @@ final class QueryTest extends TestCase
         $sql = 'SELECT * FROM `products` WHERE `color` IN (?, ?, ?) OR `size` IN (SELECT `id` FROM `sizes` WHERE `is_active` = ?)';
         $this->query
             ->whereIn('color', ['#000', '#FFF', '#CCC'])
-            ->orWhereIn('size', function($q) {
+            ->orWhereIn('size', function ($q) {
                 $q->select('id')->from('sizes')->where('is_active', '=', 1);
             });
         $this->assertEquals($sql, $this->query->toSql());
@@ -485,10 +489,10 @@ final class QueryTest extends TestCase
         $sql = 'SELECT * FROM `products` WHERE `color` IN (?, ?, ?) AND `size` IN (SELECT `id` FROM `sizes` WHERE `is_active` = ?) OR `size` IN (SELECT `id` FROM `sizes` WHERE `is_active` = ?)';
         $this->query
             ->whereIn('color', ['#000', '#FFF', '#CCC'])
-            ->whereIn('size', function($q) {
+            ->whereIn('size', function ($q) {
                 $q->select('id')->from('sizes')->where('is_active', '=', 1);
             })
-            ->orWhereIn('size', function($q) {
+            ->orWhereIn('size', function ($q) {
                 $q->select('id')->from('sizes')->where('is_active', '=', 1);
             });
         $this->assertEquals($sql, $this->query->toSql());
@@ -498,7 +502,7 @@ final class QueryTest extends TestCase
         $sql = 'SELECT * FROM `products` WHERE `color` NOT IN (?, ?, ?) AND `size` NOT IN (SELECT `id` FROM `sizes` WHERE `is_active` = ?)';
         $this->query
             ->whereNotIn('color', ['#000', '#FFF', '#CCC'])
-            ->whereNotIn('size', function($q) {
+            ->whereNotIn('size', function ($q) {
                 $q->select('id')->from('sizes')->where('is_active', '=', 1);
             });
         $this->assertEquals($sql, $this->query->toSql());
@@ -508,7 +512,7 @@ final class QueryTest extends TestCase
         $sql = 'SELECT * FROM `products` WHERE `color` NOT IN (?, ?, ?) OR `size` NOT IN (SELECT `id` FROM `sizes` WHERE `is_active` = ?)';
         $this->query
             ->whereNotIn('color', ['#000', '#FFF', '#CCC'])
-            ->orWhereNotIn('size', function($q) {
+            ->orWhereNotIn('size', function ($q) {
                 $q->select('id')->from('sizes')->where('is_active', '=', 1);
             });
         $this->assertEquals($sql, $this->query->toSql());
@@ -519,7 +523,7 @@ final class QueryTest extends TestCase
     {
         // Test 1
         $sql = 'SELECT * FROM `products` WHERE `size` IN (SELECT `id` FROM `sizes` WHERE `size` = ?)';
-        $this->query->where('size', 'IN', function($q) {
+        $this->query->where('size', 'IN', function ($q) {
             $q->from('sizes')->select('id')->where('size', '=', 'XL');
         });
         $this->assertEquals($sql, $this->query->toSql());
@@ -530,7 +534,7 @@ final class QueryTest extends TestCase
     {
         // Test 1
         $sql = 'SELECT * FROM `products` WHERE EXISTS (SELECT `id` FROM `sizes` WHERE `size` = ?)';
-        $this->query->whereExists(function($q) {
+        $this->query->whereExists(function ($q) {
             $q->from('sizes')->select('id')->where('size', '=', 'XL');
         });
         $this->assertEquals($sql, $this->query->toSql());
@@ -541,7 +545,7 @@ final class QueryTest extends TestCase
     {
         // Test 1
         $sql = 'SELECT * FROM `products` WHERE NOT EXISTS (SELECT `id` FROM `sizes` WHERE `size` = ?)';
-        $this->query->whereNotExists(function($q) {
+        $this->query->whereNotExists(function ($q) {
             $q->from('sizes')->select('id')->where('size', '=', 'XL');
         });
         $this->assertEquals($sql, $this->query->toSql());
@@ -594,7 +598,7 @@ final class QueryTest extends TestCase
         $this->query->whereNull('color')->orWhereNull('size');
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
-        
+
         // Test 4
         $sql = 'SELECT * FROM `products` WHERE `color` IS NULL OR `size` IS NOT NULL';
         $this->query->whereNull('color')->orWhereNotNull('size');
@@ -699,7 +703,7 @@ final class QueryTest extends TestCase
 
         // Test 5
         $sql = 'SELECT * FROM `products` WHERE `price` BETWEEN ? AND ? AND `size` BETWEEN ? AND ?';
-        $this->query->whereBetween('price', [10, 20])->whereBetween('size', ['M', 'L']); 
+        $this->query->whereBetween('price', [10, 20])->whereBetween('size', ['M', 'L']);
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
 
@@ -719,7 +723,7 @@ final class QueryTest extends TestCase
     {
         // Test 1
         $products = $this->query->paginate(10);
-        
+
         $this->assertInstanceOf(BasePagination::class, $this->query->paginate(10, 20));
         $this->assertCount(2, $products);
 
@@ -797,7 +801,7 @@ final class QueryTest extends TestCase
         // Make sure we have no records
         $this->query->delete();
 
-        foreach(range(1, 25) as $item) {
+        foreach (range(1, 25) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC'];
         }
 
@@ -806,8 +810,8 @@ final class QueryTest extends TestCase
         // Process chunk query
         $chunkedRecords = [];
 
-        $this->query->chunk(5, function($records) use (&$chunkedRecords) {
-            if(count($chunkedRecords) == 4) {
+        $this->query->chunk(5, function ($records) use (&$chunkedRecords) {
+            if (count($chunkedRecords) == 4) {
                 return false;
             }
 
@@ -817,7 +821,7 @@ final class QueryTest extends TestCase
         // Assertions
         $this->assertCount(4, $chunkedRecords);
 
-        foreach($chunkedRecords as $records) {
+        foreach ($chunkedRecords as $records) {
             $this->assertCount(5, $records);
         }
     }
@@ -830,7 +834,7 @@ final class QueryTest extends TestCase
         // Process chunk query on empty table
         $callbackExecuted = false;
 
-        $this->query->chunk(5, function($records) use (&$callbackExecuted) {
+        $this->query->chunk(5, function ($records) use (&$callbackExecuted) {
             $callbackExecuted = true;
         });
 
@@ -844,7 +848,7 @@ final class QueryTest extends TestCase
         $this->query->delete();
 
         // Insert 10 records
-        foreach(range(1, 10) as $item) {
+        foreach (range(1, 10) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC'];
         }
 
@@ -853,7 +857,7 @@ final class QueryTest extends TestCase
         // Process chunk query with chunk size 3
         $chunkedRecords = [];
 
-        $this->query->chunk(3, function($records) use (&$chunkedRecords) {
+        $this->query->chunk(3, function ($records) use (&$chunkedRecords) {
             $chunkedRecords[] = $records;
         });
 
@@ -871,7 +875,7 @@ final class QueryTest extends TestCase
         $this->query->delete();
 
         // Insert records with different names
-        foreach(range(1, 5) as $item) {
+        foreach (range(1, 5) as $item) {
             $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
         }
 
@@ -880,8 +884,8 @@ final class QueryTest extends TestCase
         // Process chunk query with ordering
         $names = [];
 
-        $this->query->orderBy('name', 'DESC')->chunk(5, function($records) use (&$names) {
-            foreach($records as $record) {
+        $this->query->orderBy('name', 'DESC')->chunk(5, function ($records) use (&$names) {
+            foreach ($records as $record) {
                 $names[] = $record->name;
             }
         });
@@ -899,7 +903,7 @@ final class QueryTest extends TestCase
         $this->query->delete();
 
         // Insert a few records
-        foreach(range(1, 5) as $item) {
+        foreach (range(1, 5) as $item) {
             $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
         }
 
@@ -918,7 +922,7 @@ final class QueryTest extends TestCase
         $this->query->delete();
 
         // Insert exactly 5 records
-        foreach(range(1, 5) as $item) {
+        foreach (range(1, 5) as $item) {
             $records[] = ['name' => 'Product ' . $item, 'color' => '#CCC'];
         }
 
@@ -927,7 +931,7 @@ final class QueryTest extends TestCase
         // Process chunk query with chunk size exactly matching record count
         $chunkedRecords = [];
 
-        $this->query->chunk(5, function($records) use (&$chunkedRecords) {
+        $this->query->chunk(5, function ($records) use (&$chunkedRecords) {
             $chunkedRecords[] = $records;
         });
 
@@ -942,14 +946,14 @@ final class QueryTest extends TestCase
         $this->query->delete();
 
         // Insert records with different colors
-        foreach(range(1, 10) as $item) {
+        foreach (range(1, 10) as $item) {
             $color = $item <= 5 ? 'red' : 'blue';
             $records[] = ['name' => 'Product ' . $item, 'color' => $color];
         }
 
         $this->query->insert($records);
 
-        $this->query->where('color', 'red')->chunk(2, function($records) {
+        $this->query->where('color', 'red')->chunk(2, function ($records) {
             foreach ($records as $record) {
                 $this->assertEquals('red', $record->color);
             }
@@ -995,6 +999,153 @@ final class QueryTest extends TestCase
         // Test with complex where conditions
         $exists = $this->query->where('id', '>', 0)->where('color', '!=', 'non-existent-color')->exists();
         $this->assertTrue($exists);
+        $this->query->resetQuery();
+    }
+
+    public function testBasicHavingClause()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING `num` > ?';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')->having('num', '>', 1);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testMultipleHavingClausesWithAndOr()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING `num` > ? AND `num` < ? OR `num` = ?';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')
+            ->having('num', '>', 1)
+            ->having('num', '<', 10)
+            ->orHaving('num', '=', 5);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingRawClause()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING `num` > 1';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')->havingRaw('`num` > 1');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingRawWithBindings()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING `num` > ?';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')->havingRaw('`num` > ?', [2]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([2], $this->query->bindings);
+        $this->query->resetQuery();
+    }
+
+    public function testHavingWithSumAvgMinMax()
+    {
+        $sql = 'SELECT `color`, SUM(`price`) AS sum, AVG(`price`) AS avg, MIN(`price`) AS min, MAX(`price`) AS max FROM `products` GROUP BY `color` HAVING `sum` > ? AND `avg` < ?';
+        $this->query->columns = ['color', 'SUM(`price`) AS sum', 'AVG(`price`) AS avg', 'MIN(`price`) AS min', 'MAX(`price`) AS max'];
+        $this->query->groupBy('color')
+            ->having('sum', '>', 100)
+            ->having('avg', '<', 200);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingWithWhereAndGroupBy()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` WHERE `color` != ? GROUP BY `color` HAVING COUNT(*) > ?';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->where('color', '!=', 'maroon')->groupBy('color')->having('COUNT(*)', '>', 1);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingWithAlias()
+    {
+        $sql = 'SELECT `color`, SUM(`price`) AS total FROM `products` GROUP BY `color` HAVING `total` > ?';
+        $this->query->columns = ['color', 'SUM(`price`) AS total'];
+        $this->query->groupBy('color')->having('total', '>', 100);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingInAndNotIn()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING `num` IN (?, ?, ?) AND `num` NOT IN (?, ?)';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')
+            ->having('num', 'IN', [1, 2, 3])
+            ->having('num', 'NOT IN', [4, 5]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingBooleanAndNull()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING COUNT(*) IS TRUE AND COUNT(*) IS NOT NULL';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')
+            ->having('COUNT(*)', 'IS TRUE')
+            ->having('COUNT(*)', 'IS NOT NULL');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingWithMultipleAggregates()
+    {
+        $sql = 'SELECT `color`, SUM(`price`) AS sum, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING `sum` > ? AND `num` > ?';
+        $this->query->columns = ['color', 'SUM(`price`) AS sum', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')->having('sum', '>', 100)->having('num', '>', 1);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testHavingWithOrderByLimitOffset()
+    {
+        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color` HAVING COUNT(*) > ? ORDER BY `color` ASC LIMIT 5 OFFSET 2';
+        $this->query->columns = ['color', 'COUNT(*) AS num'];
+        $this->query->groupBy('color')->having('COUNT(*)', '>', 1)->orderBy('color')->limit(5)->offset(2);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testSelectRawWithBindings()
+    {
+        // Test 1: Simple parameterized select raw
+        $sql = 'SELECT ?, ? FROM `products`';
+        $this->query->selectRaw('?, ?', [1, 2]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([1, 2], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test 2: Function with alias and binding
+        $sql = 'SELECT SUM(price) > ? AS expensive FROM `products`';
+        $this->query->selectRaw('SUM(price) > ? AS expensive', [100]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([100], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test 3: Mixing selectRaw and select columns
+        $sql = 'SELECT SUM(price) > ? AS expensive, ?, `name` FROM `products`';
+        $this->query->selectRaw('SUM(price) > ? AS expensive', [100])->select('name')->selectRaw('?', ['rawval']);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([100, 'rawval'], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test 4: Multiple selectRaw expressions
+        $sql = 'SELECT ?, ?, `color` FROM `products`';
+        $this->query->selectRaw('?', ['a'])->selectRaw('?', ['b'])->select('color');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals(['a', 'b'], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test 5: selectRaw and select with aggregate
+        $sql = 'SELECT ?, COUNT(*) AS num FROM `products`';
+        $this->query->selectRaw('?', ['xyz'])->select('COUNT(*) AS num');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals(['xyz'], $this->query->bindings);
         $this->query->resetQuery();
     }
 }
