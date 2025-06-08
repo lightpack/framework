@@ -40,10 +40,21 @@ class IndexKey
         return $sql;
     }
 
+    /**
+     * Compile a composite index definition.
+     * If the auto-generated index name would exceed 60 chars, use a hash-based name (idx_{8charhash}).
+     */
     private function compileCompositeIndex(array $columns, string $indexType, ?string $indexName = null): string
     {
-        if(is_null($indexName)) {
-            $indexName = implode('_', $columns) . '_' . strtolower($indexType);
+        if (is_null($indexName)) {
+            $base = implode('_', $columns) . '_' . strtolower($indexType);
+            // MySQL and most DBs limit index names to 64 chars; use 60 as a safe threshold
+            if (strlen($base) > 60) {
+                $hash = substr(md5($base), 0, 8);
+                $indexName = 'idx_' . $hash;
+            } else {
+                $indexName = $base;
+            }
         }
 
         $columns = array_map([$this, 'escapeColumn'], $columns);
@@ -51,7 +62,7 @@ class IndexKey
 
         $sql = "{$indexType} {$indexName} ({$columns})";
 
-        if($indexType === 'PRIMARY') {
+        if ($indexType === 'PRIMARY') {
             $sql = "{$indexType} KEY ({$columns})";
         }
 
