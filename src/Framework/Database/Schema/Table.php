@@ -237,6 +237,17 @@ class Table
     }
 
     /**
+     * Add a YEAR column (MySQL-specific).
+     */
+    public function year(string $name): Column
+    {
+        $column = new Column($name);
+        $column->type('YEAR');
+        $this->tableColumns->add($column);
+        return $column;
+    }
+
+    /**
      * Add a JSON column.
      */
     public function json(string $name): Column

@@ -85,6 +85,15 @@ final class CreateTableTest extends TestCase
         $this->assertEquals($expected, $sql);
     }
 
+    public function testCompilerCanCreateYearColumn()
+    {
+        $table = new Table('test', $this->connection);
+        $table->year('graduation_year');
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`graduation_year` YEAR NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
     public function testCompilerCanCreateTinytextColumn()
     {
         $table = new Table('test', $this->connection);
