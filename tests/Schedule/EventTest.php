@@ -165,13 +165,6 @@ class ScheduleEventTest extends TestCase
         $this->assertEquals('*/1 * * * *', $event->getCronExpression());
     }
 
-    public function testDailyAtHelperSetsCorrectCron()
-    {
-        $event = new Event('job', 'Test');
-        $event->dailyAt('13:45');
-        $this->assertEquals('45 13 * * *', $event->getCronExpression());
-    }
-
     public function testMondaysHelperSetsCorrectCron()
     {
         $event = new Event('job', 'Test');
@@ -227,11 +220,46 @@ class ScheduleEventTest extends TestCase
         $event->monthlyOn(15, '09:00');
         $this->assertEquals('0 9 15 * *', $event->getCronExpression());
     }
-    
+
     public function testMonthlyOnHelperDefaultTime()
     {
         $event = new Event('job', 'Test');
         $event->monthlyOn(10);
         $this->assertEquals('0 0 10 * *', $event->getCronExpression());
+    }
+
+    public function testAtMethodUpdatesTimeOnFridays()
+    {
+        $event = new Event('job', 'Test');
+        $event->fridays()->at('17:00');
+        $this->assertEquals('0 17 * * 5', $event->getCronExpression());
+    }
+
+    public function testAtMethodUpdatesTimeOnMondays()
+    {
+        $event = new Event('job', 'Test');
+        $event->mondays()->at('9:15');
+        $this->assertEquals('15 9 * * 1', $event->getCronExpression());
+    }
+
+    public function testAtMethodUpdatesTimeOnDaily()
+    {
+        $event = new Event('job', 'Test');
+        $event->daily()->at('23:59');
+        $this->assertEquals('59 23 * * *', $event->getCronExpression());
+    }
+
+    public function testAtMethodUpdatesTimeOnMonthly()
+    {
+        $event = new Event('job', 'Test');
+        $event->monthly()->at('00:01');
+        $this->assertEquals('1 0 1 * *', $event->getCronExpression());
+    }
+
+    public function testAtMethodWithSingleDigitHourMinute()
+    {
+        $event = new Event('job', 'Test');
+        $event->daily()->at('7:5');
+        $this->assertEquals('5 7 * * *', $event->getCronExpression());
     }
 }

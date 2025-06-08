@@ -117,14 +117,23 @@ class Event
         return $this->cron("*/{$minutes} * * * *");
     }
 
+
     /**
-     * Set the event to run daily at a specific time (HH:MM).
+     * Update the event to run at a specific time (HH:MM), keeping day/month/weekday unchanged.
+     *
+     * Usage: $event->fridays()->at('17:00') // Every Friday at 17:00
      */
-    public function dailyAt(string $time): self
+    public function at(string $time): self
     {
         [$hour, $minute] = explode(':', $time);
-        // Cast to int to remove leading zeros
-        return $this->cron(((int)$minute) . ' ' . ((int)$hour) . ' * * *');
+        $parts = explode(' ', $this->cronExpression);
+        if (count($parts) !== 5) {
+            throw new \RuntimeException('Invalid cron expression for at() helper: ' . $this->cronExpression);
+        }
+        $parts[0] = (string)(int)$minute;
+        $parts[1] = (string)(int)$hour;
+
+        return $this->cron(implode(' ', $parts));
     }
 
     /**
