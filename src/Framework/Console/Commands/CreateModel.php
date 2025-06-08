@@ -4,78 +4,108 @@ namespace Lightpack\Console\Commands;
 
 use Lightpack\Console\ICommand;
 use Lightpack\Console\Views\ModelView;
+use Lightpack\Console\Output;
 use Lightpack\Utils\Str;
 
 class CreateModel implements ICommand
 {
     public function run(array $arguments = [])
     {
-        $className = $arguments[0] ?? null;
+        $output = new Output();
+        $options = $this->parseArguments($arguments, $output);
+        if ($options === null) return;
+        extract($options); // $className, $tableName, $primaryKey
 
-        if (null === $className) {
-            $message = "Please provide a model class name.\n\n";
-            fputs(STDERR, $message);
+        $paths = $this->resolvePaths($className, $output);
+        if ($paths === null) return;
+        extract($paths); // $baseName, $subdir, $directory, $filePath, $parts
+
+        if (!$this->validateSegments($parts, $baseName, $output)) return;
+        if (file_exists($filePath)) {
+            $output->warning("Skipped: Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
             return;
         }
-
-        $className = trim($className);
-
-        if (!ctype_alnum($className)) {
-            $message = "Invalid model class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
         }
 
-        $tableName = $this->parseTableName($arguments);
-        $tableName = $tableName ?? $this->createTableName($className);
-        $primaryKey = $this->parsePrimaryKey($arguments) ?? 'id';
+        $tableName = $tableName ?? $this->createTableName($baseName);
+        $primaryKey = $primaryKey ?? 'id';
+        $namespace = $this->computeNamespace($subdir);
+        $this->writeModelFile($filePath, $namespace, $baseName, $tableName, $primaryKey);
+        $output->success("✓ Model created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
+    }
 
+    private function parseArguments(array $arguments, Output $output)
+    {
+        if (empty($arguments)) {
+            $output->error("Please provide a model class name.\n");
+            return null;
+        }
+        $className = null;
+        $tableName = null;
+        $primaryKey = null;
+        foreach ($arguments as $arg) {
+            if (strpos($arg, '--table=') === 0) {
+                $tableName = substr($arg, 8);
+            } elseif (strpos($arg, '--key=') === 0) {
+                $primaryKey = substr($arg, 6);
+            } elseif ($className === null) {
+                $className = $arg;
+            }
+        }
+        if ($className === null) {
+            $output->error("Please provide a model class name.\n");
+            return null;
+        }
+        return compact('className', 'tableName', 'primaryKey');
+    }
+
+    private function resolvePaths(string $className, Output $output)
+    {
+        $relativePath = str_replace('\\', '/', $className);
+        if (strpos($relativePath, '.') !== false) {
+            $output->error("Dot notation is not allowed in model names. Use slashes for subdirectories (e.g., Admin/User).");
+            return null;
+        }
+        $parts = explode('/', $relativePath);
+        $baseName = array_pop($parts);
+        $subdir = implode('/', $parts);
+        $directory = DIR_ROOT . '/app/Models' . ($subdir ? '/' . $subdir : '');
+        $filePath = $directory . '/' . $baseName . '.php';
+        return compact('baseName', 'subdir', 'directory', 'filePath', 'parts');
+    }
+
+    private function validateSegments(array $parts, string $baseName, Output $output): bool
+    {
+        foreach (array_merge($parts, [$baseName]) as $segment) {
+            if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $segment)) {
+                $output->error("Invalid model or namespace segment: {$segment}. Each segment must start with a letter and contain only letters, numbers, or underscores.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function computeNamespace(string $subdir): string
+    {
+        return 'App\\Models' . ($subdir ? '\\' . str_replace('/', '\\', $subdir) : '');
+    }
+
+    private function writeModelFile(string $filePath, string $namespace, string $baseName, string $tableName, string $primaryKey): void
+    {
         $template = ModelView::getTemplate();
         $template = str_replace(
-            ['__MODEL_NAME__', '__TABLE_NAME__', '__PRIMARY_KEY__'],
-            [$className, $tableName, $primaryKey],
+            ['__NAMESPACE__', '__MODEL_NAME__', '__TABLE_NAME__', '__PRIMARY_KEY__'],
+            [$namespace, $baseName, $tableName, $primaryKey],
             $template
         );
-        $directory = './app/Models';
-
-        file_put_contents(DIR_ROOT . '/app/Models/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Model created: {$directory}/{$className}.php\n\n");
+        file_put_contents($filePath, $template);
     }
 
-    private function parseTableName(array $arguments)
-    {
-        foreach ($arguments as $arg) {
-            if (strpos($arg, '--table') === 0) {
-                $tableName = explode('=', $arg)[1] ?? null;
-
-                if (preg_match('/^[\w]+$/', $tableName)) {
-                    return $tableName;
-                }
-            }
-        }
-    }
-
-    private function parsePrimaryKey(array $arguments)
-    {
-        foreach ($arguments as $arg) {
-            if (strpos($arg, '--key') === 0) {
-                $key = explode('=', $arg)[1] ?? null;
-
-                if (!preg_match('#[A-Za-z0-9_]#', $key)) {
-                    $message = "The --key flag must only contain alphabest and underscore.\n\n";
-                    fputs(STDERR, $message);
-                    exit(1);
-                }
-
-                return $key;
-            }
-        }
-    }
-    
     private function createTableName(string $text)
     {
         $text = str_replace('Model', '', $text);
-
         return (new Str)->tableize($text);
     }
 }
