@@ -12,12 +12,36 @@ class CreateModel implements ICommand
     public function run(array $arguments = [])
     {
         $output = new Output();
-        if (empty($arguments)) {
-            $output->error("Please provide a model class name.\n");
+        $options = $this->parseArguments($arguments, $output);
+        if ($options === null) return;
+        extract($options); // $className, $tableName, $primaryKey
+
+        $paths = $this->resolvePaths($className, $output);
+        if ($paths === null) return;
+        extract($paths); // $baseName, $subdir, $directory, $filePath, $parts
+
+        if (!$this->validateSegments($parts, $baseName, $output)) return;
+        if (file_exists($filePath)) {
+            $output->warning("Skipped: Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
             return;
         }
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
 
-        // Only support a single model per command
+        $tableName = $tableName ?? $this->createTableName($baseName);
+        $primaryKey = $primaryKey ?? 'id';
+        $namespace = $this->computeNamespace($subdir);
+        $this->writeModelFile($filePath, $namespace, $baseName, $tableName, $primaryKey);
+        $output->success("✓ Model created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
+    }
+
+    private function parseArguments(array $arguments, Output $output)
+    {
+        if (empty($arguments)) {
+            $output->error("Please provide a model class name.\n");
+            return null;
+        }
         $className = null;
         $tableName = null;
         $primaryKey = null;
@@ -32,63 +56,56 @@ class CreateModel implements ICommand
         }
         if ($className === null) {
             $output->error("Please provide a model class name.\n");
-            return;
+            return null;
         }
+        return compact('className', 'tableName', 'primaryKey');
+    }
 
-        // Support subdirectories, e.g., Admin/User => app/Models/Admin/User.php
+    private function resolvePaths(string $className, Output $output)
+    {
         $relativePath = str_replace('\\', '/', $className);
         if (strpos($relativePath, '.') !== false) {
             $output->error("Dot notation is not allowed in model names. Use slashes for subdirectories (e.g., Admin/User).");
-            return;
+            return null;
         }
         $parts = explode('/', $relativePath);
         $baseName = array_pop($parts);
         $subdir = implode('/', $parts);
         $directory = DIR_ROOT . '/app/Models' . ($subdir ? '/' . $subdir : '');
         $filePath = $directory . '/' . $baseName . '.php';
+        return compact('baseName', 'subdir', 'directory', 'filePath', 'parts');
+    }
 
-        // Validate all namespace/class segments
+    private function validateSegments(array $parts, string $baseName, Output $output): bool
+    {
         foreach (array_merge($parts, [$baseName]) as $segment) {
             if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $segment)) {
                 $output->error("Invalid model or namespace segment: {$segment}. Each segment must start with a letter and contain only letters, numbers, or underscores.");
-                return;
+                return false;
             }
         }
+        return true;
+    }
 
-        // Check if file exists
-        if (file_exists($filePath)) {
-            $output->warning("Skipped: Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
-            return;
-        }
+    private function computeNamespace(string $subdir): string
+    {
+        return 'App\\Models' . ($subdir ? '\\' . str_replace('/', '\\', $subdir) : '');
+    }
 
-        // Ensure directory exists
-        if (!is_dir($directory)) {
-            mkdir($directory, 0777, true);
-        }
-
-        // Table name
-        $tableName = $tableName ?? $this->createTableName($baseName);
-        // Primary key
-        $primaryKey = $primaryKey ?? 'id';
-
-        // Compute namespace
-        $namespace = 'App\\Models' . ($subdir ? '\\' . str_replace('/', '\\', $subdir) : '');
-        // Prepare template
+    private function writeModelFile(string $filePath, string $namespace, string $baseName, string $tableName, string $primaryKey): void
+    {
         $template = ModelView::getTemplate();
         $template = str_replace(
             ['__NAMESPACE__', '__MODEL_NAME__', '__TABLE_NAME__', '__PRIMARY_KEY__'],
             [$namespace, $baseName, $tableName, $primaryKey],
             $template
         );
-
         file_put_contents($filePath, $template);
-        $output->success("✓ Model created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
     }
-    
+
     private function createTableName(string $text)
     {
         $text = str_replace('Model', '', $text);
-
         return (new Str)->tableize($text);
     }
 }
