@@ -9,7 +9,7 @@ class ModelView
         return <<<'TEMPLATE'
 <?php
 
-namespace App\Models;
+namespace __NAMESPACE__;
 
 use Lightpack\Database\Lucid\Model;
 
@@ -21,7 +21,13 @@ class __MODEL_NAME__ extends Model
 
     protected $timestamps = false;
 
+    protected $strictMode = true;
+
     protected $hidden = [];
+
+    protected $casts = [];
+
+    protected $allowedLazyRelations = [];
 }
 TEMPLATE;
     }
