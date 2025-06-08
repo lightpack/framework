@@ -1148,4 +1148,37 @@ final class QueryTest extends TestCase
         $this->assertEquals(['xyz'], $this->query->bindings);
         $this->query->resetQuery();
     }
+
+    // full text search
+
+    public function testFullTextSearch()
+    {
+        // Test 1: Basic full-text search SQL and bindings
+        $sql = "SELECT * FROM `products` WHERE MATCH(`title`, `body`) AGAINST (? IN BOOLEAN MODE)";
+        $this->query->search('foo bar', ['title', 'body'])->from('products');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals(['foo bar'], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test 2: Search with additional where clause
+        $sql = "SELECT * FROM `products` WHERE MATCH(`title`, `body`) AGAINST (? IN BOOLEAN MODE) AND `status` = ?";
+        $this->query->search('baz', ['title', 'body'])->where('status', 'published')->from('products');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals(['baz', 'published'], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test 3: Search with order and limit
+        $sql = "SELECT * FROM `products` WHERE MATCH(`title`) AGAINST (? IN BOOLEAN MODE) ORDER BY `created_at` DESC LIMIT 5";
+        $this->query->search('apple', ['title'])->from('products')->orderBy('created_at', 'DESC')->limit(5);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals(['apple'], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test 4: Search with boolean operators in term
+        $sql = "SELECT * FROM `products` WHERE MATCH(`title`, `body`) AGAINST (? IN BOOLEAN MODE)";
+        $this->query->search('+foo -bar', ['title', 'body'])->from('products');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals(['+foo -bar'], $this->query->bindings);
+        $this->query->resetQuery();
+    }
 }

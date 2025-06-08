@@ -394,6 +394,31 @@ class Query
         return $this;
     }
 
+    /**
+     * Add a full-text search clause using the database's native full-text search.
+     *
+     * Only supports databases with native full-text search (e.g., MySQL/MariaDB MATCH ... AGAINST).
+     * Requires a full-text index on the target columns. 
+     * Only supports boolean mode.
+     *
+     * Example:
+     *   $query->search('foo bar', ['title', 'body']);
+     *   // WHERE MATCH(title, body) AGAINST ('foo bar' IN BOOLEAN MODE)
+     *
+     * @param string $term The search term.
+     * @param array $columns Columns to search.
+     * @return static
+     */
+    public function search(string $term, array $columns): static
+    {
+        $mode = 'IN BOOLEAN MODE';
+        $columnsSql = implode(', ', array_map(function($col) {
+            return '`' . str_replace('`', '', $col) . '`';
+        }, $columns));
+        $sql = "MATCH($columnsSql) AGAINST (? $mode)";
+        return $this->whereRaw($sql, [$term]);
+    }
+
     public function whereBetween(string $column, array $values, string $joiner = 'AND'): static
     {
         if (count($values) !== 2) {
