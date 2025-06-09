@@ -365,7 +365,6 @@ class Table
         $column = new Column($column);
 
         $column->type('DATETIME');
-        $column->nullable();
 
         $this->tableColumns->add($column);
 

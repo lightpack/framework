@@ -42,6 +42,17 @@ class Column
         return $this->attribute(self::ATTRIBUTE_UNSIGNED);
     }
 
+    /**
+     * Fluent shortcut to set default CURRENT_TIMESTAMP.
+     * Usage: $table->datetime('created_at')->current();
+     *
+     * @return $this
+     */
+    public function current(): self
+    {
+        return $this->default(self::DEFAULT_CURRENT_TIMESTAMP);
+    }
+
     public function type(string $columnType): self
     {
         $this->columnType = strtoupper($columnType);
