@@ -31,6 +31,17 @@ class Column
         $this->columnName = $columnName;
     }
 
+    /**
+     * Fluent shortcut to mark this column as UNSIGNED.
+     * Usage: $table->int('score')->unsigned();
+     *
+     * @return $this
+     */
+    public function unsigned(): self
+    {
+        return $this->attribute(self::ATTRIBUTE_UNSIGNED);
+    }
+
     public function type(string $columnType): self
     {
         $this->columnType = strtoupper($columnType);

@@ -76,6 +76,18 @@ final class TableTest extends TestCase
         $this->assertEquals($expected, $sql);
     }
 
+    public function testUnsignedFluentShortcut()
+    {
+        $table = new Table('test', $this->connection);
+        $table->int('score')->unsigned();
+        $table->bigint('user_id')->unsigned();
+        $table->smallint('age')->unsigned();
+        $table->tinyint('flag')->unsigned();
+        $sql = (new CreateTable)->compile($table);
+        $expected = 'CREATE TABLE IF NOT EXISTS test (`score` INT(11) UNSIGNED NOT NULL, `user_id` BIGINT UNSIGNED NOT NULL, `age` SMALLINT UNSIGNED NOT NULL, `flag` TINYINT UNSIGNED NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $this->assertEquals($expected, $sql);
+    }
+
     public function testCompilerCanCreateCharColumn()
     {
         $table = new Table('test', $this->connection);
