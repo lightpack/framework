@@ -102,7 +102,8 @@ class ModelPolymorphicTest extends TestCase
         ]);
 
         // Use loadMorphs to batch-load parents for all comments
-        $comments = PolymorphicCommentModel::loadMorphs([
+        $comments = PolymorphicCommentModel::query()->all();
+        $comments->loadMorphs([
             PostModel::class,
             VideoModel::class,
         ]);
