@@ -78,6 +78,53 @@ class ModelPolymorphicTest extends TestCase
         $this->assertEquals('A Video', $commentableVideo->title);
     }
 
+    public function testLoadMorphsBatchesMorphParents()
+    {
+        // Create post and video
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'A Video']);
+        $videoId = $this->db->lastInsertId();
+
+        // Create comments for both
+        $this->db->table('polymorphic_comments')->insert([
+            [
+                'body' => 'Post comment',
+                'morph_id' => $postId,
+                'morph_type' => 'posts',
+            ],
+            [
+                'body' => 'Video comment',
+                'morph_id' => $videoId,
+                'morph_type' => 'videos',
+            ]
+        ]);
+
+        // Use loadMorphs to batch-load parents for all comments
+        $comments = PolymorphicCommentModel::loadMorphs([
+            PostModel::class,
+            VideoModel::class,
+        ]);
+
+        // Should return a Collection with both comments
+        $this->assertCount(2, $comments);
+
+        // Check that each comment has a loaded parent of the correct type and title
+        foreach ($comments as $comment) {
+            $this->assertNotNull($comment->parent);
+            if ($comment->morph_type === 'posts') {
+                $this->assertInstanceOf(PostModel::class, $comment->parent);
+                $this->assertEquals('A Post', $comment->parent->title);
+            } elseif ($comment->morph_type === 'videos') {
+                $this->assertInstanceOf(VideoModel::class, $comment->parent);
+                $this->assertEquals('A Video', $comment->parent->title);
+            } else {
+                $this->fail('Unknown morph_type: ' . $comment->morph_type);
+            }
+        }
+    }
+
     public function testMorphManyRelation()
     {
         $this->db->table('posts')->insert(['title' => 'A Post']);
@@ -258,7 +305,9 @@ class ModelPolymorphicTest extends TestCase
 
         // Add another comment and check count again
         $this->db->table('polymorphic_comments')->insert([
-            'body' => 'Third post comment', 'morph_id' => $postId, 'morph_type' => 'posts'
+            'body' => 'Third post comment',
+            'morph_id' => $postId,
+            'morph_type' => 'posts'
         ]);
         $count = $post->comments()->count();
         $this->assertEquals(3, $count);
@@ -314,5 +363,3 @@ class ModelPolymorphicTest extends TestCase
         }
     }
 }
-
-

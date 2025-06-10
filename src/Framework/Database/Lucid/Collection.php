@@ -124,6 +124,21 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     }
 
     /**
+     * Returns an associative array keyed by the given property.
+     * Example: $collection->asMap('id')
+     */
+    public function asMap(string $property): array
+    {
+        $result = [];
+        foreach ($this->items as $item) {
+            if ($item->hasAttribute($property)) {
+                $result[$item->$property] = $item;
+            }
+        }
+        return $result;
+    }
+
+    /**
      * @deprecated Use ids() instead
      */
     public function getKeys(): array

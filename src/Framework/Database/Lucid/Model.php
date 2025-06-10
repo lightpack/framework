@@ -227,6 +227,60 @@ class Model implements JsonSerializable
         return $this->relations->morphMany($model, $this->table);
     }
 
+    public static function loadMorphs(array $morphModels, ?callable $cb = null): Collection
+    {
+        // 1. Build the base query
+        $query = static::query();
+
+        // 2. Apply user callback if provided
+        if ($cb) {
+            $query = $cb($query) ?? $query;
+        }
+
+        // 3. Fetch the models
+        $models = $query->all();
+
+        // 4. Derive morph map: ['posts' => PostModel::class, ...]
+        $morphMap = [];
+        foreach ($morphModels as $modelClass) {
+            $table = (new $modelClass)->getTableName();
+            $morphMap[$table] = new $modelClass;
+        }
+
+        // 5. Collect all parent IDs by type
+        $parentsByType = [];
+        foreach ($models as $model) {
+            $type = $model->morph_type;
+            $id = $model->morph_id;
+            if (!isset($parentsByType[$type])) {
+                $parentsByType[$type] = [];
+            }
+            $parentsByType[$type][] = $id;
+        }
+
+        // 6. Batch fetch all parents by type
+        $parents = [];
+        foreach ($parentsByType as $type => $ids) {
+            if (isset($morphMap[$type])) {
+                $modelClass = $morphMap[$type];
+                $parents[$type] = $modelClass::query()
+                    ->whereIn($model->getPrimaryKey(), array_unique($ids))
+                    ->all()
+                    ->asMap($model->getPrimaryKey());
+            }
+        }
+
+        // 7. Attach parent to each model as 'parent'
+        foreach ($models as $model) {
+            $type = $model->morph_type;
+            $id = $model->morph_id;
+            $model->setAttribute('parent', $parents[$type][$id] ?? null);
+        }
+
+        // 8. Return the models with parents loaded
+        return $models;
+    }
+
     /**
      * Polymorphic "one": e.g. User -> one Avatar
      */
