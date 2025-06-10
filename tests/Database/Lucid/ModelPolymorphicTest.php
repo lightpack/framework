@@ -64,15 +64,13 @@ class ModelPolymorphicTest extends TestCase
         $commentVideoId = $this->db->lastInsertId();
 
         // Test morphTo for post comment
-        $comment = $this->db->model(PolymorphicCommentModel::class);
-        $comment->find($commentPostId);
+        $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentPostId);
         $commentable = $comment->commentable();
         $this->assertInstanceOf(PostModel::class, $commentable);
         $this->assertEquals('A Post', $commentable->title);
 
         // Test morphTo for video comment
-        $comment = $this->db->model(PolymorphicCommentModel::class);
-        $comment->find($commentVideoId);
+        $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentVideoId);
         $commentable = $comment->commentable();
         $this->assertInstanceOf(VideoModel::class, $commentable);
         $this->assertEquals('A Video', $commentable->title);
@@ -88,32 +86,20 @@ class ModelPolymorphicTest extends TestCase
 
         // Insert comments
         $this->db->table('polymorphic_comments')->insert([
-            'body' => 'First post comment',
-            'commentable_id' => $postId,
-            'commentable_type' => 'post',
-        ]);
-        $this->db->table('polymorphic_comments')->insert([
-            'body' => 'Second post comment',
-            'commentable_id' => $postId,
-            'commentable_type' => 'post',
-        ]);
-        $this->db->table('polymorphic_comments')->insert([
-            'body' => 'Video comment',
-            'commentable_id' => $videoId,
-            'commentable_type' => 'video',
+            ['body' => 'First post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+            ['body' => 'Second post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+            ['body' => 'Video comment', 'commentable_id' => $videoId, 'commentable_type' => 'video'],
         ]);
 
         // Test morphMany for post
-        $post = $this->db->model(PostModel::class);
-        $post->find($postId);
+        $post = $this->db->model(PostModel::class)->find($postId);
         $comments = $post->comments()->all();
         $this->assertCount(2, $comments);
         $this->assertEquals('First post comment', $comments[0]->body);
         $this->assertEquals('Second post comment', $comments[1]->body);
 
         // Test morphMany for video
-        $video = $this->db->model(VideoModel::class);
-        $video->find($videoId);
+        $video = $this->db->model(VideoModel::class)->find($videoId);
         $comments = $video->comments()->all();
         $this->assertCount(1, $comments);
         $this->assertEquals('Video comment', $comments[0]->body);
