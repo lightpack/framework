@@ -25,15 +25,6 @@ final class RouteRegistryTest extends TestCase
         return new RouteRegistry($container);
     }
 
-    public function testRoutePathException()
-    {
-        $routeRegistry = $this->getRouteRegistry();
-
-        $this->expectException('\\Exception');
-        $routeRegistry->get('', 'UserController', 'index');
-        $this->fail('Empty route path');
-    }
-
     public function testRoutePathsRegisteredForMethod()
     {
         $routeRegistry = $this->getRouteRegistry();

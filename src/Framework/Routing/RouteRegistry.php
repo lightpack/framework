@@ -40,32 +40,63 @@ class RouteRegistry
 
     public function get(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('GET', $this->options['prefix'] . $uri, $controller, $action);
+        return $this->add('GET', $this->buildUri($uri), $controller, $action);
     }
 
     public function post(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('POST', $this->options['prefix'] . $uri, $controller, $action);
+        return $this->add('POST', $this->buildUri($uri), $controller, $action);
     }
 
     public function put(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('PUT', $this->options['prefix'] . $uri, $controller, $action);
+        return $this->add('PUT', $this->buildUri($uri), $controller, $action);
     }
 
     public function patch(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('PATCH', $this->options['prefix'] . $uri, $controller, $action);
+        return $this->add('PATCH', $this->buildUri($uri), $controller, $action);
     }
 
     public function delete(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('DELETE', $this->options['prefix'] . $uri, $controller, $action);
+        return $this->add('DELETE', $this->buildUri($uri), $controller, $action);
     }
 
     public function options(string $uri, string $controller, string $action = 'index'): Route
     {
-        return $this->add('OPTIONS', $this->options['prefix'] . $uri, $controller, $action);
+        return $this->add('OPTIONS', $this->buildUri($uri), $controller, $action);
+    }
+
+    /**
+     * Combines prefix and uri, ensuring exactly one slash between them.
+     * Handles cases where either/both have or lack leading/trailing slashes.
+     */
+    protected function buildUri(string $uri): string
+    {
+        $prefix = $this->options['prefix'] ?? '';
+
+        // Remove all leading/trailing slashes, backslashes, and whitespace
+        $prefix = trim($prefix, " \/");
+        $uri = trim($uri, " \/");
+
+        // If both are empty, return '/'
+        if ($prefix === '' && $uri === '') {
+            return '/';
+        }
+
+        // If only prefix is empty
+        if ($prefix === '') {
+            return '/' . $uri;
+        }
+
+        // If only uri is empty
+        if ($uri === '') {
+            return $prefix === '' ? '/' : $prefix;
+        }
+        
+        // Otherwise join with single slash
+        return $prefix . '/' . $uri;
     }
 
     public function paths(string $method): array
