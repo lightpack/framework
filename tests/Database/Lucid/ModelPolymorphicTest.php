@@ -6,6 +6,7 @@ require_once 'PolymorphicCommentModel.php';
 require_once 'PolymorphicThumbnailModel.php';
 
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\Collection;
 use PHPUnit\Framework\TestCase;
 
 class ModelPolymorphicTest extends TestCase
@@ -217,4 +218,50 @@ class ModelPolymorphicTest extends TestCase
         $this->assertNotNull($post->thumbnail);
         $this->assertContains($post->thumbnail->url, ['A', 'B']);
     }
+
+    public function testDeferredPolymorphicRelationLoading()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+        ]);
+
+        // Retrieve post without eager loading
+        $post = $this->db->model(PostModel::class)->find($postId);
+
+        // Relation should load only when accessed
+        $this->assertFalse($post->hasAttribute('comments'), 'Comments should not be loaded yet.');
+        $comments = $post->comments;
+        $this->assertCount(2, $comments);
+        $this->assertEquals('First post comment', $comments[0]->body);
+        $this->assertEquals('Second post comment', $comments[1]->body);
+    }
+
+    public function testDeferredPolymorphicRelationCount()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+        ]);
+
+        $post = $this->db->model(PostModel::class)->find($postId);
+
+        // Count comments via relation query
+        $count = $post->comments()->count();
+        $this->assertEquals(2, $count);
+
+        // Add another comment and check count again
+        $this->db->table('polymorphic_comments')->insert([
+            'body' => 'Third post comment', 'morph_id' => $postId, 'morph_type' => 'posts'
+        ]);
+        $count = $post->comments()->count();
+        $this->assertEquals(3, $count);
+    }
 }
+
