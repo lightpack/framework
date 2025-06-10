@@ -71,7 +71,7 @@ class RelationHandler
         $this->relationKey = $foreignKey;
         $this->foreignKey = $foreignKey;
         $this->relatedModel = $model;
-        
+
         $model = $this->getConnection()->model($model);
 
         if ($this->isEagerLoading) {
@@ -128,7 +128,7 @@ class RelationHandler
         $this->foreignKey = $foreignKey;
         $this->relatedModel = $model;
         $this->pivotTable = $pivotTable;
-        
+
         $modelInstance = $this->getConnection()->model($model);
         $tableName = $modelInstance->getTableName();
         $pivot = new Pivot($modelInstance, $this->model, $pivotTable, $foreignKey, $associateKey);
@@ -153,7 +153,7 @@ class RelationHandler
         $this->relationType = 'hasManyThrough';
         $this->foreignKey = $throughKey;
         $this->relatedModel = $model;
-        
+
         $modelInstance = $this->getConnection()->model($model);
         $throughInstance = $this->getConnection()->model($through);
         $this->relationKey = $throughKey;
@@ -165,12 +165,56 @@ class RelationHandler
             ->from($modelTable)
             ->select("$modelTable.*", "$throughTable.$throughKey")
             ->join($throughTable, "$modelTable.$foreignKey", "$throughTable.{$throughInstance->getPrimaryKey()}");
-            
+
         if ($this->isEagerLoading) {
             return $query;
         }
 
         return $query->where("$throughTable.$throughKey", '=', $this->model->{$this->model->getPrimaryKey()});
+    }
+
+    /**
+     * Polymorphic belongs-to: Comment -> Post|Video
+     * 
+     * Accepts a list of model class names. Internally builds the morph map.
+     * Usage: return $this->morphTo([PostModel::class, VideoModel::class]);
+     */
+    public function morphTo(array $models): ?Model
+    {
+        $type = $this->model->morph_type;
+        $id = $this->model->morph_id;
+
+        // Build morph map: ['posts' => PostModel::class, ...]
+        $map = [];
+        foreach ($models as $modelClass) {
+            $table = (new $modelClass)->getTableName();
+            $map[$table] = $modelClass;
+        }
+
+        if (!isset($map[$type])) {
+            return null;
+        }
+
+        $related = new $map[$type];
+        return $related->find($id);
+    }
+
+    /**
+     * Polymorphic "many": e.g. Post -> many Comments
+     */
+    public function morphMany(string $model, string $morphType): Query
+    {
+        return $this->hasMany($model, 'morph_id')
+            ->where('morph_type', $morphType);
+    }
+
+    /**
+     * Polymorphic "one": e.g. User -> one Avatar
+     */
+    public function morphOne(string $model, string $morphType): Query
+    {
+        return $this->hasOne($model, 'morph_id')
+            ->where('morph_type', $morphType);
     }
 
     /**

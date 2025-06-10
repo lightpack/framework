@@ -31,6 +31,28 @@ class Column
         $this->columnName = $columnName;
     }
 
+    /**
+     * Fluent shortcut to mark this column as UNSIGNED.
+     * Usage: $table->int('score')->unsigned();
+     *
+     * @return $this
+     */
+    public function unsigned(): self
+    {
+        return $this->attribute(self::ATTRIBUTE_UNSIGNED);
+    }
+
+    /**
+     * Fluent shortcut to set default CURRENT_TIMESTAMP.
+     * Usage: $table->datetime('created_at')->current();
+     *
+     * @return $this
+     */
+    public function current(): self
+    {
+        return $this->default(self::DEFAULT_CURRENT_TIMESTAMP);
+    }
+
     public function type(string $columnType): self
     {
         $this->columnType = strtoupper($columnType);

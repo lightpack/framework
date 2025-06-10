@@ -42,7 +42,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     public function ids(): array
     {
         $keys = [];
-        foreach($this->items as $item) {
+        foreach ($this->items as $item) {
             $keys[] = $item->{$item->getPrimaryKey()};
         }
         return $keys;
@@ -121,6 +121,21 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
             }
         }
         return false;
+    }
+
+    /**
+     * Returns an associative array keyed by the given property.
+     * Example: $collection->asMap('id')
+     */
+    public function asMap(string $property): array
+    {
+        $result = [];
+        foreach ($this->items as $item) {
+            if ($item->hasAttribute($property)) {
+                $result[$item->$property] = $item;
+            }
+        }
+        return $result;
     }
 
     /**
@@ -216,11 +231,11 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function exclude(array|string|int $keys): self
     {
-        if(!is_array($keys)) {
+        if (!is_array($keys)) {
             $keys = [$keys];
         }
 
-        $items = array_filter($this->items, function($item) use ($keys) {
+        $items = array_filter($this->items, function ($item) use ($keys) {
             return !in_array($item->{$item->getPrimaryKey()}, $keys);
         });
 
@@ -295,5 +310,54 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
             $result[] = $item->transform($options);
         }
         return $result;
+    }
+
+    public function loadMorphs(array $morphModels, string $parentKey = 'parent')
+    {
+        // 1. Derive morph map: ['posts' => PostModel::class, ...]
+        $morphMap = [];
+        foreach ($morphModels as $modelClass) {
+            $table = (new $modelClass)->getTableName();
+            $morphMap[$table] = new $modelClass;
+        }
+
+        // 2. Collect all parent IDs by type
+        $parentsByType = [];
+        foreach ($this->items as $model) {
+            // Only process models with both morph_type and morph_id attributes
+            if (!$model->hasAttribute('morph_type') || !$model->hasAttribute('morph_id')) {
+                continue;
+            }
+
+            $type = $model->morph_type;
+            $id = $model->morph_id;
+            if (!isset($parentsByType[$type])) {
+                $parentsByType[$type] = [];
+            }
+            $parentsByType[$type][] = $id;
+        }
+
+        // 3. Batch fetch all parents by type
+        $parents = [];
+        foreach ($parentsByType as $type => $ids) {
+            if (isset($morphMap[$type])) {
+                $modelClass = $morphMap[$type];
+                $parents[$type] = $modelClass::query()
+                    ->whereIn($model->getPrimaryKey(), array_unique($ids))
+                    ->all()
+                    ->asMap($model->getPrimaryKey());
+            }
+        }
+
+        // 5. Attach parent to each model as 'parent'
+        foreach ($this->items as $model) {
+            if (!$model->hasAttribute('morph_type') || !$model->hasAttribute('morph_id')) {
+                continue;
+            }
+
+            $type = $model->morph_type;
+            $id = $model->morph_id;
+            $model->setAttribute($parentKey, $parents[$type][$id] ?? null);
+        }
     }
 }
