@@ -263,5 +263,56 @@ class ModelPolymorphicTest extends TestCase
         $count = $post->comments()->count();
         $this->assertEquals(3, $count);
     }
+
+    public function testDeferredPolymorphicCollectionLoad()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'A Video']);
+        $videoId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'videos'],
+        ]);
+
+        $posts = $this->db->model(PostModel::class)::query()->all();
+
+        // Now load comments for all posts
+        $posts->load('comments');
+
+        foreach ($posts as $post) {
+            if ($post->title === 'A Post') {
+                $this->assertCount(2, $post->comments);
+            }
+        }
+    }
+
+    public function testDeferredPolymorphicCollectionLoadCount()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'A Video']);
+        $videoId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'videos'],
+        ]);
+
+        $posts = $this->db->model(PostModel::class)::query()->all();
+
+        // Now load comments count for all posts
+        $posts->loadCount('comments');
+
+        foreach ($posts as $post) {
+            $this->assertEquals(2, $post->comments_count);
+        }
+    }
 }
+
 
