@@ -176,12 +176,12 @@ class RelationHandler
     /**
      * Polymorphic inverse: e.g. Comment -> Post|Video
      */
-    public function morphTo(string $typeColumn, string $idColumn, array $map)
+    public function morphTo(array $map)
     {
-        $type = $this->model->{$typeColumn};
-        $id = $this->model->{$idColumn};
+        $id = $this->model->morph_id;
+        $type = $this->model->morph_type;
 
-        if (!$type || !$id || !isset($map[$type])) {
+        if (!$id || !$type || !isset($map[$type])) {
             return null;
         }
 

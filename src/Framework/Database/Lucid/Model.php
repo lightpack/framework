@@ -214,9 +214,9 @@ class Model implements JsonSerializable
     /**
      * Polymorphic inverse: e.g. Comment -> Post|Video
      */
-    public function morphTo(string $typeColumn, string $idColumn, array $map)
+    public function morphTo(array $map)
     {
-        return $this->relations->morphTo($typeColumn, $idColumn, $map);
+        return $this->relations->morphTo($map);
     }
 
     /**

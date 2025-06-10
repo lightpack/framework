@@ -67,15 +67,15 @@ class ModelPolymorphicTest extends TestCase
 
         // Test morphTo for post comment
         $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentPostId);
-        $commentable = $comment->commentable();
-        $this->assertInstanceOf(PostModel::class, $commentable);
-        $this->assertEquals('A Post', $commentable->title);
+        $commentablePost = $comment->commentable();
+        $this->assertInstanceOf(PostModel::class, $commentablePost);
+        $this->assertEquals('A Post', $commentablePost->title);
 
         // Test morphTo for video comment
         $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentVideoId);
-        $commentable = $comment->commentable();
-        $this->assertInstanceOf(VideoModel::class, $commentable);
-        $this->assertEquals('A Video', $commentable->title);
+        $commentableVideo = $comment->commentable();
+        $this->assertInstanceOf(VideoModel::class, $commentableVideo);
+        $this->assertEquals('A Video', $commentableVideo->title);
     }
 
     public function testMorphManyRelation()
