@@ -126,6 +126,20 @@ class ModelPolymorphicTest extends TestCase
         }
     }
 
+    public function testLoadMorphsOnNonPolymorphicModels()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $this->db->table('posts')->insert(['title' => 'Another Post']);
+
+        $posts = $this->db->model(PostModel::class)::query()->all();
+        $this->assertEquals(2, $posts->count());
+
+        // should silently skip loading morphed parent
+        $posts->loadMorphs([VideoModel::class]);
+        $this->assertNull($posts[0]->parent);
+        $this->assertNull($posts[1]->parent);
+    }
+
     public function testMorphManyRelation()
     {
         $this->db->table('posts')->insert(['title' => 'A Post']);
