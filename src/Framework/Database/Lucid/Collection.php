@@ -314,19 +314,16 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function loadMorphs(array $morphModels)
     {
-        // 1. Fetch the models
-        $models = $this->items;
-
-        // 2. Derive morph map: ['posts' => PostModel::class, ...]
+        // 1. Derive morph map: ['posts' => PostModel::class, ...]
         $morphMap = [];
         foreach ($morphModels as $modelClass) {
             $table = (new $modelClass)->getTableName();
             $morphMap[$table] = new $modelClass;
         }
 
-        // 3. Collect all parent IDs by type
+        // 2. Collect all parent IDs by type
         $parentsByType = [];
-        foreach ($models as $model) {
+        foreach ($this->items as $model) {
             $type = $model->morph_type;
             $id = $model->morph_id;
             if (!isset($parentsByType[$type])) {
@@ -335,7 +332,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
             $parentsByType[$type][] = $id;
         }
 
-        // 4. Batch fetch all parents by type
+        // 3. Batch fetch all parents by type
         $parents = [];
         foreach ($parentsByType as $type => $ids) {
             if (isset($morphMap[$type])) {
@@ -348,7 +345,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         }
 
         // 5. Attach parent to each model as 'parent'
-        foreach ($models as $model) {
+        foreach ($this->items as $model) {
             $type = $model->morph_type;
             $id = $model->morph_id;
             $model->setAttribute('parent', $parents[$type][$id] ?? null);
