@@ -149,6 +149,16 @@ CREATE TABLE IF NOT EXISTS `polymorphic_comments` (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- create table polymorphic_thumbnails for testing polymorphic relations
+DROP TABLE IF EXISTS `polymorphic_thumbnails`;
+CREATE TABLE IF NOT EXISTS `polymorphic_thumbnails` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `url` varchar(255) NOT NULL,
+  `thumbnailable_id` int NOT NULL,
+  `thumbnailable_type` varchar(50) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 -- create table posts for polymorphic relation tests
 DROP TABLE IF EXISTS `posts`;
 CREATE TABLE IF NOT EXISTS `posts` (

@@ -10,4 +10,9 @@ class PostModel extends Model
     {
         return $this->morphMany(PolymorphicCommentModel::class, 'commentable_type', 'commentable_id', 'post');
     }
+
+    public function thumbnail()
+    {
+        return $this->morphOne(PolymorphicThumbnailModel::class, 'thumbnailable_type', 'thumbnailable_id', 'post');
+    }
 }

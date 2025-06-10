@@ -1,8 +1,9 @@
 <?php
 
-require_once 'PolymorphicCommentModel.php';
 require_once 'PostModel.php';
 require_once 'VideoModel.php';
+require_once 'PolymorphicCommentModel.php';
+require_once 'PolymorphicThumbnailModel.php';
 
 use Lightpack\Container\Container;
 use PHPUnit\Framework\TestCase;
@@ -103,5 +104,35 @@ class ModelPolymorphicTest extends TestCase
         $comments = $video->comments()->all();
         $this->assertCount(1, $comments);
         $this->assertEquals('Video comment', $comments[0]->body);
+    }
+
+    public function testMorphOneThumbnail()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'A Video']);
+        $videoId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_thumbnails')->insert([
+            'url' => 'http://example.com/post-thumb.jpg',
+            'thumbnailable_id' => $postId,
+            'thumbnailable_type' => 'post',
+        ]);
+        $this->db->table('polymorphic_thumbnails')->insert([
+            'url' => 'http://example.com/video-thumb.jpg',
+            'thumbnailable_id' => $videoId,
+            'thumbnailable_type' => 'video',
+        ]);
+
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $thumbnail = $post->thumbnail();
+        $this->assertNotNull($thumbnail);
+        $this->assertEquals('http://example.com/post-thumb.jpg', $thumbnail->url);
+
+        $video = $this->db->model(VideoModel::class)->find($videoId);
+        $thumbnail = $video->thumbnail();
+        $this->assertNotNull($thumbnail);
+        $this->assertEquals('http://example.com/video-thumb.jpg', $thumbnail->url);
     }
 }
