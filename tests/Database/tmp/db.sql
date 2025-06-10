@@ -139,6 +139,32 @@ CREATE TABLE IF NOT EXISTS cast_model_relations (
     PRIMARY KEY (parent_id, child_id)
 );
 
+-- create table polymorphic_comments for testing polymorphic relations
+DROP TABLE IF EXISTS `polymorphic_comments`;
+CREATE TABLE IF NOT EXISTS `polymorphic_comments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `body` text,
+  `commentable_id` int NOT NULL,
+  `commentable_type` varchar(50) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- create table posts for polymorphic relation tests
+DROP TABLE IF EXISTS `posts`;
+CREATE TABLE IF NOT EXISTS `posts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- create table videos for polymorphic relation tests
+DROP TABLE IF EXISTS `videos`;
+CREATE TABLE IF NOT EXISTS `videos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 -- insert dummy data for products
 INSERT INTO `products` (`name`, `color`, `price`) VALUES
     ('Dummy Product', '#09F', 100.00),

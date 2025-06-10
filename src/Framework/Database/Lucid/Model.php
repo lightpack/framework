@@ -171,29 +171,68 @@ class Model implements JsonSerializable
         $this->relations->setEagerLoading($flag);
     }
 
+    /**
+     * One-to-one: e.g. User -> Profile
+     */
     public function hasOne(string $model, string $foreignKey): Query
     {
         return $this->relations->hasOne($model, $foreignKey);
     }
 
+    /**
+     * One-to-many: e.g. Post -> Comments
+     */
     public function hasMany(string $model, string $foreignKey): Query
     {
         return $this->relations->hasMany($model, $foreignKey);
     }
 
+    /**
+     * Inverse: e.g. Comment -> Post
+     */
     public function belongsTo(string $model, string $foreignKey): Query
     {
         return $this->relations->belongsTo($model, $foreignKey);
     }
 
+    /**
+     * Many-to-many (pivot): e.g. User -> Roles, Role -> Users
+     */
     public function pivot(string $model, string $pivotTable, string $foreignKey, string $associateKey): Pivot
     {
         return $this->relations->pivot($model, $pivotTable, $foreignKey, $associateKey);
     }
 
+    /**
+     * Has-many-through: e.g. Country -> User -> Posts
+     */
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
     {
         return $this->relations->hasManyThrough($model, $through, $throughKey, $foreignKey);
+    }
+
+    /**
+     * Polymorphic inverse: e.g. Comment -> Post|Video
+     */
+    public function morphTo(string $typeColumn, string $idColumn, array $map)
+    {
+        return $this->relations->morphTo($typeColumn, $idColumn, $map);
+    }
+
+    /**
+     * Polymorphic "many": e.g. Post -> many Comments
+     */
+    public function morphMany(string $related, string $typeColumn, string $idColumn, string $typeValue)
+    {
+        return $this->relations->morphMany($related, $typeColumn, $idColumn, $typeValue);
+    }
+
+    /**
+     * Polymorphic "one": e.g. User -> one Avatar
+     */
+    public function morphOne(string $related, string $typeColumn, string $idColumn, string $typeValue)
+    {
+        return $this->relations->morphOne($related, $typeColumn, $idColumn, $typeValue);
     }
 
     public function find($id, bool $fail = true): self

@@ -71,7 +71,7 @@ class RelationHandler
         $this->relationKey = $foreignKey;
         $this->foreignKey = $foreignKey;
         $this->relatedModel = $model;
-        
+
         $model = $this->getConnection()->model($model);
 
         if ($this->isEagerLoading) {
@@ -128,7 +128,7 @@ class RelationHandler
         $this->foreignKey = $foreignKey;
         $this->relatedModel = $model;
         $this->pivotTable = $pivotTable;
-        
+
         $modelInstance = $this->getConnection()->model($model);
         $tableName = $modelInstance->getTableName();
         $pivot = new Pivot($modelInstance, $this->model, $pivotTable, $foreignKey, $associateKey);
@@ -153,7 +153,7 @@ class RelationHandler
         $this->relationType = 'hasManyThrough';
         $this->foreignKey = $throughKey;
         $this->relatedModel = $model;
-        
+
         $modelInstance = $this->getConnection()->model($model);
         $throughInstance = $this->getConnection()->model($through);
         $this->relationKey = $throughKey;
@@ -165,7 +165,7 @@ class RelationHandler
             ->from($modelTable)
             ->select("$modelTable.*", "$throughTable.$throughKey")
             ->join($throughTable, "$modelTable.$foreignKey", "$throughTable.{$throughInstance->getPrimaryKey()}");
-            
+
         if ($this->isEagerLoading) {
             return $query;
         }
@@ -235,6 +235,45 @@ class RelationHandler
     public function getPivotTable(): ?string
     {
         return $this->pivotTable;
+    }
+
+    /**
+     * Polymorphic inverse: e.g. Comment -> Post|Video
+     */
+    public function morphTo(string $typeColumn, string $idColumn, array $map)
+    {
+        $type = $this->model->{$typeColumn};
+        $id = $this->model->{$idColumn};
+
+        if (!$type || !$id || !isset($map[$type])) {
+            return null;
+        }
+
+        $relatedClass = $map[$type];
+        return (new $relatedClass)->find($id, false);
+    }
+
+    /**
+     * Polymorphic "many": e.g. Post -> many Comments
+     */
+    public function morphMany(string $related, string $typeColumn, string $idColumn, string $typeValue)
+    {
+        $relatedModel = new $related;
+        return (new \Lightpack\Database\Query\Query($relatedModel->getTableName(), $relatedModel->getConnection()))
+            ->where($typeColumn, '=', $typeValue)
+            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()));
+    }
+
+    /**
+     * Polymorphic "one": e.g. User -> one Avatar
+     */
+    public function morphOne(string $related, string $typeColumn, string $idColumn, string $typeValue)
+    {
+        $relatedModel = new $related;
+        return (new \Lightpack\Database\Query\Query($relatedModel->getTableName(), $relatedModel->getConnection()))
+            ->where($typeColumn, '=', $typeValue)
+            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()))
+            ->one();
     }
 
     /**
