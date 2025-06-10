@@ -174,6 +174,64 @@ class RelationHandler
     }
 
     /**
+     * Polymorphic inverse: e.g. Comment -> Post|Video
+     */
+    public function morphTo(string $typeColumn, string $idColumn, array $map)
+    {
+        $type = $this->model->{$typeColumn};
+        $id = $this->model->{$idColumn};
+
+        if (!$type || !$id || !isset($map[$type])) {
+            return null;
+        }
+
+        $relatedClass = $map[$type];
+        return (new $relatedClass)->find($id, false);
+    }
+
+    /**
+     * Polymorphic "many": e.g. Post -> many Comments
+     */
+    public function morphMany(string $related, string $typeColumn, string $idColumn, string $typeValue): Query
+    {
+        $this->relationType = 'hasMany';
+        $this->relationKey = $idColumn;
+        $this->foreignKey = $this->model->getPrimaryKey();
+        $this->relatedModel = $related;
+
+        $relatedModel = $this->getConnection()->model($related);
+
+        if ($this->isEagerLoading) {
+            return $relatedModel::query();
+        }
+
+        return $relatedModel::query()
+            ->where($typeColumn, '=', $typeValue)
+            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()));
+    }
+
+    /**
+     * Polymorphic "one": e.g. User -> one Avatar
+     */
+    public function morphOne(string $related, string $typeColumn, string $idColumn, string $typeValue): Query
+    {
+        $this->relationType = 'hasOne';
+        $this->relationKey = $idColumn;
+        $this->foreignKey = $this->model->getPrimaryKey();
+        $this->relatedModel = $related;
+
+        $relatedModel = $this->getConnection()->model($related);
+
+        if ($this->isEagerLoading) {
+            return $relatedModel::query();
+        }
+
+        return $relatedModel::query()
+            ->where($typeColumn, '=', $typeValue)
+            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()));
+    }
+
+    /**
      * Get cached relation result
      */
     public function getFromCache(string $relation)
@@ -235,45 +293,6 @@ class RelationHandler
     public function getPivotTable(): ?string
     {
         return $this->pivotTable;
-    }
-
-    /**
-     * Polymorphic inverse: e.g. Comment -> Post|Video
-     */
-    public function morphTo(string $typeColumn, string $idColumn, array $map)
-    {
-        $type = $this->model->{$typeColumn};
-        $id = $this->model->{$idColumn};
-
-        if (!$type || !$id || !isset($map[$type])) {
-            return null;
-        }
-
-        $relatedClass = $map[$type];
-        return (new $relatedClass)->find($id, false);
-    }
-
-    /**
-     * Polymorphic "many": e.g. Post -> many Comments
-     */
-    public function morphMany(string $related, string $typeColumn, string $idColumn, string $typeValue)
-    {
-        $relatedModel = new $related;
-        return (new \Lightpack\Database\Query\Query($relatedModel->getTableName(), $relatedModel->getConnection()))
-            ->where($typeColumn, '=', $typeValue)
-            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()));
-    }
-
-    /**
-     * Polymorphic "one": e.g. User -> one Avatar
-     */
-    public function morphOne(string $related, string $typeColumn, string $idColumn, string $typeValue)
-    {
-        $relatedModel = new $related;
-        return (new \Lightpack\Database\Query\Query($relatedModel->getTableName(), $relatedModel->getConnection()))
-            ->where($typeColumn, '=', $typeValue)
-            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()))
-            ->one();
     }
 
     /**

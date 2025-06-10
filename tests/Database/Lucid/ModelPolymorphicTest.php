@@ -94,14 +94,14 @@ class ModelPolymorphicTest extends TestCase
 
         // Test morphMany for post
         $post = $this->db->model(PostModel::class)->find($postId);
-        $comments = $post->comments()->all();
+        $comments = $post->comments;
         $this->assertCount(2, $comments);
         $this->assertEquals('First post comment', $comments[0]->body);
         $this->assertEquals('Second post comment', $comments[1]->body);
 
         // Test morphMany for video
         $video = $this->db->model(VideoModel::class)->find($videoId);
-        $comments = $video->comments()->all();
+        $comments = $video->comments;
         $this->assertCount(1, $comments);
         $this->assertEquals('Video comment', $comments[0]->body);
     }
@@ -126,12 +126,12 @@ class ModelPolymorphicTest extends TestCase
         ]);
 
         $post = $this->db->model(PostModel::class)->find($postId);
-        $thumbnail = $post->thumbnail();
+        $thumbnail = $post->thumbnail;
         $this->assertNotNull($thumbnail);
         $this->assertEquals('http://example.com/post-thumb.jpg', $thumbnail->url);
 
         $video = $this->db->model(VideoModel::class)->find($videoId);
-        $thumbnail = $video->thumbnail();
+        $thumbnail = $video->thumbnail;
         $this->assertNotNull($thumbnail);
         $this->assertEquals('http://example.com/video-thumb.jpg', $thumbnail->url);
     }
