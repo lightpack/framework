@@ -135,4 +135,86 @@ class ModelPolymorphicTest extends TestCase
         $this->assertNotNull($thumbnail);
         $this->assertEquals('http://example.com/video-thumb.jpg', $thumbnail->url);
     }
+
+    public function testEagerLoadingPolymorphicRelations()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+        $this->db->table('videos')->insert(['title' => 'A Video']);
+        $videoId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'First post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+            ['body' => 'Second post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+            ['body' => 'Video comment', 'commentable_id' => $videoId, 'commentable_type' => 'video'],
+        ]);
+        $this->db->table('polymorphic_thumbnails')->insert([
+            ['url' => 'http://example.com/post-thumb.jpg', 'thumbnailable_id' => $postId, 'thumbnailable_type' => 'post'],
+            ['url' => 'http://example.com/video-thumb.jpg', 'thumbnailable_id' => $videoId, 'thumbnailable_type' => 'video'],
+        ]);
+
+        $posts = $this->db->model(PostModel::class)::query()->with('comments', 'thumbnail')->all();
+        $this->assertCount(1, $posts);
+        $this->assertCount(2, $posts[0]->comments);
+        $this->assertEquals('http://example.com/post-thumb.jpg', $posts[0]->thumbnail->url);
+
+        $videos = $this->db->model(VideoModel::class)::query()->with('comments', 'thumbnail')->all();
+        $this->assertCount(1, $videos);
+        $this->assertCount(1, $videos[0]->comments);
+        $this->assertEquals('http://example.com/video-thumb.jpg', $videos[0]->thumbnail->url);
+    }
+
+    public function testPolymorphicRelationCounts()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+        $this->db->table('videos')->insert(['title' => 'A Video']);
+        $videoId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'First post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+            ['body' => 'Second post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+            ['body' => 'Video comment', 'commentable_id' => $videoId, 'commentable_type' => 'video'],
+        ]);
+
+        $posts = $this->db->model(PostModel::class)::query()->withCount('comments')->all();
+        $this->assertEquals(2, $posts[0]->comments_count);
+
+        $videos = $this->db->model(VideoModel::class)::query()->withCount('comments')->all();
+        $this->assertEquals(1, $videos[0]->comments_count);
+    }
+
+    public function testPolymorphicRelationQueryChaining()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'First post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+            ['body' => 'Second post comment', 'commentable_id' => $postId, 'commentable_type' => 'post'],
+        ]);
+
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $comments = $post->comments()->where('body', 'LIKE', '%Second%')->all();
+        $this->assertCount(1, $comments);
+        $this->assertEquals('Second post comment', $comments[0]->body);
+    }
+
+    public function testPolymorphicEdgeCases()
+    {
+        $this->db->table('posts')->insert(['title' => 'A Post']);
+        $postId = $this->db->lastInsertId();
+
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $this->assertEmpty($post->comments);
+        $this->assertNull($post->thumbnail);
+
+        $this->db->table('polymorphic_thumbnails')->insert([
+            ['url' => 'A', 'thumbnailable_id' => $postId, 'thumbnailable_type' => 'post'],
+            ['url' => 'B', 'thumbnailable_id' => $postId, 'thumbnailable_type' => 'post'],
+        ]);
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $this->assertNotNull($post->thumbnail);
+        $this->assertContains($post->thumbnail->url, ['A', 'B']);
+    }
 }

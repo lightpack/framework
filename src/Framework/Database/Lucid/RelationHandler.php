@@ -194,20 +194,8 @@ class RelationHandler
      */
     public function morphMany(string $related, string $typeColumn, string $idColumn, string $typeValue): Query
     {
-        $this->relationType = 'hasMany';
-        $this->relationKey = $idColumn;
-        $this->foreignKey = $this->model->getPrimaryKey();
-        $this->relatedModel = $related;
-
-        $relatedModel = $this->getConnection()->model($related);
-
-        if ($this->isEagerLoading) {
-            return $relatedModel::query();
-        }
-
-        return $relatedModel::query()
-            ->where($typeColumn, '=', $typeValue)
-            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()));
+        return $this->hasMany($related, $idColumn)
+            ->where($typeColumn, $typeValue);
     }
 
     /**
@@ -215,20 +203,8 @@ class RelationHandler
      */
     public function morphOne(string $related, string $typeColumn, string $idColumn, string $typeValue): Query
     {
-        $this->relationType = 'hasOne';
-        $this->relationKey = $idColumn;
-        $this->foreignKey = $this->model->getPrimaryKey();
-        $this->relatedModel = $related;
-
-        $relatedModel = $this->getConnection()->model($related);
-
-        if ($this->isEagerLoading) {
-            return $relatedModel::query();
-        }
-
-        return $relatedModel::query()
-            ->where($typeColumn, '=', $typeValue)
-            ->where($idColumn, '=', $this->model->getAttribute($this->model->getPrimaryKey()));
+        return $this->hasOne($related, $idColumn)
+            ->where($typeColumn, $typeValue);
     }
 
     /**
