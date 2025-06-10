@@ -222,17 +222,17 @@ class Model implements JsonSerializable
     /**
      * Polymorphic "many": e.g. Post -> many Comments
      */
-    public function morphMany(string $related, string $typeColumn, string $idColumn, string $typeValue)
+    public function morphMany(string $model, string $morphType)
     {
-        return $this->relations->morphMany($related, $typeColumn, $idColumn, $typeValue);
+        return $this->relations->morphMany($model, $morphType);
     }
 
     /**
      * Polymorphic "one": e.g. User -> one Avatar
      */
-    public function morphOne(string $related, string $typeColumn, string $idColumn, string $typeValue)
+    public function morphOne(string $model, string $morphType)
     {
-        return $this->relations->morphOne($related, $typeColumn, $idColumn, $typeValue);
+        return $this->relations->morphOne($model, $morphType);
     }
 
     public function find($id, bool $fail = true): self

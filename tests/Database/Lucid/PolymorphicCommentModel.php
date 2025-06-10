@@ -9,7 +9,7 @@ class PolymorphicCommentModel extends Model
     // Defines the inverse polymorphic relation
     public function commentable()
     {
-        return $this->morphTo('commentable_type', 'commentable_id', [
+        return $this->morphTo('morph_type', 'morph_id', [
             'post' => PostModel::class,
             'video' => VideoModel::class,
         ]);

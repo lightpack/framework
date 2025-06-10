@@ -192,19 +192,19 @@ class RelationHandler
     /**
      * Polymorphic "many": e.g. Post -> many Comments
      */
-    public function morphMany(string $related, string $typeColumn, string $idColumn, string $typeValue): Query
+    public function morphMany(string $model, string $morphType): Query
     {
-        return $this->hasMany($related, $idColumn)
-            ->where($typeColumn, $typeValue);
+        return $this->hasMany($model, 'morph_id')
+            ->where('morph_type', $morphType);
     }
 
     /**
      * Polymorphic "one": e.g. User -> one Avatar
      */
-    public function morphOne(string $related, string $typeColumn, string $idColumn, string $typeValue): Query
+    public function morphOne(string $model, string $morphType): Query
     {
-        return $this->hasOne($related, $idColumn)
-            ->where($typeColumn, $typeValue);
+        return $this->hasOne($model, 'morph_id')
+            ->where('morph_type', $morphType);
     }
 
     /**

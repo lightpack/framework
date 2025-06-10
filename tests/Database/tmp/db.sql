@@ -144,8 +144,8 @@ DROP TABLE IF EXISTS `polymorphic_comments`;
 CREATE TABLE IF NOT EXISTS `polymorphic_comments` (
   `id` int NOT NULL AUTO_INCREMENT,
   `body` text,
-  `commentable_id` int NOT NULL,
-  `commentable_type` varchar(50) NOT NULL,
+  `morph_id` int NOT NULL,
+  `morph_type` varchar(50) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -154,8 +154,8 @@ DROP TABLE IF EXISTS `polymorphic_thumbnails`;
 CREATE TABLE IF NOT EXISTS `polymorphic_thumbnails` (
   `id` int NOT NULL AUTO_INCREMENT,
   `url` varchar(255) NOT NULL,
-  `thumbnailable_id` int NOT NULL,
-  `thumbnailable_type` varchar(50) NOT NULL,
+  `morph_id` int NOT NULL,
+  `morph_type` varchar(50) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 

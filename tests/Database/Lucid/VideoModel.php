@@ -8,11 +8,11 @@ class VideoModel extends Model
 
     public function comments()
     {
-        return $this->morphMany(PolymorphicCommentModel::class, 'commentable_type', 'commentable_id', 'video');
+        return $this->morphMany(PolymorphicCommentModel::class, 'video');
     }
 
     public function thumbnail()
     {
-        return $this->morphOne(PolymorphicThumbnailModel::class, 'thumbnailable_type', 'thumbnailable_id', 'video');
+        return $this->morphOne(PolymorphicThumbnailModel::class, 'video');
     }
 }
