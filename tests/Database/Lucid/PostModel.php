@@ -8,11 +8,11 @@ class PostModel extends Model
 
     public function comments()
     {
-        return $this->morphMany(PolymorphicCommentModel::class, $this->table);
+        return $this->morphMany(PolymorphicCommentModel::class);
     }
 
     public function thumbnail()
     {
-        return $this->morphOne(PolymorphicThumbnailModel::class, $this->table);
+        return $this->morphOne(PolymorphicThumbnailModel::class);
     }
 }
