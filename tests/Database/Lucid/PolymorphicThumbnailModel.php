@@ -8,8 +8,8 @@ class PolymorphicThumbnailModel extends Model
     public function thumbnailable()
     {
         return $this->morphTo('morph_type', 'morph_id', [
-            'post' => PostModel::class,
-            'video' => VideoModel::class,
+            'posts' => PostModel::class,
+            'videos' => VideoModel::class,
         ]);
     }
 }

@@ -53,14 +53,14 @@ class ModelPolymorphicTest extends TestCase
         $this->db->table('polymorphic_comments')->insert([
             'body' => 'Post comment',
             'morph_id' => $postId,
-            'morph_type' => 'post',
+            'morph_type' => 'posts',
         ]);
         $commentPostId = $this->db->lastInsertId();
 
         $this->db->table('polymorphic_comments')->insert([
             'body' => 'Video comment',
             'morph_id' => $videoId,
-            'morph_type' => 'video',
+            'morph_type' => 'videos',
         ]);
         $commentVideoId = $this->db->lastInsertId();
 
@@ -87,9 +87,9 @@ class ModelPolymorphicTest extends TestCase
 
         // Insert comments
         $this->db->table('polymorphic_comments')->insert([
-            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'video'],
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'videos'],
         ]);
 
         // Test morphMany for post
@@ -115,25 +115,25 @@ class ModelPolymorphicTest extends TestCase
         $videoId = $this->db->lastInsertId();
 
         $this->db->table('polymorphic_thumbnails')->insert([
-            'url' => 'http://example.com/post-thumb.jpg',
+            'url' => 'post-thumb.jpg',
             'morph_id' => $postId,
-            'morph_type' => 'post',
+            'morph_type' => 'posts',
         ]);
         $this->db->table('polymorphic_thumbnails')->insert([
-            'url' => 'http://example.com/video-thumb.jpg',
+            'url' => 'video-thumb.jpg',
             'morph_id' => $videoId,
-            'morph_type' => 'video',
+            'morph_type' => 'videos',
         ]);
 
         $post = $this->db->model(PostModel::class)->find($postId);
         $thumbnail = $post->thumbnail;
         $this->assertNotNull($thumbnail);
-        $this->assertEquals('http://example.com/post-thumb.jpg', $thumbnail->url);
+        $this->assertEquals('post-thumb.jpg', $thumbnail->url);
 
         $video = $this->db->model(VideoModel::class)->find($videoId);
         $thumbnail = $video->thumbnail;
         $this->assertNotNull($thumbnail);
-        $this->assertEquals('http://example.com/video-thumb.jpg', $thumbnail->url);
+        $this->assertEquals('video-thumb.jpg', $thumbnail->url);
     }
 
     public function testEagerLoadingPolymorphicRelations()
@@ -144,24 +144,24 @@ class ModelPolymorphicTest extends TestCase
         $videoId = $this->db->lastInsertId();
 
         $this->db->table('polymorphic_comments')->insert([
-            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'video'],
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'videos'],
         ]);
         $this->db->table('polymorphic_thumbnails')->insert([
-            ['url' => 'http://example.com/post-thumb.jpg', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['url' => 'http://example.com/video-thumb.jpg', 'morph_id' => $videoId, 'morph_type' => 'video'],
+            ['url' => 'post-thumb.jpg', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['url' => 'video-thumb.jpg', 'morph_id' => $videoId, 'morph_type' => 'videos'],
         ]);
 
         $posts = $this->db->model(PostModel::class)::query()->with('comments', 'thumbnail')->all();
         $this->assertCount(1, $posts);
         $this->assertCount(2, $posts[0]->comments);
-        $this->assertEquals('http://example.com/post-thumb.jpg', $posts[0]->thumbnail->url);
+        $this->assertEquals('post-thumb.jpg', $posts[0]->thumbnail->url);
 
         $videos = $this->db->model(VideoModel::class)::query()->with('comments', 'thumbnail')->all();
         $this->assertCount(1, $videos);
         $this->assertCount(1, $videos[0]->comments);
-        $this->assertEquals('http://example.com/video-thumb.jpg', $videos[0]->thumbnail->url);
+        $this->assertEquals('video-thumb.jpg', $videos[0]->thumbnail->url);
     }
 
     public function testPolymorphicRelationCounts()
@@ -172,9 +172,9 @@ class ModelPolymorphicTest extends TestCase
         $videoId = $this->db->lastInsertId();
 
         $this->db->table('polymorphic_comments')->insert([
-            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'video'],
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'videos'],
         ]);
 
         $posts = $this->db->model(PostModel::class)::query()->withCount('comments')->all();
@@ -190,8 +190,8 @@ class ModelPolymorphicTest extends TestCase
         $postId = $this->db->lastInsertId();
 
         $this->db->table('polymorphic_comments')->insert([
-            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'post'],
+            ['body' => 'First post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['body' => 'Second post comment', 'morph_id' => $postId, 'morph_type' => 'posts'],
         ]);
 
         $post = $this->db->model(PostModel::class)->find($postId);
@@ -210,8 +210,8 @@ class ModelPolymorphicTest extends TestCase
         $this->assertNull($post->thumbnail);
 
         $this->db->table('polymorphic_thumbnails')->insert([
-            ['url' => 'A', 'morph_id' => $postId, 'morph_type' => 'post'],
-            ['url' => 'B', 'morph_id' => $postId, 'morph_type' => 'post'],
+            ['url' => 'A', 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['url' => 'B', 'morph_id' => $postId, 'morph_type' => 'posts'],
         ]);
         $post = $this->db->model(PostModel::class)->find($postId);
         $this->assertNotNull($post->thumbnail);
