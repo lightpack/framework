@@ -10,8 +10,8 @@ class PolymorphicCommentModel extends Model
     public function commentable()
     {
         return $this->morphTo([
-            'posts' => PostModel::class,
-            'videos' => VideoModel::class,
+            PostModel::class,
+            VideoModel::class,
         ]);
     }
 }

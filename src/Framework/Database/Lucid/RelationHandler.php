@@ -174,19 +174,29 @@ class RelationHandler
     }
 
     /**
-     * Polymorphic inverse: e.g. Comment -> Post|Video
+     * Polymorphic belongs-to: Comment -> Post|Video
+     * 
+     * Accepts a list of model class names. Internally builds the morph map.
+     * Usage: return $this->morphTo([PostModel::class, VideoModel::class]);
      */
-    public function morphTo(array $map)
+    public function morphTo(array $models): ?Model
     {
-        $id = $this->model->morph_id;
         $type = $this->model->morph_type;
+        $id = $this->model->morph_id;
 
-        if (!$id || !$type || !isset($map[$type])) {
+        // Build morph map: ['posts' => PostModel::class, ...]
+        $map = [];
+        foreach ($models as $modelClass) {
+            $table = (new $modelClass)->getTableName();
+            $map[$table] = $modelClass;
+        }
+
+        if (!isset($map[$type])) {
             return null;
         }
 
-        $relatedClass = $map[$type];
-        return (new $relatedClass)->find($id, false);
+        $related = new $map[$type];
+        return $related->find($id);
     }
 
     /**

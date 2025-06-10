@@ -1,4 +1,5 @@
 <?php
+
 use Lightpack\Database\Lucid\Model;
 
 class PolymorphicThumbnailModel extends Model
@@ -8,8 +9,8 @@ class PolymorphicThumbnailModel extends Model
     public function thumbnailable()
     {
         return $this->morphTo([
-            'posts' => PostModel::class,
-            'videos' => VideoModel::class,
+            PostModel::class,
+            VideoModel::class,
         ]);
     }
 }
