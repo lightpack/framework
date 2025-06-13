@@ -258,7 +258,6 @@ class Model implements JsonSerializable
     public function save(): void
     {
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
-        $this->attributes->updateTimestamps($primaryKeyValue !== null);
         $query = $this->query();
 
         $this->beforeSave($query);
@@ -267,7 +266,6 @@ class Model implements JsonSerializable
             $this->update($query);
         } else {
             $this->insert($query);
-            $this->attributes->set($this->primaryKey, $this->lastInsertId());
         }
 
         $this->attributes->clearDirty(); // Clear modified state after save
@@ -357,11 +355,18 @@ class Model implements JsonSerializable
 
     protected function insert(Query $query)
     {
-        return $query->insert($this->attributes->toDatabaseArray());
+        $this->attributes->updateTimestamps(false);
+
+        $result = $query->insert($this->attributes->toDatabaseArray());
+
+        $this->attributes->set($this->primaryKey, $this->lastInsertId());
+
+        return $result;
     }
 
     protected function update(Query $query)
     {
+        $this->attributes->updateTimestamps();
         $data = $this->attributes->toDatabaseArray();
         unset($data[$this->primaryKey]);
         return $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->update($data);
