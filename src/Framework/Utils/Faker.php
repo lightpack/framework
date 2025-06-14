@@ -325,6 +325,27 @@ class Faker
         return $currency . number_format($amount, 2);
     }
 
+    /**
+     * Generate an array of fake values using a specified generator method.
+     *
+     * Example:
+     *   $faker->arrayOf('name', 5); // [ 'John Doe', 'Jane Smith', ... ]
+     *   $faker->arrayOf('number', 3, 1, 100); // [42, 17, 99]
+     *
+     * @param string $method Name of the generator method (e.g., 'name', 'email', 'number')
+     * @param int $count Number of items to generate
+     * @param mixed ...$args Arguments to pass to the generator method
+     * @return array
+     */
+    public function arrayOf(string $method, int $count, ...$args): array
+    {
+        $result = [];
+        for ($i = 0; $i < $count; $i++) {
+            $result[] = $this->$method(...$args);
+        }
+        return $result;
+    }
+
     // --- Static data ---
     protected static array $firstNames = [
         'Amit', 'Priya', 'John', 'Lucy', 'Carlos', 'Fatima', 'Wei', 'Anna', 'Tom', 'Sara',

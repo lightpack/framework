@@ -261,4 +261,44 @@ class FakerTest extends TestCase
         $this->assertSame($email1, $email2, 'Seed should make email output deterministic');
         $this->assertSame($number1, $number2, 'Seed should make number output deterministic');
     }
+
+    public function testArrayOfName()
+    {
+        $faker = new Faker();
+        $faker->seed(2024);
+        $names = $faker->arrayOf('name', 5);
+        $this->assertIsArray($names);
+        $this->assertCount(5, $names);
+        foreach ($names as $name) {
+            $this->assertIsString($name);
+            $this->assertMatchesRegularExpression('/^[A-Za-z]+ [A-Za-z]+$/', $name);
+        }
+    }
+
+    public function testArrayOfNumber()
+    {
+        $faker = new Faker();
+        $faker->seed(2024);
+        $numbers = $faker->arrayOf('number', 3, 10, 20);
+        $this->assertIsArray($numbers);
+        $this->assertCount(3, $numbers);
+        foreach ($numbers as $num) {
+            $this->assertIsInt($num);
+            $this->assertGreaterThanOrEqual(10, $num);
+            $this->assertLessThanOrEqual(20, $num);
+        }
+    }
+
+    public function testArrayOfDeterminism()
+    {
+        $faker1 = new Faker();
+        $faker1->seed(555);
+        $arr1 = $faker1->arrayOf('email', 4);
+
+        $faker2 = new Faker();
+        $faker2->seed(555);
+        $arr2 = $faker2->arrayOf('email', 4);
+
+        $this->assertSame($arr1, $arr2, 'Seed should make arrayOf deterministic');
+    }
 }
