@@ -402,6 +402,10 @@ class Faker
      */
     public function arrayOf(string $method, int $count, ...$args): array
     {
+        if (!method_exists($this, $method)) {
+            throw new \InvalidArgumentException("Method '$method' does not exist in " . static::class);
+        }
+
         $result = [];
         for ($i = 0; $i < $count; $i++) {
             $result[] = $this->$method(...$args);
