@@ -2302,4 +2302,94 @@ final class ModelTest extends TestCase
         $this->expectExceptionMessage('Increment/Decrement operations require a where clause');
         $this->product->query()->increment('views');
     }
+
+    // --- Refresh and Reload Tests ---
+    public function testRefreshReloadUpdatesAttributesFromDatabase()
+    {
+        $this->db->table('products')->insert([
+            'name' => 'Original Name',
+            'color' => '#111',
+        ]);
+        $productId = $this->db->lastInsertId();
+        $product = $this->db->model(Product::class);
+        $product->find($productId);
+        $this->assertEquals('Original Name', $product->name);
+        $this->db->table('products')->where('id', $productId)->update(['name' => 'Updated Name']);
+        $this->assertEquals('Original Name', $product->name);
+        $product = $product->refetch();
+        $this->assertEquals('Updated Name', $product->name);
+    }
+
+    public function testReloadReloadsRelations()
+    {
+        $this->db->table('products')->insert([
+            'name' => 'Product with Owner',
+            'color' => '#222',
+        ]);
+        $productId = $this->db->lastInsertId();
+
+        $this->db->table('owners')->insert([
+            'product_id' => $productId,
+            'name' => 'Alice',
+        ]);
+        $ownerId = $this->db->lastInsertId();
+
+        $product = $this->db->model(Product::class);
+        $product->find($productId);
+        $product->load('owner');
+        $this->assertEquals('Alice', $product->owner->name);
+        $this->db->table('owners')->where('id', $ownerId)->update(['name' => 'Bob']);
+        $this->assertEquals('Alice', $product->owner->name);
+        $product = $product->reload();
+        $this->assertEquals('Bob', $product->owner->name);
+    }
+
+    public function testRefreshOnDeletedThrowsException()
+    {
+        $this->db->table('products')->insert([
+            'name' => 'To delete',
+            'color' => '#333',
+        ]);
+        $productId = $this->db->lastInsertId();
+        $product = $this->db->model(Product::class);
+        $product->find($productId);
+        $this->assertEquals('To delete', $product->name);
+        $this->db->table('products')->where('id', $productId)->delete();
+
+        $this->expectException(RecordNotFoundException::class);
+        $product->refetch();
+    }
+
+    public function testReloadReloadsMultipleLoadedRelations()
+    {
+        $this->db->table('products')->insert([
+            'name' => 'Multi-rel Product',
+            'color' => '#555',
+        ]);
+        $productId = $this->db->lastInsertId();
+
+        $this->db->table('options')->insert([
+            'product_id' => $productId,
+            'name' => 'Size',
+            'value' => 'L',
+        ]);
+        $optionId = $this->db->lastInsertId();
+
+        $this->db->table('owners')->insert([
+            'product_id' => $productId,
+            'name' => 'Carol',
+        ]);
+        $ownerId = $this->db->lastInsertId();
+
+        $product = $this->db->model(Product::class);
+        $product->find($productId);
+        $product->load(['owner', 'options']);
+        $this->assertEquals('Carol', $product->owner->name);
+        $this->assertEquals('Size', $product->options[0]->name);
+        $this->db->table('owners')->where('id', $ownerId)->update(['name' => 'Dave']);
+        $this->db->table('options')->where('id', $optionId)->update(['value' => 'XL']);
+        $product = $product->reload();
+        $this->assertEquals('Dave', $product->owner->name);
+        $this->assertEquals('XL', $product->options[0]->value);
+    }
 }

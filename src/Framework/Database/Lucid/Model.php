@@ -3,6 +3,7 @@
 namespace Lightpack\Database\Lucid;
 
 use Exception;
+use Google\Service\Dataform\Relation;
 use JsonSerializable;
 use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;
@@ -292,32 +293,25 @@ class Model implements JsonSerializable
         $this->afterDelete();
     }
 
-    /**
-     * Reload the model's attributes and all loaded relations from the database.
-     * Mutates the instance in place. Returns $this.
-     * Does nothing if the primary key is not set or record is not found.
-     *
-     * @return self
-     */
-    public function reload(): self
-    {
-        $this->refresh();
-
-        foreach ($this->getLoadedRelations() as $relation) {
-            $this->load($relation);
-        }
-        return $this;
-    }
-
-    public function refresh(): self
+    public function refetch(): self|null
     {
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
 
         if ($primaryKeyValue === null) {
-            return $this;
+            return null;
         }
 
-        return $this->find($primaryKeyValue);
+        return (new static)->find($primaryKeyValue);
+    }
+
+    public function reload(): self
+    {
+        $model = $this->refetch();
+
+        $model->load();
+        $model->loadCount();
+
+        return $model;
     }
 
     public function lastInsertId()
