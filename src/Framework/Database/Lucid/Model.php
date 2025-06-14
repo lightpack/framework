@@ -293,7 +293,7 @@ class Model implements JsonSerializable
         $this->afterDelete();
     }
 
-    public function refetch(): self|null
+    public function refetch(): ?static
     {
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
 
