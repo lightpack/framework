@@ -1,7 +1,7 @@
 <?php
 
 use Lightpack\Faker\Faker;
-use Lightpack\Testing\Factory;
+use Lightpack\Factory\Factory;
 use PHPUnit\Framework\TestCase;
 
 class FactoryTest extends TestCase

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Testing;
+namespace Lightpack\Factory;
 
 abstract class Factory
 {
