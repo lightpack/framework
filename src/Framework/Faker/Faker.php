@@ -3,21 +3,59 @@
 /**
  * Lightpack Minimal Faker: Explicit, No-Magic Data Fake Generator
  */
+
 namespace Lightpack\Faker;
 
 class Faker
 {
+    protected string $locale = 'en';
+    protected array $data = [];
+
+    public function __construct(string $locale = 'en')
+    {
+        $this->locale = $locale;
+        $this->loadLocaleData($locale);
+    }
+
+    protected function loadLocaleData(string $locale): void
+    {
+        $base = __DIR__ . '/Locales/';
+        $file = $base . $locale . '.php';
+        $default = $base . 'en.php';
+
+        if (file_exists($file)) {
+            $this->data = require $file;
+        } elseif (file_exists($default)) {
+            $this->data = require $default;
+            $this->locale = 'en';
+        } else {
+            throw new \RuntimeException('No locale data found for Faker.');
+        }
+    }
+
+    protected function getData(string $key): array
+    {
+        if (isset($this->data[$key])) {
+            return $this->data[$key];
+        }
+        // fallback to English
+        $en = require __DIR__ . '/Locales/en.php';
+        return $en[$key] ?? [];
+    }
     public function name(): string
     {
-        $first = self::$firstNames[mt_rand(0, count(self::$firstNames)-1)];
-        $last = self::$lastNames[mt_rand(0, count(self::$lastNames)-1)];
+        $firstNames = $this->getData('firstNames');
+        $lastNames = $this->getData('lastNames');
+        $first = $firstNames[mt_rand(0, count($firstNames) - 1)];
+        $last = $lastNames[mt_rand(0, count($lastNames) - 1)];
         return "$first $last";
     }
 
     public function email(): string
     {
         $user = strtolower(preg_replace('/\s+/', '', $this->name()));
-        $domain = self::$domains[mt_rand(0, count(self::$domains)-1)];
+        $domains = $this->getData('domains');
+        $domain = $domains[mt_rand(0, count($domains) - 1)];
         return "$user@{$domain}";
     }
 
@@ -40,8 +78,9 @@ class Faker
     public function sentence(int $words = 8): string
     {
         $out = [];
+        $wordList = $this->getData('words');
         for ($i = 0; $i < $words; $i++) {
-            $out[] = self::$words[mt_rand(0, count(self::$words)-1)];
+            $out[] = $wordList[mt_rand(0, count($wordList) - 1)];
         }
         $str = ucfirst(implode(' ', $out)) . '.';
         return $str;
@@ -75,7 +114,7 @@ class Faker
 
     public function enum(array $values)
     {
-        return $values[mt_rand(0, count($values)-1)];
+        return $values[mt_rand(0, count($values) - 1)];
     }
 
     /**
@@ -91,12 +130,13 @@ class Faker
      */
     public function phone(): string
     {
-        $prefix = self::$phonePrefixes[mt_rand(0, count(self::$phonePrefixes)-1)];
+        $prefixes = $this->getData('phonePrefixes');
+        $prefix = $prefixes[mt_rand(0, count($prefixes) - 1)];
         $number = '';
         for ($i = 0; $i < 8; $i++) {
             $number .= mt_rand(0, 9);
         }
-        return $prefix . $number; 
+        return $prefix . $number;
     }
 
     /**
@@ -105,7 +145,8 @@ class Faker
     public function address(): string
     {
         $num = mt_rand(1, 9999);
-        $street = self::$streets[mt_rand(0, count(self::$streets)-1)];
+        $streets = $this->getData('streets');
+        $street = $streets[mt_rand(0, count($streets) - 1)];
         $city = $this->city();
         $state = $this->state();
         $country = $this->country();
@@ -117,7 +158,8 @@ class Faker
      */
     public function city(): string
     {
-        return self::$cities[mt_rand(0, count(self::$cities)-1)];
+        $cities = $this->getData('cities');
+        return $cities[mt_rand(0, count($cities) - 1)];
     }
 
     /**
@@ -125,7 +167,8 @@ class Faker
      */
     public function state(): string
     {
-        return self::$states[mt_rand(0, count(self::$states)-1)];
+        $states = $this->getData('states');
+        return $states[mt_rand(0, count($states) - 1)];
     }
 
     /**
@@ -133,7 +176,8 @@ class Faker
      */
     public function country(): string
     {
-        return self::$countries[mt_rand(0, count(self::$countries)-1)];
+        $countries = $this->getData('countries');
+        return $countries[mt_rand(0, count($countries) - 1)];
     }
 
     /**
@@ -141,7 +185,8 @@ class Faker
      */
     public function company(): string
     {
-        return self::$companies[mt_rand(0, count(self::$companies)-1)];
+        $companies = $this->getData('companies');
+        return $companies[mt_rand(0, count($companies) - 1)];
     }
 
     /**
@@ -149,7 +194,8 @@ class Faker
      */
     public function url(): string
     {
-        $domain = self::$domains[mt_rand(0, count(self::$domains)-1)];
+        $domains = $this->getData('domains');
+        $domain = $domains[mt_rand(0, count($domains) - 1)];
         $user = strtolower(preg_replace('/\s+/', '', $this->name()));
         return "https://$domain/$user";
     }
@@ -159,8 +205,10 @@ class Faker
      */
     public function username(): string
     {
-        $first = strtolower(self::$firstNames[mt_rand(0, count(self::$firstNames)-1)]);
-        $last = strtolower(self::$lastNames[mt_rand(0, count(self::$lastNames)-1)]);
+        $firstNames = $this->getData('firstNames');
+        $lastNames = $this->getData('lastNames');
+        $first = strtolower($firstNames[mt_rand(0, count($firstNames) - 1)]);
+        $last = strtolower($lastNames[mt_rand(0, count($lastNames) - 1)]);
         $num = mt_rand(1, 99);
         return "$first.$last$num";
     }
@@ -233,8 +281,8 @@ class Faker
     public function zipCode(): string
     {
         $formats = ['#####', '######', '### ###', '#####-####'];
-        $format = $formats[mt_rand(0, count($formats)-1)];
-        return preg_replace_callback('/#/', fn() => mt_rand(0,9), $format);
+        $format = $formats[mt_rand(0, count($formats) - 1)];
+        return preg_replace_callback('/#/', fn() => mt_rand(0, 9), $format);
     }
 
     /**
@@ -242,7 +290,8 @@ class Faker
      */
     public function jobTitle(): string
     {
-        return self::$jobTitles[mt_rand(0, count(self::$jobTitles)-1)];
+        $jobTitles = $this->getData('jobTitles');
+        return $jobTitles[mt_rand(0, count($jobTitles) - 1)];
     }
 
     /**
@@ -250,7 +299,8 @@ class Faker
      */
     public function productName(): string
     {
-        return self::$productNames[mt_rand(0, count(self::$productNames)-1)];
+        $productNames = $this->getData('productNames');
+        return $productNames[mt_rand(0, count($productNames) - 1)];
     }
 
     /**
@@ -265,7 +315,7 @@ class Faker
             ['34', 15],     // Amex, always 15 digits, starts with 34 or 37
             ['37', 15],     // Amex, always 15 digits, starts with 37
         ];
-        [$prefix, $length] = $types[mt_rand(0, count($types)-1)];
+        [$prefix, $length] = $types[mt_rand(0, count($types) - 1)];
         $number = $prefix;
         while (strlen($number) < $length) {
             $number .= mt_rand(0, 9);
@@ -310,8 +360,9 @@ class Faker
     public function slug(int $words = 3): string
     {
         $chosen = [];
+        $wordList = $this->getData('words');
         for ($i = 0; $i < $words; $i++) {
-            $chosen[] = self::$words[mt_rand(0, count(self::$words)-1)];
+            $chosen[] = $wordList[mt_rand(0, count($wordList) - 1)];
         }
         return strtolower(implode('-', $chosen));
     }
@@ -345,46 +396,4 @@ class Faker
         }
         return $result;
     }
-
-    // --- Static data ---
-    protected static array $firstNames = [
-        'Amit', 'Priya', 'John', 'Lucy', 'Carlos', 'Fatima', 'Wei', 'Anna', 'Tom', 'Sara',
-        'David', 'Maria', 'James', 'Linda', 'Robert', 'Patricia', 'Michael', 'Barbara', 'William', 'Elizabeth',
-    ];
-    protected static array $lastNames = [
-        'Sharma', 'Smith', 'Patel', 'Garcia', 'Wang', 'Kim', 'Kumar', 'Singh', 'Jones', 'Brown',
-        'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas', 'Jackson', 'White', 'Harris',
-    ];
-    protected static array $domains = [
-        'example.com', 'test.com', 'demo.org', 'mail.com', 'sample.net',
-    ];
-    protected static array $phonePrefixes = [
-        '+91-', '+1-', '+44-', '+81-', '+61-',
-    ];
-    protected static array $streets = [
-        'Main St', 'High St', 'Station Rd', 'Park Ave', 'Church St', 'Maple Ave', 'Oak St', 'Pine Rd', 'Cedar St', 'Elm St',
-    ];
-    protected static array $cities = [
-        'Mumbai', 'Delhi', 'London', 'New York', 'Sydney', 'Tokyo', 'Berlin', 'Paris', 'Toronto', 'San Francisco',
-    ];
-    protected static array $states = [
-        'Maharashtra', 'California', 'New York', 'London', 'Tokyo', 'Berlin', 'Ontario', 'New South Wales', 'Île-de-France', 'Delhi',
-    ];
-    protected static array $countries = [
-        'India', 'USA', 'UK', 'Australia', 'Japan', 'Germany', 'France', 'Canada', 'Brazil', 'Singapore',
-    ];
-    protected static array $companies = [
-        'Acme Corp', 'Globex', 'Initech', 'Umbrella', 'Wayne Enterprises', 'Stark Industries', 'Hooli', 'Massive Dynamic', 'Wonka Industries', 'Cyberdyne Systems',
-    ];
-    protected static array $jobTitles = [
-        'Software Engineer', 'Project Manager', 'Designer', 'Accountant', 'Sales Executive', 'Data Analyst', 'HR Manager', 'Consultant', 'Marketing Lead', 'Support Specialist',
-    ];
-    protected static array $productNames = [
-        'UltraWidget', 'SuperGadget', 'PowerTool', 'EcoBottle', 'SmartLamp', 'Speedster Bike', 'ComfyChair', 'MaxiPhone', 'CleanSweep', 'FitTracker',
-    ];
-    protected static array $words = [
-        'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do',
-        'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua', 'ut',
-        'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud', 'exercitation', 'ullamco', 'laboris', 'nisi',
-    ];
 }
