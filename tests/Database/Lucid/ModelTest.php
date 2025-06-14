@@ -12,6 +12,7 @@ require_once 'Manager.php';
 require_once 'CastModel.php';
 
 use Lightpack\Container\Container;
+use Lightpack\Database\DB;
 use Lightpack\Database\Lucid\Collection;
 use PHPUnit\Framework\TestCase;
 use \Lightpack\Database\Lucid\Model;
@@ -141,7 +142,7 @@ final class ModelTest extends TestCase
 
     public function testModelDeleteWhenIdNotSet()
     {
-        $this->assertNull($this->product->delete());
+        $this->assertFalse($this->product->delete());
     }
 
     public function testModelHasOneRelation()
@@ -290,7 +291,7 @@ final class ModelTest extends TestCase
             ['user_id' => 1, 'role_id' => 2],
             ['user_id' => 2, 'role_id' => 2],
         ]);
-        
+
         /** @var User */
         $user = $this->db->model(User::class);
         $user->find(1);
@@ -315,19 +316,19 @@ final class ModelTest extends TestCase
             ['name' => 'John'],
             ['name' => 'Jane'],
         ]);
-        
+
         $this->db->table('roles')->insert([
             ['name' => 'admin'],
             ['name' => 'user'],
             ['name' => 'guest'],
         ]);
-        
+
         $this->db->table('role_user')->insert([
             ['user_id' => 1, 'role_id' => 1],
             ['user_id' => 1, 'role_id' => 2],
             ['user_id' => 2, 'role_id' => 2],
         ]);
-        
+
         /** @var User */
         $user = $this->db->model(User::class);
         $user->find(1);
@@ -337,7 +338,7 @@ final class ModelTest extends TestCase
         $user->load('roles');
         $userRolesCountAfterSync = $user->roles->count();
         $rolesAfter = array_column($user->roles->toArray(), 'name');
-        
+
         // Assertions
         $this->assertEquals(2, $userRolesCountBeforeSync);
         $this->assertEquals(2, $userRolesCountAfterSync);
@@ -453,11 +454,11 @@ final class ModelTest extends TestCase
 
         $project = $this->db->model(Project::class);
         $project->find(2);
-        $project->load(['tasks' => function($q) {
+        $project->load(['tasks' => function ($q) {
             $q->where('name', 'LIKE', '%Task%');
         }]);
 
-       // Assertions
+        // Assertions
         $this->assertEquals(2, count($project->tasks));
         $this->assertInstanceOf(Collection::class, $project->tasks);
         $this->assertIsArray($project->tasks->toArray());
@@ -479,7 +480,7 @@ final class ModelTest extends TestCase
 
         $project = $this->db->model(Project::class);
         $project->find(2);
-        $project->loadCount(['tasks' => function($q) {
+        $project->loadCount(['tasks' => function ($q) {
             $q->where('name', 'LIKE', '%Task%');
         }]);
 
@@ -688,7 +689,7 @@ final class ModelTest extends TestCase
         // Test with() for empty parent records.
         $projectModel = $this->db->model(Project::class);
         $projects = $projectModel::query()->with('tasks')->where('id', '=', 999)->all();
-        
+
         $this->assertTrue($projects->isEmpty());
     }
 
@@ -1266,7 +1267,7 @@ final class ModelTest extends TestCase
 
         // fetch all projects that have atleast one task with name 'Task 1'
         $projectModel = $this->db->model(Project::class);
-        $projects = $projectModel::query()->has('tasks', '>', 0, function($q) {
+        $projects = $projectModel::query()->has('tasks', '>', 0, function ($q) {
             $q->where('name', '=', 'Task 1');
         })->all();
 
@@ -1486,7 +1487,7 @@ final class ModelTest extends TestCase
             ['name' => 'Task 2', 'project_id' => 2],
             ['name' => 'Task 3', 'project_id' => 2],
         ]);
-        
+
         // fetch all projects with tasks count
         $projectModel = $this->db->model(Project::class);
 
@@ -1621,7 +1622,7 @@ final class ModelTest extends TestCase
         $this->assertCount(2, $project->tasks);
         $this->assertIsString($projectJson);
         $this->assertArrayHasKey('name', $projectArray);
-        $this->assertArrayHasKey('tasks', $projectArray);   
+        $this->assertArrayHasKey('tasks', $projectArray);
         $this->assertEquals('Project 1', $projectArray['name']);
         $this->assertCount(2, $projectArray['tasks']);
     }
@@ -1641,15 +1642,15 @@ final class ModelTest extends TestCase
         $projects = $projectModel::query()->all();
 
         $this->assertCount(4, $projects);
-        $this->assertEquals([1,2,3,4], $projects->ids());
+        $this->assertEquals([1, 2, 3, 4], $projects->ids());
 
         // lets exclude product ID: 2
         $projects = $projects->exclude(2);
         $this->assertCount(3, $projects);
-        $this->assertEquals([1,3,4], $projects->ids());
+        $this->assertEquals([1, 3, 4], $projects->ids());
 
         // lets exclude product IDs: 1,4
-        $projects = $projects->exclude([1,4]);
+        $projects = $projects->exclude([1, 4]);
         $this->assertCount(1, $projects);
         $this->assertEquals([3], $projects->ids());
     }
@@ -1665,7 +1666,7 @@ final class ModelTest extends TestCase
 
         // fetch first all projects
         $projectModel = $this->db->model(Project::class);
-        $projects = $projectModel::query()->all();   
+        $projects = $projectModel::query()->all();
 
         // filter out projects having name 'Project 2'
         $filteredProjects = $projects->filter(fn($project) => $project->name !== 'Project 2');
@@ -1673,8 +1674,8 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertCount(3, $projects);
         $this->assertCount(2, $filteredProjects);
-        $this->assertEquals([1,2,3], $projects->ids());
-        $this->assertEquals([1,3], $filteredProjects->ids());
+        $this->assertEquals([1, 2, 3], $projects->ids());
+        $this->assertEquals([1, 3], $filteredProjects->ids());
     }
 
     public function testModelCloneMethod()
@@ -1726,7 +1727,7 @@ final class ModelTest extends TestCase
         // Test 5: It throws exception if cloned from a non-existing model
         try {
             $clone = (new Article)->clone();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->assertEquals('You cannot clone a non-existing model instance.', $e->getMessage());
         }
     }
@@ -1736,7 +1737,7 @@ final class ModelTest extends TestCase
         // Make sure we have no records
         (new Product)->query()->delete();
 
-        foreach(range(1, 25) as $item) {
+        foreach (range(1, 25) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC'];
         }
 
@@ -1745,8 +1746,8 @@ final class ModelTest extends TestCase
         // Process chunk query
         $chunkedRecords = [];
 
-        (new Product)->query()->chunk(5, function($records) use (&$chunkedRecords) {
-            if(count($chunkedRecords) == 4) {
+        (new Product)->query()->chunk(5, function ($records) use (&$chunkedRecords) {
+            if (count($chunkedRecords) == 4) {
                 return false;
             }
 
@@ -1756,7 +1757,7 @@ final class ModelTest extends TestCase
         // Assertions
         $this->assertCount(4, $chunkedRecords);
 
-        foreach($chunkedRecords as $records) {
+        foreach ($chunkedRecords as $records) {
             $this->assertCount(5, $records);
         }
     }
@@ -1766,7 +1767,7 @@ final class ModelTest extends TestCase
         // Make sure we have no records
         Product::query()->delete();
 
-        foreach(range(1, 10) as $item) {
+        foreach (range(1, 10) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC', 'price' => 100];
         }
 
@@ -1788,11 +1789,11 @@ final class ModelTest extends TestCase
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
-        
+
         // get all projects 
         $project = $this->db->model(Project::class);
         $projects = $project::query()->all();
-        $projects->each(function($project) {
+        $projects->each(function ($project) {
             $project->toUppercase();
         });
 
@@ -1811,7 +1812,7 @@ final class ModelTest extends TestCase
             ['name' => 'Project 2'],
             ['name' => 'Project 3'],
         ]);
-        
+
         // get all projects 
         $project = $this->db->model(Project::class);
         $projects = $project::query()->all();
@@ -1951,7 +1952,7 @@ final class ModelTest extends TestCase
     {
         // Test all types of casting
         $now = new \DateTime();
-        
+
         $data = [
             'string_col' => 123,
             'integer_col' => '456',
@@ -1982,19 +1983,19 @@ final class ModelTest extends TestCase
 
         $this->assertIsArray($record->json_col);
         $this->assertEquals(
-            ['key' => 'value', 'nested' => ['foo' => 'bar']], 
+            ['key' => 'value', 'nested' => ['foo' => 'bar']],
             $record->json_col,
             'JSON in database does not match expected array structure'
         );
-        
+
         $this->assertEquals($now->format('Y-m-d'), $record->date_col);
-        
+
         $this->assertInstanceOf(\DateTimeInterface::class, $record->datetime_col);
         $this->assertEquals(
-            $now->format('Y-m-d H:i:s'), 
+            $now->format('Y-m-d H:i:s'),
             $record->datetime_col->format('Y-m-d H:i:s')
         );
-        
+
         $this->assertIsInt($record->timestamp_col);
         $this->assertEquals($now->getTimestamp(), $record->timestamp_col);
     }
@@ -2002,7 +2003,7 @@ final class ModelTest extends TestCase
     public function testModelAttributeCastingWithNullValues()
     {
         $model = $this->db->model(CastModel::class);
-        
+
         $data = [
             'string_col' => null,
             'integer_col' => null,
@@ -2055,33 +2056,33 @@ final class ModelTest extends TestCase
         $model->date_col = $now->format('Y-m-d');
         $model->datetime_col = $now->format('Y-m-d H:i:s');
         $model->timestamp_col = $now->format('Y-m-d H:i:s');
-        
+
         $model->save();
-        
+
         // Verify types after save
         $this->assertIsString($model->string_col);
         $this->assertEquals('123', $model->string_col);
-        
+
         $this->assertIsInt($model->integer_col);
         $this->assertEquals(456, $model->integer_col);
-        
+
         $this->assertIsFloat($model->float_col);
         $this->assertEquals(123.45, $model->float_col);
-        
+
         $this->assertIsBool($model->boolean_col);
         $this->assertTrue($model->boolean_col);
-        
+
         $this->assertIsArray($model->json_col);
         $this->assertEquals(['key' => 'value'], $model->json_col);
-        
+
         $this->assertEquals($now->format('Y-m-d'), $model->date_col);
-        
+
         $this->assertInstanceOf(\DateTimeInterface::class, $model->datetime_col);
         $this->assertEquals(
             $now->format('Y-m-d H:i:s'),
             $model->datetime_col->format('Y-m-d H:i:s')
         );
-        
+
         $this->assertIsInt($model->timestamp_col);
         $this->assertEquals($now->getTimestamp(), $model->timestamp_col);
 
@@ -2151,7 +2152,7 @@ final class ModelTest extends TestCase
 
         // Verify relation casting
         $this->assertCount(2, $product->options);
-        
+
         $option = $product->options->first();
         $this->assertIsString($option->string_col);
         $this->assertEquals('Option 1', $option->string_col);
@@ -2196,7 +2197,7 @@ final class ModelTest extends TestCase
         // Test modifying existing model
         $model = $model->find($model->id);
         $this->assertFalse($model->isDirty());
-        
+
         $model->name = 'Updated';
         $this->assertTrue($model->isDirty());
         $this->assertTrue($model->isDirty('name'));
@@ -2275,25 +2276,25 @@ final class ModelTest extends TestCase
         // Test 1: Basic increment
         $product = $this->product->query()->one();
         $this->product->query()->where('id', $product->id)->increment('views');
-        
+
         $updatedProduct = $this->product->query()->where('id', $product->id)->one();
         $this->assertEquals(1, $updatedProduct->views);
 
         // Test 2: Increment by amount
         $this->product->query()->where('id', $product->id)->increment('views', 5);
-        
+
         $updatedProduct = $this->product->query()->where('id', $product->id)->one();
         $this->assertEquals(6, $updatedProduct->views);
 
         // Test 3: Basic decrement
         $this->product->query()->where('id', $product->id)->decrement('views');
-        
+
         $updatedProduct = $this->product->query()->where('id', $product->id)->one();
         $this->assertEquals(5, $updatedProduct->views);
 
         // Test 4: Decrement by amount
         $this->product->query()->where('id', $product->id)->decrement('views', 3);
-        
+
         $updatedProduct = $this->product->query()->where('id', $product->id)->one();
         $this->assertEquals(2, $updatedProduct->views);
 
@@ -2301,5 +2302,38 @@ final class ModelTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Increment/Decrement operations require a where clause');
         $this->product->query()->increment('views');
+    }
+
+    // --- Refresh and Reload Tests ---
+    public function testRefetchUpdatesAttributesFromDatabase()
+    {
+        $this->db->table('products')->insert([
+            'name' => 'Original Name',
+            'color' => '#111',
+        ]);
+        $productId = $this->db->lastInsertId();
+        $product = $this->db->model(Product::class);
+        $product->find($productId);
+        $this->assertEquals('Original Name', $product->name);
+        $this->db->table('products')->where('id', $productId)->update(['name' => 'Updated Name']);
+        $this->assertEquals('Original Name', $product->name);
+        $product = $product->refetch();
+        $this->assertEquals('Updated Name', $product->name);
+    }
+
+    public function testRefetchOnDeletedThrowsException()
+    {
+        $this->db->table('products')->insert([
+            'name' => 'To delete',
+            'color' => '#333',
+        ]);
+        $productId = $this->db->lastInsertId();
+        $product = $this->db->model(Product::class);
+        $product->find($productId);
+        $this->assertEquals('To delete', $product->name);
+        $this->db->table('products')->where('id', $productId)->delete();
+
+        $this->expectException(RecordNotFoundException::class);
+        $product->refetch();
     }
 }

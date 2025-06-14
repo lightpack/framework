@@ -32,20 +32,24 @@
             "Lightpack\\Tests\\": "tests/"
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
-        "php": ">=8.2",
-        "phpmailer/phpmailer": "^6.9.2",
-        "dompdf/dompdf": "dev-master",
-        "twilio/sdk": "dev-main",
-        "robthree/twofactorauth": "dev-master"
+        "php": ">=8.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5.10",
+        "phpmailer/phpmailer": "^6.9.2",
+        "dompdf/dompdf": "^2.0",
+        "twilio/sdk": "^7.0",
+        "robthree/twofactorauth": "^1.8",
         "aws/aws-sdk-php": "^3.342",
         "google/apiclient": "^2.0"
     },
     "suggest": {
+        "phpmailer/phpmailer": "Required for Mailer integration (^6.9.2)",
+        "dompdf/dompdf": "Required for PDF generation (^2.0)",
+        "twilio/sdk": "Required for Twilio SMS integration (^7.0)",
+        "robthree/twofactorauth": "Required for Two-Factor Authentication (^1.8)",
         "aws/aws-sdk-php": "Required for S3Storage driver (^3.342)",
         "google/apiclient": "Required for GoogleProvider (^2.0)"
     },

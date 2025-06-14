@@ -3,6 +3,7 @@
 namespace Lightpack\Database\Lucid;
 
 use Exception;
+use Google\Service\Dataform\Relation;
 use JsonSerializable;
 use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;
@@ -28,9 +29,14 @@ class Model implements JsonSerializable
     protected $connection;
 
     /**
-     * @var bool Timestamps
+     * @var bool Timestamps: created_at and updated_at
      */
     protected $timestamps = false;
+
+    /**
+     * @var bool
+     */
+    protected $autoIncrements = true;
 
     /**
      * @var array Attributes to be hidden for serialization or array conversion.
@@ -255,43 +261,97 @@ class Model implements JsonSerializable
         return $this;
     }
 
+    /**
+     * Save the current model instance to the database.
+     *
+     * - If the primary key is not set, inserts a new record.
+     * - If the primary key is set, updates the existing record.
+     * - Only reliable for models with auto-increment primary keys.
+     * - For non-auto-increment PKs, use insert() and update() explicitly.
+     * - Executes beforeSave() and afterSave() hooks for extensibility.
+     *
+     * @return void
+     *
+     * @throws \PDOException On database errors.
+     */
     public function save(): void
     {
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
-        $this->attributes->updateTimestamps($primaryKeyValue !== null);
-        $query = $this->query();
 
-        $this->beforeSave($query);
+        $this->beforeSave();
 
         if ($primaryKeyValue !== null) {
-            $this->update($query);
+            $this->executeUpdate();
         } else {
-            $this->insert($query);
-            $this->attributes->set($this->primaryKey, $this->lastInsertId());
+            $this->executeInsert();
         }
 
-        $this->attributes->clearDirty(); // Clear modified state after save
+        $this->attributes->clearDirty();
         $this->afterSave();
     }
 
-    public function delete($id = null)
+    /**
+     * Delete the current model instance from the database.
+     *
+     * If an $id is provided, attempts to find and delete the record with that primary key.
+     * If no $id is provided, deletes the current instance (if it has a primary key value).
+     *
+     * - Returns true if a row was deleted, false if nothing was deleted (e.g., missing PK or record not found).
+     * - Executes beforeDelete() and afterDelete() hooks for extensibility.
+     * - Throws exceptions on database errors (e.g., constraint violations).
+     *
+     * @param mixed|null $id Optional primary key value to delete a specific record.
+     * @return bool True if a row was deleted, false otherwise.
+     *
+     * @throws \Lightpack\Exceptions\RecordNotFoundException If $id is provided and not found.
+     * @throws \PDOException On database errors.
+     */
+    public function delete($id = null): bool
     {
         if ($id) {
             $this->find($id);
         }
 
         if (!$this->attributes->get($this->primaryKey)) {
-            return;
+            return false;
         }
 
-        $query = $this->query();
-        $this->beforeDelete($query);
-        $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
+        $this->beforeDelete();
+        $affected = self::query()->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
         $this->afterDelete();
+
+        return $affected === 1;
     }
 
-    public function lastInsertId()
+    /**
+     * Fetch a new instance using current model without mutating itself.
+     * Returns null if the primary key is not set.
+     */
+    public function refetch(): ?static
     {
+        $primaryKeyValue = $this->attributes->get($this->primaryKey);
+
+        if ($primaryKeyValue === null) {
+            return null;
+        }
+
+        return (new static)->find($primaryKeyValue);
+    }
+
+    /**
+     * Get the last auto-incremented primary key value from the database connection.
+     *
+     * Used after insert operations to retrieve the generated primary key value
+     * for models with auto-incrementing primary keys.
+     *
+     * @return null|int The last inserted primary key value.
+     */
+    public function lastInsertId(): ?int
+    {
+        if (!$this->autoIncrements) {
+            return null;
+        }
+
         return $this->getConnection()->lastInsertId();
     }
 
@@ -345,6 +405,26 @@ class Model implements JsonSerializable
         // Hook method
     }
 
+    protected function beforeInsert()
+    {
+        // Hook method
+    }
+
+    protected function afterInsert()
+    {
+        // Hook method
+    }
+
+    protected function beforeUpdate()
+    {
+        // Hook method
+    }
+
+    protected function afterUpdate()
+    {
+        // Hook method
+    }
+
     protected function beforeDelete()
     {
         // Hook method
@@ -355,16 +435,75 @@ class Model implements JsonSerializable
         // Hook method
     }
 
-    protected function insert(Query $query)
+    /**
+     * Insert the current model instance into the database.
+     * - For non-auto-increment PKs, explicitly set the primary key before calling.
+     * - Executes beforeInsert() and afterInsert() hooks for extensibility.
+     *
+     * @return void
+     *
+     * @throws \PDOException On database errors.
+     */
+    public function insert(): void
     {
-        return $query->insert($this->attributes->toDatabaseArray());
+        $this->beforeInsert();
+
+        $this->executeInsert();
+
+        $this->attributes->clearDirty();
+        $this->afterInsert();
     }
 
-    protected function update(Query $query)
+    /**
+     * Updates the row matching the model's primary key.
+     * - Executes beforeUpdate() and afterUpdate() hooks for extensibility.
+     *
+     * @return bool True if a row was updated, false otherwise.
+     *
+     * @throws \PDOException On database errors.
+     * @throws \RuntimeException If the primary key is not set.
+     */
+    public function update(): bool
     {
+        $this->beforeUpdate();
+
+        $affectedRows = $this->executeUpdate();
+
+        $this->attributes->clearDirty();
+        $this->afterUpdate();
+
+        return $affectedRows == 1;
+    }
+
+    protected function executeInsert(): void
+    {
+        $this->attributes->updateTimestamps(false);
+
+        // Error: Manual PK required for non-auto-incrementing models
+        if (!$this->autoIncrements && $this->attributes->get($this->primaryKey) === null) {
+            throw new \RuntimeException('Insert failed: This model does not use an auto-incrementing primary key. You must assign a primary key value before saving.');
+        }
+
+        $result = self::query()->insert($this->attributes->toDatabaseArray());
+
+        if ($this->autoIncrements) {
+            $this->attributes->set($this->primaryKey, $this->lastInsertId());
+        }
+    }
+
+    protected function executeUpdate(): int
+    {
+        $this->attributes->updateTimestamps();
         $data = $this->attributes->toDatabaseArray();
         unset($data[$this->primaryKey]);
-        return $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->update($data);
+
+        $primaryKeyValue = $this->attributes->get($this->primaryKey);
+
+        if ($primaryKeyValue === null) {
+            throw new \RuntimeException('Primary key must be set to update the record.');
+        }
+
+        return self::query()->where($this->primaryKey, '=', $primaryKeyValue)->update($data);
     }
 
     public function jsonSerialize(): mixed
