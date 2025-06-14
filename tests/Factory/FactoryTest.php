@@ -9,7 +9,7 @@ class FactoryTest extends TestCase
     public function testMakeReturnsArrayWithExpectedKeys()
     {
         $factory = new UserFactory();
-        $user = $factory->make();
+        $user = $factory->produce();
         $this->assertIsArray($user);
         $this->assertArrayHasKey('name', $user);
         $this->assertArrayHasKey('email', $user);
@@ -20,14 +20,14 @@ class FactoryTest extends TestCase
     public function testMakeWithOverrides()
     {
         $factory = new UserFactory();
-        $user = $factory->make(['email' => 'custom@example.com']);
+        $user = $factory->produce(['email' => 'custom@example.com']);
         $this->assertSame('custom@example.com', $user['email']);
     }
 
     public function testManyReturnsCorrectCount()
     {
         $factory = new UserFactory();
-        $users = $factory->many(5);
+        $users = $factory->batch(5)->produce();
         $this->assertCount(5, $users);
         foreach ($users as $user) {
             $this->assertIsArray($user);
@@ -37,7 +37,7 @@ class FactoryTest extends TestCase
     public function testManyWithOverrides()
     {
         $factory = new UserFactory();
-        $users = $factory->many(3, ['address' => '123 Main St']);
+        $users = $factory->batch(3)->produce(['address' => '123 Main St']);
         $this->assertCount(3, $users);
         foreach ($users as $user) {
             $this->assertSame('123 Main St', $user['address']);
@@ -48,7 +48,7 @@ class FactoryTest extends TestCase
 // UserFactory
 class UserFactory extends Factory
 {
-    protected function definition(): array
+    protected function template(): array
     {
         $faker = new Faker();
         return [
