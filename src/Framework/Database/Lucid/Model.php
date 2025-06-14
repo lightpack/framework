@@ -261,6 +261,19 @@ class Model implements JsonSerializable
         return $this;
     }
 
+    /**
+     * Save the current model instance to the database.
+     *
+     * - If the primary key is not set, inserts a new record.
+     * - If the primary key is set, updates the existing record.
+     * - Only reliable for models with auto-increment primary keys.
+     * - For non-auto-increment PKs, use insert() and update() explicitly.
+     * - Executes beforeSave() and afterSave() hooks for extensibility.
+     *
+     * @return void
+     *
+     * @throws \PDOException On database errors.
+     */
     public function save(): void
     {
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
@@ -273,7 +286,7 @@ class Model implements JsonSerializable
             $this->executeInsert();
         }
 
-        $this->attributes->clearDirty(); // Clear modified state after save
+        $this->attributes->clearDirty();
         $this->afterSave();
     }
 
@@ -303,9 +316,8 @@ class Model implements JsonSerializable
             return false;
         }
 
-        $query = $this->query();
-        $this->beforeDelete($query);
-        $affected = $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
+        $this->beforeDelete();
+        $affected = self::query()->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
         $this->afterDelete();
 
         return $affected === 1;
@@ -411,21 +423,41 @@ class Model implements JsonSerializable
         // Hook method
     }
 
+    /**
+     * Insert the current model instance into the database.
+     * - For non-auto-increment PKs, explicitly set the primary key before calling.
+     * - Executes beforeInsert() and afterInsert() hooks for extensibility.
+     *
+     * @return void
+     *
+     * @throws \PDOException On database errors.
+     */
     public function insert(): void
     {
         $this->beforeInsert();
 
         $this->executeInsert();
 
+        $this->attributes->clearDirty();
         $this->afterInsert();
     }
 
-    public function update()
+    /**
+     * Updates the row matching the model's primary key.
+     * - Executes beforeUpdate() and afterUpdate() hooks for extensibility.
+     *
+     * @return bool True if a row was updated, false otherwise.
+     *
+     * @throws \PDOException On database errors.
+     * @throws \RuntimeException If the primary key is not set.
+     */
+    public function update(): bool
     {
         $this->beforeUpdate();
 
         $affectedRows = $this->executeUpdate();
 
+        $this->attributes->clearDirty();
         $this->afterUpdate();
 
         return $affectedRows == 1;
