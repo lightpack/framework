@@ -375,12 +375,12 @@ class Model implements JsonSerializable
         // Hook method
     }
 
-    protected function beforeCreate()
+    protected function beforeInsert()
     {
         // Hook method
     }
 
-    protected function afterCreate()
+    protected function afterInsert()
     {
         // Hook method
     }
@@ -405,13 +405,13 @@ class Model implements JsonSerializable
         // Hook method
     }
 
-    public function create()
+    public function insert()
     {
-        $this->beforeCreate();
+        $this->beforeInsert();
 
         $result = $this->executeInsert();
 
-        $this->afterCreate();
+        $this->afterInsert();
 
         return $result;
     }
@@ -433,7 +433,7 @@ class Model implements JsonSerializable
 
         // Error: Manual PK required for non-auto-incrementing models
         if (!$this->autoIncrements && $this->attributes->get($this->primaryKey) === null) {
-            throw new \RuntimeException('Cannot Insert: This model does not use an auto-incrementing primary key. You must assign a primary key value before saving.');
+            throw new \RuntimeException('Insert failed: This model does not use an auto-incrementing primary key. You must assign a primary key value before saving.');
         }
 
         $result = self::query()->insert($this->attributes->toDatabaseArray());
