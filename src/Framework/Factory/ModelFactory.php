@@ -21,7 +21,7 @@ abstract class ModelFactory extends Factory
      */
     public function save(array $overrides = [])
     {
-        $data = $this->produce($overrides);
+        $data = $this->make($overrides);
         $modelClass = $this->for();
 
         if ($this->isBatch($data)) {

@@ -71,7 +71,7 @@ class ModelFactoryTest extends TestCase
     public function testModelFactorySavesBatchModels()
     {
         $factory = new DummyTestFactory;
-        $models = $factory->batch(2)->save([
+        $models = $factory->times(2)->save([
             'name' => 'Batch Name'
         ]);
 

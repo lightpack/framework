@@ -16,20 +16,20 @@ abstract class Factory
     abstract protected function template(): array;
 
     /**
-     * Set the batch count for produce().
+     * Set the number of instances to make().
      * Fluent interface.
      */
-    public function batch(int $count): static
+    public function times(int $count): static
     {
         $this->batchCount = $count;
         return $this;
     }
 
     /**
-     * Produce one or many entities depending on batch().
-     * Resets batch count after use.
+     * Make one or many entities depending on times().
+     * Resets count after use.
      */
-    public function produce(array $overrides = [])
+    public function make(array $overrides = [])
     {
         if ($this->batchCount !== null) {
             $result = $this->items($this->batchCount, $overrides);

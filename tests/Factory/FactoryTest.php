@@ -9,7 +9,7 @@ class FactoryTest extends TestCase
     public function testMakeReturnsArrayWithExpectedKeys()
     {
         $factory = new UserFactory();
-        $user = $factory->produce();
+        $user = $factory->make();
         $this->assertIsArray($user);
         $this->assertArrayHasKey('name', $user);
         $this->assertArrayHasKey('email', $user);
@@ -20,14 +20,14 @@ class FactoryTest extends TestCase
     public function testMakeWithOverrides()
     {
         $factory = new UserFactory();
-        $user = $factory->produce(['email' => 'custom@example.com']);
+        $user = $factory->make(['email' => 'custom@example.com']);
         $this->assertSame('custom@example.com', $user['email']);
     }
 
     public function testManyReturnsCorrectCount()
     {
         $factory = new UserFactory();
-        $users = $factory->batch(5)->produce();
+        $users = $factory->times(5)->make();
         $this->assertCount(5, $users);
         foreach ($users as $user) {
             $this->assertIsArray($user);
@@ -37,7 +37,7 @@ class FactoryTest extends TestCase
     public function testManyWithOverrides()
     {
         $factory = new UserFactory();
-        $users = $factory->batch(3)->produce(['address' => '123 Main St']);
+        $users = $factory->times(3)->make(['address' => '123 Main St']);
         $this->assertCount(3, $users);
         foreach ($users as $user) {
             $this->assertSame('123 Main St', $user['address']);
