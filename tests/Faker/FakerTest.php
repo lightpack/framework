@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Lightpack\Utils\Faker;
+use Lightpack\Faker\Faker;
 use PHPUnit\Framework\TestCase;
 
 class FakerTest extends TestCase

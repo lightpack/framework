@@ -3,7 +3,7 @@
 /**
  * Lightpack Minimal Faker: Explicit, No-Magic Data Fake Generator
  */
-namespace Lightpack\Utils;
+namespace Lightpack\Faker;
 
 class Faker
 {
