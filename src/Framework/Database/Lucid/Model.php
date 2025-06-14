@@ -304,16 +304,6 @@ class Model implements JsonSerializable
         return (new static)->find($primaryKeyValue);
     }
 
-    public function reload(): self
-    {
-        $model = $this->refetch();
-
-        $model->load();
-        $model->loadCount();
-
-        return $model;
-    }
-
     public function lastInsertId()
     {
         return $this->getConnection()->lastInsertId();
