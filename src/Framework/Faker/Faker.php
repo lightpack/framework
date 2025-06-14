@@ -11,14 +11,26 @@ class Faker
     protected string $locale = 'en';
     protected array $data = [];
 
-    public function __construct(string $locale = 'en')
+    public function __construct(string $locale = 'en', ?string $customLocalePath = null)
     {
         $this->locale = $locale;
-        $this->loadLocaleData($locale);
+        $this->loadLocaleData($locale, $customLocalePath);
     }
 
-    protected function loadLocaleData(string $locale): void
+    /**
+     * Allow users to set locale data directly (array injection)
+     */
+    public function setLocaleData(array $data): void
     {
+        $this->data = $data;
+    }
+
+    protected function loadLocaleData(string $locale, ?string $customLocalePath = null): void
+    {
+        if ($customLocalePath && file_exists($customLocalePath)) {
+            $this->data = require $customLocalePath;
+            return;
+        }
         $base = __DIR__ . '/Locales/';
         $file = $base . $locale . '.php';
         $default = $base . 'en.php';
