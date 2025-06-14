@@ -61,7 +61,7 @@ class ModelFactoryTest extends TestCase
     public function testModelFactorySavesSingleModel()
     {
         $factory = new DummyTestFactory;
-        $model = $factory->save(['code' => 'TEST1', 'name' => 'Factory Name']);
+        $factory->save(['code' => 'TEST1', 'name' => 'Factory Name']);
         $found = TestFactoryModel::query()->where('code', '=', 'TEST1')->one();
 
         $this->assertNotNull($found);
