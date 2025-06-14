@@ -13,7 +13,7 @@ abstract class ModelFactory extends Factory
      * Concrete factories must return the model class name.
      * @return string
      */
-    abstract protected function for(): string;
+    abstract protected function model(): string;
 
     /**
      * Create and save model instance(s) from factory data.
@@ -22,7 +22,7 @@ abstract class ModelFactory extends Factory
     public function save(array $overrides = [])
     {
         $data = $this->make($overrides);
-        $modelClass = $this->for();
+        $modelClass = $this->model();
 
         if ($this->isBatch($data)) {
             return $this->saveBatch($modelClass, $data);

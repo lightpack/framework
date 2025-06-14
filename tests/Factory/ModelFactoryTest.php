@@ -22,7 +22,7 @@ class DummyTestFactory extends ModelFactory
         ];
     }
 
-    protected function for(): string
+    protected function model(): string
     {
         return TestFactoryModel::class;
     }
