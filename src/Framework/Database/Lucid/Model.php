@@ -338,8 +338,20 @@ class Model implements JsonSerializable
         return (new static)->find($primaryKeyValue);
     }
 
-    public function lastInsertId()
+    /**
+     * Get the last auto-incremented primary key value from the database connection.
+     *
+     * Used after insert operations to retrieve the generated primary key value
+     * for models with auto-incrementing primary keys.
+     *
+     * @return null|int The last inserted primary key value.
+     */
+    public function lastInsertId(): ?int
     {
+        if (!$this->autoIncrements) {
+            return null;
+        }
+
         return $this->getConnection()->lastInsertId();
     }
 
