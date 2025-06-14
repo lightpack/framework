@@ -54,6 +54,9 @@ class Query
         return $this;
     }
 
+    /**
+     * Insert methods do not return a value. On failure, a PDOException exception is thrown.
+     */
     public function insert(array $data)
     {
         return $this->executeInsert($data);
@@ -110,23 +113,36 @@ class Query
             || $value instanceof \DateTime;
     }
 
-    public function update(array $data)
+    /**
+     * Executes an update statement and returns the number of affected rows.
+     * Throws exception on failure.
+     *
+     * @param array $data
+     * @return int Number of affected rows
+     */
+    public function update(array $data): int
     {
         $compiler = new Compiler($this);
         $this->bindings = array_merge(array_values($data), $this->bindings);
         $query = $compiler->compileUpdate(array_keys($data));
-        $result = $this->connection->query($query, $this->bindings);
+        $stmt = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
-        return $result;
+        return $stmt->rowCount();
     }
 
-    public function delete()
+    /**
+     * Executes a delete statement and returns the number of affected rows.
+     * Throws exception on failure.
+     *
+     * @return int Number of affected rows
+     */
+    public function delete(): int
     {
         $compiler = new Compiler($this);
         $query = $compiler->compileDelete();
-        $result = $this->connection->query($query, $this->bindings);
+        $stmt = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
-        return $result;
+        return $stmt->rowCount();
     }
 
     public function alias(string $alias): static
@@ -412,7 +428,7 @@ class Query
     public function search(string $term, array $columns): static
     {
         $mode = 'IN BOOLEAN MODE';
-        $columnsSql = implode(', ', array_map(function($col) {
+        $columnsSql = implode(', ', array_map(function ($col) {
             return '`' . str_replace('`', '', $col) . '`';
         }, $columns));
         $sql = "MATCH($columnsSql) AGAINST (? $mode)";

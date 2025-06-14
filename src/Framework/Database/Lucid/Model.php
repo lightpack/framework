@@ -277,20 +277,38 @@ class Model implements JsonSerializable
         $this->afterSave();
     }
 
-    public function delete($id = null)
+    /**
+     * Delete the current model instance from the database.
+     *
+     * If an $id is provided, attempts to find and delete the record with that primary key.
+     * If no $id is provided, deletes the current instance (if it has a primary key value).
+     *
+     * - Returns true if a row was deleted, false if nothing was deleted (e.g., missing PK or record not found).
+     * - Executes beforeDelete() and afterDelete() hooks for extensibility.
+     * - Throws exceptions on database errors (e.g., constraint violations).
+     *
+     * @param mixed|null $id Optional primary key value to delete a specific record.
+     * @return bool True if a row was deleted, false otherwise.
+     *
+     * @throws \Lightpack\Exceptions\RecordNotFoundException If $id is provided and not found.
+     * @throws \PDOException On database errors.
+     */
+    public function delete($id = null): bool
     {
         if ($id) {
             $this->find($id);
         }
 
         if (!$this->attributes->get($this->primaryKey)) {
-            return;
+            return false;
         }
 
         $query = $this->query();
         $this->beforeDelete($query);
-        $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
+        $affected = $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
         $this->afterDelete();
+
+        return $affected === 1;
     }
 
     /**
@@ -393,29 +411,27 @@ class Model implements JsonSerializable
         // Hook method
     }
 
-    public function insert()
+    public function insert(): void
     {
         $this->beforeInsert();
 
-        $result = $this->executeInsert();
+        $this->executeInsert();
 
         $this->afterInsert();
-
-        return $result;
     }
 
     public function update()
     {
         $this->beforeUpdate();
 
-        $result = $this->executeUpdate();
+        $affectedRows = $this->executeUpdate();
 
         $this->afterUpdate();
 
-        return $result;
+        return $affectedRows == 1;
     }
 
-    protected function executeInsert()
+    protected function executeInsert(): void
     {
         $this->attributes->updateTimestamps(false);
 
@@ -429,11 +445,9 @@ class Model implements JsonSerializable
         if ($this->autoIncrements) {
             $this->attributes->set($this->primaryKey, $this->lastInsertId());
         }
-
-        return $result;
     }
 
-    protected function executeUpdate()
+    protected function executeUpdate(): int
     {
         $this->attributes->updateTimestamps();
         $data = $this->attributes->toDatabaseArray();
