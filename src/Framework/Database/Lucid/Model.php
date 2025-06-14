@@ -28,9 +28,14 @@ class Model implements JsonSerializable
     protected $connection;
 
     /**
-     * @var bool Timestamps
+     * @var bool Timestamps: created_at and updated_at
      */
     protected $timestamps = false;
+
+    /**
+     * @var bool
+     */
+    protected $autoIncrements = true;
 
     /**
      * @var array Attributes to be hidden for serialization or array conversion.
@@ -258,14 +263,13 @@ class Model implements JsonSerializable
     public function save(): void
     {
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
-        $query = $this->query();
 
-        $this->beforeSave($query);
+        $this->beforeSave();
 
         if ($primaryKeyValue !== null) {
-            $this->update($query);
+            $this->executeUpdate();
         } else {
-            $this->insert($query);
+            $this->executeInsert();
         }
 
         $this->attributes->clearDirty(); // Clear modified state after save
@@ -286,6 +290,34 @@ class Model implements JsonSerializable
         $this->beforeDelete($query);
         $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->delete();
         $this->afterDelete();
+    }
+
+    /**
+     * Reload the model's attributes and all loaded relations from the database.
+     * Mutates the instance in place. Returns $this.
+     * Does nothing if the primary key is not set or record is not found.
+     *
+     * @return self
+     */
+    public function reload(): self
+    {
+        $this->refresh();
+
+        foreach ($this->getLoadedRelations() as $relation) {
+            $this->load($relation);
+        }
+        return $this;
+    }
+
+    public function refresh(): self
+    {
+        $primaryKeyValue = $this->attributes->get($this->primaryKey);
+
+        if ($primaryKeyValue === null) {
+            return $this;
+        }
+
+        return $this->find($primaryKeyValue);
     }
 
     public function lastInsertId()
@@ -343,6 +375,26 @@ class Model implements JsonSerializable
         // Hook method
     }
 
+    protected function beforeCreate()
+    {
+        // Hook method
+    }
+
+    protected function afterCreate()
+    {
+        // Hook method
+    }
+
+    protected function beforeUpdate()
+    {
+        // Hook method
+    }
+
+    protected function afterUpdate()
+    {
+        // Hook method
+    }
+
     protected function beforeDelete()
     {
         // Hook method
@@ -353,23 +405,59 @@ class Model implements JsonSerializable
         // Hook method
     }
 
-    protected function insert(Query $query)
+    public function create()
     {
-        $this->attributes->updateTimestamps(false);
+        $this->beforeCreate();
 
-        $result = $query->insert($this->attributes->toDatabaseArray());
+        $result = $this->executeInsert();
 
-        $this->attributes->set($this->primaryKey, $this->lastInsertId());
+        $this->afterCreate();
 
         return $result;
     }
 
-    protected function update(Query $query)
+    public function update()
+    {
+        $this->beforeUpdate();
+
+        $result = $this->executeUpdate();
+
+        $this->afterUpdate();
+
+        return $result;
+    }
+
+    protected function executeInsert()
+    {
+        $this->attributes->updateTimestamps(false);
+
+        // Error: Manual PK required for non-auto-incrementing models
+        if (!$this->autoIncrements && $this->attributes->get($this->primaryKey) === null) {
+            throw new \RuntimeException('Cannot Insert: This model does not use an auto-incrementing primary key. You must assign a primary key value before saving.');
+        }
+
+        $result = self::query()->insert($this->attributes->toDatabaseArray());
+
+        if ($this->autoIncrements) {
+            $this->attributes->set($this->primaryKey, $this->lastInsertId());
+        }
+
+        return $result;
+    }
+
+    protected function executeUpdate()
     {
         $this->attributes->updateTimestamps();
         $data = $this->attributes->toDatabaseArray();
         unset($data[$this->primaryKey]);
-        return $query->where($this->primaryKey, '=', $this->attributes->get($this->primaryKey))->update($data);
+
+        $primaryKeyValue = $this->attributes->get($this->primaryKey);
+
+        if ($primaryKeyValue === null) {
+            throw new \RuntimeException('Primary key must be set to update the record.');
+        }
+
+        return self::query()->where($this->primaryKey, '=', $primaryKeyValue)->update($data);
     }
 
     public function jsonSerialize(): mixed
