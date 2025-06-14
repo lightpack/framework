@@ -293,6 +293,10 @@ class Model implements JsonSerializable
         $this->afterDelete();
     }
 
+    /**
+     * Fetch a new instance using current model without mutating itself.
+     * Returns null if the primary key is not set.
+     */
     public function refetch(): ?static
     {
         $primaryKeyValue = $this->attributes->get($this->primaryKey);
