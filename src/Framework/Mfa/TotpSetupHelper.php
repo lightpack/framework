@@ -11,8 +11,8 @@ class TotpSetupHelper
     public static function getTotpInstance(): TwoFactorAuth
     {
         return new TwoFactorAuth(
-            new QRServerProvider(),
-            self::getIssuerName()
+            issuer: self::getIssuerName(),
+            qrcodeprovider: new QRServerProvider()
         );
     }
 
