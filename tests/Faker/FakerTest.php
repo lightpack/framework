@@ -301,4 +301,12 @@ class FakerTest extends TestCase
 
         $this->assertSame($arr1, $arr2, 'Seed should make arrayOf deterministic');
     }
+
+    public function testArrayOfThrowsOnInvalidMethod()
+    {
+        $faker = new Faker();
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Method \'notAMethod\' does not exist/');
+        $faker->arrayOf('notAMethod', 3);
+    }
 }
