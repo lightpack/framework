@@ -37,6 +37,26 @@ class TestHookModel extends Model
     {
         $this->hooksCalled[] = 'afterDelete';
     }
+
+    protected function beforeInsert()
+    {
+        $this->hooksCalled[] = 'beforeInsert';
+    }
+
+    protected function afterInsert()
+    {
+        $this->hooksCalled[] = 'afterInsert';
+    }
+
+    protected function beforeUpdate()
+    {
+        $this->hooksCalled[] = 'beforeUpdate';
+    }
+
+    protected function afterUpdate()
+    {
+        $this->hooksCalled[] = 'afterUpdate';
+    }
 }
 
 class ModelHooksTest extends TestCase 
@@ -109,5 +129,30 @@ class ModelHooksTest extends TestCase
         $afterSaveIndex = array_search('afterSave', $hooks);
         
         $this->assertLessThan($afterSaveIndex, $saveIndex, 'beforeSave should be called before afterSave');
+    }
+
+    public function testInsertHooks()
+    {
+        $model = new TestHookModel();
+        $model->name = 'Insert User';
+        $model->insert();
+        $hooks = $model->getHooksCalled();
+        $this->assertContains('beforeInsert', $hooks);
+        $this->assertContains('afterInsert', $hooks);
+        $this->assertLessThan(array_search('afterInsert', $hooks), array_search('beforeInsert', $hooks), 'beforeInsert should be called before afterInsert');
+    }
+
+    public function testUpdateHooks()
+    {
+        $model = new TestHookModel();
+        $model->name = 'Update User';
+        $model->save();
+        $model->getHooksCalled(); // Clear hooks from save
+        $model->name = 'Updated User';
+        $model->update();
+        $hooks = $model->getHooksCalled();
+        $this->assertContains('beforeUpdate', $hooks);
+        $this->assertContains('afterUpdate', $hooks);
+        $this->assertLessThan(array_search('afterUpdate', $hooks), array_search('beforeUpdate', $hooks), 'beforeUpdate should be called before afterUpdate');
     }
 }
