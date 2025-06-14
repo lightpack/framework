@@ -309,4 +309,32 @@ class FakerTest extends TestCase
         $this->expectExceptionMessageMatches('/Method \'notAMethod\' does not exist/');
         $faker->arrayOf('notAMethod', 3);
     }
+
+    public function testUniqueEmailGeneration()
+    {
+        $faker = new Faker();
+        $uniqueFaker = $faker->unique();
+        $emails = [];
+        for ($i = 0; $i < 200; $i++) {
+            $email = $uniqueFaker->email();
+            $this->assertIsString($email);
+            $this->assertNotContains($email, $emails, 'Email should be unique');
+            $emails[] = $email;
+        }
+    }
+
+    public function testUniqueThrowsWhenExhausted()
+    {
+        $faker = new Faker();
+        $faker->setLocaleData([
+            'firstNames' => ['A'],
+            'lastNames' => ['B'],
+            'domains' => ['x.com'],
+        ]);
+        $uniqueFaker = $faker->unique();
+        $uniqueFaker->email(); // First call OK
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessageMatches('/Unable to generate a unique value/');
+        $uniqueFaker->email(); // Second call will exhaust pool
+    }
 }

@@ -53,7 +53,7 @@ class UserFactory extends Factory
         $faker = new Faker();
         return [
             'name' => $faker->name(),
-            'email' => $faker->email(),
+            'email' => $faker->unique()->email(),
             'address' => $faker->address(),
             'created_at' => $faker->date('Y-m-d H:i:s'),
         ];

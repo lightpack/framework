@@ -54,6 +54,15 @@ class Faker
         $en = require __DIR__ . '/Locales/en.php';
         return $en[$key] ?? [];
     }
+
+    /**
+     * Return a UniqueFaker instance for generating unique values.
+     */
+    public function unique(): UniqueFaker
+    {
+        return new UniqueFaker($this);
+    }
+
     public function name(): string
     {
         $firstNames = $this->getData('firstNames');
