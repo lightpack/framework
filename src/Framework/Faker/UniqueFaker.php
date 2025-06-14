@@ -1,4 +1,5 @@
 <?php
+
 namespace Lightpack\Faker;
 
 /**
@@ -54,15 +55,24 @@ class UniqueFaker
 
     public function __call($method, $args)
     {
+        $maxAttempts = 100;
         $attempts = 0;
+
+        // Try to generate a unique value up to $maxAttempts times
         do {
             $value = $this->faker->$method(...$args);
             $attempts++;
-        } while (in_array($value, $this->generated, true) && $attempts < 100);
-        if ($attempts >= 100) {
-            throw new \RuntimeException("Unable to generate a unique value for $method after 100 attempts.");
-        }
-        $this->generated[] = $value;
-        return $value;
+
+            // If the value is unique, return it immediately
+            if (!in_array($value, $this->generated, true)) {
+                $this->generated[] = $value;
+                return $value;
+            }
+        } while ($attempts < $maxAttempts);
+
+        // If we reach here, all attempts failed
+        throw new \RuntimeException(
+            "Unable to generate a unique value for '{$method}' after {$maxAttempts} attempts."
+        );
     }
 }
