@@ -87,7 +87,6 @@ class Faker
 
     public function float(float $min = 0, float $max = 1, int $decimals = 2): float
     {
-        $factor = pow(10, $decimals);
         return round($min + mt_rand() / mt_getrandmax() * ($max - $min), $decimals);
     }
 

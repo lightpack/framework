@@ -163,19 +163,22 @@ class Request
             if (null === $this->jsonBody) {
                 $this->parseJson();
             }
-            return $key === null ? $this->jsonBody : $this->arr->get($key, $this->jsonBody, $default);
+            // Merge query params and JSON body, JSON body takes precedence
+            $data = array_merge($_GET, $this->jsonBody ?? []);
+            return $key === null ? $data : $this->arr->get($key, $data, $default);
         }
 
-        // For spoofed methods, use POST data
+        // For spoofed methods, merge POST and query params (POST takes precedence)
         if ($this->isSpoofed()) {
-            return $key === null ? $_POST : $this->arr->get($key, $_POST, $default);
+            $data = array_merge($_GET, $_POST);
+            return $key === null ? $data : $this->arr->get($key, $data, $default);
         }
 
         // Handle different HTTP methods
         $data = match ($this->method) {
             'GET' => $_GET,
-            'POST' => $_POST,
-            'PUT', 'PATCH', 'DELETE' => $this->getParsedBody(),
+            'POST' => array_merge($_GET, $_POST), // POST takes precedence
+            'PUT', 'PATCH', 'DELETE' => array_merge($_GET, $this->getParsedBody()), // Parsed body takes precedence
         };
 
         return $key === null ? $data : $this->arr->get($key, $data, $default);
