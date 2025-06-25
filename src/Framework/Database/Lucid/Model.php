@@ -210,6 +210,14 @@ class Model implements JsonSerializable
     }
 
     /**
+     * Has-one-through: e.g. Country -> User -> Profile
+     */
+    public function hasOneThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
+    {
+        return $this->relations->hasOneThrough($model, $through, $throughKey, $foreignKey);
+    }
+
+    /**
      * Has-many-through: e.g. Country -> User -> Posts
      */
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query

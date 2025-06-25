@@ -146,11 +146,27 @@ class RelationHandler
     }
 
     /**
+     * Define a has-one-through relationship
+     */
+    public function hasOneThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
+    {
+        return $this->throughRelation('hasOneThrough', $model, $through, $throughKey, $foreignKey);
+    }
+
+    /**
      * Define a has-many-through relationship
      */
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
     {
-        $this->relationType = 'hasManyThrough';
+        return $this->throughRelation('hasManyThrough', $model, $through, $throughKey, $foreignKey);
+    }
+
+    /**
+     * Internal helper for through relationships.
+     */
+    protected function throughRelation(string $relationType, string $model, string $through, string $throughKey, string $foreignKey): Query
+    {
+        $this->relationType = $relationType;
         $this->foreignKey = $throughKey;
         $this->relatedModel = $model;
 
