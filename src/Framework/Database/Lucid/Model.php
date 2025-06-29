@@ -347,6 +347,32 @@ class Model implements JsonSerializable
     }
 
     /**
+     * Save the current model instance and refresh its attributes from the database.
+     *
+     * This method first persists any changes to the current model by calling save().
+     * It then reloads the latest state from the database using the primary key,
+     * mutating the current instance with fresh data.
+     *
+     * Usage:
+     *   $user->name = 'New Name';
+     *   $user->saveAndRefresh();
+     *   // $user now contains the latest data from the database.
+     *
+     * - If the model is new, it will be inserted and the auto-incremented primary key will be set.
+     * - If the model already exists, its changes will be updated in the database.
+     * - The method mutates the same instance.
+     *
+     */
+    public function saveAndRefresh(): void
+    {
+        $this->save();
+
+        $primaryKeyValue = $this->attributes->get($this->primaryKey);
+
+        $this->find($primaryKeyValue);
+    }
+
+    /**
      * Get the last auto-incremented primary key value from the database connection.
      *
      * Used after insert operations to retrieve the generated primary key value
