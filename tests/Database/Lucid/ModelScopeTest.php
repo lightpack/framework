@@ -11,7 +11,7 @@ use Lightpack\Exceptions\RecordNotFoundException;
 
 class TenantModel extends Model
 {
-    public function applyScope(Query $query)
+    public function globalScope(Query $query)
     {
         $query->where('tenant_id', 1);  // Hardcode tenant_id=1 for test
     }
