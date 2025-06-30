@@ -210,6 +210,14 @@ class Model implements JsonSerializable
     }
 
     /**
+     * Has-one-through: e.g. Country -> User -> Profile
+     */
+    public function hasOneThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
+    {
+        return $this->relations->hasOneThrough($model, $through, $throughKey, $foreignKey);
+    }
+
+    /**
      * Has-many-through: e.g. Country -> User -> Posts
      */
     public function hasManyThrough(string $model, string $through, string $throughKey, string $foreignKey): Query
@@ -245,7 +253,7 @@ class Model implements JsonSerializable
     {
         $query = new Query($this->table, $this->getConnection());
 
-        $this->applyScope($query);
+        $this->globalScope($query);
         $data = $query->where($this->primaryKey, '=', $id)->one();
 
         if (!$data && $fail) {
@@ -369,7 +377,7 @@ class Model implements JsonSerializable
     {
         $model = new static;
         $builder = new Builder($model);
-        $model->applyScope($builder);
+        $model->globalScope($builder);
 
         return $builder;
     }
@@ -390,7 +398,7 @@ class Model implements JsonSerializable
         return $builder;
     }
 
-    protected function applyScope(Query $query)
+    protected function globalScope(Query $query)
     {
         // ...
     }
