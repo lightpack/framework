@@ -223,4 +223,20 @@ class Schema
         $row = $result->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    /**
+     * Check if database table exists.
+     */
+    public function tableExists(string $table): bool
+    {
+        return in_array($table, $this->inspectTables());
+    }
+
+    /**
+     * Check if database table column exists.
+     */
+    public function columnExists(string $table, string $column): bool
+    {
+        return in_array($column, $this->inspectColumns($table));
+    }
 }
