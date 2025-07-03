@@ -1,7 +1,5 @@
 <?php
 
-use Lightpack\Utils\Limiter;
-
 if (!function_exists('app')) {
     /**
      * ------------------------------------------------------------
@@ -476,6 +474,26 @@ if (!function_exists('limiter')) {
      */
     function limiter(): \Lightpack\Utils\Limiter
     {
-        return new Limiter;
+        return new Lightpack\Utils\Limiter;
+    }
+}
+
+if (!function_exists('lock')) {
+    /**
+     * Get an instance of lock utility.
+     */
+    function lock(): \Lightpack\Utils\Lock
+    {
+        return new Lightpack\Utils\Lock;
+    }
+}
+
+if (!function_exists('url')) {
+    /**
+     * Get an instance of URL utility.
+     */
+    function url(): \Lightpack\Utils\Url
+    {
+        return new Lightpack\Utils\Url;
     }
 }
