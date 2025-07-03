@@ -438,62 +438,70 @@ if (!function_exists('storage')) {
 
 if (!function_exists('asset')) {
     /**
-     * Get an instance of asset utility provider.
+     * Return an instance of asset utility provider.
      */
     function asset(): \Lightpack\Utils\Asset
     {
-        static $asset = null;
-        
-        if ($asset === null) {
-            $asset = new \Lightpack\Utils\Asset();
+        if (false === app()->has('asset')) {
+            return app()->instance('asset', new \Lightpack\Utils\Asset);
         }
-        
-        return $asset;
+
+        return app('asset');
     }
 }
 
 if (!function_exists('js')) {
     /**
-     * Get an instance of Js utility provider.
+     * Return an instance of Js utility provider.
      */
-    function script(): \Lightpack\Utils\Js
+    function js(): \Lightpack\Utils\Js
     {
-        static $js = null;
-        
-        if ($js === null) {
-            $js = new \Lightpack\Utils\Js();
+        if (false === app()->has('js')) {
+            return app()->instance('js', new \Lightpack\Utils\Js);
         }
-        
-        return $js;
+
+        return app('js');
     }
 }
 
 if (!function_exists('limiter')) {
     /**
-     * Get an instance of rate limiter utility.
+     * Return an instance of rate limiter utility.
      */
     function limiter(): \Lightpack\Utils\Limiter
     {
-        return new \Lightpack\Utils\Limiter;
+        if (false === app()->has('limiter')) {
+            return app()->instance('limiter', new \Lightpack\Utils\Limiter);
+        }
+
+        return app('limiter');
     }
 }
 
 if (!function_exists('lock')) {
     /**
-     * Get an instance of lock utility.
+     * Return an instance of lock utility.
      */
     function lock(): \Lightpack\Utils\Lock
     {
-        return new \Lightpack\Utils\Lock;
+        if (false === app()->has('lock')) {
+            return app()->instance('lock', new \Lightpack\Utils\Lock);
+        }
+
+        return app('lock');
     }
 }
 
 if (!function_exists('url')) {
     /**
-     * Get an instance of URL utility.
+     * Return an instance of URL utility.
      */
     function url(): \Lightpack\Utils\Url
     {
-        return new \Lightpack\Utils\Url;
+        if (false === app()->has('url')) {
+            return app()->instance('url', new \Lightpack\Utils\Url);
+        }
+
+        return app('url');
     }
 }
