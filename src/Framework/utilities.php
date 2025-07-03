@@ -474,7 +474,7 @@ if (!function_exists('limiter')) {
      */
     function limiter(): \Lightpack\Utils\Limiter
     {
-        return new Lightpack\Utils\Limiter;
+        return new \Lightpack\Utils\Limiter;
     }
 }
 
@@ -484,7 +484,7 @@ if (!function_exists('lock')) {
      */
     function lock(): \Lightpack\Utils\Lock
     {
-        return new Lightpack\Utils\Lock;
+        return new \Lightpack\Utils\Lock;
     }
 }
 
@@ -494,6 +494,6 @@ if (!function_exists('url')) {
      */
     function url(): \Lightpack\Utils\Url
     {
-        return new Lightpack\Utils\Url;
+        return new \Lightpack\Utils\Url;
     }
 }
