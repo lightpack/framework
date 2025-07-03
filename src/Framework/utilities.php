@@ -1,5 +1,7 @@
 <?php
 
+use Lightpack\Utils\Limiter;
+
 if (!function_exists('app')) {
     /**
      * ------------------------------------------------------------
@@ -465,5 +467,15 @@ if (!function_exists('js')) {
         }
         
         return $js;
+    }
+}
+
+if (!function_exists('limiter')) {
+    /**
+     * Get an instance of rate limiter utility.
+     */
+    function limiter(): \Lightpack\Utils\Limiter
+    {
+        return new Limiter;
     }
 }
