@@ -372,6 +372,16 @@ class Request
     }
 
     /**
+     * Get the value of the User-Agent header sent by the client.
+     *
+     * @return string|null The User-Agent string, or null if not present.
+     */
+    public function userAgent(): ?string
+    {
+        return $this->header('User-Agent');
+    }
+
+    /**
      * Get bearer token from Authorization header.
      */
     public function bearerToken(): ?string
