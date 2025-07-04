@@ -189,11 +189,17 @@ class Str
     }
 
     /**
-     * Convert string to URL-friendly slug.
-     * 
+     * Convert a string to a URL-friendly ASCII slug.
+     *
      * Example: slug('Hello World') returns 'hello-world'
-     * 
-     * @throws \RuntimeException If neither intl extension nor iconv are available
+     *
+     * - Only '-' or '_' are allowed as separators; any other value falls back to '-'.
+     * - Attempts best-effort transliteration for all languages.
+     * - Tries to return a safe ASCII slug.
+     *
+     * @param string $subject   The input string.
+     * @param string $separator The word separator, '-' or '_'.
+     * @return string           The generated slug.
      */
     public function slug(string $subject, string $separator = '-'): string
     {
@@ -201,37 +207,39 @@ class Str
             return '';
         }
 
-        // Validate separator
-        if (!preg_match('/^[a-zA-Z0-9_-]$/', $separator)) {
-            throw new \InvalidArgumentException('Separator must be a single alphanumeric character, hyphen or underscore');
+        // Only allow '-' or '_' as separator; fallback to '-'
+        if ($separator !== '-' && $separator !== '_') {
+            $separator = '-';
         }
 
-        // Convert to UTF-8 if not already
+        // Ensure UTF-8 encoding
         $encoding = mb_detect_encoding($subject, 'UTF-8, ISO-8859-1', true);
         $subject = mb_convert_encoding($subject, 'UTF-8', $encoding);
 
-        // Try different transliteration methods
+        // Try transliteration (ICU), then iconv, then strip non-ASCII
         if (function_exists('transliterator_transliterate')) {
-            // Best option: uses ICU transliterator
             $subject = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $subject);
         } elseif (function_exists('iconv')) {
-            // Fallback: uses iconv
-            $subject = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $subject);
+            $iconv = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $subject);
+            if ($iconv !== false) {
+                $subject = $iconv;
+            }
         } else {
-            throw new \RuntimeException('Either intl extension or iconv is required for slug()');
+            // Remove all non-ASCII (best effort)
+            $subject = preg_replace('/[^\x00-\x7F]/u', '', $subject);
         }
 
-        // Convert all types of spaces and separators to single space
+        // Replace all types of spaces, punctuation, etc. with a single space
         $subject = preg_replace('/[\pZ\pC\pM\pP\pS]+/u', ' ', $subject);
-        
         // Remove anything that's not alphanumeric or space
         $subject = preg_replace('/[^a-zA-Z0-9\s]/', '', $subject);
-        
         // Convert to lowercase and trim
         $subject = mb_strtolower(trim($subject));
-        
         // Replace spaces with separator
-        return preg_replace('/\s+/', $separator, $subject);
+        $slug = preg_replace('/\s+/', $separator, $subject);
+        // Remove leading/trailing separators (if any)
+        $slug = trim($slug, $separator);
+        return $slug;
     }
 
     /**
