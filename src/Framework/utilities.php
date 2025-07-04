@@ -505,3 +505,13 @@ if (!function_exists('url')) {
         return app('url');
     }
 }
+
+if (!function_exists('secrets')) {
+    /**
+     * Return an instance of Secrets.
+     */
+    function secrets(): \Lightpack\Secrets\Secrets
+    {
+        return app('secrets');
+    }
+}
