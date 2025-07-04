@@ -24,7 +24,5 @@ class SecretsProvider
             $crypto = new Crypto($cryptoKey);
             return new Secrets($db, $config, $crypto);
         });
-
-        $container->alias(Secrets::class, 'secrets');
     }
 }
