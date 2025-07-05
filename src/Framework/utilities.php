@@ -515,3 +515,13 @@ if (!function_exists('captcha')) {
         return app('captcha');
     }
 }
+
+if (!function_exists('ai')) {
+    /**
+     * Return configured instance of AI provider.
+     */
+    function ai(): \Lightpack\AI\AI
+    {
+        return app('ai');
+    }
+}
