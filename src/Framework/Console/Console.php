@@ -48,7 +48,7 @@ class Console
         'create:mail' => CreateMail::class,
         'create:seeder' => CreateSeeder::class,
         'db:seed' => SeedCommand::class,
-        'schedule:events' => ScheduleEvents::class,
+        'schedule:run' => ScheduleEvents::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,
