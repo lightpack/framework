@@ -505,3 +505,13 @@ if (!function_exists('url')) {
         return app('url');
     }
 }
+
+if (!function_exists('captcha')) {
+    /**
+     * Return configured instance of captcha provider.
+     */
+    function captcha(): \Lightpack\Captcha\CaptchaInterface
+    {
+        return app('captcha');
+    }
+}
