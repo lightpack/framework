@@ -16,7 +16,9 @@ class TaskBuilder
     protected ?int $maxTokens = null;
     protected ?string $system = null;
     protected ?string $rawResponse = null;
-
+    protected ?bool $useCache = null;
+    protected ?int $cacheTtl = null;
+    
     public function __construct($provider)
     {
         $this->provider = $provider;
@@ -97,9 +99,27 @@ class TaskBuilder
         return $this;
     }
 
+    public function cache(bool $useCache): self
+    {
+        $this->useCache = $useCache;
+        return $this;
+    }
+
+    public function cacheTtl(int $ttl): self
+    {
+        $this->cacheTtl = $ttl;
+        return $this;
+    }
+
     public function run(): array
     {
         $params = $this->buildParams();
+        if ($this->useCache !== null) {
+            $params['cache'] = $this->useCache;
+        }
+        if ($this->cacheTtl !== null) {
+            $params['cache_ttl'] = $this->cacheTtl;
+        }
         $result = $this->provider->generate($params);
         $this->rawResponse = $result['text'] ?? '';
 
