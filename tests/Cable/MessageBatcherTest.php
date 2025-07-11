@@ -15,7 +15,8 @@ final class MessageBatcherTest extends TestCase
         $this->mockCable = $this->createMock(Cable::class);
         
         // Create MessageBatcher instance with mock Cable and a test channel
-        $this->batcher = new MessageBatcher($this->mockCable, 'test-channel');
+        $this->batcher = new MessageBatcher($this->mockCable);
+        $this->batcher->channel('test-channel');
     }
 
     public function tearDown(): void
