@@ -10,11 +10,8 @@ class ServeCommand implements ICommand
     {
         chdir(DIR_ROOT);
 
-        $hostUrl = get_env('APP_URL', '127.0.0.1:8000');
-
-        $hostUrl = str_replace(['http://', 'https://'], '', $hostUrl);
-
-        $hostUrl = trim($hostUrl, '/');
+        $port = $arguments[0] ?? '8000';
+        $hostUrl = '127.0.0.1:' . $port;
 
         passthru('"' . PHP_BINARY . '"' . ' -S ' . "'$hostUrl'" . ' -t public');
     }
