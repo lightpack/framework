@@ -7,16 +7,38 @@ use Throwable;
 class Template
 {
     protected $data = [];
+    protected $embeddedTemplate = null;
 
     public function setData(array $data = []): self
     {
-        $this->data = array_merge($this->data, $data);
+        $this->data = $data;
+
+        if (isset($data['__embed'])) {
+            $this->embeddedTemplate = $data['__embed'];
+            unset($this->data['__embed']); // Do not expose to templates
+        }
+
         return $this;
     }
 
     public function getData(): array
     {
         return $this->data;
+    }
+
+    /**
+     * Render the embedded child template if __embed is set, 
+     * else return empty string.
+     */
+    public function embed(): string
+    {
+        if (!$this->embeddedTemplate) {
+            return '';
+        }
+        
+        $template = $this->embeddedTemplate;
+        $this->embeddedTemplate = null; // Prevent recursion
+        return $this->render($template, $this->data);
     }
 
     public function render(string $file, array $data = []): string
