@@ -525,3 +525,13 @@ if (!function_exists('ai')) {
         return app('ai');
     }
 }
+
+if (!function_exists('sms')) {
+    /**
+     * Return configured instance of sms provider.
+     */
+    function sms(): \Lightpack\Sms\Sms
+    {
+        return app('sms');
+    }
+}

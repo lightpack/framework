@@ -9,6 +9,8 @@ require 'MockFilter.php';
 final class FilterTest extends TestCase
 {
     private $filter;
+    private $request;
+    private $response;
 
     public function setUp(): void
     {
