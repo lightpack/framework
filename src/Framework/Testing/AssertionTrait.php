@@ -135,4 +135,42 @@ trait AssertionTrait
 
         return $this;
     }
+
+    /**
+     * Assert that a cookie exists in the response.
+     *
+     * @param string $key
+     * @return self
+     */
+    public function assertCookieHas(string $key): self
+    {
+        $this->assertTrue(cookie()->has($key), "Failed asserting that cookie '{$key}' exists");
+        return $this;
+    }
+
+    /**
+     * Assert that a cookie exists and has the expected value.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return self
+     */
+    public function assertCookieEquals(string $key, $value): self
+    {
+        $this->assertTrue(cookie()->has($key), "Failed asserting that cookie '{$key}' exists");
+        $this->assertEquals($value, cookie()->get($key), "Failed asserting that cookie '{$key}' has value '{$value}'");
+        return $this;
+    }
+
+    /**
+     * Assert that a cookie does not exist in the response.
+     *
+     * @param string $key
+     * @return self
+     */
+    public function assertCookieMissing(string $key): self
+    {
+        $this->assertFalse(cookie()->has($key), "Failed asserting that cookie '{$key}' is missing");
+        return $this;
+    }
 }
