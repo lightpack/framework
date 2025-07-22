@@ -19,6 +19,13 @@ class AuthUser extends Model implements Identity
         'remember_token',
     ];
 
+    /**
+     * The access token used for the current API request, if any.
+     *
+     * @var \Lightpack\Auth\Models\AccessToken|null
+     */
+    public ?AccessToken $currentAccessToken = null;
+
     public function getId(): mixed
     {
         return $this->id;
