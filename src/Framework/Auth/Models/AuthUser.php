@@ -69,12 +69,36 @@ class AuthUser extends Model implements Identity
     public function deleteTokens(?string $token = '')
     {
         if (!$token) {
-            AccessToken::query()->delete();
+            // Delete all tokens for the current user only
+            AccessToken::query()->where('user_id', $this->id)->delete();
+            return;
         }
 
         $tokenHash = hash('sha256', $token);
 
-        AccessToken::query()->where('token', $tokenHash)->delete();
+        AccessToken::query()
+            ->where('user_id', $this->id)
+            ->where('token', $tokenHash)
+            ->delete();
+    }
+
+    /**
+     * Delete one or more tokens by their database ID(s).
+     *
+     * @param int|int[] $ids
+     */
+    public function deleteTokensById($ids)
+    {
+        $ids = (array) $ids;
+
+        if (empty($ids)) {
+            return;
+        }
+
+        AccessToken::query()
+            ->where('user_id', $this->id)
+            ->whereIn('id', $ids)
+            ->delete();
     }
 
     public function deleteCurrentRequestToken()
