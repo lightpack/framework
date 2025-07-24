@@ -19,6 +19,13 @@ class AuthUser extends Model implements Identity
         'remember_token',
     ];
 
+    /**
+     * The access token used for the current API request, if any.
+     *
+     * @var \Lightpack\Auth\Models\AccessToken|null
+     */
+    public ?AccessToken $currentAccessToken = null;
+
     public function getId(): mixed
     {
         return $this->id;
@@ -61,17 +68,55 @@ class AuthUser extends Model implements Identity
 
     public function deleteTokens(?string $token = '')
     {
-        if(!$token) {
-            AccessToken::query()->delete();
+        if (!$token) {
+            // Delete all tokens for the current user only
+            AccessToken::query()->where('user_id', $this->id)->delete();
+            return;
         }
 
         $tokenHash = hash('sha256', $token);
-        
-        AccessToken::query()->where('token', $tokenHash)->delete();
+
+        AccessToken::query()
+            ->where('user_id', $this->id)
+            ->where('token', $tokenHash)
+            ->delete();
+    }
+
+    /**
+     * Delete one or more tokens by their database ID(s).
+     *
+     * @param int|int[] $ids
+     */
+    public function deleteTokensById($ids)
+    {
+        $ids = (array) $ids;
+
+        if (empty($ids)) {
+            return;
+        }
+
+        AccessToken::query()
+            ->where('user_id', $this->id)
+            ->whereIn('id', $ids)
+            ->delete();
+    }
+
+    public function deleteCurrentRequestToken()
+    {
+        $plainTextToken = request()->bearerToken();
+
+        if ($plainTextToken) {
+            $this->deleteTokens($plainTextToken);
+        }
     }
 
     public function tokenCan(string $ability): bool
     {
         return $this->currentAccessToken && $this->currentAccessToken->can($ability);
+    }
+
+    public function tokenCannot(string $ability): bool
+    {
+        return !$this->tokenCan($ability);
     }
 }
