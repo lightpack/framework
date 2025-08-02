@@ -68,7 +68,8 @@ class WatchCommand implements ICommand
             if ($this->checkForChanges() && $command) {
                 $this->output->info("🚀 Running command: {$command}");
                 // Use shell_exec to support aliases and shell features
-                shell_exec("/bin/zsh -i -c '{$command}'");
+                $shell = getenv('SHELL') ?: '/bin/sh';
+                shell_exec("$shell -c '$command'");
             }
             sleep(1);
         }
@@ -98,7 +99,7 @@ class WatchCommand implements ICommand
                 return substr($arg, strlen($option) + 1);
             }
         }
-        
+
         return null;
     }
 
@@ -107,7 +108,7 @@ class WatchCommand implements ICommand
         $paths = explode(',', $pathString);
         foreach ($paths as $path) {
             $path = trim($path);
-            
+
             // If path is absolute, use it directly
             if (str_starts_with($path, '/')) {
                 $fullPath = $path;
@@ -115,7 +116,7 @@ class WatchCommand implements ICommand
                 // Otherwise, make it absolute from current directory
                 $fullPath = getcwd() . '/' . trim($path, '/');
             }
-            
+
             $fullPath = $this->file->sanitizePath($fullPath);
             if ($this->file->exists($fullPath) && !in_array($fullPath, $this->paths)) {
                 $this->paths[] = $fullPath;
@@ -140,7 +141,7 @@ class WatchCommand implements ICommand
                 $this->fileHashes[$path] = $this->getFileHash($path);
                 continue;
             }
-            
+
             try {
                 $iterator = $this->file->getRecursiveIterator($path);
                 if ($iterator === null) {
