@@ -14,6 +14,15 @@ class CreateMigration implements ICommand
         $support = $this->parseSupportArgument($arguments);
         $schemas = self::getPredefinedSchemas();
 
+        if ($support === '') {
+            $output->newline();
+            $output->errorLabel();
+            $output->error("You must provide a value for --support. Example: --support=users");
+            $output->newline();
+            $output->infoLabel();
+            $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
+            return;
+        }
         if ($support) {
             $result = $this->handleSupportSchema($support, $schemas, $output);
         } else {
@@ -32,9 +41,15 @@ class CreateMigration implements ICommand
         $output->success("✓ Migration created in {$migrationFilepath}");
     }
 
+    /**
+     * Parses the --support argument. Returns string value, or empty string if --support= is present with no value, or null if not present.
+     */
     protected function parseSupportArgument(array $arguments): ?string
     {
         foreach ($arguments as $arg) {
+            if ($arg === '--support' || $arg === '--support=') {
+                return '';
+            }
             if (strpos($arg, '--support=') === 0) {
                 return substr($arg, strlen('--support='));
             }
@@ -68,8 +83,9 @@ class CreateMigration implements ICommand
             $output->errorLabel();
             $output->error("Please provide a migration file name.");
             $output->newline();
-            $output->infoLabel();
-            $output->info("Tip: You can use --support=<schema> for a predefined migration. Supported: " . implode(', ', array_keys($schemas)) . ".");
+            $output->infoLabel(' Tip ');
+            $output->info("You can use --support=<schema> for a predefined migration.");
+            $output->info("Supported: " . implode(', ', array_keys($schemas)) . ".");
             return null;
         }
         if (!preg_match('/^[\w_]+$/', $migration)) {
