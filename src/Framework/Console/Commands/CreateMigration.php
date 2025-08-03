@@ -11,35 +11,75 @@ class CreateMigration implements ICommand
     public function run(array $arguments = [])
     {
         $output = new Output();
-        $support = $this->parseSupportArgument($arguments);
         $schemas = self::getPredefinedSchemas();
+        $support = $this->parseSupportArgument($arguments);
 
         if ($support === '') {
-            $output->newline();
-            $output->errorLabel();
-            $output->error("You must provide a value for --support. Example: --support=users");
-            $output->newline();
-            $output->infoLabel();
-            $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
+            $this->showError($output, "You must provide a value for --support. Example: --support=users", null, array_keys($schemas));
             return;
         }
+
         if ($support) {
-            $result = $this->handleSupportSchema($support, $schemas, $output);
+            if (!isset($schemas[$support])) {
+                $this->showError($output, "Unknown support schema: \"{$support}\".", null, array_keys($schemas));
+                return;
+            }
+            [$filepath, $template] = $this->buildMigrationFile("{$support}_schema", $schemas[$support]);
         } else {
-            $result = $this->handleClassicMigration($arguments, $schemas, $output);
+            $migration = $arguments[0] ?? null;
+            if (!$migration) {
+                $this->showError(
+                    $output,
+                    "Please provide a migration file name.",
+                    "You can use --support=<schema> for a predefined migration.",
+                    array_keys($schemas)
+                );
+                return;
+            }
+            if (!preg_match('/^[\w_]+$/', $migration)) {
+                $this->showError($output, "Migration file name can only contain alphanumeric characters and underscores.");
+                return;
+            }
+            [$filepath, $template] = $this->buildMigrationFile($migration);
         }
 
-        if ($result === null) {
-            return;
-        }
-
-        [$migrationFilepath, $template] = $result;
-        file_put_contents($migrationFilepath, $template);
+        file_put_contents($filepath, $template);
         $output->newline();
         $output->successLabel();
         $output->newline();
-        $output->success("✓ Migration created in {$migrationFilepath}");
+        $output->success("✓ Migration created in {$filepath}");
     }
+
+    /**
+     * Outputs error/info blocks with optional tip and supported schemas.
+     */
+    protected function showError(Output $output, string $error, ?string $tip = null, ?array $schemas = null): void
+    {
+        $output->newline();
+        $output->errorLabel();
+        $output->error($error);
+        if ($tip) {
+            $output->newline();
+            $output->infoLabel(' Tip ');
+            $output->info($tip);
+        }
+        if ($schemas) {
+            $output->info("Supported: " . implode(', ', $schemas) . ".");
+        }
+    }
+
+    /**
+     * Returns migration file path and template for given name and optional template class.
+     */
+    protected function buildMigrationFile(string $name, ?string $templateClass = null): array
+    {
+        $timestamp = date('YmdHis');
+        $filename = "{$timestamp}_{$name}.php";
+        $filepath = "./database/migrations/{$filename}";
+        $template = $templateClass ? $templateClass::getTemplate() : MigrationView::getTemplate();
+        return [$filepath, $template];
+    }
+
 
     /**
      * Parses the --support argument. Returns string value, or empty string if --support= is present with no value, or null if not present.
