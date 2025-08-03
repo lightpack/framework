@@ -10,45 +10,102 @@ class Input
     protected array $requiredOptions = [];
     protected string $scriptName = '';
 
+    /**
+     * Parses CLI arguments and options from the provided $argv array.
+     * Skips the script name, then parses options and positional arguments.
+     *
+     * @param array $argv
+     */
     public function __construct(array $argv)
     {
         $argv = array_values($argv);
+        $this->extractScriptName($argv);
+        $this->parseArgumentsAndOptions($argv);
+    }
+
+    /**
+     * Extracts the script name from argv and removes it from the array.
+     *
+     * @param array &$argv
+     * @return void
+     */
+    private function extractScriptName(array &$argv): void
+    {
         if (count($argv) > 0) {
             $this->scriptName = $argv[0];
-            $argv = array_slice($argv, 1); // skip script name
+            array_shift($argv);
         }
+    }
 
+    /**
+     * Parses the remaining argv array into options and positional arguments.
+     *
+     * @param array $argv
+     * @return void
+     */
+    private function parseArgumentsAndOptions(array $argv): void
+    {
         $argc = count($argv);
         for ($i = 0; $i < $argc; $i++) {
             $arg = $argv[$i];
-            if (strpos($arg, '--') === 0) {
-                // Long option
-                $parts = explode('=', substr($arg, 2), 2);
-                $key = $parts[0];
-                $value = $parts[1] ?? true;
-                $this->addOption($key, $value);
-            } elseif (strpos($arg, '-') === 0 && strlen($arg) > 1) {
-                // Short option(s)
-                $flags = substr($arg, 1);
-                if (strlen($flags) > 1) {
-                    // Multiple flags, e.g. -abc
-                    foreach (str_split($flags) as $flag) {
-                        $this->addOption($flag, true);
-                    }
-                } else {
-                    // Single flag, may have value
-                    $next = ($i + 1 < $argc) ? $argv[$i + 1] : null;
-                    if ($next !== null && strpos($next, '-') !== 0) {
-                        $this->addOption($flags, $next);
-                        $i++; // skip next argument
-                    } else {
-                        $this->addOption($flags, true);
-                    }
-                }
+            if ($this->isLongOption($arg)) {
+                $this->parseLongOption($arg);
+            } elseif ($this->isShortOption($arg)) {
+                $i = $this->parseShortOption($argv, $i);
             } else {
                 $this->arguments[] = $arg;
             }
         }
+    }
+
+    /**
+     * Checks if an argument is a long option (starts with --)
+     */
+    private function isLongOption(string $arg): bool
+    {
+        return strpos($arg, '--') === 0;
+    }
+
+    /**
+     * Checks if an argument is a short option (starts with - and length > 1)
+     */
+    private function isShortOption(string $arg): bool
+    {
+        return strpos($arg, '-') === 0 && strlen($arg) > 1;
+    }
+
+    /**
+     * Parses a long option (e.g. --foo=bar or --flag)
+     */
+    private function parseLongOption(string $arg): void
+    {
+        $parts = explode('=', substr($arg, 2), 2);
+        $key = $parts[0];
+        $value = $parts[1] ?? true;
+        $this->addOption($key, $value);
+    }
+
+    /**
+     * Parses a short option or group of flags (e.g. -f bar, -abc)
+     * Returns the new index after consuming any value.
+     */
+    private function parseShortOption(array $argv, int $i): int
+    {
+        $flags = substr($argv[$i], 1);
+        if (strlen($flags) > 1) {
+            foreach (str_split($flags) as $flag) {
+                $this->addOption($flag, true);
+            }
+        } else {
+            $next = ($i + 1 < count($argv)) ? $argv[$i + 1] : null;
+            if ($next !== null && strpos($next, '-') !== 0) {
+                $this->addOption($flags, $next);
+                $i++; // skip next argument
+            } else {
+                $this->addOption($flags, true);
+            }
+        }
+        return $i;
     }
 
     protected function addOption(string $key, $value): void
