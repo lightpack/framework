@@ -19,11 +19,18 @@ class CreateMigration implements ICommand
         }
 
         $schemas = self::getPredefinedSchemas();
-        if ($support && isset($schemas[$support])) {
-            // If --support is present and valid, use it for migration naming and template
-            $migration = date('YmdHis') . '_' . $support . '_schema';
-            $migrationFilepath = './database/migrations/' . $migration . '.php';
-            $template = $schemas[$support]::getTemplate();
+        if ($support) {
+            if (isset($schemas[$support])) {
+                // If --support is present and valid, use it for migration naming and template
+                $migration = date('YmdHis') . '_' . $support . '_schema';
+                $migrationFilepath = './database/migrations/' . $migration . '.php';
+                $template = $schemas[$support]::getTemplate();
+            } else {
+                $message = "Unknown support schema: \"{$support}\".\n";
+                $message .= "Supported values are: " . implode(', ', array_keys($schemas)) . ".\n\n";
+                fputs(STDERR, $message);
+                return;
+            }
         } else {
             // Fallback to classic behavior (require migration name)
             $migration = $arguments[0] ?? null;
