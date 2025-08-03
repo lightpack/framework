@@ -4,13 +4,16 @@ namespace Lightpack\Console\Commands;
 
 use Lightpack\Console\ICommand;
 use Lightpack\Console\Views\MigrationView;
+use Lightpack\Console\Output;
 
 class CreateMigration implements ICommand
 {
     public function run(array $arguments = [])
     {
-        // Parse for --support argument first
         $support = null;
+        $output = new Output();
+        
+        // Parse for --support argument first
         foreach ($arguments as $arg) {
             if (strpos($arg, '--support=') === 0) {
                 $support = substr($arg, strlen('--support='));
@@ -26,9 +29,8 @@ class CreateMigration implements ICommand
                 $migrationFilepath = './database/migrations/' . $migration . '.php';
                 $template = $schemas[$support]::getTemplate();
             } else {
-                $message = "Unknown support schema: \"{$support}\".\n";
-                $message .= "Supported values are: " . implode(', ', array_keys($schemas)) . ".\n\n";
-                fputs(STDERR, $message);
+                $output->error("Unknown support schema: \"{$support}\".");
+                $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
                 return;
             }
         } else {
@@ -36,14 +38,12 @@ class CreateMigration implements ICommand
             $migration = $arguments[0] ?? null;
 
             if (null === $migration) {
-                $message = "Please provide a migration file name.\n\n";
-                fputs(STDERR, $message);
+                $output->error("Please provide a migration file name.");
                 return;
             }
 
             if (!preg_match('/^[\w_]+$/', $migration)) {
-                $message = "Migration file name can only contain alphanumeric characters and underscores.\n\n";
-                fputs(STDERR, $message);
+                $output->error("Migration file name can only contain alphanumeric characters and underscores.");
                 return;
             }
 
@@ -53,7 +53,7 @@ class CreateMigration implements ICommand
         }
 
         file_put_contents($migrationFilepath, $template);
-        fputs(STDOUT, "✓ Migration created in {$migrationFilepath}\n\n");
+        $output->success("✓ Migration created in {$migrationFilepath}");
     }
 
     /**
