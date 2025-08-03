@@ -32,6 +32,8 @@ class CreateMigration implements ICommand
                 $output->newline();
                 $output->errorLabel();
                 $output->error("Unknown support schema: \"{$support}\".");
+                $output->newline();
+                $output->infoLabel();
                 $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
                 return;
             }
@@ -40,8 +42,10 @@ class CreateMigration implements ICommand
             $migration = $arguments[0] ?? null;
 
             if (null === $migration) {
+                $output->newline();
                 $output->errorLabel();
                 $output->error("Please provide a migration file name.");
+                $output->newline();
                 $output->infoLabel();
                 $output->info("Tip: You can use --support=<schema> for a predefined migration. Supported: " . implode(', ', array_keys($schemas)) . ".");
                 return;
@@ -79,8 +83,8 @@ class CreateMigration implements ICommand
             'tags' => \Lightpack\Console\Views\Migrations\TagsView::class,
             'users' => \Lightpack\Console\Views\Migrations\UsersView::class,
             'cache' => \Lightpack\Console\Views\Migrations\CacheView::class,
-            'cable' => \Lightpack\Console\Views\Migrations\UploadsView::class,
-            'social' => \Lightpack\Console\Views\Migrations\UploadsView::class,
+            'cable' => \Lightpack\Console\Views\Migrations\CableView::class,
+            'social' => \Lightpack\Console\Views\Migrations\SocialView::class,
             'uploads' => \Lightpack\Console\Views\Migrations\UploadsView::class,
             'secrets' => \Lightpack\Console\Views\Migrations\SecretsView::class,
             'settings' => \Lightpack\Console\Views\Migrations\SettingsView::class,
