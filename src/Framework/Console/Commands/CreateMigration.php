@@ -56,7 +56,18 @@ class CreateMigration implements ICommand
     protected static function getPredefinedSchemas(): array
     {
         return [
-            'users' => \Lightpack\Console\Views\Migrations\UserSchemaView::class,
+            'jobs' => \Lightpack\Console\Views\Migrations\JobsView::class,
+            'rbac' => \Lightpack\Console\Views\Migrations\RbacView::class,
+            'tags' => \Lightpack\Console\Views\Migrations\TagsView::class,
+            'users' => \Lightpack\Console\Views\Migrations\UsersView::class,
+            'cache' => \Lightpack\Console\Views\Migrations\CacheView::class,
+            'cable' => \Lightpack\Console\Views\Migrations\UploadsView::class,
+            'social' => \Lightpack\Console\Views\Migrations\UploadsView::class,
+            'uploads' => \Lightpack\Console\Views\Migrations\UploadsView::class,
+            'secrets' => \Lightpack\Console\Views\Migrations\SecretsView::class,
+            'settings' => \Lightpack\Console\Views\Migrations\SettingsView::class,
+            'sessions' => \Lightpack\Console\Views\Migrations\SessionsView::class,
+            'taxonomies' => \Lightpack\Console\Views\Migrations\TaxonomiesView::class,
         ];
     }
 }

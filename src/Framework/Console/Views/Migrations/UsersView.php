@@ -2,7 +2,7 @@
 
 namespace Lightpack\Console\Views\Migrations;
 
-class UserSchemaView
+class UsersView
 {
     public static function getTemplate()
     {
