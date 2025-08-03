@@ -12,7 +12,7 @@ class CreateMigration implements ICommand
     {
         $support = null;
         $output = new Output();
-        
+
         // Parse for --support argument first
         foreach ($arguments as $arg) {
             if (strpos($arg, '--support=') === 0) {
@@ -29,6 +29,8 @@ class CreateMigration implements ICommand
                 $migrationFilepath = './database/migrations/' . $migration . '.php';
                 $template = $schemas[$support]::getTemplate();
             } else {
+                $output->newline();
+                $output->errorLabel();
                 $output->error("Unknown support schema: \"{$support}\".");
                 $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
                 return;
@@ -38,11 +40,17 @@ class CreateMigration implements ICommand
             $migration = $arguments[0] ?? null;
 
             if (null === $migration) {
+                $output->errorLabel();
                 $output->error("Please provide a migration file name.");
+                $output->infoLabel();
+                $output->info("Tip: You can use --support=<schema> for a predefined migration. Supported: " . implode(', ', array_keys($schemas)) . ".");
                 return;
             }
 
             if (!preg_match('/^[\w_]+$/', $migration)) {
+                $output->newline();
+                $output->errorLabel();
+                $output->newline();
                 $output->error("Migration file name can only contain alphanumeric characters and underscores.");
                 return;
             }
@@ -53,6 +61,9 @@ class CreateMigration implements ICommand
         }
 
         file_put_contents($migrationFilepath, $template);
+        $output->newline();
+        $output->successLabel();
+        $output->newline();
         $output->success("✓ Migration created in {$migrationFilepath}");
     }
 

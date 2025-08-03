@@ -72,4 +72,9 @@ class Output
 
         echo "\n{$leftText}{$padding} {$rightText}\n";
     }
+
+    public function newline(int $count = 1)
+    {
+        echo str_repeat(PHP_EOL, $count);
+    }
 }
