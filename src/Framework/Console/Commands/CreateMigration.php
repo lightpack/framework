@@ -10,65 +10,79 @@ class CreateMigration implements ICommand
 {
     public function run(array $arguments = [])
     {
-        $support = null;
         $output = new Output();
-
-        // Parse for --support argument first
-        foreach ($arguments as $arg) {
-            if (strpos($arg, '--support=') === 0) {
-                $support = substr($arg, strlen('--support='));
-                break;
-            }
-        }
-
+        $support = $this->parseSupportArgument($arguments);
         $schemas = self::getPredefinedSchemas();
+
         if ($support) {
-            if (isset($schemas[$support])) {
-                // If --support is present and valid, use it for migration naming and template
-                $migration = date('YmdHis') . '_' . $support . '_schema';
-                $migrationFilepath = './database/migrations/' . $migration . '.php';
-                $template = $schemas[$support]::getTemplate();
-            } else {
-                $output->newline();
-                $output->errorLabel();
-                $output->error("Unknown support schema: \"{$support}\".");
-                $output->newline();
-                $output->infoLabel();
-                $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
-                return;
-            }
+            $result = $this->handleSupportSchema($support, $schemas, $output);
         } else {
-            // Fallback to classic behavior (require migration name)
-            $migration = $arguments[0] ?? null;
-
-            if (null === $migration) {
-                $output->newline();
-                $output->errorLabel();
-                $output->error("Please provide a migration file name.");
-                $output->newline();
-                $output->infoLabel();
-                $output->info("Tip: You can use --support=<schema> for a predefined migration. Supported: " . implode(', ', array_keys($schemas)) . ".");
-                return;
-            }
-
-            if (!preg_match('/^[\w_]+$/', $migration)) {
-                $output->newline();
-                $output->errorLabel();
-                $output->newline();
-                $output->error("Migration file name can only contain alphanumeric characters and underscores.");
-                return;
-            }
-
-            $migration = date('YmdHis') . '_' . $migration;
-            $migrationFilepath = './database/migrations/' . $migration . '.php';
-            $template = MigrationView::getTemplate();
+            $result = $this->handleClassicMigration($arguments, $schemas, $output);
         }
 
+        if ($result === null) {
+            return;
+        }
+
+        [$migrationFilepath, $template] = $result;
         file_put_contents($migrationFilepath, $template);
         $output->newline();
         $output->successLabel();
         $output->newline();
         $output->success("✓ Migration created in {$migrationFilepath}");
+    }
+
+    protected function parseSupportArgument(array $arguments): ?string
+    {
+        foreach ($arguments as $arg) {
+            if (strpos($arg, '--support=') === 0) {
+                return substr($arg, strlen('--support='));
+            }
+        }
+        return null;
+    }
+
+    protected function handleSupportSchema($support, $schemas, $output): ?array
+    {
+        if (isset($schemas[$support])) {
+            $migration = date('YmdHis') . '_' . $support . '_schema';
+            $migrationFilepath = './database/migrations/' . $migration . '.php';
+            $template = $schemas[$support]::getTemplate();
+            return [$migrationFilepath, $template];
+        } else {
+            $output->newline();
+            $output->errorLabel();
+            $output->error("Unknown support schema: \"{$support}\".");
+            $output->newline();
+            $output->infoLabel();
+            $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
+            return null;
+        }
+    }
+
+    protected function handleClassicMigration($arguments, $schemas, $output): ?array
+    {
+        $migration = $arguments[0] ?? null;
+        if (null === $migration) {
+            $output->newline();
+            $output->errorLabel();
+            $output->error("Please provide a migration file name.");
+            $output->newline();
+            $output->infoLabel();
+            $output->info("Tip: You can use --support=<schema> for a predefined migration. Supported: " . implode(', ', array_keys($schemas)) . ".");
+            return null;
+        }
+        if (!preg_match('/^[\w_]+$/', $migration)) {
+            $output->newline();
+            $output->errorLabel();
+            $output->newline();
+            $output->error("Migration file name can only contain alphanumeric characters and underscores.");
+            return null;
+        }
+        $migration = date('YmdHis') . '_' . $migration;
+        $migrationFilepath = './database/migrations/' . $migration . '.php';
+        $template = MigrationView::getTemplate();
+        return [$migrationFilepath, $template];
     }
 
     /**
