@@ -154,6 +154,7 @@ class CreateMigration implements ICommand
             'users' => \Lightpack\Console\Views\Migrations\UsersView::class,
             'cache' => \Lightpack\Console\Views\Migrations\CacheView::class,
             'cable' => \Lightpack\Console\Views\Migrations\CableView::class,
+            'audits' => \Lightpack\Console\Views\Migrations\AuditsView::class,
             'social' => \Lightpack\Console\Views\Migrations\SocialView::class,
             'uploads' => \Lightpack\Console\Views\Migrations\UploadsView::class,
             'secrets' => \Lightpack\Console\Views\Migrations\SecretsView::class,
