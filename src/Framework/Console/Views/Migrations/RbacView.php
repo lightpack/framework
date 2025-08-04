@@ -19,6 +19,7 @@ return new class extends Migration
         $this->create('roles', function (Table $table) {
             $table->id();
             $table->varchar('name')->unique();
+            $table->varchar('description')->nullable();
             $table->timestamps();
         });
 
