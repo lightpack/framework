@@ -1,5 +1,14 @@
 <?php
 
+namespace Lightpack\Console\Views\Migrations;
+
+class TagsView
+{
+    public static function getTemplate()
+    {
+        return <<<'TEMPLATE'
+<?php
+
 use Lightpack\Database\Schema\Table;
 use Lightpack\Database\Migrations\Migration;
 
@@ -29,3 +38,6 @@ return new class extends Migration
         $this->drop('tags');
     }
 };
+TEMPLATE;
+    }
+}

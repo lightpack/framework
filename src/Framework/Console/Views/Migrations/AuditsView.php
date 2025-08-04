@@ -1,5 +1,14 @@
 <?php
 
+namespace Lightpack\Console\Views\Migrations;
+
+class AuditsView
+{
+    public static function getTemplate()
+    {
+        return <<<'TEMPLATE'
+<?php
+
 namespace Lightpack\Audit;
 
 use Lightpack\Database\Schema\Table;
@@ -30,3 +39,6 @@ return new class extends Migration
         $this->drop('audit_logs');
     }
 };
+TEMPLATE;
+    }
+}

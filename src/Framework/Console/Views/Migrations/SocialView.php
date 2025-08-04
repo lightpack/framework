@@ -1,7 +1,16 @@
 <?php
 
-use Lightpack\Database\Migrations\Migration;
+namespace Lightpack\Console\Views\Migrations;
+
+class SocialView
+{
+    public static function getTemplate()
+    {
+        return <<<'TEMPLATE'
+<?php
+
 use Lightpack\Database\Schema\Table;
+use Lightpack\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -25,3 +34,6 @@ return new class extends Migration
         $this->drop('social_accounts');
     }
 };
+TEMPLATE;
+    }
+}

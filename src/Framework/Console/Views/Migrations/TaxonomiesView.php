@@ -1,9 +1,16 @@
 <?php
 
-namespace Lightpack\Taxonomies;
+namespace Lightpack\Console\Views\Migrations;
 
-use Lightpack\Database\Migrations\Migration;
+class TaxonomiesView
+{
+    public static function getTemplate()
+    {
+        return <<<'TEMPLATE'
+<?php
+
 use Lightpack\Database\Schema\Table;
+use Lightpack\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -19,7 +26,7 @@ return new class extends Migration
             $table->text('meta')->nullable();
             $table->timestamps();
             $table->foreignKey('parent_id')->references('id')->on('taxonomies')->cascadeOnDelete();
-            $table->unique(['type', 'slug']); // Enforce unique slugs per type
+            $table->unique(['type', 'slug']); // Unique slugs per type
         });
 
         $this->create('taxonomy_models', function (Table $table) {
@@ -33,7 +40,10 @@ return new class extends Migration
 
     public function down(): void
     {
-        $this->drop('taxonomyables');
+        $this->drop('taxonomy_models');
         $this->drop('taxonomies');
     }
 };
+TEMPLATE;
+    }
+}

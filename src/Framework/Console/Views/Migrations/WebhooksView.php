@@ -1,5 +1,14 @@
 <?php
 
+namespace Lightpack\Console\Views\Migrations;
+
+class WebhooksView
+{
+    public static function getTemplate()
+    {
+        return <<<'TEMPLATE'
+<?php
+
 use Lightpack\Database\Schema\Table;
 use Lightpack\Database\Migrations\Migration;
 
@@ -24,3 +33,6 @@ return new class extends Migration
         $this->drop('webhook_events');
     }
 };
+TEMPLATE;
+    }
+}

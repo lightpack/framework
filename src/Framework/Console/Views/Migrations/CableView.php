@@ -1,5 +1,14 @@
 <?php
 
+namespace Lightpack\Console\Views\Migrations;
+
+class CableView
+{
+    public static function getTemplate()
+    {
+        return <<<'TEMPLATE'
+<?php
+
 use Lightpack\Database\Schema\Table;
 use Lightpack\Database\Migrations\Migration;
 
@@ -22,7 +31,7 @@ return new class extends Migration
             $table->varchar('channel', 255);
             $table->column('user_id')->type('bigint')->attribute('unsigned');
             $table->datetime('last_seen');
-            $table->foreignKey('user_id')->references('id')->on('users')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignKey('user_id')->references('id')->on('users')->cascadeOnDelete();
             
             $table->unique(['channel', 'user_id']);
             $table->index('channel');
@@ -36,3 +45,6 @@ return new class extends Migration
         $this->drop('cable_presence');
     }
 };
+TEMPLATE;
+    }
+}
