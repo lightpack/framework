@@ -29,18 +29,18 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        $this->create('role_user', function (Table $table) {
-            $table->column('role_id')->type('bigint')->attribute('unsigned');
+        $this->create('user_role', function (Table $table) {
             $table->column('user_id')->type('bigint')->attribute('unsigned');
+            $table->column('role_id')->type('bigint')->attribute('unsigned');
             $table->timestamps();
             $table->foreignKey('role_id')->cascadeOnDelete();
             $table->foreignKey('user_id')->cascadeOnDelete();
             $table->primary(['role_id', 'user_id']);
         });
 
-        $this->create('permission_role', function (Table $table) {
-            $table->column('permission_id')->type('bigint')->attribute('unsigned');
+        $this->create('role_permission', function (Table $table) {
             $table->column('role_id')->type('bigint')->attribute('unsigned');
+            $table->column('permission_id')->type('bigint')->attribute('unsigned');
             $table->timestamps();
             $table->foreignKey('permission_id')->cascadeOnDelete();
             $table->foreignKey('role_id')->cascadeOnDelete();
@@ -50,8 +50,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        $this->drop('permission_role');
-        $this->drop('role_user');
+        $this->drop('role_permission');
+        $this->drop('user_role');
         $this->drop('permissions');
         $this->drop('roles');
     }
