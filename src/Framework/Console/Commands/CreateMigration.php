@@ -159,6 +159,7 @@ class CreateMigration implements ICommand
             'uploads' => \Lightpack\Console\Views\Migrations\UploadsView::class,
             'secrets' => \Lightpack\Console\Views\Migrations\SecretsView::class,
             'settings' => \Lightpack\Console\Views\Migrations\SettingsView::class,
+            'webhooks' => \Lightpack\Console\Views\Migrations\WebhooksView::class,
             'taxonomies' => \Lightpack\Console\Views\Migrations\TaxonomiesView::class,
         ];
     }

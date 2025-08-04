@@ -31,6 +31,7 @@ return new class extends Migration
             $table->varchar('channel', 255);
             $table->column('user_id')->type('bigint')->attribute('unsigned');
             $table->datetime('last_seen');
+            $table->foreignKey('user_id')->references('id')->on('users')->cascadeOnDelete();
             
             $table->unique(['channel', 'user_id']);
             $table->index('channel');
