@@ -41,7 +41,7 @@ return new class extends Migration
 
         $this->create('access_tokens', function (Table $table) {
             $table->id();
-            $table->column('user_id')->type('BIGINT')->attribute('UNSIGNED')->nullable();
+            $table->column('user_id')->type('BIGINT')->attribute('UNSIGNED');
             $table->varchar('name', 55);
             $table->varchar('token', 100);
             $table->text('abilities')->nullable();
