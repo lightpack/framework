@@ -64,11 +64,7 @@ final class App
 
     public static function bootRoutes()
     {
-        $routes = require DIR_BOOT . '/routes.php';
-
-        foreach($routes as $route) {
-            require DIR_ROOT . '/routes/' . trim($route, '/');
-        }
+        require DIR_BOOT . '/routes.php';
 
         Container::getInstance()->get('route')->bootRouteNames();
     }
