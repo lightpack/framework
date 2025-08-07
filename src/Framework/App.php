@@ -80,9 +80,9 @@ final class App
 
     public static function bootCommands()
     {
-        $commands = require DIR_CONFIG . '/commands.php';
+        $commands = require DIR_BOOT . '/commands.php';
 
-        foreach ($commands['commands'] as $command => $handler) {
+        foreach ($commands as $command => $handler) {
             Console::register($command, new $handler);
         }
     }
