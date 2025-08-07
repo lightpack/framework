@@ -98,7 +98,7 @@ final class App
         $frameworkProviders = self::getFrameworkProviders();
 
         $container = Container::getInstance();
-        $providers = array_merge($frameworkProviders, $appProviders['providers']);
+        $providers = array_merge($frameworkProviders, $appProviders);
 
         foreach ($providers as $provider) {
             $provider = $container->resolve($provider);
