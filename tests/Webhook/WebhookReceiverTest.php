@@ -15,7 +15,7 @@ class WebhookReceiverTest extends TestCase
     private $schema;
     private $container;
     private $testConfig = [
-        'webhook' => [
+        'webhooks' => [
             'dummy' => [
                 'secret' => 'testsecret',
                 'algo' => 'hmac',
@@ -81,7 +81,7 @@ class WebhookReceiverTest extends TestCase
     private function getWebhookControllerInstance()
     {
         $config = new \Lightpack\Config\Config();
-        $config->set('webhook', $this->testConfig['webhook']);
+        $config->set('webhooks', $this->testConfig['webhooks']);
         $request = new \Lightpack\Http\Request();
         $response = new \Lightpack\Http\Response();
 
@@ -128,7 +128,7 @@ class WebhookReceiverTest extends TestCase
         $payload = json_encode(['id' => 'evt_fail']);
         $signature = hash_hmac('sha256', $payload, 'testsecret');
         $this->setRequest($payload, $signature);
-        $this->testConfig['webhook']['dummy']['handler'] = ExceptionThrowingWebhookHandler::class;
+        $this->testConfig['webhooks']['dummy']['handler'] = ExceptionThrowingWebhookHandler::class;
         $controller = $this->getWebhookControllerInstance();
         try {
             $controller->handle('dummy');
@@ -183,7 +183,7 @@ class WebhookReceiverTest extends TestCase
     public function testMultiProviderConfigIsolation()
     {
         // Add a second provider
-        $this->testConfig['webhook']['github'] = [
+        $this->testConfig['webhooks']['github'] = [
             'secret' => 'othersecret',
             'algo' => 'hmac',
             'id' => 'delivery',
