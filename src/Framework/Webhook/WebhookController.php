@@ -20,7 +20,7 @@ class WebhookController
      */
     public function handle($provider)
     {
-        $config = $this->config->get('webhook');
+        $config = $this->config->get('webhooks');
 
         if (
             !isset($config[$provider]) ||
