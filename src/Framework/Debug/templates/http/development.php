@@ -16,7 +16,7 @@
 
         <div class="header bg-error bg-<?= strtolower($type) ?>">
             <h1 class="title">
-                <?= $type ?> (<?= $code ?>)
+                <?= $type ?>
             </h1>
 
             <div class="message">
