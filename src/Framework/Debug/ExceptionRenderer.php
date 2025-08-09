@@ -164,6 +164,8 @@ class ExceptionRenderer
             if(file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
                 $template = $statusCode;
                 $errorTemplate = DIR_VIEWS . "/errors/{$statusCode}.php";
+            } elseif(file_exists(DIR_VIEWS . '/errors/generic.php')) {
+                $errorTemplate = DIR_VIEWS . "/errors/generic.php";
             }
         }
 
