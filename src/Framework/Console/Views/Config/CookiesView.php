@@ -10,8 +10,8 @@ class CookiesView
 <?php
 
 return [
-    'cookies' => [
-        // Cookie settings
+    'cookie' => [
+        'secret' => get_env('APP_KEY', 'secret'),
     ],
 ];
 PHP;

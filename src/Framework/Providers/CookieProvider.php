@@ -10,9 +10,8 @@ class CookieProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->register('cookie', function ($container) {
-            return new Cookie(
-                $container->get('config')->get('cookie.secret')
-            );
+            $secret = get_env('APP_KEY', 'secret');
+            return new Cookie($secret);
         });
 
         $container->alias(Cookie::class, 'cookie');
