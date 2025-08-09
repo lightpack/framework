@@ -10,6 +10,7 @@ class CreateConfig implements ICommand
     public function run(array $arguments = [])
     {
         $output = new Output();
+        $force = $this->parseForceArgument($arguments);
 
         // Parse --support argument
         $support = $this->parseSupportArgument($arguments);
@@ -55,9 +56,14 @@ class CreateConfig implements ICommand
             $template = $this->getDefaultTemplate($name);
         }
 
-        if (file_exists($targetPath)) {
+        if (file_exists($targetPath) && !$force) {
             $this->showError($output, "Config file already exists: {$targetPath}");
             return;
+        }
+
+        if ($force && file_exists($targetPath)) {
+            $output->infoLabel(' Overwrite ');
+            $output->info("Overwriting existing config at {$targetPath}");
         }
 
         file_put_contents($targetPath, $template);
@@ -65,6 +71,16 @@ class CreateConfig implements ICommand
         $output->successLabel();
         $output->newline();
         $output->success("✓ Config created at {$targetPath}");
+    }
+
+    protected function parseForceArgument(array $arguments): bool
+    {
+        foreach ($arguments as $arg) {
+            if ($arg === '--force') {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function parseSupportArgument(array $arguments): ?string
