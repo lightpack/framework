@@ -13,16 +13,10 @@ class SecretsProvider
     public function register(Container $container)
     {
         $container->factory('secrets', function () use ($container) {
-            $config = $container->get(Config::class);
             $db = $container->get(DB::class);
-            $cryptoKey = $config->get('app.secrets_key');
+            $crypto = $container->get('crypto');
 
-            if (!$cryptoKey) {
-                throw new \RuntimeException('Secrets encryption key not configured.');
-            }
-            
-            $crypto = new Crypto($cryptoKey);
-            return new Secrets($db, $config, $crypto);
+            return new Secrets($db, $crypto);
         });
     }
 }
