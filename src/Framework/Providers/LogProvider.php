@@ -17,9 +17,9 @@ class LogProvider implements ProviderInterface
 
             if ('file' === get_env('LOG_DRIVER')) {
                 $logDriver = new FileLogger(
-                    $container->get('config')->get('logs.path') . '/lightpack.log',
-                    $container->get('config')->get('logs.max_file_size') ?? 10 * 1024 * 1024, // 10mb
-                    $container->get('config')->get('logs.max_log_files') ?? 10,
+                    $container->get('config')->get('logs.path', DIR_STORAGE . '/logs') . '/lightpack.log',
+                    $container->get('config')->get('logs.max_file_size', 10 * 1024 * 1024), // 10mb
+                    $container->get('config')->get('logs.max_log_files', 10),
                 );
             }
 
