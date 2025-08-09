@@ -30,14 +30,11 @@ class SecretsIntegrationTest extends TestCase
         if (!defined('DIR_CONFIG')) {
             define('DIR_CONFIG', __DIR__ . '/tmp');
         }
-        $config = new Config();
-        $config->set('app', ['secrets_key' => str_repeat('a', 32)]);
         $this->container->register('config', fn() => $config);
         $this->container->register('secrets', function () {
             $crypto = new Crypto(str_repeat('a', 32));
             return new Secrets(
                 $this->container->get('db'),
-                $this->container->get('config'),
                 $crypto
             );
         });
@@ -166,7 +163,7 @@ class SecretsIntegrationTest extends TestCase
 
         // Swap crypto to new key and verify
         $crypto = new Crypto($newKey);
-        $secretsNew = new Secrets($this->db, $this->container->get('config'), $crypto);
+        $secretsNew = new Secrets($this->db, $crypto);
         $this->assertEquals('bar', $secretsNew->group('global')->owner(null)->get('foo'));
         $this->assertEquals('tok1', $secretsNew->group('users')->owner(1)->get('token'));
         $this->assertEquals('tok2', $secretsNew->group('users')->owner(2)->get('token'));
@@ -186,7 +183,7 @@ class SecretsIntegrationTest extends TestCase
 
         // Values should not be updated, still decryptable with original key
         $crypto = new Crypto(str_repeat('a', 32));
-        $secretsOrig = new Secrets($this->db, $this->container->get('config'), $crypto);
+        $secretsOrig = new Secrets($this->db, $crypto);
         $this->assertEquals('bar', $secretsOrig->group('global')->owner(null)->get('foo'));
         $this->assertEquals('tok1', $secretsOrig->group('users')->owner(1)->get('token'));
     }

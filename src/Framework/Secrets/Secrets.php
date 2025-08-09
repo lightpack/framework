@@ -4,7 +4,6 @@ namespace Lightpack\Secrets;
 
 use Lightpack\Database\DB;
 
-use Lightpack\Config\Config;
 use Lightpack\Utils\Crypto;
 
 class Secrets
@@ -13,13 +12,11 @@ class Secrets
     protected ?int $ownerId = null;
     protected DB $db;
 
-    protected Config $config;
     protected Crypto $crypto;
 
-    public function __construct(DB $db, Config $config, Crypto $crypto)
+    public function __construct(DB $db, Crypto $crypto)
     {
         $this->db = $db;
-        $this->config = $config;
         $this->crypto = $crypto;
     }
 

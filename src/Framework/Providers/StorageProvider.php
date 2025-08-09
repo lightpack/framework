@@ -14,10 +14,10 @@ class StorageProvider implements ProviderInterface
     {
         $container->register('storage', function($container) {
             $config = $container->get('config');
-            $driver = $config->get('storage.driver') ?? 'local';
+            $driver = get_env('STORAGE_DRIVER') ?? 'local';
             
             return match ($driver) {
-                's3' => $this->createS3Driver($config->get('storage.s3')),
+                's3' => $this->createS3Driver($config->get('s3')),
                 default => new LocalStorage(DIR_STORAGE),
             };
         });

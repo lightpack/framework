@@ -155,14 +155,18 @@ class ExceptionRenderer
     {
         $statusCode = $exc->getCode() ?: 500;
         $statusCode = (int) $statusCode;
-        $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . '/production.php';
         $message = $exc->getMessage() ?: 'We are facing some technical issues. We will be back soon.';
-
+        $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . "/production/layout.php";
+        $statusCodeTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . "/production/{$statusCode}.php";
+        $errorTemplateNotFound = !file_exists($statusCodeTemplate);
+        
         if('http' == $this->getResponseFormat()) {
             if(file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
                 $template = $statusCode;
-                $errorTemplate = DIR_VIEWS . '/errors/layout.php';
-            } 
+                $errorTemplate = DIR_VIEWS . "/errors/{$statusCode}.php";
+            } elseif(file_exists(DIR_VIEWS . '/errors/fallback.php')) {
+                $errorTemplate = DIR_VIEWS . "/errors/fallback.php";
+            }
         }
 
         $this->sendHeaders($statusCode);
@@ -175,6 +179,8 @@ class ExceptionRenderer
 
         $this->renderTemplate($errorTemplate, [
             'code' => 'HTTP: ' . $statusCode, 
+            'status_code' => $statusCode,
+            'error_template_not_found' => $errorTemplateNotFound,
             'message' => $message,
             'template' => $template ?? null,
         ]);

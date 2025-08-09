@@ -37,8 +37,7 @@ class CacheProvider implements ProviderInterface
         }
 
         if ($cacheDriver === 'file') {
-            $cacheDir = $container->get('config')->get('storage.cache');
-            return new FileDriver($cacheDir);
+            return new FileDriver(DIR_STORAGE . '/cache');
         }
 
         if ($cacheDriver === 'database') {

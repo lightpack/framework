@@ -6,6 +6,7 @@ use Lightpack\Console\Commands\CreateEvent;
 use Lightpack\Console\Commands\CreateModel;
 use Lightpack\Console\Commands\CreateFilter;
 use Lightpack\Console\Commands\CreateCommand;
+use Lightpack\Console\Commands\CreateConfig;
 use Lightpack\Console\Commands\LinkStorage;
 use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\CreateProvider;
@@ -47,6 +48,7 @@ class Console
         'create:job' => CreateJob::class,
         'create:mail' => CreateMail::class,
         'create:seeder' => CreateSeeder::class,
+        'create:config' => CreateConfig::class,
         'db:seed' => SeedCommand::class,
         'schedule:events' => ScheduleEvents::class,
         'app:key' => GenerateAppKey::class,
