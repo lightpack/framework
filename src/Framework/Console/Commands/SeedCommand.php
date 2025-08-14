@@ -15,7 +15,6 @@ class SeedCommand implements ICommand
 
         if(strtolower($confirm) === 'y') {
             (new DatabaseSeeder)->seed();
-            fputs(STDOUT, "\n✔ Database seeded\n\n");
         } else {
             fputs(STDOUT, "\n✔ Database seeding cancelled\n\n");
         }
