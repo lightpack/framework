@@ -18,5 +18,6 @@ class Seeder
             Container::getInstance()->call($class, 'seed');
             fputs(STDOUT, "Seeded: {$class}\n");
         }
+        fputs(STDOUT, "\nTotal seeders executed: " . count($seeder) . "\n");
     }
 }
