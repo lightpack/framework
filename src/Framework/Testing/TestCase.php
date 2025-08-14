@@ -2,6 +2,7 @@
 
 namespace Lightpack\Testing;
 
+use Lightpack\App;
 use Lightpack\Mail\Mail;
 use Lightpack\Http\Response;
 use Lightpack\Container\Container;
@@ -25,11 +26,13 @@ class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        require getcwd() . '/bootstrap/init.php';
+        $this->bootApp();
 
         $this->container = Container::getInstance();
 
-        Mail::clearSentMails();
+        if (class_exists('\PHPMailer\PHPMailer\PHPMailer')) {
+            Mail::clearSentMails();
+        }
 
         if(method_exists($this, 'beginTransaction')) {
             $this->beginTransaction();
@@ -167,5 +170,15 @@ class TestCase extends BaseTestCase
         }
 
         $_SERVER['CONTENT_TYPE'] = 'text/html';
+    }
+
+    protected function bootApp(): void
+    {
+        $cwd = getcwd();
+
+        require_once $cwd . '/vendor/autoload.php';
+        require_once $cwd . '/boot/constants.php';
+
+        App::boot();
     }
 }
