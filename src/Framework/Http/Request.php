@@ -79,7 +79,7 @@ class Request
 
     public function fullpath(): string
     {
-        $path = explode('?', $_SERVER['REQUEST_URI'])[0];
+        $path = explode('?', $this->uri())[0];
 
         return '/' . trim($path, '/');
     }
