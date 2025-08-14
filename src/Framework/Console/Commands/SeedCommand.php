@@ -11,7 +11,11 @@ class SeedCommand implements ICommand
     {
         fputs(STDOUT, "\n");
 
-        $confirm = readline('Are you sure you want to continue? (y/n) ');
+        if (in_array('--force', $arguments)) {
+            $confirm = 'y';
+        } else {
+            $confirm = readline('Are you sure you want to continue? (y/n) ');
+        }
 
         if(strtolower($confirm) === 'y') {
             (new DatabaseSeeder)->seed();
