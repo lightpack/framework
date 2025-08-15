@@ -53,7 +53,7 @@ final class RequestTest extends TestCase
     public function testRequestFullPath()
     {
         $request = new Request($this->basepath);
-        
+
         $this->assertSame(
             $this->fullpath,
             $request->fullpath(),
@@ -195,14 +195,14 @@ final class RequestTest extends TestCase
     public function testRequestIsValid()
     {
         $this->expectException(InvalidHttpMethodException::class);
-        
+
         $_SERVER['REQUEST_METHOD'] = 'GETPOST';
         $request = new Request();
     }
 
     public function testRequestIsAjax()
     {
-        $_SERVER['HTTP_X_REQUESTED_WITH']= 'XMLHttpRequest';
+        $_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
         $this->assertTrue((new Request)->isAjax());
     }
 
@@ -264,14 +264,14 @@ final class RequestTest extends TestCase
         ];
 
         $request = new Request();
-        
+
         // Test nested access
         $this->assertEquals('John Doe', $request->input('user.profile.name'));
         $this->assertEquals('dark', $request->input('user.settings.theme'));
-        
+
         // Test default value with non-existent key
         $this->assertEquals('light', $request->input('user.settings.color', 'light'));
-        
+
         // Test null for non-existent nested key
         $this->assertNull($request->input('user.profile.age'));
 
@@ -287,7 +287,7 @@ final class RequestTest extends TestCase
         ];
 
         $request = new Request(); // Create new instance for POST test
-        
+
         // Test array access with dot notation
         $this->assertEquals('Item 1', $request->input('data.items.0.name'));
         $this->assertEquals(2, $request->input('data.items.1.id'));
@@ -304,7 +304,7 @@ final class RequestTest extends TestCase
         // Set up the environment for JSON request
         $_SERVER['CONTENT_TYPE'] = 'application/json';
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        
+
         $jsonData = json_encode([
             'user' => [
                 'profile' => [
@@ -333,7 +333,7 @@ final class RequestTest extends TestCase
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
-        
+
         // Test with POST parameters
         $_POST = [
             'users' => [
@@ -365,13 +365,13 @@ final class RequestTest extends TestCase
         ];
 
         $request = new Request();
-        
+
         // Verify request method is POST
         $this->assertEquals('POST', $request->method());
-        
+
         // Verify we can get all POST data
         $this->assertEquals($_POST, $request->input());
-      
+
         // Test wildcard access to get all user names
         $this->assertEquals(
             ['John', 'Jane', 'Bob'],
@@ -468,5 +468,50 @@ final class RequestTest extends TestCase
         $this->assertSame('https', $request->scheme(), 'X-Forwarded-Proto should override HTTPS');
         $this->assertSame('example.com', $request->host(), 'X-Forwarded-Host should override HTTP_HOST');
         $this->assertSame(443, $request->port(), 'X-Forwarded-Port should override SERVER_PORT');
+    }
+
+    public function testRouteIsReturnsTrueForExactMatch()
+    {
+        $request = new \Lightpack\Http\Request();
+        $route = new \Lightpack\Routing\Route();
+        $route->name('dashboard');
+        $request->setRoute($route);
+        $this->assertTrue($request->matchesRoute('dashboard'));
+    }
+
+    public function testRouteIsReturnsTrueForWildcardMatch()
+    {
+        $request = new \Lightpack\Http\Request();
+        $route = new \Lightpack\Routing\Route();
+        $route->name('admin.dashboard');
+        $request->setRoute($route);
+        $this->assertTrue($request->matchesRoute('admin.*'));
+    }
+
+    public function testRouteIsReturnsTrueForArrayOfPatterns()
+    {
+        $request = new \Lightpack\Http\Request();
+        $route = new \Lightpack\Routing\Route();
+        $route->name('user.profile');
+        $request->setRoute($route);
+        $this->assertTrue($request->matchesRoute(['foo', 'user.*']));
+    }
+
+    public function testRouteIsReturnsFalseForNoMatch()
+    {
+        $request = new \Lightpack\Http\Request();
+        $route = new \Lightpack\Routing\Route();
+        $route->name('user.profile');
+        $request->setRoute($route);
+        $this->assertFalse($request->matchesRoute('admin.*'));
+    }
+
+    public function testRouteIsReturnsFalseIfRouteHasNoName()
+    {
+        $request = new \Lightpack\Http\Request();
+        $route = new \Lightpack\Routing\Route();
+        // Do not set a name
+        $request->setRoute($route);
+        $this->assertFalse($request->matchesRoute('no-name'));
     }
 }

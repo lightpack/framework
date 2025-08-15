@@ -458,6 +458,28 @@ class Request
     }
 
     /**
+     * Check if the current request's route matches the given name or pattern(s).
+     * Supports wildcard patterns (e.g., admin.*).
+     *
+     * @param string|array $patterns
+     * @return bool
+     */
+    public function matchesRoute($patterns): bool
+    {
+        $route = $this->route();
+        if (!$route || !$route->getName()) {
+            return false;
+        }
+        $name = $route->getName();
+        foreach ((array) $patterns as $pattern) {
+            if (fnmatch($pattern, $name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get the route parameters.
      * 
      * @return mixed The value of the specified parameter, or an array of all parameters if $key is null.
