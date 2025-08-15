@@ -10,7 +10,7 @@ class Route
     private array $params = [];
     private string $path;
     private string $uri;
-    private string $name;
+    private string $name = '';
     private array $pattern = [];
     private string $host = '';
 
