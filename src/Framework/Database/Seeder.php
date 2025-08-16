@@ -2,6 +2,7 @@
 
 namespace Lightpack\Database;
 
+use Lightpack\Console\Output;
 use Lightpack\Container\Container;
 
 class Seeder
@@ -12,12 +13,20 @@ class Seeder
             $seeder = [$seeder];
         }
 
-        fputs(STDOUT, "\nRunning seeders...\n\n");
+        // fputs(STDOUT, "\nRunning seeders...\n\n");
+        $output = new Output;
+        $output->newline();
+        $output->info('Running seeders...');
+        $output->newline(2);
 
         foreach ($seeder as $class) {
             Container::getInstance()->call($class, 'seed');
-            fputs(STDOUT, "Seeded: {$class}\n");
+            $output->success("✓");
+            $output->line(" {$class}");
         }
-        fputs(STDOUT, "\nTotal seeders executed: " . count($seeder) . "\n");
+
+        $output->newline();
+        $output->success('[DONE]:');
+        $output->line(" Total seeders executed: " . count($seeder));
     }
 }
