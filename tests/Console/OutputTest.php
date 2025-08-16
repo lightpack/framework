@@ -7,7 +7,7 @@ class OutputTest extends TestCase
 {
     public function testLineMethod()
     {
-        $expected = "\nHello\n";
+        $expected = "Hello\n";
 
         ob_start();
         (new Output)->line('Hello');
@@ -18,7 +18,7 @@ class OutputTest extends TestCase
 
     public function testErrorMethod()
     {
-        $expected = "\n\033[0;31mHello\033[0m\n";
+        $expected = "\033[0;31mHello\033[0m";
 
         ob_start();
         (new Output)->error('Hello');
@@ -29,7 +29,7 @@ class OutputTest extends TestCase
 
     public function testSuccessMethod()
     {
-        $expected = "\n\033[0;32mHello\033[0m\n";
+        $expected = "\033[0;32mHello\033[0m";
 
         ob_start();
         (new Output)->success('Hello');
@@ -40,7 +40,7 @@ class OutputTest extends TestCase
 
     public function testWarningMethod()
     {
-        $expected = "\n\033[0;33mHello\033[0m\n";
+        $expected = "\033[0;33mHello\033[0m";
 
         ob_start();
         (new Output)->warning('Hello');
@@ -51,7 +51,7 @@ class OutputTest extends TestCase
 
     public function testInfoMethod()
     {
-        $expected = "\n\033[0;34mHello\033[0m\n";
+        $expected = "\033[0;34mHello\033[0m";
 
         ob_start();
         (new Output)->info('Hello');
@@ -150,7 +150,7 @@ class OutputTest extends TestCase
 
         // Test case 1
         $repeat = str_repeat('.', 20 - strlen('Hello'));
-        $expected = PHP_EOL . "Hello{$repeat} World" . PHP_EOL;
+        $expected = "Hello{$repeat} World";
         ob_start();
         $output->pad('Hello', 'World');
         $actual = ob_get_clean();
@@ -159,7 +159,7 @@ class OutputTest extends TestCase
 
         // Test case 2
         $repeat = str_repeat('.', 20 - strlen('Hello'));
-        $expected = PHP_EOL . "Hello{$repeat} World" . PHP_EOL;
+        $expected = "Hello{$repeat} World";
         ob_start();
         $output->pad('Hello', 'World', 20);
         $actual = ob_get_clean();
@@ -168,7 +168,7 @@ class OutputTest extends TestCase
 
         // Test case 3
         $repeat = str_repeat('.', 5 - strlen('Hello'));
-        $expected = PHP_EOL . 'Hello World' . PHP_EOL;
+        $expected = 'Hello World';
         ob_start();
         $output->pad('Hello', 'World', 5);
         $actual = ob_get_clean();

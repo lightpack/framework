@@ -6,35 +6,27 @@ class Output
 {
     public function line(string $text)
     {
-        echo "\n{$text}\n";
+        echo "{$text}\n";
     }
 
     public function info(string $text)
     {
-        echo "\n";
         echo (new Color)->format("<BLUE>{$text}</BLUE>");
-        echo "\n";
     }
 
     public function success(string $text)
     {
-        echo "\n";
         echo (new Color)->format("<GREEN>{$text}</GREEN>");
-        echo "\n";
     }
 
     public function error(string $text)
     {
-        echo "\n";
         echo (new Color)->format("<RED>{$text}</RED>");
-        echo "\n";
     }
 
     public function warning(string $text)
     {
-        echo "\n";
         echo (new Color)->format("<YELLOW>{$text}</YELLOW>");
-        echo "\n";
     }
 
     public function infoLabel(?string $text = null)
@@ -70,7 +62,7 @@ class Output
         $paddingLength = max(0, $length - strlen($leftText));
         $padding = str_repeat($character, $paddingLength);
 
-        echo "\n{$leftText}{$padding} {$rightText}\n";
+        echo "{$leftText}{$padding} {$rightText}";
     }
 
     public function newline(int $count = 1)
