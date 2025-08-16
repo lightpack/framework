@@ -22,7 +22,8 @@ class CreateModel implements ICommand
 
         if (!$this->validateSegments($parts, $baseName, $output)) return;
         if (file_exists($filePath)) {
-            $output->warning("Skipped: Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
+            $output->error("[Skipped]: ");
+            $output->line("Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
             return;
         }
         if (!is_dir($directory)) {
@@ -34,12 +35,14 @@ class CreateModel implements ICommand
         $namespace = $this->computeNamespace($subdir);
         $this->writeModelFile($filePath, $namespace, $baseName, $tableName, $primaryKey);
         $output->success("✓ Model created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
+        $output->newline();
     }
 
     private function parseArguments(array $arguments, Output $output)
     {
         if (empty($arguments)) {
-            $output->error("Please provide a model class name.\n");
+            $output->error("Please provide a model class name.");
+            $output->newline();
             return null;
         }
         $className = null;
