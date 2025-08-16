@@ -15,7 +15,7 @@ class CreateConfig implements ICommand
         // Parse --support argument
         $support = $this->parseSupportArgument($arguments);
         if ($support === '') {
-            $this->showError($output, "You must provide a value for --support. Example: --support=app", null, array_keys(self::getSupportedConfigs()));
+            $this->showError($output, "You must provide a value for --support.", null, array_keys(self::getSupportedConfigs()));
             return;
         }
 
@@ -62,13 +62,11 @@ class CreateConfig implements ICommand
         }
 
         if ($force && file_exists($targetPath)) {
-            $output->infoLabel(' Overwrite ');
-            $output->info("Overwriting existing config at {$targetPath}");
+            $output->infoLabel('Overwrite');
+            $output->info(" Overwriting existing config at {$targetPath}");
         }
 
         file_put_contents($targetPath, $template);
-        $output->newline();
-        $output->successLabel();
         $output->newline();
         $output->success("✓ Config created at {$targetPath}");
     }
@@ -99,15 +97,18 @@ class CreateConfig implements ICommand
     protected function showError(Output $output, string $error, ?string $tip = null, ?array $supported = null): void
     {
         $output->newline();
-        $output->errorLabel();
         $output->error($error);
+        $output->newline();
+
         if ($tip) {
             $output->newline();
-            $output->infoLabel(' Tip ');
-            $output->info($tip);
+            $output->info('[Tip]: ');
+            $output->line($tip);
         }
         if ($supported) {
-            $output->info("Supported: " . implode(', ', $supported) . ".");
+            $output->newline();
+            $output->info("[Supported]: ");
+            $output->line(implode(', ', $supported));
         }
     }
 
