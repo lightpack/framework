@@ -46,6 +46,7 @@ class CreateMigration implements ICommand
         file_put_contents($filepath, $template);
         $output->newline();
         $output->success("✓ Migration created in {$filepath}");
+        $output->newline();
     }
 
     /**
