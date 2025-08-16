@@ -45,8 +45,6 @@ class CreateMigration implements ICommand
 
         file_put_contents($filepath, $template);
         $output->newline();
-        $output->successLabel();
-        $output->newline();
         $output->success("✓ Migration created in {$filepath}");
     }
 
@@ -56,15 +54,18 @@ class CreateMigration implements ICommand
     protected function showError(Output $output, string $error, ?string $tip = null, ?array $schemas = null): void
     {
         $output->newline();
-        $output->errorLabel();
         $output->error($error);
+        $output->newline();
+
         if ($tip) {
             $output->newline();
-            $output->infoLabel(' Tip ');
-            $output->info($tip);
+            $output->info('[Tip]:');
+            $output->line($tip);
         }
         if ($schemas) {
-            $output->info("Supported: " . implode(', ', $schemas) . ".");
+            $output->newline();
+            $output->info("[Supported]:");
+            $output->line(implode(', ', $schemas));
         }
     }
 
