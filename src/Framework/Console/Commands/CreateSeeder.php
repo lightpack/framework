@@ -27,7 +27,13 @@ class CreateSeeder implements ICommand
         $template = str_replace('__SEEDER_NAME__', $className, $template);
         $directory = './database/seeders';
 
-        file_put_contents(DIR_ROOT . '/database/seeders/' . $className . '.php', $template);
+        $filePath = DIR_ROOT . '/database/seeders/' . $className . '.php';
+        if (file_exists($filePath)) {
+            $message = "Seeder class file already exists: {$directory}/{$className}.php\n\n";
+            fputs(STDERR, $message);
+            return;
+        }
+        file_put_contents($filePath, $template);
         fputs(STDOUT, "✓ Seeder class file created: {$directory}/{$className}.php\n\n");
     }
 }
