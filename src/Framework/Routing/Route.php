@@ -10,7 +10,7 @@ class Route
     private array $params = [];
     private string $path;
     private string $uri;
-    private string $name = '';
+    private string $name;
     private array $pattern = [];
     private string $host = '';
 
@@ -156,7 +156,7 @@ class Route
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->name ?? '';
     }
 
     public function hasName(): bool
