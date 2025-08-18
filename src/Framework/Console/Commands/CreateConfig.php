@@ -69,6 +69,7 @@ class CreateConfig implements ICommand
         file_put_contents($targetPath, $template);
         $output->newline();
         $output->success("✓ Config created at {$targetPath}");
+        $output->newline();
     }
 
     protected function parseForceArgument(array $arguments): bool
