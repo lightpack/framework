@@ -70,7 +70,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
     public function withPath($path)
     {
-        $this->path = url($path);
+        $this->path = url()->to($path);
         return $this;
     }
 
