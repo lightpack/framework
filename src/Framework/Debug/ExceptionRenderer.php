@@ -116,6 +116,11 @@ class ExceptionRenderer
 
     private function sendHeaders(int|string $statusCode)
     {
+        // Defensive: Only allow valid HTTP status codes (100-599)
+        if (!is_int($statusCode) || $statusCode < 100 || $statusCode > 599) {
+            $statusCode = 500;
+        }
+
         if (!headers_sent()) {
             header("HTTP/1.1 $statusCode", true, $statusCode);
 
@@ -153,8 +158,13 @@ class ExceptionRenderer
 
     private function renderProductionTemplate(Throwable $exc)
     {
-        $statusCode = $exc->getCode() ?: 500;
-        $statusCode = (int) $statusCode;
+        // Only use HTTP code if it's an HttpException and valid
+        if ($exc instanceof HttpException) {
+            $code = (int) $exc->getCode();
+            $statusCode = ($code >= 100 && $code <= 599) ? $code : 500;
+        } else {
+            $statusCode = 500;
+        }
         $message = $exc->getMessage() ?: 'We are facing some technical issues. We will be back soon.';
         $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . "/production/layout.php";
         $statusCodeTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . "/production/{$statusCode}.php";
@@ -220,12 +230,18 @@ class ExceptionRenderer
             $errorType = $this->getErrorType($exc->getCode());
         }
         
-        $statusCode = $exc->getCode() ?: 500;
-        $statusCode = (int) $statusCode;
+        // Only use HTTP code if it's an HttpException and valid
+        if ($exc instanceof HttpException) {
+            $code = (int) $exc->getCode();
+            $statusCode = ($code >= 100 && $code <= 599) ? $code : 500;
+        } else {
+            $statusCode = 500;
+        }
         $relevantTrace = $this->findRelevantTrace($exc);
         
         $data['type'] = $errorType;
         $data['code'] = $statusCode;
+        $data['db_code'] = $exc->getCode(); // Show DB error code for debugging
         $data['message'] = $exc->getMessage();
         $data['file'] = $exc->getFile();
         $data['line'] = $exc->getLine();
