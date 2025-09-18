@@ -116,6 +116,11 @@ class ExceptionRenderer
 
     private function sendHeaders(int|string $statusCode)
     {
+        // Defensive: Only allow valid HTTP status codes (100-599)
+        if (!is_int($statusCode) || $statusCode < 100 || $statusCode > 599) {
+            $statusCode = 500;
+        }
+        
         if (!headers_sent()) {
             header("HTTP/1.1 $statusCode", true, $statusCode);
 
