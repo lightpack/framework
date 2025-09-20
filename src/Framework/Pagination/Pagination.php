@@ -244,7 +244,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
     protected function setCurrentPage($currentPage = null)
     {
-        $this->currentPage = $currentPage ?? app('request')->get('page', 1);
+        $this->currentPage = $currentPage ?? app('request')->query('page', 1);
         $this->currentPage = (int) $this->currentPage;
         $this->currentPage = $this->currentPage > 0 ? $this->currentPage : 1;
     }
