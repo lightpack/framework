@@ -382,6 +382,14 @@ class Model implements JsonSerializable
         return $builder;
     }
 
+    public static function queryWithoutScopes(): Builder
+    {
+        $model = new static;
+        $builder = new Builder($model);
+
+        return $builder;
+    }
+
     public static function filters(array $filters): Builder
     {
         $builder = self::query();
@@ -492,7 +500,7 @@ class Model implements JsonSerializable
             throw new \RuntimeException('Insert failed: This model does not use an auto-incrementing primary key. You must assign a primary key value before saving.');
         }
 
-        $result = self::query()->insert($this->attributes->toDatabaseArray());
+        $result = self::queryWithoutScopes()->insert($this->attributes->toDatabaseArray());
 
         if ($this->autoIncrements) {
             $this->attributes->set($this->primaryKey, $this->lastInsertId());

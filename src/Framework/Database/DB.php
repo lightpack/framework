@@ -318,7 +318,8 @@ class DB
      */
     protected function logError(\PDOException $e, string $sql, ?array $params): void
     {
-        $errorCode = (int) $e->getCode();
+        $errorCode = $e->getCode();
+
         $context = [
             'error_code' => $errorCode,
             'sql' => $sql,
