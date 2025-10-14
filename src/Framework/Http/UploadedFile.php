@@ -4,7 +4,6 @@ namespace Lightpack\Http;
 
 use Lightpack\Container\Container;
 use Lightpack\Utils\Str;
-use Lightpack\Storage\LocalStorage;
 use Lightpack\Exceptions\FileUploadException;
 
 class UploadedFile
@@ -90,6 +89,36 @@ class UploadedFile
     public function isEmpty(): bool
     {
         return empty($this->getName());
+    }
+
+    /**
+     * Check if the file upload encountered an error
+     * 
+     * @return bool True if there was an upload error, false otherwise
+     */
+    public function hasError(): bool
+    {
+        return $this->error !== UPLOAD_ERR_OK;
+    }
+
+    /**
+     * Get the upload error code
+     * 
+     * Returns one of the UPLOAD_ERR_* constants:
+     * - UPLOAD_ERR_OK: No error
+     * - UPLOAD_ERR_INI_SIZE: File exceeds upload_max_filesize
+     * - UPLOAD_ERR_FORM_SIZE: File exceeds MAX_FILE_SIZE in HTML form
+     * - UPLOAD_ERR_PARTIAL: File was only partially uploaded
+     * - UPLOAD_ERR_NO_FILE: No file was uploaded
+     * - UPLOAD_ERR_NO_TMP_DIR: Missing temporary folder
+     * - UPLOAD_ERR_CANT_WRITE: Failed to write file to disk
+     * - UPLOAD_ERR_EXTENSION: A PHP extension stopped the file upload
+     * 
+     * @return int The upload error code
+     */
+    public function getError(): int
+    {
+        return $this->error;
     }
 
     /**
