@@ -1988,7 +1988,8 @@ final class ModelTest extends TestCase
             'JSON in database does not match expected array structure'
         );
 
-        $this->assertEquals($now->format('Y-m-d'), $record->date_col);
+        $this->assertInstanceOf(\DateTimeInterface::class, $record->date_col);
+        $this->assertEquals($now->format('Y-m-d'), $record->date_col->format('Y-m-d'));
 
         $this->assertInstanceOf(\DateTimeInterface::class, $record->datetime_col);
         $this->assertEquals(
@@ -2075,7 +2076,8 @@ final class ModelTest extends TestCase
         $this->assertIsArray($model->json_col);
         $this->assertEquals(['key' => 'value'], $model->json_col);
 
-        $this->assertEquals($now->format('Y-m-d'), $model->date_col);
+        $this->assertInstanceOf(\DateTimeInterface::class, $model->date_col);
+        $this->assertEquals($now->format('Y-m-d'), $model->date_col->format('Y-m-d'));
 
         $this->assertInstanceOf(\DateTimeInterface::class, $model->datetime_col);
         $this->assertEquals(

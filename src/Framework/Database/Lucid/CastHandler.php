@@ -66,16 +66,16 @@ class CastHandler
     /**
      * Cast value to date.
      */
-    protected function castToDate(mixed $value): string
+    protected function castToDate(mixed $value): DateTimeInterface
     {
         if ($value instanceof DateTimeInterface) {
-            return $value->format('Y-m-d');
+            return $value;
         }
 
         if (is_string($value)) {
             $date = date_create($value);
             if ($date) {
-                return $date->format('Y-m-d');
+                return $date;
             }
         }
 

@@ -65,11 +65,16 @@ class CastHandlerTest extends TestCase
         $date = '2025-03-18';
         $datetime = new DateTime($date);
 
-        // Cast string to date
-        $this->assertEquals($date, $this->handler->cast($date, 'date'));
+        // Cast string to DateTime object
+        $result = $this->handler->cast($date, 'date');
+        $this->assertInstanceOf(DateTime::class, $result);
+        $this->assertEquals($date, $result->format('Y-m-d'));
         
-        // Cast DateTime to date string
-        $this->assertEquals($date, $this->handler->cast($datetime, 'date'));
+        // Cast DateTime to DateTime (should return same instance)
+        $this->assertSame($datetime, $this->handler->cast($datetime, 'date'));
+
+        // Uncast DateTime to string
+        $this->assertEquals($date, $this->handler->uncast($datetime, 'date'));
 
         // Invalid date string
         $this->expectException(InvalidArgumentException::class);
