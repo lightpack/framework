@@ -160,8 +160,8 @@ class Schema
         $result = $this->connection->query("
             SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
             FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND REFERENCED_TABLE_NAME IS NOT NULL
-        ");
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL
+        ", [$table]);
 
         foreach ($result->fetchAll(\PDO::FETCH_ASSOC) as $row) {
             $foreignKeys[] = $row;
@@ -179,8 +179,8 @@ class Schema
         $result = $this->connection->query("
             SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
             FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND CONSTRAINT_NAME = '$foreignKey'
-        ");
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?
+        ", [$table, $foreignKey]);
 
         $row = $result->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
@@ -198,8 +198,8 @@ class Schema
         $result = $this->connection->query("
             SELECT TABLE_NAME, COLUMN_NAME, INDEX_NAME
             FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND INDEX_TYPE = 'FULLTEXT'
-        ");
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_TYPE = 'FULLTEXT'
+        ", [$table]);
 
         foreach ($result->fetchAll(\PDO::FETCH_ASSOC) as $row) {
             $fullTextIndexes[] = $row;
@@ -217,8 +217,8 @@ class Schema
         $result = $this->connection->query("
             SELECT TABLE_NAME, COLUMN_NAME, INDEX_NAME
             FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$table' AND INDEX_NAME = '$index' AND INDEX_TYPE = 'FULLTEXT'
-        ");
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ? AND INDEX_TYPE = 'FULLTEXT'
+        ", [$table, $index]);
 
         $row = $result->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;

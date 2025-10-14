@@ -51,8 +51,10 @@ class Migrator
             $sql && $this->connection->query($sql);
 
             // Record migration
-            $sql = "INSERT INTO migrations (migration, batch) VALUES ('{$migration}', {$nextBatch});";
-            $this->connection->query($sql);
+            $this->connection->query(
+                "INSERT INTO migrations (migration, batch) VALUES (?, ?)",
+                [$migration, $nextBatch]
+            );
 
             $migratedFiles[] = $migration;
         }
@@ -97,8 +99,10 @@ class Migrator
                 $sql && $this->connection->query($sql);
 
                 // Delete migration
-                $sql = "DELETE FROM migrations WHERE migration = '{$migration}'";
-                $this->connection->query($sql);
+                $this->connection->query(
+                    "DELETE FROM migrations WHERE migration = ?",
+                    [$migration]
+                );
 
                 $migratedFiles[] = $migration;
             }
