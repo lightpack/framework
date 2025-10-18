@@ -10,6 +10,7 @@ require_once 'Comment.php';
 require_once 'Article.php';
 require_once 'Manager.php';
 require_once 'CastModel.php';
+require_once 'TimestampCastModel.php';
 
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
@@ -55,7 +56,7 @@ final class ModelTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations";
+        $sql = "DROP TABLE IF EXISTS products, options, owners, users, roles, role_user, permissions, permission_role, projects, tasks, comments, articles, managers, cast_models, cast_model_relations, timestamp_cast_models";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -2337,5 +2338,94 @@ final class ModelTest extends TestCase
 
         $this->expectException(RecordNotFoundException::class);
         $product->refetch();
+    }
+
+    // --- Timestamp Casting Tests ---
+    public function testTimestampsWithDatetimeCasting()
+    {
+        // Create table for timestamp cast model
+        $this->db->query("
+            CREATE TABLE timestamp_cast_models (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255),
+                created_at DATETIME,
+                updated_at DATETIME
+            )
+        ");
+
+        $model = $this->db->model(TimestampCastModel::class);
+        $model->name = 'Test Record';
+        $model->save();
+
+        // Test 1: Verify created_at is cast to DateTime object
+        $this->assertInstanceOf(\DateTimeInterface::class, $model->created_at);
+        $this->assertNull($model->updated_at);
+
+        // Test 2: Verify database received correct string format
+        $raw = $this->db->table('timestamp_cast_models')->where('id', $model->id)->one();
+        $this->assertIsString($raw->created_at);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $raw->created_at);
+
+        // Test 3: Update the model and verify updated_at is cast
+        sleep(1); // Ensure different timestamp
+        $model->name = 'Updated Record';
+        $model->save();
+
+        $this->assertInstanceOf(\DateTimeInterface::class, $model->updated_at);
+        $this->assertNotEquals(
+            $model->created_at->format('Y-m-d H:i:s'),
+            $model->updated_at->format('Y-m-d H:i:s')
+        );
+
+        // Test 4: Verify database received correct string format for updated_at
+        $raw = $this->db->table('timestamp_cast_models')->where('id', $model->id)->one();
+        $this->assertIsString($raw->updated_at);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $raw->updated_at);
+
+        // Test 5: Fetch from database and verify casts are applied
+        $fetched = $this->db->model(TimestampCastModel::class)->find($model->id);
+        $this->assertInstanceOf(\DateTimeInterface::class, $fetched->created_at);
+        $this->assertInstanceOf(\DateTimeInterface::class, $fetched->updated_at);
+    }
+
+    public function testToDatabaseArrayAppliesUncasting()
+    {
+        $model = $this->db->model(CastModel::class);
+        $now = new \DateTime('2025-03-18 22:30:00');
+
+        // Set values with various types
+        $model->string_col = 123;
+        $model->integer_col = '456';
+        $model->json_col = ['key' => 'value'];
+        $model->date_col = $now;
+        $model->datetime_col = $now;
+        $model->timestamp_col = '2025-03-18 22:30:00'; // Timestamp cast expects string or DateTime
+
+        $model->save();
+
+        // Verify database received properly uncast values
+        $raw = $this->db->table('cast_models')->where('id', $model->id)->one();
+        
+        // String should be string in DB
+        $this->assertEquals('123', $raw->string_col);
+        
+        // Integer should be stored as is
+        $this->assertEquals('456', $raw->integer_col);
+        
+        // JSON should be JSON string
+        $this->assertEquals(['key' => 'value'], json_decode($raw->json_col, true));
+        
+        // Date should be Y-m-d format
+        $this->assertEquals('2025-03-18', $raw->date_col);
+        
+        // Datetime should be Y-m-d H:i:s format
+        $this->assertEquals('2025-03-18 22:30:00', $raw->datetime_col);
+        
+        // Timestamp should be Y-m-d H:i:s format (stored as datetime string)
+        $this->assertEquals('2025-03-18 22:30:00', $raw->timestamp_col);
+        
+        // Verify the value is cast back to integer when retrieved
+        $this->assertIsInt($model->timestamp_col);
+        $this->assertEquals($now->getTimestamp(), $model->timestamp_col);
     }
 }
