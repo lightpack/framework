@@ -14,6 +14,7 @@ use Lightpack\Validation\Rules\BeforeRule;
 use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\BoolRule;
 use Lightpack\Validation\Rules\CustomRule;
+use Lightpack\Validation\Rules\DbUniqueRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
@@ -231,6 +232,24 @@ class Validator
     public function unique(): self
     {
         $this->rules[$this->currentField][] = new UniqueRule;
+        return $this;
+    }
+
+    public function dbUnique(
+        string $table,
+        string|array|null $columns = null,
+        int|string|null $ignoreId = null,
+        string $idColumn = 'id'
+    ): self {
+        // If no columns specified, use current field
+        $columns = $columns ?? $this->currentField;
+        
+        $this->rules[$this->currentField][] = new DbUniqueRule(
+            $table,
+            $columns,
+            $ignoreId,
+            $idColumn
+        );
         return $this;
     }
 
