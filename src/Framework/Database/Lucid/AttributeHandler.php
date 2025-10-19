@@ -141,10 +141,30 @@ class AttributeHandler
 
     /**
      * Get all attributes as array for database operations.
+     * Values are already in database format because set() applies uncasting.
+     * This method only needs to handle DateTime objects that might exist.
      */
     public function toDatabaseArray(): array
     {
-        return (array) $this->data;
+        $data = (array) $this->data;
+        $result = [];
+        
+        foreach ($data as $key => $value) {
+            // Handle DateTime objects that might not have been uncast
+            if ($value instanceof \DateTimeInterface) {
+                $castType = $this->getCastType($key);
+                if ($castType) {
+                    $result[$key] = $this->castHandler->uncast($value, $castType);
+                } else {
+                    // Default to datetime format if no cast specified
+                    $result[$key] = $value->format('Y-m-d H:i:s');
+                }
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        
+        return $result;
     }
 
     /**
@@ -181,6 +201,7 @@ class AttributeHandler
 
     /**
      * Update timestamps.
+     * Uses set() method to respect casting if timestamps are in $casts array.
      */
     public function updateTimestamps(bool $updating = true): void
     {
@@ -191,11 +212,11 @@ class AttributeHandler
         $now = date('Y-m-d H:i:s');
 
         if ($updating) {
-            $this->data->updated_at = $now;
+            $this->set('updated_at', $now);
             return;
         }
 
-        $this->data->created_at = $now;
+        $this->set('created_at', $now);
     }
 
     /**

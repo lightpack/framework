@@ -14,6 +14,7 @@ use Lightpack\Validation\Rules\BeforeRule;
 use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\BoolRule;
 use Lightpack\Validation\Rules\CustomRule;
+use Lightpack\Validation\Rules\DbUniqueRule;
 use Lightpack\Validation\Rules\DateRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
@@ -38,6 +39,7 @@ use Lightpack\Validation\Rules\NotInRule;
 use Lightpack\Validation\Rules\NumericRule;
 use Lightpack\Validation\Rules\RegexRule;
 use Lightpack\Validation\Rules\RequiredRule;
+use Lightpack\Validation\Rules\RequiredIfRule;
 use Lightpack\Validation\Rules\SameRule;
 use Lightpack\Validation\Rules\SlugRule;
 use Lightpack\Validation\Rules\StringRule;
@@ -104,6 +106,12 @@ class Validator
     public function required(): self
     {
         $this->rules[$this->currentField][] = new RequiredRule;
+        return $this;
+    }
+
+    public function requiredIf(string $field, mixed $value): self
+    {
+        $this->rules[$this->currentField][] = new RequiredIfRule($field, $value, $this->arr);
         return $this;
     }
 
@@ -224,6 +232,24 @@ class Validator
     public function unique(): self
     {
         $this->rules[$this->currentField][] = new UniqueRule;
+        return $this;
+    }
+
+    public function dbUnique(
+        string $table,
+        string|array|null $columns = null,
+        int|string|null $ignoreId = null,
+        string $idColumn = 'id'
+    ): self {
+        // If no columns specified, use current field
+        $columns = $columns ?? $this->currentField;
+        
+        $this->rules[$this->currentField][] = new DbUniqueRule(
+            $table,
+            $columns,
+            $ignoreId,
+            $idColumn
+        );
         return $this;
     }
 
@@ -404,7 +430,7 @@ class Validator
         $isOptional = true;
 
         foreach ($rules as $index => $rule) {
-            if ($rule instanceof RequiredRule) {
+            if ($rule instanceof RequiredRule || $rule instanceof RequiredIfRule) {
                 $isOptional = false;
             }
 
