@@ -20,12 +20,12 @@ class CastHandlerTest extends TestCase
     {
         // Integer casting
         $this->assertSame(123, $this->handler->cast('123', 'int'));
-        $this->assertSame(123, $this->handler->cast('123.45', 'integer'));
+        $this->assertSame(123, $this->handler->cast('123.45', 'int'));
         $this->assertSame(0, $this->handler->cast('abc', 'int'));
 
         // Float casting
         $this->assertSame(123.45, $this->handler->cast('123.45', 'float'));
-        $this->assertSame(123.0, $this->handler->cast('123', 'double'));
+        $this->assertSame(123.0, $this->handler->cast('123', 'float'));
         $this->assertSame(0.0, $this->handler->cast('abc', 'float'));
 
         // String casting
@@ -35,10 +35,10 @@ class CastHandlerTest extends TestCase
 
         // Boolean casting
         $this->assertTrue($this->handler->cast(1, 'bool'));
-        $this->assertTrue($this->handler->cast('1', 'boolean'));
+        $this->assertTrue($this->handler->cast('1', 'bool'));
         $this->assertTrue($this->handler->cast('true', 'bool'));
         $this->assertFalse($this->handler->cast(0, 'bool'));
-        $this->assertFalse($this->handler->cast('', 'boolean'));
+        $this->assertFalse($this->handler->cast('', 'bool'));
     }
 
     public function testArrayJsonCasting()
@@ -49,11 +49,9 @@ class CastHandlerTest extends TestCase
 
         // Cast JSON to array
         $this->assertEquals($array, $this->handler->cast($json, 'array'));
-        $this->assertEquals($array, $this->handler->cast($json, 'json'));
 
         // Cast array to JSON (uncast)
         $this->assertEquals($json, $this->handler->uncast($array, 'array'));
-        $this->assertEquals($json, $this->handler->uncast($array, 'json'));
 
         // Invalid JSON string
         $this->expectException(InvalidArgumentException::class);

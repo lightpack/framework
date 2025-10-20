@@ -33,7 +33,7 @@ class UploadModel extends Model
      * @var array
      */
     protected $casts = [
-        'meta' => 'json',
+        'meta' => 'array',
     ];
     
     /**

@@ -208,7 +208,7 @@ class Settings
         if (is_int($value)) return 'int';
         if (is_float($value)) return 'float';
         if (is_bool($value)) return 'bool';
-        if (is_array($value)) return 'json';
+        if (is_array($value)) return 'array';
         return 'string';
     }
 
