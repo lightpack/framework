@@ -2,8 +2,16 @@
 
 # Lightpack Test Runner
 # Runs all test suites individually to verify isolation
+#
+# Usage:
+#   ./run-tests.sh           # Run all suites (summary only)
+#   ./run-tests.sh --verbose # Run all suites (show all output)
+#   ./run-tests.sh -v        # Same as --verbose
 
-set -e  # Exit on first failure
+VERBOSE=false
+if [[ "$1" == "--verbose" ]] || [[ "$1" == "-v" ]]; then
+    VERBOSE=true
+fi
 
 SUITES=(
     "AI"
@@ -54,12 +62,25 @@ PASSED_SUITES=()
 
 for suite in "${SUITES[@]}"; do
     echo "Running $suite tests..."
-    if ./vendor/bin/phpunit --testsuite "$suite" > /dev/null 2>&1; then
-        echo "✓ $suite passed"
-        PASSED_SUITES+=("$suite")
+    
+    if [ "$VERBOSE" = true ]; then
+        # Show full output
+        if ./vendor/bin/phpunit --testsuite "$suite"; then
+            echo "✓ $suite passed"
+            PASSED_SUITES+=("$suite")
+        else
+            echo "✗ $suite failed"
+            FAILED_SUITES+=("$suite")
+        fi
     else
-        echo "✗ $suite failed"
-        FAILED_SUITES+=("$suite")
+        # Suppress output for summary mode
+        if ./vendor/bin/phpunit --testsuite "$suite" > /dev/null 2>&1; then
+            echo "✓ $suite passed"
+            PASSED_SUITES+=("$suite")
+        else
+            echo "✗ $suite failed"
+            FAILED_SUITES+=("$suite")
+        fi
     fi
     echo ""
 done
