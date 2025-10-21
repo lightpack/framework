@@ -99,4 +99,143 @@ class LimiterTest extends TestCase
         $this->assertTrue($this->limiter->attempt('submin-key', 2, 2));
         $this->assertFalse($this->limiter->attempt('submin-key', 2, 2));
     }
+
+    public function testGetRemainingWithNoAttempts()
+    {
+        // No attempts yet - should return max
+        $remaining = $this->limiter->getRemaining('new-key', 5);
+        $this->assertEquals(5, $remaining);
+    }
+
+    public function testGetRemainingAfterSomeAttempts()
+    {
+        // Make 2 attempts out of 5
+        $this->limiter->attempt('test-key', 5, 60);
+        $this->limiter->attempt('test-key', 5, 60);
+        
+        $remaining = $this->limiter->getRemaining('test-key', 5);
+        $this->assertEquals(3, $remaining);
+    }
+
+    public function testGetRemainingWhenLimitReached()
+    {
+        // Use all 3 attempts
+        $this->limiter->attempt('test-key', 3, 60);
+        $this->limiter->attempt('test-key', 3, 60);
+        $this->limiter->attempt('test-key', 3, 60);
+        
+        $remaining = $this->limiter->getRemaining('test-key', 3);
+        $this->assertEquals(0, $remaining);
+    }
+
+    public function testGetRemainingNeverNegative()
+    {
+        // Edge case: if somehow hits exceed max
+        $this->limiter->attempt('test-key', 2, 60);
+        $this->limiter->attempt('test-key', 2, 60);
+        
+        // Should return 0, not negative
+        $remaining = $this->limiter->getRemaining('test-key', 2);
+        $this->assertEquals(0, $remaining);
+    }
+
+    public function testGetHitsReturnsNullForNonExistentKey()
+    {
+        $hits = $this->limiter->getHits('non-existent-key');
+        $this->assertNull($hits);
+    }
+
+    public function testGetHitsReturnsCorrectCount()
+    {
+        $this->limiter->attempt('test-key', 5, 60);
+        $this->limiter->attempt('test-key', 5, 60);
+        $this->limiter->attempt('test-key', 5, 60);
+        
+        $hits = $this->limiter->getHits('test-key');
+        $this->assertEquals(3, $hits);
+    }
+
+    public function testRateLimitingAcrossMultipleKeys()
+    {
+        // Simulate rate limiting per user
+        $this->assertTrue($this->limiter->attempt('user:1', 3, 60));
+        $this->assertTrue($this->limiter->attempt('user:2', 3, 60));
+        $this->assertTrue($this->limiter->attempt('user:1', 3, 60));
+        
+        $this->assertEquals(2, $this->limiter->getHits('user:1'));
+        $this->assertEquals(1, $this->limiter->getHits('user:2'));
+        $this->assertEquals(1, $this->limiter->getRemaining('user:1', 3));
+        $this->assertEquals(2, $this->limiter->getRemaining('user:2', 3));
+    }
+
+    public function testHighVolumeAttempts()
+    {
+        // Test with higher limits
+        $max = 100;
+        
+        // Make 50 attempts
+        for ($i = 0; $i < 50; $i++) {
+            $this->assertTrue($this->limiter->attempt('high-volume', $max, 60));
+        }
+        
+        $this->assertEquals(50, $this->limiter->getHits('high-volume'));
+        $this->assertEquals(50, $this->limiter->getRemaining('high-volume', $max));
+    }
+
+    public function testZeroMaxLimit()
+    {
+        // Edge case: max = 0 (should always fail)
+        $this->assertFalse($this->limiter->attempt('zero-limit', 0, 60));
+        $this->assertEquals(0, $this->limiter->getRemaining('zero-limit', 0));
+    }
+
+    public function testOneMaxLimit()
+    {
+        // Edge case: max = 1 (single attempt allowed)
+        $this->assertTrue($this->limiter->attempt('one-limit', 1, 60));
+        $this->assertFalse($this->limiter->attempt('one-limit', 1, 60));
+        
+        $this->assertEquals(1, $this->limiter->getHits('one-limit'));
+        $this->assertEquals(0, $this->limiter->getRemaining('one-limit', 1));
+    }
+
+    public function testRemainingDecreasesWithEachAttempt()
+    {
+        $max = 5;
+        
+        // Check remaining before any attempts
+        $this->assertEquals(5, $this->limiter->getRemaining('countdown', $max));
+        
+        // Make attempts and verify remaining decreases
+        $this->limiter->attempt('countdown', $max, 60);
+        $this->assertEquals(4, $this->limiter->getRemaining('countdown', $max));
+        
+        $this->limiter->attempt('countdown', $max, 60);
+        $this->assertEquals(3, $this->limiter->getRemaining('countdown', $max));
+        
+        $this->limiter->attempt('countdown', $max, 60);
+        $this->assertEquals(2, $this->limiter->getRemaining('countdown', $max));
+        
+        $this->limiter->attempt('countdown', $max, 60);
+        $this->assertEquals(1, $this->limiter->getRemaining('countdown', $max));
+        
+        $this->limiter->attempt('countdown', $max, 60);
+        $this->assertEquals(0, $this->limiter->getRemaining('countdown', $max));
+    }
+
+    public function testKeyPrefixing()
+    {
+        // Ensure keys are properly prefixed to avoid collisions
+        $this->limiter->attempt('test', 5, 60);
+        
+        // The actual cache key should be prefixed
+        $hits = $this->limiter->getHits('test');
+        $this->assertEquals(1, $hits);
+        
+        // Direct cache access without prefix should return null
+        $container = Container::getInstance();
+        $cache = $container->get('cache');
+        $this->assertNull($cache->get('test')); // No prefix
+        $this->assertNotNull($cache->get('limiter:test')); // With prefix
+    }
 }
