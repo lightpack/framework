@@ -9,10 +9,16 @@ class Config
     protected Arr $arr;
     protected $config = [];
 
-    public function __construct()
+    public function __construct(?string $configDir = null)
     {
         $this->arr = new Arr;
-        $configs = glob(DIR_CONFIG . '/*.php');
+        $configDir = $configDir ?? (defined('DIR_CONFIG') ? \DIR_CONFIG : null);
+        
+        if ($configDir === null) {
+            throw new \RuntimeException('Config directory not specified and DIR_CONFIG constant not defined');
+        }
+        
+        $configs = glob($configDir . '/*.php');
 
         foreach ($configs as $config) {
             $this->config = array_merge(

@@ -30,11 +30,6 @@ class SettingsIntegrationTest extends TestCase
         $this->container->register('cache', fn() => new Cache(new ArrayDriver));
         $this->container->register('logger', fn() => new Logger(new NullLogger));
 
-        // Ensure DIR_CONFIG is defined for Config loading
-        if (!defined('DIR_CONFIG')) {
-            define('DIR_CONFIG', __DIR__ . '/tmp');
-        }
-
         $config = new Config();
         $config->set('settings', [
             'cache' => true,

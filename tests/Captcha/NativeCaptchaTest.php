@@ -21,10 +21,6 @@ class NativeCaptchaTest extends TestCase
         parent::setUp();
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        // Ensure DIR_CONFIG is defined for Config loading
-        if (!defined('DIR_CONFIG')) {
-            define('DIR_CONFIG', __DIR__ . '/tmp');
-        }
         $this->font = __DIR__ . '/FreeSans.ttf';
         if (!file_exists($this->font)) {
             $this->markTestSkipped('Test font not found: ' . $this->font);

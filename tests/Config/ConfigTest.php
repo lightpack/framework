@@ -2,14 +2,11 @@
 
 use PHPUnit\Framework\TestCase;
 
-define('APP_ENV', 'development');
-define('DIR_CONFIG', __DIR__ . '/tmp');
-
 final class ConfigTest extends TestCase
 {
     public function testConfigCanAccessKeys()
     {
-        $config = new \Lightpack\Config\Config(['app', 'db']);
+        $config = new \Lightpack\Config\Config(__DIR__ . '/../fixtures/config');
         $this->assertEquals('Lightpack', $config->get('app.name'));
         $this->assertEquals('lightpack', $config->get('db.name'));
     }
@@ -23,14 +20,14 @@ final class ConfigTest extends TestCase
 
     public function testConfigCanParseNestedKeys()
     {
-        $config = new \Lightpack\Config\Config(['cache']);
+        $config = new \Lightpack\Config\Config(__DIR__ . '/../fixtures/config');
 
         $this->assertEquals('1.0', $config->get('cache')['version']);
     }
 
     public function testConfigDoesNotAllowModifyingExistingKeys()
     {
-        $config = new \Lightpack\Config\Config(['app']);
+        $config = new \Lightpack\Config\Config(__DIR__ . '/../fixtures/config');
 
         $this->assertEquals(1, $config->get('app.version'));
 

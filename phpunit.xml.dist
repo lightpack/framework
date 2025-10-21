@@ -2,16 +2,123 @@
 <phpunit 
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
-    bootstrap="vendor/autoload.php" 
+    bootstrap="tests/bootstrap.php" 
     colors="true" 
     testdox="true">
     <testsuites>
-        <testsuite name="Lightpack Framework Tests">
+        <!-- Run all tests -->
+        <testsuite name="All">
             <directory>./tests</directory>
-            <exclude>./tests/Session</exclude>
         </testsuite>
-        <testsuite name="Session Tests">
+        
+        <!-- Feature-specific test suites -->
+        <testsuite name="AI">
+            <directory>./tests/AI</directory>
+        </testsuite>
+        <testsuite name="Audit">
+            <directory>./tests/Audit</directory>
+        </testsuite>
+        <testsuite name="Auth">
+            <directory>./tests/Auth</directory>
+        </testsuite>
+        <testsuite name="Cable">
+            <directory>./tests/Cable</directory>
+        </testsuite>
+        <testsuite name="Cache">
+            <directory>./tests/Cache</directory>
+        </testsuite>
+        <testsuite name="Captcha">
+            <directory>./tests/Captcha</directory>
+        </testsuite>
+        <testsuite name="Config">
+            <directory>./tests/Config</directory>
+        </testsuite>
+        <testsuite name="Console">
+            <directory>./tests/Console</directory>
+        </testsuite>
+        <testsuite name="Container">
+            <directory>./tests/Container</directory>
+        </testsuite>
+        <testsuite name="Database">
+            <directory>./tests/Database</directory>
+        </testsuite>
+        <testsuite name="Event">
+            <directory>./tests/Event</directory>
+        </testsuite>
+        <testsuite name="Factory">
+            <directory>./tests/Factory</directory>
+        </testsuite>
+        <testsuite name="Faker">
+            <directory>./tests/Faker</directory>
+        </testsuite>
+        <testsuite name="File">
+            <directory>./tests/File</directory>
+        </testsuite>
+        <testsuite name="Filters">
+            <directory>./tests/Filters</directory>
+        </testsuite>
+        <testsuite name="Http">
+            <directory>./tests/Http</directory>
+        </testsuite>
+        <testsuite name="Jobs">
+            <directory>./tests/Jobs</directory>
+        </testsuite>
+        <testsuite name="Logger">
+            <directory>./tests/Logger</directory>
+        </testsuite>
+        <testsuite name="Mfa">
+            <directory>./tests/Mfa</directory>
+        </testsuite>
+        <testsuite name="Pdf">
+            <directory>./tests/Pdf</directory>
+        </testsuite>
+        <testsuite name="Rbac">
+            <directory>./tests/Rbac</directory>
+        </testsuite>
+        <testsuite name="Redis">
+            <directory>./tests/Redis</directory>
+        </testsuite>
+        <testsuite name="Routing">
+            <directory>./tests/Routing</directory>
+        </testsuite>
+        <testsuite name="Schedule">
+            <directory>./tests/Schedule</directory>
+        </testsuite>
+        <testsuite name="Secrets">
+            <directory>./tests/Secrets</directory>
+        </testsuite>
+        <testsuite name="Session">
             <directory>./tests/Session</directory>
+        </testsuite>
+        <testsuite name="Settings">
+            <directory>./tests/Settings</directory>
+        </testsuite>
+        <testsuite name="SocialAuth">
+            <directory>./tests/SocialAuth</directory>
+        </testsuite>
+        <testsuite name="Storage">
+            <directory>./tests/Storage</directory>
+        </testsuite>
+        <testsuite name="Tags">
+            <directory>./tests/Tags</directory>
+        </testsuite>
+        <testsuite name="Taxonomies">
+            <directory>./tests/Taxonomies</directory>
+        </testsuite>
+        <testsuite name="Uploads">
+            <directory>./tests/Uploads</directory>
+        </testsuite>
+        <testsuite name="Utils">
+            <directory>./tests/Utils</directory>
+        </testsuite>
+        <testsuite name="Validation">
+            <directory>./tests/Validation</directory>
+        </testsuite>
+        <testsuite name="View">
+            <directory>./tests/View</directory>
+        </testsuite>
+        <testsuite name="Webhook">
+            <directory>./tests/Webhook</directory>
         </testsuite>
     </testsuites>
     <php>

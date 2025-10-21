@@ -27,9 +27,6 @@ class SecretsIntegrationTest extends TestCase
         $this->container = Container::getInstance();
         $this->container->register('db', fn() => $this->db);
         $this->container->register('logger', fn() => new Logger(new NullLogger));
-        if (!defined('DIR_CONFIG')) {
-            define('DIR_CONFIG', __DIR__ . '/tmp');
-        }
         $this->container->register('config', fn() => $config);
         $this->container->register('secrets', function () {
             $crypto = new Crypto(str_repeat('a', 32));

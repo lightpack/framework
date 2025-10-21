@@ -15,9 +15,6 @@ class PdfTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!defined('DIR_VIEWS')) {
-            define('DIR_VIEWS', __DIR__ . '/fixtures');
-        }
         $template = new Template(__DIR__ . '/fixtures');
         $driver = new DompdfDriver([]);
         $this->pdf = new Pdf($driver, $template);
