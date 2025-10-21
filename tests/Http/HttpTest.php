@@ -5,6 +5,13 @@ namespace Lightpack\Tests\Http;
 use Lightpack\Http\Http;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @group integration
+ * @group external
+ * 
+ * These tests require network access and depend on httpbin.org.
+ * They are skipped by default. Run with: phpunit --group integration
+ */
 class HttpTest extends TestCase
 {
     private string $baseUrl = 'https://httpbin.org';

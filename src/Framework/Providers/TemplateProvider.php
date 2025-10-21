@@ -10,7 +10,9 @@ class TemplateProvider implements ProviderInterface
     public function register(Container $container)
     {
         $container->register('template', function ($container) {
-            return new Template();
+            // Use DIR_VIEWS constant if defined, otherwise null (will use default)
+            $viewsPath = defined('DIR_VIEWS') ? DIR_VIEWS : null;
+            return new Template($viewsPath);
         });
 
         $container->alias(Template::class, 'template');

@@ -41,4 +41,22 @@ class Limiter
     {
         return $this->cache->get($this->prefix . $key);
     }
+
+    /**
+     * Get remaining attempts for a key.
+     *
+     * @param string $key Unique key for the action/user
+     * @param int $max Maximum allowed attempts
+     * @return int Remaining attempts (0 if rate limited, $max if no attempts yet)
+     */
+    public function getRemaining(string $key, int $max): int
+    {
+        $hits = $this->getHits($key);
+        
+        if ($hits === null) {
+            return $max; // No attempts yet
+        }
+        
+        return max(0, $max - $hits);
+    }
 }

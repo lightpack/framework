@@ -4,6 +4,7 @@ namespace Lightpack\Database\Lucid;
 
 use DateTimeInterface;
 use InvalidArgumentException;
+use Lightpack\Database\Lucid\Casts\CastInterface;
 
 class CastHandler
 {
@@ -19,11 +20,18 @@ class CastHandler
      * - date: Cast to DateTime (Y-m-d format)
      * - datetime: Cast to DateTime (Y-m-d H:i:s format)
      * - timestamp: Cast to Unix timestamp (integer)
+     * - Custom cast class implementing CastInterface
      */
     public function cast(mixed $value, string $type): mixed
     {
         if ($value === null) {
             return null;
+        }
+
+        // Check if it's a custom cast class
+        if ($this->isCustomCast($type)) {
+            $caster = new $type();
+            return $caster->get($value);
         }
 
         return match($type) {
@@ -44,6 +52,12 @@ class CastHandler
      */
     public function uncast(mixed $value, string $type): mixed
     {
+        // Check if it's a custom cast class
+        if ($this->isCustomCast($type)) {
+            $caster = new $type();
+            return $caster->set($value);
+        }
+
         return match($type) {
             'int', 'float', 'string', 'bool' => $value,
             'array' => $this->uncastFromArray($value),
@@ -191,5 +205,13 @@ class CastHandler
         }
 
         return (string) $value;
+    }
+
+    /**
+     * Check if the given type is a custom cast class.
+     */
+    protected function isCustomCast(string $type): bool
+    {
+        return class_exists($type) && is_subclass_of($type, CastInterface::class);
     }
 }

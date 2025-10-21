@@ -8,10 +8,6 @@ use Lightpack\Container\Container;
 use PHPUnit\Framework\TestCase;
 use Lightpack\Storage\S3Storage;
 
-if(!defined('DIR_CONFIG')) {
-    define('DIR_CONFIG', __DIR__ . '/tmp');
-}
-
 /**
  * Integration tests for S3Storage with real AWS
  * 

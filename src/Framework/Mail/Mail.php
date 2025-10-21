@@ -170,11 +170,11 @@ abstract class Mail extends PHPMailer
     private function setBody()
     {
         if ($this->htmlView) {
-            $this->Body = app('template')->setData($this->viewData)->render($this->htmlView);
+            $this->Body = app('template')->setData($this->viewData)->include($this->htmlView);
         }
 
         if ($this->textView) {
-            $this->AltBody = app('template')->setData($this->viewData)->render($this->textView);
+            $this->AltBody = app('template')->setData($this->viewData)->include($this->textView);
         }
     }
 

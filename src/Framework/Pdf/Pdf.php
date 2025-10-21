@@ -84,7 +84,7 @@ class Pdf
      */
     public function template(string $view, array $data = []): self
     {
-        $html = $this->template->render($view, $data);
+        $html = $this->template->include($view, $data);
         return $this->html($html);
     }
 

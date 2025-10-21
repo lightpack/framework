@@ -42,11 +42,6 @@ class WebhookReceiverTest extends TestCase
         });
 
         $this->createWebhookEventsTable();
-
-        // Ensure DIR_CONFIG is defined for Config loading
-        if (!defined('DIR_CONFIG')) {
-            define('DIR_CONFIG', __DIR__ . '/tmp');
-        }
     }
 
     protected function tearDown(): void
