@@ -8,10 +8,10 @@ class CastModel extends Model
 
     protected $casts = [
         'string_col' => 'string',
-        'integer_col' => 'integer',
+        'integer_col' => 'int',
         'float_col' => 'float',
-        'boolean_col' => 'boolean',
-        'json_col' => 'json',
+        'boolean_col' => 'bool',
+        'json_col' => 'array',
         'date_col' => 'date',
         'datetime_col' => 'datetime',
         'timestamp_col' => 'timestamp',

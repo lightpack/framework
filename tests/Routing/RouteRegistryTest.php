@@ -253,4 +253,201 @@ final class RouteRegistryTest extends TestCase
             'Route should match non-nested url: /users/23/profile'
         );
     }
+
+    public function testRouteMatchesWildcardSubdomain()
+    {
+        $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
+        $_SERVER['HTTP_HOST'] = 'tenant1.example.com';
+        
+        $request = new Request();
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $routeRegistry = new RouteRegistry($container);
+
+        $routeRegistry->group(['host' => ':subdomain.example.com'], function ($route) {
+            $route->get('/dashboard', 'DashboardController', 'index');
+        });
+
+        $route = $routeRegistry->matches('/dashboard');
+
+        $this->assertTrue(
+            $route instanceof Route,
+            'Route should match wildcard subdomain request'
+        );
+
+        $this->assertEquals(
+            'tenant1',
+            $route->getParams()['subdomain'] ?? null,
+            'Route should extract subdomain parameter correctly'
+        );
+
+        $this->assertEquals(
+            'DashboardController',
+            $route->getController(),
+            'Route should have correct controller'
+        );
+    }
+
+    public function testRouteMatchesMultipleWildcardSubdomains()
+    {
+        $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
+        
+        $subdomains = ['tenant1', 'tenant2', 'admin', 'api'];
+        
+        foreach ($subdomains as $subdomain) {
+            $_SERVER['HTTP_HOST'] = $subdomain . '.example.com';
+            
+            $request = new Request();
+            $container = Container::getInstance();
+            $container->instance('request', $request);
+            $routeRegistry = new RouteRegistry($container);
+
+            $routeRegistry->group(['host' => ':subdomain.example.com'], function ($route) {
+                $route->get('/dashboard', 'DashboardController', 'index');
+            });
+
+            $route = $routeRegistry->matches('/dashboard');
+
+            $this->assertTrue(
+                $route instanceof Route,
+                "Route should match subdomain: {$subdomain}"
+            );
+
+            $this->assertEquals(
+                $subdomain,
+                $route->getParams()['subdomain'] ?? null,
+                "Route should extract subdomain '{$subdomain}' correctly"
+            );
+        }
+    }
+
+    public function testRouteMatchesWildcardSubdomainWithPathParameters()
+    {
+        $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
+        $_SERVER['HTTP_HOST'] = 'tenant1.example.com';
+        
+        $request = new Request();
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $routeRegistry = new RouteRegistry($container);
+
+        $routeRegistry->group(['host' => ':subdomain.example.com'], function ($route) {
+            $route->get('/users/:id', 'UserController', 'show');
+        });
+
+        $route = $routeRegistry->matches('/users/42');
+
+        $this->assertTrue(
+            $route instanceof Route,
+            'Route should match wildcard subdomain with path parameters'
+        );
+
+        $params = $route->getParams();
+        
+        $this->assertEquals(
+            'tenant1',
+            $params['subdomain'] ?? null,
+            'Route should extract subdomain parameter'
+        );
+
+        $this->assertEquals(
+            '42',
+            $params['id'] ?? null,
+            'Route should extract path parameter'
+        );
+    }
+
+    public function testRouteDoesNotMatchWrongHost()
+    {
+        $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
+        $_SERVER['HTTP_HOST'] = 'wrongdomain.com';
+        
+        $request = new Request();
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $routeRegistry = new RouteRegistry($container);
+
+        $routeRegistry->group(['host' => ':subdomain.example.com'], function ($route) {
+            $route->get('/dashboard', 'DashboardController', 'index');
+        });
+
+        $route = $routeRegistry->matches('/dashboard');
+
+        $this->assertFalse(
+            $route,
+            'Route should not match when host does not match pattern'
+        );
+    }
+
+    public function testRouteMatchesStaticHost()
+    {
+        $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
+        $_SERVER['HTTP_HOST'] = 'admin.example.com';
+        
+        $request = new Request();
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $routeRegistry = new RouteRegistry($container);
+
+        $routeRegistry->group(['host' => 'admin.example.com'], function ($route) {
+            $route->get('/dashboard', 'AdminController', 'dashboard');
+        });
+
+        $route = $routeRegistry->matches('/dashboard');
+
+        $this->assertTrue(
+            $route instanceof Route,
+            'Route should match static host'
+        );
+
+        $this->assertEquals(
+            'AdminController',
+            $route->getController(),
+            'Route should have correct controller'
+        );
+
+        // Static host should not create subdomain parameter
+        $this->assertEmpty(
+            $route->getParams(),
+            'Static host should not create parameters'
+        );
+    }
+
+    public function testRouteMatchesNestedWildcardSubdomainGroups()
+    {
+        $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
+        $_SERVER['HTTP_HOST'] = 'tenant1.example.com';
+        
+        $request = new Request();
+        $container = Container::getInstance();
+        $container->instance('request', $request);
+        $routeRegistry = new RouteRegistry($container);
+
+        $routeRegistry->group(['host' => ':subdomain.example.com'], function ($route) {
+            $route->group(['prefix' => '/admin'], function ($route) {
+                $route->get('/users/:id', 'AdminUserController', 'show');
+            });
+        });
+
+        $route = $routeRegistry->matches('/admin/users/99');
+
+        $this->assertTrue(
+            $route instanceof Route,
+            'Route should match nested groups with wildcard subdomain'
+        );
+
+        $params = $route->getParams();
+        
+        $this->assertEquals(
+            'tenant1',
+            $params['subdomain'] ?? null,
+            'Route should extract subdomain from nested group'
+        );
+
+        $this->assertEquals(
+            '99',
+            $params['id'] ?? null,
+            'Route should extract path parameter from nested group'
+        );
+    }
 }

@@ -9,6 +9,16 @@ class CastHandler
 {
     /**
      * Cast value to specified type.
+     * 
+     * Supported types:
+     * - int: Cast to integer
+     * - float: Cast to float
+     * - string: Cast to string
+     * - bool: Cast to boolean
+     * - array: Cast to array (stores as JSON in database)
+     * - date: Cast to DateTime (Y-m-d format)
+     * - datetime: Cast to DateTime (Y-m-d H:i:s format)
+     * - timestamp: Cast to Unix timestamp (integer)
      */
     public function cast(mixed $value, string $type): mixed
     {
@@ -17,11 +27,11 @@ class CastHandler
         }
 
         return match($type) {
-            'int', 'integer' => (int) $value,
-            'real', 'float', 'double' => (float) $value,
+            'int' => (int) $value,
+            'float' => (float) $value,
             'string' => (string) $value,
-            'bool', 'boolean' => (bool) $value,
-            'array', 'json' => $this->castToArray($value),
+            'bool' => (bool) $value,
+            'array' => $this->castToArray($value),
             'date' => $this->castToDate($value),
             'datetime' => $this->castToDateTime($value),
             'timestamp' => $this->castToTimestamp($value),
@@ -35,8 +45,8 @@ class CastHandler
     public function uncast(mixed $value, string $type): mixed
     {
         return match($type) {
-            'int', 'integer', 'real', 'float', 'double', 'string', 'bool', 'boolean' => $value,
-            'array', 'json' => $this->uncastFromArray($value),
+            'int', 'float', 'string', 'bool' => $value,
+            'array' => $this->uncastFromArray($value),
             'date' => $this->uncastFromDate($value),
             'datetime' => $this->uncastFromDateTime($value),
             'timestamp' => $this->uncastFromTimestamp($value),
