@@ -8,6 +8,12 @@ class Template
 {
     protected $data = [];
     protected $embeddedTemplate = null;
+    protected string $viewsPath;
+
+    public function __construct(?string $viewsPath = null)
+    {
+        $this->viewsPath = $viewsPath ?? (defined('DIR_VIEWS') ? DIR_VIEWS : '');
+    }
 
     public function setData(array $data = []): self
     {
@@ -38,7 +44,9 @@ class Template
         
         $template = $this->embeddedTemplate;
         $this->embeddedTemplate = null; // Prevent recursion
-        return $this->render($template, $this->data);
+        
+        // Render embedded template directly with current data (no merge needed)
+        return $this->renderTemplateWithData($template, $this->data);
     }
 
     public function render(string $file, array $data = []): string
@@ -50,11 +58,8 @@ class Template
 
     public function include(string $file, array $data = []): string
     {
-        $template = new self;
-
-        $template->setData(array_merge($this->data, $data));
-
-        return $template->render($file);
+        // Semantic alias for render() - used for including partials
+        return $this->render($file, $data);
     }
 
     public function includeIf(bool $flag, string $file, array $data = []): string
@@ -115,7 +120,7 @@ class Template
 
     protected function resolveTemplatePath(string $file): string
     {
-        $template = DIR_VIEWS . '/' . $file . '.php';
+        $template = $this->viewsPath . '/' . $file . '.php';
 
         $this->throwExceptionIfTemplateNotFound($template);
 
