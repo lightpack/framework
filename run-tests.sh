@@ -3,6 +3,9 @@
 # Lightpack Test Runner
 # Runs all test suites individually to verify isolation
 #
+# Setup:
+#   chmod +x run-tests.sh    # Make executable (first time only)
+#
 # Usage:
 #   ./run-tests.sh           # Run all suites (summary only)
 #   ./run-tests.sh --verbose # Run all suites (show all output)
