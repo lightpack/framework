@@ -49,17 +49,19 @@ class Template
         return $this->renderTemplateWithData($template, $this->data);
     }
 
-    public function render(string $file, array $data = []): string
+    public function include(string $file, array $data = []): string
     {
         $mergedData = array_merge($this->data, $data);
 
         return $this->renderTemplateWithData($file, $mergedData);
     }
 
-    public function include(string $file, array $data = []): string
+    /**
+     * @deprecated Use include() instead. Will be removed in next major version.
+     */
+    public function render(string $file, array $data = []): string
     {
-        // Semantic alias for render() - used for including partials
-        return $this->render($file, $data);
+        return $this->include($file, $data);
     }
 
     public function includeIf(bool $flag, string $file, array $data = []): string
