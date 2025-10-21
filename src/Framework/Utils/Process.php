@@ -246,10 +246,6 @@ class Process
 
         $this->exitCode = proc_close($this->resource);
         $this->resource = null;
-
-        if (!$this->isRunning && $this->exitCode !== 0) {
-            throw new RuntimeException('Process failed with exit code: ' . $this->exitCode);
-        }
     }
 
     private function cleanup(): void
