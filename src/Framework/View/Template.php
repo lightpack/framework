@@ -57,7 +57,7 @@ class Template
     }
 
     /**
-     * @deprecated Use include() instead. Will be removed in next major version.
+     * @deprecated Use include() instead.
      */
     public function render(string $file, array $data = []): string
     {

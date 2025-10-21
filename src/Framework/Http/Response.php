@@ -401,7 +401,7 @@ class Response
      */
     public function view(string $file, array $data = []): self
     {
-        $template = app('template')->setData($data)->render($file);
+        $template = app('template')->setData($data)->include($file);
 
         $this->setBody($template);
         return $this;
