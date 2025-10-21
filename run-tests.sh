@@ -32,7 +32,7 @@ SUITES=(
     "Faker"
     "File"
     "Filters"
-    "Http"
+    # "Http"  # Excluded - integration tests requiring external network
     "Jobs"
     "Logger"
     "Mfa"
