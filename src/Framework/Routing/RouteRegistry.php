@@ -155,7 +155,7 @@ class RouteRegistry
         $routes = $this->getRoutesForCurrentRequest();
 
         foreach ($routes as $routeUri => $route) {
-            ['params' => $params, 'regex' => $regex] = $this->compileRegexWithParams($routeUri, $route->getPattern());
+            ['params' => $params, 'regex' => $regex] = $this->compileRegexWithParams($routeUri, $route->getPattern(), (bool)$route->getHost());
 
             if ($route->getHost()) {
                 $path = $this->container->get('request')->host() . '/' . trim($originalPath, '/');
@@ -166,15 +166,7 @@ class RouteRegistry
             if (preg_match('@^' . $regex . '$@', $path, $matches)) {
                 \array_shift($matches);
                 
-                // Make sure we have extracted matched wildcard subdomain
-                if($route->getHost() && strpos($routeUri[0], ':') === 0) {
-                    $firstParams = explode('.',  $params[0]);
-                    $firstMatches = explode('.',  $matches[0]);
-
-                    $params[0] = $firstParams[0];
-                    $matches[0] = $firstMatches[0];
-                }
-
+                // Trim slashes from matches
                 $matches = array_map(function($match) {
                     return trim($match, '/');
                 }, $matches);
@@ -244,11 +236,12 @@ class RouteRegistry
         return str_replace($search, $replace, $path);
     }
 
-    private function compileRegexWithParams(string $routePattern, array $pattern): array
+    private function compileRegexWithParams(string $routePattern, array $pattern, bool $hasHost = false): array
     {
         $params = [];
         $parts = [];
         $fragments = explode('/', $routePattern);
+        $isFirstFragment = true;
 
         foreach ($fragments as $fragment) {
             if (strpos($fragment, ':') === 0) {
@@ -260,6 +253,15 @@ class RouteRegistry
                     $isOptional = true;
                 }
 
+                // For host parameters (containing dots), extract just the parameter name
+                // e.g., :subdomain.example.com -> param name is 'subdomain', literal part is '.example.com'
+                $literalPart = '';
+                if ($isFirstFragment && $hasHost && strpos($param, '.') !== false) {
+                    $paramParts = explode('.', $param, 2);
+                    $param = $paramParts[0];
+                    $literalPart = '\\.' . str_replace('.', '\\.', $paramParts[1]);
+                }
+
                 $params[] = $param;
                 $registeredPattern = $pattern[$param] ?? ':seg';
                 $registeredPattern = $this->placeholders[$registeredPattern] ?? $registeredPattern;
@@ -267,16 +269,29 @@ class RouteRegistry
                 if ($isOptional) {
                     $parts[] = '(\/' . $registeredPattern . ')?';
                 } else {
-                    $parts[] = '/(' . $registeredPattern . ')';
+                    // For host-based routes, first fragment shouldn't have leading slash
+                    $separator = ($isFirstFragment && $hasHost) ? '' : '/';
+                    $parts[] = $separator . '(' . $registeredPattern . ')' . $literalPart;
                 }
             } else {
-                $parts[] = '/' . $fragment;
+                // For host-based routes, first fragment shouldn't have leading slash
+                // Also escape dots for literal matching in host part
+                $separator = ($isFirstFragment && $hasHost) ? '' : '/';
+                $fragmentToAdd = ($isFirstFragment && $hasHost) ? str_replace('.', '\\.', $fragment) : $fragment;
+                $parts[] = $separator . $fragmentToAdd;
             }
+            $isFirstFragment = false;
+        }
+
+        $compiledRegex = trim(implode('', $parts), '/');
+        // For host-based routes, don't add leading slash to regex
+        if (!$hasHost) {
+            $compiledRegex = '/' . $compiledRegex;
         }
 
         return [
             'params' => $params,
-            'regex' => '/' . trim(implode('', $parts), '/'),
+            'regex' => $compiledRegex,
         ];
     }
 
