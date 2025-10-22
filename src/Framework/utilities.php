@@ -60,14 +60,14 @@ if(!function_exists('csrf_token')) {
 
 if (!function_exists('_e')) {
     /**
-     * HTML characters to entities converter.
+     * Escape HTML special characters to protect against XSS attacks.
      * 
-     * Often used to escape HTML output to protect against 
-     * XSS attacks..
+     * Converts: & < > " ' to their HTML entity equivalents.
+     * Preserves UTF-8 characters (é, ñ, etc.) as-is.
      */
     function _e(string $str): string
     {
-        return htmlentities($str, ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
     }
 }
 

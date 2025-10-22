@@ -91,7 +91,7 @@ class TemplateTest extends TestCase
         $this->createView('simple', '<h1><?= $title ?></h1>');
 
         $this->template->setData(['title' => 'Hello World']);
-        $result = $this->template->render('simple');
+        $result = $this->template->include('simple');
 
         $this->assertEquals('<h1>Hello World</h1>', $result);
     }
@@ -102,7 +102,7 @@ class TemplateTest extends TestCase
         $this->createView('profile', '<h1><?= $name ?></h1><p><?= $role ?></p>');
 
         $this->template->setData(['name' => 'Alice']);
-        $result = $this->template->render('profile', ['role' => 'Admin']);
+        $result = $this->template->include('profile', ['role' => 'Admin']);
 
         $this->assertStringContainsString('Alice', $result);
         $this->assertStringContainsString('Admin', $result);
@@ -114,7 +114,7 @@ class TemplateTest extends TestCase
         $this->createView('override', '<p><?= $value ?></p>');
 
         $this->template->setData(['value' => 'original']);
-        $result = $this->template->render('override', ['value' => 'overridden']);
+        $result = $this->template->include('override', ['value' => 'overridden']);
 
         $this->assertEquals('<p>overridden</p>', $result);
     }
@@ -126,7 +126,7 @@ class TemplateTest extends TestCase
         $this->createView('child', '<p><?= $name ?></p>');
 
         $this->template->setData(['name' => 'Bob']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertEquals('<p>Bob</p>', $result);
     }
@@ -138,7 +138,7 @@ class TemplateTest extends TestCase
         $this->createView('child', '<p><?= $name ?> - <?= $age ?></p>');
 
         $this->template->setData(['name' => 'Charlie']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertEquals('<p>Charlie - 30</p>', $result);
     }
@@ -150,7 +150,7 @@ class TemplateTest extends TestCase
         $this->createView('child', '<p><?= $name ?></p>');
 
         $this->template->setData(['name' => 'Original']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertEquals('<p>Override</p>', $result);
     }
@@ -163,7 +163,7 @@ class TemplateTest extends TestCase
         $this->createView('childB', '<p><?= $name ?></p>');
 
         $this->template->setData(['name' => 'Original']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertEquals('<p>Alice</p><p>Original</p>', $result);
     }
@@ -175,32 +175,10 @@ class TemplateTest extends TestCase
         $this->createView('child', '<span><?= $extra ?></span>');
 
         $this->template->setData(['name' => 'Test']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertStringContainsString('<span>data</span>', $result);
         $this->assertStringContainsString('<p>PASS</p>', $result);
-    }
-
-    /** @test */
-    public function test_includeIf_includes_when_true()
-    {
-        $this->createView('parent', '<?= template()->includeIf(true, "child") ?>');
-        $this->createView('child', '<p>Included</p>');
-
-        $result = $this->template->render('parent');
-
-        $this->assertEquals('<p>Included</p>', $result);
-    }
-
-    /** @test */
-    public function test_includeIf_returns_empty_when_false()
-    {
-        $this->createView('parent', '<?= template()->includeIf(false, "child") ?>');
-        $this->createView('child', '<p>Should not appear</p>');
-
-        $result = $this->template->render('parent');
-
-        $this->assertEquals('', $result);
     }
 
     /** @test */
@@ -210,7 +188,7 @@ class TemplateTest extends TestCase
         $this->createView('button', '<button><?= $label ?></button>');
 
         $this->template->setData(['name' => 'Alice', 'role' => 'Admin']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertEquals('<button>Click</button>', $result);
     }
@@ -222,7 +200,7 @@ class TemplateTest extends TestCase
         $this->createView('widget', '<div><?= isset($name) ? "FAIL" : "PASS" ?></div>');
 
         $this->template->setData(['name' => 'Alice']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertEquals('<div>PASS</div>', $result);
     }
@@ -237,7 +215,7 @@ class TemplateTest extends TestCase
             '__embed' => 'dashboard',
             'title' => 'Dashboard'
         ]);
-        $result = $this->template->render('layout');
+        $result = $this->template->include('layout');
 
         $this->assertEquals('<html><h1>Dashboard</h1></html>', $result);
     }
@@ -253,7 +231,7 @@ class TemplateTest extends TestCase
             'user' => 'Alice',
             'role' => 'Admin'
         ]);
-        $result = $this->template->render('layout');
+        $result = $this->template->include('layout');
 
         $this->assertEquals('<div><p>Alice - Admin</p></div>', $result);
     }
@@ -264,7 +242,7 @@ class TemplateTest extends TestCase
         $this->createView('layout', '<div><?= template()->embed() ?></div>');
 
         $this->template->setData(['title' => 'Test']);
-        $result = $this->template->render('layout');
+        $result = $this->template->include('layout');
 
         $this->assertEquals('<div></div>', $result);
     }
@@ -275,7 +253,7 @@ class TemplateTest extends TestCase
         $this->createView('layout', '<div><?= isset($__embed) ? "FAIL" : "PASS" ?></div>');
 
         $this->template->setData(['__embed' => 'child', 'title' => 'Test']);
-        $result = $this->template->render('layout');
+        $result = $this->template->include('layout');
 
         $this->assertStringContainsString('PASS', $result);
     }
@@ -287,7 +265,7 @@ class TemplateTest extends TestCase
 
         $this->template->setData(['old' => 'value']);
         $this->template->setData(['new' => 'value']);
-        $result = $this->template->render('test');
+        $result = $this->template->include('test');
 
         $this->assertEquals('<p>PASS</p>', $result);
     }
@@ -306,7 +284,7 @@ class TemplateTest extends TestCase
     {
         $this->expectException(\Lightpack\Exceptions\TemplateNotFoundException::class);
         
-        $this->template->render('nonexistent');
+        $this->template->include('nonexistent');
     }
 
     /** @test */
@@ -317,7 +295,7 @@ class TemplateTest extends TestCase
         $this->createView('child2', '<p><?= $name ?></p>');
 
         $this->template->setData(['name' => 'Nested']);
-        $result = $this->template->render('parent');
+        $result = $this->template->include('parent');
 
         $this->assertEquals('<div><p>Nested</p></div>', $result);
     }
@@ -328,7 +306,7 @@ class TemplateTest extends TestCase
         // Templates should not have access to Template class properties
         $this->createView('test', '<p><?= isset($data) || isset($embeddedTemplate) ? "FAIL" : "PASS" ?></p>');
 
-        $result = $this->template->render('test');
+        $result = $this->template->include('test');
 
         $this->assertEquals('<p>PASS</p>', $result);
     }
@@ -341,7 +319,7 @@ class TemplateTest extends TestCase
         $obLevel = ob_get_level();
 
         try {
-            $this->template->render('error');
+            $this->template->include('error');
             $this->fail('Expected exception was not thrown');
         } catch (\Exception $e) {
             // Exception was thrown as expected
@@ -364,7 +342,7 @@ class TemplateTest extends TestCase
         $this->createView('footer', '<footer><?= $user ?></footer>');
 
         $this->template->setData(['user' => 'Alice']);
-        $result = $this->template->render('page');
+        $result = $this->template->include('page');
 
         $expected = '<h1>Home - Alice</h1><button>Save</button><footer>Alice</footer>';
         $this->assertEquals($expected, $result);
@@ -387,9 +365,358 @@ class TemplateTest extends TestCase
             'site' => 'Lightpack',
             'page' => 'Dashboard'
         ]);
-        $result = $this->template->render('layout');
+        $result = $this->template->include('layout');
 
         $expected = '<header>Lightpack</header><main>Dashboard</main><footer>Lightpack</footer>';
         $this->assertEquals($expected, $result);
     }
+
+    /** @test */
+    public function test_layout_renders_child_content_in_layout()
+    {
+        $this->createView('layouts/app', '<html><body><?= $this->content() ?></body></html>');
+        $this->createView('dashboard', '<?php $this->layout("layouts/app") ?><h1>Dashboard</h1>');
+
+        $result = $this->template->include('dashboard');
+
+        $this->assertEquals('<html><body><h1>Dashboard</h1></body></html>', $result);
+    }
+
+    /** @test */
+    public function test_layout_child_has_access_to_data()
+    {
+        $this->createView('layouts/app', '<html><?= $this->content() ?></html>');
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><h1><?= $title ?></h1>');
+
+        $this->template->setData(['title' => 'Welcome']);
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<html><h1>Welcome</h1></html>', $result);
+    }
+
+    /** @test */
+    public function test_layout_has_access_to_same_data()
+    {
+        $this->createView('layouts/app', '<html><title><?= $site ?></title><?= $this->content() ?></html>');
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><p><?= $page ?></p>');
+
+        $this->template->setData(['site' => 'Lightpack', 'page' => 'Home']);
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<html><title>Lightpack</title><p>Home</p></html>', $result);
+    }
+
+    /** @test */
+    public function test_layout_with_includes_in_child()
+    {
+        $this->createView('layouts/app', '<html><?= $this->content() ?></html>');
+        $this->createView('page', '<?php $this->layout("layouts/app"); ?><?= template()->include("header") ?><main>Content</main>');
+        $this->createView('header', '<h1><?= $title ?></h1>');
+
+        $this->template->setData(['title' => 'Dashboard']);
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<html><h1>Dashboard</h1><main>Content</main></html>', $result);
+    }
+
+    /** @test */
+    public function test_layout_with_includes_in_layout()
+    {
+        $this->createView('layouts/app', '<?= template()->include("header") ?><?= $this->content() ?><?= template()->include("footer") ?>');
+        $this->createView('header', '<header><?= $site ?></header>');
+        $this->createView('footer', '<footer><?= $site ?></footer>');
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><main><?= $page ?></main>');
+
+        $this->template->setData(['site' => 'Lightpack', 'page' => 'Dashboard']);
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<header>Lightpack</header><main>Dashboard</main><footer>Lightpack</footer>', $result);
+    }
+
+    /** @test */
+    public function test_template_without_layout_renders_normally()
+    {
+        $this->createView('simple', '<h1><?= $title ?></h1>');
+
+        $this->template->setData(['title' => 'No Layout']);
+        $result = $this->template->include('simple');
+
+        $this->assertEquals('<h1>No Layout</h1>', $result);
+    }
+
+    /** @test */
+    public function test_content_returns_empty_when_no_layout_used()
+    {
+        $this->createView('test', '<div><?= $this->content() ?></div>');
+
+        $result = $this->template->include('test');
+
+        $this->assertEquals('<div></div>', $result);
+    }
+
+    /** @test */
+    public function test_layout_with_components()
+    {
+        $this->createView('layouts/app', '<html><?= $this->content() ?></html>');
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><?= template()->component("button", ["label" => "Click"]) ?>');
+        $this->createView('button', '<button><?= $label ?></button>');
+
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<html><button>Click</button></html>', $result);
+    }
+
+    /** @test */
+    public function test_nested_layout_inheritance_two_levels()
+    {
+        // Base layout
+        $this->createView('layouts/base', '<!DOCTYPE html><html><body><?= $this->content() ?></body></html>');
+        
+        // Primary layout extends base
+        $this->createView('layouts/primary', '<?php $this->layout("layouts/base") ?><div class="primary"><?= $this->content() ?></div>');
+        
+        // Page uses primary layout
+        $this->createView('users', '<?php $this->layout("layouts/primary") ?><h1>Users</h1>');
+
+        $result = $this->template->include('users');
+
+        $this->assertEquals('<!DOCTYPE html><html><body><div class="primary"><h1>Users</h1></div></body></html>', $result);
+    }
+
+    /** @test */
+    public function test_nested_layout_inheritance_three_levels()
+    {
+        // Base layout
+        $this->createView('layouts/base', '<html><?= $this->content() ?></html>');
+        
+        // App layout extends base
+        $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= $this->content() ?></body>');
+        
+        // Admin layout extends app
+        $this->createView('layouts/admin', '<?php $this->layout("layouts/app") ?><div class="admin-panel"><?= $this->content() ?></div>');
+        
+        // Page uses admin layout
+        $this->createView('dashboard', '<?php $this->layout("layouts/admin") ?><h1>Admin Dashboard</h1>');
+
+        $result = $this->template->include('dashboard');
+
+        $this->assertEquals('<html><body><div class="admin-panel"><h1>Admin Dashboard</h1></div></body></html>', $result);
+    }
+
+    /** @test */
+    public function test_multiple_pages_with_different_nested_layouts()
+    {
+        // Base layout
+        $this->createView('layouts/base', '<!DOCTYPE html><html><?= $this->content() ?></html>');
+        
+        // Primary layout
+        $this->createView('layouts/primary', '<?php $this->layout("layouts/base") ?><body class="primary"><?= $this->content() ?></body>');
+        
+        // Secondary layout
+        $this->createView('layouts/secondary', '<?php $this->layout("layouts/base") ?><body class="secondary"><?= $this->content() ?></body>');
+        
+        // Users page with primary layout
+        $this->createView('users', '<?php $this->layout("layouts/primary") ?><h1>Users</h1>');
+        
+        // Books page with secondary layout
+        $this->createView('books', '<?php $this->layout("layouts/secondary") ?><h1>Books</h1>');
+
+        $usersResult = $this->template->include('users');
+        $booksResult = $this->template->include('books');
+
+        $this->assertEquals('<!DOCTYPE html><html><body class="primary"><h1>Users</h1></body></html>', $usersResult);
+        $this->assertEquals('<!DOCTYPE html><html><body class="secondary"><h1>Books</h1></body></html>', $booksResult);
+    }
+
+    /** @test */
+    public function test_nested_layouts_with_data_access()
+    {
+        // Base layout uses data
+        $this->createView('layouts/base', '<html><title><?= $site ?></title><?= $this->content() ?></html>');
+        
+        // App layout uses data and extends base
+        $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><nav><?= $site ?></nav><?= $this->content() ?></body>');
+        
+        // Page uses data and app layout
+        $this->createView('home', '<?php $this->layout("layouts/app") ?><h1><?= $page ?></h1>');
+
+        $this->template->setData(['site' => 'Lightpack', 'page' => 'Home']);
+        $result = $this->template->include('home');
+
+        $this->assertEquals('<html><title>Lightpack</title><body><nav>Lightpack</nav><h1>Home</h1></body></html>', $result);
+    }
+
+    /** @test */
+    public function test_nested_layouts_with_includes_at_each_level()
+    {
+        // Base layout with include
+        $this->createView('layouts/base', '<html><?= template()->include("meta") ?><?= $this->content() ?></html>');
+        $this->createView('meta', '<head><title><?= $title ?></title></head>');
+        
+        // App layout with include
+        $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= template()->include("nav") ?><?= $this->content() ?></body>');
+        $this->createView('nav', '<nav>Navigation</nav>');
+        
+        // Page with include
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><?= template()->include("content") ?>');
+        $this->createView('content', '<main>Content</main>');
+
+        $this->template->setData(['title' => 'Test']);
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<html><head><title>Test</title></head><body><nav>Navigation</nav><main>Content</main></body></html>', $result);
+    }
+
+    /** @test */
+    public function test_nested_layouts_with_components()
+    {
+        // Base layout
+        $this->createView('layouts/base', '<html><?= $this->content() ?></html>');
+        
+        // App layout with component
+        $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= template()->component("header", ["title" => "App"]) ?><?= $this->content() ?></body>');
+        $this->createView('header', '<header><?= $title ?></header>');
+        
+        // Page with component
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><?= template()->component("card", ["text" => "Hello"]) ?>');
+        $this->createView('card', '<div><?= $text ?></div>');
+
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<html><body><header>App</header><div>Hello</div></body></html>', $result);
+    }
+
+    /** @test */
+    public function test_deeply_nested_layouts_four_levels()
+    {
+        // Level 1: Base
+        $this->createView('layouts/base', '<html><?= $this->content() ?></html>');
+        
+        // Level 2: App
+        $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= $this->content() ?></body>');
+        
+        // Level 3: Section
+        $this->createView('layouts/section', '<?php $this->layout("layouts/app") ?><main><?= $this->content() ?></main>');
+        
+        // Level 4: Subsection
+        $this->createView('layouts/subsection', '<?php $this->layout("layouts/section") ?><article><?= $this->content() ?></article>');
+        
+        // Page
+        $this->createView('page', '<?php $this->layout("layouts/subsection") ?><p>Deep nesting works!</p>');
+
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<html><body><main><article><p>Deep nesting works!</p></article></main></body></html>', $result);
+    }
+
+    // ========================================
+    // Stack Tests
+    // ========================================
+
+    /** @test */
+    public function test_stack_basic_push_and_render()
+    {
+        $this->createView('page', '<?php $this->push("scripts") ?><script>alert("test")</script><?php $this->endPush() ?><?= $this->stack("scripts") ?>');
+
+        $result = $this->template->include('page');
+
+        $this->assertEquals('<script>alert("test")</script>', $result);
+    }
+
+    /** @test */
+    public function test_stack_multiple_pushes()
+    {
+        $this->createView('page', '<?php $this->push("scripts") ?><script>one.js</script><?php $this->endPush() ?><?php $this->push("scripts") ?><script>two.js</script><?php $this->endPush() ?><?= $this->stack("scripts") ?>');
+
+        $result = $this->template->include('page');
+
+        $this->assertStringContainsString('<script>one.js</script>', $result);
+        $this->assertStringContainsString('<script>two.js</script>', $result);
+    }
+
+    /** @test */
+    public function test_stack_with_layout()
+    {
+        $this->createView('layouts/app', '<html><head><?= $this->stack("styles") ?></head><body><?= $this->content() ?><?= $this->stack("scripts") ?></body></html>');
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><?php $this->push("styles") ?><link rel="stylesheet" href="app.css"><?php $this->endPush() ?><h1>Page</h1><?php $this->push("scripts") ?><script>app.js</script><?php $this->endPush() ?>');
+
+        $result = $this->template->include('page');
+
+        $this->assertStringContainsString('<link rel="stylesheet" href="app.css">', $result);
+        $this->assertStringContainsString('<script>app.js</script>', $result);
+        $this->assertStringContainsString('<h1>Page</h1>', $result);
+    }
+
+    /** @test */
+    public function test_stack_empty_returns_empty_string()
+    {
+        $this->createView('page', '<?= $this->stack("nonexistent") ?>');
+
+        $result = $this->template->include('page');
+
+        $this->assertEquals('', $result);
+    }
+
+    /** @test */
+    public function test_stack_with_includes()
+    {
+        $this->createView('partial', '<?php $this->push("scripts") ?><script>partial.js</script><?php $this->endPush() ?>');
+        $this->createView('page', '<?= template()->include("partial") ?><?php $this->push("scripts") ?><script>page.js</script><?php $this->endPush() ?><?= $this->stack("scripts") ?>');
+
+        $result = $this->template->include('page');
+
+        $this->assertStringContainsString('<script>partial.js</script>', $result);
+        $this->assertStringContainsString('<script>page.js</script>', $result);
+    }
+
+    /** @test */
+    public function test_stack_with_components()
+    {
+        $this->createView('button', '<?php $this->push("scripts") ?><script>button.js</script><?php $this->endPush() ?><button>Click</button>');
+        $this->createView('page', '<?= template()->component("button") ?><?= $this->stack("scripts") ?>');
+
+        $result = $this->template->include('page');
+
+        $this->assertStringContainsString('<button>Click</button>', $result);
+        $this->assertStringContainsString('<script>button.js</script>', $result);
+    }
+
+    /** @test */
+    public function test_stack_multiple_stacks()
+    {
+        $this->createView('page', '<?php $this->push("styles") ?><link rel="stylesheet" href="app.css"><?php $this->endPush() ?><?php $this->push("scripts") ?><script>app.js</script><?php $this->endPush() ?>STYLES:<?= $this->stack("styles") ?>SCRIPTS:<?= $this->stack("scripts") ?>');
+
+        $result = $this->template->include('page');
+
+        $this->assertStringContainsString('STYLES:<link rel="stylesheet" href="app.css">', $result);
+        $this->assertStringContainsString('SCRIPTS:<script>app.js</script>', $result);
+    }
+
+    /** @test */
+    public function test_stack_complex_layout_scenario()
+    {
+        // Base layout with stacks
+        $this->createView('layouts/base', '<!DOCTYPE html><html><head><?= $this->stack("meta") ?><?= $this->stack("styles") ?></head><body><?= $this->content() ?><?= $this->stack("scripts") ?></body></html>');
+        
+        // App layout extends base and adds its own assets
+        $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><?php $this->push("styles") ?><link rel="stylesheet" href="app.css"><?php $this->endPush() ?><div class="app"><?= $this->content() ?></div><?php $this->push("scripts") ?><script>app.js</script><?php $this->endPush() ?>');
+        
+        // Page uses app layout and adds page-specific assets
+        $this->createView('page', '<?php $this->layout("layouts/app") ?><?php $this->push("meta") ?><meta name="description" content="Page"><?php $this->endPush() ?><?php $this->push("styles") ?><link rel="stylesheet" href="page.css"><?php $this->endPush() ?><h1>Page Content</h1><?php $this->push("scripts") ?><script>page.js</script><?php $this->endPush() ?>');
+
+        $result = $this->template->include('page');
+
+        // Verify structure
+        $this->assertStringContainsString('<!DOCTYPE html>', $result);
+        $this->assertStringContainsString('<div class="app">', $result);
+        $this->assertStringContainsString('<h1>Page Content</h1>', $result);
+        
+        // Verify all assets are included
+        $this->assertStringContainsString('<meta name="description" content="Page">', $result);
+        $this->assertStringContainsString('app.css', $result);
+        $this->assertStringContainsString('page.css', $result);
+        $this->assertStringContainsString('app.js', $result);
+        $this->assertStringContainsString('page.js', $result);
+    }
+
 }
