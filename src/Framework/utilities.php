@@ -48,7 +48,7 @@ if (!function_exists('csrf_input')) {
     }
 }
 
-if(!function_exists('csrf_token')) {
+if (!function_exists('csrf_token')) {
     /**
      * Returns the CSRF token.
      */
@@ -372,27 +372,27 @@ if (!function_exists('schedule')) {
     }
 }
 
-if(!function_exists('old')) {
+if (!function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
     function old(string $key, string|array $default = '', bool $escape = true): string|array
     {
         static $oldInput;
-        
-        if(!isset($oldInput)) {
+
+        if (!isset($oldInput)) {
             $oldInput = session()->flash('_old_input') ?? [];
         }
 
         $arr = new \Lightpack\Utils\Arr;
-        
+
         $value = $arr->get($key, $oldInput, $default);
 
-        if(is_null($value)) {
+        if (is_null($value)) {
             return '';
         }
 
-        if(is_array($value)) {
+        if (is_array($value)) {
             return $value;
         }
 
@@ -408,15 +408,15 @@ if (!function_exists('error')) {
     {
         static $errors;
 
-        if(!isset($errors)) {
+        if (!isset($errors)) {
             $errors = app('session')->flash('_validation_errors') ?? [];
         }
-       
+
         return $errors[$key] ?? '';
     }
 }
 
-if(!function_exists('spoof_input')) {
+if (!function_exists('spoof_input')) {
     /**
      * Returns a hidden input field for the spoofed request method.
      */
@@ -533,5 +533,33 @@ if (!function_exists('sms')) {
     function sms(): \Lightpack\Sms\Sms
     {
         return app('sms');
+    }
+}
+
+if (!function_exists('halt')) {
+    /**
+     * Halt execution and throw an HTTP exception with the given status code.
+     * 
+     * If no message is provided, uses the standard HTTP status message.
+     * 
+     * @param int $code HTTP status code (e.g., 404, 403, 500)
+     * @param string $message Optional error message
+     * @param array $headers Optional HTTP headers
+     * @throws \Lightpack\Exceptions\HttpException
+     */
+    function halt(int $code, string $message = '', array $headers = []): void
+    {
+        // Use standard HTTP status message if no custom message provided
+        if ($message === '') {
+            $message = \Lightpack\Http\Response::STATUS_MESSAGES[$code] ?? 'HTTP Error';
+        }
+
+        $exception = new \Lightpack\Exceptions\HttpException($message, $code);
+
+        if ($headers) {
+            $exception->setHeaders($headers);
+        }
+
+        throw $exception;
     }
 }

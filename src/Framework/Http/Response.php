@@ -7,7 +7,7 @@ class Response
     /**
      * Standard HTTP status codes and their messages
      */
-    private const STATUS_MESSAGES = [
+    public const STATUS_MESSAGES = [
         // 2xx Success
         200 => 'OK',
         201 => 'Created',
