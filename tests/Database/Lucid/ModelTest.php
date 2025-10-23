@@ -2428,4 +2428,166 @@ final class ModelTest extends TestCase
         $this->assertIsInt($model->timestamp_col);
         $this->assertEquals($now->getTimestamp(), $model->timestamp_col);
     }
+
+    public function testSaveAfterEagerLoadingDoesNotSaveRelations()
+    {
+        // Insert a project
+        $this->db->table('projects')->insert(['name' => 'Test Project']);
+        $projectId = $this->db->lastInsertId();
+
+        // Insert tasks for the project
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => $projectId],
+            ['name' => 'Task 2', 'project_id' => $projectId],
+        ]);
+
+        // Fetch project with eager loaded tasks
+        $projectModel = $this->db->model(Project::class);
+        $project = $projectModel::query()->with('tasks')->where('id', $projectId)->one();
+
+        // Verify tasks are loaded
+        $this->assertNotEmpty($project->tasks);
+        $this->assertEquals(2, $project->tasks->count());
+
+        // Modify project name
+        $project->name = 'Updated Project';
+        
+        // Save should work without trying to save the tasks relation
+        $project->save();
+
+        // Verify the project was updated
+        $updated = $this->db->table('projects')->where('id', $projectId)->one();
+        $this->assertEquals('Updated Project', $updated->name);
+    }
+
+    public function testSaveAfterEagerLoadingHasOneRelation()
+    {
+        // Insert a project
+        $this->db->table('projects')->insert(['name' => 'Test Project']);
+        $projectId = $this->db->lastInsertId();
+
+        // Insert a manager for the project
+        $this->db->table('managers')->insert([
+            'name' => 'Manager 1',
+            'project_id' => $projectId,
+        ]);
+
+        // Fetch project with eager loaded manager
+        $projectModel = $this->db->model(Project::class);
+        $project = $projectModel::query()->with('manager')->where('id', $projectId)->one();
+
+        // Verify manager is loaded
+        $this->assertNotEmpty($project->manager);
+        $this->assertEquals('Manager 1', $project->manager->name);
+
+        // Modify project
+        $project->name = 'Updated Project';
+        
+        // Save should work without trying to save the manager relation
+        $project->save();
+
+        // Verify the project was updated
+        $updated = $this->db->table('projects')->where('id', $projectId)->one();
+        $this->assertEquals('Updated Project', $updated->name);
+    }
+
+    public function testSaveAfterEagerLoadingBelongsToRelation()
+    {
+        // Insert a project
+        $this->db->table('projects')->insert(['name' => 'Test Project']);
+        $projectId = $this->db->lastInsertId();
+
+        // Insert a task
+        $this->db->table('tasks')->insert([
+            'name' => 'Test Task',
+            'project_id' => $projectId,
+        ]);
+        $taskId = $this->db->lastInsertId();
+
+        // Fetch task with eager loaded project
+        $taskModel = $this->db->model(Task::class);
+        $task = $taskModel::query()->with('project')->where('id', $taskId)->one();
+
+        // Verify project is loaded
+        $this->assertNotEmpty($task->project);
+        $this->assertEquals('Test Project', $task->project->name);
+
+        // Modify task
+        $task->name = 'Updated Task';
+        
+        // Save should work without trying to save the project relation
+        $task->save();
+
+        // Verify the task was updated
+        $updated = $this->db->table('tasks')->where('id', $taskId)->one();
+        $this->assertEquals('Updated Task', $updated->name);
+    }
+
+    public function testSaveAfterEagerLoadingPivotRelation()
+    {
+        // Insert users
+        $this->db->table('users')->insert([
+            ['name' => 'User 1'],
+        ]);
+        $userId = $this->db->lastInsertId();
+
+        // Insert roles
+        $this->db->table('roles')->insert([
+            ['name' => 'Admin'],
+            ['name' => 'Editor'],
+        ]);
+
+        // Attach roles to user
+        $this->db->table('role_user')->insert([
+            ['user_id' => $userId, 'role_id' => 1],
+            ['user_id' => $userId, 'role_id' => 2],
+        ]);
+
+        // Fetch user with eager loaded roles
+        $userModel = $this->db->model(User::class);
+        $user = $userModel::query()->with('roles')->where('id', $userId)->one();
+
+        // Verify roles are loaded
+        $this->assertNotEmpty($user->roles);
+        $this->assertEquals(2, $user->roles->count());
+
+        // Modify user
+        $user->name = 'Updated User';
+        
+        // Save should work without trying to save the roles relation
+        $user->save();
+
+        // Verify the user was updated
+        $updated = $this->db->table('users')->where('id', $userId)->one();
+        $this->assertEquals('Updated User', $updated->name);
+    }
+
+    public function testToDatabaseArrayExcludesEagerLoadedRelations()
+    {
+        // Insert a project
+        $this->db->table('projects')->insert(['name' => 'Test Project']);
+        $projectId = $this->db->lastInsertId();
+
+        // Insert tasks
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => $projectId],
+        ]);
+
+        // Fetch project with eager loaded tasks
+        $projectModel = $this->db->model(Project::class);
+        $project = $projectModel::query()->with('tasks')->where('id', $projectId)->one();
+
+        // Verify tasks are loaded as an attribute
+        $this->assertTrue($project->hasAttribute('tasks'));
+        $this->assertInstanceOf(Collection::class, $project->getAttribute('tasks'));
+        
+        // Try to save - this will call toDatabaseArray internally
+        // If the bug exists, this will fail with "Collection cannot be converted to string"
+        $project->name = 'Updated Project';
+        $project->save();
+        
+        // If we got here, the bug is fixed!
+        $updated = $this->db->table('projects')->where('id', $projectId)->one();
+        $this->assertEquals('Updated Project', $updated->name);
+    }
 }

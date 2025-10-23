@@ -150,6 +150,11 @@ class AttributeHandler
         $result = [];
         
         foreach ($data as $key => $value) {
+            // Skip eager-loaded relations (Model or Collection objects)
+            if ($value instanceof Model || $value instanceof Collection) {
+                continue;
+            }
+            
             // Handle DateTime objects that might not have been uncast
             if ($value instanceof \DateTimeInterface) {
                 $castType = $this->getCastType($key);
