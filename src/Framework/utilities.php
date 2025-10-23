@@ -48,7 +48,7 @@ if (!function_exists('csrf_input')) {
     }
 }
 
-if(!function_exists('csrf_token')) {
+if (!function_exists('csrf_token')) {
     /**
      * Returns the CSRF token.
      */
@@ -372,27 +372,27 @@ if (!function_exists('schedule')) {
     }
 }
 
-if(!function_exists('old')) {
+if (!function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
     function old(string $key, string|array $default = '', bool $escape = true): string|array
     {
         static $oldInput;
-        
-        if(!isset($oldInput)) {
+
+        if (!isset($oldInput)) {
             $oldInput = session()->flash('_old_input') ?? [];
         }
 
         $arr = new \Lightpack\Utils\Arr;
-        
+
         $value = $arr->get($key, $oldInput, $default);
 
-        if(is_null($value)) {
+        if (is_null($value)) {
             return '';
         }
 
-        if(is_array($value)) {
+        if (is_array($value)) {
             return $value;
         }
 
@@ -408,15 +408,15 @@ if (!function_exists('error')) {
     {
         static $errors;
 
-        if(!isset($errors)) {
+        if (!isset($errors)) {
             $errors = app('session')->flash('_validation_errors') ?? [];
         }
-       
+
         return $errors[$key] ?? '';
     }
 }
 
-if(!function_exists('spoof_input')) {
+if (!function_exists('spoof_input')) {
     /**
      * Returns a hidden input field for the spoofed request method.
      */
@@ -553,31 +553,13 @@ if (!function_exists('halt')) {
         if ($message === '') {
             $message = \Lightpack\Http\Response::STATUS_MESSAGES[$code] ?? 'HTTP Error';
         }
-        
+
         $exception = new \Lightpack\Exceptions\HttpException($message, $code);
-        
+
         if ($headers) {
             $exception->setHeaders($headers);
         }
-        
-        throw $exception;
-    }
-}
 
-if (!function_exists('halt_if')) {
-    /**
-     * Halt execution if the given condition is true.
-     * 
-     * @param bool $condition Condition to check
-     * @param int $code HTTP status code
-     * @param string $message Optional error message
-     * @param array $headers Optional HTTP headers
-     * @throws \Lightpack\Exceptions\HttpException
-     */
-    function halt_if(bool $condition, int $code, string $message = '', array $headers = []): void
-    {
-        if ($condition) {
-            halt($code, $message, $headers);
-        }
+        throw $exception;
     }
 }
