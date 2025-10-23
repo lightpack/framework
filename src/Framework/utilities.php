@@ -535,3 +535,49 @@ if (!function_exists('sms')) {
         return app('sms');
     }
 }
+
+if (!function_exists('halt')) {
+    /**
+     * Halt execution and throw an HTTP exception with the given status code.
+     * 
+     * If no message is provided, uses the standard HTTP status message.
+     * 
+     * @param int $code HTTP status code (e.g., 404, 403, 500)
+     * @param string $message Optional error message
+     * @param array $headers Optional HTTP headers
+     * @throws \Lightpack\Exceptions\HttpException
+     */
+    function halt(int $code, string $message = '', array $headers = []): void
+    {
+        // Use standard HTTP status message if no custom message provided
+        if ($message === '') {
+            $message = \Lightpack\Http\Response::STATUS_MESSAGES[$code] ?? 'HTTP Error';
+        }
+        
+        $exception = new \Lightpack\Exceptions\HttpException($message, $code);
+        
+        if ($headers) {
+            $exception->setHeaders($headers);
+        }
+        
+        throw $exception;
+    }
+}
+
+if (!function_exists('halt_if')) {
+    /**
+     * Halt execution if the given condition is true.
+     * 
+     * @param bool $condition Condition to check
+     * @param int $code HTTP status code
+     * @param string $message Optional error message
+     * @param array $headers Optional HTTP headers
+     * @throws \Lightpack\Exceptions\HttpException
+     */
+    function halt_if(bool $condition, int $code, string $message = '', array $headers = []): void
+    {
+        if ($condition) {
+            halt($code, $message, $headers);
+        }
+    }
+}
