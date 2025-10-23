@@ -6,8 +6,9 @@ use Exception as GlobalException;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 
-abstract class Mail extends PHPMailer
+abstract class Mail
 {
+    protected PHPMailer $mailer;
     protected $textView;
     protected $htmlView;
     protected $viewData = [];
@@ -17,34 +18,41 @@ abstract class Mail extends PHPMailer
 
     public function __construct()
     {
-        $this->isSMTP();
-        $this->SMTPAuth     = true;
-        $this->Host         = get_env('MAIL_HOST');
-        $this->Port         = get_env('MAIL_PORT');
-        $this->Username     = get_env('MAIL_USERNAME');
-        $this->Password     = get_env('MAIL_PASSWORD');
-        $this->SMTPSecure   = get_env('MAIL_ENCRYPTION');
+        $this->mailer = new PHPMailer(true);
+        
+        if (get_env('MAIL_DRIVER', 'smtp') === 'smtp') {
+            $this->configureSMTP();
+        }
 
-        $this->setFrom(
+        $this->mailer->setFrom(
             get_env('MAIL_FROM_ADDRESS'),
             get_env('MAIL_FROM_NAME')
         );
 
-        $this->isHTML(true);
+        $this->mailer->isHTML(true);
+    }
 
-        parent::__construct(true);
+    private function configureSMTP(): void
+    {
+        $this->mailer->isSMTP();
+        $this->mailer->SMTPAuth     = true;
+        $this->mailer->Host         = get_env('MAIL_HOST');
+        $this->mailer->Port         = get_env('MAIL_PORT');
+        $this->mailer->Username     = get_env('MAIL_USERNAME');
+        $this->mailer->Password     = get_env('MAIL_PASSWORD');
+        $this->mailer->SMTPSecure   = get_env('MAIL_ENCRYPTION');
     }
 
     public function from(string $address, string $name = ''): self
     {
-        $this->setFrom($address, $name);
+        $this->mailer->setFrom($address, $name);
 
         return $this;
     }
 
     public function to(string $address, string $name = ''): self
     {
-        $this->addAddress($address, $name);
+        $this->mailer->addAddress($address, $name);
 
         return $this;
     }
@@ -58,7 +66,7 @@ abstract class Mail extends PHPMailer
         }
 
         if (is_string($address)) {
-            $this->addReplyTo($address, $name);
+            $this->mailer->addReplyTo($address, $name);
         }
 
         return $this;
@@ -73,7 +81,7 @@ abstract class Mail extends PHPMailer
         }
 
         if (is_string($address)) {
-            $this->addCC($address, $name);
+            $this->mailer->addCC($address, $name);
         }
 
         return $this;
@@ -88,7 +96,7 @@ abstract class Mail extends PHPMailer
         }
 
         if (is_string($address)) {
-            $this->addBCC($address, $name);
+            $this->mailer->addBCC($address, $name);
         }
 
         return $this;
@@ -103,7 +111,7 @@ abstract class Mail extends PHPMailer
         }
 
         if (is_string($path)) {
-            $this->addAttachment($path, $name);
+            $this->mailer->addAttachment($path, $name);
         }
 
         return $this;
@@ -111,21 +119,21 @@ abstract class Mail extends PHPMailer
 
     public function subject(string $subject): self
     {
-        $this->Subject = $subject;
+        $this->mailer->Subject = $subject;
 
         return $this;
     }
 
     public function body(string $body): self
     {
-        $this->Body = $body;
+        $this->mailer->Body = $body;
 
         return $this;
     }
 
     public function altBody(string $body): self
     {
-        $this->AltBody = $body;
+        $this->mailer->AltBody = $body;
 
         return $this;
     }
@@ -159,22 +167,22 @@ abstract class Mail extends PHPMailer
             return match (get_env('MAIL_DRIVER', 'smtp')) {
                 'log' => $this->logMail(),
                 'array' => $this->arrayMail(),
-                'smtp' => parent::send(),
+                'smtp' => $this->mailer->send(),
                 default => throw new GlobalException('Invalid mail driver: ' . get_env('MAIL_DRIVER')),
             };
         } catch (Exception $e) {
-            throw new GlobalException("Message could not be sent. Mailer Error: {$this->ErrorInfo}");
+            throw new GlobalException("Message could not be sent. Mailer Error: {$this->mailer->ErrorInfo}");
         }
     }
 
     private function setBody()
     {
         if ($this->htmlView) {
-            $this->Body = app('template')->setData($this->viewData)->include($this->htmlView);
+            $this->mailer->Body = app('template')->setData($this->viewData)->include($this->htmlView);
         }
 
         if ($this->textView) {
-            $this->AltBody = app('template')->setData($this->viewData)->include($this->textView);
+            $this->mailer->AltBody = app('template')->setData($this->viewData)->include($this->textView);
         }
     }
 
@@ -217,13 +225,13 @@ abstract class Mail extends PHPMailer
 
             switch ($type) {
                 case 'cc':
-                    $this->addCC($email, $name);
+                    $this->mailer->addCC($email, $name);
                     break;
                 case 'bcc':
-                    $this->addBCC($email, $name);
+                    $this->mailer->addBCC($email, $name);
                     break;
                 case 'reply_to':
-                    $this->addReplyTo($email, $name);
+                    $this->mailer->addReplyTo($email, $name);
                     break;
             }
         }
@@ -247,7 +255,7 @@ abstract class Mail extends PHPMailer
                 list($path, $name) = [$key, $value];
             }
 
-            $this->addAttachment($path, $name);
+            $this->mailer->addAttachment($path, $name);
         }
     }
 
@@ -256,20 +264,20 @@ abstract class Mail extends PHPMailer
         return [
             'id' => uniqid(),
             'timestamp' => time(),
-            'to' => array_column($this->getToAddresses(), 0),
-            'from' => $this->From,
-            'subject' => $this->Subject,
-            'html_body' => $this->Body,
-            'text_body' => $this->AltBody,
-            'cc' => array_column($this->getCcAddresses(), 0),
-            'bcc' => array_column($this->getBccAddresses(), 0),
-            'reply_to' => array_column($this->getReplyToAddresses(), 0),
+            'to' => array_column($this->mailer->getToAddresses(), 0),
+            'from' => $this->mailer->From,
+            'subject' => $this->mailer->Subject,
+            'html_body' => $this->mailer->Body,
+            'text_body' => $this->mailer->AltBody,
+            'cc' => array_column($this->mailer->getCcAddresses(), 0),
+            'bcc' => array_column($this->mailer->getBccAddresses(), 0),
+            'reply_to' => array_column($this->mailer->getReplyToAddresses(), 0),
             'attachments' => array_map(function ($attachment) {
                 return [
                     'filename' => $attachment[1],
                     'path' => $attachment[0],
                 ];
-            }, $this->getAttachments()),
+            }, $this->mailer->getAttachments()),
         ];
     }
 }
