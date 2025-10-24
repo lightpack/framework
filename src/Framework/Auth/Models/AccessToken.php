@@ -8,6 +8,12 @@ class AccessToken extends Model
 {
     protected $table = 'access_tokens';
     
+    protected $timestamps = true;
+    
+    protected $casts = [
+        'abilities' => 'array',
+    ];
+    
     public function user()
     {
         return $this->belongsTo(AuthUser::class, 'user_id');
@@ -24,8 +30,7 @@ class AccessToken extends Model
     
     public function can(string $ability): bool
     {
-        $this->abilities = json_decode($this->abilities, true);
-        
+        // abilities is always an array due to cast
         if (in_array('*', $this->abilities)) {
             return true;
         }

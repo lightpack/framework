@@ -142,7 +142,7 @@ class AttributeHandler
     /**
      * Get all attributes as array for database operations.
      * Values are already in database format because set() applies uncasting.
-     * This method only needs to handle DateTime objects that might exist.
+     * This method only needs to handle DateTime objects and arrays that might exist.
      */
     public function toDatabaseArray(): array
     {
@@ -155,16 +155,22 @@ class AttributeHandler
                 continue;
             }
             
+            $castType = $this->getCastType($key);
+            
             // Handle DateTime objects that might not have been uncast
             if ($value instanceof \DateTimeInterface) {
-                $castType = $this->getCastType($key);
                 if ($castType) {
                     $result[$key] = $this->castHandler->uncast($value, $castType);
                 } else {
                     // Default to datetime format if no cast specified
                     $result[$key] = $value->format('Y-m-d H:i:s');
                 }
-            } else {
+            } 
+            // Handle arrays that need to be uncast to JSON
+            elseif (is_array($value) && $castType === 'array') {
+                $result[$key] = $this->castHandler->uncast($value, $castType);
+            } 
+            else {
                 $result[$key] = $value;
             }
         }
