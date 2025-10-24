@@ -42,6 +42,10 @@ class MailCompositionTest extends TestCase
         $mailManager->setDefaultDriver('array');
         $container->register('mail', fn() => $mailManager);
         
+        // Register template service for markdown support
+        $viewsPath = __DIR__ . '/../fixtures/views';
+        $container->register('template', fn() => new \Lightpack\View\Template($viewsPath));
+        
         Mail::clearSentMails();
     }
 
@@ -622,5 +626,50 @@ class MailCompositionTest extends TestCase
         $this->assertContains('smtp', $drivers);
         $this->assertContains('array', $drivers);
         $this->assertContains('log', $drivers);
+    }
+
+    public function testMarkdownEmail()
+    {
+        Mail::clearSentMails();
+        
+        $mail = new class(app('mail')) extends Mail {
+            public function dispatch(array $payload = []) {
+                $this->markdown('emails/welcome.md', [
+                        'name' => $payload['name'],
+                        'email' => $payload['email'],
+                        'role' => $payload['role']
+                    ])
+                    ->to($payload['email'])
+                    ->subject('Welcome!')
+                    ->send();
+            }
+        };
+        
+        $mail->dispatch([
+            'name' => 'Bob',
+            'email' => 'bob@example.com',
+            'role' => 'Developer'
+        ]);
+        
+        $sentMails = Mail::getSentMails();
+        $this->assertCount(1, $sentMails);
+        
+        $sentMail = $sentMails[0];
+        
+        // Check HTML was generated from markdown
+        $this->assertStringContainsString('<h1>Hello Bob!</h1>', $sentMail['html_body']);
+        $this->assertStringContainsString('<strong>Lightpack Framework</strong>', $sentMail['html_body']);
+        $this->assertStringContainsString('<h2>Getting Started</h2>', $sentMail['html_body']);
+        $this->assertStringContainsString('bob@example.com', $sentMail['html_body']);
+        $this->assertStringContainsString('Developer', $sentMail['html_body']);
+        
+        // Check plain text was auto-generated
+        $this->assertStringContainsString('Hello Bob!', $sentMail['text_body']);
+        $this->assertStringContainsString('Lightpack Framework', $sentMail['text_body']);
+        $this->assertStringContainsString('bob@example.com', $sentMail['text_body']);
+        
+        // Should not contain HTML tags in text version
+        $this->assertStringNotContainsString('<h1>', $sentMail['text_body']);
+        $this->assertStringNotContainsString('<strong>', $sentMail['text_body']);
     }
 }

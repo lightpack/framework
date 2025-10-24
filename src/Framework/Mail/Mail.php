@@ -166,6 +166,42 @@ abstract class Mail
         return $this;
     }
 
+    /**
+     * Set markdown template for email
+     * 
+     * Uses .md.php files with PHP variables (<?= $var ?>)
+     * Automatically converts markdown to HTML and generates plain text
+     * 
+     * Example:
+     * $this->markdown('emails/welcome.md', ['name' => 'Bob']);
+     * 
+     * File: emails/welcome.md.php
+     * # Hello <?= $name ?>!
+     * Welcome to **Lightpack**.
+     */
+    public function markdown(string $template, array $data = []): self
+    {
+        $this->viewData($data);
+        
+        // Render markdown template (uses .md.php file)
+        $markdownContent = app('template')
+            ->setData($data)
+            ->include($template);
+        
+        // Convert markdown to HTML
+        $converter = new \League\CommonMark\CommonMarkConverter([
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
+        ]);
+        
+        $this->htmlBody = $converter->convert($markdownContent)->getContent();
+        
+        // Auto-generate plain text version
+        $this->textBody = strip_tags($this->htmlBody);
+        
+        return $this;
+    }
+
     public function send()
     {
         $this->renderViews();
