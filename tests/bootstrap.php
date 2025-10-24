@@ -20,11 +20,17 @@ if (!defined('APP_ENV')) {
     define('APP_ENV', 'testing');
 }
 
+if (!defined('DIR_STORAGE')) {
+    define('DIR_STORAGE', __DIR__ . '/fixtures/storage');
+}
+
 // Create fixture directories if they don't exist
 $fixtureDirectories = [
     __DIR__ . '/fixtures',
     __DIR__ . '/fixtures/config',
     __DIR__ . '/fixtures/views',
+    __DIR__ . '/fixtures/storage',
+    __DIR__ . '/fixtures/storage/logs',
 ];
 
 foreach ($fixtureDirectories as $dir) {
