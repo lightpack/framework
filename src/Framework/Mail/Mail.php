@@ -6,26 +6,27 @@ use Lightpack\Mail\Drivers\ArrayDriver;
 
 abstract class Mail
 {
-    protected $textView;
-    protected $htmlView;
-    protected $viewData = [];
-    protected ?string $driverName = null;
-    
-    // Mail composition data
     protected array $to = [];
     protected array $cc = [];
     protected array $bcc = [];
     protected array $replyTo = [];
-    protected array $attachments = [];
     protected array $from = [];
     protected string $subject = '';
     protected string $htmlBody = '';
     protected string $textBody = '';
+    protected array $attachments = [];
+    protected ?string $htmlView = null;
+    protected ?string $textView = null;
+    protected array $viewData = [];
+    protected ?string $driverName = null;
+    protected MailManager $mailManager;
 
     abstract public function dispatch(array $payload = []);
 
-    public function __construct()
+    public function __construct(MailManager $mailManager)
     {
+        $this->mailManager = $mailManager;
+        
         // Set default from address
         $this->from = [
             'email' => get_env('MAIL_FROM_ADDRESS'),
@@ -169,15 +170,23 @@ abstract class Mail
     {
         $this->renderViews();
         
-        $data = $this->buildMailData();
-        
-        // Get driver from MailManager
-        $mailManager = app('mail');
+        // Get driver from injected MailManager
         $driver = $this->driverName 
-            ? $mailManager->driver($this->driverName)
-            : $mailManager->getDefaultDriver();
+            ? $this->mailManager->driver($this->driverName)
+            : $this->mailManager->getDefaultDriver();
         
-        return $driver->send($data);
+        // Build simple array - no MailData needed
+        return $driver->send([
+            'to' => $this->to,
+            'from' => $this->from,
+            'subject' => $this->subject,
+            'html_body' => $this->htmlBody,
+            'text_body' => $this->textBody,
+            'cc' => $this->cc,
+            'bcc' => $this->bcc,
+            'reply_to' => $this->replyTo,
+            'attachments' => $this->attachments,
+        ]);
     }
 
     private function renderViews(): void
@@ -189,21 +198,6 @@ abstract class Mail
         if ($this->textView) {
             $this->textBody = app('template')->setData($this->viewData)->include($this->textView);
         }
-    }
-
-    private function buildMailData(): array
-    {
-        return [
-            'to' => $this->to,
-            'from' => $this->from,
-            'subject' => $this->subject,
-            'html_body' => $this->htmlBody,
-            'text_body' => $this->textBody,
-            'cc' => $this->cc,
-            'bcc' => $this->bcc,
-            'reply_to' => $this->replyTo,
-            'attachments' => $this->attachments,
-        ];
     }
 
     /**

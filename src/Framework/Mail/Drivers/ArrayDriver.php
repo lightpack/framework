@@ -3,7 +3,6 @@
 namespace Lightpack\Mail\Drivers;
 
 use Lightpack\Mail\DriverInterface;
-use Lightpack\Mail\MailData;
 
 class ArrayDriver implements DriverInterface
 {
@@ -11,15 +10,12 @@ class ArrayDriver implements DriverInterface
 
     public function send(array $data): bool
     {
-        // Convert to MailData for fluent handling
-        $mailData = MailData::fromArray($data);
+        // Data is already normalized by MailData
+        // Just add metadata
+        $data['id'] = uniqid();
+        $data['timestamp'] = time();
         
-        // Add metadata
-        $enrichedData = $mailData->toArray();
-        $enrichedData['id'] = uniqid();
-        $enrichedData['timestamp'] = time();
-        
-        static::$sentMails[] = $enrichedData;
+        static::$sentMails[] = $data;
         
         return true;
     }

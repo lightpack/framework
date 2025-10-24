@@ -14,6 +14,12 @@ class TestMail extends Mail
             ->body($payload['body'] ?? 'Test Body')
             ->send();
     }
+    
+    // Helper for tests to create instance with MailManager
+    public static function make(): self
+    {
+        return new self(app('mail'));
+    }
 }
 
 class MailCompositionTest extends TestCase
@@ -44,10 +50,7 @@ class MailCompositionTest extends TestCase
     protected function tearDown(): void
     {
         Mail::clearSentMails();
-        
-        // Reset environment to array driver
         putenv('MAIL_DRIVER=array');
-        
         parent::tearDown();
     }
 
@@ -72,7 +75,7 @@ class MailCompositionTest extends TestCase
 
     public function testMailSendsSuccessfully()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         $mail->dispatch([
             'to' => 'recipient@example.com',
             'subject' => 'Hello World',
@@ -90,7 +93,7 @@ class MailCompositionTest extends TestCase
 
     public function testMailFluentApi()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $result = $mail->to('user@example.com')
             ->cc('cc@example.com')
@@ -110,7 +113,7 @@ class MailCompositionTest extends TestCase
 
     public function testMailWithAttachments()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         // Create a temporary file for testing
         $tempFile = tempnam(sys_get_temp_dir(), 'mail_test_');
@@ -137,7 +140,7 @@ class MailCompositionTest extends TestCase
         // Test that we can switch between drivers
         putenv('MAIL_DRIVER=log');
         
-        $mail = new TestMail();
+        $mail = TestMail::make();
         $mail->to('user@example.com')
             ->subject('Test')
             ->body('Body')
@@ -152,7 +155,7 @@ class MailCompositionTest extends TestCase
 
     public function testFromMethodOverridesDefaultFrom()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->from('custom@example.com', 'Custom Sender')
             ->to('user@example.com')
@@ -167,7 +170,7 @@ class MailCompositionTest extends TestCase
 
     public function testReplyToWithSingleAddress()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->replyTo('reply@example.com', 'Reply Name')
@@ -183,7 +186,7 @@ class MailCompositionTest extends TestCase
 
     public function testReplyToWithMultipleAddresses()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->replyTo(['reply1@example.com', 'reply2@example.com'])
@@ -200,7 +203,7 @@ class MailCompositionTest extends TestCase
 
     public function testReplyToWithArrayOfEmailsAndNames()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->replyTo(['reply1@example.com' => 'Reply One', 'reply2@example.com' => 'Reply Two'])
@@ -217,7 +220,7 @@ class MailCompositionTest extends TestCase
 
     public function testCcWithMultipleAddresses()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->cc(['cc1@example.com', 'cc2@example.com'])
@@ -234,7 +237,7 @@ class MailCompositionTest extends TestCase
 
     public function testCcWithArrayOfEmailsAndNames()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->cc(['cc1@example.com' => 'CC One', 'cc2@example.com' => 'CC Two'])
@@ -251,7 +254,7 @@ class MailCompositionTest extends TestCase
 
     public function testBccWithMultipleAddresses()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->bcc(['bcc1@example.com', 'bcc2@example.com'])
@@ -268,7 +271,7 @@ class MailCompositionTest extends TestCase
 
     public function testBccWithArrayOfEmailsAndNames()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->bcc(['bcc1@example.com' => 'BCC One', 'bcc2@example.com' => 'BCC Two'])
@@ -285,7 +288,7 @@ class MailCompositionTest extends TestCase
 
     public function testMultipleAttachmentsAsArray()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         // Create temporary files
         $tempFile1 = tempnam(sys_get_temp_dir(), 'mail_test_');
@@ -309,7 +312,7 @@ class MailCompositionTest extends TestCase
 
     public function testMultipleAttachmentsWithCustomNames()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         // Create temporary files
         $tempFile1 = tempnam(sys_get_temp_dir(), 'mail_test_');
@@ -336,7 +339,7 @@ class MailCompositionTest extends TestCase
 
     public function testAltBodyMethod()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->subject('Test')
@@ -351,7 +354,7 @@ class MailCompositionTest extends TestCase
 
     public function testMultipleToRecipients()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user1@example.com')
             ->to('user2@example.com')
@@ -370,7 +373,7 @@ class MailCompositionTest extends TestCase
 
     public function testComplexMailWithAllFields()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $tempFile = tempnam(sys_get_temp_dir(), 'mail_test_');
         file_put_contents($tempFile, 'Test content');
@@ -411,7 +414,7 @@ class MailCompositionTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage("Mail driver 'invalid_driver' is not registered");
         
-        $mail = new TestMail();
+        $mail = TestMail::make();
         $mail->driver('invalid_driver')
             ->to('user@example.com')
             ->subject('Test')
@@ -432,7 +435,7 @@ class MailCompositionTest extends TestCase
         $mailManager = app('mail');
         $mailManager->setDefaultDriver('log');
         
-        $mail = new TestMail();
+        $mail = TestMail::make();
         $mail->to('user@example.com')
             ->subject('Log Test')
             ->body('Log Body')
@@ -466,14 +469,14 @@ class MailCompositionTest extends TestCase
         $mailManager->setDefaultDriver('log');
         
         // Send first mail
-        $mail1 = new TestMail();
+        $mail1 = TestMail::make();
         $mail1->to('user1@example.com')
             ->subject('First Mail')
             ->body('First Body')
             ->send();
         
         // Send second mail
-        $mail2 = new TestMail();
+        $mail2 = TestMail::make();
         $mail2->to('user2@example.com')
             ->subject('Second Mail')
             ->body('Second Body')
@@ -491,7 +494,7 @@ class MailCompositionTest extends TestCase
 
     public function testMailDataNormalization()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com', 'User Name')
             ->cc('cc@example.com')
@@ -529,7 +532,7 @@ class MailCompositionTest extends TestCase
 
     public function testEmptyRecipientsArrays()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         
         $mail->to('user@example.com')
             ->subject('Test')
@@ -550,13 +553,13 @@ class MailCompositionTest extends TestCase
 
     public function testMailIdIsUnique()
     {
-        $mail1 = new TestMail();
+        $mail1 = TestMail::make();
         $mail1->to('user1@example.com')
             ->subject('Test 1')
             ->body('Body 1')
             ->send();
         
-        $mail2 = new TestMail();
+        $mail2 = TestMail::make();
         $mail2->to('user2@example.com')
             ->subject('Test 2')
             ->body('Body 2')
@@ -570,7 +573,7 @@ class MailCompositionTest extends TestCase
     {
         $beforeTime = time();
         
-        $mail = new TestMail();
+        $mail = TestMail::make();
         $mail->to('user@example.com')
             ->subject('Test')
             ->body('Body')
@@ -587,7 +590,7 @@ class MailCompositionTest extends TestCase
 
     public function testClearSentMailsWorks()
     {
-        $mail = new TestMail();
+        $mail = TestMail::make();
         $mail->to('user@example.com')
             ->subject('Test')
             ->body('Body')

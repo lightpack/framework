@@ -40,10 +40,7 @@ class SmtpDriver implements DriverInterface
     public function send(array $data): bool
     {
         try {
-            // Convert to MailData for fluent handling
-            $mailData = \Lightpack\Mail\MailData::fromArray($data);
-            $normalizedData = $mailData->toArray();
-            
+            // Data is already normalized by MailData
             // Clear any previous recipients
             $this->mailer->clearAddresses();
             $this->mailer->clearCCs();
@@ -52,50 +49,50 @@ class SmtpDriver implements DriverInterface
             $this->mailer->clearAttachments();
 
             // Set from
-            if (!empty($normalizedData['from'])) {
+            if (!empty($data['from'])) {
                 $this->mailer->setFrom(
-                    $normalizedData['from']['email'], 
-                    $normalizedData['from']['name'] ?? ''
+                    $data['from']['email'], 
+                    $data['from']['name'] ?? ''
                 );
             }
 
             // Set recipients
-            foreach ($normalizedData['to'] as $recipient) {
+            foreach ($data['to'] as $recipient) {
                 $this->mailer->addAddress($recipient['email'], $recipient['name'] ?? '');
             }
 
             // Set CC
-            if (!empty($normalizedData['cc'])) {
-                foreach ($normalizedData['cc'] as $cc) {
+            if (!empty($data['cc'])) {
+                foreach ($data['cc'] as $cc) {
                     $this->mailer->addCC($cc['email'], $cc['name'] ?? '');
                 }
             }
 
             // Set BCC
-            if (!empty($normalizedData['bcc'])) {
-                foreach ($normalizedData['bcc'] as $bcc) {
+            if (!empty($data['bcc'])) {
+                foreach ($data['bcc'] as $bcc) {
                     $this->mailer->addBCC($bcc['email'], $bcc['name'] ?? '');
                 }
             }
 
             // Set Reply-To
-            if (!empty($normalizedData['reply_to'])) {
-                foreach ($normalizedData['reply_to'] as $replyTo) {
+            if (!empty($data['reply_to'])) {
+                foreach ($data['reply_to'] as $replyTo) {
                     $this->mailer->addReplyTo($replyTo['email'], $replyTo['name'] ?? '');
                 }
             }
 
             // Set subject and body
-            $this->mailer->Subject = $normalizedData['subject'];
-            $this->mailer->Body = $normalizedData['html_body'];
+            $this->mailer->Subject = $data['subject'];
+            $this->mailer->Body = $data['html_body'];
             
-            if (!empty($normalizedData['text_body'])) {
-                $this->mailer->AltBody = $normalizedData['text_body'];
+            if (!empty($data['text_body'])) {
+                $this->mailer->AltBody = $data['text_body'];
             }
 
             // Set attachments
-            if (!empty($normalizedData['attachments'])) {
-                foreach ($normalizedData['attachments'] as $attachment) {
+            if (!empty($data['attachments'])) {
+                foreach ($data['attachments'] as $attachment) {
                     $this->mailer->addAttachment($attachment['path'], $attachment['name'] ?? '');
                 }
             }
