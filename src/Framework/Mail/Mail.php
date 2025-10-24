@@ -112,16 +112,16 @@ abstract class Mail
         if (is_array($path)) {
             foreach ($path as $key => $value) {
                 if (is_int($key)) {
-                    $this->attachments[] = ['path' => $value, 'name' => ''];
+                    $this->attachments[] = ['path' => $value, 'filename' => ''];
                 } else {
-                    $this->attachments[] = ['path' => $key, 'name' => $value];
+                    $this->attachments[] = ['path' => $key, 'filename' => $value];
                 }
             }
             return $this;
         }
 
         if (is_string($path)) {
-            $this->attachments[] = ['path' => $path, 'name' => $name];
+            $this->attachments[] = ['path' => $path, 'filename' => $name];
         }
 
         return $this;

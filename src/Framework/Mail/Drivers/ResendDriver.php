@@ -104,7 +104,7 @@ class ResendDriver implements DriverInterface
     {
         return array_map(function($att) {
             return [
-                'filename' => $att['name'] ?: basename($att['path']),
+                'filename' => $att['filename'] ?: basename($att['path']),
                 'content' => base64_encode(file_get_contents($att['path'])),
             ];
         }, $attachments);

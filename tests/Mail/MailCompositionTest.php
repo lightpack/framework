@@ -127,7 +127,7 @@ class MailCompositionTest extends TestCase
         $this->assertCount(1, $sentMails);
         $this->assertCount(1, $sentMails[0]['attachments']);
         $this->assertNotEmpty($sentMails[0]['attachments'][0]['path']);
-        $this->assertEquals('test.txt', $sentMails[0]['attachments'][0]['name']);
+        $this->assertEquals('test.txt', $sentMails[0]['attachments'][0]['filename']);
         
         // Cleanup
         unlink($tempFile);
@@ -326,7 +326,7 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['attachments']);
-        $filenames = array_column($sentMails[0]['attachments'], 'name');
+        $filenames = array_column($sentMails[0]['attachments'], 'filename');
         $this->assertContains('file1.txt', $filenames);
         $this->assertContains('file2.txt', $filenames);
         

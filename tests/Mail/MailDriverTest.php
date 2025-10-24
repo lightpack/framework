@@ -338,8 +338,8 @@ class MailDriverTest extends TestCase
         
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['attachments']);
-        $this->assertEquals('custom-name.txt', $sentMails[0]['attachments'][0]['name']);
-        $this->assertEquals('', $sentMails[0]['attachments'][1]['name']);
+        $this->assertEquals('custom-name.txt', $sentMails[0]['attachments'][0]['filename']);
+        $this->assertEquals('', $sentMails[0]['attachments'][1]['filename']);
         
         unlink($tempFile1);
         unlink($tempFile2);

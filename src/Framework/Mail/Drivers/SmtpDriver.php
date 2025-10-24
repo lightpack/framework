@@ -93,7 +93,7 @@ class SmtpDriver implements DriverInterface
             // Set attachments
             if (!empty($data['attachments'])) {
                 foreach ($data['attachments'] as $attachment) {
-                    $this->mailer->addAttachment($attachment['path'], $attachment['name'] ?? '');
+                    $this->mailer->addAttachment($attachment['path'], $attachment['filename'] ?? '');
                 }
             }
 
