@@ -160,7 +160,9 @@ class AuthManager
         $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
 
         if (request()->input($rememberTokenField)) {
-            cookie()->forever($rememberTokenField, self::$identity->getRememberToken());
+            // Duration in minutes (default: 30 days)
+            $duration = $this->normalizedConfig['remember_duration'] ?? (60 * 24 * 30);
+            cookie()->set($rememberTokenField, self::$identity->getRememberToken(), $duration);
         }
     }
 

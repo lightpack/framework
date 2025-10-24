@@ -774,4 +774,105 @@ final class AuthIntegrationTest extends TestCase
         
         $this->assertInstanceOf(Auth::class, $result);
     }
+
+    /**
+     * Test that remember me cookie duration is configurable.
+     */
+    public function test_remember_me_uses_configurable_duration()
+    {
+        $this->createTestUser('user@example.com', 'password123');
+        
+        // Set custom remember duration (7 days)
+        $customConfig = $this->authConfig;
+        $customConfig['default']['remember_duration'] = 60 * 24 * 7; // 7 days in minutes
+        
+        // Track what cookie()->set() is called with
+        $capturedName = null;
+        $capturedValue = null;
+        $capturedDuration = null;
+        
+        $cookie = $this->createMock(Cookie::class);
+        $cookie->expects($this->once())
+               ->method('set')
+               ->willReturnCallback(function($name, $value, $duration) use (&$capturedName, &$capturedValue, &$capturedDuration) {
+                   $capturedName = $name;
+                   $capturedValue = $value;
+                   $capturedDuration = $duration;
+                   return true;
+               });
+        $this->container->instance('cookie', $cookie);
+        
+        // Mock request with credentials AND remember_token checkbox
+        $request = $this->createMock(Request::class);
+        $request->expects($this->any())
+                ->method('input')
+                ->willReturnCallback(function($key = null) {
+                    if ($key === null) {
+                        return [
+                            'email' => 'user@example.com',
+                            'password' => 'password123',
+                            'remember_token' => '1',
+                        ];
+                    }
+                    if ($key === 'remember_token') {
+                        return '1';
+                    }
+                    return null;
+                });
+        $this->container->instance('request', $request);
+        
+        // Create auth with custom config and login (which calls persist())
+        $auth = new Auth('default', $customConfig);
+        $result = $auth->login();
+        
+        // Verify redirect was returned (successful login)
+        $this->assertInstanceOf(Redirect::class, $result);
+        
+        // Verify cookie()->set() was called with correct duration
+        $this->assertEquals('remember_token', $capturedName);
+        $this->assertNotNull($capturedValue);
+        $this->assertEquals(60 * 24 * 7, $capturedDuration, 'Cookie duration should be 7 days (10080 minutes)');
+    }
+    
+    public function test_remember_me_defaults_to_30_days()
+    {
+        $this->createTestUser('user@example.com', 'password123');
+        
+        // Don't set remember_duration - should default to 30 days
+        $capturedDuration = null;
+        
+        $cookie = $this->createMock(Cookie::class);
+        $cookie->expects($this->once())
+               ->method('set')
+               ->willReturnCallback(function($name, $value, $duration) use (&$capturedDuration) {
+                   $capturedDuration = $duration;
+                   return true;
+               });
+        $this->container->instance('cookie', $cookie);
+        
+        $request = $this->createMock(Request::class);
+        $request->expects($this->any())
+                ->method('input')
+                ->willReturnCallback(function($key = null) {
+                    if ($key === null) {
+                        return [
+                            'email' => 'user@example.com',
+                            'password' => 'password123',
+                            'remember_token' => '1',
+                        ];
+                    }
+                    if ($key === 'remember_token') {
+                        return '1';
+                    }
+                    return null;
+                });
+        $this->container->instance('request', $request);
+        
+        // Use default config (no remember_duration set)
+        $auth = new Auth('default', $this->authConfig);
+        $result = $auth->login();
+        
+        $this->assertInstanceOf(Redirect::class, $result);
+        $this->assertEquals(60 * 24 * 30, $capturedDuration, 'Cookie duration should default to 30 days (43200 minutes)');
+    }
 }
