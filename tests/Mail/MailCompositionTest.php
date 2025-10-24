@@ -634,7 +634,7 @@ class MailCompositionTest extends TestCase
         
         $mail = new class(app('mail')) extends Mail {
             public function dispatch(array $payload = []) {
-                $this->markdown('emails/welcome.md', [
+                $this->markdownView('emails/welcome.md', [
                         'name' => $payload['name'],
                         'email' => $payload['email'],
                         'role' => $payload['role']
@@ -663,13 +663,7 @@ class MailCompositionTest extends TestCase
         $this->assertStringContainsString('bob@example.com', $sentMail['html_body']);
         $this->assertStringContainsString('Developer', $sentMail['html_body']);
         
-        // Check plain text was auto-generated
-        $this->assertStringContainsString('Hello Bob!', $sentMail['text_body']);
-        $this->assertStringContainsString('Lightpack Framework', $sentMail['text_body']);
-        $this->assertStringContainsString('bob@example.com', $sentMail['text_body']);
-        
-        // Should not contain HTML tags in text version
-        $this->assertStringNotContainsString('<h1>', $sentMail['text_body']);
-        $this->assertStringNotContainsString('<strong>', $sentMail['text_body']);
+        // Plain text is empty (user must provide with textView() if needed)
+        $this->assertEmpty($sentMail['text_body']);
     }
 }

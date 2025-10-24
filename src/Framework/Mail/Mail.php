@@ -173,13 +173,13 @@ abstract class Mail
      * Automatically converts markdown to HTML and generates plain text
      * 
      * Example:
-     * $this->markdown('emails/welcome.md', ['name' => 'Bob']);
+     * $this->markdownView('emails/welcome.md', ['name' => 'Bob']);
      * 
      * File: emails/welcome.md.php
      * # Hello <?= $name ?>!
      * Welcome to **Lightpack**.
      */
-    public function markdown(string $template, array $data = []): self
+    public function markdownView(string $template, array $data = []): self
     {
         $this->viewData($data);
         
@@ -195,9 +195,6 @@ abstract class Mail
         ]);
         
         $this->htmlBody = $converter->convert($markdownContent)->getContent();
-        
-        // Auto-generate plain text version
-        $this->textBody = strip_tags($this->htmlBody);
         
         return $this;
     }
