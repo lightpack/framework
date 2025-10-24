@@ -71,6 +71,12 @@ class Auth
 
     public function isLoggedIn(): bool
     {
+        // Check if authenticated via API token (static identity)
+        if ($this->manager->getAuthUser()) {
+            return true;
+        }
+        
+        // Check if authenticated via session (web login)
         return session()->get('_logged_in', false);
     }
 
