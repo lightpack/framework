@@ -58,7 +58,7 @@ trait MailAssertionTrait
     {
         $found = false;
         foreach (Mail::getSentMails() as $mail) {
-            if ($mail['from'] === $email) {
+            if ($mail['from']['email'] === $email) {
                 $found = true;
                 break;
             }
@@ -83,9 +83,11 @@ trait MailAssertionTrait
     {
         $sent = false;
         foreach (Mail::getSentMails() as $mail) {
-            if (in_array($email, $mail['to'])) {
-                $sent = true;
-                break;
+            foreach ($mail['to'] as $recipient) {
+                if ($recipient['email'] === $email) {
+                    $sent = true;
+                    break 2; // Break out of both loops
+                }
             }
         }
 
@@ -97,9 +99,11 @@ trait MailAssertionTrait
     {
         $sent = false;
         foreach (Mail::getSentMails() as $mail) {
-            if (in_array($email, $mail['to'])) {
-                $sent = true;
-                break;
+            foreach ($mail['to'] as $recipient) {
+                if ($recipient['email'] === $email) {
+                    $sent = true;
+                    break 2;
+                }
             }
         }
 
@@ -113,7 +117,14 @@ trait MailAssertionTrait
         foreach (Mail::getSentMails() as $mail) {
             $allFound = true;
             foreach ($emails as $email) {
-                if (!in_array($email, $mail['to'])) {
+                $found = false;
+                foreach ($mail['to'] as $recipient) {
+                    if ($recipient['email'] === $email) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
                     $allFound = false;
                     break;
                 }
@@ -132,9 +143,11 @@ trait MailAssertionTrait
     {
         $found = false;
         foreach (Mail::getSentMails() as $mail) {
-            if (in_array($email, $mail['cc'])) {
-                $found = true;
-                break;
+            foreach ($mail['cc'] as $recipient) {
+                if ($recipient['email'] === $email) {
+                    $found = true;
+                    break 2;
+                }
             }
         }
 
@@ -146,9 +159,11 @@ trait MailAssertionTrait
     {
         $found = false;
         foreach (Mail::getSentMails() as $mail) {
-            if (in_array($email, $mail['bcc'])) {
-                $found = true;
-                break;
+            foreach ($mail['bcc'] as $recipient) {
+                if ($recipient['email'] === $email) {
+                    $found = true;
+                    break 2;
+                }
             }
         }
 
@@ -160,9 +175,11 @@ trait MailAssertionTrait
     {
         $found = false;
         foreach (Mail::getSentMails() as $mail) {
-            if (in_array($email, $mail['reply_to'])) {
-                $found = true;
-                break;
+            foreach ($mail['reply_to'] as $recipient) {
+                if ($recipient['email'] === $email) {
+                    $found = true;
+                    break 2;
+                }
             }
         }
 
@@ -206,7 +223,14 @@ trait MailAssertionTrait
         foreach (Mail::getSentMails() as $mail) {
             $allFound = true;
             foreach ($emails as $email) {
-                if (!in_array($email, $mail['cc'])) {
+                $found = false;
+                foreach ($mail['cc'] as $recipient) {
+                    if ($recipient['email'] === $email) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
                     $allFound = false;
                     break;
                 }
@@ -227,7 +251,14 @@ trait MailAssertionTrait
         foreach (Mail::getSentMails() as $mail) {
             $allFound = true;
             foreach ($emails as $email) {
-                if (!in_array($email, $mail['bcc'])) {
+                $found = false;
+                foreach ($mail['bcc'] as $recipient) {
+                    if ($recipient['email'] === $email) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
                     $allFound = false;
                     break;
                 }
@@ -248,7 +279,14 @@ trait MailAssertionTrait
         foreach (Mail::getSentMails() as $mail) {
             $allMatched = true;
             foreach ($emails as $email) {
-                if (!in_array($email, $mail['reply_to'])) {
+                $found = false;
+                foreach ($mail['reply_to'] as $recipient) {
+                    if ($recipient['email'] === $email) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
                     $allMatched = false;
                     break;
                 }

@@ -39,7 +39,7 @@ class MailManager
     /**
      * Get a specific driver
      */
-    public function driver(string $name = null): DriverInterface
+    public function driver(?string $name = null): DriverInterface
     {
         $name = $name ?? $this->defaultDriver;
 
