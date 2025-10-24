@@ -153,11 +153,9 @@
         <env name="MAILTRAP_PASSWORD" value="" />
         
         <!-- Resend Test Config (for Resend Integration Tests) -->
-        <!-- Get API key from: https://resend.com -->
-        <!-- Test emails work without domain verification -->
+        <!-- Get API key from: https://resend.com (free tier: 100 emails/day) -->
+        <!-- Tests use Resend's test emails: onboarding@resend.dev, delivered@resend.dev -->
         <env name="RESEND_API_KEY" value="" />
-        <env name="RESEND_FROM_EMAIL" value="onboarding@resend.dev" />
-        <env name="RESEND_TO_EMAIL" value="delivered@resend.dev" />
     </php>
     <coverage>
         <include>

@@ -33,24 +33,15 @@ class ResendIntegrationTest extends TestCase
             $this->markTestSkipped('Resend API key not configured. Set RESEND_API_KEY environment variable.');
         }
         
-        // Use Resend's test emails if not configured
-        // onboarding@resend.dev - Can send FROM (no domain verification needed)
-        // delivered@resend.dev - Test recipient (emails go to sandbox)
-        if (!getenv('RESEND_FROM_EMAIL')) {
-            putenv('RESEND_FROM_EMAIL=onboarding@resend.dev');
-        }
-        
-        if (!getenv('RESEND_TO_EMAIL')) {
-            putenv('RESEND_TO_EMAIL=delivered@resend.dev');
-        }
-        
         // Check if resend package is installed
         if (!class_exists('\Resend')) {
             $this->markTestSkipped('Resend package not installed. Run: composer require resend/resend-php');
         }
         
-        // Configure Resend
-        putenv('MAIL_FROM_ADDRESS=' . getenv('RESEND_FROM_EMAIL'));
+        // Configure Resend with test emails
+        // onboarding@resend.dev - Can send FROM (no domain verification needed)
+        // delivered@resend.dev - Test recipient (emails go to sandbox)
+        putenv('MAIL_FROM_ADDRESS=onboarding@resend.dev');
         putenv('MAIL_FROM_NAME=Lightpack Integration Test');
         
         // Register MailManager with Resend driver
@@ -63,22 +54,20 @@ class ResendIntegrationTest extends TestCase
 
     public function testResendSendsBasicEmail()
     {
-        $testEmail = getenv('RESEND_TO_EMAIL');
-        
         $mail = new class(app('mail')) extends Mail {
             public function dispatch(array $payload = []) {
-                $this->to($payload['to'])
+                $this->to('delivered@resend.dev')
                     ->subject('Resend Integration Test - ' . date('Y-m-d H:i:s'))
                     ->body('<h1>Hello from Lightpack via Resend!</h1><p>This is a real API test.</p>')
                     ->send();
             }
         };
 
-        $mail->dispatch(['to' => $testEmail]);
+        $mail->dispatch();
         
         $this->assertTrue(true, 'Email sent successfully via Resend');
         
-        echo "\n✅ Email sent via Resend! Check inbox: {$testEmail}\n";
+        echo "\n✅ Email sent via Resend!\n";
         
         // Respect Resend rate limit (2 requests/second)
         sleep(1);
@@ -86,24 +75,31 @@ class ResendIntegrationTest extends TestCase
 
     public function testResendSendsEmailWithMultipleRecipients()
     {
-        $testEmail = getenv('RESEND_TO_EMAIL');
+        // Resend supports email labeling with + syntax
+        // delivered+user1@resend.dev, delivered+user2@resend.dev, etc.
         
         $mail = new class(app('mail')) extends Mail {
             public function dispatch(array $payload = []) {
-                $this->to($payload['to'], 'Primary Recipient')
-                    ->cc($payload['to'], 'CC Recipient')
+                $this->to('delivered+user1@resend.dev', 'User One')
+                    ->to('delivered+user2@resend.dev', 'User Two')
+                    ->to('delivered+user3@resend.dev', 'User Three')
+                    ->cc('delivered+cc@resend.dev', 'CC Recipient')
+                    ->bcc('delivered+bcc@resend.dev', 'BCC Recipient')
                     ->subject('Resend Multi-Recipient Test - ' . date('Y-m-d H:i:s'))
-                    ->body('<h1>Multi-Recipient Test</h1><p>Testing CC functionality.</p>')
-                    ->altBody('Multi-Recipient Test - Testing CC functionality.')
+                    ->body('<h1>Multi-Recipient Test</h1><p>Testing multiple TO, CC, and BCC recipients.</p>')
+                    ->altBody('Multi-Recipient Test - Testing multiple TO, CC, and BCC recipients.')
                     ->send();
             }
         };
 
-        $mail->dispatch(['to' => $testEmail]);
+        $mail->dispatch();
         
         $this->assertTrue(true, 'Multi-recipient email sent successfully');
         
-        echo "\n✅ Multi-recipient email sent! Check for CC in inbox.\n";
+        echo "\n✅ Multi-recipient email sent!\n";
+        echo "   - 3 TO recipients (delivered+user1/2/3@resend.dev)\n";
+        echo "   - 1 CC recipient (delivered+cc@resend.dev)\n";
+        echo "   - 1 BCC recipient (delivered+bcc@resend.dev)\n";
         
         // Respect Resend rate limit (2 requests/second)
         sleep(1);
@@ -111,15 +107,13 @@ class ResendIntegrationTest extends TestCase
 
     public function testResendSendsEmailWithAttachment()
     {
-        $testEmail = getenv('RESEND_TO_EMAIL');
-        
         // Create a test PDF-like file
         $tempFile = tempnam(sys_get_temp_dir(), 'resend_test_');
         file_put_contents($tempFile, "%PDF-1.4\nTest PDF Content\n%%EOF");
 
         $mail = new class(app('mail')) extends Mail {
             public function dispatch(array $payload = []) {
-                $this->to($payload['to'])
+                $this->to('delivered@resend.dev')
                     ->subject('Resend Attachment Test - ' . date('Y-m-d H:i:s'))
                     ->body('<h1>Email with Attachment</h1><p>Check for attached document.</p>')
                     ->attach($payload['file'], 'test-document.pdf')
@@ -127,16 +121,42 @@ class ResendIntegrationTest extends TestCase
             }
         };
 
-        $mail->dispatch([
-            'to' => $testEmail,
-            'file' => $tempFile
-        ]);
+        $mail->dispatch(['file' => $tempFile]);
         
         $this->assertTrue(true, 'Email with attachment sent successfully');
         
         unlink($tempFile);
         
         echo "\n✅ Email with attachment sent via Resend!\n";
+    }
+
+    public function testResendSendsBatchEmails()
+    {
+        $batch = new \Lightpack\Mail\BatchMail(app('mail'));
+        
+        // Add 5 emails to batch
+        for ($i = 1; $i <= 5; $i++) {
+            $batch->add(function($mail) use ($i) {
+                $mail->to("delivered+batch{$i}@resend.dev", "User {$i}")
+                    ->subject("Batch Email #{$i} - " . date('Y-m-d H:i:s'))
+                    ->body("<h1>Batch Email #{$i}</h1><p>This is email number {$i} in the batch.</p>")
+                    ->altBody("Batch Email #{$i} - This is email number {$i} in the batch.");
+            });
+        }
+        
+        $this->assertEquals(5, $batch->count(), 'Batch should contain 5 emails');
+        
+        // Send batch via Resend
+        $results = $batch->driver('resend')->send();
+        
+        $this->assertIsArray($results, 'Batch send should return array of results');
+        $this->assertNotEmpty($results, 'Results should not be empty');
+        
+        echo "\n✅ Batch of {$batch->count()} emails sent via Resend!\n";
+        echo "   Results: " . count($results) . " emails processed\n";
+        
+        // Respect Resend rate limit
+        sleep(1);
     }
 
     public function testResendHandlesInvalidApiKey()
