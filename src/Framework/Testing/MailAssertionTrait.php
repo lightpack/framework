@@ -192,9 +192,9 @@ trait MailAssertionTrait
         $found = false;
         foreach (Mail::getSentMails() as $mail) {
             foreach ($mail['attachments'] as $attachment) {
-                if ($attachment['filename'] === $filename) {
+                if ($attachment['name'] === $filename) {
                     $found = true;
-                    break 2;
+                    break 2; // Break out of both loops
                 }
             }
         }
@@ -309,7 +309,7 @@ trait MailAssertionTrait
             foreach ($filenames as $filename) {
                 $fileFound = false;
                 foreach ($mail['attachments'] as $attachment) {
-                    if ($attachment['filename'] === $filename) {
+                    if ($attachment['name'] === $filename) {
                         $fileFound = true;
                         break;
                     }
