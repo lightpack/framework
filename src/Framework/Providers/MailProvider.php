@@ -7,6 +7,7 @@ use Lightpack\Mail\MailManager;
 use Lightpack\Mail\Drivers\SmtpDriver;
 use Lightpack\Mail\Drivers\ArrayDriver;
 use Lightpack\Mail\Drivers\LogDriver;
+use Lightpack\Mail\Drivers\ResendDriver;
 
 class MailProvider implements ProviderInterface
 {
@@ -17,6 +18,7 @@ class MailProvider implements ProviderInterface
 
             // Register built-in drivers
             $manager->registerDriver('smtp', new SmtpDriver());
+            $manager->registerDriver('resend', new ResendDriver());
             $manager->registerDriver('array', new ArrayDriver());
             $manager->registerDriver('log', new LogDriver());
 
