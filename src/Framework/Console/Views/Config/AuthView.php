@@ -24,6 +24,7 @@ return [
                 'fields.password' => 'password',
                 'fields.remember_token' => 'remember_token',
                 'fields.last_login_at' => 'last_login_at',
+                'remember_duration' => 60 * 24 * 30, // 30 days in minutes
                 'flash_error' => 'Invalid account credentials.',
             ],
         ],
