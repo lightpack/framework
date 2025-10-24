@@ -79,6 +79,9 @@ class ResendIntegrationTest extends TestCase
         $this->assertTrue(true, 'Email sent successfully via Resend');
         
         echo "\n✅ Email sent via Resend! Check inbox: {$testEmail}\n";
+        
+        // Respect Resend rate limit (2 requests/second)
+        sleep(1);
     }
 
     public function testResendSendsEmailWithMultipleRecipients()
@@ -101,6 +104,9 @@ class ResendIntegrationTest extends TestCase
         $this->assertTrue(true, 'Multi-recipient email sent successfully');
         
         echo "\n✅ Multi-recipient email sent! Check for CC in inbox.\n";
+        
+        // Respect Resend rate limit (2 requests/second)
+        sleep(1);
     }
 
     public function testResendSendsEmailWithAttachment()
