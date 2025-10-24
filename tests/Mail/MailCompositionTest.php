@@ -35,14 +35,12 @@ class MailCompositionTest extends TestCase
         
         // Register MailManager in container for tests
         $container = \Lightpack\Container\Container::getInstance();
-        if (!$container->has('mail')) {
-            $mailManager = new \Lightpack\Mail\MailManager();
-            $mailManager->registerDriver('smtp', new \Lightpack\Mail\Drivers\SmtpDriver());
-            $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
-            $mailManager->registerDriver('log', new \Lightpack\Mail\Drivers\LogDriver());
-            $mailManager->setDefaultDriver('array');
-            $container->register('mail', fn() => $mailManager);
-        }
+        $mailManager = new \Lightpack\Mail\MailManager();
+        $mailManager->registerDriver('smtp', new \Lightpack\Mail\Drivers\SmtpDriver());
+        $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
+        $mailManager->registerDriver('log', new \Lightpack\Mail\Drivers\LogDriver());
+        $mailManager->setDefaultDriver('array');
+        $container->register('mail', fn() => $mailManager);
         
         Mail::clearSentMails();
     }

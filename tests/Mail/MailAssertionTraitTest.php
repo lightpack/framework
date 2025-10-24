@@ -36,12 +36,10 @@ class MailAssertionTraitTest extends TestCase
         
         // Register MailManager
         $container = \Lightpack\Container\Container::getInstance();
-        if (!$container->has('mail')) {
-            $mailManager = new \Lightpack\Mail\MailManager();
-            $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
-            $mailManager->setDefaultDriver('array');
-            $container->register('mail', fn() => $mailManager);
-        }
+        $mailManager = new \Lightpack\Mail\MailManager();
+        $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
+        $mailManager->setDefaultDriver('array');
+        $container->register('mail', fn() => $mailManager);
         
         Mail::clearSentMails();
     }
