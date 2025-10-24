@@ -44,12 +44,12 @@ class MailCompositionTest extends TestCase
     {
         $mail = new TestMail();
         
-        // Verify that Mail class has a mailer property (composition)
+        // Verify that Mail class has a driver property (composition)
         $reflection = new \ReflectionClass($mail);
-        $property = $reflection->getProperty('mailer');
+        $property = $reflection->getProperty('driver');
         $property->setAccessible(true);
         
-        $this->assertInstanceOf(\PHPMailer\PHPMailer\PHPMailer::class, $property->getValue($mail));
+        $this->assertInstanceOf(\Lightpack\Mail\DriverInterface::class, $property->getValue($mail));
     }
 
     public function testMailSendsSuccessfully()
@@ -64,7 +64,8 @@ class MailCompositionTest extends TestCase
         $sentMails = Mail::getSentMails();
         
         $this->assertCount(1, $sentMails);
-        $this->assertEquals(['recipient@example.com'], $sentMails[0]['to']);
+        $this->assertCount(1, $sentMails[0]['to']);
+        $this->assertEquals('recipient@example.com', $sentMails[0]['to'][0]['email']);
         $this->assertEquals('Hello World', $sentMails[0]['subject']);
         $this->assertEquals('This is a test email', $sentMails[0]['html_body']);
     }
