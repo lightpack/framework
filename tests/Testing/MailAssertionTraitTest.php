@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Tests\Mail;
+namespace Lightpack\Tests\Testing;
 
 use Lightpack\Mail\Mail;
 use Lightpack\Testing\MailAssertionTrait;
