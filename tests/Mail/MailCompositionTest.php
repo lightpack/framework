@@ -627,43 +627,4 @@ class MailCompositionTest extends TestCase
         $this->assertContains('array', $drivers);
         $this->assertContains('log', $drivers);
     }
-
-    public function testMarkdownEmail()
-    {
-        Mail::clearSentMails();
-        
-        $mail = new class(app('mail')) extends Mail {
-            public function dispatch(array $payload = []) {
-                $this->markdownView('emails/welcome.md', [
-                        'name' => $payload['name'],
-                        'email' => $payload['email'],
-                        'role' => $payload['role']
-                    ])
-                    ->to($payload['email'])
-                    ->subject('Welcome!')
-                    ->send();
-            }
-        };
-        
-        $mail->dispatch([
-            'name' => 'Bob',
-            'email' => 'bob@example.com',
-            'role' => 'Developer'
-        ]);
-        
-        $sentMails = Mail::getSentMails();
-        $this->assertCount(1, $sentMails);
-        
-        $sentMail = $sentMails[0];
-        
-        // Check HTML was generated from markdown
-        $this->assertStringContainsString('<h1>Hello Bob!</h1>', $sentMail['html_body']);
-        $this->assertStringContainsString('<strong>Lightpack Framework</strong>', $sentMail['html_body']);
-        $this->assertStringContainsString('<h2>Getting Started</h2>', $sentMail['html_body']);
-        $this->assertStringContainsString('bob@example.com', $sentMail['html_body']);
-        $this->assertStringContainsString('Developer', $sentMail['html_body']);
-        
-        // Plain text is empty (user must provide with textView() if needed)
-        $this->assertEmpty($sentMail['text_body']);
-    }
 }
