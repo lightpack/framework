@@ -276,6 +276,7 @@ abstract class Mail
                 return [
                     'filename' => $attachment[1],
                     'path' => $attachment[0],
+                    'custom_attachment_name' => $attachment[2],
                 ];
             }, $this->mailer->getAttachments()),
         ];
