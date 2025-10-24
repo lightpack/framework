@@ -2590,4 +2590,53 @@ final class ModelTest extends TestCase
         $updated = $this->db->table('projects')->where('id', $projectId)->one();
         $this->assertEquals('Updated Project', $updated->name);
     }
+
+    /**
+     * Test that array casts are properly uncast when saving a model
+     * even when only updating a different field.
+     * 
+     * This is a regression test for a bug where:
+     * 1. Load model with array cast from DB
+     * 2. Update a DIFFERENT field (not the array field)
+     * 3. Call save()
+     * 4. The array field should be uncast to JSON, not saved as array
+     * 
+     * Bug scenario: Bearer token authentication was failing because
+     * when updating last_used_at, the abilities array wasn't being uncast.
+     */
+    public function testArrayCastUncastingWhenUpdatingDifferentField()
+    {
+        // Create a model with array cast
+        $model = $this->db->model(CastModel::class);
+        $model->string_col = 'Test';
+        $model->json_col = ['foo' => 'bar', 'nested' => ['a', 'b', 'c']];
+        $model->save();
+        
+        $id = $model->id;
+        
+        // Load the model from database (json_col will be cast to array)
+        $loaded = $this->db->model(CastModel::class)->find($id);
+        
+        // Verify json_col is an array after loading
+        $this->assertIsArray($loaded->json_col);
+        $this->assertEquals(['foo' => 'bar', 'nested' => ['a', 'b', 'c']], $loaded->json_col);
+        
+        // Now update a DIFFERENT field (not json_col)
+        $loaded->string_col = 'Updated';
+        
+        // Save should properly uncast json_col back to JSON string
+        $loaded->save();
+        
+        // Verify the database has JSON string, not array
+        $raw = $this->db->table('cast_models')->where('id', '=', $id)->one();
+        $this->assertIsString($raw->json_col);
+        $this->assertEquals(['foo' => 'bar', 'nested' => ['a', 'b', 'c']], json_decode($raw->json_col, true));
+        $this->assertEquals('Updated', $raw->string_col);
+        
+        // Load again and verify json_col is still properly cast
+        $reloaded = $this->db->model(CastModel::class)->find($id);
+        $this->assertIsArray($reloaded->json_col);
+        $this->assertEquals(['foo' => 'bar', 'nested' => ['a', 'b', 'c']], $reloaded->json_col);
+        $this->assertEquals('Updated', $reloaded->string_col);
+    }
 }

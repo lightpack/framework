@@ -56,7 +56,7 @@ class AuthUser extends Model implements Identity
         $accessToken->user_id = $this->id;
         $accessToken->name = $name;
         $accessToken->token = hash('sha256', $plainTextToken);
-        $accessToken->abilities = json_encode($abilities);
+        $accessToken->abilities = $abilities; // Cast will handle JSON encoding
         $accessToken->expires_at = $expiresAt;
         $accessToken->save();
 
