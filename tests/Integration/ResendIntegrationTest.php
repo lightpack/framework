@@ -132,7 +132,8 @@ class ResendIntegrationTest extends TestCase
 
     public function testResendSendsBatchEmails()
     {
-        $batch = new \Lightpack\Mail\BatchMail(app('mail'));
+        // Create batch using cleaner API
+        $batch = app('mail')->batch();
         
         // Add 5 emails to batch
         for ($i = 1; $i <= 5; $i++) {

@@ -65,4 +65,18 @@ class MailManager
     {
         return array_keys($this->drivers);
     }
+
+    /**
+     * Create a new batch mail instance
+     * 
+     * Usage:
+     * app('mail')->batch()
+     *     ->add(fn($m) => $m->to('user1@example.com')->subject('Hi')->body('...'))
+     *     ->add(fn($m) => $m->to('user2@example.com')->subject('Hi')->body('...'))
+     *     ->send();
+     */
+    public function batch(): BatchMail
+    {
+        return new BatchMail($this);
+    }
 }
