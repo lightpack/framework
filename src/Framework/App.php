@@ -191,6 +191,7 @@ final class App
             \Lightpack\Providers\AiProvider::class,
             \Lightpack\Providers\SettingsProvider::class,
             \Lightpack\Providers\SecretsProvider::class,
+            \Lightpack\Providers\MailProvider::class,
         ];
     }
 

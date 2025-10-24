@@ -36,6 +36,7 @@ SUITES=(
     "Jobs"
     "Logger"
     "Mfa"
+    "Mail"
     "Pdf"
     "Rbac"
     "Redis"
