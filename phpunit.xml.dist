@@ -67,8 +67,17 @@
         <testsuite name="Logger">
             <directory>./tests/Logger</directory>
         </testsuite>
+        <testsuite name="Mail">
+            <directory>./tests/Mail</directory>
+        </testsuite>
         <testsuite name="Mfa">
             <directory>./tests/Mfa</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>./tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Testing">
+            <directory>./tests/Testing</directory>
         </testsuite>
         <testsuite name="Pdf">
             <directory>./tests/Pdf</directory>
@@ -135,6 +144,20 @@
         <env name="AWS_SECRET_KEY" value="" />
         <env name="AWS_BUCKET" value="" />
         <env name="AWS_REGION" value="us-east-1" />
+        
+        <!-- Mailtrap Test Config (for SMTP Integration Tests) -->
+        <!-- Get credentials from: https://mailtrap.io -->
+        <env name="MAILTRAP_HOST" value="" />
+        <env name="MAILTRAP_PORT" value="" />
+        <env name="MAILTRAP_USERNAME" value="" />
+        <env name="MAILTRAP_PASSWORD" value="" />
+        
+        <!-- Resend Test Config (for Resend Integration Tests) -->
+        <!-- Get API key from: https://resend.com -->
+        <!-- Test emails work without domain verification -->
+        <env name="RESEND_API_KEY" value="" />
+        <env name="RESEND_FROM_EMAIL" value="onboarding@resend.dev" />
+        <env name="RESEND_TO_EMAIL" value="delivered@resend.dev" />
     </php>
     <coverage>
         <include>
