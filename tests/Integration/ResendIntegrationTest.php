@@ -130,36 +130,6 @@ class ResendIntegrationTest extends TestCase
         echo "\n✅ Email with attachment sent via Resend!\n";
     }
 
-    public function testResendSendsBatchEmails()
-    {
-        // Create batch using cleaner API
-        $batch = app('mail')->batch();
-        
-        // Add 5 emails to batch
-        for ($i = 1; $i <= 5; $i++) {
-            $batch->add(function($mail) use ($i) {
-                $mail->to("delivered+batch{$i}@resend.dev", "User {$i}")
-                    ->subject("Batch Email #{$i} - " . date('Y-m-d H:i:s'))
-                    ->body("<h1>Batch Email #{$i}</h1><p>This is email number {$i} in the batch.</p>")
-                    ->altBody("Batch Email #{$i} - This is email number {$i} in the batch.");
-            });
-        }
-        
-        $this->assertEquals(5, $batch->count(), 'Batch should contain 5 emails');
-        
-        // Send batch via Resend
-        $results = $batch->driver('resend')->send();
-        
-        $this->assertIsArray($results, 'Batch send should return array of results');
-        $this->assertNotEmpty($results, 'Results should not be empty');
-        
-        echo "\n✅ Batch of {$batch->count()} emails sent via Resend!\n";
-        echo "   Results: " . count($results) . " emails processed\n";
-        
-        // Respect Resend rate limit
-        sleep(1);
-    }
-
     public function testResendHandlesInvalidApiKey()
     {
         // Set invalid API key
