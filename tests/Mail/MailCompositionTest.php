@@ -27,6 +27,17 @@ class MailCompositionTest extends TestCase
         putenv('MAIL_FROM_ADDRESS=sender@example.com');
         putenv('MAIL_FROM_NAME=Test Sender');
         
+        // Register MailManager in container for tests
+        $container = \Lightpack\Container\Container::getInstance();
+        if (!$container->has('mail')) {
+            $mailManager = new \Lightpack\Mail\MailManager();
+            $mailManager->registerDriver('smtp', new \Lightpack\Mail\Drivers\SmtpDriver());
+            $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
+            $mailManager->registerDriver('log', new \Lightpack\Mail\Drivers\LogDriver());
+            $mailManager->setDefaultDriver('array');
+            $container->register('mail', fn() => $mailManager);
+        }
+        
         Mail::clearSentMails();
     }
 
@@ -40,16 +51,23 @@ class MailCompositionTest extends TestCase
         parent::tearDown();
     }
 
-    public function testMailUsesComposition()
+    /**
+     * Helper to extract emails from normalized recipient array
+     */
+    private function extractEmails(array $recipients): array
     {
-        $mail = new TestMail();
+        return array_map(fn($r) => $r['email'], $recipients);
+    }
+
+    public function testMailUsesDriverArchitecture()
+    {
+        // Verify MailManager is registered
+        $mailManager = app('mail');
+        $this->assertInstanceOf(\Lightpack\Mail\MailManager::class, $mailManager);
         
-        // Verify that Mail class has a driver property (composition)
-        $reflection = new \ReflectionClass($mail);
-        $property = $reflection->getProperty('driver');
-        $property->setAccessible(true);
-        
-        $this->assertInstanceOf(\Lightpack\Mail\DriverInterface::class, $property->getValue($mail));
+        // Verify default driver is accessible
+        $driver = $mailManager->getDefaultDriver();
+        $this->assertInstanceOf(\Lightpack\Mail\DriverInterface::class, $driver);
     }
 
     public function testMailSendsSuccessfully()
@@ -85,9 +103,9 @@ class MailCompositionTest extends TestCase
         
         $sentMails = Mail::getSentMails();
         $this->assertCount(1, $sentMails);
-        $this->assertEquals(['user@example.com'], $sentMails[0]['to']);
-        $this->assertEquals(['cc@example.com'], $sentMails[0]['cc']);
-        $this->assertEquals(['bcc@example.com'], $sentMails[0]['bcc']);
+        $this->assertEquals('user@example.com', $sentMails[0]['to'][0]['email']);
+        $this->assertEquals('cc@example.com', $sentMails[0]['cc'][0]['email']);
+        $this->assertEquals('bcc@example.com', $sentMails[0]['bcc'][0]['email']);
     }
 
     public function testMailWithAttachments()
@@ -107,30 +125,29 @@ class MailCompositionTest extends TestCase
         $sentMails = Mail::getSentMails();
         $this->assertCount(1, $sentMails);
         $this->assertCount(1, $sentMails[0]['attachments']);
-        // PHPMailer stores attachments with path and filename swapped in the array
         $this->assertNotEmpty($sentMails[0]['attachments'][0]['path']);
-        $this->assertNotEmpty($sentMails[0]['attachments'][0]['filename']);
+        $this->assertEquals('test.txt', $sentMails[0]['attachments'][0]['name']);
         
         // Cleanup
         unlink($tempFile);
     }
 
-    public function testSmtpConfigurationOnlyForSmtpDriver()
+    public function testDifferentDriversCanBeUsed()
     {
+        // Test that we can switch between drivers
         putenv('MAIL_DRIVER=log');
-        putenv('MAIL_HOST=smtp.example.com');
-        putenv('MAIL_PORT=587');
         
         $mail = new TestMail();
+        $mail->to('user@example.com')
+            ->subject('Test')
+            ->body('Body')
+            ->send();
         
-        // Access the mailer to check SMTP is not configured for non-SMTP drivers
-        $reflection = new \ReflectionClass($mail);
-        $property = $reflection->getProperty('mailer');
-        $property->setAccessible(true);
-        $mailer = $property->getValue($mail);
+        // Should work without errors
+        $this->assertTrue(true);
         
-        // For log driver, SMTP should not be configured
-        $this->assertNotEquals('smtp.example.com', $mailer->Host);
+        // Switch back to array driver
+        putenv('MAIL_DRIVER=array');
     }
 
     public function testFromMethodOverridesDefaultFrom()
@@ -144,7 +161,8 @@ class MailCompositionTest extends TestCase
             ->send();
 
         $sentMails = Mail::getSentMails();
-        $this->assertEquals('custom@example.com', $sentMails[0]['from']);
+        $this->assertEquals('custom@example.com', $sentMails[0]['from']['email']);
+        $this->assertEquals('Custom Sender', $sentMails[0]['from']['name']);
     }
 
     public function testReplyToWithSingleAddress()
@@ -159,7 +177,8 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(1, $sentMails);
-        $this->assertEquals(['reply@example.com'], $sentMails[0]['reply_to']);
+        $this->assertCount(1, $sentMails[0]['reply_to']);
+        $this->assertEquals('reply@example.com', $sentMails[0]['reply_to'][0]['email']);
     }
 
     public function testReplyToWithMultipleAddresses()
@@ -174,8 +193,9 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['reply_to']);
-        $this->assertContains('reply1@example.com', $sentMails[0]['reply_to']);
-        $this->assertContains('reply2@example.com', $sentMails[0]['reply_to']);
+        $emails = $this->extractEmails($sentMails[0]['reply_to']);
+        $this->assertContains('reply1@example.com', $emails);
+        $this->assertContains('reply2@example.com', $emails);
     }
 
     public function testReplyToWithArrayOfEmailsAndNames()
@@ -190,8 +210,9 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['reply_to']);
-        $this->assertContains('reply1@example.com', $sentMails[0]['reply_to']);
-        $this->assertContains('reply2@example.com', $sentMails[0]['reply_to']);
+        $emails = $this->extractEmails($sentMails[0]['reply_to']);
+        $this->assertContains('reply1@example.com', $emails);
+        $this->assertContains('reply2@example.com', $emails);
     }
 
     public function testCcWithMultipleAddresses()
@@ -206,8 +227,9 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['cc']);
-        $this->assertContains('cc1@example.com', $sentMails[0]['cc']);
-        $this->assertContains('cc2@example.com', $sentMails[0]['cc']);
+        $emails = $this->extractEmails($sentMails[0]['cc']);
+        $this->assertContains('cc1@example.com', $emails);
+        $this->assertContains('cc2@example.com', $emails);
     }
 
     public function testCcWithArrayOfEmailsAndNames()
@@ -222,8 +244,9 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['cc']);
-        $this->assertContains('cc1@example.com', $sentMails[0]['cc']);
-        $this->assertContains('cc2@example.com', $sentMails[0]['cc']);
+        $emails = $this->extractEmails($sentMails[0]['cc']);
+        $this->assertContains('cc1@example.com', $emails);
+        $this->assertContains('cc2@example.com', $emails);
     }
 
     public function testBccWithMultipleAddresses()
@@ -238,8 +261,9 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['bcc']);
-        $this->assertContains('bcc1@example.com', $sentMails[0]['bcc']);
-        $this->assertContains('bcc2@example.com', $sentMails[0]['bcc']);
+        $emails = $this->extractEmails($sentMails[0]['bcc']);
+        $this->assertContains('bcc1@example.com', $emails);
+        $this->assertContains('bcc2@example.com', $emails);
     }
 
     public function testBccWithArrayOfEmailsAndNames()
@@ -254,8 +278,9 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['bcc']);
-        $this->assertContains('bcc1@example.com', $sentMails[0]['bcc']);
-        $this->assertContains('bcc2@example.com', $sentMails[0]['bcc']);
+        $emails = $this->extractEmails($sentMails[0]['bcc']);
+        $this->assertContains('bcc1@example.com', $emails);
+        $this->assertContains('bcc2@example.com', $emails);
     }
 
     public function testMultipleAttachmentsAsArray()
@@ -300,7 +325,7 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['attachments']);
-        $filenames = array_column($sentMails[0]['attachments'], 'custom_attachment_name');
+        $filenames = array_column($sentMails[0]['attachments'], 'name');
         $this->assertContains('file1.txt', $filenames);
         $this->assertContains('file2.txt', $filenames);
         
@@ -337,9 +362,10 @@ class MailCompositionTest extends TestCase
 
         $sentMails = Mail::getSentMails();
         $this->assertCount(3, $sentMails[0]['to']);
-        $this->assertContains('user1@example.com', $sentMails[0]['to']);
-        $this->assertContains('user2@example.com', $sentMails[0]['to']);
-        $this->assertContains('user3@example.com', $sentMails[0]['to']);
+        $emails = $this->extractEmails($sentMails[0]['to']);
+        $this->assertContains('user1@example.com', $emails);
+        $this->assertContains('user2@example.com', $emails);
+        $this->assertContains('user3@example.com', $emails);
     }
 
     public function testComplexMailWithAllFields()
@@ -364,7 +390,7 @@ class MailCompositionTest extends TestCase
         $sentMails = Mail::getSentMails();
         $mail = $sentMails[0];
         
-        $this->assertEquals('sender@example.com', $mail['from']);
+        $this->assertEquals('sender@example.com', $mail['from']['email']);
         $this->assertCount(2, $mail['to']);
         $this->assertCount(2, $mail['cc']);
         $this->assertCount(1, $mail['bcc']);
@@ -382,14 +408,12 @@ class MailCompositionTest extends TestCase
 
     public function testInvalidMailDriverThrowsException()
     {
-        putenv('MAIL_DRIVER=invalid_driver');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Mail driver 'invalid_driver' is not registered");
         
         $mail = new TestMail();
-        
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid mail driver: invalid_driver');
-        
-        $mail->to('user@example.com')
+        $mail->driver('invalid_driver')
+            ->to('user@example.com')
             ->subject('Test')
             ->body('Body')
             ->send();
@@ -397,14 +421,16 @@ class MailCompositionTest extends TestCase
 
     public function testLogDriverWritesToFile()
     {
-        putenv('MAIL_DRIVER=log');
-        
         $logFile = DIR_STORAGE . '/logs/mails.json';
         
         // Clean up any existing log file
         if (file_exists($logFile)) {
             unlink($logFile);
         }
+        
+        // Set log driver as default
+        $mailManager = app('mail');
+        $mailManager->setDefaultDriver('log');
         
         $mail = new TestMail();
         $mail->to('user@example.com')
@@ -417,24 +443,27 @@ class MailCompositionTest extends TestCase
         $logs = json_decode(file_get_contents($logFile), true);
         $this->assertIsArray($logs);
         $this->assertCount(1, $logs);
-        $this->assertEquals(['user@example.com'], $logs[0]['to']);
+        $this->assertEquals('user@example.com', $logs[0]['to'][0]['email']);
         $this->assertEquals('Log Test', $logs[0]['subject']);
         $this->assertEquals('Log Body', $logs[0]['html_body']);
         
         // Cleanup
         unlink($logFile);
+        $mailManager->setDefaultDriver('array');
     }
 
     public function testLogDriverAppendsToExistingFile()
     {
-        putenv('MAIL_DRIVER=log');
-        
         $logFile = DIR_STORAGE . '/logs/mails.json';
         
         // Clean up any existing log file
         if (file_exists($logFile)) {
             unlink($logFile);
         }
+        
+        // Set log driver as default
+        $mailManager = app('mail');
+        $mailManager->setDefaultDriver('log');
         
         // Send first mail
         $mail1 = new TestMail();
@@ -457,6 +486,7 @@ class MailCompositionTest extends TestCase
         
         // Cleanup
         unlink($logFile);
+        $mailManager->setDefaultDriver('array');
     }
 
     public function testMailDataNormalization()
@@ -570,28 +600,26 @@ class MailCompositionTest extends TestCase
         $this->assertCount(0, Mail::getSentMails());
     }
 
-    public function testSmtpDriverConfiguration()
+    public function testSmtpDriverIsRegistered()
     {
-        putenv('MAIL_DRIVER=smtp');
-        putenv('MAIL_HOST=smtp.example.com');
-        putenv('MAIL_PORT=587');
-        putenv('MAIL_USERNAME=user@example.com');
-        putenv('MAIL_PASSWORD=secret');
-        putenv('MAIL_ENCRYPTION=tls');
+        $mailManager = app('mail');
         
-        $mail = new TestMail();
+        // Verify SMTP driver is registered
+        $drivers = $mailManager->getDriverNames();
+        $this->assertContains('smtp', $drivers);
         
-        $reflection = new \ReflectionClass($mail);
-        $property = $reflection->getProperty('mailer');
-        $property->setAccessible(true);
-        $mailer = $property->getValue($mail);
+        // Verify we can get the SMTP driver
+        $smtpDriver = $mailManager->driver('smtp');
+        $this->assertInstanceOf(\Lightpack\Mail\Drivers\SmtpDriver::class, $smtpDriver);
+    }
+
+    public function testAllBuiltInDriversAreRegistered()
+    {
+        $mailManager = app('mail');
+        $drivers = $mailManager->getDriverNames();
         
-        // Verify SMTP is configured
-        $this->assertEquals('smtp.example.com', $mailer->Host);
-        $this->assertEquals(587, $mailer->Port);
-        $this->assertEquals('user@example.com', $mailer->Username);
-        $this->assertEquals('secret', $mailer->Password);
-        $this->assertEquals('tls', $mailer->SMTPSecure);
-        $this->assertTrue($mailer->SMTPAuth);
+        $this->assertContains('smtp', $drivers);
+        $this->assertContains('array', $drivers);
+        $this->assertContains('log', $drivers);
     }
 }

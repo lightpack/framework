@@ -2,17 +2,14 @@
 
 namespace Lightpack\Mail;
 
-use Exception as GlobalException;
 use Lightpack\Mail\Drivers\ArrayDriver;
-use Lightpack\Mail\Drivers\LogDriver;
-use Lightpack\Mail\Drivers\SmtpDriver;
 
 abstract class Mail
 {
-    protected DriverInterface $driver;
     protected $textView;
     protected $htmlView;
     protected $viewData = [];
+    protected ?string $driverName = null;
     
     // Mail composition data
     protected array $to = [];
@@ -29,8 +26,6 @@ abstract class Mail
 
     public function __construct()
     {
-        $this->driver = $this->createDriver();
-        
         // Set default from address
         $this->from = [
             'email' => get_env('MAIL_FROM_ADDRESS'),
@@ -38,14 +33,14 @@ abstract class Mail
         ];
     }
 
-    private function createDriver(): DriverInterface
+    /**
+     * Set the driver to use for this mail
+     * Allows per-mail driver selection
+     */
+    public function driver(string $name): self
     {
-        return match (get_env('MAIL_DRIVER', 'smtp')) {
-            'smtp' => new SmtpDriver(),
-            'array' => new ArrayDriver(),
-            'log' => new LogDriver(),
-            default => throw new GlobalException('Invalid mail driver: ' . get_env('MAIL_DRIVER')),
-        };
+        $this->driverName = $name;
+        return $this;
     }
 
     public function from(string $address, string $name = ''): self
@@ -176,7 +171,13 @@ abstract class Mail
         
         $data = $this->buildMailData();
         
-        return $this->driver->send($data);
+        // Get driver from MailManager
+        $mailManager = app('mail');
+        $driver = $this->driverName 
+            ? $mailManager->driver($this->driverName)
+            : $mailManager->getDefaultDriver();
+        
+        return $driver->send($data);
     }
 
     private function renderViews(): void
