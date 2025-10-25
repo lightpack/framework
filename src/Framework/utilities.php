@@ -576,3 +576,63 @@ if (!function_exists('pipeline')) {
         return new \Lightpack\Utils\Pipeline($passable);
     }
 }
+
+if (!function_exists('once')) {
+    /**
+     * Execute a callback only once per request and cache the result.
+     * Subsequent calls with the same callback instance return the cached result.
+     *
+     * @param callable $callback The callback to execute
+     * @return mixed The cached result
+     */
+    function once(callable $callback)
+    {
+        static $cache = null;
+        
+        if ($cache === null) {
+            $cache = new \SplObjectStorage();
+        }
+        
+        // Use object storage to track unique closures
+        if (!$cache->contains($callback)) {
+            $cache[$callback] = $callback();
+        }
+        
+        return $cache[$callback];
+    }
+}
+
+if (!function_exists('optional')) {
+    /**
+     * Safely access properties/methods on a potentially null value.
+     * Returns null if the value is null, otherwise returns the value.
+     *
+     * @param mixed $value The value to wrap
+     * @param callable|null $callback Optional callback to execute on non-null value
+     * @return mixed
+     */
+    function optional($value, ?callable $callback = null)
+    {
+        if (is_null($value)) {
+            return new class {
+                public function __get($key) {
+                    return $this; // Return self for chaining
+                }
+                
+                public function __call($method, $args) {
+                    return $this; // Return self for chaining
+                }
+                
+                public function __toString() {
+                    return '';
+                }
+                
+                public function __isset($key) {
+                    return false;
+                }
+            };
+        }
+        
+        return $callback ? $callback($value) : $value;
+    }
+}
