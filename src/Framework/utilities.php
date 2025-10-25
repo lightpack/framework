@@ -579,11 +579,11 @@ if (!function_exists('pipeline')) {
 
 if (!function_exists('once')) {
     /**
-     * Execute a callback only once and cache the result.
-     * Subsequent calls with the same callback return the cached result.
+     * Execute a callback only once per request and cache the result.
+     * Subsequent calls with the same callback instance return the cached result.
      *
      * @param callable $callback The callback to execute
-     * @return mixed The result of the callback
+     * @return mixed The cached result
      */
     function once(callable $callback)
     {
