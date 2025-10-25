@@ -1251,30 +1251,6 @@ class Query
         } while (true);
     }
 
-    /**
-     * Execute the query and return a generator that yields one row at a time.
-     * 
-     * This is memory-efficient for large result sets as it fetches rows one at a time
-     * instead of loading all results into memory at once.
-     * 
-     * Example:
-     *   foreach ($query->where('status', 'active')->cursor() as $user) {
-     *       // Process one user at a time
-     *       // Memory usage: O(1) instead of O(n)
-     *   }
-     * 
-     * @return \Generator
-     */
-    public function cursor(): \Generator
-    {
-        $sql = $this->getCompiledSelect();
-        $stmt = $this->connection->query($sql, $this->bindings);
-        
-        while ($row = $stmt->fetch(\PDO::FETCH_OBJ)) {
-            yield $row;
-        }
-    }
-
     public function getCompiledSelect()
     {
         $compiler = new Compiler($this);
