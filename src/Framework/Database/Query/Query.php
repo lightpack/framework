@@ -516,6 +516,8 @@ class Query
      *
      * Example:
      *   $query->whereMonth('created_at', 12);
+     *   $query->whereMonth('created_at', 'dec');
+     *   $query->whereMonth('created_at', 'december');
      *   $query->whereMonth('created_at', '>=', 6);
      *
      * @param string $column Column name
@@ -529,6 +531,10 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+        
+        // Convert month name to number
+        $value = $this->normalizeMonth($value);
+        
         return $this->whereRaw("MONTH(`$column`) $operator ?", [(int)$value]);
     }
 
@@ -546,7 +552,56 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+        
+        // Convert month name to number
+        $value = $this->normalizeMonth($value);
+        
         return $this->orWhereRaw("MONTH(`$column`) $operator ?", [(int)$value]);
+    }
+
+    /**
+     * Normalize month value - converts month names to numbers.
+     *
+     * @param mixed $month Month number (1-12) or name (jan, january, etc.)
+     * @return int Month number (1-12)
+     */
+    protected function normalizeMonth($month): int
+    {
+        // If already a number, return it
+        if (is_numeric($month)) {
+            return (int)$month;
+        }
+        
+        // Convert month name to number
+        $monthMap = [
+            'jan' => 1, 'january' => 1,
+            'feb' => 2, 'february' => 2,
+            'mar' => 3, 'march' => 3,
+            'apr' => 4, 'april' => 4,
+            'may' => 5,
+            'jun' => 6, 'june' => 6,
+            'jul' => 7, 'july' => 7,
+            'aug' => 8, 'august' => 8,
+            'sep' => 9, 'september' => 9,
+            'oct' => 10, 'october' => 10,
+            'nov' => 11, 'november' => 11,
+            'dec' => 12, 'december' => 12,
+        ];
+        
+        $monthLower = strtolower(trim($month));
+        
+        if (isset($monthMap[$monthLower])) {
+            return $monthMap[$monthLower];
+        }
+        
+        // If not found, try to parse as date string
+        $timestamp = strtotime($month);
+        if ($timestamp !== false) {
+            return (int)date('n', $timestamp);
+        }
+        
+        // Default to the value as-is (will be cast to int)
+        return (int)$month;
     }
 
     /**

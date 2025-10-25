@@ -140,6 +140,66 @@ final class DateTimeQueryTest extends TestCase
         $this->query->resetQuery();
     }
 
+    public function testWhereMonthWithMonthNames()
+    {
+        // Test with short month name
+        $sql = "SELECT * FROM `events` WHERE MONTH(`created_at`) = ?";
+        $this->query->whereMonth('created_at', 'dec');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([12], $this->query->bindings);
+        
+        // Execute and verify
+        $results = $this->query->all();
+        $this->assertCount(1, $results);
+        $this->assertEquals('Event 2024 Dec', $results[0]->name);
+        $this->query->resetQuery();
+        
+        // Test with full month name
+        $this->query->whereMonth('created_at', 'december');
+        $results = $this->query->all();
+        $this->assertCount(1, $results);
+        $this->assertEquals('Event 2024 Dec', $results[0]->name);
+        $this->query->resetQuery();
+        
+        // Test with different month names
+        $this->query->whereMonth('created_at', 'jan');
+        $results = $this->query->all();
+        $this->assertCount(1, $results);
+        $this->assertEquals('Event 2024 Jan', $results[0]->name);
+        $this->query->resetQuery();
+        
+        // Test case insensitivity
+        $this->query->whereMonth('created_at', 'JAN');
+        $results = $this->query->all();
+        $this->assertCount(1, $results);
+        $this->query->resetQuery();
+        
+        $this->query->whereMonth('created_at', 'January');
+        $results = $this->query->all();
+        $this->assertCount(1, $results);
+        $this->query->resetQuery();
+        
+        // Test all month names
+        $monthTests = [
+            'feb' => 2, 'february' => 2,
+            'mar' => 3, 'march' => 3,
+            'apr' => 4, 'april' => 4,
+            'may' => 5,
+            'jun' => 6, 'june' => 6,
+            'jul' => 7, 'july' => 7,
+            'aug' => 8, 'august' => 8,
+            'sep' => 9, 'september' => 9,
+            'oct' => 10, 'october' => 10,
+            'nov' => 11, 'november' => 11,
+        ];
+        
+        foreach ($monthTests as $monthName => $monthNumber) {
+            $this->query->whereMonth('created_at', $monthName);
+            $this->assertEquals([$monthNumber], $this->query->bindings);
+            $this->query->resetQuery();
+        }
+    }
+
     public function testWhereDayWithExactMatch()
     {
         // Test exact day match
