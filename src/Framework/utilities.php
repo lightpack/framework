@@ -563,3 +563,16 @@ if (!function_exists('halt')) {
         throw $exception;
     }
 }
+
+if (!function_exists('pipeline')) {
+    /**
+     * Create a new pipeline instance.
+     *
+     * @param mixed $passable The data to pass through the pipeline
+     * @return \Lightpack\Utils\Pipeline
+     */
+    function pipeline($passable): \Lightpack\Utils\Pipeline
+    {
+        return new \Lightpack\Utils\Pipeline($passable);
+    }
+}
