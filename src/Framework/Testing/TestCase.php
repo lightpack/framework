@@ -43,6 +43,9 @@ class TestCase extends BaseTestCase
             $this->rollbackTransaction();
         }
 
+        // ensure user identity is cleared
+        auth()->logout();
+
         parent::tearDown();
     }
 
@@ -62,6 +65,7 @@ class TestCase extends BaseTestCase
         if ($method === 'GET') {
             $_GET = array_merge($queryParams, $params);
         } else {
+            $params['_token'] = csrf_token();
             $_POST = $params;
             $_GET = $queryParams; 
         }

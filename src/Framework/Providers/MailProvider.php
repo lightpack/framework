@@ -15,15 +15,17 @@ class MailProvider implements ProviderInterface
     {
         $container->register('mail', function ($container) {
             $manager = new MailManager();
+            $driver = get_env('MAIL_DRIVER', 'smtp');
 
-            // Register built-in drivers
-            $manager->registerDriver('smtp', new SmtpDriver());
-            $manager->registerDriver('resend', new ResendDriver());
-            $manager->registerDriver('array', new ArrayDriver());
-            $manager->registerDriver('log', new LogDriver());
+            match ($driver) {
+                'smtp' => $manager->registerDriver('smtp', new SmtpDriver()),
+                'resend' => $manager->registerDriver('resend', new ResendDriver()),
+                'array' => $manager->registerDriver('array', new ArrayDriver()),
+                'log' => $manager->registerDriver('log', new LogDriver()),
+                default => throw new \Exception('Invalid mail driver: ' . $driver),
+            };
 
-            // Set default driver from config
-            $manager->setDefaultDriver(get_env('MAIL_DRIVER', 'smtp'));
+            $manager->setDefaultDriver($driver);
 
             return $manager;
         });
