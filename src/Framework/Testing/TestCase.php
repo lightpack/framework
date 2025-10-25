@@ -30,9 +30,7 @@ class TestCase extends BaseTestCase
 
         $this->container = Container::getInstance();
 
-        if (class_exists('\PHPMailer\PHPMailer\PHPMailer')) {
-            Mail::clearSentMails();
-        }
+        Mail::clearSentMails();
 
         if(method_exists($this, 'beginTransaction')) {
             $this->beginTransaction();
