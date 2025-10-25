@@ -33,7 +33,7 @@ class LogDriver implements DriverInterface
 
         $mails = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
         $mails[] = $data;
-        file_put_contents($logFile, json_encode($mails, JSON_PRETTY_PRINT));
+        file_put_contents($logFile, json_encode($mails, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         return true;
     }
