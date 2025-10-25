@@ -1181,4 +1181,101 @@ final class QueryTest extends TestCase
         $this->assertEquals(['+foo -bar'], $this->query->bindings);
         $this->query->resetQuery();
     }
+
+    public function testDescMethod()
+    {
+        // Test 1: Default column (id)
+        $sql = 'SELECT * FROM `products` ORDER BY `id` DESC';
+        $this->query->desc();
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2: Custom column
+        $sql = 'SELECT * FROM `products` ORDER BY `created_at` DESC';
+        $this->query->desc('created_at');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3: With WHERE clause
+        $sql = 'SELECT * FROM `products` WHERE `color` = ? ORDER BY `price` DESC';
+        $this->query->where('color', '#000')->desc('price');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 4: With LIMIT
+        $sql = 'SELECT * FROM `products` ORDER BY `id` DESC LIMIT 5';
+        $this->query->desc()->limit(5);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testAscMethod()
+    {
+        // Test 1: Default column (id)
+        $sql = 'SELECT * FROM `products` ORDER BY `id` ASC';
+        $this->query->asc();
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2: Custom column
+        $sql = 'SELECT * FROM `products` ORDER BY `name` ASC';
+        $this->query->asc('name');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3: With WHERE clause
+        $sql = 'SELECT * FROM `products` WHERE `color` = ? ORDER BY `name` ASC';
+        $this->query->where('color', '#000')->asc('name');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testDescWithMultipleOrderBy()
+    {
+        // Test 1: desc() + orderBy() - Primary and secondary sort
+        $sql = 'SELECT * FROM `products` ORDER BY `price` DESC, `name` ASC';
+        $this->query->desc('price')->orderBy('name', 'ASC');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2: Multiple orderBy calls with desc()
+        $sql = 'SELECT * FROM `products` ORDER BY `created_at` DESC, `price` DESC, `name` ASC';
+        $this->query->desc('created_at')->orderBy('price', 'DESC')->orderBy('name', 'ASC');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3: desc() with custom column + orderBy()
+        $sql = 'SELECT * FROM `products` ORDER BY `views` DESC, `id` DESC';
+        $this->query->desc('views')->orderBy('id', 'DESC');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testAscWithMultipleOrderBy()
+    {
+        // Test: asc() + orderBy() - Primary and secondary sort
+        $sql = 'SELECT * FROM `products` ORDER BY `name` ASC, `price` DESC';
+        $this->query->asc('name')->orderBy('price', 'DESC');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testDescAndAscMixed()
+    {
+        // Test: Mixing desc() and asc()
+        $sql = 'SELECT * FROM `products` ORDER BY `price` DESC, `name` ASC';
+        $this->query->desc('price')->asc('name');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testDescWithComplexQuery()
+    {
+        // Test: Real-world scenario - highest priced products with filters
+        $sql = 'SELECT * FROM `products` WHERE `color` = ? AND `price` > ? ORDER BY `price` DESC LIMIT 10';
+        $this->query->where('color', '#000')->where('price', '>', 100)->desc('price')->limit(10);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals(['#000', 100], $this->query->bindings);
+        $this->query->resetQuery();
+    }
 }
