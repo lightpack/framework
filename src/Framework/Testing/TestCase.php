@@ -30,9 +30,7 @@ class TestCase extends BaseTestCase
 
         $this->container = Container::getInstance();
 
-        if (class_exists('\PHPMailer\PHPMailer\PHPMailer')) {
-            Mail::clearSentMails();
-        }
+        Mail::clearSentMails();
 
         if(method_exists($this, 'beginTransaction')) {
             $this->beginTransaction();
@@ -44,6 +42,9 @@ class TestCase extends BaseTestCase
         if(method_exists($this, 'rollbackTransaction')) {
             $this->rollbackTransaction();
         }
+
+        // ensure user identity is cleared
+        auth()->logout();
 
         parent::tearDown();
     }
@@ -64,6 +65,7 @@ class TestCase extends BaseTestCase
         if ($method === 'GET') {
             $_GET = array_merge($queryParams, $params);
         } else {
+            $params['_token'] = csrf_token();
             $_POST = $params;
             $_GET = $queryParams; 
         }
