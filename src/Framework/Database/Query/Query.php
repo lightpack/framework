@@ -435,6 +435,406 @@ class Query
         return $this->whereRaw($sql, [$term]);
     }
 
+    /**
+     * Add a WHERE clause that compares the DATE part of a column.
+     *
+     * Example:
+     *   $query->whereDate('created_at', '2024-01-15');
+     *   $query->whereDate('created_at', '>=', '2024-01-01');
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function whereDate(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->whereRaw("DATE(`$column`) $operator ?", [$value]);
+    }
+
+    /**
+     * Add an OR WHERE clause that compares the DATE part of a column.
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function orWhereDate(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->orWhereRaw("DATE(`$column`) $operator ?", [$value]);
+    }
+
+    /**
+     * Add a WHERE clause that compares the YEAR part of a column.
+     *
+     * Example:
+     *   $query->whereYear('created_at', 2024);
+     *   $query->whereYear('created_at', '>', 2023);
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function whereYear(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->whereRaw("YEAR(`$column`) $operator ?", [(int)$value]);
+    }
+
+    /**
+     * Add an OR WHERE clause that compares the YEAR part of a column.
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function orWhereYear(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->orWhereRaw("YEAR(`$column`) $operator ?", [(int)$value]);
+    }
+
+    /**
+     * Add a WHERE clause that compares the MONTH part of a column.
+     *
+     * Example:
+     *   $query->whereMonth('created_at', 12);
+     *   $query->whereMonth('created_at', '>=', 6);
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function whereMonth(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->whereRaw("MONTH(`$column`) $operator ?", [(int)$value]);
+    }
+
+    /**
+     * Add an OR WHERE clause that compares the MONTH part of a column.
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function orWhereMonth(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->orWhereRaw("MONTH(`$column`) $operator ?", [(int)$value]);
+    }
+
+    /**
+     * Add a WHERE clause that compares the DAY part of a column.
+     *
+     * Example:
+     *   $query->whereDay('created_at', 25);
+     *   $query->whereDay('created_at', '<=', 15);
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function whereDay(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->whereRaw("DAY(`$column`) $operator ?", [(int)$value]);
+    }
+
+    /**
+     * Add an OR WHERE clause that compares the DAY part of a column.
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function orWhereDay(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->orWhereRaw("DAY(`$column`) $operator ?", [(int)$value]);
+    }
+
+    /**
+     * Add a WHERE clause that compares the TIME part of a column.
+     *
+     * Example:
+     *   $query->whereTime('created_at', '14:30:00');
+     *   $query->whereTime('created_at', '>=', '09:00:00');
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function whereTime(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->whereRaw("TIME(`$column`) $operator ?", [$value]);
+    }
+
+    /**
+     * Add an OR WHERE clause that compares the TIME part of a column.
+     *
+     * @param string $column Column name
+     * @param string $operator Operator or value if operator is omitted
+     * @param mixed $value Value to compare (optional if operator is omitted)
+     * @return static
+     */
+    public function orWhereTime(string $column, string $operator = '=', $value = null): static
+    {
+        if ($value === null) {
+            $value = $operator;
+            $operator = '=';
+        }
+        return $this->orWhereRaw("TIME(`$column`) $operator ?", [$value]);
+    }
+
+    /**
+     * Filter records from today.
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function today(string $column = 'created_at'): static
+    {
+        return $this->whereDate($column, date('Y-m-d'));
+    }
+
+    /**
+     * Filter records from yesterday.
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function yesterday(string $column = 'created_at'): static
+    {
+        return $this->whereDate($column, date('Y-m-d', strtotime('-1 day')));
+    }
+
+    /**
+     * Filter records from this week (Monday to Sunday).
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function thisWeek(string $column = 'created_at'): static
+    {
+        $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+        $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+        return $this->whereDate($column, '>=', $startOfWeek)
+                    ->whereDate($column, '<=', $endOfWeek);
+    }
+
+    /**
+     * Filter records from last week.
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function lastWeek(string $column = 'created_at'): static
+    {
+        $startOfLastWeek = date('Y-m-d', strtotime('monday last week'));
+        $endOfLastWeek = date('Y-m-d', strtotime('sunday last week'));
+        return $this->whereDate($column, '>=', $startOfLastWeek)
+                    ->whereDate($column, '<=', $endOfLastWeek);
+    }
+
+    /**
+     * Filter records from this month.
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function thisMonth(string $column = 'created_at'): static
+    {
+        return $this->whereYear($column, date('Y'))
+                    ->whereMonth($column, date('m'));
+    }
+
+    /**
+     * Filter records from last month.
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function lastMonth(string $column = 'created_at'): static
+    {
+        $lastMonth = date('Y-m', strtotime('-1 month'));
+        return $this->whereYear($column, date('Y', strtotime($lastMonth)))
+                    ->whereMonth($column, date('m', strtotime($lastMonth)));
+    }
+
+    /**
+     * Filter records from this year.
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function thisYear(string $column = 'created_at'): static
+    {
+        return $this->whereYear($column, date('Y'));
+    }
+
+    /**
+     * Filter records from last year.
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function lastYear(string $column = 'created_at'): static
+    {
+        return $this->whereYear($column, date('Y') - 1);
+    }
+
+    /**
+     * Filter records from the last N days.
+     *
+     * @param int $days Number of days
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function lastDays(int $days, string $column = 'created_at'): static
+    {
+        $startDate = date('Y-m-d', strtotime("-{$days} days"));
+        return $this->whereDate($column, '>=', $startDate);
+    }
+
+    /**
+     * Filter records from the last N weeks.
+     *
+     * @param int $weeks Number of weeks
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function lastWeeks(int $weeks, string $column = 'created_at'): static
+    {
+        $startDate = date('Y-m-d', strtotime("-{$weeks} weeks"));
+        return $this->whereDate($column, '>=', $startDate);
+    }
+
+    /**
+     * Filter records from the last N months.
+     *
+     * @param int $months Number of months
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function lastMonths(int $months, string $column = 'created_at'): static
+    {
+        $startDate = date('Y-m-d', strtotime("-{$months} months"));
+        return $this->whereDate($column, '>=', $startDate);
+    }
+
+    /**
+     * Filter records older than specified time.
+     *
+     * @param int $value Time value
+     * @param string $unit Time unit: 'minutes', 'hours', 'days', 'weeks', 'months', 'years'
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function olderThan(int $value, string $unit, string $column = 'created_at'): static
+    {
+        $date = date('Y-m-d H:i:s', strtotime("-{$value} {$unit}"));
+        return $this->where($column, '<', $date);
+    }
+
+    /**
+     * Filter records newer than specified time.
+     *
+     * @param int $value Time value
+     * @param string $unit Time unit: 'minutes', 'hours', 'days', 'weeks', 'months', 'years'
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function newerThan(int $value, string $unit, string $column = 'created_at'): static
+    {
+        $date = date('Y-m-d H:i:s', strtotime("-{$value} {$unit}"));
+        return $this->where($column, '>', $date);
+    }
+
+    /**
+     * Filter records before a specific date.
+     *
+     * @param string $date Date string
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function before(string $date, string $column = 'created_at'): static
+    {
+        return $this->whereDate($column, '<', $date);
+    }
+
+    /**
+     * Filter records after a specific date.
+     *
+     * @param string $date Date string
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function after(string $date, string $column = 'created_at'): static
+    {
+        return $this->whereDate($column, '>', $date);
+    }
+
+    /**
+     * Filter records on weekdays only (Monday-Friday).
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function weekdays(string $column = 'created_at'): static
+    {
+        return $this->whereRaw("DAYOFWEEK(`$column`) BETWEEN 2 AND 6");
+    }
+
+    /**
+     * Filter records on weekends only (Saturday-Sunday).
+     *
+     * @param string $column Column to filter (default: 'created_at')
+     * @return static
+     */
+    public function weekends(string $column = 'created_at'): static
+    {
+        return $this->whereRaw("DAYOFWEEK(`$column`) IN (1, 7)");
+    }
+
     public function whereBetween(string $column, array $values, string $joiner = 'AND'): static
     {
         if (count($values) !== 2) {
@@ -540,6 +940,40 @@ class Query
     {
         $this->components['order'][] = compact('column', 'sort');
         return $this;
+    }
+
+    /**
+     * Order results by column in descending order.
+     * Convenience method for orderBy($column, 'DESC').
+     *
+     * Example:
+     *   $query->desc(); // ORDER BY id DESC
+     *   $query->desc('created_at'); // ORDER BY created_at DESC
+     *   $query->desc('price'); // ORDER BY price DESC (highest first)
+     *
+     * @param string $column Column to order by (default: 'id')
+     * @return static
+     */
+    public function desc(string $column = 'id'): static
+    {
+        return $this->orderBy($column, 'DESC');
+    }
+
+    /**
+     * Order results by column in ascending order.
+     * Convenience method for orderBy($column, 'ASC').
+     *
+     * Example:
+     *   $query->asc(); // ORDER BY id ASC
+     *   $query->asc('created_at'); // ORDER BY created_at ASC
+     *   $query->asc('name'); // ORDER BY name ASC (alphabetical)
+     *
+     * @param string $column Column to order by (default: 'id')
+     * @return static
+     */
+    public function asc(string $column = 'id'): static
+    {
+        return $this->orderBy($column, 'ASC');
     }
 
     public function limit(int $limit)
