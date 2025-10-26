@@ -45,8 +45,14 @@ class Env
 
                 self::$cache[$key] = $value;
                 putenv("{$key}=" . (is_bool($value) ? ($value ? 'true' : 'false') : (string) $value));
-                $_ENV[$key] = $value;
-                $_SERVER[$key] = $value;
+
+                if(!isset($_ENV[$key])) {
+                    $_ENV[$key] = $value;
+                }
+                
+                if(!isset($_SERVER[$key])) {
+                    $_SERVER[$key] = $value;
+                }
             }
         }
     }
