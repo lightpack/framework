@@ -39,12 +39,12 @@ class SessionProvider implements ProviderInterface
     protected function getDriver(Container $container): DriverInterface
     {
         $config = $container->get('config');
-        $sessionDriver = $config->get('session.driver', 'default');
+        $sessionDriver = $config->get('session.driver', 'file');
         $encrypt = $config->get('session.encrypt', false);
 
         $driver = match($sessionDriver) {
             'array' => new ArrayDriver(),
-            'default' => new DefaultDriver($config),
+            'file' => new DefaultDriver($config),
             'cache' => new CacheDriver($container->get('cache'), $container->get('cookie'), $config),
             'redis' => $this->createRedisDriver($container),
             default => throw new \Exception('Session driver not found: ' . $sessionDriver)

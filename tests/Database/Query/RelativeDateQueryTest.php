@@ -89,8 +89,18 @@ final class RelativeDateQueryTest extends TestCase
         $this->assertGreaterThanOrEqual(1, count($results));
         
         // Verify all results are from this week
-        $startOfWeek = strtotime('monday this week');
-        $endOfWeek = strtotime('sunday this week');
+        // Get current day of week (1=Monday, 7=Sunday)
+        $dayOfWeek = (int) date('N');
+        
+        if ($dayOfWeek === 7) {
+            // If today is Sunday, week is from last Monday to today
+            $startOfWeek = strtotime('monday last week');
+            $endOfWeek = strtotime('today 23:59:59');
+        } else {
+            // Otherwise, week is from this Monday to next Sunday
+            $startOfWeek = strtotime('monday this week');
+            $endOfWeek = strtotime('sunday this week 23:59:59');
+        }
         
         foreach ($results as $result) {
             $timestamp = strtotime($result->created_at);
