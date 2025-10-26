@@ -29,7 +29,7 @@ class ResendIntegrationTest extends TestCase
         parent::setUp();
         
         // Skip if Resend not configured
-        if (!getenv('RESEND_API_KEY')) {
+        if (!get_env('RESEND_API_KEY')) {
             $this->markTestSkipped('Resend API key not configured. Set RESEND_API_KEY environment variable.');
         }
         

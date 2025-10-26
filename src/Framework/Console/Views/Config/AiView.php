@@ -30,12 +30,12 @@ return [
                 'version' => get_env('ANTHROPIC_VERSION', '2023-06-01'),
             ],
             'mistral' => [
-                'key' => getenv('MISTRAL_KEY'),
+                'key' => get_env('MISTRAL_KEY'),
                 'model' => 'mistral-small-latest', // Or 'mistral-small', 'mistral-large'
                 'endpoint' => 'https://api.mistral.ai/v1/chat/completions',
             ],
             'groq' => [
-                'key' => getenv('GROQ_KEY'),
+                'key' => get_env('GROQ_KEY'),
                 'model' => 'llama3-70b-8192', // Or 'llama3-8b-8192', 'mixtral-8x7b-32768', etc.
                 'endpoint' => 'https://api.groq.com/openai/v1/chat/completions',
             ],
