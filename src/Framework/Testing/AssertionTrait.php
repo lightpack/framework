@@ -2,6 +2,7 @@
 
 namespace Lightpack\Testing;
 
+use Lightpack\Exceptions\InvalidUrlSignatureException;
 use Lightpack\Utils\Arr;
 use Lightpack\Http\Redirect;
 use Lightpack\Exceptions\RouteNotFoundException;
@@ -172,5 +173,23 @@ trait AssertionTrait
     {
         $this->assertFalse(cookie()->has($key), "Failed asserting that cookie '{$key}' is missing");
         return $this;
+    }
+
+    /**
+     * Assert that the next request will throw InvalidUrlSignatureException.
+     * 
+     * Use this before making a request to a signed URL that should fail
+     * due to invalid, expired, or missing signature.
+     *
+     * @return void
+     * 
+     * @example
+     * $this->assertInvalidUrlSignature();
+     * $this->request('GET', '/download/123?signature=bad');
+     */
+    public function assertInvalidUrlSignature()
+    {
+        $this->expectException(InvalidUrlSignatureException::class);
+        $this->expectExceptionCode(403);
     }
 }
