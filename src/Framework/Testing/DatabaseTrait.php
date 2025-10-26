@@ -42,12 +42,12 @@ trait DatabaseTrait
         return new DB(
             sprintf(
                 'mysql:host=%s;port=%s;dbname=%s',
-                getenv('DB_HOST'),
-                getenv('DB_PORT'),
-                getenv('DB_NAME')
+                get_env('DB_HOST'),
+                get_env('DB_PORT'),
+                get_env('DB_NAME')
             ),
-            getenv('DB_USER'),
-            getenv('DB_PASSWORD')
+            get_env('DB_USER'),
+            get_env('DB_PSWD')
         );
     }
 }
