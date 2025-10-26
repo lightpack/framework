@@ -710,8 +710,19 @@ class Query
      */
     public function thisWeek(string $column = 'created_at'): static
     {
-        $startOfWeek = date('Y-m-d', strtotime('monday this week'));
-        $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+        // Get current day of week (1=Monday, 7=Sunday)
+        $dayOfWeek = (int) date('N');
+        
+        if ($dayOfWeek === 7) {
+            // If today is Sunday, week is from last Monday to today
+            $startOfWeek = date('Y-m-d', strtotime('monday last week'));
+            $endOfWeek = date('Y-m-d'); // Today (Sunday)
+        } else {
+            // Otherwise, week is from this Monday to next Sunday
+            $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+            $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+        }
+        
         return $this->whereDate($column, '>=', $startOfWeek)
                     ->whereDate($column, '<=', $endOfWeek);
     }
