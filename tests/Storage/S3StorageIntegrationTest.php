@@ -33,9 +33,9 @@ class S3StorageIntegrationTest extends TestCase
         parent::setUp();
         
         // Skip tests if AWS credentials are not set
-        $key = getenv('AWS_ACCESS_KEY');
-        $secret = getenv('AWS_SECRET_KEY');
-        $this->bucket = getenv('AWS_BUCKET');
+        $key = get_env('AWS_ACCESS_KEY');
+        $secret = get_env('AWS_SECRET_KEY');
+        $this->bucket = get_env('AWS_BUCKET');
         
         if (empty($key) || empty($secret) || empty($this->bucket)) {
             $this->markTestSkipped(
@@ -43,7 +43,7 @@ class S3StorageIntegrationTest extends TestCase
             );
         }
         
-        $region = getenv('AWS_REGION') ?: 'us-east-1';
+        $region = get_env('AWS_REGION') ?: 'us-east-1';
         
         // Create S3 client
         $this->s3Client = new S3Client([

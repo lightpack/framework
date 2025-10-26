@@ -30,15 +30,15 @@ class SmtpIntegrationTest extends TestCase
         parent::setUp();
         
         // Skip if Mailtrap credentials not configured
-        if (!getenv('MAILTRAP_HOST')) {
+        if (!get_env('MAILTRAP_HOST')) {
             $this->markTestSkipped('Mailtrap credentials not configured. Set MAILTRAP_* environment variables.');
         }
         
         // Configure SMTP with Mailtrap
-        putenv('MAIL_HOST=' . getenv('MAILTRAP_HOST'));
-        putenv('MAIL_PORT=' . getenv('MAILTRAP_PORT'));
-        putenv('MAIL_USERNAME=' . getenv('MAILTRAP_USERNAME'));
-        putenv('MAIL_PASSWORD=' . getenv('MAILTRAP_PASSWORD'));
+        putenv('MAIL_HOST=' . get_env('MAILTRAP_HOST'));
+        putenv('MAIL_PORT=' . get_env('MAILTRAP_PORT'));
+        putenv('MAIL_USERNAME=' . get_env('MAILTRAP_USERNAME'));
+        putenv('MAIL_PASSWORD=' . get_env('MAILTRAP_PASSWORD'));
         putenv('MAIL_ENCRYPTION=tls');
         putenv('MAIL_FROM_ADDRESS=test@example.com');
         putenv('MAIL_FROM_NAME=Integration Test');
