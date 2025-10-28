@@ -14,9 +14,27 @@ class AuthUser extends Model implements Identity
 
     protected $timestamps = true;
 
+    /**
+     * Attribute casts for automatic type conversion
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'mfa_backup_codes' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    /**
+     * Hidden attributes (excluded from toArray/JSON serialization)
+     */
     protected $hidden = [
         'password',
         'remember_token',
+        'verification_token',
+        'recovery_token',
+        'mfa_totp_secret',
+        'mfa_backup_codes',
     ];
 
     /**
