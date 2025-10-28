@@ -431,6 +431,69 @@ if (!function_exists('spoof_input')) {
     }
 }
 
+if (!function_exists('hidden_input')) {
+    /**
+     * Returns a hidden input field with the given name and value.
+     * Automatically escapes the value for security.
+     */
+    function hidden_input(string $name, string $value = ''): string
+    {
+        return '<input type="hidden" name="' . _e($name) . '" value="' . _e($value) . '">';
+    }
+}
+
+if (!function_exists('form_open')) {
+    /**
+     * Opens a form with automatic CSRF token injection for POST/PUT/PATCH/DELETE.
+     * 
+     * @param string $action Form action URL
+     * @param string $method HTTP method (GET, POST, PUT, PATCH, DELETE)
+     * @param array $attributes Additional HTML attributes like classes, id, etc
+     * @param bool $csrf Whether to include CSRF token (default: true)
+     */
+    function form_open(
+        string $action = '', 
+        string $method = 'POST', 
+        array $attributes = [],
+        bool $csrf = true
+    ): string {
+        $method = strtoupper($method);
+        $spoofMethods = ['PUT', 'PATCH', 'DELETE'];
+        $actualMethod = in_array($method, $spoofMethods) ? 'POST' : $method;
+        
+        $attrs = ['action' => $action, 'method' => $actualMethod];
+        $attrs = array_merge($attrs, $attributes);
+        
+        $html = '<form';
+        foreach ($attrs as $key => $value) {
+            $html .= ' ' . _e($key) . '="' . _e($value) . '"';
+        }
+        $html .= '>';
+        
+        // Add CSRF token for state-changing methods
+        if ($csrf && in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+            $html .= "\n    " . csrf_input();
+        }
+        
+        // Add method spoofing for PUT/PATCH/DELETE
+        if (in_array($method, $spoofMethods)) {
+            $html .= "\n    " . spoof_input($method);
+        }
+        
+        return $html;
+    }
+}
+
+if (!function_exists('form_close')) {
+    /**
+     * Closes a form tag.
+     */
+    function form_close(): string
+    {
+        return '</form>';
+    }
+}
+
 if (!function_exists('storage')) {
     /**
      * Returns the storage object.
