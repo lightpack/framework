@@ -64,9 +64,14 @@ if (!function_exists('_e')) {
      * 
      * Converts: & < > " ' to their HTML entity equivalents.
      * Preserves UTF-8 characters (é, ñ, etc.) as-is.
+     * Returns empty string if null is provided.
      */
-    function _e(string $str): string
+    function _e(?string $str): string
     {
+        if ($str === null) {
+            return '';
+        }
+        
         return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
     }
 }
