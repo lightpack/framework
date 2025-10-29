@@ -144,15 +144,15 @@ class NestedFieldMessagesTest extends TestCase
         
         $errors = $this->validator->getErrors();
         
-        // Note: Current wildcard implementation replaces ALL * with same index
-        // For deeply nested wildcards, this means companies.*.departments.*.employees.*
-        // becomes companies.1.departments.1.employees.1 for the second employee
-        $this->assertArrayHasKey('companies.1.departments.1.employees.1.name', $errors);
-        $this->assertArrayHasKey('companies.1.departments.1.employees.1.email', $errors);
+        // Check deeply nested error keys with correct indices
+        // companies.*.departments.*.employees.* should become
+        // companies.0.departments.0.employees.1 for the second employee
+        $this->assertArrayHasKey('companies.0.departments.0.employees.1.name', $errors);
+        $this->assertArrayHasKey('companies.0.departments.0.employees.1.email', $errors);
         
         // Verify custom messages
-        $this->assertEquals('Employee name is required', $errors['companies.1.departments.1.employees.1.name']);
-        $this->assertEquals('Employee email must be valid', $errors['companies.1.departments.1.employees.1.email']);
+        $this->assertEquals('Employee name is required', $errors['companies.0.departments.0.employees.1.name']);
+        $this->assertEquals('Employee email must be valid', $errors['companies.0.departments.0.employees.1.email']);
     }
 
     public function testOrderFormWithMultipleItems(): void

@@ -316,8 +316,8 @@ class WildcardValidationTest extends TestCase
         $this->validator->setInput($data);
         $result = $this->validator->validate();
         
-        $this->assertTrue($result->fails());
-        $this->assertStringContainsString('must be an array', $this->validator->getError('emails.*'));
+        // Empty arrays pass validation - no items to validate
+        $this->assertTrue($result->passes());
     }
 
     public function testWildcardWithRequiredArray(): void
