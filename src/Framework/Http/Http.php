@@ -326,4 +326,66 @@ class Http
         
         return $success;
     }
+
+    /**
+     * Make a streaming POST request with a callback to process chunks as they arrive.
+     * Perfect for Server-Sent Events (SSE) and real-time streaming.
+     * 
+     * @param string $url URL to stream from
+     * @param array $data Request body data
+     * @param callable $callback Function to process each chunk: function(string $chunk): void
+     * @return self
+     */
+    public function stream(string $url, array $data, callable $callback): self
+    {
+        $ch = curl_init();
+        
+        // Prepare headers
+        $headers = [];
+        if (!isset($this->headers['Content-Type'])) {
+            $this->headers['Content-Type'] = 'application/json';
+        }
+        
+        foreach ($this->headers as $key => $value) {
+            $headers[] = "$key: $value";
+        }
+        
+        // Add SSE accept header
+        $headers[] = 'Accept: text/event-stream';
+        
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => false, // Don't buffer in memory
+            CURLOPT_TIMEOUT => $this->options[CURLOPT_TIMEOUT] ?? 30,
+            CURLOPT_WRITEFUNCTION => function($curl, $chunk) use ($callback) {
+                // Call user callback with each chunk
+                $callback($chunk);
+                return strlen($chunk);
+            },
+        ]);
+        
+        // Apply custom options
+        foreach ($this->options as $option => $value) {
+            if ($option !== CURLOPT_RETURNTRANSFER) {
+                curl_setopt($ch, $option, $value);
+            }
+        }
+        
+        // Execute streaming request
+        curl_exec($ch);
+        
+        $this->error = curl_error($ch);
+        $this->statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+        
+        // Reset state
+        $this->headers = [];
+        $this->options = [];
+        
+        return $this;
+    }
 }

@@ -2,10 +2,12 @@
 namespace Lightpack\AI\Providers;
 
 use Lightpack\AI\AI;
+use Lightpack\AI\Traits\StreamsResponses;
 use Lightpack\Http\Response;
 
 class Groq extends AI
 {
+    use StreamsResponses;
     /**
      * Generate a response from the Groq API.
      */
@@ -92,77 +94,12 @@ class Groq extends AI
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
         
-        $response = app('response');
-        $response->setType('text/event-stream');
-        $response->setHeader('Cache-Control', 'no-cache');
-        $response->setHeader('Connection', 'keep-alive');
-        $response->setHeader('X-Accel-Buffering', 'no');
-        
-        $endpoint = $this->config->get('ai.providers.groq.endpoint');
-        $body = $this->prepareRequestBody($params);
-        $body['stream'] = true;
-        $headers = $this->prepareHeaders();
-        $timeout = $this->config->get('ai.http_timeout', 30);
-        
-        $response->stream(function() use ($endpoint, $body, $headers, $timeout) {
-            if (ob_get_level()) {
-                ob_end_clean();
-            }
-            
-            $ch = curl_init();
-            $buffer = '';
-            
-            curl_setopt_array($ch, [
-                CURLOPT_URL => $endpoint,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => json_encode($body),
-                CURLOPT_HTTPHEADER => array_merge(
-                    array_map(fn($k, $v) => "$k: $v", array_keys($headers), $headers),
-                    ['Accept: text/event-stream']
-                ),
-                CURLOPT_RETURNTRANSFER => false,
-                CURLOPT_TIMEOUT => $timeout,
-                CURLOPT_WRITEFUNCTION => function($curl, $data) use (&$buffer) {
-                    $buffer .= $data;
-                    $lines = explode("\n", $buffer);
-                    $buffer = array_pop($lines);
-                    
-                    foreach ($lines as $line) {
-                        $line = trim($line);
-                        if (empty($line) || $line === 'data: [DONE]') {
-                            continue;
-                        }
-                        
-                        if (strpos($line, 'data: ') === 0) {
-                            $json = substr($line, 6);
-                            $chunk = json_decode($json, true);
-                            
-                            if (isset($chunk['choices'][0]['delta']['content'])) {
-                                $content = $chunk['choices'][0]['delta']['content'];
-                                echo "data: " . json_encode(['content' => $content]) . "\n\n";
-                                flush();
-                            }
-                        }
-                    }
-                    
-                    return strlen($data);
-                },
-            ]);
-            
-            curl_exec($ch);
-            
-            if (curl_errno($ch)) {
-                $error = curl_error($ch);
-                $this->logger->error('Groq streaming error: ' . $error);
-                echo "data: " . json_encode(['error' => $error]) . "\n\n";
-                flush();
-            }
-            
-            curl_close($ch);
-            echo "data: [DONE]\n\n";
-            flush();
-        });
-        
-        return $response;
+        return $this->createStreamingResponse(
+            $this->config->get('ai.providers.groq.endpoint'),
+            $this->prepareRequestBody($params),
+            $this->prepareHeaders(),
+            $this->config->get('ai.http_timeout', 30),
+            fn($line) => $this->parseOpenAIStreamLine($line)
+        );
     }
 }
