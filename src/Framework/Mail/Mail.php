@@ -20,6 +20,9 @@ abstract class Mail
     protected array $viewData = [];
     protected ?string $driverName = null;
     protected MailManager $mailManager;
+    protected ?MailTemplate $mailTemplate = null;
+    protected ?string $templateName = null;
+    protected bool $autoPlainText = true;
 
     abstract public function dispatch(array $payload = []);
 
@@ -166,6 +169,57 @@ abstract class Mail
         return $this;
     }
 
+    /**
+     * Use a built-in mail template
+     * 
+     * Available templates:
+     * - welcome: Welcome email with call-to-action
+     * - passwordReset: Password reset with secure link
+     * - verifyEmail: Email verification
+     * - notification: General notification
+     * - invoice: Invoice/receipt with items table
+     * - orderConfirmation: Order confirmation
+     * - accountAlert: Security/account alerts
+     * - teamInvitation: Team invitation
+     */
+    public function template(string $name, array $data = []): self
+    {
+        $this->templateName = $name;
+        $this->viewData = array_merge($this->viewData, $data);
+        
+        return $this;
+    }
+
+    /**
+     * Get or create MailTemplate instance
+     */
+    public function getMailTemplate(): MailTemplate
+    {
+        if ($this->mailTemplate === null) {
+            $this->mailTemplate = new MailTemplate();
+        }
+        
+        return $this->mailTemplate;
+    }
+
+    /**
+     * Set custom MailTemplate instance (for custom styling)
+     */
+    public function setMailTemplate(MailTemplate $template): self
+    {
+        $this->mailTemplate = $template;
+        return $this;
+    }
+
+    /**
+     * Disable automatic plain text generation
+     */
+    public function disableAutoPlainText(): self
+    {
+        $this->autoPlainText = false;
+        return $this;
+    }
+
     public function send()
     {
         $this->renderViews();
@@ -191,12 +245,33 @@ abstract class Mail
 
     private function renderViews(): void
     {
+        // Render using MailTemplate if template name is set
+        if ($this->templateName) {
+            $template = $this->getMailTemplate();
+            $template->setData(array_merge($this->viewData, ['subject' => $this->subject]));
+            $this->htmlBody = $template->render($this->templateName);
+            
+            // Auto-generate plain text if enabled and not already set
+            if ($this->autoPlainText && empty($this->textBody)) {
+                $this->textBody = $template->toPlainText($this->htmlBody);
+            }
+            
+            return;
+        }
+        
+        // Legacy view rendering
         if ($this->htmlView) {
             $this->htmlBody = app('template')->setData($this->viewData)->include($this->htmlView);
         }
 
         if ($this->textView) {
             $this->textBody = app('template')->setData($this->viewData)->include($this->textView);
+        }
+        
+        // Auto-generate plain text from HTML if enabled
+        if ($this->autoPlainText && !empty($this->htmlBody) && empty($this->textBody)) {
+            $template = $this->getMailTemplate();
+            $this->textBody = $template->toPlainText($this->htmlBody);
         }
     }
 
