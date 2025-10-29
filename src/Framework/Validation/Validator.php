@@ -191,9 +191,9 @@ class Validator
         return $this;
     }
 
-    public function date(): self
+    public function date(?string $format = null): self
     {
-        $this->rules[$this->currentField][] = new DateRule;
+        $this->rules[$this->currentField][] = new DateRule($format);
         return $this;
     }
 
