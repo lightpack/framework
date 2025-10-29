@@ -237,6 +237,18 @@ class TaskBuilder
         return $this->rawResponse;
     }
 
+    /**
+     * Run the task with streaming enabled.
+     * Returns a Response object configured for Server-Sent Events.
+     * 
+     * @return \Lightpack\Http\Response
+     */
+    public function stream()
+    {
+        $params = $this->buildParams();
+        return $this->provider->generateStream($params);
+    }
+
     protected function buildSchemaInstruction(): string
     {
         if ($this->expectSchema) {

@@ -58,6 +58,29 @@ abstract class AI
         return $result['raw'];
     }
 
+    /**
+     * Stream a question response in real-time using Server-Sent Events.
+     * Returns a Response object configured for SSE streaming.
+     * 
+     * @param string $question The question to ask
+     * @param array $options Optional parameters (model, temperature, etc.)
+     * @return \Lightpack\Http\Response Response configured for SSE streaming
+     */
+    public function askStream(string $question, array $options = [])
+    {
+        $params = array_merge(['prompt' => $question], $options);
+        return $this->generateStream($params);
+    }
+
+    /**
+     * Generate streaming completion using Server-Sent Events.
+     * Must be implemented by each provider to support streaming.
+     * 
+     * @param array $params Generation parameters
+     * @return \Lightpack\Http\Response Response configured for SSE streaming
+     */
+    abstract public function generateStream(array $params);
+
     protected function makeApiRequest(string $endpoint, array $body, array $headers = [], int $timeout = 10)
     {
         try {
@@ -96,5 +119,48 @@ abstract class AI
         }
         ksort($data);
         return md5(json_encode($data));
+    }
+
+    /**
+     * Make a streaming API request using Server-Sent Events.
+     * Yields chunks of data as they arrive from the provider.
+     * 
+     * @param string $endpoint API endpoint URL
+     * @param array $body Request body
+     * @param array $headers Request headers
+     * @param int $timeout Request timeout in seconds
+     * @return \Generator Yields SSE data chunks
+     */
+    protected function makeStreamingRequest(string $endpoint, array $body, array $headers = [], int $timeout = 30)
+    {
+        $ch = curl_init();
+        
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $endpoint,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($body),
+            CURLOPT_HTTPHEADER => array_merge(
+                array_map(fn($k, $v) => "$k: $v", array_keys($headers), $headers),
+                ['Accept: text/event-stream']
+            ),
+            CURLOPT_RETURNTRANSFER => false,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_WRITEFUNCTION => function($curl, $data) {
+                echo $data;
+                flush();
+                return strlen($data);
+            },
+        ]);
+        
+        curl_exec($ch);
+        
+        if (curl_errno($ch)) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            $this->logger->error(static::class . ' streaming error: ' . $error);
+            throw new \Exception(static::class . ' streaming error: ' . $error);
+        }
+        
+        curl_close($ch);
     }
 }

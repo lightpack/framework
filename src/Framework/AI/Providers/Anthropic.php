@@ -2,6 +2,7 @@
 namespace Lightpack\AI\Providers;
 
 use Lightpack\AI\AI;
+use Lightpack\Http\Response;
 
 class Anthropic extends AI
 {
@@ -94,5 +95,111 @@ class Anthropic extends AI
             'usage' => $result['usage'] ?? [],
             'raw' => $result,
         ];
+    }
+
+    /**
+     * Generate streaming completion using Server-Sent Events.
+     * Streams tokens as they are generated for real-time display.
+     * 
+     * @param array $params Generation parameters
+     * @return Response Response configured for SSE streaming
+     */
+    public function generateStream(array $params): Response
+    {
+        $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
+        
+        $response = app('response');
+        $response->setType('text/event-stream');
+        $response->setHeader('Cache-Control', 'no-cache');
+        $response->setHeader('Connection', 'keep-alive');
+        $response->setHeader('X-Accel-Buffering', 'no');
+        
+        $endpoint = $this->config->get('ai.providers.anthropic.endpoint');
+        $body = $this->prepareRequestBody($params);
+        $body['stream'] = true; // Enable streaming
+        $headers = $this->prepareHeaders();
+        $timeout = $this->config->get('ai.http_timeout', 30);
+        
+        $response->stream(function() use ($endpoint, $body, $headers, $timeout) {
+            // Disable output buffering for real-time streaming
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            $ch = curl_init();
+            $buffer = '';
+            
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $endpoint,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($body),
+                CURLOPT_HTTPHEADER => array_merge(
+                    array_map(fn($k, $v) => "$k: $v", array_keys($headers), $headers),
+                    ['Accept: text/event-stream']
+                ),
+                CURLOPT_RETURNTRANSFER => false,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_WRITEFUNCTION => function($curl, $data) use (&$buffer) {
+                    $buffer .= $data;
+                    $lines = explode("\n", $buffer);
+                    
+                    // Keep the last incomplete line in buffer
+                    $buffer = array_pop($lines);
+                    
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        
+                        if (empty($line)) {
+                            continue;
+                        }
+                        
+                        // Anthropic uses different event types
+                        if (strpos($line, 'event: ') === 0) {
+                            continue; // Skip event type lines
+                        }
+                        
+                        if (strpos($line, 'data: ') === 0) {
+                            $json = substr($line, 6);
+                            $chunk = json_decode($json, true);
+                            
+                            // Handle content_block_delta events
+                            if (isset($chunk['type']) && $chunk['type'] === 'content_block_delta') {
+                                if (isset($chunk['delta']['text'])) {
+                                    $content = $chunk['delta']['text'];
+                                    // Send as SSE format
+                                    echo "data: " . json_encode(['content' => $content]) . "\n\n";
+                                    flush();
+                                }
+                            }
+                            
+                            // Handle message_stop event
+                            if (isset($chunk['type']) && $chunk['type'] === 'message_stop') {
+                                // Stream completed
+                                break;
+                            }
+                        }
+                    }
+                    
+                    return strlen($data);
+                },
+            ]);
+            
+            curl_exec($ch);
+            
+            if (curl_errno($ch)) {
+                $error = curl_error($ch);
+                $this->logger->error('Anthropic streaming error: ' . $error);
+                echo "data: " . json_encode(['error' => $error]) . "\n\n";
+                flush();
+            }
+            
+            curl_close($ch);
+            
+            // Send completion signal
+            echo "data: [DONE]\n\n";
+            flush();
+        });
+        
+        return $response;
     }
 }
