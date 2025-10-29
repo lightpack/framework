@@ -129,10 +129,20 @@ class CastHandlerTest extends TestCase
 
     public function testUnknownTypeCasting()
     {
-        // Unknown type should return value as is
-        $value = 'test';
-        $this->assertSame($value, $this->handler->cast($value, 'unknown_type'));
-        $this->assertSame($value, $this->handler->uncast($value, 'unknown_type'));
+        // Unknown type should throw exception
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unknown cast type: 'unknown_type'");
+        
+        $this->handler->cast('test', 'unknown_type');
+    }
+
+    public function testUnknownTypeUncastingThrowsException()
+    {
+        // Unknown type should throw exception on uncast too
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Unknown cast type: 'unknown_type'");
+        
+        $this->handler->uncast('test', 'unknown_type');
     }
 
     public function testNullValues()

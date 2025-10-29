@@ -19,8 +19,8 @@ class CastHandler
      * - array: Cast to array (stores as JSON in database)
      * - date: Cast to DateTime (Y-m-d format)
      * - datetime: Cast to DateTime (Y-m-d H:i:s format)
-     * - timestamp: Cast to Unix timestamp (integer)
-     * - Custom cast class implementing CastInterface
+     * - timestamp: Cast to Unix timestamp
+     * - Custom cast classes implementing CastInterface
      */
     public function cast(mixed $value, string $type): mixed
     {
@@ -43,7 +43,7 @@ class CastHandler
             'date' => $this->castToDate($value),
             'datetime' => $this->castToDateTime($value),
             'timestamp' => $this->castToTimestamp($value),
-            default => $value // Return as is for unknown types
+            default => throw new \InvalidArgumentException("Unknown cast type: '{$type}'. Supported types: int, float, string, bool, array, date, datetime, timestamp")
         };
     }
 
@@ -59,12 +59,13 @@ class CastHandler
         }
 
         return match($type) {
-            'int', 'float', 'string', 'bool' => $value,
+            'int', 'float', 'string' => $value,
+            'bool' => $value ? 1 : 0, // Convert boolean to int for database storage
             'array' => $this->uncastFromArray($value),
             'date' => $this->uncastFromDate($value),
             'datetime' => $this->uncastFromDateTime($value),
             'timestamp' => $this->uncastFromTimestamp($value),
-            default => $value
+            default => throw new \InvalidArgumentException("Unknown cast type: '{$type}'. Supported types: int, float, string, bool, array, date, datetime, timestamp")
         };
     }
 

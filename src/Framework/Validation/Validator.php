@@ -191,9 +191,9 @@ class Validator
         return $this;
     }
 
-    public function date(): self
+    public function date(?string $format = null): self
     {
-        $this->rules[$this->currentField][] = new DateRule;
+        $this->rules[$this->currentField][] = new DateRule($format);
         return $this;
     }
 
@@ -498,16 +498,52 @@ class Validator
 
     private function validateWildcard(string $field, mixed $value, array $rules): void
     {
-        if (!is_array($value)) {
+        // Split the field path by the first wildcard
+        $parts = explode('.', $field);
+        $wildcardIndex = array_search('*', $parts);
+        
+        if ($wildcardIndex === false) {
+            // No wildcard found, validate normally
+            $this->validateField($field, $value, $rules);
+            return;
+        }
+        
+        // Get the path up to the wildcard
+        $pathBeforeWildcard = implode('.', array_slice($parts, 0, $wildcardIndex));
+        $pathAfterWildcard = implode('.', array_slice($parts, $wildcardIndex + 1));
+        
+        // Get the array at the wildcard position
+        $arrayData = $pathBeforeWildcard 
+            ? $this->arr->get($pathBeforeWildcard, $this->data)
+            : $this->data;
+        
+        if (!is_array($arrayData)) {
             $this->errors[$field] = 'Field must be an array';
             $this->valid = false;
             return;
         }
-
-        // For regular arrays, validate each item
-        foreach ($value as $key => $item) {
-            $actualField = str_replace('*', (string) $key, $field);
-            $this->validateField($actualField, $item, $rules);
+        
+        // Iterate through each item in the array
+        foreach ($arrayData as $key => $item) {
+            $currentPath = $pathBeforeWildcard 
+                ? $pathBeforeWildcard . '.' . $key
+                : (string) $key;
+            
+            if ($pathAfterWildcard) {
+                $newField = $currentPath . '.' . $pathAfterWildcard;
+                
+                // If there are more wildcards, recurse
+                if (str_contains($pathAfterWildcard, '*')) {
+                    $this->validateWildcard($newField, $item, $rules);
+                } else {
+                    // No more wildcards, get the value and validate
+                    $finalValue = $this->arr->get($pathAfterWildcard, $item);
+                    $this->validateField($newField, $finalValue, $rules);
+                }
+            } else {
+                // This was the last part, validate the item directly
+                $this->validateField($currentPath, $item, $rules);
+            }
         }
     }
 }
