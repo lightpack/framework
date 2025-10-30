@@ -13,6 +13,7 @@ class Route
     private string $name;
     private array $pattern = [];
     private string $host = '';
+    private array $bindings = [];
 
     /**
      * @var string HTTP method
@@ -185,5 +186,63 @@ class Route
     public function getHost(): string
     {
         return $this->host;
+    }
+
+    /**
+     * Bind a route parameter to a model class.
+     * 
+     * Phase 1: Basic binding with model class
+     * Phase 3: Custom field support
+     * 
+     * @param string $param Route parameter name (e.g., 'id', 'user_id')
+     * @param string $model Fully qualified model class name
+     * @param string|null $field Database column to query (default: model's primary key)
+     * @return self
+     * @throws \Exception If model class doesn't exist or isn't a Model subclass
+     */
+    public function bind(string $param, string $model, ?string $field = null): self
+    {
+        // Validate model class exists
+        if (!class_exists($model)) {
+            throw new \Exception("Model class not found: {$model}");
+        }
+        
+        // Validate it's a Model subclass
+        if (!is_subclass_of($model, \Lightpack\Database\Lucid\Model::class)) {
+            throw new \Exception("{$model} must extend Lightpack\\Database\\Lucid\\Model");
+        }
+        
+        // Validate parameter exists in route URI
+        if (!str_contains($this->uri, ":{$param}") && !str_contains($this->uri, ":{$param}?")) {
+            throw new \Exception("Route parameter :{$param} not found in route {$this->uri}");
+        }
+        
+        // Store binding configuration
+        $this->bindings[$param] = [
+            'model' => $model,
+            'field' => $field,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Get all model bindings for this route.
+     * 
+     * @return array
+     */
+    public function getBindings(): array
+    {
+        return $this->bindings;
+    }
+
+    /**
+     * Check if route has any model bindings.
+     * 
+     * @return bool
+     */
+    public function hasBindings(): bool
+    {
+        return !empty($this->bindings);
     }
 }

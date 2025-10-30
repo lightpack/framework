@@ -271,8 +271,22 @@ class Container
         // Filter parameters that are non-scalar
         $nonScalarParameters = $this->filterNonScalarParameters($parameters);
 
-        // Resolve method parameters
-        $dependencies = $this->resolveParameters($nonScalarParameters);
+        // Resolve method parameters (only if not already provided in $args)
+        $dependencies = [];
+        foreach ($nonScalarParameters as $parameter) {
+            $parameterName = $parameter->getName();
+            
+            // Check if parameter is already provided (e.g., from route model binding)
+            if (array_key_exists($parameterName, $args)) {
+                $dependencies[$parameterName] = $args[$parameterName];
+            } else {
+                // Resolve via DI
+                $resolved = $this->resolveParameter($parameter);
+                if ($resolved !== null) {
+                    $dependencies[$parameterName] = $resolved;
+                }
+            }
+        }
 
         // Prepare method's scalar arguments
         $arguments = [];

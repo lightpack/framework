@@ -49,6 +49,19 @@ class Dispatcher
             );
         }
 
+        // Resolve model bindings if declared on route
+        if ($this->route->hasBindings()) {
+            $binder = new ModelBinder();
+            $models = $binder->resolve(
+                $this->route->getBindings(),
+                $params
+            );
+            
+            // Merge resolved models into params
+            // Models take precedence over scalar params with same name
+            $params = array_merge($params, $models);
+        }
+
         try {
             return $this->container->call($controller, $action, $params);
         } catch (ValidationException $e) {
