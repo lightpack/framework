@@ -52,6 +52,37 @@ class Builder extends Query
     }
 
     /**
+     * Find a model by its primary key within the current query scope.
+     * 
+     * This method adds a WHERE clause for the primary key and returns a single model.
+     * It respects any existing WHERE clauses from relationships or other query constraints.
+     * 
+     * @param mixed $id The primary key value to search for
+     * @param bool $fail Whether to throw an exception if the record is not found (default: true)
+     * @return Model|null The found model instance or null if not found (when $fail is false)
+     * @throws RecordNotFoundException If $fail is true and the record is not found
+     */
+    public function find($id, bool $fail = true): ?Model
+    {
+        $primaryKey = $this->model->getPrimaryKey();
+        
+        // Add WHERE clause for the primary key
+        $this->where($primaryKey, '=', $id);
+        
+        // Execute the query
+        $result = $this->one();
+        
+        // Handle not found case
+        if (!$result && $fail) {
+            throw new \Lightpack\Exceptions\RecordNotFoundException(
+                sprintf('%s: No record found for ID = %s', get_class($this->model), $id)
+            );
+        }
+        
+        return $result;
+    }
+
+    /**
      * @param integer|null $limit
      * @param integer|null $page
      * @return \Lightpack\Database\Lucid\Pagination

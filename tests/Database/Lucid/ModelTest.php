@@ -2639,4 +2639,243 @@ final class ModelTest extends TestCase
         $this->assertEquals(['foo' => 'bar', 'nested' => ['a', 'b', 'c']], $reloaded->json_col);
         $this->assertEquals('Updated', $reloaded->string_col);
     }
+
+    /**
+     * Test that find() method works on hasMany relationship queries.
+     * This should find a specific related record by ID and ensure it belongs to the parent.
+     */
+    public function testHasManyRelationshipFind()
+    {
+        // Setup: Create a product with multiple options
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        
+        $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
+        $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => 'Red']);
+        $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Material', 'value' => 'Wood']);
+        
+        // Get the second option's ID
+        $allOptions = $this->db->table('options')->where('product_id', '=', $product->id)->orderBy('id', 'ASC')->all();
+        $secondOptionId = $allOptions[1]->id;
+        
+        // Test: Use find() on relationship
+        $productModel = $this->db->model(Product::class)->find($product->id);
+        $foundOption = $productModel->options()->find($secondOptionId);
+        
+        // Assertions
+        $this->assertInstanceOf(Option::class, $foundOption);
+        $this->assertEquals($secondOptionId, $foundOption->id);
+        $this->assertEquals('Color', $foundOption->name);
+        $this->assertEquals('Red', $foundOption->value);
+        $this->assertEquals($product->id, $foundOption->product_id);
+    }
+
+    /**
+     * Test that find() on relationship returns null when record doesn't exist.
+     */
+    public function testHasManyRelationshipFindReturnsNullWhenNotFound()
+    {
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        
+        $productModel = $this->db->model(Product::class)->find($product->id);
+        $foundOption = $productModel->options()->find(99999, false);
+        
+        $this->assertNull($foundOption);
+    }
+
+    /**
+     * Test that find() on relationship throws exception when $fail = true and record not found.
+     */
+    public function testHasManyRelationshipFindThrowsExceptionWhenNotFoundAndFailIsTrue()
+    {
+        $this->expectException(RecordNotFoundException::class);
+        
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        
+        $productModel = $this->db->model(Product::class)->find($product->id);
+        $productModel->options()->find(99999, true);
+    }
+
+    /**
+     * Test that find() on relationship only finds records that belong to the parent.
+     * It should NOT find records that belong to a different parent.
+     */
+    public function testHasManyRelationshipFindOnlyFindsOwnedRecords()
+    {
+        // Create two products
+        $this->db->table('products')->insert(['name' => 'Product A', 'color' => '#AAA']);
+        $this->db->table('products')->insert(['name' => 'Product B', 'color' => '#BBB']);
+        
+        $productA = $this->db->table('products')->where('name', '=', 'Product A')->one();
+        $productB = $this->db->table('products')->where('name', '=', 'Product B')->one();
+        
+        // Create options for both products
+        $this->db->table('options')->insert(['product_id' => $productA->id, 'name' => 'Option A1', 'value' => 'ValA']);
+        $this->db->table('options')->insert(['product_id' => $productB->id, 'name' => 'Option B1', 'value' => 'ValB']);
+        
+        $optionB = $this->db->table('options')->where('product_id', '=', $productB->id)->one();
+        
+        // Try to find Product B's option through Product A's relationship
+        $productAModel = $this->db->model(Product::class)->find($productA->id);
+        $foundOption = $productAModel->options()->find($optionB->id, false);
+        
+        // Should return null because the option doesn't belong to Product A
+        $this->assertNull($foundOption);
+    }
+
+    /**
+     * Test that find() works on hasOne relationship.
+     */
+    public function testHasOneRelationshipFind()
+    {
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'John Doe']);
+        
+        $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
+        
+        $productModel = $this->db->model(Product::class)->find($product->id);
+        $foundOwner = $productModel->owner()->find($owner->id);
+        
+        $this->assertInstanceOf(Owner::class, $foundOwner);
+        $this->assertEquals($owner->id, $foundOwner->id);
+        $this->assertEquals('John Doe', $foundOwner->name);
+        $this->assertEquals($product->id, $foundOwner->product_id);
+    }
+
+    /**
+     * Test that find() on hasOne relationship returns null for wrong ID.
+     */
+    public function testHasOneRelationshipFindReturnsNullForWrongId()
+    {
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        
+        $productModel = $this->db->model(Product::class)->find($product->id);
+        $foundOwner = $productModel->owner()->find(99999, false);
+        
+        $this->assertNull($foundOwner);
+    }
+
+    /**
+     * Test that find() works on belongsTo relationship.
+     */
+    public function testBelongsToRelationshipFind()
+    {
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Jane Doe']);
+        
+        $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
+        
+        $ownerModel = $this->db->model(Owner::class)->find($owner->id);
+        $foundProduct = $ownerModel->product()->find($product->id);
+        
+        $this->assertInstanceOf(Product::class, $foundProduct);
+        $this->assertEquals($product->id, $foundProduct->id);
+        $this->assertEquals('Test Product', $foundProduct->name);
+    }
+
+    /**
+     * Test that find() works with pivot (many-to-many) relationships.
+     */
+    public function testPivotRelationshipFind()
+    {
+        // Setup users and roles
+        $this->db->table('users')->insert(['name' => 'Alice']);
+        $this->db->table('roles')->insert([
+            ['name' => 'admin'],
+            ['name' => 'editor'],
+            ['name' => 'viewer'],
+        ]);
+        
+        $user = $this->db->table('users')->where('name', '=', 'Alice')->one();
+        $adminRole = $this->db->table('roles')->where('name', '=', 'admin')->one();
+        $editorRole = $this->db->table('roles')->where('name', '=', 'editor')->one();
+        
+        // Attach roles to user
+        $this->db->table('role_user')->insert([
+            ['user_id' => $user->id, 'role_id' => $adminRole->id],
+            ['user_id' => $user->id, 'role_id' => $editorRole->id],
+        ]);
+        
+        // Test find() on pivot relationship
+        $userModel = $this->db->model(User::class)->find($user->id);
+        $foundRole = $userModel->roles()->find($editorRole->id);
+        
+        $this->assertInstanceOf(Role::class, $foundRole);
+        $this->assertEquals($editorRole->id, $foundRole->id);
+        $this->assertEquals('editor', $foundRole->name);
+    }
+
+    /**
+     * Test that find() on pivot relationship returns null for unrelated record.
+     */
+    public function testPivotRelationshipFindReturnsNullForUnrelatedRecord()
+    {
+        $this->db->table('users')->insert(['name' => 'Bob']);
+        $this->db->table('roles')->insert([
+            ['name' => 'admin'],
+            ['name' => 'guest'],
+        ]);
+        
+        $user = $this->db->table('users')->where('name', '=', 'Bob')->one();
+        $adminRole = $this->db->table('roles')->where('name', '=', 'admin')->one();
+        $guestRole = $this->db->table('roles')->where('name', '=', 'guest')->one();
+        
+        // Only attach admin role
+        $this->db->table('role_user')->insert(['user_id' => $user->id, 'role_id' => $adminRole->id]);
+        
+        // Try to find guest role (not attached to this user)
+        $userModel = $this->db->model(User::class)->find($user->id);
+        $foundRole = $userModel->roles()->find($guestRole->id, false);
+        
+        $this->assertNull($foundRole);
+    }
+
+    /**
+     * Test that relationship find() can be chained with other query methods.
+     */
+    public function testRelationshipFindCanBeChainedWithQueryMethods()
+    {
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        
+        $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
+        $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => 'Red']);
+        
+        $option = $this->db->table('options')->where('name', '=', 'Color')->one();
+        
+        // This tests that find() properly adds to existing WHERE clauses
+        $productModel = $this->db->model(Product::class)->find($product->id);
+        $foundOption = $productModel->options()->where('name', '=', 'Color')->find($option->id);
+        
+        $this->assertInstanceOf(Option::class, $foundOption);
+        $this->assertEquals('Color', $foundOption->name);
+        $this->assertEquals('Red', $foundOption->value);
+    }
+
+    /**
+     * Test that relationship find() respects additional WHERE clauses and returns null
+     * when the record doesn't match all conditions.
+     */
+    public function testRelationshipFindRespectsAdditionalWhereClausesAndReturnsNull()
+    {
+        $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
+        $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
+        
+        $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
+        $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => 'Red']);
+        
+        $sizeOption = $this->db->table('options')->where('name', '=', 'Size')->one();
+        
+        // Try to find the Size option but with a WHERE clause that doesn't match
+        $productModel = $this->db->model(Product::class)->find($product->id);
+        $foundOption = $productModel->options()->where('name', '=', 'Color')->find($sizeOption->id, false);
+        
+        // Should return null because the option with this ID has name='Size', not 'Color'
+        $this->assertNull($foundOption);
+    }
 }
