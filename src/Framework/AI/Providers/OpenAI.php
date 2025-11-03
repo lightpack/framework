@@ -8,7 +8,7 @@ class OpenAI extends AI
     public function generate(array $params)
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $useCache = $params['cache'] ?? true;
+        $useCache = $params['cache'] ?? false;
         $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl', 3600);
         $cacheKey = $this->generateCacheKey($params);
 
@@ -19,8 +19,9 @@ class OpenAI extends AI
             }
         }
 
+        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.openai.endpoint');
         $result = $this->makeApiRequest(
-            $this->config->get('ai.providers.openai.endpoint'),
+            $endpoint,
             $this->prepareRequestBody($params), 
             $this->prepareHeaders(), 
             $this->config->get('ai.http_timeout')
