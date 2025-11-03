@@ -5,35 +5,21 @@ use Lightpack\AI\AI;
 
 class OpenAI extends AI
 {
-    public function generate(array $params)
+    public function generate(array $params): array
     {
-        $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $useCache = $params['cache'] ?? false;
-        $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl', 3600);
-        $cacheKey = $this->generateCacheKey($params);
-
-        // Check cache first (unless bypassed)
-        if ($useCache) {
-            if ($this->cache->has($cacheKey)) {
-                return $this->cache->get($cacheKey);
-            }
-        }
-
-        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.openai.endpoint');
-        $result = $this->makeApiRequest(
-            $endpoint,
-            $this->prepareRequestBody($params), 
-            $this->prepareHeaders(), 
-            $this->config->get('ai.http_timeout')
-        );
-        $output = $this->parseOutput($result);
-        
-        // Write to cache unless bypassed
-        if ($useCache) {
-            $this->cache->set($cacheKey, $output, $cacheTtl);
-        }
-
-        return $output;
+        return $this->executeWithCache($params, function() use ($params) {
+            $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
+            $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.openai.endpoint');
+            
+            $result = $this->makeApiRequest(
+                $endpoint,
+                $this->prepareRequestBody($params), 
+                $this->prepareHeaders(), 
+                $this->config->get('ai.http_timeout')
+            );
+            
+            return $this->parseOutput($result);
+        });
     }
 
     protected function parseOutput(array $result): array
