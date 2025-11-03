@@ -8,7 +8,7 @@ class Anthropic extends AI
     public function generate(array $params)
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $useCache = $params['cache'] ?? true;
+        $useCache = $params['cache'] ?? false;
         $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl');
         $cacheKey = $this->generateCacheKey($params);
 
@@ -17,8 +17,9 @@ class Anthropic extends AI
             return $this->cache->get($cacheKey);
         }
 
+        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.anthropic.endpoint');
         $result = $this->makeApiRequest(
-            $this->config->get('ai.providers.anthropic.endpoint'),
+            $endpoint,
             $this->prepareRequestBody($params),
             $this->prepareHeaders(),
             $this->config->get('ai.http_timeout', 10)

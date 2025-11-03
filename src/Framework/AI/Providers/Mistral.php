@@ -11,7 +11,7 @@ class Mistral extends AI
     public function generate(array $params): array
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $useCache = $params['cache'] ?? true;
+        $useCache = $params['cache'] ?? false;
         $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl',);
         $cacheKey = $this->generateCacheKey($params);
 
@@ -20,8 +20,9 @@ class Mistral extends AI
             return $this->cache->get($cacheKey);
         }
 
+        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.mistral.endpoint');
         $result = $this->makeApiRequest(
-            $this->config->get('ai.providers.mistral.endpoint'),
+            $endpoint,
             $this->prepareRequestBody($params),
             $this->prepareHeaders(),
             $this->config->get('ai.http_timeout')
