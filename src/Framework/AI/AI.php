@@ -97,4 +97,34 @@ abstract class AI
         ksort($data);
         return md5(json_encode($data));
     }
+
+    /**
+     * Execute API call with optional caching.
+     * Handles cache check, API execution, and cache storage.
+     * 
+     * @param array $params Request parameters (must include cache settings)
+     * @param callable $apiCall The actual API call to execute
+     * @return array The API response
+     */
+    protected function executeWithCache(array $params, callable $apiCall): array
+    {
+        $useCache = $params['cache'] ?? false;
+        $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl', 3600);
+        $cacheKey = $this->generateCacheKey($params);
+
+        // Check cache first
+        if ($useCache && $this->cache->has($cacheKey)) {
+            return $this->cache->get($cacheKey);
+        }
+
+        // Execute API call
+        $output = $apiCall();
+
+        // Store in cache
+        if ($useCache) {
+            $this->cache->set($cacheKey, $output, $cacheTtl);
+        }
+
+        return $output;
+    }
 }

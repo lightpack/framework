@@ -5,32 +5,21 @@ use Lightpack\AI\AI;
 
 class Anthropic extends AI
 {
-    public function generate(array $params)
+    public function generate(array $params): array
     {
-        $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $useCache = $params['cache'] ?? false;
-        $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl');
-        $cacheKey = $this->generateCacheKey($params);
-
-        // Check cache first (unless bypassed)
-        if ($useCache && $this->cache->has($cacheKey)) {
-            return $this->cache->get($cacheKey);
-        }
-
-        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.anthropic.endpoint');
-        $result = $this->makeApiRequest(
-            $endpoint,
-            $this->prepareRequestBody($params),
-            $this->prepareHeaders(),
-            $this->config->get('ai.http_timeout', 10)
-        );
-        $output = $this->parseOutput($result);
-
-        if ($useCache) {
-            $this->cache->set($cacheKey, $output, $cacheTtl);
-        }
-
-        return $output;
+        return $this->executeWithCache($params, function() use ($params) {
+            $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
+            $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.anthropic.endpoint');
+            
+            $result = $this->makeApiRequest(
+                $endpoint,
+                $this->prepareRequestBody($params),
+                $this->prepareHeaders(),
+                $this->config->get('ai.http_timeout', 10)
+            );
+            
+            return $this->parseOutput($result);
+        });
     }
 
     /**

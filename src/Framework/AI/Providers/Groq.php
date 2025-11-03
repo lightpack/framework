@@ -5,36 +5,21 @@ use Lightpack\AI\AI;
 
 class Groq extends AI
 {
-    /**
-     * Generate a response from the Groq API.
-     */
     public function generate(array $params): array
     {
-        $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $useCache = $params['cache'] ?? false;
-        $cacheTtl = $params['cache_ttl'] ?? $this->config->get('ai.cache_ttl');
-        $cacheKey = $this->generateCacheKey($params);
-
-        // Check cache first
-        if ($useCache && $this->cache->has($cacheKey)) {
-            return $this->cache->get($cacheKey);
-        }
-
-        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.groq.endpoint');
-        $result = $this->makeApiRequest(
-            $endpoint,
-            $this->prepareRequestBody($params),
-            $this->prepareHeaders(),
-            $this->config->get('ai.http_timeout')
-        );
-        $output = $this->parseOutput($result);
-
-        // Write to cache
-        if ($useCache) {
-            $this->cache->set($cacheKey, $output, $cacheTtl);
-        }
-
-        return $output;
+        return $this->executeWithCache($params, function() use ($params) {
+            $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
+            $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.groq.endpoint');
+            
+            $result = $this->makeApiRequest(
+                $endpoint,
+                $this->prepareRequestBody($params),
+                $this->prepareHeaders(),
+                $this->config->get('ai.http_timeout')
+            );
+            
+            return $this->parseOutput($result);
+        });
     }
 
     /**
