@@ -65,7 +65,7 @@ class Console
     {
         if (!isset(self::$commands[$command])) {
             fputs(STDERR, "Invalid command: {$command}\n");
-            exit(0);
+            exit(1);
         }
 
         return new self::$commands[$command];
