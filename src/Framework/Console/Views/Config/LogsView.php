@@ -12,8 +12,9 @@ class LogsView
 return [
     'logs' => [
         'path' => DIR_STORAGE . '/logs',
-        'max_file_size' => 500 * 1024 * 1024, // 10mb
-        'max_log_files' => 10,
+        'max_file_size' => 10 * 1024 * 1024, // 10MB (used by 'file' driver)
+        'max_log_files' => 10,                // (used by 'file' driver)
+        'days_to_keep' => 7,                  // (used by 'daily' driver)
     ]
 ];
 PHP;
