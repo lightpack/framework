@@ -27,6 +27,8 @@ return new class extends Migration
             $table->createdAt();
             $table->datetime('scheduled_at')->default('CURRENT_TIMESTAMP')->index();
             $table->datetime('failed_at')->nullable();
+            $table->index(['queue', 'status', 'scheduled_at']);
+            $table->index(['status', 'scheduled_at']);
         });
     }
 

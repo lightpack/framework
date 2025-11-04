@@ -30,7 +30,12 @@ return new class extends Migration
             $table->varchar('url', 255)->nullable();
             $table->varchar('ip_address', 45)->nullable();
             $table->varchar('user_agent', 255)->nullable();
-            $table->timestamps();
+            $table->createdAt();
+
+            $table->index('user_id');
+            $table->index('action');
+            $table->index(['audit_type', 'audit_id']);
+            $table->index('created_at');
         });
     }
 

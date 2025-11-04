@@ -24,6 +24,7 @@ return new class extends Migration
             $table->column('owner_id')->type('bigint')->attribute('unsigned')->nullable();
             $table->timestamps();
             $table->unique(['key', 'group', 'owner_id']);
+            $table->index(['owner_id', 'group']);
         });
     }
 
