@@ -29,6 +29,7 @@ return new class extends Migration
             $table->varchar('model_type', 191);
             $table->primary(['tag_id', 'model_id', 'model_type']);
             $table->foreignKey('tag_id')->references('id')->on('tags')->cascadeOnDelete();
+            $table->index(['model_type', 'model_id']);
         });
     }
 

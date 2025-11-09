@@ -25,6 +25,8 @@ return new class extends Migration
             $table->varchar('status', 32)->default('pending');
             $table->datetime('received_at')->default('CURRENT_TIMESTAMP');
             $table->unique(['provider', 'event_id']);
+            $table->index('status');
+            $table->index('received_at');
         });
     }
 

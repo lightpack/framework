@@ -23,6 +23,7 @@ class Audit
         $log->ip_address = $data['ip_address'] ?? null;
         $log->user_agent = $data['user_agent'] ?? null;
         $log->message = $data['message'] ?? null;
+        $log->created_at = date('Y-m-d H:i:s');
         $log->save();
         return $log;
     }

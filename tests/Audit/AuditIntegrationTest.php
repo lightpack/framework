@@ -46,7 +46,7 @@ class AuditIntegrationTest extends TestCase
             $table->varchar('url', 255)->nullable();
             $table->varchar('ip_address', 45)->nullable();
             $table->varchar('user_agent', 255)->nullable();
-            $table->timestamps();
+            $table->createdAt();
         });
         // users schema
         $this->schema->createTable('users', function(Table $table) {

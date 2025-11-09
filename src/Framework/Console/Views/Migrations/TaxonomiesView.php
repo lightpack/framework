@@ -27,6 +27,7 @@ return new class extends Migration
             $table->timestamps();
             $table->foreignKey('parent_id')->references('id')->on('taxonomies')->cascadeOnDelete();
             $table->unique(['type', 'slug']); // Unique slugs per type
+            $table->index('parent_id');
         });
 
         $this->create('taxonomy_models', function (Table $table) {
@@ -35,6 +36,7 @@ return new class extends Migration
             $table->varchar('model_type', 150);
             $table->primary(['taxonomy_id', 'model_id', 'model_type']);
             $table->foreignKey('taxonomy_id')->references('id')->on('taxonomies')->cascadeOnDelete();
+            $table->index(['model_type', 'model_id']);
         });
     }
 

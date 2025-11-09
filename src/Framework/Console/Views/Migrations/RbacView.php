@@ -37,6 +37,7 @@ return new class extends Migration
             $table->foreignKey('role_id')->cascadeOnDelete();
             $table->foreignKey('user_id')->cascadeOnDelete();
             $table->primary(['role_id', 'user_id']);
+            $table->index('user_id');
         });
 
         $this->create('role_permission', function (Table $table) {
@@ -46,6 +47,7 @@ return new class extends Migration
             $table->foreignKey('permission_id')->cascadeOnDelete();
             $table->foreignKey('role_id')->cascadeOnDelete();
             $table->primary(['permission_id', 'role_id']);
+            $table->index('role_id');
         });
     }
 
