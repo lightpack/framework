@@ -71,7 +71,7 @@ if (!function_exists('_e')) {
         if ($str === null) {
             return '';
         }
-        
+
         return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
     }
 }
@@ -82,15 +82,7 @@ if (!function_exists('get_env')) {
      */
     function get_env(string $key, ?string $default = null): ?string
     {
-        if (isset($_ENV[$key])) {
-            return $_ENV[$key];
-        }
-
-        if (isset($_SERVER[$key])) {
-            return $_SERVER[$key];
-        }
-
-        return getenv($key) ? getenv($key) : $default;
+        return Lightpack\Config\Env::get($key, $default);
     }
 }
 
@@ -452,34 +444,34 @@ if (!function_exists('form_open')) {
      * @param bool $csrf Whether to include CSRF token (default: true)
      */
     function form_open(
-        string $action = '', 
-        string $method = 'POST', 
+        string $action = '',
+        string $method = 'POST',
         array $attributes = [],
         bool $csrf = true
     ): string {
         $method = strtoupper($method);
         $spoofMethods = ['PUT', 'PATCH', 'DELETE'];
         $actualMethod = in_array($method, $spoofMethods) ? 'POST' : $method;
-        
+
         $attrs = ['action' => $action, 'method' => $actualMethod];
         $attrs = array_merge($attrs, $attributes);
-        
+
         $html = '<form';
         foreach ($attrs as $key => $value) {
             $html .= ' ' . _e($key) . '="' . _e($value) . '"';
         }
         $html .= '>';
-        
+
         // Add CSRF token for state-changing methods
         if ($csrf && in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             $html .= "\n    " . csrf_input();
         }
-        
+
         // Add method spoofing for PUT/PATCH/DELETE
         if (in_array($method, $spoofMethods)) {
             $html .= "\n    " . spoof_input($method);
         }
-        
+
         return $html;
     }
 }
@@ -656,16 +648,16 @@ if (!function_exists('once')) {
     function once(callable $callback)
     {
         static $cache = null;
-        
+
         if ($cache === null) {
             $cache = new \SplObjectStorage();
         }
-        
+
         // Use object storage to track unique closures
         if (!$cache->contains($callback)) {
             $cache[$callback] = $callback();
         }
-        
+
         return $cache[$callback];
     }
 }
@@ -683,24 +675,28 @@ if (!function_exists('optional')) {
     {
         if (is_null($value)) {
             return new class {
-                public function __get($key) {
+                public function __get($key)
+                {
                     return $this; // Return self for chaining
                 }
-                
-                public function __call($method, $args) {
+
+                public function __call($method, $args)
+                {
                     return $this; // Return self for chaining
                 }
-                
-                public function __toString() {
+
+                public function __toString()
+                {
                     return '';
                 }
-                
-                public function __isset($key) {
+
+                public function __isset($key)
+                {
                     return false;
                 }
             };
         }
-        
+
         return $callback ? $callback($value) : $value;
     }
 }
