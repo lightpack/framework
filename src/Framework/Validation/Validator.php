@@ -62,6 +62,7 @@ class Validator
     private string $currentField = '';
     private bool $valid = true;
     private Arr $arr;
+    private array $fieldTypes = []; // Track type rules per field (string, numeric, int, float)
 
     public function __construct()
     {
@@ -145,13 +146,15 @@ class Validator
 
     public function min(int $length): self
     {
-        $this->rules[$this->currentField][] = new MinRule($length);
+        $type = $this->fieldTypes[$this->currentField] ?? null;
+        $this->rules[$this->currentField][] = new MinRule($length, $type);
         return $this;
     }
 
     public function max(int $length): self
     {
-        $this->rules[$this->currentField][] = new MaxRule($length);
+        $type = $this->fieldTypes[$this->currentField] ?? null;
+        $this->rules[$this->currentField][] = new MaxRule($length, $type);
         return $this;
     }
 
@@ -164,12 +167,14 @@ class Validator
     public function numeric(): self
     {
         $this->rules[$this->currentField][] = new NumericRule;
+        $this->fieldTypes[$this->currentField] = 'numeric';
         return $this;
     }
 
     public function string(): self
     {
         $this->rules[$this->currentField][] = new StringRule;
+        $this->fieldTypes[$this->currentField] = 'string';
         return $this;
     }
 
@@ -212,12 +217,14 @@ class Validator
     public function int(): self
     {
         $this->rules[$this->currentField][] = new IntRule;
+        $this->fieldTypes[$this->currentField] = 'int';
         return $this;
     }
 
     public function float(): self
     {
         $this->rules[$this->currentField][] = new FloatRule;
+        $this->fieldTypes[$this->currentField] = 'float';
         return $this;
     }
 

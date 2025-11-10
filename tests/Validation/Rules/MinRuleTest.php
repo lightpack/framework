@@ -512,4 +512,147 @@ class MinRuleTest extends TestCase
         
         $this->assertTrue($result->fails());
     }
+
+    // ========================================
+    // Context-Aware Validation Tests
+    // ========================================
+
+    public function testPasswordWithStringTypeValidatesLength(): void
+    {
+        // Critical: Password "123" should FAIL when using string() + min(8)
+        // because string length is 3, not because 123 >= 8
+        $data = ['password' => '123'];
+
+        $this->validator
+            ->field('password')
+            ->required()
+            ->string()      // Force string length validation
+            ->min(8);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+        $this->assertStringContainsString('not be less than 8', $this->validator->getError('password'));
+    }
+
+    public function testPasswordWithStringTypePassesWhenLengthValid(): void
+    {
+        $data = ['password' => 'password123'];  // 11 chars
+
+        $this->validator
+            ->field('password')
+            ->required()
+            ->string()
+            ->min(8);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->passes());
+    }
+
+    public function testPriceWithNumericTypeValidatesValue(): void
+    {
+        // Critical: Price "500" should FAIL with numeric() + min(1000)
+        // because numeric value 500 < 1000
+        $data = ['price' => '500'];
+
+        $this->validator
+            ->field('price')
+            ->required()
+            ->numeric()     // Force numeric value validation
+            ->min(1000);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+        $this->assertStringContainsString('not be less than 1000', $this->validator->getError('price'));
+    }
+
+    public function testPriceWithNumericTypePassesWhenValueValid(): void
+    {
+        $data = ['price' => '1500.50'];
+
+        $this->validator
+            ->field('price')
+            ->required()
+            ->numeric()
+            ->min(1000);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->passes());
+    }
+
+    public function testIntTypeWithMinValidatesNumericValue(): void
+    {
+        $data = ['age' => '15'];
+
+        $this->validator
+            ->field('age')
+            ->required()
+            ->int()
+            ->min(18);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+    }
+
+    public function testFloatTypeWithMinValidatesNumericValue(): void
+    {
+        $data = ['rating' => '3.5'];
+
+        $this->validator
+            ->field('rating')
+            ->required()
+            ->float()
+            ->min(4);  // min() expects int
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+    }
+
+    // ========================================
+    // Backward Compatibility Tests
+    // ========================================
+
+    public function testNumericStringWithoutTypeUsesNumericValidation(): void
+    {
+        // Backward compatibility: Without type declaration,
+        // numeric strings are validated as numbers
+        $data = ['value' => '123'];
+
+        $this->validator
+            ->field('value')
+            ->min(8);  // No type declared
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        // Passes because 123 >= 8 (numeric validation)
+        $this->assertTrue($result->passes());
+    }
+
+    public function testNonNumericStringWithoutTypeUsesStringLength(): void
+    {
+        // Without type, non-numeric strings use length validation
+        $data = ['username' => 'abc'];
+
+        $this->validator
+            ->field('username')
+            ->min(5);  // No type declared
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        // Fails because string length 3 < 5
+        $this->assertTrue($result->fails());
+    }
 }

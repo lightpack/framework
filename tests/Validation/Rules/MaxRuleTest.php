@@ -528,4 +528,147 @@ class MaxRuleTest extends TestCase
         
         $this->assertTrue($result->fails());
     }
+
+    // ========================================
+    // Context-Aware Validation Tests
+    // ========================================
+
+    public function testPasswordWithStringTypeValidatesLength(): void
+    {
+        // Password "passwordtoolong" should FAIL when using string() + max(10)
+        // because string length is 15, not because it's a string
+        $data = ['password' => 'passwordtoolong'];
+
+        $this->validator
+            ->field('password')
+            ->required()
+            ->string()      // Force string length validation
+            ->max(10);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+        $this->assertStringContainsString('not be greater than 10', $this->validator->getError('password'));
+    }
+
+    public function testPasswordWithStringTypePassesWhenLengthValid(): void
+    {
+        $data = ['password' => 'pass123'];  // 7 chars
+
+        $this->validator
+            ->field('password')
+            ->required()
+            ->string()
+            ->max(10);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->passes());
+    }
+
+    public function testPriceWithNumericTypeValidatesValue(): void
+    {
+        // Price "15000" should FAIL with numeric() + max(10000)
+        // because numeric value 15000 > 10000
+        $data = ['price' => '15000'];
+
+        $this->validator
+            ->field('price')
+            ->required()
+            ->numeric()     // Force numeric value validation
+            ->max(10000);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+        $this->assertStringContainsString('not be greater than 10000', $this->validator->getError('price'));
+    }
+
+    public function testPriceWithNumericTypePassesWhenValueValid(): void
+    {
+        $data = ['price' => '9999.99'];
+
+        $this->validator
+            ->field('price')
+            ->required()
+            ->numeric()
+            ->max(10000);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->passes());
+    }
+
+    public function testIntTypeWithMaxValidatesNumericValue(): void
+    {
+        $data = ['age' => '150'];
+
+        $this->validator
+            ->field('age')
+            ->required()
+            ->int()
+            ->max(120);
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+    }
+
+    public function testFloatTypeWithMaxValidatesNumericValue(): void
+    {
+        $data = ['rating' => '5.5'];
+
+        $this->validator
+            ->field('rating')
+            ->required()
+            ->float()
+            ->max(5);  // max() expects int
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        $this->assertTrue($result->fails());
+    }
+
+    // ========================================
+    // Backward Compatibility Tests
+    // ========================================
+
+    public function testNumericStringWithoutTypeUsesNumericValidation(): void
+    {
+        // Backward compatibility: Without type declaration,
+        // numeric strings are validated as numbers
+        $data = ['value' => '5'];
+
+        $this->validator
+            ->field('value')
+            ->max(10);  // No type declared
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        // Passes because 5 <= 10 (numeric validation)
+        $this->assertTrue($result->passes());
+    }
+
+    public function testNonNumericStringWithoutTypeUsesStringLength(): void
+    {
+        // Without type, non-numeric strings use length validation
+        $data = ['username' => 'verylongusername'];
+
+        $this->validator
+            ->field('username')
+            ->max(10);  // No type declared
+
+        $this->validator->setInput($data);
+        $result = $this->validator->validate();
+        
+        // Fails because string length 16 > 10
+        $this->assertTrue($result->fails());
+    }
 }

@@ -10,34 +10,45 @@ class MinRule
 {
     use ValidationMessageTrait;
 
-    public function __construct(private readonly int|float $min)
-    {
+    public function __construct(
+        private readonly int|float $min,
+        private readonly ?string $type = null
+    ) {
         $this->message = "Must not be less than {$min}";
     }
 
     public function __invoke($value): bool
     {
-        // Handle arrays separately - empty arrays should be validated
+        // Skip validation for null and empty strings (use required rule for that)
+        if ($value === null || $value === '') {
+            return true;
+        }
+
+        // Arrays: validate count
         if (is_array($value)) {
             return count($value) >= $this->min;
         }
 
-        // For non-arrays, skip validation for empty values (use required() for that)
-        // But allow '0' and 0 to pass through for numeric validation
-        if (empty($value) && $value !== '0' && $value !== 0) {
-            return false;
+        // If type was explicitly set (via string(), numeric(), etc.), use that
+        if ($this->type === 'string') {
+            return is_string($value) && mb_strlen($value) >= $this->min;
         }
 
-        // Check numeric values BEFORE string length
-        // This ensures form inputs like "47" are validated as numbers
+        if ($this->type === 'numeric' || $this->type === 'int' || $this->type === 'float') {
+            return is_numeric($value) && (float) $value >= $this->min;
+        }
+
+        // This ensures "500" validates as number 500, not string length 3
         if (is_numeric($value)) {
             return (float) $value >= $this->min;
         }
 
+        // String length validation
         if (is_string($value)) {
-            return mb_strlen((string) $value) >= $this->min;
+            return mb_strlen($value) >= $this->min;
         }
 
-        return true;
+        // For other types (objects, resources, etc.), fail validation
+        return false;
     }
 }
