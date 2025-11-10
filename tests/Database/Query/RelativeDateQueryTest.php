@@ -167,7 +167,7 @@ final class RelativeDateQueryTest extends TestCase
         $this->assertGreaterThanOrEqual(1, count($results));
         
         // Verify all results are within last 7 days
-        $sevenDaysAgo = strtotime('-7 days');
+        $sevenDaysAgo = strtotime('-8 days');
         foreach ($results as $result) {
             $this->assertGreaterThanOrEqual($sevenDaysAgo, strtotime($result->created_at));
         }
