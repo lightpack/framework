@@ -63,6 +63,7 @@ echo ""
 
 FAILED_SUITES=()
 PASSED_SUITES=()
+FAILURE_DETAILS=()
 
 for suite in "${SUITES[@]}"; do
     echo "Running $suite tests..."
@@ -77,13 +78,24 @@ for suite in "${SUITES[@]}"; do
             FAILED_SUITES+=("$suite")
         fi
     else
-        # Suppress output for summary mode
-        if ./vendor/bin/phpunit --testsuite "$suite" > /dev/null 2>&1; then
+        # Capture output for summary mode
+        OUTPUT=$(./vendor/bin/phpunit --testsuite "$suite" 2>&1)
+        EXIT_CODE=$?
+        
+        if [ $EXIT_CODE -eq 0 ]; then
             echo "✓ $suite passed"
             PASSED_SUITES+=("$suite")
         else
             echo "✗ $suite failed"
             FAILED_SUITES+=("$suite")
+            
+            # Extract failure details (lines with ✘ and following context)
+            FAILURES=$(echo "$OUTPUT" | grep -A 5 "✘\|FAILURES!\|Failed asserting")
+            if [ -n "$FAILURES" ]; then
+                FAILURE_DETAILS+=("=== $suite ===")
+                FAILURE_DETAILS+=("$FAILURES")
+                FAILURE_DETAILS+=("")
+            fi
         fi
     fi
     echo ""
@@ -101,6 +113,21 @@ if [ ${#FAILED_SUITES[@]} -gt 0 ]; then
     for suite in "${FAILED_SUITES[@]}"; do
         echo "  - $suite"
     done
+    
+    # Show detailed failure information
+    if [ ${#FAILURE_DETAILS[@]} -gt 0 ]; then
+        echo ""
+        echo "========================================="
+        echo "Failure Details"
+        echo "========================================="
+        for detail in "${FAILURE_DETAILS[@]}"; do
+            echo "$detail"
+        done
+    fi
+    
+    echo ""
+    echo "Tip: Run './run-tests.sh -v' for full output or"
+    echo "     './vendor/bin/phpunit --testsuite <suite-name>' for specific suite"
     exit 1
 fi
 

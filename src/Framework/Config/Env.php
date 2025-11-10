@@ -36,6 +36,17 @@ class Env
                     default => $value
                 };
 
+                // Priority: $_ENV > $_SERVER > .env file
+                if (array_key_exists($key, $_ENV)) {
+                    self::$cache[$key] = $_ENV[$key];
+                    continue;
+                }
+                
+                if (array_key_exists($key, $_SERVER)) {
+                    self::$cache[$key] = $_SERVER[$key];
+                    continue;
+                }
+
                 // Handle variable interpolation
                 if (is_string($value) && str_contains($value, '${')) {
                     $value = preg_replace_callback('/\${([^}]+)}/', function($matches) {
@@ -45,25 +56,46 @@ class Env
 
                 self::$cache[$key] = $value;
                 putenv("{$key}=" . (is_bool($value) ? ($value ? 'true' : 'false') : (string) $value));
-
-                if(!isset($_ENV[$key])) {
-                    $_ENV[$key] = $value;
-                }
-                
-                if(!isset($_SERVER[$key])) {
-                    $_SERVER[$key] = $value;
-                }
+                $_ENV[$key] = $value;
+                $_SERVER[$key] = $value;
             }
         }
     }
 
     public static function get(string $key, mixed $default = null): mixed
     {
-        return self::$cache[$key] ?? $default;
+        // Priority: cache > $_ENV > $_SERVER > getenv() > default
+        if (array_key_exists($key, self::$cache)) {
+            return self::$cache[$key];
+        }
+        
+        if (array_key_exists($key, $_ENV)) {
+            return $_ENV[$key];
+        }
+        
+        if (array_key_exists($key, $_SERVER)) {
+            return $_SERVER[$key];
+        }
+        
+        // Check process environment (set via putenv())
+        $value = getenv($key);
+        if ($value !== false) {
+            return $value;
+        }
+        
+        return $default;
     }
 
     public static function has(string $key): bool
     {
         return isset(self::$cache[$key]);
+    }
+
+    public static function set(string $key, mixed $value): void
+    {
+        self::$cache[$key] = $value;
+        putenv("{$key}=" . (is_bool($value) ? ($value ? 'true' : 'false') : (string) $value));
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
     }
 }

@@ -80,7 +80,7 @@ if (!function_exists('get_env')) {
     /**
      * Gets an environment variable.
      */
-    function get_env(string $key, ?string $default = null): ?string
+    function get_env(string $key, mixed $default = null): mixed
     {
         return Lightpack\Config\Env::get($key, $default);
     }
@@ -90,11 +90,9 @@ if (!function_exists('set_env')) {
     /**
      * Sets an environment variable.
      */
-    function set_env(string $key, ?string $value): void
+    function set_env(string $key, mixed $value): void
     {
-        putenv("{$key}={$value}");
-        $_ENV[$key] = $value;
-        $_SERVER[$key] = $value;
+        Lightpack\Config\Env::set($key, $value);
     }
 }
 
