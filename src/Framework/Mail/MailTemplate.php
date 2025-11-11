@@ -20,6 +20,8 @@ class MailTemplate
     protected ?string $layout = 'default';
     protected ?string $logoUrl = null;
     protected int $logoWidth = 120;
+    protected ?int $logoHeight = null;
+    protected int $logoMaxHeight = 60;
 
     // Default color scheme
     protected array $colors = [
@@ -123,11 +125,18 @@ class MailTemplate
 
     /**
      * Set logo for header (replaces app name text)
+     * 
+     * @param string $url Logo URL
+     * @param int $width Logo width in pixels (default: 120)
+     * @param int|null $height Logo height in pixels (null = auto, maintains aspect ratio)
+     * @param int $maxHeight Maximum height constraint in pixels (default: 60, prevents tall logos)
      */
-    public function logo(string $url, int $width = 120): self
+    public function logo(string $url, int $width = 120, ?int $height = null, int $maxHeight = 60): self
     {
         $this->logoUrl = $url;
         $this->logoWidth = $width;
+        $this->logoHeight = $height;
+        $this->logoMaxHeight = $maxHeight;
         return $this;
     }
 
@@ -352,10 +361,31 @@ HTML;
         $escapedLogoUrl = $this->escape($this->logoUrl);
         $escapedAppName = $this->escape($appName);
         
+        // Build inline styles for logo
+        $styles = [
+            'width: ' . $this->logoWidth . 'px',
+            'max-width: 100%',
+            'display: block',
+            'margin: 0 auto',
+            'border: 0',
+        ];
+        
+        // Add height control
+        if ($this->logoHeight !== null) {
+            // Explicit height set
+            $styles[] = 'height: ' . $this->logoHeight . 'px';
+        } else {
+            // Auto height with max-height constraint
+            $styles[] = 'height: auto';
+            $styles[] = 'max-height: ' . $this->logoMaxHeight . 'px';
+        }
+        
+        $styleAttr = implode('; ', $styles) . ';';
+        
         return <<<HTML
         <tr>
             <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
-                <img src="{$escapedLogoUrl}" alt="{$escapedAppName}" style="width: {$this->logoWidth}px; max-width: 100%; height: auto; display: block; margin: 0 auto; border: 0;">
+                <img src="{$escapedLogoUrl}" alt="{$escapedAppName}" style="{$styleAttr}">
             </td>
         </tr>
 HTML;
