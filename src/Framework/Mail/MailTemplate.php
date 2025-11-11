@@ -264,31 +264,23 @@ class MailTemplate
     </style>
 </head>
 <body style="margin: 0; padding: {$this->spacing['lg']}; background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
-    <!-- Main container -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container" align="center" style="max-width: 600px; margin: 0 auto; background-color: {$this->colors['white']}; border: 1px solid {$this->colors['border']}; border-radius: 8px; font-family: {$this->fonts['family']};">
-        <!-- Header -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" align="center" style="max-width: 600px; margin: 0 auto; font-family: {$this->fonts['family']};">
+        {$this->renderOptionalHeader($appName)}
+        
+        <!-- Main content container -->
         <tr>
-            <td class="mobile-padding" style="padding: {$this->spacing['xl']} {$this->spacing['xl']} {$this->spacing['lg']}; text-align: center; border-bottom: 1px solid {$this->colors['border']};">
-                {$this->renderHeader($appName)}
+            <td>
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container" style="background-color: {$this->colors['white']}; border: 1px solid {$this->colors['border']}; border-radius: 8px; font-family: {$this->fonts['family']};">
+                    <tr>
+                        <td class="mobile-padding" style="padding: {$this->spacing['xl']}; font-family: {$this->fonts['family']};">
+                            {$content}
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
         
-        <!-- Content -->
-        <tr>
-            <td class="mobile-padding" style="padding: {$this->spacing['xl']}; font-family: {$this->fonts['family']};">
-                {$content}
-            </td>
-        </tr>
-        
-        <!-- Footer -->
-        <tr>
-            <td class="mobile-padding" style="padding: {$this->spacing['lg']} {$this->spacing['xl']}; text-align: center; border-top: 1px solid {$this->colors['border']}; font-family: {$this->fonts['family']};">
-                <p style="margin: 0 0 {$this->spacing['sm']}; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['textLight']}; font-family: {$this->fonts['family']};">
-                    &copy; {$year} {$appName}. All rights reserved.
-                </p>
-                {$this->renderFooterLinks()}
-            </td>
-        </tr>
+        {$this->renderOptionalFooter($appName, $year)}
     </table>
 </body>
 </html>
@@ -296,45 +288,57 @@ HTML;
     }
 
     /**
-     * Render header (logo or app name)
+     * Render optional header (only if logo is set)
      */
-    protected function renderHeader(string $appName): string
+    protected function renderOptionalHeader(string $appName): string
     {
-        if ($this->logoUrl) {
-            return <<<HTML
-<img src="{$this->logoUrl}" alt="{$appName}" style="width: {$this->logoWidth}px; max-width: 100%; height: auto; display: block; margin: 0 auto; border: 0;">
-HTML;
+        if (!$this->logoUrl) {
+            return '';
         }
         
         return <<<HTML
-<div style="margin: 0; font-size: {$this->fonts['sizeH2']}; font-weight: 600; color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
-    {$appName}
-</div>
+        <tr>
+            <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
+                <img src="{$this->logoUrl}" alt="{$appName}" style="width: {$this->logoWidth}px; max-width: 100%; height: auto; display: block; margin: 0 auto; border: 0;">
+            </td>
+        </tr>
 HTML;
     }
 
     /**
-     * Render footer links
+     * Render optional footer (only if footer data is provided)
      */
-    protected function renderFooterLinks(): string
+    protected function renderOptionalFooter(string $appName, string $year): string
     {
-        $links = $this->data['footer_links'] ?? [];
-
-        if (empty($links)) {
+        $footerText = $this->data['footer_text'] ?? null;
+        $footerLinks = $this->data['footer_links'] ?? [];
+        
+        // Don't render footer if nothing is provided
+        if (!$footerText && empty($footerLinks)) {
             return '';
         }
-
-        $html = '<p style="margin: 0; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . ';">';
-        $linkParts = [];
-
-        foreach ($links as $text => $url) {
-            $linkParts[] = '<a href="' . htmlspecialchars($url) . '" style="color: ' . $this->colors['primary'] . '; text-decoration: none;">' . htmlspecialchars($text) . '</a>';
+        
+        $content = '';
+        
+        if ($footerText) {
+            $content .= '<p style="margin: 0 0 ' . $this->spacing['sm'] . '; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . htmlspecialchars($footerText, ENT_QUOTES, 'UTF-8') . '</p>';
         }
-
-        $html .= implode(' • ', $linkParts);
-        $html .= '</p>';
-
-        return $html;
+        
+        if (!empty($footerLinks)) {
+            $linkHtml = [];
+            foreach ($footerLinks as $text => $url) {
+                $linkHtml[] = '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" style="color: ' . $this->colors['primary'] . '; text-decoration: none; font-family: ' . $this->fonts['family'] . ';">' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</a>';
+            }
+            $content .= '<p style="margin: 0; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . implode(' | ', $linkHtml) . '</p>';
+        }
+        
+        return <<<HTML
+        <tr>
+            <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
+                {$content}
+            </td>
+        </tr>
+HTML;
     }
 
     /**
