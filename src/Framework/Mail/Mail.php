@@ -166,6 +166,17 @@ abstract class Mail
         return $this;
     }
 
+    /**
+     * Use a MailTemplate for both HTML and plain text bodies
+     */
+    public function template(MailTemplate $template): self
+    {
+        $this->htmlBody = $template->toHtml();
+        $this->textBody = $template->toPlainText();
+
+        return $this;
+    }
+
     public function send()
     {
         $this->renderViews();

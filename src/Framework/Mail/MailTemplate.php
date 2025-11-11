@@ -15,8 +15,9 @@ namespace Lightpack\Mail;
  */
 class MailTemplate
 {
+    protected array $components = [];
     protected array $data = [];
-    protected string $content = '';
+    protected ?string $layout = 'default';
 
     // Default color scheme
     protected array $colors = [
@@ -79,54 +80,129 @@ class MailTemplate
     }
 
     /**
-     * Render a template with data
+     * Set data for the template
      */
-    public function render(array $data = []): string
+    public function setData(array $data): self
     {
         $this->data = array_merge($this->data, $data);
-        
-        return $this->wrapInLayout();
+        return $this;
     }
 
     /**
-     * Generate plain text version from HTML
+     * Use a specific layout (default, minimal, or null for no layout)
      */
-    public function toPlainText(string $html): string
+    public function useLayout(?string $layout): self
     {
-        // Remove script and style tags
-        $text = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $html);
-        $text = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $text);
+        $this->layout = $layout;
+        return $this;
+    }
 
-        // Convert common HTML elements to text equivalents
-        $text = preg_replace('/<h[1-6][^>]*>(.*?)<\/h[1-6]>/is', "\n\n" . '$1' . "\n", $text);
-        $text = preg_replace('/<p[^>]*>(.*?)<\/p>/is', '$1' . "\n\n", $text);
-        $text = preg_replace('/<br\s*\/?>/i', "\n", $text);
-        $text = preg_replace('/<hr\s*\/?>/i', "\n" . str_repeat('-', 50) . "\n", $text);
+    /**
+     * Disable layout wrapper
+     */
+    public function withoutLayout(): self
+    {
+        $this->layout = null;
+        return $this;
+    }
 
-        // Convert links
-        $text = preg_replace('/<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/is', '$2 ($1)', $text);
+    /**
+     * Render to HTML
+     */
+    public function toHtml(): string
+    {
+        $content = $this->renderComponents();
+        
+        if ($this->layout === null) {
+            return $content;
+        }
+        
+        return $this->wrapInLayout($content);
+    }
 
-        // Convert lists
-        $text = preg_replace('/<li[^>]*>(.*?)<\/li>/is', '• $1' . "\n", $text);
-        $text = preg_replace('/<\/?[ou]l[^>]*>/i', "\n", $text);
+    /**
+     * Alias for toHtml() for backward compatibility
+     */
+    public function render(array $data = []): string
+    {
+        if (!empty($data)) {
+            $this->data = array_merge($this->data, $data);
+        }
+        
+        return $this->toHtml();
+    }
 
-        // Remove remaining HTML tags
-        $text = strip_tags($text);
+    /**
+     * Generate plain text version from components
+     */
+    public function toPlainText(): string
+    {
+        $text = '';
+        
+        foreach ($this->components as $component) {
+            $text .= $this->componentToPlainText($component);
+        }
+        
+        // Clean up excessive whitespace
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+        
+        return trim($text);
+    }
 
-        // Decode HTML entities
-        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    /**
+     * Render all components to HTML
+     */
+    protected function renderComponents(): string
+    {
+        $html = '';
+        
+        foreach ($this->components as $component) {
+            $html .= $this->renderComponent($component);
+        }
+        
+        return $html;
+    }
 
-        // Clean up whitespace
-        $text = preg_replace('/\n\s*\n\s*\n/', "\n\n", $text);
-        $text = trim($text);
+    /**
+     * Render a single component to HTML
+     */
+    protected function renderComponent(array $component): string
+    {
+        return match ($component['type']) {
+            'heading' => $this->renderHeading($component),
+            'paragraph' => $this->renderParagraph($component),
+            'button' => $this->renderButton($component),
+            'divider' => $this->renderDivider($component),
+            'alert' => $this->renderAlert($component),
+            'code' => $this->renderCode($component),
+            'bulletList' => $this->renderBulletList($component),
+            'keyValueTable' => $this->renderKeyValueTable($component),
+            default => '',
+        };
+    }
 
-        return $text;
+    /**
+     * Convert a single component to plain text
+     */
+    protected function componentToPlainText(array $component): string
+    {
+        return match ($component['type']) {
+            'heading' => strtoupper($component['text']) . "\n" . str_repeat('=', min(strlen($component['text']), 50)) . "\n\n",
+            'paragraph' => $component['text'] . "\n\n",
+            'button' => $component['text'] . ': ' . $component['url'] . "\n\n",
+            'divider' => str_repeat('-', 50) . "\n\n",
+            'alert' => '[' . strtoupper($component['alertType']) . '] ' . $component['text'] . "\n\n",
+            'code' => $component['code'] . "\n\n",
+            'bulletList' => implode("\n", array_map(fn($item) => '• ' . $item, $component['items'])) . "\n\n",
+            'keyValueTable' => implode("\n", array_map(fn($k, $v) => $k . ': ' . $v, array_keys($component['data']), $component['data'])) . "\n\n",
+            default => '',
+        };
     }
 
     /**
      * Wrap content in layout
      */
-    protected function wrapInLayout(): string
+    protected function wrapInLayout(string $content): string
     {
         $appName = $this->data['app_name'] ?? get_env('APP_NAME');
         $appUrl = $this->data['app_url'] ?? get_env('APP_URL');
@@ -167,7 +243,7 @@ class MailTemplate
                     <!-- Content -->
                     <tr>
                         <td style="padding: {$this->spacing['xl']};">
-                            {$this->content}
+                            {$content}
                         </td>
                     </tr>
                     
@@ -214,18 +290,33 @@ HTML;
     }
 
     /**
+     * Add a button component
+     */
+    public function button(string $text, string $url, string $color = 'primary'): self
+    {
+        $this->components[] = [
+            'type' => 'button',
+            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+            'url' => htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
+            'color' => $color,
+        ];
+        
+        return $this;
+    }
+
+    /**
      * Render a button component
      */
-    public function button(string $text, string $url, string $color = 'primary'): string
+    protected function renderButton(array $component): string
     {
-        $bgColor = $this->colors[$color] ?? $this->colors['primary'];
+        $bgColor = $this->colors[$component['color']] ?? $this->colors['primary'];
 
         return <<<HTML
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: {$this->spacing['lg']} 0;">
     <tr>
         <td style="border-radius: 6px; background-color: {$bgColor};">
-            <a href="{$url}" style="display: inline-block; padding: {$this->spacing['md']} {$this->spacing['xl']}; font-size: {$this->fonts['sizeBase']}; font-weight: 600; color: {$this->colors['white']}; text-decoration: none; border-radius: 6px;">
-                {$text}
+            <a href="{$component['url']}" style="display: inline-block; padding: {$this->spacing['md']} {$this->spacing['xl']}; font-size: {$this->fonts['sizeBase']}; font-weight: 600; color: {$this->colors['white']}; text-decoration: none; border-radius: 6px;">
+                {$component['text']}
             </a>
         </td>
     </tr>
@@ -234,10 +325,25 @@ HTML;
     }
 
     /**
-     * Render a heading
+     * Add a heading component
      */
-    public function heading(string $text, int $level = 1): string
+    public function heading(string $text, int $level = 1): self
     {
+        $this->components[] = [
+            'type' => 'heading',
+            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+            'level' => max(1, min(3, $level)), // Clamp between 1-3
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a heading component
+     */
+    protected function renderHeading(array $component): string
+    {
+        $level = $component['level'];
         $sizes = [
             1 => $this->fonts['sizeH1'],
             2 => $this->fonts['sizeH2'],
@@ -247,48 +353,78 @@ HTML;
         $size = $sizes[$level] ?? $this->fonts['sizeH2'];
         $marginBottom = $level === 1 ? $this->spacing['lg'] : $this->spacing['md'];
 
-        $content = <<<HTML
+        return <<<HTML
 <h{$level} style="margin: 0 0 {$marginBottom}; font-size: {$size}; font-weight: 600; color: {$this->colors['text']}; line-height: 1.3;">
-    {$text}
+    {$component['text']}
 </h{$level}>
 HTML;
-
-        $this->content .= $content;
-        return $content;
     }
 
     /**
-     * Render a paragraph
+     * Add a paragraph component
      */
-    public function paragraph(string $text): string
+    public function paragraph(string $text): self
     {
-        $content = <<<HTML
+        $this->components[] = [
+            'type' => 'paragraph',
+            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a paragraph component
+     */
+    protected function renderParagraph(array $component): string
+    {
+        return <<<HTML
 <p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6;">
-    {$text}
+    {$component['text']}
 </p>
 HTML;
-
-        $this->content .= $content;
-        return $content;
     }
 
     /**
-     * Render a divider
+     * Add a divider component
      */
-    public function divider(): string
+    public function divider(): self
     {
-        $content = <<<HTML
+        $this->components[] = [
+            'type' => 'divider',
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a divider component
+     */
+    protected function renderDivider(array $component): string
+    {
+        return <<<HTML
 <hr style="margin: {$this->spacing['xl']} 0; border: none; border-top: 1px solid {$this->colors['border']};">
 HTML;
-
-        $this->content .= $content;
-        return $content;
     }
 
     /**
-     * Render an alert box
+     * Add an alert box component
      */
-    public function alert(string $text, string $type = 'info'): string
+    public function alert(string $text, string $type = 'info'): self
+    {
+        $this->components[] = [
+            'type' => 'alert',
+            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+            'alertType' => $type,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render an alert box component
+     */
+    protected function renderAlert(array $component): string
     {
         $colors = [
             'info' => ['bg' => '#EFF6FF', 'border' => $this->colors['info'], 'text' => '#1E40AF'],
@@ -297,51 +433,71 @@ HTML;
             'danger' => ['bg' => '#FEF2F2', 'border' => $this->colors['danger'], 'text' => '#991B1B'],
         ];
 
-        $style = $colors[$type] ?? $colors['info'];
+        $style = $colors[$component['alertType']] ?? $colors['info'];
 
-        $content = <<<HTML
+        return <<<HTML
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0;">
     <tr>
         <td style="padding: {$this->spacing['md']}; background-color: {$style['bg']}; border-left: 4px solid {$style['border']}; border-radius: 4px;">
             <p style="margin: 0; font-size: {$this->fonts['sizeBase']}; color: {$style['text']}; line-height: 1.6;">
-                {$text}
+                {$component['text']}
             </p>
         </td>
     </tr>
 </table>
 HTML;
-
-        $this->content .= $content;
-        return $content;
     }
 
     /**
-     * Render a code block
+     * Add a code block component
      */
-    public function code(string $code): string
+    public function code(string $code): self
     {
-        $content = <<<HTML
+        $this->components[] = [
+            'type' => 'code',
+            'code' => htmlspecialchars($code, ENT_QUOTES, 'UTF-8'),
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a code block component
+     */
+    protected function renderCode(array $component): string
+    {
+        return <<<HTML
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0;">
     <tr>
         <td style="padding: {$this->spacing['md']}; background-color: #F3F4F6; border-radius: 4px; font-family: 'Courier New', monospace; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['text']}; overflow-x: auto;">
-            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">{$code}</pre>
+            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">{$component['code']}</pre>
         </td>
     </tr>
 </table>
 HTML;
-
-        $this->content .= $content;
-        return $content;
     }
 
     /**
-     * Render a list
+     * Add a bullet list component
      */
-    public function bulletList(array $items): string
+    public function bulletList(array $items): self
+    {
+        $this->components[] = [
+            'type' => 'bulletList',
+            'items' => array_map(fn($item) => htmlspecialchars($item, ENT_QUOTES, 'UTF-8'), $items),
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a bullet list component
+     */
+    protected function renderBulletList(array $component): string
     {
         $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0;">';
 
-        foreach ($items as $item) {
+        foreach ($component['items'] as $item) {
             $content .= <<<HTML
     <tr>
         <td style="padding: {$this->spacing['sm']} 0;">
@@ -357,19 +513,36 @@ HTML;
         }
 
         $content .= '</table>';
-        $this->content .= $content;
         return $content;
     }
 
     /**
-     * Render a key-value table
+     * Add a key-value table component
      */
-    public function keyValueTable(array $data): string
+    public function keyValueTable(array $data): self
+    {
+        $escaped = [];
+        foreach ($data as $key => $value) {
+            $escaped[htmlspecialchars($key, ENT_QUOTES, 'UTF-8')] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        }
+        
+        $this->components[] = [
+            'type' => 'keyValueTable',
+            'data' => $escaped,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a key-value table component
+     */
+    protected function renderKeyValueTable(array $component): string
     {
         $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px;">';
 
         $isFirst = true;
-        foreach ($data as $key => $value) {
+        foreach ($component['data'] as $key => $value) {
             $borderTop = $isFirst ? '' : 'border-top: 1px solid ' . $this->colors['border'] . ';';
             $content .= <<<HTML
     <tr>
@@ -385,7 +558,6 @@ HTML;
         }
 
         $content .= '</table>';
-        $this->content .= $content;
         return $content;
     }
 }
