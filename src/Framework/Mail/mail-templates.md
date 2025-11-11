@@ -197,14 +197,55 @@ $template->setColors([
 
 ### Custom Fonts
 
+You can customize fonts via constructor or the `setFonts()` method:
+
 ```php
+// Via constructor
 $template = new MailTemplate([
     'fonts' => [
-        'family' => 'Georgia, serif',
+        'family' => 'Georgia, "Times New Roman", serif',
         'sizeBase' => '18px',
+        'sizeH1' => '36px',
+        'sizeH2' => '28px',
+        'sizeH3' => '22px',
+        'sizeSmall' => '13px',
     ],
 ]);
+
+// Or after instantiation
+$template = new MailTemplate();
+$template->setFonts([
+    'family' => 'Verdana, Geneva, sans-serif',
+    'sizeBase' => '17px',
+]);
 ```
+
+**Email-Safe Fonts:**
+
+Email clients have limited font support. Use these web-safe fonts:
+
+**Sans-serif (recommended):**
+- `Arial, Helvetica, sans-serif` - Universal, clean
+- `Verdana, Geneva, sans-serif` - Wider, very readable
+- `Tahoma, Geneva, sans-serif` - Compact, modern
+- `"Trebuchet MS", Helvetica, sans-serif` - Friendly, rounded
+
+**Serif:**
+- `Georgia, "Times New Roman", serif` - Elegant, professional
+- `"Times New Roman", Times, serif` - Classic, formal
+
+**Monospace (for code blocks):**
+- `"Courier New", Courier, monospace` - Default for code
+- `Monaco, "Lucida Console", monospace` - Alternative
+
+**System fonts (modern approach):**
+```php
+$template->setFonts([
+    'family' => '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+]);
+```
+
+> **Note:** The template automatically applies `font-family` to every element with `!important` to ensure consistent rendering across all email clients, including Outlook and MailTrap.
 
 ### Custom Spacing
 
@@ -427,6 +468,27 @@ This applies to all components:
 - **role="presentation"** - Accessibility and compatibility
 - **Responsive meta tags** - Mobile-friendly where supported
 
+### Mobile Responsiveness
+
+The template is fully responsive and mobile-optimized:
+
+- **Fluid width** - Uses `max-width: 600px` instead of fixed width
+- **Scales to fit** - No horizontal scrolling on mobile devices
+- **Reduced padding** - Automatically adjusts padding on small screens (16px vs 32px)
+- **Media queries** - CSS `@media` queries for mobile optimization
+- **Touch-friendly** - Buttons and links are properly sized for touch
+
+**Desktop:** 600px centered container with full padding  
+**Mobile:** 100% width with reduced padding for better readability
+
+The responsive behavior works on:
+- ✅ iPhone (iOS Mail, Gmail app)
+- ✅ Android (Gmail, Samsung Email)
+- ✅ iPad and tablets
+- ✅ Modern email clients that support media queries
+
+> **Note:** Some older email clients (like Outlook 2007-2013) don't support media queries, but the email will still be readable with the base styles.
+
 ## Best Practices
 
 ### 1. Keep It Simple
@@ -548,6 +610,40 @@ $template->paragraph('Content here...');
 
 ## Troubleshooting
 
+### Font Looks Wrong in Email Client
+
+If fonts appear as Times New Roman or another serif font instead of your chosen sans-serif:
+
+**Cause:** Some email clients (Outlook, MailTrap) ignore font-family on body/parent elements.
+
+**Solution:** The template already applies `font-family` to every element with `!important`. If you still see issues:
+
+```php
+// Use a more specific font stack
+$template->setFonts([
+    'family' => 'Arial, Helvetica, "Helvetica Neue", sans-serif',
+]);
+```
+
+### Horizontal Scroll on Mobile
+
+If your email requires horizontal scrolling on mobile devices:
+
+**Cause:** Fixed-width content or images wider than screen.
+
+**Solution:** The template uses responsive `max-width` by default. Ensure any custom content or images are also responsive:
+
+```php
+// ✅ Good - Responsive
+$template->paragraph('Text content');  // Automatically responsive
+
+// ❌ Avoid - Fixed width images
+$template->paragraph('<img src="..." width="800">');
+
+// ✅ Better - Responsive images
+$template->paragraph('<img src="..." style="max-width: 100%; height: auto;">');
+```
+
 ### Email Looks Different in Outlook
 
 This is normal. Outlook uses Word's rendering engine. The template is designed to look good (not identical) across all clients.
@@ -622,6 +718,7 @@ Benefits:
 | `bulletList(array $items)` | `self` | Add bullet list |
 | `keyValueTable(array $data)` | `self` | Add key-value table |
 | `setColors(array $colors)` | `self` | Set custom colors |
+| `setFonts(array $fonts)` | `self` | Set custom fonts |
 | `setData(array $data)` | `self` | Set template data |
 | `useLayout(?string $layout)` | `self` | Use specific layout |
 | `withoutLayout()` | `self` | Disable layout wrapper |

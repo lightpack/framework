@@ -80,6 +80,15 @@ class MailTemplate
     }
 
     /**
+     * Set custom fonts
+     */
+    public function setFonts(array $fonts): self
+    {
+        $this->fonts = array_merge($this->fonts, $fonts);
+        return $this;
+    }
+
+    /**
      * Set data for the template
      */
     public function setData(array $data): self
@@ -220,21 +229,37 @@ class MailTemplate
     <title>{$subject}</title>
     <!--[if mso]>
     <style type="text/css">
-        table {border-collapse: collapse;}
+        table {border-collapse: collapse; font-family: {$this->fonts['family']};}
     </style>
     <![endif]-->
+    <style type="text/css">
+        /* Force font on all elements */
+        body, table, td, p, h1, h2, h3, a {
+            font-family: {$this->fonts['family']} !important;
+        }
+        /* Responsive table */
+        @media only screen and (max-width: 620px) {
+            .email-container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .mobile-padding {
+                padding: 16px !important;
+            }
+        }
+    </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
     <!-- Wrapper table for Outlook -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: {$this->colors['background']};">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
         <tr>
             <td style="padding: {$this->spacing['lg']} 0;">
                 <!-- Main container -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="margin: 0 auto; background-color: {$this->colors['white']}; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container" align="center" style="max-width: 600px; margin: 0 auto; background-color: {$this->colors['white']}; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-family: {$this->fonts['family']};">
                     <!-- Header -->
                     <tr>
-                        <td style="padding: {$this->spacing['xl']} {$this->spacing['xl']} {$this->spacing['lg']}; text-align: center; border-bottom: 1px solid {$this->colors['border']};">
-                            <h1 style="margin: 0; font-size: {$this->fonts['sizeH2']}; font-weight: 600; color: {$this->colors['text']};">
+                        <td class="mobile-padding" style="padding: {$this->spacing['xl']} {$this->spacing['xl']} {$this->spacing['lg']}; text-align: center; border-bottom: 1px solid {$this->colors['border']};">
+                            <h1 style="margin: 0; font-size: {$this->fonts['sizeH2']}; font-weight: 600; color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
                                 {$appName}
                             </h1>
                         </td>
@@ -242,15 +267,15 @@ class MailTemplate
                     
                     <!-- Content -->
                     <tr>
-                        <td style="padding: {$this->spacing['xl']};">
+                        <td class="mobile-padding" style="padding: {$this->spacing['xl']}; font-family: {$this->fonts['family']};">
                             {$content}
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: {$this->spacing['lg']} {$this->spacing['xl']}; text-align: center; border-top: 1px solid {$this->colors['border']}; background-color: {$this->colors['background']};">
-                            <p style="margin: 0 0 {$this->spacing['sm']}; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['textLight']};">
+                        <td class="mobile-padding" style="padding: {$this->spacing['lg']} {$this->spacing['xl']}; text-align: center; border-top: 1px solid {$this->colors['border']}; background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
+                            <p style="margin: 0 0 {$this->spacing['sm']}; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['textLight']}; font-family: {$this->fonts['family']};">
                                 &copy; {$year} {$appName}. All rights reserved.
                             </p>
                             {$this->renderFooterLinks()}
@@ -312,10 +337,10 @@ HTML;
         $bgColor = $this->colors[$component['color']] ?? $this->colors['primary'];
 
         return <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: {$this->spacing['lg']} 0;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
     <tr>
         <td style="border-radius: 6px; background-color: {$bgColor};">
-            <a href="{$component['url']}" style="display: inline-block; padding: {$this->spacing['md']} {$this->spacing['xl']}; font-size: {$this->fonts['sizeBase']}; font-weight: 600; color: {$this->colors['white']}; text-decoration: none; border-radius: 6px;">
+            <a href="{$component['url']}" style="display: inline-block; padding: {$this->spacing['md']} {$this->spacing['xl']}; font-size: {$this->fonts['sizeBase']}; font-weight: 600; color: {$this->colors['white']}; text-decoration: none; border-radius: 6px; font-family: {$this->fonts['family']};">
                 {$component['text']}
             </a>
         </td>
@@ -354,7 +379,7 @@ HTML;
         $marginBottom = $level === 1 ? $this->spacing['lg'] : $this->spacing['md'];
 
         return <<<HTML
-<h{$level} style="margin: 0 0 {$marginBottom}; font-size: {$size}; font-weight: 600; color: {$this->colors['text']}; line-height: 1.3;">
+<h{$level} style="margin: 0 0 {$marginBottom}; font-size: {$size}; font-weight: 600; color: {$this->colors['text']}; line-height: 1.3; font-family: {$this->fonts['family']};">
     {$component['text']}
 </h{$level}>
 HTML;
@@ -379,7 +404,7 @@ HTML;
     protected function renderParagraph(array $component): string
     {
         return <<<HTML
-<p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6;">
+<p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">
     {$component['text']}
 </p>
 HTML;
@@ -436,10 +461,10 @@ HTML;
         $style = $colors[$component['alertType']] ?? $colors['info'];
 
         return <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
     <tr>
         <td style="padding: {$this->spacing['md']}; background-color: {$style['bg']}; border-left: 4px solid {$style['border']}; border-radius: 4px;">
-            <p style="margin: 0; font-size: {$this->fonts['sizeBase']}; color: {$style['text']}; line-height: 1.6;">
+            <p style="margin: 0; font-size: {$this->fonts['sizeBase']}; color: {$style['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">
                 {$component['text']}
             </p>
         </td>
@@ -467,10 +492,10 @@ HTML;
     protected function renderCode(array $component): string
     {
         return <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0; font-family: 'Courier New', monospace;">
     <tr>
         <td style="padding: {$this->spacing['md']}; background-color: #F3F4F6; border-radius: 4px; font-family: 'Courier New', monospace; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['text']}; overflow-x: auto;">
-            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">{$component['code']}</pre>
+            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace;">{$component['code']}</pre>
         </td>
     </tr>
 </table>
@@ -495,16 +520,16 @@ HTML;
      */
     protected function renderBulletList(array $component): string
     {
-        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0;">';
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; font-family: ' . $this->fonts['family'] . ';">';
 
         foreach ($component['items'] as $item) {
             $content .= <<<HTML
     <tr>
         <td style="padding: {$this->spacing['sm']} 0;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="font-family: {$this->fonts['family']};">
                 <tr>
-                    <td style="padding-right: {$this->spacing['sm']}; vertical-align: top; color: {$this->colors['primary']}; font-weight: bold;">•</td>
-                    <td style="font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6;">{$item}</td>
+                    <td style="padding-right: {$this->spacing['sm']}; vertical-align: top; color: {$this->colors['primary']}; font-weight: bold; font-family: {$this->fonts['family']};">•</td>
+                    <td style="font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">{$item}</td>
                 </tr>
             </table>
         </td>
@@ -539,17 +564,17 @@ HTML;
      */
     protected function renderKeyValueTable(array $component): string
     {
-        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px;">';
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; font-family: ' . $this->fonts['family'] . ';">';
 
         $isFirst = true;
         foreach ($component['data'] as $key => $value) {
             $borderTop = $isFirst ? '' : 'border-top: 1px solid ' . $this->colors['border'] . ';';
             $content .= <<<HTML
     <tr>
-        <td style="padding: {$this->spacing['md']}; {$borderTop} font-weight: 600; color: {$this->colors['text']}; width: 40%;">
+        <td style="padding: {$this->spacing['md']}; {$borderTop} font-weight: 600; color: {$this->colors['text']}; width: 40%; font-family: {$this->fonts['family']};">
             {$key}
         </td>
-        <td style="padding: {$this->spacing['md']}; {$borderTop} color: {$this->colors['text']};">
+        <td style="padding: {$this->spacing['md']}; {$borderTop} color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
             {$value}
         </td>
     </tr>
