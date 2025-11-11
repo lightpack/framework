@@ -670,20 +670,20 @@ HTML;
     {
         $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; overflow: hidden; font-family: ' . $this->fonts['family'] . ';">';
 
-        $index = 0;
+        $isFirst = true;
         foreach ($component['data'] as $key => $value) {
-            $bgColor = $index % 2 === 0 ? $this->colors['white'] : '#F9FAFB';
+            $borderTop = $isFirst ? '' : 'border-top: 1px solid ' . $this->colors['border'] . ';';
             $content .= <<<HTML
-    <tr style="background-color: {$bgColor};">
-        <td style="padding: {$this->spacing['md']}; font-weight: 600; color: {$this->colors['text']}; width: 40%; font-family: {$this->fonts['family']};">
+    <tr>
+        <td style="padding: {$this->spacing['md']}; {$borderTop} font-weight: 600; color: {$this->colors['text']}; width: 40%; background-color: {$this->colors['background']}; font-size: {$this->fonts['sizeBase']}; font-family: {$this->fonts['family']};">
             {$key}
         </td>
-        <td style="padding: {$this->spacing['md']}; color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
+        <td style="padding: {$this->spacing['md']}; {$borderTop} color: {$this->colors['text']}; font-size: {$this->fonts['sizeBase']}; font-family: {$this->fonts['family']};">
             {$value}
         </td>
     </tr>
 HTML;
-            $index++;
+            $isFirst = false;
         }
 
         $content .= '</table>';
@@ -698,22 +698,19 @@ HTML;
         $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; overflow: hidden; font-family: ' . $this->fonts['family'] . ';">';
         
         // Header row
-        $content .= '<tr style="background-color: ' . $this->colors['primary'] . ';">';
+        $content .= '<tr style="background-color: ' . $this->colors['background'] . ';">';
         foreach ($component['headers'] as $header) {
-            $content .= '<th style="padding: ' . $this->spacing['md'] . '; text-align: left; font-weight: 600; color: ' . $this->colors['white'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $header . '</th>';
+            $content .= '<th style="padding: ' . $this->spacing['md'] . '; text-align: left; font-weight: 600; color: ' . $this->colors['text'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $header . '</th>';
         }
         $content .= '</tr>';
         
         // Data rows
-        $index = 0;
         foreach ($component['rows'] as $row) {
-            $bgColor = $index % 2 === 0 ? $this->colors['white'] : '#F9FAFB';
-            $content .= '<tr style="background-color: ' . $bgColor . ';">';
+            $content .= '<tr>';
             foreach ($row as $cell) {
-                $content .= '<td style="padding: ' . $this->spacing['md'] . '; color: ' . $this->colors['text'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $cell . '</td>';
+                $content .= '<td style="padding: ' . $this->spacing['md'] . '; border-top: 1px solid ' . $this->colors['border'] . '; color: ' . $this->colors['text'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $cell . '</td>';
             }
             $content .= '</tr>';
-            $index++;
         }
         
         $content .= '</table>';
