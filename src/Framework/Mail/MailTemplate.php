@@ -18,6 +18,8 @@ class MailTemplate
     protected array $components = [];
     protected array $data = [];
     protected ?string $layout = 'default';
+    protected ?string $logoUrl = null;
+    protected int $logoWidth = 120;
 
     // Default color scheme
     protected array $colors = [
@@ -37,22 +39,22 @@ class MailTemplate
     // Typography settings
     protected array $fonts = [
         'family' => '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        'sizeBase' => '16px',
-        'sizeSmall' => '14px',
-        'sizeLarge' => '18px',
-        'sizeH1' => '32px',
-        'sizeH2' => '24px',
-        'sizeH3' => '20px',
+        'sizeBase' => '15px',
+        'sizeSmall' => '13px',
+        'sizeLarge' => '17px',
+        'sizeH1' => '22px',
+        'sizeH2' => '18px',
+        'sizeH3' => '16px',
     ];
 
     // Spacing settings
     protected array $spacing = [
         'xs' => '4px',
         'sm' => '8px',
-        'md' => '16px',
-        'lg' => '24px',
-        'xl' => '32px',
-        'xxl' => '48px',
+        'md' => '12px',
+        'lg' => '20px',
+        'xl' => '24px',
+        'xxl' => '32px',
     ];
 
     public function __construct(array $config = [])
@@ -85,6 +87,16 @@ class MailTemplate
     public function setFonts(array $fonts): self
     {
         $this->fonts = array_merge($this->fonts, $fonts);
+        return $this;
+    }
+
+    /**
+     * Set logo for header (replaces app name text)
+     */
+    public function logo(string $url, int $width = 120): self
+    {
+        $this->logoUrl = $url;
+        $this->logoWidth = $width;
         return $this;
     }
 
@@ -186,6 +198,7 @@ class MailTemplate
             'code' => $this->renderCode($component),
             'bulletList' => $this->renderBulletList($component),
             'keyValueTable' => $this->renderKeyValueTable($component),
+            'image' => $this->renderImage($component),
             default => '',
         };
     }
@@ -204,6 +217,7 @@ class MailTemplate
             'code' => $component['code'] . "\n\n",
             'bulletList' => implode("\n", array_map(fn($item) => '• ' . $item, $component['items'])) . "\n\n",
             'keyValueTable' => implode("\n", array_map(fn($k, $v) => $k . ': ' . $v, array_keys($component['data']), $component['data'])) . "\n\n",
+            'image' => '[Image: ' . ($component['alt'] ?? 'Image') . ']' . "\n\n",
             default => '',
         };
     }
@@ -249,44 +263,53 @@ class MailTemplate
         }
     </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
-    <!-- Wrapper table for Outlook -->
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
+<body style="margin: 0; padding: {$this->spacing['lg']}; background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
+    <!-- Main container -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container" align="center" style="max-width: 600px; margin: 0 auto; background-color: {$this->colors['white']}; border: 1px solid {$this->colors['border']}; border-radius: 8px; font-family: {$this->fonts['family']};">
+        <!-- Header -->
         <tr>
-            <td style="padding: {$this->spacing['lg']} 0;">
-                <!-- Main container -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container" align="center" style="max-width: 600px; margin: 0 auto; background-color: {$this->colors['white']}; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-family: {$this->fonts['family']};">
-                    <!-- Header -->
-                    <tr>
-                        <td class="mobile-padding" style="padding: {$this->spacing['xl']} {$this->spacing['xl']} {$this->spacing['lg']}; text-align: center; border-bottom: 1px solid {$this->colors['border']};">
-                            <h1 style="margin: 0; font-size: {$this->fonts['sizeH2']}; font-weight: 600; color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
-                                {$appName}
-                            </h1>
-                        </td>
-                    </tr>
-                    
-                    <!-- Content -->
-                    <tr>
-                        <td class="mobile-padding" style="padding: {$this->spacing['xl']}; font-family: {$this->fonts['family']};">
-                            {$content}
-                        </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                        <td class="mobile-padding" style="padding: {$this->spacing['lg']} {$this->spacing['xl']}; text-align: center; border-top: 1px solid {$this->colors['border']}; background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
-                            <p style="margin: 0 0 {$this->spacing['sm']}; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['textLight']}; font-family: {$this->fonts['family']};">
-                                &copy; {$year} {$appName}. All rights reserved.
-                            </p>
-                            {$this->renderFooterLinks()}
-                        </td>
-                    </tr>
-                </table>
+            <td class="mobile-padding" style="padding: {$this->spacing['xl']} {$this->spacing['xl']} {$this->spacing['lg']}; text-align: center; border-bottom: 1px solid {$this->colors['border']};">
+                {$this->renderHeader($appName)}
+            </td>
+        </tr>
+        
+        <!-- Content -->
+        <tr>
+            <td class="mobile-padding" style="padding: {$this->spacing['xl']}; font-family: {$this->fonts['family']};">
+                {$content}
+            </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+            <td class="mobile-padding" style="padding: {$this->spacing['lg']} {$this->spacing['xl']}; text-align: center; border-top: 1px solid {$this->colors['border']}; font-family: {$this->fonts['family']};">
+                <p style="margin: 0 0 {$this->spacing['sm']}; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['textLight']}; font-family: {$this->fonts['family']};">
+                    &copy; {$year} {$appName}. All rights reserved.
+                </p>
+                {$this->renderFooterLinks()}
             </td>
         </tr>
     </table>
 </body>
 </html>
+HTML;
+    }
+
+    /**
+     * Render header (logo or app name)
+     */
+    protected function renderHeader(string $appName): string
+    {
+        if ($this->logoUrl) {
+            return <<<HTML
+<img src="{$this->logoUrl}" alt="{$appName}" style="width: {$this->logoWidth}px; max-width: 100%; height: auto; display: block; margin: 0 auto; border: 0;">
+HTML;
+        }
+        
+        return <<<HTML
+<div style="margin: 0; font-size: {$this->fonts['sizeH2']}; font-weight: 600; color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
+    {$appName}
+</div>
 HTML;
     }
 
@@ -339,8 +362,8 @@ HTML;
         return <<<HTML
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
     <tr>
-        <td style="border-radius: 6px; background-color: {$bgColor};">
-            <a href="{$component['url']}" style="display: inline-block; padding: {$this->spacing['md']} {$this->spacing['xl']}; font-size: {$this->fonts['sizeBase']}; font-weight: 600; color: {$this->colors['white']}; text-decoration: none; border-radius: 6px; font-family: {$this->fonts['family']};">
+        <td style="border-radius: 4px; background-color: {$bgColor};">
+            <a href="{$component['url']}" style="display: inline-block; padding: {$this->spacing['md']} {$this->spacing['lg']}; font-size: {$this->fonts['sizeBase']}; font-weight: 500; color: {$this->colors['white']}; text-decoration: none; border-radius: 4px; font-family: {$this->fonts['family']};">
                 {$component['text']}
             </a>
         </td>
@@ -584,5 +607,41 @@ HTML;
 
         $content .= '</table>';
         return $content;
+    }
+
+    /**
+     * Add an image component
+     */
+    public function image(string $src, string $alt = '', ?int $width = null, string $align = 'center'): self
+    {
+        $this->components[] = [
+            'type' => 'image',
+            'src' => htmlspecialchars($src, ENT_QUOTES, 'UTF-8'),
+            'alt' => htmlspecialchars($alt, ENT_QUOTES, 'UTF-8'),
+            'width' => $width,
+            'align' => $align,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render an image component
+     */
+    protected function renderImage(array $component): string
+    {
+        $align = $component['align'] === 'center' ? 'center' : 'left';
+        $widthStyle = $component['width'] ? 'width: ' . $component['width'] . 'px; ' : '';
+        $maxWidth = $component['width'] ? 'max-width: ' . $component['width'] . 'px; ' : 'max-width: 100%; ';
+        
+        return <<<HTML
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
+    <tr>
+        <td align="{$align}">
+            <img src="{$component['src']}" alt="{$component['alt']}" style="{$widthStyle}{$maxWidth}height: auto; display: block; border: 0;">
+        </td>
+    </tr>
+</table>
+HTML;
     }
 }
