@@ -62,7 +62,7 @@ class MailTemplate
         if (!empty($config['colors'])) {
             $sanitized = [];
             foreach ($config['colors'] as $key => $value) {
-                $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                $sanitized[$key] = $this->escape($value);
             }
             $this->colors = array_merge($this->colors, $sanitized);
         }
@@ -70,7 +70,7 @@ class MailTemplate
         if (!empty($config['fonts'])) {
             $sanitized = [];
             foreach ($config['fonts'] as $key => $value) {
-                $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                $sanitized[$key] = $this->escape($value);
             }
             $this->fonts = array_merge($this->fonts, $sanitized);
         }
@@ -78,10 +78,19 @@ class MailTemplate
         if (!empty($config['spacing'])) {
             $sanitized = [];
             foreach ($config['spacing'] as $key => $value) {
-                $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                $sanitized[$key] = $this->escape($value);
             }
             $this->spacing = array_merge($this->spacing, $sanitized);
         }
+    }
+
+    /**
+     * Escape text for safe HTML output
+     * Protects against XSS while preserving UTF-8 characters
+     */
+    protected function escape(string $text): string
+    {
+        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     }
 
     /**
@@ -92,7 +101,7 @@ class MailTemplate
         // Sanitize color values to prevent CSS injection
         $sanitized = [];
         foreach ($colors as $key => $value) {
-            $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            $sanitized[$key] = $this->escape($value);
         }
         $this->colors = array_merge($this->colors, $sanitized);
         return $this;
@@ -106,7 +115,7 @@ class MailTemplate
         // Sanitize font values to prevent CSS injection
         $sanitized = [];
         foreach ($fonts as $key => $value) {
-            $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            $sanitized[$key] = $this->escape($value);
         }
         $this->fonts = array_merge($this->fonts, $sanitized);
         return $this;
@@ -340,8 +349,8 @@ HTML;
             return '';
         }
         
-        $escapedLogoUrl = htmlspecialchars($this->logoUrl, ENT_QUOTES, 'UTF-8');
-        $escapedAppName = htmlspecialchars($appName, ENT_QUOTES, 'UTF-8');
+        $escapedLogoUrl = $this->escape($this->logoUrl);
+        $escapedAppName = $this->escape($appName);
         
         return <<<HTML
         <tr>
@@ -375,7 +384,7 @@ HTML;
         if (!empty($footerLinks)) {
             $linkHtml = [];
             foreach ($footerLinks as $text => $url) {
-                $linkHtml[] = '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" style="color: ' . $this->colors['primary'] . '; text-decoration: none; font-family: ' . $this->fonts['family'] . ';">' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</a>';
+                $linkHtml[] = '<a href="' . $this->escape($url) . '" style="color: ' . $this->colors['primary'] . '; text-decoration: none; font-family: ' . $this->fonts['family'] . ';">' . $this->escape($text) . '</a>';
             }
             $content .= '<p style="margin: 0; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . implode(' | ', $linkHtml) . '</p>';
         }
@@ -396,8 +405,8 @@ HTML;
     {
         $this->components[] = [
             'type' => 'button',
-            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
-            'url' => htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
+            'text' => $this->escape($text),
+            'url' => $this->escape($url),
             'color' => $color,
         ];
         
@@ -431,7 +440,7 @@ HTML;
     {
         $this->components[] = [
             'type' => 'heading',
-            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+            'text' => $this->escape($text),
             'level' => max(1, min(3, $level)), // Clamp between 1-3
         ];
         
@@ -467,7 +476,7 @@ HTML;
     {
         $this->components[] = [
             'type' => 'paragraph',
-            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+            'text' => $this->escape($text),
         ];
         
         return $this;
@@ -506,8 +515,8 @@ HTML;
     {
         $this->components[] = [
             'type' => 'link',
-            'url' => htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
-            'text' => $text ? htmlspecialchars($text, ENT_QUOTES, 'UTF-8') : null,
+            'url' => $this->escape($url),
+            'text' => $text ? $this->escape($text) : null,
         ];
         
         return $this;
@@ -568,7 +577,7 @@ HTML;
     {
         $this->components[] = [
             'type' => 'alert',
-            'text' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+            'text' => $this->escape($text),
             'alertType' => $type,
         ];
         
@@ -609,7 +618,7 @@ HTML;
     {
         $this->components[] = [
             'type' => 'code',
-            'code' => htmlspecialchars($code, ENT_QUOTES, 'UTF-8'),
+            'code' => $this->escape($code),
         ];
         
         return $this;
@@ -638,7 +647,7 @@ HTML;
     {
         $this->components[] = [
             'type' => 'bulletList',
-            'items' => array_map(fn($item) => htmlspecialchars($item, ENT_QUOTES, 'UTF-8'), $items),
+            'items' => array_map(fn($item) => $this->escape($item), $items),
         ];
         
         return $this;
@@ -677,7 +686,7 @@ HTML;
     {
         $escaped = [];
         foreach ($data as $key => $value) {
-            $escaped[htmlspecialchars($key, ENT_QUOTES, 'UTF-8')] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            $escaped[$this->escape($key)] = $this->escape($value);
         }
         
         $this->components[] = [
@@ -750,9 +759,9 @@ HTML;
      */
     public function table(array $headers, array $rows): self
     {
-        $escapedHeaders = array_map(fn($h) => htmlspecialchars($h, ENT_QUOTES, 'UTF-8'), $headers);
+        $escapedHeaders = array_map(fn($h) => $this->escape($h), $headers);
         $escapedRows = array_map(
-            fn($row) => array_map(fn($cell) => htmlspecialchars($cell, ENT_QUOTES, 'UTF-8'), $row),
+            fn($row) => array_map(fn($cell) => $this->escape($cell), $row),
             $rows
         );
         
@@ -772,8 +781,8 @@ HTML;
     {
         $this->components[] = [
             'type' => 'image',
-            'src' => htmlspecialchars($src, ENT_QUOTES, 'UTF-8'),
-            'alt' => htmlspecialchars($alt, ENT_QUOTES, 'UTF-8'),
+            'src' => $this->escape($src),
+            'alt' => $this->escape($alt),
             'width' => $width,
             'align' => $align,
         ];
