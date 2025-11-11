@@ -51,7 +51,7 @@ class MailTemplate
     protected array $spacing = [
         'xs' => '4px',
         'sm' => '8px',
-        'md' => '12px',
+        'md' => '10px',
         'lg' => '20px',
         'xl' => '24px',
         'xxl' => '32px',
