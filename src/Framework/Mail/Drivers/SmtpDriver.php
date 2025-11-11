@@ -44,7 +44,6 @@ class SmtpDriver implements DriverInterface
     public function send(array $data): bool
     {
         try {
-            // Data is already normalized by MailData
             // Clear any previous recipients
             $this->mailer->clearAddresses();
             $this->mailer->clearCCs();

@@ -10,8 +10,6 @@ class ArrayDriver implements DriverInterface
 
     public function send(array $data): bool
     {
-        // Data is already normalized by MailData
-        // Just add metadata
         $data['id'] = uniqid();
         $data['timestamp'] = time();
         

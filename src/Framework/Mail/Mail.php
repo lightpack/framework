@@ -186,7 +186,6 @@ abstract class Mail
             ? $this->mailManager->driver($this->driverName)
             : $this->mailManager->getDefaultDriver();
         
-        // Build simple array - no MailData needed
         return $driver->send([
             'to' => $this->to,
             'from' => $this->from,
