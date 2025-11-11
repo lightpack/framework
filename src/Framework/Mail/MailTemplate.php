@@ -166,7 +166,7 @@ class MailTemplate
         $html = '';
         
         foreach ($this->components as $component) {
-            $html .= $this->renderComponent($component);
+            $html .= $this->renderComponent($component) . "\n";
         }
         
         return $html;
@@ -213,10 +213,10 @@ class MailTemplate
      */
     protected function wrapInLayout(string $content): string
     {
-        $appName = $this->data['app_name'] ?? get_env('APP_NAME');
-        $appUrl = $this->data['app_url'] ?? get_env('APP_URL');
+        $appName = $this->data['app_name'] ?? get_env('APP_NAME') ?? 'Application';
+        $appUrl = $this->data['app_url'] ?? get_env('APP_URL') ?? '#';
         $year = date('Y');
-        $subject = $this->data['subject'] ?? '';
+        $subject = $this->data['subject'] ?? 'Email from ' . $appName;
 
         return <<<HTML
 <!DOCTYPE html>
