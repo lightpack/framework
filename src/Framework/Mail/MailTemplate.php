@@ -79,6 +79,21 @@ class MailTemplate
     }
 
     /**
+     * Render a template with data
+     */
+    public function render(array $data = []): string
+    {
+        $this->data = array_merge($this->data, $data);
+        
+        $content = $this->renderCustomTemplate($template);
+        
+        // Wrap in layout
+        $html = $this->wrapInLayout($content);
+        
+        return $html;
+    }
+
+    /**
      * Generate plain text version from HTML
      */
     public function toPlainText(string $html): string
