@@ -428,6 +428,10 @@ class PasswordResetMail extends Mail
     public function dispatch(array $payload = [])
     {
         $template = new MailTemplate();
+        
+        // Optional: Add logo
+        $template->logo('https://yourapp.com/logo.png', 100);
+        
         $template
             ->heading('Reset Your Password')
             ->paragraph('You requested to reset your password. Click the button below to continue.')
@@ -436,8 +440,47 @@ class PasswordResetMail extends Mail
             ->alert('This link will expire in 60 minutes.', 'warning')
             ->paragraph('If you didn\'t request this, you can safely ignore this email.');
         
+        // Optional: Add footer
+        $template->footer('&copy; 2025 YourApp. All rights reserved.');
+        
         $this->to($payload['email'])
             ->subject('Password Reset Request')
+            ->template($template)
+            ->send();
+    }
+}
+```
+
+### Email Verification with Long URL
+
+```php
+class VerifyEmailMail extends Mail
+{
+    public function dispatch(array $payload = [])
+    {
+        $template = new MailTemplate();
+        
+        $template->logo(asset()->url('img/logo.svg'), 50);
+        
+        $template
+            ->heading('Verify Your Email Address')
+            ->paragraph('Please verify your email address by clicking the link below.')
+            ->button('Verify Email', $payload['verification_url'], 'primary')
+            ->divider()
+            ->paragraph('If you are not able to click the link, copy and paste the URL into your browser.')
+            ->link($payload['verification_url'])  // Use link() for long URLs
+            ->divider()
+            ->paragraph('If you did not create an account, please ignore this email.');
+        
+        $template
+            ->footer('&copy; 2025 AuthKit. All rights reserved.')
+            ->footerLinks([
+                'Privacy' => 'https://authkit.com/privacy',
+                'Terms' => 'https://authkit.com/terms',
+            ]);
+        
+        $this->to($payload['email'])
+            ->subject('Verify Your Email Address')
             ->template($template)
             ->send();
     }

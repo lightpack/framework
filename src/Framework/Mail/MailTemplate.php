@@ -248,8 +248,6 @@ class MailTemplate
     protected function wrapInLayout(string $content): string
     {
         $appName = $this->data['app_name'] ?? get_env('APP_NAME') ?? 'Application';
-        $appUrl = $this->data['app_url'] ?? get_env('APP_URL') ?? '#';
-        $year = date('Y');
         $subject = $this->data['subject'] ?? 'Email from ' . $appName;
 
         return <<<HTML
@@ -300,7 +298,7 @@ class MailTemplate
             </td>
         </tr>
         
-        {$this->renderOptionalFooter($appName, $year)}
+        {$this->renderOptionalFooter()}
     </table>
 </body>
 </html>
@@ -328,7 +326,7 @@ HTML;
     /**
      * Render optional footer (only if footer data is provided)
      */
-    protected function renderOptionalFooter(string $appName, string $year): string
+    protected function renderOptionalFooter(): string
     {
         $footerText = $this->data['footer_text'] ?? null;
         $footerLinks = $this->data['footer_links'] ?? [];

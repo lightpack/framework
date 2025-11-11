@@ -339,4 +339,91 @@ class MailTemplateTest extends TestCase
         $this->assertStringContainsString('xmlns:o="urn:schemas-microsoft-com:office:office"', $html);
         $this->assertStringContainsString('<!--[if mso]>', $html);
     }
+
+    public function testLinkComponent()
+    {
+        $template = new MailTemplate();
+        $template->link('https://example.com/very/long/url');
+        
+        $html = $template->toHtml();
+        
+        $this->assertStringContainsString('<a href="https://example.com/very/long/url"', $html);
+        $this->assertStringContainsString('word-break: break-all', $html);
+    }
+
+    public function testLinkWithCustomText()
+    {
+        $template = new MailTemplate();
+        $template->link('https://example.com', 'Click here');
+        
+        $html = $template->toHtml();
+        
+        $this->assertStringContainsString('Click here', $html);
+        $this->assertStringContainsString('https://example.com', $html);
+    }
+
+    public function testLogoInHeader()
+    {
+        $template = new MailTemplate();
+        $template->logo('https://example.com/logo.png', 100);
+        $template->paragraph('Content');
+        
+        $html = $template->toHtml();
+        
+        $this->assertStringContainsString('<img src="https://example.com/logo.png"', $html);
+        $this->assertStringContainsString('width: 100px', $html);
+    }
+
+    public function testFooterText()
+    {
+        $template = new MailTemplate();
+        $template->paragraph('Content');
+        $template->footer('&copy; 2025 Test App');
+        
+        $html = $template->toHtml();
+        
+        $this->assertStringContainsString('&copy; 2025 Test App', $html);
+    }
+
+    public function testFooterLinks()
+    {
+        $template = new MailTemplate();
+        $template->paragraph('Content');
+        $template->footerLinks([
+            'Privacy' => 'https://example.com/privacy',
+            'Terms' => 'https://example.com/terms',
+        ]);
+        
+        $html = $template->toHtml();
+        
+        $this->assertStringContainsString('Privacy', $html);
+        $this->assertStringContainsString('Terms', $html);
+        $this->assertStringContainsString('https://example.com/privacy', $html);
+        $this->assertStringContainsString('https://example.com/terms', $html);
+    }
+
+    public function testFooterTextAndLinks()
+    {
+        $template = new MailTemplate();
+        $template->paragraph('Content');
+        $template->footer('&copy; 2025 Test');
+        $template->footerLinks(['Privacy' => 'https://example.com/privacy']);
+        
+        $html = $template->toHtml();
+        
+        $this->assertStringContainsString('&copy; 2025 Test', $html);
+        $this->assertStringContainsString('Privacy', $html);
+    }
+
+    public function testNoFooterWhenNotProvided()
+    {
+        $template = new MailTemplate();
+        $template->paragraph('Content only');
+        
+        $html = $template->toHtml();
+        
+        // Should not have footer section when no footer data provided
+        $plainText = $template->toPlainText();
+        $this->assertEquals("Content only", $plainText);
+    }
 }
