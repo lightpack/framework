@@ -210,6 +210,7 @@ class MailTemplate
         return match ($component['type']) {
             'heading' => $this->renderHeading($component),
             'paragraph' => $this->renderParagraph($component),
+            'html' => $this->renderHtml($component),
             'button' => $this->renderButton($component),
             'link' => $this->renderLink($component),
             'divider' => $this->renderDivider($component),
@@ -217,6 +218,7 @@ class MailTemplate
             'code' => $this->renderCode($component),
             'bulletList' => $this->renderBulletList($component),
             'keyValueTable' => $this->renderKeyValueTable($component),
+            'table' => $this->renderTable($component),
             'image' => $this->renderImage($component),
             default => '',
         };
@@ -230,12 +232,14 @@ class MailTemplate
         return match ($component['type']) {
             'heading' => strtoupper($component['text']) . "\n" . str_repeat('=', min(strlen($component['text']), 50)) . "\n\n",
             'paragraph' => $component['text'] . "\n\n",
+            'html' => strip_tags($component['content']) . "\n\n",
             'button' => $component['text'] . ': ' . $component['url'] . "\n\n",
             'divider' => str_repeat('-', 50) . "\n\n",
             'alert' => '[' . strtoupper($component['alertType']) . '] ' . $component['text'] . "\n\n",
             'code' => $component['code'] . "\n\n",
             'bulletList' => implode("\n", array_map(fn($item) => '• ' . $item, $component['items'])) . "\n\n",
             'keyValueTable' => implode("\n", array_map(fn($k, $v) => $k . ': ' . $v, array_keys($component['data']), $component['data'])) . "\n\n",
+            'table' => implode("\n", array_map(fn($row) => implode(' | ', $row), array_merge([$component['headers']], $component['rows']))) . "\n\n",
             'image' => '[Image: ' . ($component['alt'] ?? 'Image') . ']' . "\n\n",
             'link' => $component['url'] . "\n\n",
             default => '',
@@ -457,6 +461,20 @@ HTML;
     }
 
     /**
+     * Add raw HTML content (allows HTML entities like &copy;, &trade;, etc.)
+     * Use sparingly - content is NOT escaped for XSS protection
+     */
+    public function html(string $content): self
+    {
+        $this->components[] = [
+            'type' => 'html',
+            'content' => $content, // NOT escaped - allows HTML entities
+        ];
+        
+        return $this;
+    }
+
+    /**
      * Add a clickable link/URL component
      */
     public function link(string $url, ?string $text = null): self
@@ -468,6 +486,18 @@ HTML;
         ];
         
         return $this;
+    }
+
+    /**
+     * Render raw HTML component
+     */
+    protected function renderHtml(array $component): string
+    {
+        return <<<HTML
+<div style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">
+    {$component['content']}
+</div>
+HTML;
     }
 
     /**
@@ -602,7 +632,7 @@ HTML;
         <td style="padding: {$this->spacing['sm']} 0;">
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="font-family: {$this->fonts['family']};">
                 <tr>
-                    <td style="padding-right: {$this->spacing['sm']}; vertical-align: top; color: {$this->colors['primary']}; font-weight: bold; font-family: {$this->fonts['family']};">•</td>
+                    <td style="padding-right: {$this->spacing['sm']}; vertical-align: top; color: {$this->colors['primary']}; font-weight: bold; font-family: {$this->fonts['family']};">&bull;</td>
                     <td style="font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">{$item}</td>
                 </tr>
             </table>
@@ -638,26 +668,79 @@ HTML;
      */
     protected function renderKeyValueTable(array $component): string
     {
-        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; font-family: ' . $this->fonts['family'] . ';">';
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; overflow: hidden; font-family: ' . $this->fonts['family'] . ';">';
 
-        $isFirst = true;
+        $index = 0;
         foreach ($component['data'] as $key => $value) {
-            $borderTop = $isFirst ? '' : 'border-top: 1px solid ' . $this->colors['border'] . ';';
+            $bgColor = $index % 2 === 0 ? $this->colors['white'] : '#F9FAFB';
             $content .= <<<HTML
-    <tr>
-        <td style="padding: {$this->spacing['md']}; {$borderTop} font-weight: 600; color: {$this->colors['text']}; width: 40%; font-family: {$this->fonts['family']};">
+    <tr style="background-color: {$bgColor};">
+        <td style="padding: {$this->spacing['md']}; font-weight: 600; color: {$this->colors['text']}; width: 40%; font-family: {$this->fonts['family']};">
             {$key}
         </td>
-        <td style="padding: {$this->spacing['md']}; {$borderTop} color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
+        <td style="padding: {$this->spacing['md']}; color: {$this->colors['text']}; font-family: {$this->fonts['family']};">
             {$value}
         </td>
     </tr>
 HTML;
-            $isFirst = false;
+            $index++;
         }
 
         $content .= '</table>';
         return $content;
+    }
+
+    /**
+     * Render a multi-column table component
+     */
+    protected function renderTable(array $component): string
+    {
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; overflow: hidden; font-family: ' . $this->fonts['family'] . ';">';
+        
+        // Header row
+        $content .= '<tr style="background-color: ' . $this->colors['primary'] . ';">';
+        foreach ($component['headers'] as $header) {
+            $content .= '<th style="padding: ' . $this->spacing['md'] . '; text-align: left; font-weight: 600; color: ' . $this->colors['white'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $header . '</th>';
+        }
+        $content .= '</tr>';
+        
+        // Data rows
+        $index = 0;
+        foreach ($component['rows'] as $row) {
+            $bgColor = $index % 2 === 0 ? $this->colors['white'] : '#F9FAFB';
+            $content .= '<tr style="background-color: ' . $bgColor . ';">';
+            foreach ($row as $cell) {
+                $content .= '<td style="padding: ' . $this->spacing['md'] . '; color: ' . $this->colors['text'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $cell . '</td>';
+            }
+            $content .= '</tr>';
+            $index++;
+        }
+        
+        $content .= '</table>';
+        return $content;
+    }
+
+    /**
+     * Add a multi-column table component
+     * 
+     * @param array $headers Column headers (e.g., ['Name', 'Email', 'Status'])
+     * @param array $rows Array of row data (e.g., [['John', 'john@example.com', 'Active'], ...])
+     */
+    public function table(array $headers, array $rows): self
+    {
+        $escapedHeaders = array_map(fn($h) => htmlspecialchars($h, ENT_QUOTES, 'UTF-8'), $headers);
+        $escapedRows = array_map(
+            fn($row) => array_map(fn($cell) => htmlspecialchars($cell, ENT_QUOTES, 'UTF-8'), $row),
+            $rows
+        );
+        
+        $this->components[] = [
+            'type' => 'table',
+            'headers' => $escapedHeaders,
+            'rows' => $escapedRows,
+        ];
+        
+        return $this;
     }
 
     /**

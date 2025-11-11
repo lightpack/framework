@@ -96,7 +96,7 @@ class MailTemplateTest extends TestCase
         $this->assertStringContainsString('Item 1', $html);
         $this->assertStringContainsString('Item 2', $html);
         $this->assertStringContainsString('Item 3', $html);
-        $this->assertStringContainsString('•', $html);
+        $this->assertStringContainsString('&bull;', $html);
     }
 
     public function testKeyValueTableComponent()
@@ -425,5 +425,41 @@ class MailTemplateTest extends TestCase
         // Should not have footer section when no footer data provided
         $plainText = $template->toPlainText();
         $this->assertEquals("Content only", $plainText);
+    }
+
+    public function testHtmlComponent()
+    {
+        $template = new MailTemplate();
+        $template->html('&copy; 2025 MyApp. All rights reserved.');
+        
+        $html = $template->toHtml();
+        
+        // HTML entities should NOT be escaped
+        $this->assertStringContainsString('&copy; 2025 MyApp', $html);
+    }
+
+    public function testTableComponent()
+    {
+        $template = new MailTemplate();
+        $template->table(
+            ['Name', 'Email', 'Status'],
+            [
+                ['John Doe', 'john@example.com', 'Active'],
+                ['Jane Smith', 'jane@example.com', 'Inactive'],
+            ]
+        );
+        
+        $html = $template->toHtml();
+        
+        // Check headers
+        $this->assertStringContainsString('Name', $html);
+        $this->assertStringContainsString('Email', $html);
+        $this->assertStringContainsString('Status', $html);
+        
+        // Check data
+        $this->assertStringContainsString('John Doe', $html);
+        $this->assertStringContainsString('john@example.com', $html);
+        $this->assertStringContainsString('Active', $html);
+        $this->assertStringContainsString('Jane Smith', $html);
     }
 }

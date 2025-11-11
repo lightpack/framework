@@ -129,6 +129,23 @@ $template->link('https://example.com/verify?token=abc123', 'Click here to verify
 
 **Use `link()` instead of `paragraph()` for URLs** to prevent horizontal scrolling on long URLs.
 
+### HTML Content (with Entities)
+
+For content with HTML entities like `&copy;`, `&trade;`, `&reg;`:
+
+```php
+// HTML entities are preserved (NOT escaped)
+$template->html('&copy; 2025 MyApp. All rights reserved.');
+$template->html('MyApp&trade; is a registered trademark.');
+```
+
+**⚠️ Security Warning:** The `html()` method does NOT escape content. Only use it for:
+- HTML entities (`&copy;`, `&trade;`, `&reg;`, `&nbsp;`, etc.)
+- Trusted content you control
+- **NEVER** use it for user-generated content
+
+For regular text, use `paragraph()` which provides XSS protection.
+
 ### Divider
 
 ```php
@@ -163,13 +180,36 @@ $template->bulletList([
 
 ### Key-Value Table
 
+Simple two-column table with alternating row colors:
+
 ```php
 $template->keyValueTable([
     'Order ID' => '#12345',
-    'Date' => '2024-01-01',
-    'Total' => '$99.99',
+    'Date' => '2025-01-01',
+    'Total' => '$100.00',
 ]);
 ```
+
+### Multi-Column Table
+
+For complex data with multiple columns and headers:
+
+```php
+$template->table(
+    ['Name', 'Email', 'Status', 'Joined'],  // Headers
+    [
+        ['John Doe', 'john@example.com', 'Active', '2025-01-01'],
+        ['Jane Smith', 'jane@example.com', 'Inactive', '2024-12-15'],
+        ['Bob Johnson', 'bob@example.com', 'Active', '2025-01-10'],
+    ]
+);
+```
+
+**Features:**
+- ✅ Colored header row (uses primary color)
+- ✅ Alternating row colors for readability
+- ✅ Automatic XSS protection
+- ✅ Responsive on mobile
 
 ## Fluent Interface
 
@@ -840,14 +880,16 @@ Benefits:
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `heading(string $text, int $level = 1)` | `self` | Add heading (H1-H3) |
-| `paragraph(string $text)` | `self` | Add paragraph |
+| `paragraph(string $text)` | `self` | Add paragraph (XSS protected) |
+| `html(string $content)` | `self` | Add raw HTML (allows entities, NOT escaped) |
 | `button(string $text, string $url, string $color = 'primary')` | `self` | Add button |
 | `link(string $url, string $text = null)` | `self` | Add clickable link (prevents scroll on long URLs) |
 | `divider()` | `self` | Add horizontal divider |
 | `alert(string $text, string $type = 'info')` | `self` | Add alert box |
 | `code(string $code)` | `self` | Add code block |
 | `bulletList(array $items)` | `self` | Add bullet list |
-| `keyValueTable(array $data)` | `self` | Add key-value table |
+| `keyValueTable(array $data)` | `self` | Add key-value table (2 columns) |
+| `table(array $headers, array $rows)` | `self` | Add multi-column table with headers |
 | `image(string $src, string $alt = '', ?int $width = null, string $align = 'center')` | `self` | Add image |
 | `logo(string $url, int $width = 120)` | `self` | Set header logo (optional) |
 | `footer(string $text)` | `self` | Set footer text (optional, supports HTML entities) |
