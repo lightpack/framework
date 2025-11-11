@@ -60,15 +60,27 @@ class MailTemplate
     public function __construct(array $config = [])
     {
         if (!empty($config['colors'])) {
-            $this->colors = array_merge($this->colors, $config['colors']);
+            $sanitized = [];
+            foreach ($config['colors'] as $key => $value) {
+                $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            }
+            $this->colors = array_merge($this->colors, $sanitized);
         }
 
         if (!empty($config['fonts'])) {
-            $this->fonts = array_merge($this->fonts, $config['fonts']);
+            $sanitized = [];
+            foreach ($config['fonts'] as $key => $value) {
+                $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            }
+            $this->fonts = array_merge($this->fonts, $sanitized);
         }
 
         if (!empty($config['spacing'])) {
-            $this->spacing = array_merge($this->spacing, $config['spacing']);
+            $sanitized = [];
+            foreach ($config['spacing'] as $key => $value) {
+                $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            }
+            $this->spacing = array_merge($this->spacing, $sanitized);
         }
     }
 
@@ -77,7 +89,12 @@ class MailTemplate
      */
     public function setColors(array $colors): self
     {
-        $this->colors = array_merge($this->colors, $colors);
+        // Sanitize color values to prevent CSS injection
+        $sanitized = [];
+        foreach ($colors as $key => $value) {
+            $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        }
+        $this->colors = array_merge($this->colors, $sanitized);
         return $this;
     }
 
@@ -86,7 +103,12 @@ class MailTemplate
      */
     public function setFonts(array $fonts): self
     {
-        $this->fonts = array_merge($this->fonts, $fonts);
+        // Sanitize font values to prevent CSS injection
+        $sanitized = [];
+        foreach ($fonts as $key => $value) {
+            $sanitized[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        }
+        $this->fonts = array_merge($this->fonts, $sanitized);
         return $this;
     }
 
@@ -318,10 +340,13 @@ HTML;
             return '';
         }
         
+        $escapedLogoUrl = htmlspecialchars($this->logoUrl, ENT_QUOTES, 'UTF-8');
+        $escapedAppName = htmlspecialchars($appName, ENT_QUOTES, 'UTF-8');
+        
         return <<<HTML
         <tr>
             <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
-                <img src="{$this->logoUrl}" alt="{$appName}" style="width: {$this->logoWidth}px; max-width: 100%; height: auto; display: block; margin: 0 auto; border: 0;">
+                <img src="{$escapedLogoUrl}" alt="{$escapedAppName}" style="width: {$this->logoWidth}px; max-width: 100%; height: auto; display: block; margin: 0 auto; border: 0;">
             </td>
         </tr>
 HTML;

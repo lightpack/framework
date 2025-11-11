@@ -462,4 +462,54 @@ class MailTemplateTest extends TestCase
         $this->assertStringContainsString('Active', $html);
         $this->assertStringContainsString('Jane Smith', $html);
     }
+
+    public function testCssInjectionPrevention()
+    {
+        $template = new MailTemplate();
+        
+        // Attempt CSS injection through colors
+        $template->setColors([
+            'primary' => '#000"; onclick="alert(1)',
+        ]);
+        
+        $template->button('Click', 'https://example.com');
+        $html = $template->toHtml();
+        
+        // Verify quotes are escaped (prevents breaking out of style attribute)
+        $this->assertStringContainsString('&quot;', $html);
+        // The onclick should be escaped as part of the color value, not as a real attribute
+        $this->assertStringNotContainsString('"; onclick="', $html);
+    }
+
+    public function testLogoUrlXssPrevention()
+    {
+        $template = new MailTemplate();
+        
+        // Attempt XSS through logo URL
+        $template->logo('javascript:alert(1)" onerror="alert(2)', 50);
+        $template->paragraph('Test');
+        
+        $html = $template->toHtml();
+        
+        // Verify URL is escaped (prevents breaking out of src attribute)
+        $this->assertStringContainsString('&quot;', $html);
+        $this->assertStringNotContainsString('" onerror="', $html);
+    }
+
+    public function testFontInjectionPrevention()
+    {
+        $template = new MailTemplate();
+        
+        // Attempt injection through fonts
+        $template->setFonts([
+            'family' => 'Arial"; style="color:red" data-evil="',
+        ]);
+        
+        $template->paragraph('Test');
+        $html = $template->toHtml();
+        
+        // Verify quotes are escaped (prevents breaking out of style attribute)
+        $this->assertStringContainsString('&quot;', $html);
+        $this->assertStringNotContainsString('"; style="', $html);
+    }
 }
