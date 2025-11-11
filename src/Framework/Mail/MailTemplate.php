@@ -16,7 +16,7 @@ namespace Lightpack\Mail;
 class MailTemplate
 {
     protected array $data = [];
-    protected bool $inlineCss = true;
+    protected string $content = '';
 
     // Default color scheme
     protected array $colors = [
@@ -85,12 +85,7 @@ class MailTemplate
     {
         $this->data = array_merge($this->data, $data);
         
-        $content = $this->renderCustomTemplate($template);
-        
-        // Wrap in layout
-        $html = $this->wrapInLayout($content);
-        
-        return $html;
+        return $this->wrapInLayout();
     }
 
     /**
@@ -131,10 +126,10 @@ class MailTemplate
     /**
      * Wrap content in layout
      */
-    protected function wrapInLayout(string $content): string
+    protected function wrapInLayout(): string
     {
-        $appName = $this->data['app_name'] ?? get_env('APP_NAME', 'Lightpack PHP Framework');
-        $appUrl = $this->data['app_url'] ?? get_env('APP_URL', '');
+        $appName = $this->data['app_name'] ?? get_env('APP_NAME');
+        $appUrl = $this->data['app_url'] ?? get_env('APP_URL');
         $year = date('Y');
         $subject = $this->data['subject'] ?? '';
 
@@ -172,7 +167,7 @@ class MailTemplate
                     <!-- Content -->
                     <tr>
                         <td style="padding: {$this->spacing['xl']};">
-                            {$content}
+                            {$this->content}
                         </td>
                     </tr>
                     
@@ -252,11 +247,14 @@ HTML;
         $size = $sizes[$level] ?? $this->fonts['sizeH2'];
         $marginBottom = $level === 1 ? $this->spacing['lg'] : $this->spacing['md'];
 
-        return <<<HTML
+        $content = <<<HTML
 <h{$level} style="margin: 0 0 {$marginBottom}; font-size: {$size}; font-weight: 600; color: {$this->colors['text']}; line-height: 1.3;">
     {$text}
 </h{$level}>
 HTML;
+
+        $this->content .= $content;
+        return $content;
     }
 
     /**
@@ -264,11 +262,14 @@ HTML;
      */
     public function paragraph(string $text): string
     {
-        return <<<HTML
+        $content = <<<HTML
 <p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6;">
     {$text}
 </p>
 HTML;
+
+        $this->content .= $content;
+        return $content;
     }
 
     /**
@@ -276,9 +277,12 @@ HTML;
      */
     public function divider(): string
     {
-        return <<<HTML
+        $content = <<<HTML
 <hr style="margin: {$this->spacing['xl']} 0; border: none; border-top: 1px solid {$this->colors['border']};">
 HTML;
+
+        $this->content .= $content;
+        return $content;
     }
 
     /**
@@ -295,7 +299,7 @@ HTML;
 
         $style = $colors[$type] ?? $colors['info'];
 
-        return <<<HTML
+        $content = <<<HTML
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0;">
     <tr>
         <td style="padding: {$this->spacing['md']}; background-color: {$style['bg']}; border-left: 4px solid {$style['border']}; border-radius: 4px;">
@@ -306,6 +310,9 @@ HTML;
     </tr>
 </table>
 HTML;
+
+        $this->content .= $content;
+        return $content;
     }
 
     /**
@@ -313,7 +320,7 @@ HTML;
      */
     public function code(string $code): string
     {
-        return <<<HTML
+        $content = <<<HTML
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0;">
     <tr>
         <td style="padding: {$this->spacing['md']}; background-color: #F3F4F6; border-radius: 4px; font-family: 'Courier New', monospace; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['text']}; overflow-x: auto;">
@@ -322,6 +329,9 @@ HTML;
     </tr>
 </table>
 HTML;
+
+        $this->content .= $content;
+        return $content;
     }
 
     /**
@@ -329,10 +339,10 @@ HTML;
      */
     public function bulletList(array $items): string
     {
-        $html = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0;">';
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0;">';
 
         foreach ($items as $item) {
-            $html .= <<<HTML
+            $content .= <<<HTML
     <tr>
         <td style="padding: {$this->spacing['sm']} 0;">
             <table role="presentation" cellspacing="0" cellpadding="0" border="0">
@@ -346,8 +356,9 @@ HTML;
 HTML;
         }
 
-        $html .= '</table>';
-        return $html;
+        $content .= '</table>';
+        $this->content .= $content;
+        return $content;
     }
 
     /**
@@ -355,12 +366,12 @@ HTML;
      */
     public function keyValueTable(array $data): string
     {
-        $html = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px;">';
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px;">';
 
         $isFirst = true;
         foreach ($data as $key => $value) {
             $borderTop = $isFirst ? '' : 'border-top: 1px solid ' . $this->colors['border'] . ';';
-            $html .= <<<HTML
+            $content .= <<<HTML
     <tr>
         <td style="padding: {$this->spacing['md']}; {$borderTop} font-weight: 600; color: {$this->colors['text']}; width: 40%;">
             {$key}
@@ -373,7 +384,8 @@ HTML;
             $isFirst = false;
         }
 
-        $html .= '</table>';
-        return $html;
+        $content .= '</table>';
+        $this->content .= $content;
+        return $content;
     }
 }
