@@ -115,6 +115,20 @@ $template->button('Click Me', 'https://example.com', 'primary');
 $template->button('Delete', 'https://example.com/delete', 'danger');
 ```
 
+### Link
+
+Display a clickable URL with proper word-breaking (prevents horizontal scroll):
+
+```php
+// Show URL as clickable link
+$template->link('https://example.com/very/long/url/that/might/cause/scroll');
+
+// Show custom text for the link
+$template->link('https://example.com/verify?token=abc123', 'Click here to verify');
+```
+
+**Use `link()` instead of `paragraph()` for URLs** to prevent horizontal scrolling on long URLs.
+
 ### Divider
 
 ```php
@@ -785,6 +799,7 @@ Benefits:
 | `heading(string $text, int $level = 1)` | `self` | Add heading (H1-H3) |
 | `paragraph(string $text)` | `self` | Add paragraph |
 | `button(string $text, string $url, string $color = 'primary')` | `self` | Add button |
+| `link(string $url, string $text = null)` | `self` | Add clickable link (prevents scroll on long URLs) |
 | `divider()` | `self` | Add horizontal divider |
 | `alert(string $text, string $type = 'info')` | `self` | Add alert box |
 | `code(string $code)` | `self` | Add code block |

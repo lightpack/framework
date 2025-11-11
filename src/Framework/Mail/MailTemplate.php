@@ -211,6 +211,7 @@ class MailTemplate
             'heading' => $this->renderHeading($component),
             'paragraph' => $this->renderParagraph($component),
             'button' => $this->renderButton($component),
+            'link' => $this->renderLink($component),
             'divider' => $this->renderDivider($component),
             'alert' => $this->renderAlert($component),
             'code' => $this->renderCode($component),
@@ -236,6 +237,7 @@ class MailTemplate
             'bulletList' => implode("\n", array_map(fn($item) => '• ' . $item, $component['items'])) . "\n\n",
             'keyValueTable' => implode("\n", array_map(fn($k, $v) => $k . ': ' . $v, array_keys($component['data']), $component['data'])) . "\n\n",
             'image' => '[Image: ' . ($component['alt'] ?? 'Image') . ']' . "\n\n",
+            'link' => $component['url'] . "\n\n",
             default => '',
         };
     }
@@ -450,8 +452,36 @@ HTML;
     protected function renderParagraph(array $component): string
     {
         return <<<HTML
-<p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">
+<p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; word-break: break-word; overflow-wrap: break-word; font-family: {$this->fonts['family']};">
     {$component['text']}
+</p>
+HTML;
+    }
+
+    /**
+     * Add a clickable link/URL component
+     */
+    public function link(string $url, ?string $text = null): self
+    {
+        $this->components[] = [
+            'type' => 'link',
+            'url' => htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
+            'text' => $text ? htmlspecialchars($text, ENT_QUOTES, 'UTF-8') : null,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a link component
+     */
+    protected function renderLink(array $component): string
+    {
+        $displayText = $component['text'] ?? $component['url'];
+        
+        return <<<HTML
+<p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; word-break: break-all; overflow-wrap: break-word; font-family: {$this->fonts['family']};">
+    <a href="{$component['url']}" style="color: {$this->colors['primary']}; text-decoration: underline; word-break: break-all; font-family: {$this->fonts['family']};">{$displayText}</a>
 </p>
 HTML;
     }
