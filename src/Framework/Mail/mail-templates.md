@@ -20,7 +20,7 @@ Building HTML emails is notoriously difficult:
 
 ## Quick Start
 
-### Basic Example
+### Basic Example (Minimal - No Header/Footer)
 
 ```php
 use Lightpack\Mail\Mail;
@@ -33,7 +33,7 @@ class WelcomeMail extends Mail
         $template = new MailTemplate();
         
         $template
-            ->heading('Welcome to ' . get_env('APP_NAME'))
+            ->heading('Welcome!')
             ->paragraph('Thanks for signing up! We\'re excited to have you on board.')
             ->button('Get Started', $payload['actionUrl'], 'primary')
             ->divider()
@@ -42,6 +42,39 @@ class WelcomeMail extends Mail
         $this->to($payload['email'])
             ->subject('Welcome!')
             ->template($template)  // Sets both HTML and plain text
+            ->send();
+    }
+}
+```
+
+### With Logo and Footer
+
+```php
+class WelcomeMail extends Mail
+{
+    public function dispatch(array $payload = [])
+    {
+        $template = new MailTemplate();
+        
+        // Optional: Add logo in header (outside content box)
+        $template->logo('https://yourapp.com/logo.png', 120);
+        
+        $template
+            ->heading('Welcome!')
+            ->paragraph('Thanks for signing up!')
+            ->button('Get Started', $payload['actionUrl']);
+        
+        // Optional: Add footer (outside content box)
+        $template
+            ->footer('&copy; 2025 YourApp. All rights reserved.')
+            ->footerLinks([
+                'Privacy Policy' => 'https://yourapp.com/privacy',
+                'Terms of Service' => 'https://yourapp.com/terms',
+            ]);
+        
+        $this->to($payload['email'])
+            ->subject('Welcome!')
+            ->template($template)
             ->send();
     }
 }
@@ -137,15 +170,64 @@ $template
     ->button('View Order', 'https://example.com/orders/12345');
 ```
 
-## Layout Control
+## Layout Architecture
 
-### Default Layout
+### Three-Layer Structure
 
-By default, emails include a professional layout with header, footer, and responsive container:
+Emails have a clean three-layer structure:
+
+```
+┌─────────────────────────────────┐
+│  Gray Background (body padding) │
+│                                  │
+│  ┌───────────────────────────┐  │
+│  │  Logo (optional)          │  │ ← Outside content box
+│  └───────────────────────────┘  │
+│                                  │
+│  ┌───────────────────────────┐  │
+│  │ ┏━━━━━━━━━━━━━━━━━━━━━━┓ │  │
+│  │ ┃ White Box (content)  ┃ │  │ ← Your components
+│  │ ┃ • Heading            ┃ │  │
+│  │ ┃ • Paragraph          ┃ │  │
+│  │ ┃ • Button             ┃ │  │
+│  │ ┗━━━━━━━━━━━━━━━━━━━━━━┛ │  │
+│  └───────────────────────────┘  │
+│                                  │
+│  ┌───────────────────────────┐  │
+│  │  Footer (optional)        │  │ ← Outside content box
+│  └───────────────────────────┘  │
+└─────────────────────────────────┘
+```
+
+**Key Points:**
+- ✅ **Header and footer are optional** - Only render if you explicitly set them
+- ✅ **Header/footer outside content box** - They appear in the gray background area
+- ✅ **Only content has white background** - Clean separation with border and border-radius
+- ✅ **Nothing renders by default** - You control everything
+
+### Adding Logo (Optional)
 
 ```php
-$template->heading('Hello')->paragraph('World');
-$html = $template->toHtml();  // Includes full HTML document with layout
+// Logo appears above content box
+$template->logo('https://yourapp.com/logo.png', 120);  // 120px width
+```
+
+### Adding Footer (Optional)
+
+```php
+// Footer text (supports HTML entities like &copy;)
+$template->footer('&copy; 2025 YourApp. All rights reserved.');
+
+// Footer links
+$template->footerLinks([
+    'Privacy' => 'https://yourapp.com/privacy',
+    'Terms' => 'https://yourapp.com/terms',
+]);
+
+// Or both
+$template
+    ->footer('&copy; 2025 YourApp')
+    ->footerLinks(['Privacy' => 'https://yourapp.com/privacy']);
 ```
 
 ### Without Layout
@@ -159,15 +241,6 @@ $template
     ->withoutLayout();
 
 $html = $template->toHtml();  // Just the components, no layout wrapper
-```
-
-### Custom Layout
-
-You can specify a different layout (future feature):
-
-```php
-$template->useLayout('minimal');  // Use minimal layout
-$template->useLayout(null);       // Same as withoutLayout()
 ```
 
 ## Customization
@@ -717,6 +790,10 @@ Benefits:
 | `code(string $code)` | `self` | Add code block |
 | `bulletList(array $items)` | `self` | Add bullet list |
 | `keyValueTable(array $data)` | `self` | Add key-value table |
+| `image(string $src, string $alt = '', ?int $width = null, string $align = 'center')` | `self` | Add image |
+| `logo(string $url, int $width = 120)` | `self` | Set header logo (optional) |
+| `footer(string $text)` | `self` | Set footer text (optional, supports HTML entities) |
+| `footerLinks(array $links)` | `self` | Set footer links (optional) |
 | `setColors(array $colors)` | `self` | Set custom colors |
 | `setFonts(array $fonts)` | `self` | Set custom fonts |
 | `setData(array $data)` | `self` | Set template data |

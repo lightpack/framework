@@ -42,9 +42,9 @@ class MailTemplate
         'sizeBase' => '15px',
         'sizeSmall' => '13px',
         'sizeLarge' => '17px',
-        'sizeH1' => '22px',
-        'sizeH2' => '18px',
-        'sizeH3' => '16px',
+        'sizeH1' => '20px',
+        'sizeH2' => '16px',
+        'sizeH3' => '14px',
     ];
 
     // Spacing settings
@@ -97,6 +97,24 @@ class MailTemplate
     {
         $this->logoUrl = $url;
         $this->logoWidth = $width;
+        return $this;
+    }
+
+    /**
+     * Set footer text (e.g., copyright notice)
+     */
+    public function footer(string $text): self
+    {
+        $this->data['footer_text'] = $text;
+        return $this;
+    }
+
+    /**
+     * Set footer links (e.g., Privacy, Terms)
+     */
+    public function footerLinks(array $links): self
+    {
+        $this->data['footer_links'] = $links;
         return $this;
     }
 
@@ -321,7 +339,8 @@ HTML;
         $content = '';
         
         if ($footerText) {
-            $content .= '<p style="margin: 0 0 ' . $this->spacing['sm'] . '; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . htmlspecialchars($footerText, ENT_QUOTES, 'UTF-8') . '</p>';
+            // Don't escape footer text - allow HTML entities like &copy;
+            $content .= '<p style="margin: 0 0 ' . $this->spacing['sm'] . '; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . $footerText . '</p>';
         }
         
         if (!empty($footerLinks)) {
