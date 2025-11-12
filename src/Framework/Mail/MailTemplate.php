@@ -1,0 +1,842 @@
+<?php
+
+namespace Lightpack\Mail;
+
+/**
+ * MailTemplate - email templating building blocks
+ * 
+ * Features:
+ * - Table-based layouts for maximum email client compatibility
+ * - Automatic CSS inlining
+ * - Component system for reusable parts
+ * - Beautiful default styling
+ * - Responsive design (where supported)
+ * - Plain text auto-generation
+ */
+class MailTemplate
+{
+    protected array $components = [];
+    protected array $data = [];
+    protected ?string $layout = 'default';
+    protected ?string $logoUrl = null;
+    protected int $logoWidth = 120;
+    protected ?int $logoHeight = null;
+    protected int $logoMaxHeight = 60;
+
+    // Default color scheme
+    protected array $colors = [
+        'primary' => '#4F46E5',      // Indigo
+        'secondary' => '#6B7280',    // Gray
+        'success' => '#10B981',      // Green
+        'danger' => '#EF4444',       // Red
+        'warning' => '#F59E0B',      // Amber
+        'info' => '#3B82F6',         // Blue
+        'text' => '#1F2937',         // Dark gray
+        'textLight' => '#6B7280',    // Medium gray
+        'background' => '#F9FAFB',   // Light gray
+        'white' => '#FFFFFF',
+        'border' => '#E5E7EB',       // Light border
+    ];
+
+    // Typography settings
+    protected array $fonts = [
+        'family' => '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        'sizeBase' => '15px',
+        'sizeSmall' => '13px',
+        'sizeLarge' => '17px',
+        'sizeH1' => '20px',
+        'sizeH2' => '16px',
+        'sizeH3' => '14px',
+    ];
+
+    // Spacing settings
+    protected array $spacing = [
+        'xs' => '4px',
+        'sm' => '8px',
+        'md' => '10px',
+        'lg' => '20px',
+        'xl' => '24px',
+        'xxl' => '32px',
+    ];
+
+    public function __construct(array $config = [])
+    {
+        if (!empty($config['colors'])) {
+            $sanitized = [];
+            foreach ($config['colors'] as $key => $value) {
+                $sanitized[$key] = $this->escape($value);
+            }
+            $this->colors = array_merge($this->colors, $sanitized);
+        }
+
+        if (!empty($config['fonts'])) {
+            $sanitized = [];
+            foreach ($config['fonts'] as $key => $value) {
+                $sanitized[$key] = $this->escape($value);
+            }
+            $this->fonts = array_merge($this->fonts, $sanitized);
+        }
+
+        if (!empty($config['spacing'])) {
+            $sanitized = [];
+            foreach ($config['spacing'] as $key => $value) {
+                $sanitized[$key] = $this->escape($value);
+            }
+            $this->spacing = array_merge($this->spacing, $sanitized);
+        }
+    }
+
+    /**
+     * Escape text for safe HTML output
+     * Protects against XSS while preserving UTF-8 characters
+     */
+    protected function escape(string $text): string
+    {
+        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Set custom colors
+     */
+    public function setColors(array $colors): self
+    {
+        // Sanitize color values to prevent CSS injection
+        $sanitized = [];
+        foreach ($colors as $key => $value) {
+            $sanitized[$key] = $this->escape($value);
+        }
+        $this->colors = array_merge($this->colors, $sanitized);
+        return $this;
+    }
+
+    /**
+     * Set custom fonts
+     */
+    public function setFonts(array $fonts): self
+    {
+        // Sanitize font values to prevent CSS injection
+        $sanitized = [];
+        foreach ($fonts as $key => $value) {
+            $sanitized[$key] = $this->escape($value);
+        }
+        $this->fonts = array_merge($this->fonts, $sanitized);
+        return $this;
+    }
+
+    /**
+     * Set logo for header (replaces app name text)
+     * 
+     * @param string $url Logo URL
+     * @param int $width Logo width in pixels (default: 120)
+     * @param int|null $height Logo height in pixels (null = auto, maintains aspect ratio)
+     * @param int $maxHeight Maximum height constraint in pixels (default: 60, prevents tall logos)
+     */
+    public function logo(string $url, int $width = 120, ?int $height = null, int $maxHeight = 60): self
+    {
+        $this->logoUrl = $url;
+        $this->logoWidth = $width;
+        $this->logoHeight = $height;
+        $this->logoMaxHeight = $maxHeight;
+        return $this;
+    }
+
+    /**
+     * Set footer text (e.g., copyright notice)
+     */
+    public function footer(string $text): self
+    {
+        $this->data['footer_text'] = $text;
+        return $this;
+    }
+
+    /**
+     * Set footer links (e.g., Privacy, Terms)
+     */
+    public function footerLinks(array $links): self
+    {
+        $this->data['footer_links'] = $links;
+        return $this;
+    }
+
+    /**
+     * Set data for the template
+     */
+    public function setData(array $data): self
+    {
+        $this->data = array_merge($this->data, $data);
+        return $this;
+    }
+
+    /**
+     * Use a specific layout (default, minimal, or null for no layout)
+     */
+    public function useLayout(?string $layout): self
+    {
+        $this->layout = $layout;
+        return $this;
+    }
+
+    /**
+     * Disable layout wrapper
+     */
+    public function withoutLayout(): self
+    {
+        $this->layout = null;
+        return $this;
+    }
+
+    /**
+     * Render to HTML
+     */
+    public function toHtml(): string
+    {
+        $content = $this->renderComponents();
+        
+        if ($this->layout === null) {
+            return $content;
+        }
+        
+        return $this->wrapInLayout($content);
+    }
+
+    /**
+     * Alias for toHtml() for backward compatibility
+     */
+    public function render(array $data = []): string
+    {
+        if (!empty($data)) {
+            $this->data = array_merge($this->data, $data);
+        }
+        
+        return $this->toHtml();
+    }
+
+    /**
+     * Generate plain text version from components
+     */
+    public function toPlainText(): string
+    {
+        $text = '';
+        
+        foreach ($this->components as $component) {
+            $text .= $this->componentToPlainText($component);
+        }
+        
+        // Clean up excessive whitespace
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+        
+        return trim($text);
+    }
+
+    /**
+     * Render all components to HTML
+     */
+    protected function renderComponents(): string
+    {
+        $html = '';
+        
+        foreach ($this->components as $component) {
+            $html .= $this->renderComponent($component) . "\n";
+        }
+        
+        return $html;
+    }
+
+    /**
+     * Render a single component to HTML
+     */
+    protected function renderComponent(array $component): string
+    {
+        return match ($component['type']) {
+            'heading' => $this->renderHeading($component),
+            'paragraph' => $this->renderParagraph($component),
+            'html' => $this->renderHtml($component),
+            'button' => $this->renderButton($component),
+            'link' => $this->renderLink($component),
+            'divider' => $this->renderDivider($component),
+            'alert' => $this->renderAlert($component),
+            'code' => $this->renderCode($component),
+            'bulletList' => $this->renderBulletList($component),
+            'keyValueTable' => $this->renderKeyValueTable($component),
+            'table' => $this->renderTable($component),
+            'image' => $this->renderImage($component),
+            default => '',
+        };
+    }
+
+    /**
+     * Convert a single component to plain text
+     */
+    protected function componentToPlainText(array $component): string
+    {
+        return match ($component['type']) {
+            'heading' => strtoupper($component['text']) . "\n" . str_repeat('=', min(strlen($component['text']), 50)) . "\n\n",
+            'paragraph' => $component['text'] . "\n\n",
+            'html' => strip_tags($component['content']) . "\n\n",
+            'button' => $component['text'] . ': ' . $component['url'] . "\n\n",
+            'divider' => str_repeat('-', 50) . "\n\n",
+            'alert' => '[' . strtoupper($component['alertType']) . '] ' . $component['text'] . "\n\n",
+            'code' => $component['code'] . "\n\n",
+            'bulletList' => implode("\n", array_map(fn($item) => '• ' . $item, $component['items'])) . "\n\n",
+            'keyValueTable' => implode("\n", array_map(fn($k, $v) => $k . ': ' . $v, array_keys($component['data']), $component['data'])) . "\n\n",
+            'table' => implode("\n", array_map(fn($row) => implode(' | ', $row), array_merge([$component['headers']], $component['rows']))) . "\n\n",
+            'image' => '[Image: ' . ($component['alt'] ?? 'Image') . ']' . "\n\n",
+            'link' => $component['url'] . "\n\n",
+            default => '',
+        };
+    }
+
+    /**
+     * Wrap content in layout
+     */
+    protected function wrapInLayout(string $content): string
+    {
+        $appName = $this->data['app_name'] ?? get_env('APP_NAME') ?? 'Application';
+        $subject = $this->data['subject'] ?? 'Email from ' . $appName;
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <title>{$subject}</title>
+    <!--[if mso]>
+    <style type="text/css">
+        table {border-collapse: collapse; font-family: {$this->fonts['family']};}
+    </style>
+    <![endif]-->
+    <style type="text/css">
+        /* Force font on all elements */
+        body, table, td, p, h1, h2, h3, a {
+            font-family: {$this->fonts['family']} !important;
+        }
+        /* Responsive table */
+        @media only screen and (max-width: 620px) {
+            .email-container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .mobile-padding {
+                padding: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: {$this->spacing['lg']}; background-color: {$this->colors['background']}; font-family: {$this->fonts['family']};">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" align="center" style="max-width: 600px; margin: 0 auto; font-family: {$this->fonts['family']};">
+        {$this->renderOptionalHeader($appName)}
+        
+        <!-- Main content container -->
+        <tr>
+            <td>
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container" style="background-color: {$this->colors['white']}; border: 1px solid {$this->colors['border']}; border-radius: 8px; font-family: {$this->fonts['family']};">
+                    <tr>
+                        <td class="mobile-padding" style="padding: {$this->spacing['xl']}; font-family: {$this->fonts['family']};">
+                            {$content}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        {$this->renderOptionalFooter()}
+    </table>
+</body>
+</html>
+HTML;
+    }
+
+    /**
+     * Render optional header (only if logo is set)
+     */
+    protected function renderOptionalHeader(string $appName): string
+    {
+        if (!$this->logoUrl) {
+            return '';
+        }
+        
+        $escapedLogoUrl = $this->escape($this->logoUrl);
+        $escapedAppName = $this->escape($appName);
+        
+        // Build inline styles for logo
+        $styles = [
+            'width: ' . $this->logoWidth . 'px',
+            'max-width: 100%',
+            'display: block',
+            'margin: 0 auto',
+            'border: 0',
+        ];
+        
+        // Add height control
+        if ($this->logoHeight !== null) {
+            // Explicit height set
+            $styles[] = 'height: ' . $this->logoHeight . 'px';
+        } else {
+            // Auto height with max-height constraint
+            $styles[] = 'height: auto';
+            $styles[] = 'max-height: ' . $this->logoMaxHeight . 'px';
+        }
+        
+        $styleAttr = implode('; ', $styles) . ';';
+        
+        return <<<HTML
+        <tr>
+            <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
+                <img src="{$escapedLogoUrl}" alt="{$escapedAppName}" style="{$styleAttr}">
+            </td>
+        </tr>
+HTML;
+    }
+
+    /**
+     * Render optional footer (only if footer data is provided)
+     */
+    protected function renderOptionalFooter(): string
+    {
+        $footerText = $this->data['footer_text'] ?? null;
+        $footerLinks = $this->data['footer_links'] ?? [];
+        
+        // Don't render footer if nothing is provided
+        if (!$footerText && empty($footerLinks)) {
+            return '';
+        }
+        
+        $content = '';
+        
+        if ($footerText) {
+            // Don't escape footer text - allow HTML entities like &copy;
+            $content .= '<p style="margin: 0 0 ' . $this->spacing['sm'] . '; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . $footerText . '</p>';
+        }
+        
+        if (!empty($footerLinks)) {
+            $linkHtml = [];
+            foreach ($footerLinks as $text => $url) {
+                $linkHtml[] = '<a href="' . $this->escape($url) . '" style="color: ' . $this->colors['primary'] . '; text-decoration: none; font-family: ' . $this->fonts['family'] . ';">' . $this->escape($text) . '</a>';
+            }
+            $content .= '<p style="margin: 0; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . implode(' | ', $linkHtml) . '</p>';
+        }
+        
+        return <<<HTML
+        <tr>
+            <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
+                {$content}
+            </td>
+        </tr>
+HTML;
+    }
+
+    /**
+     * Add a button component
+     */
+    public function button(string $text, string $url, string $color = 'primary'): self
+    {
+        $this->components[] = [
+            'type' => 'button',
+            'text' => $this->escape($text),
+            'url' => $this->escape($url),
+            'color' => $color,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a button component
+     */
+    protected function renderButton(array $component): string
+    {
+        $bgColor = $this->colors[$component['color']] ?? $this->colors['primary'];
+
+        return <<<HTML
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
+    <tr>
+        <td style="border-radius: 4px; background-color: {$bgColor};">
+            <a href="{$component['url']}" style="display: inline-block; padding: {$this->spacing['md']} {$this->spacing['lg']}; font-size: {$this->fonts['sizeBase']}; font-weight: 500; color: {$this->colors['white']}; text-decoration: none; border-radius: 4px; font-family: {$this->fonts['family']};">
+                {$component['text']}
+            </a>
+        </td>
+    </tr>
+</table>
+HTML;
+    }
+
+    /**
+     * Add a heading component
+     */
+    public function heading(string $text, int $level = 1): self
+    {
+        $this->components[] = [
+            'type' => 'heading',
+            'text' => $this->escape($text),
+            'level' => max(1, min(3, $level)), // Clamp between 1-3
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a heading component
+     */
+    protected function renderHeading(array $component): string
+    {
+        $level = $component['level'];
+        $sizes = [
+            1 => $this->fonts['sizeH1'],
+            2 => $this->fonts['sizeH2'],
+            3 => $this->fonts['sizeH3'],
+        ];
+
+        $size = $sizes[$level] ?? $this->fonts['sizeH2'];
+        $marginBottom = $level === 1 ? $this->spacing['lg'] : $this->spacing['md'];
+
+        return <<<HTML
+<h{$level} style="margin: 0 0 {$marginBottom}; font-size: {$size}; font-weight: 600; color: {$this->colors['text']}; line-height: 1.3; font-family: {$this->fonts['family']};">
+    {$component['text']}
+</h{$level}>
+HTML;
+    }
+
+    /**
+     * Add a paragraph component
+     */
+    public function paragraph(string $text): self
+    {
+        $this->components[] = [
+            'type' => 'paragraph',
+            'text' => $this->escape($text),
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a paragraph component
+     */
+    protected function renderParagraph(array $component): string
+    {
+        return <<<HTML
+<p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; word-break: break-word; overflow-wrap: break-word; font-family: {$this->fonts['family']};">
+    {$component['text']}
+</p>
+HTML;
+    }
+
+    /**
+     * Add raw HTML content (allows HTML entities like &copy;, &trade;, etc.)
+     * Use sparingly - content is NOT escaped for XSS protection
+     */
+    public function html(string $content): self
+    {
+        $this->components[] = [
+            'type' => 'html',
+            'content' => $content, // NOT escaped - allows HTML entities
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Add a clickable link/URL component
+     */
+    public function link(string $url, ?string $text = null): self
+    {
+        $this->components[] = [
+            'type' => 'link',
+            'url' => $this->escape($url),
+            'text' => $text ? $this->escape($text) : null,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render raw HTML component
+     */
+    protected function renderHtml(array $component): string
+    {
+        return <<<HTML
+<div style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">
+    {$component['content']}
+</div>
+HTML;
+    }
+
+    /**
+     * Render a link component
+     */
+    protected function renderLink(array $component): string
+    {
+        $displayText = $component['text'] ?? $component['url'];
+        
+        return <<<HTML
+<p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; word-break: break-all; overflow-wrap: break-word; font-family: {$this->fonts['family']};">
+    <a href="{$component['url']}" style="color: {$this->colors['primary']}; text-decoration: underline; word-break: break-all; font-family: {$this->fonts['family']};">{$displayText}</a>
+</p>
+HTML;
+    }
+
+    /**
+     * Add a divider component
+     */
+    public function divider(): self
+    {
+        $this->components[] = [
+            'type' => 'divider',
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a divider component
+     */
+    protected function renderDivider(array $component): string
+    {
+        return <<<HTML
+<hr style="margin: {$this->spacing['xl']} 0; border: none; border-top: 1px solid {$this->colors['border']};">
+HTML;
+    }
+
+    /**
+     * Add an alert box component
+     */
+    public function alert(string $text, string $type = 'info'): self
+    {
+        $this->components[] = [
+            'type' => 'alert',
+            'text' => $this->escape($text),
+            'alertType' => $type,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render an alert box component
+     */
+    protected function renderAlert(array $component): string
+    {
+        $colors = [
+            'info' => ['bg' => '#EFF6FF', 'border' => $this->colors['info'], 'text' => '#1E40AF'],
+            'success' => ['bg' => '#F0FDF4', 'border' => $this->colors['success'], 'text' => '#166534'],
+            'warning' => ['bg' => '#FFFBEB', 'border' => $this->colors['warning'], 'text' => '#92400E'],
+            'danger' => ['bg' => '#FEF2F2', 'border' => $this->colors['danger'], 'text' => '#991B1B'],
+        ];
+
+        $style = $colors[$component['alertType']] ?? $colors['info'];
+
+        return <<<HTML
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
+    <tr>
+        <td style="padding: {$this->spacing['md']}; background-color: {$style['bg']}; border-left: 4px solid {$style['border']}; border-radius: 4px;">
+            <p style="margin: 0; font-size: {$this->fonts['sizeBase']}; color: {$style['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">
+                {$component['text']}
+            </p>
+        </td>
+    </tr>
+</table>
+HTML;
+    }
+
+    /**
+     * Add a code block component
+     */
+    public function code(string $code): self
+    {
+        $this->components[] = [
+            'type' => 'code',
+            'code' => $this->escape($code),
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a code block component
+     */
+    protected function renderCode(array $component): string
+    {
+        return <<<HTML
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0; font-family: 'Courier New', monospace;">
+    <tr>
+        <td style="padding: {$this->spacing['md']}; background-color: #F3F4F6; border-radius: 4px; font-family: 'Courier New', monospace; font-size: {$this->fonts['sizeSmall']}; color: {$this->colors['text']}; overflow-x: auto;">
+            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace;">{$component['code']}</pre>
+        </td>
+    </tr>
+</table>
+HTML;
+    }
+
+    /**
+     * Add a bullet list component
+     */
+    public function bulletList(array $items): self
+    {
+        $this->components[] = [
+            'type' => 'bulletList',
+            'items' => array_map(fn($item) => $this->escape($item), $items),
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a bullet list component
+     */
+    protected function renderBulletList(array $component): string
+    {
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; font-family: ' . $this->fonts['family'] . ';">';
+
+        foreach ($component['items'] as $item) {
+            $content .= <<<HTML
+    <tr>
+        <td style="padding: {$this->spacing['sm']} 0;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="font-family: {$this->fonts['family']};">
+                <tr>
+                    <td style="padding-right: {$this->spacing['sm']}; vertical-align: top; color: {$this->colors['primary']}; font-weight: bold; font-family: {$this->fonts['family']};">&bull;</td>
+                    <td style="font-size: {$this->fonts['sizeBase']}; color: {$this->colors['text']}; line-height: 1.6; font-family: {$this->fonts['family']};">{$item}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+HTML;
+        }
+
+        $content .= '</table>';
+        return $content;
+    }
+
+    /**
+     * Add a key-value table component
+     */
+    public function keyValueTable(array $data): self
+    {
+        $escaped = [];
+        foreach ($data as $key => $value) {
+            $escaped[$this->escape($key)] = $this->escape($value);
+        }
+        
+        $this->components[] = [
+            'type' => 'keyValueTable',
+            'data' => $escaped,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render a key-value table component
+     */
+    protected function renderKeyValueTable(array $component): string
+    {
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; overflow: hidden; font-family: ' . $this->fonts['family'] . ';">';
+
+        $isFirst = true;
+        foreach ($component['data'] as $key => $value) {
+            $borderTop = $isFirst ? '' : 'border-top: 1px solid ' . $this->colors['border'] . ';';
+            $content .= <<<HTML
+    <tr>
+        <td style="padding: {$this->spacing['md']}; {$borderTop} font-weight: 600; color: {$this->colors['text']}; width: 40%; background-color: {$this->colors['background']}; font-size: {$this->fonts['sizeBase']}; font-family: {$this->fonts['family']};">
+            {$key}
+        </td>
+        <td style="padding: {$this->spacing['md']}; {$borderTop} color: {$this->colors['text']}; font-size: {$this->fonts['sizeBase']}; font-family: {$this->fonts['family']};">
+            {$value}
+        </td>
+    </tr>
+HTML;
+            $isFirst = false;
+        }
+
+        $content .= '</table>';
+        return $content;
+    }
+
+    /**
+     * Render a multi-column table component
+     */
+    protected function renderTable(array $component): string
+    {
+        $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; overflow: hidden; font-family: ' . $this->fonts['family'] . ';">';
+        
+        // Header row
+        $content .= '<tr style="background-color: ' . $this->colors['background'] . ';">';
+        foreach ($component['headers'] as $header) {
+            $content .= '<th style="padding: ' . $this->spacing['md'] . '; text-align: left; font-weight: 600; color: ' . $this->colors['text'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $header . '</th>';
+        }
+        $content .= '</tr>';
+        
+        // Data rows
+        foreach ($component['rows'] as $row) {
+            $content .= '<tr>';
+            foreach ($row as $cell) {
+                $content .= '<td style="padding: ' . $this->spacing['md'] . '; border-top: 1px solid ' . $this->colors['border'] . '; color: ' . $this->colors['text'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $cell . '</td>';
+            }
+            $content .= '</tr>';
+        }
+        
+        $content .= '</table>';
+        return $content;
+    }
+
+    /**
+     * Add a multi-column table component
+     * 
+     * @param array $headers Column headers (e.g., ['Name', 'Email', 'Status'])
+     * @param array $rows Array of row data (e.g., [['John', 'john@example.com', 'Active'], ...])
+     */
+    public function table(array $headers, array $rows): self
+    {
+        $escapedHeaders = array_map(fn($h) => $this->escape($h), $headers);
+        $escapedRows = array_map(
+            fn($row) => array_map(fn($cell) => $this->escape($cell), $row),
+            $rows
+        );
+        
+        $this->components[] = [
+            'type' => 'table',
+            'headers' => $escapedHeaders,
+            'rows' => $escapedRows,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Add an image component
+     */
+    public function image(string $src, string $alt = '', ?int $width = null, string $align = 'center'): self
+    {
+        $this->components[] = [
+            'type' => 'image',
+            'src' => $this->escape($src),
+            'alt' => $this->escape($alt),
+            'width' => $width,
+            'align' => $align,
+        ];
+        
+        return $this;
+    }
+
+    /**
+     * Render an image component
+     */
+    protected function renderImage(array $component): string
+    {
+        $align = $component['align'] === 'center' ? 'center' : 'left';
+        $widthStyle = $component['width'] ? 'width: ' . $component['width'] . 'px; ' : '';
+        $maxWidth = $component['width'] ? 'max-width: ' . $component['width'] . 'px; ' : 'max-width: 100%; ';
+        
+        return <<<HTML
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
+    <tr>
+        <td align="{$align}">
+            <img src="{$component['src']}" alt="{$component['alt']}" style="{$widthStyle}{$maxWidth}height: auto; display: block; border: 0;">
+        </td>
+    </tr>
+</table>
+HTML;
+    }
+}

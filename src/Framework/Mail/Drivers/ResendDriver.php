@@ -49,8 +49,6 @@ class ResendDriver implements DriverInterface
     public function send(array $data): bool
     {
         try {
-            // Data is already normalized by MailData
-            // Just transform to Resend's specific format
             $payload = [
                 'from' => $this->formatAddress($data['from']),
                 'to' => $this->formatAddresses($data['to']),

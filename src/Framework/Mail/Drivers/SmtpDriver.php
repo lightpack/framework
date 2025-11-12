@@ -35,12 +35,15 @@ class SmtpDriver implements DriverInterface
         );
 
         $this->mailer->isHTML(true);
+        
+        // Set UTF-8 encoding explicitly to prevent garbage characters
+        $this->mailer->CharSet = PHPMailer::CHARSET_UTF8;
+        $this->mailer->Encoding = 'base64'; // Best for UTF-8 content
     }
 
     public function send(array $data): bool
     {
         try {
-            // Data is already normalized by MailData
             // Clear any previous recipients
             $this->mailer->clearAddresses();
             $this->mailer->clearCCs();
