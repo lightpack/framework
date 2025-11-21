@@ -4,6 +4,7 @@ namespace Lightpack\Http;
 
 use Lightpack\Utils\Url;
 use Lightpack\Session\Session;
+use Lightpack\Routing\RouteRegistry;
 
 class Redirect extends Response
 {
@@ -15,6 +16,9 @@ class Redirect extends Response
 
     /** @var \Lightpack\Utils\Url */
     protected $url;
+
+    /** @var \Lightpack\Routing\RouteRegistry */
+    protected $routeRegistry;
 
     public function to(...$params): self
     {
@@ -28,7 +32,7 @@ class Redirect extends Response
 
     public function route(string $name, ...$params): self
     {
-        $url = $this->url->route($name, ...$params);
+        $url = $this->routeRegistry->url($name, ...$params);
 
         return $this->setRedirectUrl($url)
             ->setStatus(302)
@@ -69,11 +73,12 @@ class Redirect extends Response
     /**
      * @internal This method is for internal use only.
      */
-    public function __boot(Request $request, Session $session, Url $url): self
+    public function __boot(Request $request, Session $session, Url $url, RouteRegistry $routeRegistry): self
     {
         $this->request = $request;
         $this->session = $session;
         $this->url = $url;
+        $this->routeRegistry = $routeRegistry;
 
         return $this;
     }

@@ -6,6 +6,8 @@ use Lightpack\Container\Container;
 use Lightpack\Http\Request;
 use Lightpack\Routing\Route;
 use Lightpack\Routing\RouteRegistry;
+use Lightpack\Utils\Crypto;
+use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
 final class RouteRegistryTest extends TestCase
@@ -449,5 +451,90 @@ final class RouteRegistryTest extends TestCase
             $params['id'] ?? null,
             'Route should extract path parameter from nested group'
         );
+    }
+
+    public function testRouteRegistryUrlMethod()
+    {
+        $container = Container::getInstance();
+        $container->instance('request', new Request());
+        $container->instance('url', new Url());
+        
+        $routeRegistry = new RouteRegistry($container);
+        $routeRegistry->get('/foo', 'DummyController')->name('foo');
+        $routeRegistry->get('/foo/:num', 'DummyController')->name('foo.num');
+        $routeRegistry->get('/foo/:num/bar/:slug?', 'DummyController')->name('foo.num.bar');
+        $routeRegistry->bootRouteNames();
+
+        // Test basic route
+        $this->assertEquals('/foo', $routeRegistry->url('foo'));
+        
+        // Test route with required parameter
+        $this->assertEquals('/foo/23', $routeRegistry->url('foo.num', ['num' => 23]));
+        
+        // Test route with optional parameter (not provided)
+        $this->assertEquals('/foo/23/bar', $routeRegistry->url('foo.num.bar', ['num' => 23]));
+        
+        // Test route with optional parameter (provided)
+        $this->assertEquals('/foo/23/bar/baz', $routeRegistry->url('foo.num.bar', ['num' => 23, 'slug' => 'baz']));
+        
+        // Test route with query parameters
+        $this->assertEquals('/foo/23/bar/baz?p=1&r=2', $routeRegistry->url('foo.num.bar', ['num' => 23, 'slug' => 'baz', 'p' => 1, 'r' => 2]));
+        
+        // Test route with optional parameter as null and query params
+        $this->assertEquals('/foo/23/bar?p=1&r=2', $routeRegistry->url('foo.num.bar', ['num' => 23, 'slug' => null, 'p' => 1, 'r' => 2]));
+    }
+
+    public function testRouteRegistryUrlMethodThrowsExceptionForNonexistentRoute()
+    {
+        $container = Container::getInstance();
+        $container->instance('request', new Request());
+        $routeRegistry = new RouteRegistry($container);
+        $routeRegistry->bootRouteNames();
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Route with name 'nonexistent' not found.");
+        $routeRegistry->url('nonexistent');
+    }
+
+    public function testRouteRegistryUrlMethodThrowsExceptionForMissingRequiredParams()
+    {
+        $container = Container::getInstance();
+        $container->instance('request', new Request());
+        $routeRegistry = new RouteRegistry($container);
+        $routeRegistry->get('/users/:id', 'UserController')->name('users.show');
+        $routeRegistry->bootRouteNames();
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Invalid number of parameters for route 'users.show'. Expected 1 but got 0");
+        $routeRegistry->url('users.show');
+    }
+
+    public function testRouteRegistrySignMethod()
+    {
+        $container = Container::getInstance();
+        $container->instance('request', new Request());
+        $container->instance('url', new Url());
+        
+        // Set up the Crypto class mock
+        $cryptoMock = $this->getMockBuilder(Crypto::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $cryptoMock->expects($this->once())
+            ->method('hash')
+            ->willReturn('encryptedSignature');
+        
+        $container->instance('crypto', $cryptoMock);
+        
+        $routeRegistry = new RouteRegistry($container);
+        $routeRegistry->get('/users', 'DummyController')->name('users');
+        $routeRegistry->bootRouteNames();
+
+        // Generate the signed URL
+        $signedUrl = $routeRegistry->sign('users', ['sort' => 'asc', 'status' => 'active'], 3600);
+
+        // Verify the generated URL
+        $this->assertStringContainsString('/users?sort=asc&status=active', $signedUrl);
+        $this->assertStringContainsString('&signature=encryptedSignature', $signedUrl);
+        $this->assertStringMatchesFormat('%s&expires=%s', $signedUrl);
     }
 }

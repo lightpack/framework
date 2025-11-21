@@ -76,6 +76,12 @@ class Url
         return $file;
     }
 
+    /**
+     * Generate a URL for a named route with parameters.
+     * 
+     * @deprecated Use route()->url() instead for better separation of concerns
+     * @see \Lightpack\Routing\RouteRegistry::url()
+     */
     public function route(string $routeName, array $params = [])
     {
         /** @var \Lightpack\Routing\Route */
@@ -145,6 +151,8 @@ class Url
      * @param array $params The route params.
      * @param int $expiration Expiration time in seconds (default: 3600)
      * @return string
+     * @deprecated Use route()->sign() instead for better separation of concerns
+     * @see \Lightpack\Routing\RouteRegistry::sign()
      */
     public function sign(string $route, array $params = [], int $expiration = 3600): string
     {
