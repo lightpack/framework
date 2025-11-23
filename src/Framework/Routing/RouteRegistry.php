@@ -3,6 +3,7 @@
 namespace Lightpack\Routing;
 
 use Lightpack\Container\Container;
+use Lightpack\Utils\Url;
 
 class RouteRegistry
 {
@@ -379,9 +380,7 @@ class RouteRegistry
 
         $uri[] = $params ?? [];
 
-        // Use Url utility to build the final URL
-        $urlUtil = $this->container->get('url') ?? new \Lightpack\Utils\Url();
-        return $urlUtil->to(...$uri);
+        return (new Url)->to(...$uri);
     }
 
     /**
