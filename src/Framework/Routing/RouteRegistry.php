@@ -3,6 +3,7 @@
 namespace Lightpack\Routing;
 
 use Lightpack\Container\Container;
+use Lightpack\Utils\Url;
 
 class RouteRegistry
 {
@@ -318,5 +319,101 @@ class RouteRegistry
         }
 
         $this->names[$name] = $route;
+    }
+
+    /**
+     * Generate a URL for a named route with parameters.
+     * 
+     * This method resolves a named route and generates its URL by replacing
+     * route parameters with provided values. Extra parameters are appended
+     * as query string.
+     * 
+     * @param string $routeName The name of the route
+     * @param array $params Route parameters and query string parameters
+     * @return string The generated URL
+     * @throws \Exception If route is not found or required parameters are missing
+     * 
+     * @example
+     * // Route: /users/:id/posts/:slug?
+     * route()->url('user.posts', ['id' => 1, 'slug' => 'hello'])
+     * // Returns: /users/1/posts/hello
+     * 
+     * route()->url('user.posts', ['id' => 1, 'page' => 2])
+     * // Returns: /users/1/posts?page=2
+     */
+    public function url(string $routeName, array $params = []): string
+    {
+        $route = $this->getByName($routeName);
+
+        if (!$route) {
+            throw new \Exception("Route with name '$routeName' not found.");
+        }
+
+        $uri = explode('/', trim($route->getUri(), '/ '));
+
+        // We do not want the subdomain while resolving route urls
+        if ($route->getHost() !== '') {
+            unset($uri[0]);
+        }
+
+        $uriPatterns = array_filter($uri, fn($val) => strpos($val, ':') === 0);
+        $lastCharacterForEndParam = substr(end($uriPatterns), -1);
+        $minimumRequiredParams = $lastCharacterForEndParam == '?' ? count($uriPatterns) - 1 : count($uriPatterns);
+
+        if ($minimumRequiredParams > count($params)) {
+            throw new \Exception("Invalid number of parameters for route '$routeName'. Expected " . count($uriPatterns) . " but got " . count($params));
+        }
+
+        foreach ($uri as $key => $value) {
+            if (strpos($value, ':') === 0) {
+                $isOptionalParam = substr($value, -1) == '?';
+                $value = trim($value, ':?');
+
+                if (!$isOptionalParam && !isset($params[$value])) {
+                    throw new \Exception("Undefined parameter [:{$value}] for route '{$routeName}'");
+                }
+
+                $uri[$key] = $params[$value] ?? null;
+                unset($params[$value]);
+            }
+        }
+
+        $uri[] = $params ?? [];
+
+        return (new Url)->to(...$uri);
+    }
+
+    /**
+     * Generate a signed URL for a named route.
+     * 
+     * Signed URLs contain a cryptographic signature that prevents tampering.
+     * They also include an expiration timestamp for time-limited access.
+     * 
+     * @param string $routeName The name of the route
+     * @param array $params Route parameters and query string parameters
+     * @param int $expiration Expiration time in seconds (default: 3600)
+     * @return string The signed URL with signature and expiration
+     * @throws \Exception If route is not found or required parameters are missing
+     * 
+     * @example
+     * route()->sign('download', ['file' => 'report.pdf'], 3600)
+     * // Returns: /download/report.pdf?signature=abc123&expires=1234567890
+     */
+    public function sign(string $routeName, array $params = [], int $expiration = 3600): string
+    {
+        $url = $this->url($routeName, $params);
+        $expirationTime = time() + $expiration;
+        $stringToSign = $url . $expirationTime;
+
+        $crypto = $this->container->get('crypto');
+        $encryptedSignature = $crypto->hash($stringToSign);
+
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        // Append the encrypted signature and expiration timestamp
+        $url .= $separator . 'signature=' . urlencode($encryptedSignature);
+        $url .= '&expires=' . $expirationTime;
+
+        return $url;
     }
 }

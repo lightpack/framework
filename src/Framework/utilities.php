@@ -371,7 +371,7 @@ if (!function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
-    function old(string $key, string|array $default = '', bool $escape = true): string|array
+    function old(string $key, string|array|null $default = '', bool $escape = true): string|array
     {
         static $oldInput;
 
@@ -383,6 +383,7 @@ if (!function_exists('old')) {
 
         $value = $arr->get($key, $oldInput, $default);
 
+        // Convert null to empty string for safe output
         if (is_null($value)) {
             return '';
         }
