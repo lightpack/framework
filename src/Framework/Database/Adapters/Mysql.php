@@ -8,7 +8,13 @@ class Mysql extends DB
 {
     public function __construct(array $args)
     {
-        $dsn = "mysql:host={$args['host']};port={$args['port']};dbname={$args['database']}";
+        // Support connecting without a database (for database creation)
+        $dsn = "mysql:host={$args['host']};port={$args['port']}";
+        
+        if (isset($args['database']) && $args['database'] !== null) {
+            $dsn .= ";dbname={$args['database']}";
+        }
+        
         parent::__construct($dsn, $args['username'], $args['password'], $args['options']);
     }
 }
