@@ -10,7 +10,9 @@ return [
         'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas', 'Jackson', 'White', 'Harris',
     ],
     'domains' => [
-        'example.com', 'test.com', 'demo.org', 'mail.com', 'sample.net',
+        'example.com', 'example.org', 'example.net',
+        'test.com', 'test.org', 'test.net',
+        'example.invalid', 'test.invalid',
     ],
     'phonePrefixes' => [
         '+91-', '+1-', '+44-', '+81-', '+61-',
@@ -37,8 +39,15 @@ return [
         'UltraWidget', 'SuperGadget', 'PowerTool', 'EcoBottle', 'SmartLamp', 'Speedster Bike', 'ComfyChair', 'MaxiPhone', 'CleanSweep', 'FitTracker',
     ],
     'words' => [
-        'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do',
-        'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua', 'ut',
-        'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud', 'exercitation', 'ullamco', 'laboris', 'nisi',
+        'the', 'be', 'to', 'of', 'and', 'in', 'that', 'have', 'it', 'for',
+        'not', 'on', 'with', 'as', 'you', 'do', 'at', 'this', 'but', 'by',
+        'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my',
+        'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if',
+        'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like',
+        'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your',
+        'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look',
+        'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two',
+        'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because',
+        'any', 'these', 'give', 'day', 'most', 'us', 'is', 'was', 'are', 'been',
     ],
 ];

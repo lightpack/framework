@@ -14,6 +14,22 @@ class FakerTest extends TestCase
         $this->faker = new Faker();
     }
 
+    public function testFirstName()
+    {
+        $firstName = $this->faker->firstName();
+        $this->assertIsString($firstName);
+        $this->assertNotEmpty($firstName);
+        $this->assertMatchesRegularExpression('/^[A-Za-z]+$/', $firstName, 'First name should be single word');
+    }
+
+    public function testLastName()
+    {
+        $lastName = $this->faker->lastName();
+        $this->assertIsString($lastName);
+        $this->assertNotEmpty($lastName);
+        $this->assertMatchesRegularExpression('/^[A-Za-z]+$/', $lastName, 'Last name should be single word');
+    }
+
     public function testName()
     {
         $name = $this->faker->name();
@@ -91,11 +107,27 @@ class FakerTest extends TestCase
         $this->assertNotEmpty($product);
     }
 
+    public function testDomainName()
+    {
+        $domain = $this->faker->domainName();
+        $this->assertIsString($domain);
+        $this->assertNotEmpty($domain);
+        // Should be one of the safe domains from locale
+        $safeDomains = [
+            'example.com', 'example.org', 'example.net',
+            'test.com', 'test.org', 'test.net',
+            'example.invalid', 'test.invalid',
+        ];
+        $this->assertContains($domain, $safeDomains, 'Domain should be from safe list');
+    }
+
     public function testUrl()
     {
         $url = $this->faker->url();
         $this->assertIsString($url);
         $this->assertStringStartsWith('https://', $url);
+        // URL should contain a safe domain
+        $this->assertMatchesRegularExpression('/(example|test)\.(com|org|net|invalid)/', $url);
     }
 
     public function testIpv4()
@@ -108,6 +140,16 @@ class FakerTest extends TestCase
     {
         $ip = $this->faker->ipv6();
         $this->assertMatchesRegularExpression('/^([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}$/i', $ip);
+    }
+
+    public function testUserAgent()
+    {
+        $userAgent = $this->faker->userAgent();
+        $this->assertIsString($userAgent);
+        $this->assertNotEmpty($userAgent);
+        $this->assertStringContainsString('Mozilla', $userAgent, 'User agent should contain Mozilla');
+        // Should contain browser identifiers
+        $this->assertMatchesRegularExpression('/(Chrome|Safari|Firefox|Edg)/', $userAgent);
     }
 
     public function testHexColor()
@@ -207,6 +249,17 @@ class FakerTest extends TestCase
     {
         $date = $this->faker->date('Y-m-d');
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $date);
+    }
+
+    public function testDatetime()
+    {
+        $datetime = $this->faker->datetime();
+        $this->assertIsString($datetime);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $datetime, 'Datetime should match Y-m-d H:i:s format');
+        
+        // Test custom format
+        $customDatetime = $this->faker->datetime('d/m/Y H:i');
+        $this->assertMatchesRegularExpression('/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/', $customDatetime);
     }
 
     public function testUuid()

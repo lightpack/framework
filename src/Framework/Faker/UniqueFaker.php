@@ -5,6 +5,8 @@ namespace Lightpack\Faker;
 /**
  * Proxy for unique fake data generation.
  *
+ * @method string firstName()
+ * @method string lastName()
  * @method string name()
  * @method string email()
  * @method string username()
@@ -16,9 +18,11 @@ namespace Lightpack\Faker;
  * @method string company()
  * @method string jobTitle()
  * @method string productName()
+ * @method string domainName()
  * @method string url()
  * @method string ipv4()
  * @method string ipv6()
+ * @method string userAgent()
  * @method string hexColor()
  * @method string password(int $length = 10)
  * @method int age(int $min = 18, int $max = 65)
@@ -33,6 +37,7 @@ namespace Lightpack\Faker;
  * @method string sentence(int $words = 6)
  * @method string paragraph(int $sentences = 3)
  * @method string date(string $format = 'Y-m-d')
+ * @method string datetime(string $format = 'Y-m-d H:i:s')
  * @method string uuid()
  * @method mixed enum(array $values)
  * @method bool bool()
