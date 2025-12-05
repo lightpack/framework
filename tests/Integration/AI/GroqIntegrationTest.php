@@ -80,6 +80,18 @@ class GroqIntegrationTest extends TestCase
         $this->assertIsInt($result['data']['age']);
     }
 
+    public function testSystemPrompt()
+    {
+        $result = $this->groq->task()
+            ->system('You are a helpful assistant that always responds in JSON format.')
+            ->prompt('Say hello')
+            ->expect(['message' => 'string'])
+            ->run();
+
+        $this->assertTrue($result['success']);
+        $this->assertArrayHasKey('message', $result['data']);
+    }
+
     public function testArrayResponse()
     {
         $result = $this->groq->task()
