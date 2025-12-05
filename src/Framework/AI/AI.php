@@ -6,9 +6,13 @@ use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
 use Lightpack\Logger\Logger;
+use Lightpack\AI\VectorSearch\VectorSearchInterface;
+use Lightpack\AI\VectorSearch\InMemoryVectorSearch;
 
 abstract class AI
 {
+    private ?VectorSearchInterface $vectorSearch = null;
+
     public function __construct(
         protected Http $http,
         protected Cache $cache,
@@ -71,43 +75,54 @@ abstract class AI
     }
 
     /**
-     * Find similar items using cosine similarity.
+     * Find similar items using vector similarity search.
      * 
-     * NOTE: This is an O(n) brute-force search that works great for, say, < 5K documents.
-     * For larger datasets or very high traffic, consider using a vector database.
+     * Uses the configured VectorSearchInterface implementation (defaults to in-memory).
+     * For custom implementations (Qdrant, Meilisearch), use setVectorSearch().
      * 
      * @param array $queryEmbedding The query vector
-     * @param array $items Array of items with 'embedding' key
+     * @param mixed $target For in-memory: array of items. For vector DBs: collection name
      * @param int $limit Number of results to return
      * @param float $threshold Minimum similarity score (0-1)
      * @return array Sorted array of items with similarity scores
      */
-    public function similar(array $queryEmbedding, array $items, int $limit = 5, float $threshold = 0.0): array
+    public function similar(array $queryEmbedding, mixed $target, int $limit = 5, float $threshold = 0.0): array
     {
-        $similarities = [];
-        
-        foreach ($items as $id => $item) {
-            $embedding = $item['embedding'] ?? $item;
-            $score = $this->cosineSimilarity($queryEmbedding, $embedding);
-            
-            if ($score >= $threshold) {
-                $similarities[$id] = [
-                    'id' => $id,
-                    'similarity' => $score,
-                    'item' => $item,
-                ];
-            }
+        $search = $this->getVectorSearch();
+        return $search->search($queryEmbedding, $target, $limit, ['threshold' => $threshold]);
+    }
+
+    /**
+     * Set a custom vector search implementation.
+     * Allows using external vector databases (Qdrant, Meilisearch, etc.)
+     * 
+     * @param VectorSearchInterface $search Custom search implementation
+     * @return self For method chaining
+     */
+    public function setVectorSearch(VectorSearchInterface $search): self
+    {
+        $this->vectorSearch = $search;
+        return $this;
+    }
+
+    /**
+     * Get the vector search implementation (creates default if not set).
+     * 
+     * @return VectorSearchInterface
+     */
+    protected function getVectorSearch(): VectorSearchInterface
+    {
+        if ($this->vectorSearch === null) {
+            $this->vectorSearch = new InMemoryVectorSearch($this->logger);
         }
-        
-        // Sort by similarity (highest first)
-        usort($similarities, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
-        
-        return array_slice($similarities, 0, $limit);
+        return $this->vectorSearch;
     }
 
     /**
      * Calculate cosine similarity between two vectors.
      * Returns value between 0 (completely different) and 1 (identical).
+     * 
+     * Note: This is a utility method that delegates to InMemoryVectorSearch.
      * 
      * @param array $a First vector
      * @param array $b Second vector
@@ -115,23 +130,16 @@ abstract class AI
      */
     public function cosineSimilarity(array $a, array $b): float
     {
-        if (count($a) !== count($b)) {
-            throw new \InvalidArgumentException('Vectors must have same dimensions');
-        }
-
-        $dotProduct = 0;
-        $magnitudeA = 0;
-        $magnitudeB = 0;
+        $search = $this->getVectorSearch();
         
-        for ($i = 0; $i < count($a); $i++) {
-            $dotProduct += $a[$i] * $b[$i];
-            $magnitudeA += $a[$i] * $a[$i];
-            $magnitudeB += $b[$i] * $b[$i];
+        if ($search instanceof InMemoryVectorSearch) {
+            return $search->cosineSimilarity($a, $b);
         }
         
-        $magnitude = sqrt($magnitudeA) * sqrt($magnitudeB);
-        
-        return $magnitude > 0 ? $dotProduct / $magnitude : 0;
+        throw new \BadMethodCallException(
+            'cosineSimilarity() is only available with InMemoryVectorSearch. ' .
+            'Vector databases calculate similarity server-side.'
+        );
     }
 
     /**
