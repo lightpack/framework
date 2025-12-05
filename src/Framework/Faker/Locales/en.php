@@ -10,7 +10,9 @@ return [
         'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas', 'Jackson', 'White', 'Harris',
     ],
     'domains' => [
-        'example.com', 'test.com', 'demo.org', 'mail.com', 'sample.net',
+        'example.com', 'example.org', 'example.net',
+        'test.com', 'test.org', 'test.net',
+        'example.invalid', 'test.invalid',
     ],
     'phonePrefixes' => [
         '+91-', '+1-', '+44-', '+81-', '+61-',

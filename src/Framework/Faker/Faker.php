@@ -63,13 +63,21 @@ class Faker
         return new UniqueFaker($this);
     }
 
-    public function name(): string
+    public function firstName(): string
     {
         $firstNames = $this->getData('firstNames');
+        return $firstNames[mt_rand(0, count($firstNames) - 1)];
+    }
+
+    public function lastName(): string
+    {
         $lastNames = $this->getData('lastNames');
-        $first = $firstNames[mt_rand(0, count($firstNames) - 1)];
-        $last = $lastNames[mt_rand(0, count($lastNames) - 1)];
-        return "$first $last";
+        return $lastNames[mt_rand(0, count($lastNames) - 1)];
+    }
+
+    public function name(): string
+    {
+        return $this->firstName() . ' ' . $this->lastName();
     }
 
     public function email(): string
@@ -118,6 +126,12 @@ class Faker
     public function date(string $format = 'Y-m-d'): string
     {
         $timestamp = mt_rand(strtotime('-10 years'), time());
+        return date($format, $timestamp);
+    }
+
+    public function datetime(string $format = 'Y-m-d H:i:s'): string
+    {
+        $timestamp = mt_rand(strtotime('-1 year'), time());
         return date($format, $timestamp);
     }
 
@@ -212,10 +226,15 @@ class Faker
     /**
      * Generate a fake URL.
      */
-    public function url(): string
+    public function domainName(): string
     {
         $domains = $this->getData('domains');
-        $domain = $domains[mt_rand(0, count($domains) - 1)];
+        return $domains[mt_rand(0, count($domains) - 1)];
+    }
+
+    public function url(): string
+    {
+        $domain = $this->domainName();
         $user = strtolower(preg_replace('/\s+/', '', $this->name()));
         return "https://$domain/$user";
     }
@@ -251,6 +270,18 @@ class Faker
             $segments[] = dechex(mt_rand(0, 0xffff));
         }
         return implode(':', $segments);
+    }
+
+    public function userAgent(): string
+    {
+        $browsers = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+            'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ];
+        return $browsers[mt_rand(0, count($browsers) - 1)];
     }
 
     /**
