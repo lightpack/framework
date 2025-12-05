@@ -153,9 +153,17 @@
         <env name="MAILTRAP_PASSWORD" value="" />
         
         <!-- Resend Test Config (for Resend Integration Tests) -->
-        <!-- Get API key from: https://resend.com (free tier: 100 emails/day) -->
+        <!-- Get API key from: https://resend.com -->
         <!-- Tests use Resend's test emails: onboarding@resend.dev, delivered@resend.dev -->
         <env name="RESEND_API_KEY" value="" />
+        
+        <!-- AI Provider Test Config (for AI Integration Tests) -->
+        <!-- Tests will be skipped if API keys are not provided -->
+        <env name="OPENAI_API_KEY" value="" />
+        <env name="ANTHROPIC_API_KEY" value="" />
+        <env name="GEMINI_API_KEY" value="" />
+        <env name="GROQ_API_KEY" value="" />
+        <env name="MISTRAL_API_KEY" value="" />
     </php>
     <coverage>
         <include>
