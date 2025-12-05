@@ -71,7 +71,10 @@ abstract class AI
     }
 
     /**
-     * Find similar items to a query embedding.
+     * Find similar items using cosine similarity.
+     * 
+     * NOTE: This is an O(n) brute-force search that works great for, say, < 5K documents.
+     * For larger datasets or very high traffic, consider using a vector database.
      * 
      * @param array $queryEmbedding The query vector
      * @param array $items Array of items with 'embedding' key
