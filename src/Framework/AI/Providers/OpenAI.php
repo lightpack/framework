@@ -64,4 +64,28 @@ class OpenAI extends AI
             'Content-Type' => 'application/json',
         ];
     }
+
+    protected function generateEmbedding(string|array $input, array $options = []): array
+    {
+        $model = $options['model'] ?? $this->config->get('ai.providers.openai.embedding_model', 'text-embedding-3-small');
+        $endpoint = 'https://api.openai.com/v1/embeddings';
+        
+        $result = $this->makeApiRequest(
+            $endpoint,
+            [
+                'model' => $model,
+                'input' => $input,  // OpenAI accepts both string and array
+            ],
+            $this->prepareHeaders(),
+            $this->config->get('ai.http_timeout', 15)
+        );
+        
+        // Single text returns single embedding
+        if (is_string($input)) {
+            return $result['data'][0]['embedding'] ?? [];
+        }
+        
+        // Batch returns array of embeddings
+        return array_map(fn($item) => $item['embedding'] ?? [], $result['data'] ?? []);
+    }
 }

@@ -25,7 +25,7 @@ return [
             ],
             'anthropic' => [
                 'key' => get_env('ANTHROPIC_API_KEY'),
-                'model' => 'claude-3-7-sonnet-latest',
+                'model' => 'claude-sonnet-4-5',
                 'endpoint' => 'https://api.anthropic.com/v1/messages',
                 'version' => get_env('ANTHROPIC_VERSION', '2023-06-01'),
             ],

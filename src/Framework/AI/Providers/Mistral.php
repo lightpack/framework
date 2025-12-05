@@ -73,4 +73,31 @@ class Mistral extends AI
             'raw' => $result,
         ];
     }
+
+    protected function generateEmbedding(string|array $input, array $options = []): array
+    {
+        $model = $options['model'] ?? $this->config->get('ai.providers.mistral.embedding_model', 'mistral-embed');
+        $endpoint = 'https://api.mistral.ai/v1/embeddings';
+        
+        // Mistral API expects array, so wrap string
+        $apiInput = is_string($input) ? [$input] : $input;
+        
+        $result = $this->makeApiRequest(
+            $endpoint,
+            [
+                'model' => $model,
+                'input' => $apiInput,
+            ],
+            $this->prepareHeaders(),
+            $this->config->get('ai.http_timeout', 15)
+        );
+        
+        // Single text returns single embedding
+        if (is_string($input)) {
+            return $result['data'][0]['embedding'] ?? [];
+        }
+        
+        // Batch returns array of embeddings
+        return array_map(fn($item) => $item['embedding'] ?? [], $result['data'] ?? []);
+    }
 }

@@ -19,12 +19,15 @@ class AnthropicIntegrationTest extends TestCase
         if (!$this->apiKey) {
             $this->markTestSkipped('ANTHROPIC_API_KEY environment variable not set');
         }
+        
+        // Avoid rate limiting - wait 5 seconds between tests
+        sleep(5);
 
         $config = $this->createMock(Config::class);
         $config->method('get')->willReturnCallback(function($key, $default = null) {
             $map = [
                 'ai.providers.anthropic.key' => $this->apiKey,
-                'ai.providers.anthropic.model' => 'claude-3-5-sonnet-20241022',
+                'ai.providers.anthropic.model' => 'claude-sonnet-4-5',
                 'ai.providers.anthropic.endpoint' => 'https://api.anthropic.com/v1/messages',
                 'ai.providers.anthropic.version' => '2023-06-01',
                 'ai.http_timeout' => 30,
