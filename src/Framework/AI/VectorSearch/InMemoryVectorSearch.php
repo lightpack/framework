@@ -7,11 +7,9 @@ use Lightpack\Logger\Logger;
 /**
  * In-memory vector search implementation using brute-force cosine similarity.
  * 
- * This implementation works great for < 5K documents. For larger datasets
- * or high traffic, consider using a vector database (Qdrant, Meilisearch).
- * 
- * @see EMBEDDINGS_GUIDE.md#next-level-vector-databases
- */
+ * This implementation works great for small to moderate datasets (up to 3-5K documents). 
+ * For larger datasets or high traffic, consider using a vector database (Qdrant, Meilisearch).
+ */ 
 class InMemoryVectorSearch implements VectorSearchInterface
 {
     public function __construct(
@@ -21,8 +19,7 @@ class InMemoryVectorSearch implements VectorSearchInterface
     /**
      * Search for similar items using cosine similarity.
      * 
-     * NOTE: This is an O(n) brute-force search that works great for, say, < 5K documents.
-     * For larger datasets or very high traffic, consider using a vector database.
+     * NOTE: This is an O(n) brute-force in-memory search.
      * 
      * @param array $queryEmbedding The query vector
      * @param mixed $target Array of items with 'embedding' key
@@ -34,17 +31,6 @@ class InMemoryVectorSearch implements VectorSearchInterface
     {
         $items = $target;
         $threshold = $options['threshold'] ?? 0.0;
-        
-        // Log warning for large datasets
-        $itemCount = count($items);
-        if ($itemCount > 5000 && $this->logger) {
-            $this->logger->warning(
-                "Searching {$itemCount} items with in-memory search. " .
-                "Consider using a vector database (Qdrant, Meilisearch) for better performance. " .
-                "See: EMBEDDINGS_GUIDE.md#next-level-vector-databases"
-            );
-        }
-        
         $similarities = [];
         
         foreach ($items as $id => $item) {
