@@ -610,6 +610,448 @@ class EmbeddingIndexer
 }
 ```
 
+## Real-World Migration: 6 Months Later
+
+### The Scenario
+
+**You started with in-memory search:**
+- Launched 6 months ago with 500 products
+- Used `ai()->similar()` with in-memory search
+- Everything worked great!
+
+**Now you have:**
+- 15,000 products (30x growth!)
+- Search takes 300-500ms (too slow)
+- 50 searches/second during peak (server struggling)
+- Users complaining about slow search
+
+**Time to upgrade to Qdrant!**
+
+### Migration Checklist
+
+#### Week 1: Preparation (No Downtime)
+
+**Day 1-2: Setup Qdrant**
+
+```bash
+# Option 1: Docker (development/staging)
+docker run -p 6333:6333 qdrant/qdrant
+
+# Option 2: Qdrant Cloud (production)
+# Sign up at https://cloud.qdrant.io
+# Get API key and endpoint
+```
+
+**Day 3-4: Create Adapter**
+
+```php
+// src/VectorSearch/QdrantVectorSearch.php
+namespace App\VectorSearch;
+
+use Lightpack\AI\VectorSearch\VectorSearchInterface;
+
+class QdrantVectorSearch implements VectorSearchInterface
+{
+    private string $host;
+    private int $port;
+    private ?string $apiKey;
+    
+    public function __construct(string $host, int $port, ?string $apiKey = null)
+    {
+        $this->host = $host;
+        $this->port = $port;
+        $this->apiKey = $apiKey;
+    }
+    
+    public function search(array $queryEmbedding, mixed $target, int $limit = 5, array $options = []): array
+    {
+        $collectionName = $target;
+        
+        $headers = ['Content-Type' => 'application/json'];
+        if ($this->apiKey) {
+            $headers['api-key'] = $this->apiKey;
+        }
+        
+        $response = http()
+            ->headers($headers)
+            ->post("http://{$this->host}:{$this->port}/collections/{$collectionName}/points/search", [
+                'vector' => $queryEmbedding,
+                'limit' => $limit,
+                'with_payload' => true,
+                'filter' => $options['filter'] ?? null
+            ]);
+        
+        if ($response->failed()) {
+            throw new \Exception('Qdrant search failed: ' . $response->body());
+        }
+        
+        $data = json_decode($response->body(), true);
+        
+        return array_map(fn($result) => [
+            'id' => $result['id'],
+            'similarity' => $result['score'],
+            'item' => $result['payload']
+        ], $data['result'] ?? []);
+    }
+}
+```
+
+**Day 5: Test Locally**
+
+```php
+// Test script
+$qdrant = new QdrantVectorSearch('localhost', 6333);
+
+// Create collection
+http()->put('http://localhost:6333/collections/products', [
+    'vectors' => [
+        'size' => 768,  // Gemini embedding dimensions
+        'distance' => 'Cosine'
+    ]
+]);
+
+// Test with sample data
+$embedding = ai()->embed('test product');
+$qdrant->search($embedding, 'products', 5);
+```
+
+#### Week 2: Data Migration (Minimal Downtime)
+
+**Step 1: Migrate Existing Embeddings**
+
+```php
+// scripts/migrate_to_qdrant.php
+require 'vendor/autoload.php';
+
+$qdrant = new QdrantVectorSearch(
+    env('QDRANT_HOST'),
+    env('QDRANT_PORT'),
+    env('QDRANT_API_KEY')
+);
+
+// Create collection
+http()->put(env('QDRANT_HOST') . '/collections/products', [
+    'vectors' => ['size' => 768, 'distance' => 'Cosine']
+]);
+
+// Migrate in batches
+$batchSize = 100;
+$offset = 0;
+
+while (true) {
+    $products = Product::query()
+        ->limit($batchSize)
+        ->offset($offset)
+        ->get();
+    
+    if ($products->isEmpty()) {
+        break;
+    }
+    
+    $points = [];
+    foreach ($products as $product) {
+        $embedding = json_decode($product->embedding, true);
+        
+        if (!$embedding) {
+            echo "Skipping product {$product->id} - no embedding\n";
+            continue;
+        }
+        
+        $points[] = [
+            'id' => $product->id,
+            'vector' => $embedding,
+            'payload' => [
+                'name' => $product->name,
+                'description' => $product->description,
+                'category' => $product->category,
+                'price' => $product->price,
+                'created_at' => $product->created_at
+            ]
+        ];
+    }
+    
+    // Batch upsert
+    http()->put(env('QDRANT_HOST') . '/collections/products/points', [
+        'points' => $points
+    ]);
+    
+    echo "Migrated batch: {$offset} - " . ($offset + count($products)) . "\n";
+    $offset += $batchSize;
+}
+
+echo "Migration complete! Total: {$offset} products\n";
+```
+
+**Run migration:**
+
+```bash
+php scripts/migrate_to_qdrant.php
+# Migrated batch: 0 - 100
+# Migrated batch: 100 - 200
+# ...
+# Migration complete! Total: 15000 products
+```
+
+**Step 2: Update Configuration**
+
+```php
+// config/ai.php
+return [
+    'driver' => env('AI_DRIVER', 'gemini'),
+    
+    // Vector search configuration
+    'vector_search' => env('VECTOR_SEARCH', 'memory'), // Change to 'qdrant' when ready
+    
+    'qdrant' => [
+        'host' => env('QDRANT_HOST', 'localhost'),
+        'port' => env('QDRANT_PORT', 6333),
+        'api_key' => env('QDRANT_API_KEY'),
+    ],
+];
+```
+
+```bash
+# .env (staging first!)
+VECTOR_SEARCH=qdrant
+QDRANT_HOST=your-qdrant-instance.com
+QDRANT_PORT=6333
+QDRANT_API_KEY=your-api-key
+```
+
+**Step 3: Update AiProvider**
+
+```php
+// src/Framework/Providers/AiProvider.php
+public function register(Container $container)
+{
+    $config = $container->get('config');
+    $ai = /* ... create AI instance ... */;
+    
+    // Configure vector search based on environment
+    $searchType = $config->get('ai.vector_search', 'memory');
+    
+    $vectorSearch = match($searchType) {
+        'qdrant' => new \App\VectorSearch\QdrantVectorSearch(
+            $config->get('ai.qdrant.host'),
+            $config->get('ai.qdrant.port'),
+            $config->get('ai.qdrant.api_key')
+        ),
+        default => new InMemoryVectorSearch($container->get('logger')),
+    };
+    
+    $ai->setVectorSearch($vectorSearch);
+    
+    return $ai;
+}
+```
+
+**Step 4: Update Search Code**
+
+```php
+// BEFORE (in-memory)
+public function search(string $query): array
+{
+    $queryEmbedding = ai()->embed($query);
+    
+    $products = Product::query()->all()->map(fn($p) => [
+        'id' => $p->id,
+        'name' => $p->name,
+        'embedding' => json_decode($p->embedding, true)
+    ]);
+    
+    return ai()->similar($queryEmbedding, $products, 10);
+}
+
+// AFTER (Qdrant)
+public function search(string $query, ?string $category = null): array
+{
+    $queryEmbedding = ai()->embed($query);
+    
+    $options = [];
+    if ($category) {
+        $options['filter'] = [
+            'must' => [
+                ['key' => 'category', 'match' => ['value' => $category]]
+            ]
+        ];
+    }
+    
+    return ai()->similar($queryEmbedding, 'products', 10, $options);
+}
+```
+
+**Step 5: Update Indexing Pipeline**
+
+```php
+// BEFORE (just save to DB)
+class Product extends Model
+{
+    protected function afterSave()
+    {
+        if ($this->isDirty('description')) {
+            $this->embedding = json_encode(ai()->embed($this->description));
+            $this->save();
+        }
+    }
+}
+
+// AFTER (save to DB + index in Qdrant)
+class Product extends Model
+{
+    protected function afterSave()
+    {
+        if ($this->isDirty('description')) {
+            $embedding = ai()->embed($this->description);
+            
+            // Save to DB (backup)
+            $this->embedding = json_encode($embedding);
+            $this->saveQuietly(); // Avoid infinite loop
+            
+            // Index in Qdrant (search)
+            $this->indexInVectorDB($embedding);
+        }
+    }
+    
+    protected function afterDelete()
+    {
+        // Remove from Qdrant
+        http()->delete(
+            env('QDRANT_HOST') . "/collections/products/points/{$this->id}"
+        );
+    }
+    
+    private function indexInVectorDB(array $embedding): void
+    {
+        http()->put(env('QDRANT_HOST') . '/collections/products/points', [
+            'points' => [[
+                'id' => $this->id,
+                'vector' => $embedding,
+                'payload' => [
+                    'name' => $this->name,
+                    'description' => $this->description,
+                    'category' => $this->category,
+                    'price' => $this->price
+                ]
+            ]]
+        ]);
+    }
+}
+```
+
+#### Week 3: Testing & Deployment
+
+**Step 1: Test on Staging**
+
+```bash
+# Deploy to staging with VECTOR_SEARCH=qdrant
+# Run tests
+./vendor/bin/phpunit
+
+# Load test
+ab -n 1000 -c 10 https://staging.yourapp.com/search?q=laptop
+
+# Compare performance
+# Before: 300-500ms per search
+# After: 15-30ms per search (10-20x faster!)
+```
+
+**Step 2: Gradual Rollout**
+
+```php
+// Feature flag approach
+public function search(string $query): array
+{
+    $useQdrant = cache()->get('feature:qdrant_search', false);
+    
+    // Or percentage rollout
+    $useQdrant = (crc32(session()->id()) % 100) < 10; // 10% of users
+    
+    if ($useQdrant) {
+        return $this->searchWithQdrant($query);
+    }
+    
+    return $this->searchInMemory($query);
+}
+```
+
+**Step 3: Monitor**
+
+```php
+// Add monitoring
+$start = microtime(true);
+$results = ai()->similar($queryEmbedding, 'products', 10);
+$duration = (microtime(true) - $start) * 1000;
+
+logger()->info('Vector search', [
+    'type' => env('VECTOR_SEARCH'),
+    'duration_ms' => $duration,
+    'results_count' => count($results),
+    'query' => substr($query, 0, 50)
+]);
+```
+
+**Step 4: Full Deployment**
+
+```bash
+# Update production .env
+VECTOR_SEARCH=qdrant
+
+# Deploy
+git push production main
+
+# Monitor logs
+tail -f storage/logs/app.log | grep "Vector search"
+```
+
+### Results After Migration
+
+**Performance:**
+- Search time: 300-500ms → 15-30ms (10-20x faster!)
+- Concurrent capacity: 10 req/s → 200+ req/s
+- Server CPU: 80% → 15%
+
+**Cost:**
+- Before: $80/month (large server for in-memory)
+- After: $60/month ($40 Qdrant VPS + $20 smaller app server)
+- **Savings: $20/month + way better performance!**
+
+**User Experience:**
+- Search feels instant
+- Can handle traffic spikes
+- Advanced filtering available
+
+### Rollback Plan
+
+**If something goes wrong:**
+
+```bash
+# Instant rollback - just change env var
+VECTOR_SEARCH=memory
+
+# Restart app
+pm2 restart app
+
+# Back to in-memory in 30 seconds!
+```
+
+**Keep embeddings in DB as backup:**
+- Vector DB dies? Fall back to in-memory
+- Need to switch providers? Re-index from DB
+- Always have a safety net!
+
+### Key Takeaways
+
+1. **Start simple** - In-memory got you to 15K products!
+2. **Migrate when needed** - Not before, not after
+3. **Keep embeddings in DB** - Always have a backup
+4. **Test thoroughly** - Staging first, gradual rollout
+5. **Monitor everything** - Know when to scale
+6. **Have rollback plan** - Things can go wrong
+
+**Total migration time: 2-3 weeks**
+**Downtime: 0 minutes** (gradual rollout)
+**Effort: Medium** (mostly testing and monitoring)
+
 ### Cost Analysis: In-Memory vs Vector DB
 
 #### Scenario: 50,000 Products, 100 searches/sec
@@ -804,6 +1246,225 @@ $results = $search->similar($queryEmbedding, $docs, 10);
 
 Don't let perfect be the enemy of good. Start simple, ship fast, upgrade when you need to.
 
+## Extending with Custom Vector Search
+
+### The VectorSearchInterface
+
+Lightpack's embedding system is extensible via `VectorSearchInterface`. This allows you to plug in any vector database while keeping the same simple API.
+
+```php
+namespace Lightpack\AI\VectorSearch;
+
+interface VectorSearchInterface
+{
+    public function search(array $queryEmbedding, mixed $target, int $limit = 5, array $options = []): array;
+}
+```
+
+### Creating a Custom Adapter
+
+**Example: Qdrant Adapter**
+
+```php
+use Lightpack\AI\VectorSearch\VectorSearchInterface;
+
+class QdrantVectorSearch implements VectorSearchInterface
+{
+    public function __construct(
+        private string $host = 'localhost',
+        private int $port = 6333
+    ) {}
+    
+    public function search(array $queryEmbedding, mixed $target, int $limit = 5, array $options = []): array
+    {
+        $collectionName = $target; // For vector DBs, target is collection name
+        $filter = $options['filter'] ?? null;
+        
+        // Call Qdrant API
+        $response = $this->http->post("http://{$this->host}:{$this->port}/collections/{$collectionName}/points/search", [
+            'vector' => $queryEmbedding,
+            'limit' => $limit,
+            'filter' => $filter,
+            'with_payload' => true
+        ]);
+        
+        // Normalize to Lightpack format
+        return array_map(fn($result) => [
+            'id' => $result['id'],
+            'similarity' => $result['score'],
+            'item' => $result['payload']
+        ], $response['result']);
+    }
+}
+```
+
+### Using Custom Adapters
+
+**Option 1: Direct Usage**
+
+```php
+// Create custom adapter
+$qdrant = new QdrantVectorSearch('localhost', 6333);
+
+// Set on AI instance
+ai()->setVectorSearch($qdrant);
+
+// Use same API!
+$results = ai()->similar($queryEmbedding, 'products', 10);
+```
+
+**Option 2: Via Configuration**
+
+```php
+// config/ai.php
+return [
+    'vector_search' => env('VECTOR_SEARCH', 'memory'), // 'memory', 'qdrant', 'meilisearch'
+    
+    'qdrant' => [
+        'host' => env('QDRANT_HOST', 'localhost'),
+        'port' => env('QDRANT_PORT', 6333),
+    ],
+];
+
+// src/Framework/Providers/AiProvider.php
+public function register(Container $container)
+{
+    $config = $container->get('config');
+    $ai = /* ... create AI instance ... */;
+    
+    // Configure vector search
+    $searchType = $config->get('ai.vector_search', 'memory');
+    
+    $vectorSearch = match($searchType) {
+        'qdrant' => new QdrantVectorSearch(
+            $config->get('ai.qdrant.host'),
+            $config->get('ai.qdrant.port')
+        ),
+        'meilisearch' => new MeilisearchVectorSearch(/* ... */),
+        default => new InMemoryVectorSearch($container->get('logger')),
+    };
+    
+    $ai->setVectorSearch($vectorSearch);
+    
+    return $ai;
+}
+```
+
+**Option 3: Swap at Runtime**
+
+```php
+// Start with in-memory for small datasets
+$products = Product::query()->where('category', 'electronics')->get();
+$results = ai()->similar($queryEmbedding, $products, 10);
+
+// Switch to Qdrant for large datasets
+if (count($allProducts) > 10000) {
+    ai()->setVectorSearch(new QdrantVectorSearch());
+    $results = ai()->similar($queryEmbedding, 'products', 10);
+}
+```
+
+### Example Adapters
+
+**Meilisearch Adapter**
+
+```php
+class MeilisearchVectorSearch implements VectorSearchInterface
+{
+    public function __construct(private MeiliSearch\Client $client) {}
+    
+    public function search(array $queryEmbedding, mixed $target, int $limit = 5, array $options = []): array
+    {
+        $index = $this->client->index($target);
+        
+        $results = $index->search('', [
+            'vector' => $queryEmbedding,
+            'hybrid' => ['semanticRatio' => $options['semanticRatio'] ?? 1.0],
+            'limit' => $limit
+        ]);
+        
+        return array_map(fn($hit) => [
+            'id' => $hit['id'],
+            'similarity' => $hit['_semanticScore'] ?? 1.0,
+            'item' => $hit
+        ], $results['hits']);
+    }
+}
+```
+
+**pgvector Adapter**
+
+```php
+class PgVectorSearch implements VectorSearchInterface
+{
+    public function __construct(private PDO $pdo) {}
+    
+    public function search(array $queryEmbedding, mixed $target, int $limit = 5, array $options = []): array
+    {
+        $table = $target; // Table name
+        $vector = json_encode($queryEmbedding);
+        
+        $stmt = $this->pdo->prepare("
+            SELECT id, data, 1 - (embedding <=> ?) as similarity
+            FROM {$table}
+            WHERE 1 - (embedding <=> ?) >= ?
+            ORDER BY embedding <=> ?
+            LIMIT ?
+        ");
+        
+        $threshold = $options['threshold'] ?? 0.0;
+        $stmt->execute([$vector, $vector, $threshold, $vector, $limit]);
+        
+        return array_map(fn($row) => [
+            'id' => $row['id'],
+            'similarity' => (float) $row['similarity'],
+            'item' => json_decode($row['data'], true)
+        ], $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+}
+```
+
+### Publishing Community Adapters
+
+**Create a package:**
+
+```bash
+# Package structure
+lightpack-qdrant/
+├── composer.json
+├── src/
+│   └── QdrantVectorSearch.php
+└── README.md
+```
+
+```json
+// composer.json
+{
+    "name": "yourname/lightpack-qdrant",
+    "description": "Qdrant vector search adapter for Lightpack AI",
+    "require": {
+        "lightpack/framework": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "YourName\\LightpackQdrant\\": "src/"
+        }
+    }
+}
+```
+
+**Users install:**
+
+```bash
+composer require yourname/lightpack-qdrant
+```
+
+```php
+use YourName\LightpackQdrant\QdrantVectorSearch;
+
+ai()->setVectorSearch(new QdrantVectorSearch());
+```
+
 ## Advanced: Semantic Search with Caching
 
 ```php
@@ -982,6 +1643,314 @@ class Product extends Model
         }
     }
 }
+```
+
+## Error Handling
+
+### Handling Embedding Failures
+
+```php
+// Always wrap API calls in try-catch
+try {
+    $embedding = ai()->embed($product->description);
+    $product->embedding = json_encode($embedding);
+    $product->save();
+} catch (\Exception $e) {
+    logger()->error('Embedding generation failed', [
+        'product_id' => $product->id,
+        'error' => $e->getMessage()
+    ]);
+    
+    // Fallback: Mark for retry or use keyword search
+    $product->embedding_failed = true;
+    $product->save();
+}
+```
+
+### Provider Doesn't Support Embeddings
+
+```php
+// Check if provider supports embeddings
+try {
+    $embedding = ai()->embed('test');
+} catch (\Exception $e) {
+    if (str_contains($e->getMessage(), 'does not support embeddings')) {
+        // Switch to a provider that supports embeddings
+        logger()->warning('Current AI provider does not support embeddings. Use Gemini, OpenAI, or Mistral.');
+    }
+}
+```
+
+### Dimension Mismatch
+
+```php
+// Vectors must have same dimensions
+$vec1 = [0.1, 0.2, 0.3];  // 3 dimensions
+$vec2 = [0.1, 0.2];       // 2 dimensions
+
+try {
+    $score = ai()->cosineSimilarity($vec1, $vec2);
+} catch (\InvalidArgumentException $e) {
+    // "Vectors must have same dimensions"
+    logger()->error('Dimension mismatch in similarity calculation');
+}
+```
+
+### Graceful Degradation
+
+```php
+// Fallback to keyword search if embeddings fail
+public function search(string $query): array
+{
+    try {
+        // Try semantic search first
+        $queryEmbedding = ai()->embed($query);
+        $products = $this->loadProductsWithEmbeddings();
+        return ai()->similar($queryEmbedding, $products, 10);
+    } catch (\Exception $e) {
+        logger()->warning('Semantic search failed, falling back to keyword search');
+        
+        // Fallback to simple keyword search
+        return Product::query()
+            ->where('name', 'LIKE', "%{$query}%")
+            ->orWhere('description', 'LIKE', "%{$query}%")
+            ->limit(10)
+            ->get();
+    }
+}
+```
+
+## Common Pitfalls
+
+### ❌ Pitfall 1: Embedding on Every Search
+
+```php
+// ❌ WRONG - Generates embeddings on every search (1000 API calls!)
+public function search(string $query): array
+{
+    $products = Product::query()->all();
+    
+    foreach ($products as $product) {
+        // This calls the API 1000 times!
+        $product->embedding = ai()->embed($product->description);
+    }
+    
+    $queryEmbedding = ai()->embed($query);
+    return ai()->similar($queryEmbedding, $products);
+}
+
+// ✅ CORRECT - Load pre-computed embeddings from database
+public function search(string $query): array
+{
+    $queryEmbedding = ai()->embed($query);  // Only 1 API call
+    
+    $products = Product::query()->all()->map(fn($p) => [
+        'id' => $p->id,
+        'name' => $p->name,
+        'embedding' => json_decode($p->embedding, true)  // From DB!
+    ]);
+    
+    return ai()->similar($queryEmbedding, $products);
+}
+```
+
+### ❌ Pitfall 2: Not Storing Embeddings
+
+```php
+// ❌ WRONG - Generates but never saves
+$product = new Product();
+$product->name = 'iPhone';
+$product->description = 'Smartphone';
+
+$embedding = ai()->embed($product->description);
+// Oops! Never saved to database
+$product->save();
+
+// ✅ CORRECT - Always save embeddings
+$product = new Product();
+$product->name = 'iPhone';
+$product->description = 'Smartphone';
+
+$embedding = ai()->embed($product->description);
+$product->embedding = json_encode($embedding);  // Save it!
+$product->save();
+```
+
+### ❌ Pitfall 3: Mixing Providers
+
+```php
+// ❌ WRONG - Different providers for indexing vs searching
+// Day 1: Index with OpenAI
+config()->set('ai.driver', 'openai');
+$product->embedding = json_encode(ai()->embed($description));  // 1536 dims
+
+// Day 2: Search with Gemini
+config()->set('ai.driver', 'gemini');
+$queryEmbedding = ai()->embed($query);  // 768 dims
+
+// Result: Garbage matches! Dimensions don't match!
+ai()->similar($queryEmbedding, $products);  // ❌ Fails or wrong results
+
+// ✅ CORRECT - Use same provider always
+// Store provider with embedding
+$product->embedding_provider = 'openai';
+$product->embedding = json_encode(ai()->embed($description));
+
+// Always use same provider for search
+config()->set('ai.driver', $product->embedding_provider);
+$queryEmbedding = ai()->embed($query);
+```
+
+### ❌ Pitfall 4: Not Updating Embeddings
+
+```php
+// ❌ WRONG - Description changed but embedding not updated
+$product = Product::find(1);
+$product->description = 'Completely new description';
+$product->save();
+// Embedding still has old description! Search won't find it!
+
+// ✅ CORRECT - Update embedding when content changes
+class Product extends Model
+{
+    protected function afterSave()
+    {
+        // Re-generate embedding if description changed
+        if ($this->isDirty('description')) {
+            $embedding = ai()->embed($this->description);
+            $this->embedding = json_encode($embedding);
+            $this->saveQuietly();  // Avoid infinite loop
+        }
+    }
+}
+```
+
+### ❌ Pitfall 5: Loading Too Much Data
+
+```php
+// ❌ WRONG - Loads all data including large fields
+$products = Product::query()->all();  // Loads everything!
+
+$items = $products->map(fn($p) => [
+    'id' => $p->id,
+    'embedding' => json_decode($p->embedding, true),
+    // Loads unnecessary data: images, full descriptions, etc.
+]);
+
+// ✅ CORRECT - Only load what you need
+$products = Product::query()
+    ->select('id', 'name', 'price', 'embedding')  // Only needed fields
+    ->get();
+
+$items = $products->map(fn($p) => [
+    'id' => $p->id,
+    'name' => $p->name,
+    'price' => $p->price,
+    'embedding' => json_decode($p->embedding, true)
+]);
+```
+
+### ❌ Pitfall 6: No Threshold Filtering
+
+```php
+// ❌ WRONG - Returns all results, even poor matches
+$results = ai()->similar($queryEmbedding, $products, 10);
+// Might return items with 0.1 similarity (terrible match!)
+
+// ✅ CORRECT - Use threshold to filter poor matches
+$results = ai()->similar($queryEmbedding, $products, 10, threshold: 0.7);
+// Only returns items with 70%+ similarity
+
+// Or filter after
+$results = ai()->similar($queryEmbedding, $products, 10);
+$goodMatches = array_filter($results, fn($r) => $r['similarity'] >= 0.7);
+```
+
+## Quick Reference
+
+### Basic API
+
+```php
+// Embed single text
+$embedding = ai()->embed('Hello world');
+
+// Embed multiple texts (batch - single API call)
+$embeddings = ai()->embed(['text1', 'text2', 'text3']);
+
+// Find similar items
+$results = ai()->similar($queryEmbedding, $items, limit: 10);
+
+// With threshold
+$results = ai()->similar($queryEmbedding, $items, limit: 10, threshold: 0.7);
+
+// Calculate similarity
+$score = ai()->cosineSimilarity($vec1, $vec2);
+
+// Alias (backwards compatibility)
+$results = ai()->findSimilar($queryEmbedding, $items, limit: 10);
+```
+
+### When to Upgrade
+
+| Scale | Action |
+|-------|--------|
+| < 5K docs | ✅ In-memory (perfect!) |
+| 5K-10K docs | ⚠️ In-memory + caching |
+| > 10K docs | 🚀 Upgrade to vector DB |
+
+### Provider Comparison
+
+| Provider | Cost | Dimensions | Embeddings |
+|----------|------|------------|------------|
+| **Gemini** | FREE | 768 | ✅ Yes |
+| **OpenAI** | $0.02/1M | 1536 | ✅ Yes |
+| **Mistral** | $0.10/1M | 1024 | ✅ Yes |
+| **Groq** | - | - | ❌ No |
+| **Anthropic** | - | - | ❌ No |
+
+### Performance Guidelines
+
+```
+Documents    Search Time    Memory    Recommendation
+---------    -----------    ------    --------------
+< 1K         < 10ms        < 8 MB    Perfect
+1K-5K        20-100ms      8-40 MB   Good
+5K-10K       100-300ms     40-80 MB  Add caching
+> 10K        > 300ms       > 80 MB   Use vector DB
+```
+
+### Common Patterns
+
+```php
+// 1. Store embeddings
+$product->embedding = json_encode(ai()->embed($text));
+
+// 2. Load embeddings
+$embedding = json_decode($product->embedding, true);
+
+// 3. Search
+$queryEmbedding = ai()->embed($query);
+$results = ai()->similar($queryEmbedding, $items, 10);
+
+// 4. Filter results
+$goodMatches = array_filter($results, fn($r) => $r['similarity'] >= 0.7);
+```
+
+### Custom Vector Search
+
+```php
+use Lightpack\AI\VectorSearch\VectorSearchInterface;
+
+// Create adapter
+class MyVectorDB implements VectorSearchInterface {
+    public function search(array $query, mixed $target, int $limit, array $options): array
+    {
+        // Your implementation
+    }
+}
+
+// Use it
+ai()->setVectorSearch(new MyVectorDB());
 ```
 
 ## Summary
