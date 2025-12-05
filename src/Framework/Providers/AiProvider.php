@@ -9,6 +9,7 @@ use Lightpack\AI\Providers\Groq;
 use Lightpack\AI\Providers\OpenAI;
 use Lightpack\AI\Providers\Mistral;
 use Lightpack\AI\Providers\Anthropic;
+use Lightpack\AI\Providers\Gemini;
 use Lightpack\Http\Http;
 
 class AiProvider implements ProviderInterface
@@ -31,6 +32,7 @@ class AiProvider implements ProviderInterface
                 'anthropic' => new Anthropic(...$dependencies),
                 'mistral'   => new Mistral(...$dependencies),
                 'groq'      => new Groq(...$dependencies),
+                'gemini'    => new Gemini(...$dependencies),
                 default     => throw new \Exception("Unknown AI driver: {$type}"),
             };
         });

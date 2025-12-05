@@ -11,7 +11,7 @@ class AiView
 
 return [
     'ai' => [
-        'driver' => get_env('AI_PROVIDER'), // openai, anthropic, mistral, groq
+        'driver' => get_env('AI_PROVIDER'), // openai, anthropic, mistral, groq, gemini
         'cache_ttl' => 3600, // Cache TTL in seconds (when caching is enabled)
         'http_timeout' => 15, // 15 seconds HTTP timeout by default
         'temperature' => 0.7,
@@ -38,6 +38,11 @@ return [
                 'key' => get_env('GROQ_KEY'),
                 'model' => 'llama3-70b-8192', // Or 'llama3-8b-8192', 'mixtral-8x7b-32768', etc.
                 'endpoint' => 'https://api.groq.com/openai/v1/chat/completions',
+            ],
+            'gemini' => [
+                'key' => get_env('GEMINI_API_KEY'),
+                'model' => 'gemini-2.0-flash', // Or 'gemini-2.5-flash', 'gemini-pro', etc.
+                'endpoint' => 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
             ],
         ],
     ],
