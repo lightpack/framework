@@ -28,6 +28,11 @@ class Mistral extends AI
     protected function prepareRequestBody(array $params): array
     {
         $messages = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
+        
+        if (!empty($params['system'])) {
+            array_unshift($messages, ['role' => 'system', 'content' => $params['system']]);
+        }
+        
         $messages = array_map(function($msg) {
             return [
                 'role' => $msg['role'],
@@ -59,12 +64,12 @@ class Mistral extends AI
      */
     protected function parseOutput($result): array
     {
-        $text = '';
-        if (isset($result['choices'][0]['message']['content'])) {
-            $text = $result['choices'][0]['message']['content'];
-        }
+        $choice = $result['choices'][0] ?? [];
+
         return [
-            'text' => $text,
+            'text' => $choice['message']['content'] ?? '',
+            'finish_reason' => $choice['finish_reason'] ?? '',
+            'usage' => $result['usage'] ?? [],
             'raw' => $result,
         ];
     }
