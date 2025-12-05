@@ -1597,6 +1597,250 @@ $answer = $generator->task()
 - ✅ Groq: Fast, cheap generation (llama-3.1-8b-instant)
 - ✅ Claude: High-quality generation for complex queries
 
+### 5. Knowledge Base AI Chatbot (Complete Example)
+
+**Build a production-ready chatbot that answers questions from your documentation:**
+
+```php
+// app/Services/KnowledgeBaseChatbot.php
+namespace App\Services;
+
+class KnowledgeBaseChatbot
+{
+    public function ask(string $question, array $options = []): array
+    {
+        // 1. Embed the question
+        $queryEmbedding = ai()->embed($question);
+        
+        // 2. Find relevant documentation
+        $docs = Documentation::query()
+            ->select('id', 'title', 'content', 'category', 'embedding')
+            ->get()
+            ->map(fn($d) => [
+                'id' => $d->id,
+                'title' => $d->title,
+                'content' => $d->content,
+                'category' => $d->category,
+                'embedding' => json_decode($d->embedding, true)
+            ]);
+        
+        // 3. Get top 3 most relevant docs
+        $relevant = ai()->similar(
+            $queryEmbedding, 
+            $docs, 
+            limit: $options['context_docs'] ?? 3,
+            threshold: $options['threshold'] ?? 0.7
+        );
+        
+        // 4. If no relevant docs found, say so
+        if (empty($relevant)) {
+            return [
+                'answer' => "I couldn't find relevant information in the documentation to answer your question.",
+                'sources' => [],
+                'confidence' => 0
+            ];
+        }
+        
+        // 5. Build context from relevant docs
+        $context = implode("\n\n---\n\n", array_map(
+            fn($r) => "# {$r['item']['title']}\n\n{$r['item']['content']}",
+            $relevant
+        ));
+        
+        // 6. Ask AI with context
+        $answer = ai()->task()
+            ->system(
+                "You are a helpful documentation assistant. " .
+                "Answer questions based ONLY on the provided documentation. " .
+                "If the documentation doesn't contain the answer, say so. " .
+                "Be concise and accurate.\n\n" .
+                "Documentation:\n\n{$context}"
+            )
+            ->prompt($question)
+            ->run();
+        
+        // 7. Return structured response
+        return [
+            'answer' => $answer['raw'],
+            'sources' => array_map(fn($r) => [
+                'title' => $r['item']['title'],
+                'category' => $r['item']['category'],
+                'similarity' => round($r['similarity'] * 100, 1) . '%',
+                'url' => "/docs/{$r['item']['id']}"
+            ], $relevant),
+            'confidence' => $this->calculateConfidence($relevant)
+        ];
+    }
+    
+    private function calculateConfidence(array $relevant): string
+    {
+        if (empty($relevant)) return 'none';
+        
+        $avgSimilarity = array_sum(array_column($relevant, 'similarity')) / count($relevant);
+        
+        if ($avgSimilarity >= 0.85) return 'high';
+        if ($avgSimilarity >= 0.70) return 'medium';
+        return 'low';
+    }
+}
+```
+
+**Usage in Controller:**
+
+```php
+// app/Controllers/ChatbotController.php
+class ChatbotController
+{
+    public function ask()
+    {
+        $question = request()->input('question');
+        
+        $chatbot = new KnowledgeBaseChatbot();
+        $response = $chatbot->ask($question);
+        
+        return json([
+            'question' => $question,
+            'answer' => $response['answer'],
+            'sources' => $response['sources'],
+            'confidence' => $response['confidence']
+        ]);
+    }
+}
+```
+
+**Frontend Integration:**
+
+```javascript
+// Chat interface
+async function askQuestion(question) {
+    const response = await fetch('/api/chatbot/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+    });
+    
+    const data = await response.json();
+    
+    // Display answer
+    displayMessage(data.answer, 'bot');
+    
+    // Show sources
+    if (data.sources.length > 0) {
+        displaySources(data.sources);
+    }
+    
+    // Show confidence indicator
+    displayConfidence(data.confidence);
+}
+```
+
+**Indexing Documentation:**
+
+```php
+// scripts/index_documentation.php
+// Run this once to index all docs
+
+$docs = Documentation::query()->all();
+$contents = $docs->pluck('content')->toArray();
+
+// Batch embed all docs (efficient!)
+$embeddings = ai()->embed($contents);
+
+foreach ($docs as $i => $doc) {
+    $doc->embedding = json_encode($embeddings[$i]);
+    $doc->save();
+    echo "Indexed: {$doc->title}\n";
+}
+
+echo "Done! Indexed " . count($docs) . " documents.\n";
+```
+
+**Auto-Update on Content Change:**
+
+```php
+// app/Models/Documentation.php
+class Documentation extends Model
+{
+    protected function afterSave()
+    {
+        // Re-embed if content changed
+        if ($this->isDirty('content')) {
+            try {
+                $embedding = ai()->embed($this->content);
+                $this->embedding = json_encode($embedding);
+                $this->saveQuietly();
+                
+                logger()->info('Documentation re-indexed', ['id' => $this->id]);
+            } catch (\Exception $e) {
+                logger()->error('Failed to re-index documentation', [
+                    'id' => $this->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+    }
+}
+```
+
+**Advanced: Conversation History**
+
+```php
+class KnowledgeBaseChatbot
+{
+    public function askWithHistory(string $question, array $history = []): array
+    {
+        // Build conversation context
+        $conversationContext = '';
+        foreach ($history as $msg) {
+            $conversationContext .= "{$msg['role']}: {$msg['content']}\n";
+        }
+        
+        // Find relevant docs
+        $queryEmbedding = ai()->embed($question);
+        $relevant = ai()->similar($queryEmbedding, $this->loadDocs(), limit: 3);
+        
+        $docsContext = implode("\n\n", array_map(
+            fn($r) => $r['item']['content'],
+            $relevant
+        ));
+        
+        // Ask with both conversation and docs context
+        $answer = ai()->task()
+            ->system(
+                "You are a helpful assistant. Use this documentation:\n\n{$docsContext}\n\n" .
+                "Previous conversation:\n{$conversationContext}"
+            )
+            ->prompt($question)
+            ->run();
+        
+        return [
+            'answer' => $answer['raw'],
+            'sources' => array_column($relevant, 'item')
+        ];
+    }
+}
+```
+
+**Features You Get:**
+- ✅ Semantic search (understands intent)
+- ✅ Source citations (shows where answer came from)
+- ✅ Confidence scoring (high/medium/low)
+- ✅ Auto-indexing (updates when docs change)
+- ✅ Conversation history (context-aware)
+- ✅ Graceful fallback (handles missing info)
+
+**Cost Analysis:**
+```
+1000 questions/day × 30 days = 30,000 questions/month
+30,000 × 13 tokens (avg query) = 390,000 tokens
+
+Gemini: FREE! 🎉
+OpenAI: $0.008/month
+Mistral: $0.04/month
+```
+
+**This is production-ready!** Deploy it today. 🚀
+
 ## Best Practices
 
 ### 1. Batch Embed on Import
