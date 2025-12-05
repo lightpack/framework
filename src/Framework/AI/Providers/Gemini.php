@@ -64,4 +64,41 @@ class Gemini extends AI
             'Content-Type' => 'application/json',
         ];
     }
+
+    protected function generateEmbedding(string|array $input, array $options = []): array
+    {
+        $model = $options['model'] ?? $this->config->get('ai.providers.gemini.embedding_model', 'text-embedding-004');
+        $apiKey = $this->config->get('ai.providers.gemini.key');
+        
+        // Single text
+        if (is_string($input)) {
+            $endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':embedContent?key=' . $apiKey;
+            
+            $result = $this->makeApiRequest(
+                $endpoint,
+                ['content' => ['parts' => [['text' => $input]]]],
+                ['Content-Type' => 'application/json'],
+                $this->config->get('ai.http_timeout', 15)
+            );
+            
+            return $result['embedding']['values'] ?? [];
+        }
+        
+        // Batch - use efficient batch endpoint
+        $endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . $model . ':batchEmbedContents?key=' . $apiKey;
+        
+        $requests = array_map(fn($text) => [
+            'model' => 'models/' . $model,
+            'content' => ['parts' => [['text' => $text]]]
+        ], $input);
+        
+        $result = $this->makeApiRequest(
+            $endpoint,
+            ['requests' => $requests],
+            ['Content-Type' => 'application/json'],
+            $this->config->get('ai.http_timeout', 15)
+        );
+        
+        return array_map(fn($item) => $item['values'] ?? [], $result['embeddings'] ?? []);
+    }
 }

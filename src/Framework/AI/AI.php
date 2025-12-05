@@ -58,6 +58,92 @@ abstract class AI
         return $result['raw'];
     }
 
+    /**
+     * Generate embedding vector(s) for text.
+     * 
+     * @param string|array $input Single text or array of texts
+     * @param array $options Optional parameters (model, etc.)
+     * @return array Single embedding vector or array of vectors
+     */
+    public function embed(string|array $input, array $options = []): array
+    {
+        return $this->generateEmbedding($input, $options);
+    }
+
+    /**
+     * Find similar items to a query embedding.
+     * 
+     * @param array $queryEmbedding The query vector
+     * @param array $items Array of items with 'embedding' key
+     * @param int $limit Number of results to return
+     * @param float $threshold Minimum similarity score (0-1)
+     * @return array Sorted array of items with similarity scores
+     */
+    public function similar(array $queryEmbedding, array $items, int $limit = 5, float $threshold = 0.0): array
+    {
+        $similarities = [];
+        
+        foreach ($items as $id => $item) {
+            $embedding = $item['embedding'] ?? $item;
+            $score = $this->cosineSimilarity($queryEmbedding, $embedding);
+            
+            if ($score >= $threshold) {
+                $similarities[$id] = [
+                    'id' => $id,
+                    'similarity' => $score,
+                    'item' => $item,
+                ];
+            }
+        }
+        
+        // Sort by similarity (highest first)
+        usort($similarities, fn($a, $b) => $b['similarity'] <=> $a['similarity']);
+        
+        return array_slice($similarities, 0, $limit);
+    }
+
+    /**
+     * Calculate cosine similarity between two vectors.
+     * Returns value between 0 (completely different) and 1 (identical).
+     * 
+     * @param array $a First vector
+     * @param array $b Second vector
+     * @return float Similarity score (0-1)
+     */
+    public function cosineSimilarity(array $a, array $b): float
+    {
+        if (count($a) !== count($b)) {
+            throw new \InvalidArgumentException('Vectors must have same dimensions');
+        }
+
+        $dotProduct = 0;
+        $magnitudeA = 0;
+        $magnitudeB = 0;
+        
+        for ($i = 0; $i < count($a); $i++) {
+            $dotProduct += $a[$i] * $b[$i];
+            $magnitudeA += $a[$i] * $a[$i];
+            $magnitudeB += $b[$i] * $b[$i];
+        }
+        
+        $magnitude = sqrt($magnitudeA) * sqrt($magnitudeB);
+        
+        return $magnitude > 0 ? $dotProduct / $magnitude : 0;
+    }
+
+    /**
+     * Provider-specific embedding implementation.
+     * Override in provider classes that support embeddings.
+     * 
+     * @param string|array $input Single text or array of texts
+     * @param array $options Optional parameters
+     * @return array Single embedding vector or array of vectors
+     */
+    protected function generateEmbedding(string|array $input, array $options = []): array
+    {
+        throw new \Exception(static::class . ' does not support embeddings');
+    }
+
     protected function makeApiRequest(string $endpoint, array $body, array $headers = [], int $timeout = 10)
     {
         try {
