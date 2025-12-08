@@ -24,7 +24,7 @@ use Lightpack\Database\Query\Query;
  * session()->set('tenant.id', $currentTenantId);
  * ```
  */
-abstract class TenantModel extends Model
+class TenantModel extends Model
 {
     /**
      * The column name used for tenant identification.
