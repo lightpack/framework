@@ -19,9 +19,22 @@ use Lightpack\Database\Query\Query;
  * }
  * ```
  * 
- * The tenant context must be set before using tenant models:
+ * Tenant Resolution:
+ * The default implementation uses session storage, but you can customize
+ * tenant resolution by overriding getTenantId() in your base model:
+ * 
  * ```php
+ * // For session-based (default):
  * session()->set('tenant.id', $currentTenantId);
+ * 
+ * // For JWT/API (override in your base model):
+ * class ApiTenantModel extends TenantModel
+ * {
+ *     protected function getTenantId(): ?int
+ *     {
+ *         return auth()->user()?->tenant_id;
+ *     }
+ * }
  * ```
  */
 class TenantModel extends Model
@@ -36,13 +49,15 @@ class TenantModel extends Model
 
     /**
      * Get the current tenant ID.
-     * Override this method to customize tenant resolution.
+     * 
+     * Default implementation uses session storage. Override this method
+     * to customize tenant resolution (e.g., from JWT, request header, etc.)
      * 
      * @return int|null
      */
     protected function getTenantId(): ?int
     {
-        // Check if session service is available
+        // Default: Session-based tenant resolution
         try {
             return app('session')->get('tenant.id');
         } catch (\Exception $e) {
