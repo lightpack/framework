@@ -17,24 +17,27 @@ use Lightpack\Database\Query\Query;
  *     protected $table = 'posts';
  *     protected $tenantColumn = 'site_id';  // Optional, defaults to 'tenant_id'
  * }
+ * 
+ * // Set tenant context (in route filter, middleware, etc.)
+ * TenantModel::setContext($tenantId);
+ * 
+ * // All queries are now automatically scoped
+ * $posts = Post::query()->all(); // Only current tenant's posts
  * ```
  * 
- * Tenant Resolution:
- * The default implementation uses session storage, but you can customize
- * tenant resolution by overriding getTenantId() in your base model:
- * 
+ * Setting Tenant Context:
  * ```php
- * // For session-based (default):
- * session()->set('tenant.id', $currentTenantId);
+ * // Web apps (session-based)
+ * TenantModel::setContext(session()->get('tenant.id'));
  * 
- * // For JWT/API (override in your base model):
- * class ApiTenantModel extends TenantModel
- * {
- *     protected function getTenantId(): ?int
- *     {
- *         return auth()->user()?->tenant_id;
- *     }
- * }
+ * // API apps (JWT/token-based)
+ * TenantModel::setContext(auth()->user()->tenant_id);
+ * 
+ * // CLI commands
+ * TenantModel::setContext($tenant->id);
+ * 
+ * // Clear context
+ * TenantModel::clearContext();
  * ```
  */
 class TenantModel extends Model
@@ -48,22 +51,43 @@ class TenantModel extends Model
     protected $tenantColumn = 'tenant_id';
 
     /**
-     * Get the current tenant ID.
+     * Current tenant context (shared across all tenant models)
      * 
-     * Default implementation uses session storage. Override this method
-     * to customize tenant resolution (e.g., from JWT, request header, etc.)
+     * @var int|null
+     */
+    protected static $tenantId = null;
+
+    /**
+     * Set the current tenant context.
+     * All subsequent queries will be scoped to this tenant.
+     * 
+     * @param int $tenantId
+     * @return void
+     */
+    public static function setContext(int $tenantId): void
+    {
+        static::$tenantId = $tenantId;
+    }
+
+    /**
+     * Get the current tenant context.
      * 
      * @return int|null
      */
-    protected function getTenantId(): ?int
+    public static function getContext(): ?int
     {
-        // Default: Session-based tenant resolution
-        try {
-            return app('session')->get('tenant.id');
-        } catch (\Exception $e) {
-            // Session not available (e.g. in CLI context)
-            return null;
-        }
+        return static::$tenantId;
+    }
+
+    /**
+     * Clear the tenant context.
+     * Queries will no longer be scoped by tenant.
+     * 
+     * @return void
+     */
+    public static function clearContext(): void
+    {
+        static::$tenantId = null;
     }
 
     /**
@@ -75,7 +99,7 @@ class TenantModel extends Model
      */
     public function globalScope(Query $query)
     {
-        $tenantId = $this->getTenantId();
+        $tenantId = static::getContext();
 
         if ($tenantId !== null) {
             $query->where($this->tenantColumn, $tenantId);
@@ -89,7 +113,7 @@ class TenantModel extends Model
      */
     protected function beforeSave()
     {
-        $tenantId = $this->getTenantId();
+        $tenantId = static::getContext();
 
         // Only set on INSERT (when primary key is null)
         if (
@@ -109,7 +133,7 @@ class TenantModel extends Model
      */
     protected function beforeInsert()
     {
-        $tenantId = $this->getTenantId();
+        $tenantId = static::getContext();
 
         if ($tenantId !== null && !$this->hasAttribute($this->tenantColumn)) {
             $this->setAttribute($this->tenantColumn, $tenantId);
@@ -126,7 +150,7 @@ class TenantModel extends Model
      */
     protected function beforeUpdate()
     {
-        $tenantId = $this->getTenantId();
+        $tenantId = static::getContext();
 
         // Only enforce if tenant column wasn't explicitly changed by user
         if ($tenantId !== null && !$this->isDirty($this->tenantColumn)) {

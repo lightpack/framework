@@ -81,36 +81,24 @@ class TenantModelTest extends TestCase
             };
         });
 
-        // Mock session
-        $mockSession = new class {
-            private $data = [];
-            public function get($key) {
-                return $this->data[$key] ?? null;
-            }
-            public function set($key, $value) {
-                $this->data[$key] = $value;
-            }
-            public function forget($key) {
-                unset($this->data[$key]);
-            }
-        };
-        
-        $container->register('session', function () use ($mockSession) {
-            return $mockSession;
-        });
+        // Clear tenant context before each test
+        TenantModel::clearContext();
     }
 
     public function tearDown(): void
     {
         $this->db->query("DROP TABLE IF EXISTS posts, articles");
         $this->db = null;
+        
+        // Clear tenant context after each test
+        TenantModel::clearContext();
     }
 
     // ==================== READ ISOLATION TESTS ====================
 
     public function testQueryAllFiltersByTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $posts = Post::query()->all();
         
@@ -122,7 +110,7 @@ class TenantModelTest extends TestCase
 
     public function testQueryCountFiltersByTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $count = Post::query()->count();
         
@@ -131,7 +119,7 @@ class TenantModelTest extends TestCase
 
     public function testQueryWithWhereFiltersByTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $posts = Post::query()
             ->where('title', 'LIKE', '%Post%')
@@ -145,7 +133,7 @@ class TenantModelTest extends TestCase
 
     public function testFindFiltersByTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         // Get first post from tenant 1
         $post = Post::query()->one();
@@ -159,15 +147,15 @@ class TenantModelTest extends TestCase
 
     public function testFindThrowsExceptionForOtherTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         // Get a post from tenant 2
-        session()->set('tenant.id', 2);
+        TenantModel::setContext(2);
         $post = Post::query()->one();
         $tenant2PostId = $post->id;
         
         // Switch back to tenant 1
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         // Should not be able to find tenant 2's post
         $this->expectException(RecordNotFoundException::class);
@@ -176,7 +164,7 @@ class TenantModelTest extends TestCase
 
     public function testCustomTenantColumn()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $articles = Article::query()->all();
         
@@ -190,7 +178,7 @@ class TenantModelTest extends TestCase
 
     public function testSaveAutoAssignsTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $post = new Post();
         $post->title = 'New Post';
@@ -208,7 +196,7 @@ class TenantModelTest extends TestCase
 
     public function testInsertAutoAssignsTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $post = new Post();
         $post->title = 'New Post';
@@ -220,7 +208,7 @@ class TenantModelTest extends TestCase
 
     public function testSaveDoesNotOverrideExplicitTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $post = new Post();
         $post->title = 'New Post';
@@ -233,7 +221,7 @@ class TenantModelTest extends TestCase
 
     public function testCustomTenantColumnAutoAssigned()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $article = new Article();
         $article->title = 'New Article';
@@ -247,7 +235,7 @@ class TenantModelTest extends TestCase
 
     public function testUpdateOnlyAffectsTenantRecords()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         // Update all posts (should only affect tenant 1)
         Post::query()->update(['content' => 'Updated']);
@@ -271,7 +259,7 @@ class TenantModelTest extends TestCase
 
     public function testModelUpdateFiltersByTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $post = Post::query()->one();
         $post->title = 'Updated Title';
@@ -290,7 +278,7 @@ class TenantModelTest extends TestCase
 
     public function testDirectUpdateMethodFiltersByTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $post = Post::query()->one();
         $post->title = 'Updated via update()';
@@ -301,7 +289,7 @@ class TenantModelTest extends TestCase
 
     public function testUpdateAllowsExplicitTenantChange()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $post = Post::query()->one();
         $originalId = $post->id;
@@ -324,7 +312,7 @@ class TenantModelTest extends TestCase
 
     public function testDeleteOnlyAffectsTenantRecords()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         // Delete all posts (should only affect tenant 1)
         Post::query()->delete();
@@ -344,7 +332,7 @@ class TenantModelTest extends TestCase
 
     public function testModelDeleteFiltersByTenant()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $post = Post::query()->one();
         $postId = $post->id;
@@ -368,8 +356,8 @@ class TenantModelTest extends TestCase
 
     public function testNoTenantContextReturnsAllRecords()
     {
-        // No tenant set
-        session()->forget('tenant.id');
+        // No tenant set (context is null)
+        TenantModel::clearContext();
         
         $posts = Post::query()->all();
         
@@ -379,7 +367,7 @@ class TenantModelTest extends TestCase
 
     public function testNoTenantContextDoesNotSetTenantOnSave()
     {
-        session()->forget('tenant.id');
+        TenantModel::clearContext();
         
         $post = new Post();
         $post->title = 'No Tenant Post';
@@ -394,7 +382,7 @@ class TenantModelTest extends TestCase
 
     public function testQueryWithoutScopesBypassesTenantFilter()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         $allPosts = Post::queryWithoutScopes()->all();
         
@@ -404,7 +392,7 @@ class TenantModelTest extends TestCase
 
     public function testQueryWithoutScopesAllowsCrossTenantOperations()
     {
-        session()->set('tenant.id', 1);
+        TenantModel::setContext(1);
         
         // Get a post from tenant 2 using queryWithoutScopes
         $tenant2Post = Post::queryWithoutScopes()
