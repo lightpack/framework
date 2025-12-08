@@ -10,35 +10,6 @@ use Lightpack\Database\Query\Query;
  * Provides automatic tenant isolation for all CRUD operations 
  * using row-level (column-based) tenancy.
  * 
- * Usage:
- * ```php
- * class Post extends TenantModel
- * {
- *     protected $table = 'posts';
- *     protected $tenantColumn = 'site_id';  // Optional, defaults to 'tenant_id'
- * }
- * 
- * // Set tenant context (in route filter, middleware, etc.)
- * TenantModel::setContext($tenantId);
- * 
- * // All queries are now automatically scoped
- * $posts = Post::query()->all(); // Only current tenant's posts
- * ```
- * 
- * Setting Tenant Context:
- * ```php
- * // Web apps (session-based)
- * TenantModel::setContext(session()->get('tenant.id'));
- * 
- * // API apps (JWT/token-based)
- * TenantModel::setContext(auth()->user()->tenant_id);
- * 
- * // CLI commands
- * TenantModel::setContext($tenant->id);
- * 
- * // Clear context
- * TenantModel::clearContext();
- * ```
  */
 class TenantModel extends Model
 {
@@ -51,46 +22,6 @@ class TenantModel extends Model
     protected $tenantColumn = 'tenant_id';
 
     /**
-     * Current tenant context (shared across all tenant models)
-     * 
-     * @var int|null
-     */
-    protected static $tenantId = null;
-
-    /**
-     * Set the current tenant context.
-     * All subsequent queries will be scoped to this tenant.
-     * 
-     * @param int $tenantId
-     * @return void
-     */
-    public static function setContext(int $tenantId): void
-    {
-        static::$tenantId = $tenantId;
-    }
-
-    /**
-     * Get the current tenant context.
-     * 
-     * @return int|null
-     */
-    public static function getContext(): ?int
-    {
-        return static::$tenantId;
-    }
-
-    /**
-     * Clear the tenant context.
-     * Queries will no longer be scoped by tenant.
-     * 
-     * @return void
-     */
-    public static function clearContext(): void
-    {
-        static::$tenantId = null;
-    }
-
-    /**
      * Automatically filter all queries by tenant.
      * Applied to: SELECT, UPDATE, DELETE queries.
      * 
@@ -99,7 +30,7 @@ class TenantModel extends Model
      */
     public function globalScope(Query $query)
     {
-        $tenantId = static::getContext();
+        $tenantId = TenantContext::get();
 
         if ($tenantId !== null) {
             $query->where($this->tenantColumn, $tenantId);
@@ -113,7 +44,7 @@ class TenantModel extends Model
      */
     protected function beforeSave()
     {
-        $tenantId = static::getContext();
+        $tenantId = TenantContext::get();
 
         // Only set on INSERT (when primary key is null)
         if (
@@ -133,7 +64,7 @@ class TenantModel extends Model
      */
     protected function beforeInsert()
     {
-        $tenantId = static::getContext();
+        $tenantId = TenantContext::get();
 
         if ($tenantId !== null && !$this->hasAttribute($this->tenantColumn)) {
             $this->setAttribute($this->tenantColumn, $tenantId);
@@ -150,7 +81,7 @@ class TenantModel extends Model
      */
     protected function beforeUpdate()
     {
-        $tenantId = static::getContext();
+        $tenantId = TenantContext::get();
 
         // Only enforce if tenant column wasn't explicitly changed by user
         if ($tenantId !== null && !$this->isDirty($this->tenantColumn)) {
