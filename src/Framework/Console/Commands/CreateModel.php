@@ -33,7 +33,7 @@ class CreateModel implements ICommand
         $tableName = $tableName ?? $this->createTableName($baseName);
         $primaryKey = $primaryKey ?? 'id';
         $namespace = $this->computeNamespace($subdir);
-        $this->writeModelFile($filePath, $namespace, $baseName, $tableName, $primaryKey, $isTenant, $tenantColumn);
+        $this->writeModelFile($filePath, $namespace, $baseName, $tableName, $primaryKey, $isTenant);
         
         $modelType = $isTenant ? 'Tenant model' : 'Model';
         $output->success("✓ {$modelType} created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
@@ -51,7 +51,6 @@ class CreateModel implements ICommand
         $tableName = null;
         $primaryKey = null;
         $isTenant = false;
-        $tenantColumn = null;
         
         foreach ($arguments as $arg) {
             if (strpos($arg, '--table=') === 0) {
@@ -60,9 +59,6 @@ class CreateModel implements ICommand
                 $primaryKey = substr($arg, 6);
             } elseif ($arg === '--tenant') {
                 $isTenant = true;
-            } elseif (strpos($arg, '--tenant-column=') === 0) {
-                $isTenant = true;
-                $tenantColumn = substr($arg, 16);
             } elseif ($className === null) {
                 $className = $arg;
             }
@@ -73,7 +69,7 @@ class CreateModel implements ICommand
             return null;
         }
         
-        return compact('className', 'tableName', 'primaryKey', 'isTenant', 'tenantColumn');
+        return compact('className', 'tableName', 'primaryKey', 'isTenant');
     }
 
     private function resolvePaths(string $className, Output $output)
@@ -107,14 +103,13 @@ class CreateModel implements ICommand
         return 'App\\Models' . ($subdir ? '\\' . str_replace('/', '\\', $subdir) : '');
     }
 
-    private function writeModelFile(string $filePath, string $namespace, string $baseName, string $tableName, string $primaryKey, bool $isTenant, ?string $tenantColumn): void
+    private function writeModelFile(string $filePath, string $namespace, string $baseName, string $tableName, string $primaryKey, bool $isTenant): void
     {
         if ($isTenant) {
             $template = ModelView::getTenantTemplate();
-            $tenantColumn = $tenantColumn ?? 'tenant_id';
             $template = str_replace(
-                ['__NAMESPACE__', '__MODEL_NAME__', '__TABLE_NAME__', '__PRIMARY_KEY__', '__TENANT_COLUMN__'],
-                [$namespace, $baseName, $tableName, $primaryKey, $tenantColumn],
+                ['__NAMESPACE__', '__MODEL_NAME__', '__TABLE_NAME__', '__PRIMARY_KEY__'],
+                [$namespace, $baseName, $tableName, $primaryKey],
                 $template
             );
         } else {

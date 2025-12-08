@@ -47,7 +47,7 @@ class __MODEL_NAME__ extends TenantModel
 
     protected $primaryKey = '__PRIMARY_KEY__';
 
-    protected $tenantColumn = '__TENANT_COLUMN__';
+    protected $tenantColumn = 'tenant_id';
 
     protected $timestamps = false;
 
