@@ -7,7 +7,8 @@ use Lightpack\Database\Query\Query;
 /**
  * TenantModel - Base class for multi-tenant models
  * 
- * Provides automatic tenant isolation for all CRUD operations using row-level (column-based) tenancy.
+ * Provides automatic tenant isolation for all CRUD operations 
+ * using row-level (column-based) tenancy.
  * 
  * Usage:
  * ```php
@@ -43,10 +44,9 @@ abstract class TenantModel extends Model
     {
         // Check if session service is available
         try {
-            $session = app('session');
-            return $session->get('tenant.id');
+            return app('session')->get('tenant.id');
         } catch (\Exception $e) {
-            // Session not available (CLI context or not registered)
+            // Session not available (e.g. in CLI context)
             return null;
         }
     }
@@ -69,24 +69,25 @@ abstract class TenantModel extends Model
 
     /**
      * Auto-assign tenant when using save() on new records.
-     * Called by: save() → executeInsert()
      * 
      * @return void
      */
     protected function beforeSave()
     {
         $tenantId = $this->getTenantId();
-        
+
         // Only set on INSERT (when primary key is null)
-        if ($tenantId !== null && !$this->hasAttribute($this->tenantColumn) && !$this->hasAttribute($this->primaryKey)) {
+        if (
+            $tenantId !== null
+            && !$this->hasAttribute($this->tenantColumn)
+            && !$this->hasAttribute($this->primaryKey)
+        ) {
             $this->setAttribute($this->tenantColumn, $tenantId);
         }
     }
 
     /**
      * Auto-assign tenant when using insert() directly.
-     * Called by: insert() → beforeInsert() → executeInsert()
-     * 
      * CRITICAL: Without this, direct insert() calls bypass tenant isolation!
      * 
      * @return void
@@ -94,7 +95,7 @@ abstract class TenantModel extends Model
     protected function beforeInsert()
     {
         $tenantId = $this->getTenantId();
-        
+
         if ($tenantId !== null && !$this->hasAttribute($this->tenantColumn)) {
             $this->setAttribute($this->tenantColumn, $tenantId);
         }
@@ -102,7 +103,6 @@ abstract class TenantModel extends Model
 
     /**
      * Prevent accidental tenant changes on update().
-     * Called by: update() → beforeUpdate() → executeUpdate()
      * 
      * Only enforces if tenant column wasn't explicitly changed by user.
      * This allows intentional tenant transfers when needed.
@@ -112,7 +112,7 @@ abstract class TenantModel extends Model
     protected function beforeUpdate()
     {
         $tenantId = $this->getTenantId();
-        
+
         // Only enforce if tenant column wasn't explicitly changed by user
         if ($tenantId !== null && !$this->isDirty($this->tenantColumn)) {
             // Ensure tenant is set (defensive check)
