@@ -31,9 +31,12 @@ class TenantModelTest extends TestCase
         $config = require __DIR__ . '/../tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         
+        // Drop tables first to ensure clean state
+        $this->db->query("DROP TABLE IF EXISTS posts, articles");
+        
         // Create tables
         $this->db->query("
-            CREATE TABLE IF NOT EXISTS `posts` (
+            CREATE TABLE `posts` (
                 `id` int NOT NULL AUTO_INCREMENT,
                 `tenant_id` int NOT NULL,
                 `title` varchar(255) NOT NULL,
@@ -44,7 +47,7 @@ class TenantModelTest extends TestCase
         ");
 
         $this->db->query("
-            CREATE TABLE IF NOT EXISTS `articles` (
+            CREATE TABLE `articles` (
                 `id` int NOT NULL AUTO_INCREMENT,
                 `site_id` int NOT NULL,
                 `title` varchar(255) NOT NULL,
