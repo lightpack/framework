@@ -58,8 +58,16 @@ trait TaxonomyTrait
 
     public function scopeTaxonomies($builder, array $taxonomyIds = [])
     {
-        $builder->join('taxonomy_models AS tx_any', $builder->getTable() . '.id', 'tx_any.model_id')
+        $table = $builder->getTable();
+        
+        // Only set select if user hasn't already specified columns
+        if (empty($builder->columns)) {
+            $builder->select($table . '.*');
+        }
+        
+        $builder->join('taxonomy_models AS tx_any', $table . '.id', 'tx_any.model_id')
             ->where('tx_any.model_type', $this->table)
-            ->whereIn('tx_any.taxonomy_id', $taxonomyIds);
+            ->whereIn('tx_any.taxonomy_id', $taxonomyIds)
+            ->groupBy($table . '.id');
     }
 }

@@ -213,4 +213,51 @@ class TagsIntegrationTest extends TestCase
         $post->find(201);
         $this->assertCount(0, $post->tags()->all());
     }
+
+    public function testFilterPostsByMultipleTagsReturnsNoDuplicates()
+    {
+        $this->seedTagsData();
+        
+        // Post 101 has both tags 1 and 2
+        // Without deduplication, it would appear twice in results (once per tag)
+        $posts = $this->getPostModelInstance()::filters(['tags' => [1,2]])->all();
+        
+        // Count how many times post 101 appears in the result set
+        $post101Count = 0;
+        foreach ($posts as $post) {
+            if ($post->id == 101) {
+                $post101Count++;
+            }
+        }
+        
+        // Should appear exactly once, not twice
+        $this->assertEquals(1, $post101Count, 'Post 101 should appear exactly once, not duplicated');
+        
+        // Total should be 2 unique posts (101 and 102), not more due to duplicates
+        $this->assertCount(2, $posts, 'Should return 2 unique posts, not duplicates');
+    }
+
+    public function testFilterPostsWithCustomColumnSelection()
+    {
+        $this->seedTagsData();
+        
+        // User specifies custom columns with tag filter
+        // This tests that GROUP BY works with custom column selection
+        $builder = $this->getPostModelInstance()::filters(['tags' => [1,2]]);
+        $builder->select('posts.id', 'posts.title');
+        $posts = $builder->all();
+        
+        // Should still return unique posts without duplicates
+        $this->assertCount(2, $posts, 'Should return 2 unique posts with custom columns');
+        
+        // Verify the selected columns are accessible
+        $firstPost = $posts->first();
+        $this->assertNotNull($firstPost->id);
+        $this->assertNotNull($firstPost->title);
+        
+        // Verify no duplicates - post 101 should appear only once
+        $postIds = $posts->column('id');
+        $this->assertEquals(2, count($postIds), 'Should have 2 posts');
+        $this->assertEquals(2, count(array_unique($postIds)), 'All post IDs should be unique');
+    }
 }

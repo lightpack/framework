@@ -33,8 +33,16 @@ trait TagsTrait
 
     public function scopeTags($builder, array $tagIds = [])
     {
-        $builder->join('tag_models AS tg_any', $builder->getTable() . '.id', 'tg_any.model_id')
+        $table = $builder->getTable();
+        
+        // Only set select if user hasn't already specified columns
+        if (empty($builder->columns)) {
+            $builder->select($table . '.*');
+        }
+        
+        $builder->join('tag_models AS tg_any', $table . '.id', 'tg_any.model_id')
             ->where('tg_any.model_type', $this->table)
-            ->whereIn('tg_any.tag_id', $tagIds);
+            ->whereIn('tg_any.tag_id', $tagIds)
+            ->groupBy($table . '.id');
     }
 }
