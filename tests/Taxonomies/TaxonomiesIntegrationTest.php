@@ -568,4 +568,27 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         Taxonomy::bulkMove([4], 2); // 4 (grandchild) moved under 2 (its own descendant) should throw
     }
+
+    public function testFilterPostsByMultipleTaxonomiesReturnsNoDuplicates()
+    {
+        $this->seedTaxonomiesData();
+        
+        // Post 101 has both taxonomies 1 and 2
+        // Without deduplication, it would appear twice in results (once per taxonomy)
+        $posts = $this->getPostModelInstance()::filters(['taxonomies' => [1,2]])->all();
+        
+        // Count how many times post 101 appears in the result set
+        $post101Count = 0;
+        foreach ($posts as $post) {
+            if ($post->id == 101) {
+                $post101Count++;
+            }
+        }
+        
+        // Should appear exactly once, not twice
+        $this->assertEquals(1, $post101Count, 'Post 101 should appear exactly once, not duplicated');
+        
+        // Total should be 2 unique posts (101 and 102), not more due to duplicates
+        $this->assertCount(2, $posts, 'Should return 2 unique posts, not duplicates');
+    }
 }
