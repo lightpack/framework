@@ -25,7 +25,8 @@ class RunMigrationDown implements ICommand
 
         $migrator = new Migrator($this->getConnection());
         $steps = $this->getStepsArgument($arguments);
-        $confirm = $this->promptConfirmation($steps);
+        $force = in_array('--force', $arguments);
+        $confirm = $this->promptConfirmation($steps, $force);
 
         if ($confirm) {
             if('all' === $steps) {
@@ -85,8 +86,13 @@ class RunMigrationDown implements ICommand
         return $steps;
     }
 
-    private function promptConfirmation(null|string|int $steps = null): bool
+    private function promptConfirmation(null|string|int $steps = null, bool $force = false): bool
     {
+        // If --force flag is provided, skip confirmation
+        if ($force) {
+            return true;
+        }
+
         fputs(STDOUT, "\n");
 
         if ('all' === $steps) {
