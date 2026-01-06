@@ -21,7 +21,10 @@ class RunMigrationUp implements ICommand
             exit;
         }
 
-        $confirm = $this->promptConfirmation();
+        // Check for --force flag
+        $force = in_array('--force', $arguments);
+
+        $confirm = $this->promptConfirmation($force);
 
         if(false === $confirm) {
             fputs(STDOUT, "\n✓ Migration cancelled.\n");
@@ -68,8 +71,13 @@ class RunMigrationUp implements ICommand
         }
     }
 
-    private function promptConfirmation(): bool
+    private function promptConfirmation(bool $force = false): bool
     {
+        // If --force flag is provided, skip confirmation
+        if ($force) {
+            return true;
+        }
+
         if ('production' === strtolower(get_env('APP_ENV'))) {
             fputs(STDOUT, "\n[Production] Are you sure you want to migrate? [y/N]: ");
             return strtolower(trim(fgets(STDIN))) === 'y';
