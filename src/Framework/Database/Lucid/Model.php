@@ -248,6 +248,26 @@ class Model implements JsonSerializable
         return $this->relations->morphOne($model, $this->table);
     }
 
+    /**
+     * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_models)
+     * 
+     * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK.
+     */
+    public function morphToMany(string $model, string $pivotTable, string $associateKey)
+    {
+        return $this->relations->morphToMany($model, $pivotTable, $associateKey);
+    }
+
+    /**
+     * Inverse polymorphic many-to-many: e.g. Tag -> many Posts (through tag_models)
+     * 
+     * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK.
+     */
+    public function morphedByMany(string $model, string $pivotTable, string $morphType, string $associateKey)
+    {
+        return $this->relations->morphedByMany($model, $pivotTable, $morphType, $associateKey);
+    }
+
     public function find($id, bool $fail = true): self
     {
         $query = new Query($this->table, $this->getConnection());

@@ -7,15 +7,12 @@ use Lightpack\Tags\Tag;
 trait TagsTrait
 {
     /**
-     * Get all tags for this model.
-     * Returns a Builder instance for Tag models.
+     * Get all tags for this model using polymorphic many-to-many relationship.
+     * Returns a PolymorphicPivot instance for Tag models.
      */
     public function tags()
     {
-        return Tag::query()
-            ->join('tag_models', 'tags.id', 'tag_models.tag_id')
-            ->where('tag_models.model_id', '=', $this->{$this->getPrimaryKey()})
-            ->where('tag_models.model_type', '=', $this->table);
+        return $this->morphToMany(Tag::class, 'tag_models', 'tag_id');
     }
 
     /**
@@ -23,19 +20,7 @@ trait TagsTrait
      */
     public function attachTags(array $tagIds)
     {
-        $data = array_map(function($tagId) {
-            return [
-                'tag_id' => $tagId,
-                'model_id' => $this->{$this->getPrimaryKey()},
-                'model_type' => $this->table,
-            ];
-        }, $tagIds);
-
-        if ($data) {
-            $this->getConnection()
-                ->table('tag_models')
-                ->insertIgnore($data);
-        }
+        $this->tags()->attach($tagIds);
     }
 
     /**
@@ -43,12 +28,7 @@ trait TagsTrait
      */
     public function detachTags(array $tagIds)
     {
-        $this->getConnection()
-            ->table('tag_models')
-            ->where('model_id', '=', $this->{$this->getPrimaryKey()})
-            ->where('model_type', '=', $this->table)
-            ->whereIn('tag_id', $tagIds)
-            ->delete();
+        $this->tags()->detach($tagIds);
     }
 
     /**
@@ -56,31 +36,7 @@ trait TagsTrait
      */
     public function syncTags(array $tagIds)
     {
-        $this->getConnection()->transaction(function() use ($tagIds) {
-            // Get current tag IDs
-            $currentIds = $this->getConnection()
-                ->table('tag_models')
-                ->where('model_id', '=', $this->{$this->getPrimaryKey()})
-                ->where('model_type', '=', $this->table)
-                ->select('tag_id')
-                ->all('tag_id');
-            
-            $currentIds = array_column($currentIds, 'tag_id');
-            
-            // Find IDs to delete and insert
-            $idsToDelete = array_diff($currentIds, $tagIds);
-            $idsToInsert = array_diff($tagIds, $currentIds);
-            
-            // Delete removed tags
-            if ($idsToDelete) {
-                $this->detachTags($idsToDelete);
-            }
-            
-            // Insert new tags
-            if ($idsToInsert) {
-                $this->attachTags($idsToInsert);
-            }
-        });
+        $this->tags()->sync($tagIds);
     }
 
     public function scopeTags($builder, array $tagIds = [])
@@ -92,8 +48,8 @@ trait TagsTrait
             $builder->select($table . '.*');
         }
         
-        $builder->join('tag_models AS tg_any', $table . '.id', 'tg_any.model_id')
-            ->where('tg_any.model_type', $this->table)
+        $builder->join('tag_models AS tg_any', $table . '.id', 'tg_any.morph_id')
+            ->where('tg_any.morph_type', $this->table)
             ->whereIn('tg_any.tag_id', $tagIds)
             ->groupBy($table . '.id');
     }

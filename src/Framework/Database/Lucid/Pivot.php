@@ -6,10 +6,10 @@ use Lightpack\Database\Query\Query;
 
 class Pivot extends Builder
 {
-    private $baseModel;
-    private $pivotTable;
-    private $foreignKey;
-    private $associateKey;
+    protected $baseModel;
+    protected $pivotTable;
+    protected $foreignKey;
+    protected $associateKey;
 
     /**
      * @param Model $model The relating model class name.

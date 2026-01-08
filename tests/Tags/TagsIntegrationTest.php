@@ -43,9 +43,9 @@ class TagsIntegrationTest extends TestCase
         });
         $this->schema->createTable('tag_models', function(Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
-            $table->column('model_id')->type('bigint')->attribute('unsigned');
-            $table->varchar('model_type', 191);
-            $table->primary(['tag_id', 'model_id', 'model_type']);
+            $table->column('morph_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('morph_type', 191);
+            $table->primary(['tag_id', 'morph_id', 'morph_type']);
         });
     }
 
@@ -86,10 +86,10 @@ class TagsIntegrationTest extends TestCase
         ]);
         // Tag posts
         $this->db->table('tag_models')->insert([
-            ['tag_id' => 1, 'model_id' => 101, 'model_type' => 'posts'],
-            ['tag_id' => 2, 'model_id' => 101, 'model_type' => 'posts'],
-            ['tag_id' => 2, 'model_id' => 102, 'model_type' => 'posts'],
-            ['tag_id' => 3, 'model_id' => 103, 'model_type' => 'posts'],
+            ['tag_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['tag_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['tag_id' => 2, 'morph_id' => 102, 'morph_type' => 'posts'],
+            ['tag_id' => 3, 'morph_id' => 103, 'morph_type' => 'posts'],
         ]);
     }
 
@@ -207,7 +207,7 @@ class TagsIntegrationTest extends TestCase
             'title' => 'Fake Post for Isolation',
         ]);
         $this->db->table('tag_models')->insert([
-            ['tag_id' => 1, 'model_id' => 201, 'model_type' => 'other_model'],
+            ['tag_id' => 1, 'morph_id' => 201, 'morph_type' => 'other_model'],
         ]);
         $post = $this->getPostModelInstance();
         $post->find(201);

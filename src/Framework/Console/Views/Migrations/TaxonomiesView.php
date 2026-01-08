@@ -32,11 +32,11 @@ return new class extends Migration
 
         $this->create('taxonomy_models', function (Table $table) {
             $table->column('taxonomy_id')->type('bigint')->attribute('unsigned');
-            $table->column('model_id')->type('bigint')->attribute('unsigned');
-            $table->varchar('model_type', 150);
-            $table->primary(['taxonomy_id', 'model_id', 'model_type']);
+            $table->column('morph_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('morph_type', 150);
+            $table->primary(['taxonomy_id', 'morph_id', 'morph_type']);
             $table->foreignKey('taxonomy_id')->references('id')->on('taxonomies')->cascadeOnDelete();
-            $table->index(['model_type', 'model_id']);
+            $table->index(['morph_type', 'morph_id']);
         });
     }
 
