@@ -30,7 +30,7 @@ return new class extends Migration
             $table->index('parent_id');
         });
 
-        $this->create('taxonomy_models', function (Table $table) {
+        $this->create('taxonomy_morphs', function (Table $table) {
             $table->column('taxonomy_id')->type('bigint')->attribute('unsigned');
             $table->column('morph_id')->type('bigint')->attribute('unsigned');
             $table->varchar('morph_type', 150);
