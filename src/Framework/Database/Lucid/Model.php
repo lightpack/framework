@@ -153,7 +153,10 @@ class Model implements JsonSerializable
         $query = $this->{$key}();
         $result = $this->relations->getRelationType() === 'hasMany' ||
             $this->relations->getRelationType() === 'pivot' ||
-            $this->relations->getRelationType() === 'hasManyThrough'
+            $this->relations->getRelationType() === 'hasManyThrough' ||
+            $this->relations->getRelationType() === 'morphMany' ||
+            $this->relations->getRelationType() === 'morphToMany' ||
+            $this->relations->getRelationType() === 'morphedByMany'
             ? $query->all()
             : $query->one();
 

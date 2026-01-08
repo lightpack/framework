@@ -68,13 +68,13 @@ class ModelPolymorphicTest extends TestCase
 
         // Test morphTo for post comment
         $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentPostId);
-        $commentablePost = $comment->commentable();
+        $commentablePost = $comment->parent();
         $this->assertInstanceOf(PostModel::class, $commentablePost);
         $this->assertEquals('A Post', $commentablePost->title);
 
         // Test morphTo for video comment
         $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentVideoId);
-        $commentableVideo = $comment->commentable();
+        $commentableVideo = $comment->parent();
         $this->assertInstanceOf(VideoModel::class, $commentableVideo);
         $this->assertEquals('A Video', $commentableVideo->title);
     }
@@ -408,20 +408,20 @@ class ModelPolymorphicTest extends TestCase
 
         // Test morphToMany for first post
         $post = $this->db->model(PostModel::class)->find($postId1);
-        $tags = $post->tags()->all();
+        $tags = $post->tags;
         $this->assertCount(2, $tags);
         $this->assertEquals('PHP', $tags[0]->name);
         $this->assertEquals('Lightpack', $tags[1]->name);
 
         // Test morphToMany for second post
         $post = $this->db->model(PostModel::class)->find($postId2);
-        $tags = $post->tags()->all();
+        $tags = $post->tags;
         $this->assertCount(1, $tags);
         $this->assertEquals('PHP', $tags[0]->name);
 
         // Test morphToMany for video
         $video = $this->db->model(VideoModel::class)->find($videoId);
-        $tags = $video->tags()->all();
+        $tags = $video->tags;
         $this->assertCount(1, $tags);
         $this->assertEquals('Tutorial', $tags[0]->name);
     }
@@ -491,7 +491,7 @@ class ModelPolymorphicTest extends TestCase
         $post->tags()->attach([$tagId1, $tagId2]);
 
         // Verify tags were attached
-        $tags = $post->tags()->all();
+        $tags = $post->tags;
         $this->assertCount(2, $tags);
         
         // Verify pivot records exist
@@ -528,7 +528,7 @@ class ModelPolymorphicTest extends TestCase
         $post->tags()->detach([$tagId2]);
 
         // Verify only 2 tags remain
-        $tags = $post->tags()->all();
+        $tags = $post->tags;
         $this->assertCount(2, $tags);
         $this->assertEquals('PHP', $tags[0]->name);
         $this->assertEquals('Tutorial', $tags[1]->name);
@@ -559,7 +559,7 @@ class ModelPolymorphicTest extends TestCase
         $post->tags()->sync([$tagId2, $tagId3]);
 
         // Verify correct tags remain
-        $tags = $post->tags()->all();
+        $tags = $post->tags;
         $this->assertCount(2, $tags);
         $this->assertEquals('Lightpack', $tags[0]->name);
         $this->assertEquals('Tutorial', $tags[1]->name);
@@ -585,21 +585,22 @@ class ModelPolymorphicTest extends TestCase
 
         // Verify post only sees its own tag relationship
         $post = $this->db->model(PostModel::class)->find($postId);
-        $tags = $post->tags()->all();
+        $tags = $post->tags;
         $this->assertCount(1, $tags);
 
         // Verify video only sees its own tag relationship
         $video = $this->db->model(VideoModel::class)->find($videoId);
-        $tags = $video->tags()->all();
+        $tags = $video->tags;
         $this->assertCount(1, $tags);
 
         // Detach from post should not affect video
         $post->tags()->detach([$tagId]);
-        $tags = $post->tags()->all();
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $tags = $post->tags;
         $this->assertCount(0, $tags);
 
         $video = $this->db->model(VideoModel::class)->find($videoId);
-        $tags = $video->tags()->all();
+        $tags = $video->tags;
         $this->assertCount(1, $tags);
     }
 
@@ -627,14 +628,14 @@ class ModelPolymorphicTest extends TestCase
 
         // Tag should only return posts when calling posts()
         $tag = $this->db->model(TagModel::class)->find($tagId);
-        $posts = $tag->posts()->all();
+        $posts = $tag->posts;
         $this->assertCount(2, $posts);
         foreach ($posts as $post) {
             $this->assertInstanceOf(PostModel::class, $post);
         }
 
         // Tag should only return videos when calling videos()
-        $videos = $tag->videos()->all();
+        $videos = $tag->videos;
         $this->assertCount(1, $videos);
         $this->assertInstanceOf(VideoModel::class, $videos[0]);
     }
