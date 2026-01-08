@@ -42,7 +42,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $this->drop('taxonomy_models');
+        $this->drop('taxonomy_morphs');
         $this->drop('taxonomies');
     }
 };

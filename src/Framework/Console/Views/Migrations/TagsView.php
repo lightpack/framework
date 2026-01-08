@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        $this->create('tag_models', function (Table $table) {
+        $this->create('tag_morphs', function (Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
             $table->column('morph_id')->type('bigint')->attribute('unsigned');
             $table->varchar('morph_type', 191);
@@ -35,7 +35,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $this->drop('tag_models');
+        $this->drop('tag_morphs');
         $this->drop('tags');
     }
 };
