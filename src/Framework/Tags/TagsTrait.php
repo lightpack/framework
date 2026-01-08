@@ -6,29 +6,13 @@ use Lightpack\Tags\Tag;
 
 trait TagsTrait
 {
+    /**
+     * Get all tags for this model using polymorphic many-to-many relationship.
+     * Returns a PolymorphicPivot instance for Tag models.
+     */
     public function tags()
     {
-        return $this->pivot(
-            Tag::class,
-            'tag_models',
-            'model_id',
-            'tag_id',
-        )->where('tag_models.model_type', $this->table);
-    }
-
-    public function attachTags(array $tagIds)
-    {
-        $this->tags()->attach($tagIds, ['model_type' => $this->table]);
-    }
-
-    public function detachTags(array $tagIds)
-    {
-        $this->tags()->detach($tagIds, ['model_type' => $this->table]);
-    }
-
-    public function syncTags(array $tagIds)
-    {
-        $this->tags()->sync($tagIds, ['model_type' => $this->table]);
+        return $this->morphToMany(Tag::class, 'tag_morphs', 'tag_id');
     }
 
     public function scopeTags($builder, array $tagIds = [])
@@ -40,8 +24,8 @@ trait TagsTrait
             $builder->select($table . '.*');
         }
         
-        $builder->join('tag_models AS tg_any', $table . '.id', 'tg_any.model_id')
-            ->where('tg_any.model_type', $this->table)
+        $builder->join('tag_morphs AS tg_any', $table . '.id', 'tg_any.morph_id')
+            ->where('tg_any.morph_type', $this->table)
             ->whereIn('tg_any.tag_id', $tagIds)
             ->groupBy($table . '.id');
     }

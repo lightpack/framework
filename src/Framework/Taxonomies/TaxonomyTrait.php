@@ -10,50 +10,12 @@ namespace Lightpack\Taxonomies;
 trait TaxonomyTrait
 {
     /**
-     * Get all taxonomy nodes (of a given type) attached to this model.
+     * Get all taxonomy nodes attached to this model using polymorphic many-to-many relationship.
+     * Returns a PolymorphicPivot instance for Taxonomy models.
      */
     public function taxonomies()
     {
-        return $this->pivot(
-            Taxonomy::class,
-            'taxonomy_models',
-            'model_id',
-            'taxonomy_id'
-        )->where('taxonomy_models.model_type', $this->table);
-    }
-
-    /**
-     * Attach taxonomy nodes to this model.
-     * @param array $taxonomyIds
-     */
-    public function attachTaxonomies(array $taxonomyIds)
-    {
-        // Optionally filter/validate taxonomy ids by type
-        $this->taxonomies()->attach($taxonomyIds, [
-            'model_type' => $this->table
-        ]);
-    }
-
-    /**
-     * Detach taxonomy nodes from this model.
-     * @param array $taxonomyIds
-     */
-    public function detachTaxonomies(array $taxonomyIds)
-    {
-        $this->taxonomies()->detach($taxonomyIds, [
-            'model_type' => $this->table
-        ]);
-    }
-
-    /**
-     * Sync taxonomy nodes for this model.
-     * @param array $taxonomyIds
-     */
-    public function syncTaxonomies(array $taxonomyIds)
-    {
-        $this->taxonomies()->sync($taxonomyIds, [
-            'model_type' => $this->table
-        ]);
+        return $this->morphToMany(Taxonomy::class, 'taxonomy_morphs', 'taxonomy_id');
     }
 
     public function scopeTaxonomies($builder, array $taxonomyIds = [])
@@ -65,8 +27,8 @@ trait TaxonomyTrait
             $builder->select($table . '.*');
         }
         
-        $builder->join('taxonomy_models AS tx_any', $table . '.id', 'tx_any.model_id')
-            ->where('tx_any.model_type', $this->table)
+        $builder->join('taxonomy_morphs AS tx_any', $table . '.id', 'tx_any.morph_id')
+            ->where('tx_any.morph_type', $this->table)
             ->whereIn('tx_any.taxonomy_id', $taxonomyIds)
             ->groupBy($table . '.id');
     }

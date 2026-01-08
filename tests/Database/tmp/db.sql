@@ -178,6 +178,26 @@ CREATE TABLE IF NOT EXISTS `videos` (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- create table tags for polymorphic many-to-many tests
+DROP TABLE IF EXISTS `tags`;
+CREATE TABLE IF NOT EXISTS `tags` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- create pivot table tag_morphs for polymorphic many-to-many tests
+DROP TABLE IF EXISTS `tag_morphs`;
+CREATE TABLE IF NOT EXISTS `tag_morphs` (
+  `tag_id` int NOT NULL,
+  `morph_id` int NOT NULL,
+  `morph_type` varchar(255) NOT NULL,
+  PRIMARY KEY (tag_id, morph_id, morph_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 -- insert dummy data for products
 INSERT INTO `products` (`name`, `color`, `price`) VALUES
     ('Dummy Product', '#09F', 100.00),

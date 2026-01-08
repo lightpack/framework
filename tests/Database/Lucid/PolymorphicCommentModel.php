@@ -7,7 +7,7 @@ class PolymorphicCommentModel extends Model
     protected $table = 'polymorphic_comments';
 
     // Defines the inverse polymorphic relation
-    public function commentable()
+    public function parent()
     {
         return $this->morphTo([
             PostModel::class,

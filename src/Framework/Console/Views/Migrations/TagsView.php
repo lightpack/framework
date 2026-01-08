@@ -23,19 +23,19 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        $this->create('tag_models', function (Table $table) {
+        $this->create('tag_morphs', function (Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
-            $table->column('model_id')->type('bigint')->attribute('unsigned');
-            $table->varchar('model_type', 191);
-            $table->primary(['tag_id', 'model_id', 'model_type']);
+            $table->column('morph_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('morph_type', 191);
+            $table->primary(['tag_id', 'morph_id', 'morph_type']);
             $table->foreignKey('tag_id')->references('id')->on('tags')->cascadeOnDelete();
-            $table->index(['model_type', 'model_id']);
+            $table->index(['morph_type', 'morph_id']);
         });
     }
 
     public function down(): void
     {
-        $this->drop('tag_models');
+        $this->drop('tag_morphs');
         $this->drop('tags');
     }
 };

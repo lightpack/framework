@@ -153,7 +153,10 @@ class Model implements JsonSerializable
         $query = $this->{$key}();
         $result = $this->relations->getRelationType() === 'hasMany' ||
             $this->relations->getRelationType() === 'pivot' ||
-            $this->relations->getRelationType() === 'hasManyThrough'
+            $this->relations->getRelationType() === 'hasManyThrough' ||
+            $this->relations->getRelationType() === 'morphMany' ||
+            $this->relations->getRelationType() === 'morphToMany' ||
+            $this->relations->getRelationType() === 'morphedByMany'
             ? $query->all()
             : $query->one();
 
@@ -246,6 +249,26 @@ class Model implements JsonSerializable
     public function morphOne(string $model)
     {
         return $this->relations->morphOne($model, $this->table);
+    }
+
+    /**
+     * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_morphs)
+     * 
+     * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK.
+     */
+    public function morphToMany(string $model, string $pivotTable, string $associateKey)
+    {
+        return $this->relations->morphToMany($model, $pivotTable, $associateKey);
+    }
+
+    /**
+     * Inverse polymorphic many-to-many: e.g. Tag -> many Posts (through tag_morphs)
+     * 
+     * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK.
+     */
+    public function morphedByMany(string $model, string $pivotTable, string $associateKey)
+    {
+        return $this->relations->morphedByMany($model, $pivotTable, $associateKey);
     }
 
     public function find($id, bool $fail = true): self

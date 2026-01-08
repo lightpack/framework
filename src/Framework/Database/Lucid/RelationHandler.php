@@ -195,8 +195,10 @@ class RelationHandler
      * Accepts a list of model class names. Internally builds the morph map.
      * Usage: return $this->morphTo([PostModel::class, VideoModel::class]);
      */
-    public function morphTo(array $models): ?Model
+    public function morphTo(array $models): ?Query
     {
+        $this->relationType = 'morphTo';
+        
         $type = $this->model->morph_type;
         $id = $this->model->morph_id;
 
@@ -212,7 +214,7 @@ class RelationHandler
         }
 
         $related = new $map[$type];
-        return $related->find($id);
+        return $related::query()->where($related->getPrimaryKey(), $id);
     }
 
     /**
@@ -231,6 +233,84 @@ class RelationHandler
     {
         return $this->hasOne($model, 'morph_id')
             ->where('morph_type', $morphType);
+    }
+
+    /**
+     * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_morphs)
+     * 
+     * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK column.
+     * Example: tag_morphs table has: tag_id, morph_id, morph_type
+     */
+    public function morphToMany(string $model, string $pivotTable, string $associateKey): PolymorphicPivot
+    {
+        $this->relationType = 'morphToMany';
+        $this->relationKey = 'morph_id';
+        $this->foreignKey = 'morph_id';
+        $this->relatedModel = $model;
+        $this->pivotTable = $pivotTable;
+
+        $modelInstance = $this->getConnection()->model($model);
+        $tableName = $modelInstance->getTableName();
+        $morphType = $this->model->getTableName();
+        
+        $pivot = new PolymorphicPivot(
+            $modelInstance,
+            $this->model,
+            $pivotTable,
+            $associateKey,
+            $morphType
+        );
+
+        $pivot
+            ->from($tableName)
+            ->select("$tableName.*", "$pivotTable.morph_id")
+            ->join($pivotTable, "$tableName.{$modelInstance->getPrimaryKey()}", "$pivotTable.$associateKey")
+            ->where("$pivotTable.morph_type", '=', $morphType);
+
+        if ($this->isEagerLoading) {
+            return $pivot;
+        }
+
+        return $pivot->where("$pivotTable.morph_id", '=', $this->model->{$this->model->getPrimaryKey()});
+    }
+
+    /**
+     * Inverse polymorphic many-to-many: e.g. Tag -> many Posts (through tag_morphs)
+     * 
+     * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK column.
+     * Example: tag_morphs table has: tag_id, morph_id, morph_type
+     */
+    public function morphedByMany(string $model, string $pivotTable, string $associateKey): PolymorphicPivot
+    {
+        $this->relationType = 'morphedByMany';
+        $this->relationKey = 'morph_id';
+        $this->foreignKey = 'morph_id';
+        $this->relatedModel = $model;
+        $this->pivotTable = $pivotTable;
+
+        $modelInstance = $this->getConnection()->model($model);
+        $tableName = $modelInstance->getTableName();
+        $morphType = $tableName; // Auto-detect from related model's table
+        
+        $pivot = new PolymorphicPivot(
+            $modelInstance,
+            $this->model,
+            $pivotTable,
+            $associateKey,
+            $morphType
+        );
+
+        $pivot
+            ->from($tableName)
+            ->select("$tableName.*", "$pivotTable.$associateKey")
+            ->join($pivotTable, "$tableName.{$modelInstance->getPrimaryKey()}", "$pivotTable.morph_id")
+            ->where("$pivotTable.morph_type", '=', $morphType);
+
+        if ($this->isEagerLoading) {
+            return $pivot;
+        }
+
+        return $pivot->where("$pivotTable.$associateKey", '=', $this->model->{$this->model->getPrimaryKey()});
     }
 
     /**

@@ -46,17 +46,17 @@ class TaxonomiesIntegrationTest extends TestCase
             $table->text('meta')->nullable();
             $table->timestamps();
         });
-        $this->schema->createTable('taxonomy_models', function (Table $table) {
+        $this->schema->createTable('taxonomy_morphs', function (Table $table) {
             $table->column('taxonomy_id')->type('bigint')->attribute('unsigned');
-            $table->column('model_id')->type('bigint')->attribute('unsigned');
-            $table->varchar('model_type', 191);
-            $table->primary(['taxonomy_id', 'model_id', 'model_type']);
+            $table->column('morph_id')->type('bigint')->attribute('unsigned');
+            $table->varchar('morph_type', 191);
+            $table->primary(['taxonomy_id', 'morph_id', 'morph_type']);
         });
     }
 
     protected function tearDown(): void
     {
-        $this->schema->dropTable('taxonomy_models');
+        $this->schema->dropTable('taxonomy_morphs');
         $this->schema->dropTable('taxonomies');
         $this->schema->dropTable('posts');
         $this->db = null;
@@ -92,11 +92,11 @@ class TaxonomiesIntegrationTest extends TestCase
             ['id' => 103, 'title' => 'Third Post'],
         ]);
         // Attach taxonomies to posts
-        $this->db->table('taxonomy_models')->insert([
-            ['taxonomy_id' => 1, 'model_id' => 101, 'model_type' => 'posts'],
-            ['taxonomy_id' => 2, 'model_id' => 101, 'model_type' => 'posts'],
-            ['taxonomy_id' => 2, 'model_id' => 102, 'model_type' => 'posts'],
-            ['taxonomy_id' => 3, 'model_id' => 103, 'model_type' => 'posts'],
+        $this->db->table('taxonomy_morphs')->insert([
+            ['taxonomy_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['taxonomy_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['taxonomy_id' => 2, 'morph_id' => 102, 'morph_type' => 'posts'],
+            ['taxonomy_id' => 3, 'morph_id' => 103, 'morph_type' => 'posts'],
         ]);
     }
 
@@ -123,10 +123,12 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->detachTaxonomies([1]);
-        $this->assertCount(1, $post->taxonomies()->all());
-        $post->attachTaxonomies([1]);
-        $this->assertCount(2, $post->taxonomies()->all());
+        $post->taxonomies()->detach([1]);
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(1, $post->taxonomies);
+        $post->taxonomies()->attach([1]);
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(2, $post->taxonomies);
     }
 
     public function testSyncTaxonomies()
@@ -134,8 +136,9 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->syncTaxonomies([3]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post->taxonomies()->sync([3]);
+        $post = $this->getPostModelInstance()->find(101);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertEquals([3], $taxonomyIds);
     }
 
@@ -144,8 +147,9 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->detachTaxonomies([9999]); // Should not error
-        $this->assertCount(2, $post->taxonomies()->all());
+        $post->taxonomies()->detach([9999]); // Should not error
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(2, $post->taxonomies);
     }
 
     public function testAttachDuplicateTaxonomy()
@@ -153,8 +157,9 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->attachTaxonomies([1]);
-        $this->assertCount(2, $post->taxonomies()->all());
+        $post->taxonomies()->attach([1]);
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(2, $post->taxonomies);
     }
 
     public function testBulkAttachAndDetachTaxonomies()
@@ -162,13 +167,15 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->attachTaxonomies([1, 3]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post->taxonomies()->attach([1, 3]);
+        $post = $this->getPostModelInstance()->find(102);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertContains(1, $taxonomyIds);
         $this->assertContains(2, $taxonomyIds);
         $this->assertContains(3, $taxonomyIds);
-        $post->detachTaxonomies([1, 2]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post->taxonomies()->detach([1, 2]);
+        $post = $this->getPostModelInstance()->find(102);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertNotContains(1, $taxonomyIds);
         $this->assertNotContains(2, $taxonomyIds);
         $this->assertContains(3, $taxonomyIds);
@@ -179,8 +186,9 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->syncTaxonomies([1, 3]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post->taxonomies()->sync([1, 3]);
+        $post = $this->getPostModelInstance()->find(102);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertContains(1, $taxonomyIds);
         $this->assertContains(3, $taxonomyIds);
         $this->assertNotContains(2, $taxonomyIds);
@@ -194,12 +202,12 @@ class TaxonomiesIntegrationTest extends TestCase
             'id' => 201,
             'title' => 'Fake Post for Isolation',
         ]);
-        $this->db->table('taxonomy_models')->insert([
-            ['taxonomy_id' => 1, 'model_id' => 201, 'model_type' => 'other_model'],
+        $this->db->table('taxonomy_morphs')->insert([
+            ['taxonomy_id' => 1, 'morph_id' => 201, 'morph_type' => 'other_model'],
         ]);
         $post = $this->getPostModelInstance();
         $post->find(201);
-        $this->assertCount(0, $post->taxonomies()->all());
+        $this->assertCount(0, $post->taxonomies);
     }
 
     public function testScopeTaxonomiesHierarchicalFiltering()
@@ -214,8 +222,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->db->table('posts')->insert([
             ['id' => 301, 'title' => 'Deep Post'],
         ]);
-        $this->db->table('taxonomy_models')->insert([
-            ['taxonomy_id' => 4, 'model_id' => 301, 'model_type' => 'posts'], // Assigned at level 4
+        $this->db->table('taxonomy_morphs')->insert([
+            ['taxonomy_id' => 4, 'morph_id' => 301, 'morph_type' => 'posts'], // Assigned at level 4
         ]);
         $postModel = $this->getPostModelInstance();
         $taxonomy = new Taxonomy(2); // Level 2
@@ -252,8 +260,8 @@ class TaxonomiesIntegrationTest extends TestCase
     {
         $this->seedTaxonomiesData();
         // Insert taxonomy for a different model_type
-        $this->db->table('taxonomy_models')->insert([
-            ['taxonomy_id' => 1, 'model_id' => 999, 'model_type' => 'other_model'],
+        $this->db->table('taxonomy_morphs')->insert([
+            ['taxonomy_id' => 1, 'morph_id' => 999, 'morph_type' => 'other_model'],
         ]);
         $postModel = $this->getPostModelInstance();
         $posts = $postModel::filters(['taxonomies' => [1]])->all();

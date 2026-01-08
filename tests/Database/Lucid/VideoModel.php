@@ -15,4 +15,9 @@ class VideoModel extends Model
     {
         return $this->morphOne(PolymorphicThumbnailModel::class, $this->table);
     }
+
+    public function tags()
+    {
+        return $this->morphToMany(TagModel::class, 'tag_morphs', 'tag_id');
+    }
 }

@@ -4,6 +4,7 @@ require_once 'PostModel.php';
 require_once 'VideoModel.php';
 require_once 'PolymorphicCommentModel.php';
 require_once 'PolymorphicThumbnailModel.php';
+require_once 'TagModel.php';
 
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
@@ -36,7 +37,7 @@ class ModelPolymorphicTest extends TestCase
 
     public function tearDown(): void
     {
-        $sql = "DROP TABLE IF EXISTS polymorphic_comments, posts, videos";
+        $sql = "DROP TABLE IF EXISTS polymorphic_comments, polymorphic_thumbnails, tag_morphs, posts, videos, tags";
         $this->db->query($sql);
         $this->db = null;
     }
@@ -67,13 +68,13 @@ class ModelPolymorphicTest extends TestCase
 
         // Test morphTo for post comment
         $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentPostId);
-        $commentablePost = $comment->commentable();
+        $commentablePost = $comment->parent;
         $this->assertInstanceOf(PostModel::class, $commentablePost);
         $this->assertEquals('A Post', $commentablePost->title);
 
         // Test morphTo for video comment
         $comment = $this->db->model(PolymorphicCommentModel::class)->find($commentVideoId);
-        $commentableVideo = $comment->commentable();
+        $commentableVideo = $comment->parent;
         $this->assertInstanceOf(VideoModel::class, $commentableVideo);
         $this->assertEquals('A Video', $commentableVideo->title);
     }
@@ -376,5 +377,266 @@ class ModelPolymorphicTest extends TestCase
         foreach ($posts as $post) {
             $this->assertEquals(2, $post->comments_count);
         }
+    }
+
+    public function testMorphToManyRelation()
+    {
+        // Create posts and videos
+        $this->db->table('posts')->insert(['title' => 'First Post']);
+        $postId1 = $this->db->lastInsertId();
+        $this->db->table('posts')->insert(['title' => 'Second Post']);
+        $postId2 = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'First Video']);
+        $videoId = $this->db->lastInsertId();
+
+        // Create tags
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId1 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
+        $tagId2 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
+        $tagId3 = $this->db->lastInsertId();
+
+        // Attach tags to posts and videos
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagId1, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId2, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId1, 'morph_id' => $postId2, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId3, 'morph_id' => $videoId, 'morph_type' => 'videos'],
+        ]);
+
+        // Test morphToMany for first post
+        $post = $this->db->model(PostModel::class)->find($postId1);
+        $tags = $post->tags;
+        $this->assertCount(2, $tags);
+        $this->assertEquals('PHP', $tags[0]->name);
+        $this->assertEquals('Lightpack', $tags[1]->name);
+
+        // Test morphToMany for second post
+        $post = $this->db->model(PostModel::class)->find($postId2);
+        $tags = $post->tags;
+        $this->assertCount(1, $tags);
+        $this->assertEquals('PHP', $tags[0]->name);
+
+        // Test morphToMany for video
+        $video = $this->db->model(VideoModel::class)->find($videoId);
+        $tags = $video->tags;
+        $this->assertCount(1, $tags);
+        $this->assertEquals('Tutorial', $tags[0]->name);
+    }
+
+    public function testMorphedByManyRelation()
+    {
+        // Create posts and videos
+        $this->db->table('posts')->insert(['title' => 'First Post']);
+        $postId1 = $this->db->lastInsertId();
+        $this->db->table('posts')->insert(['title' => 'Second Post']);
+        $postId2 = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'First Video']);
+        $videoId = $this->db->lastInsertId();
+
+        // Create tags
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId1 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
+        $tagId2 = $this->db->lastInsertId();
+
+        // Attach tags to posts and videos
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagId1, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId1, 'morph_id' => $postId2, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId1, 'morph_id' => $videoId, 'morph_type' => 'videos'],
+            ['tag_id' => $tagId2, 'morph_id' => $videoId, 'morph_type' => 'videos'],
+        ]);
+
+        // Test morphedByMany for PHP tag - should get 2 posts
+        $tag = $this->db->model(TagModel::class)->find($tagId1);
+        $posts = $tag->posts()->all();
+        $this->assertCount(2, $posts);
+        $this->assertEquals('First Post', $posts[0]->title);
+        $this->assertEquals('Second Post', $posts[1]->title);
+
+        // Test morphedByMany for PHP tag - should get 1 video
+        $videos = $tag->videos()->all();
+        $this->assertCount(1, $videos);
+        $this->assertEquals('First Video', $videos[0]->title);
+
+        // Test morphedByMany for Tutorial tag - should get 0 posts
+        $tag = $this->db->model(TagModel::class)->find($tagId2);
+        $posts = $tag->posts()->all();
+        $this->assertCount(0, $posts);
+
+        // Test morphedByMany for Tutorial tag - should get 1 video
+        $videos = $tag->videos()->all();
+        $this->assertCount(1, $videos);
+        $this->assertEquals('First Video', $videos[0]->title);
+    }
+
+    public function testMorphToManyAttach()
+    {
+        // Create post
+        $this->db->table('posts')->insert(['title' => 'Test Post']);
+        $postId = $this->db->lastInsertId();
+
+        // Create tags
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId1 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
+        $tagId2 = $this->db->lastInsertId();
+
+        // Attach tags using pivot attach
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $post->tags()->attach([$tagId1, $tagId2]);
+
+        // Verify tags were attached
+        $tags = $post->tags;
+        $this->assertCount(2, $tags);
+        
+        // Verify pivot records exist
+        $pivotRecords = $this->db->table('tag_morphs')
+            ->where('morph_id', $postId)
+            ->where('morph_type', 'posts')
+            ->all();
+        $this->assertCount(2, $pivotRecords);
+    }
+
+    public function testMorphToManyDetach()
+    {
+        // Create post
+        $this->db->table('posts')->insert(['title' => 'Test Post']);
+        $postId = $this->db->lastInsertId();
+
+        // Create tags
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId1 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
+        $tagId2 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
+        $tagId3 = $this->db->lastInsertId();
+
+        // Attach all tags
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagId1, 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId2, 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId3, 'morph_id' => $postId, 'morph_type' => 'posts'],
+        ]);
+
+        // Detach one tag
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $post->tags()->detach([$tagId2]);
+
+        // Verify only 2 tags remain
+        $tags = $post->tags;
+        $this->assertCount(2, $tags);
+        $this->assertEquals('PHP', $tags[0]->name);
+        $this->assertEquals('Tutorial', $tags[1]->name);
+    }
+
+    public function testMorphToManySync()
+    {
+        // Create post
+        $this->db->table('posts')->insert(['title' => 'Test Post']);
+        $postId = $this->db->lastInsertId();
+
+        // Create tags
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId1 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
+        $tagId2 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
+        $tagId3 = $this->db->lastInsertId();
+
+        // Initially attach PHP and Lightpack
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagId1, 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId2, 'morph_id' => $postId, 'morph_type' => 'posts'],
+        ]);
+
+        // Sync to Lightpack and Tutorial (should remove PHP, keep Lightpack, add Tutorial)
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $post->tags()->sync([$tagId2, $tagId3]);
+
+        // Verify correct tags remain
+        $tags = $post->tags;
+        $this->assertCount(2, $tags);
+        $this->assertEquals('Lightpack', $tags[0]->name);
+        $this->assertEquals('Tutorial', $tags[1]->name);
+    }
+
+    public function testMorphToManyTypeIsolation()
+    {
+        // Create post and video
+        $this->db->table('posts')->insert(['title' => 'Test Post']);
+        $postId = $this->db->lastInsertId();
+        $this->db->table('videos')->insert(['title' => 'Test Video']);
+        $videoId = $this->db->lastInsertId();
+
+        // Create tag
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId = $this->db->lastInsertId();
+
+        // Attach tag to both post and video
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagId, 'morph_id' => $postId, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId, 'morph_id' => $videoId, 'morph_type' => 'videos'],
+        ]);
+
+        // Verify post only sees its own tag relationship
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $tags = $post->tags;
+        $this->assertCount(1, $tags);
+
+        // Verify video only sees its own tag relationship
+        $video = $this->db->model(VideoModel::class)->find($videoId);
+        $tags = $video->tags;
+        $this->assertCount(1, $tags);
+
+        // Detach from post should not affect video
+        $post->tags()->detach([$tagId]);
+        $post = $this->db->model(PostModel::class)->find($postId);
+        $tags = $post->tags;
+        $this->assertCount(0, $tags);
+
+        $video = $this->db->model(VideoModel::class)->find($videoId);
+        $tags = $video->tags;
+        $this->assertCount(1, $tags);
+    }
+
+    public function testMorphedByManyTypeIsolation()
+    {
+        // Create posts and videos
+        $this->db->table('posts')->insert(['title' => 'First Post']);
+        $postId1 = $this->db->lastInsertId();
+        $this->db->table('posts')->insert(['title' => 'Second Post']);
+        $postId2 = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'First Video']);
+        $videoId = $this->db->lastInsertId();
+
+        // Create tag
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId = $this->db->lastInsertId();
+
+        // Attach tag to posts and video
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagId, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId, 'morph_id' => $postId2, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId, 'morph_id' => $videoId, 'morph_type' => 'videos'],
+        ]);
+
+        // Tag should only return posts when calling posts()
+        $tag = $this->db->model(TagModel::class)->find($tagId);
+        $posts = $tag->posts;
+        $this->assertCount(2, $posts);
+        foreach ($posts as $post) {
+            $this->assertInstanceOf(PostModel::class, $post);
+        }
+
+        // Tag should only return videos when calling videos()
+        $videos = $tag->videos;
+        $this->assertCount(1, $videos);
+        $this->assertInstanceOf(VideoModel::class, $videos[0]);
     }
 }

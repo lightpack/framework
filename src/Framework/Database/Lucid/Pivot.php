@@ -6,10 +6,10 @@ use Lightpack\Database\Query\Query;
 
 class Pivot extends Builder
 {
-    private $baseModel;
-    private $pivotTable;
-    private $foreignKey;
-    private $associateKey;
+    protected $baseModel;
+    protected $pivotTable;
+    protected $foreignKey;
+    protected $associateKey;
 
     /**
      * @param Model $model The relating model class name.
@@ -46,7 +46,7 @@ class Pivot extends Builder
             // Get current IDs
             $currentIds = $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))
                 ->select($this->associateKey)
-                ->all($this->associateKey);
+                ->all();
 
             $currentIds = array_column($currentIds, $this->associateKey);
 

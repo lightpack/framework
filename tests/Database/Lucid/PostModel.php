@@ -15,4 +15,9 @@ class PostModel extends Model
     {
         return $this->morphOne(PolymorphicThumbnailModel::class);
     }
+
+    public function tags()
+    {
+        return $this->morphToMany(TagModel::class, 'tag_morphs', 'tag_id');
+    }
 }

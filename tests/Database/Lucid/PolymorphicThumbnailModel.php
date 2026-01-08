@@ -6,7 +6,7 @@ class PolymorphicThumbnailModel extends Model
 {
     protected $table = 'polymorphic_thumbnails';
 
-    public function thumbnailable()
+    public function parent()
     {
         return $this->morphTo([
             PostModel::class,
