@@ -123,10 +123,10 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->detachTaxonomies([1]);
+        $post->taxonomies()->detach([1]);
         $post = $this->getPostModelInstance()->find(101);
         $this->assertCount(1, $post->taxonomies);
-        $post->attachTaxonomies([1]);
+        $post->taxonomies()->attach([1]);
         $post = $this->getPostModelInstance()->find(101);
         $this->assertCount(2, $post->taxonomies);
     }
@@ -136,7 +136,7 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->syncTaxonomies([3]);
+        $post->taxonomies()->sync([3]);
         $post = $this->getPostModelInstance()->find(101);
         $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertEquals([3], $taxonomyIds);
@@ -147,7 +147,7 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->detachTaxonomies([9999]); // Should not error
+        $post->taxonomies()->detach([9999]); // Should not error
         $post = $this->getPostModelInstance()->find(101);
         $this->assertCount(2, $post->taxonomies);
     }
@@ -157,7 +157,7 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->attachTaxonomies([1]);
+        $post->taxonomies()->attach([1]);
         $post = $this->getPostModelInstance()->find(101);
         $this->assertCount(2, $post->taxonomies);
     }
@@ -167,13 +167,13 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->attachTaxonomies([1, 3]);
+        $post->taxonomies()->attach([1, 3]);
         $post = $this->getPostModelInstance()->find(102);
         $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertContains(1, $taxonomyIds);
         $this->assertContains(2, $taxonomyIds);
         $this->assertContains(3, $taxonomyIds);
-        $post->detachTaxonomies([1, 2]);
+        $post->taxonomies()->detach([1, 2]);
         $post = $this->getPostModelInstance()->find(102);
         $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertNotContains(1, $taxonomyIds);
@@ -186,7 +186,7 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->seedTaxonomiesData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->syncTaxonomies([1, 3]);
+        $post->taxonomies()->sync([1, 3]);
         $post = $this->getPostModelInstance()->find(102);
         $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertContains(1, $taxonomyIds);

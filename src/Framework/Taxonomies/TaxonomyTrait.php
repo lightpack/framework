@@ -18,30 +18,6 @@ trait TaxonomyTrait
         return $this->morphToMany(Taxonomy::class, 'taxonomy_morphs', 'taxonomy_id');
     }
 
-    /**
-     * Attach taxonomy nodes to this model.
-     */
-    public function attachTaxonomies(array $taxonomyIds)
-    {
-        $this->taxonomies()->attach($taxonomyIds);
-    }
-
-    /**
-     * Detach taxonomy nodes from this model.
-     */
-    public function detachTaxonomies(array $taxonomyIds)
-    {
-        $this->taxonomies()->detach($taxonomyIds);
-    }
-
-    /**
-     * Sync taxonomy nodes for this model.
-     */
-    public function syncTaxonomies(array $taxonomyIds)
-    {
-        $this->taxonomies()->sync($taxonomyIds);
-    }
-
     public function scopeTaxonomies($builder, array $taxonomyIds = [])
     {
         $table = $builder->getTable();

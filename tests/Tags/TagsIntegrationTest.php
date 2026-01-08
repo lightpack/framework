@@ -98,10 +98,10 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->detachTags([1]);
+        $post->tags()->detach([1]);
         $post = $this->getPostModelInstance()->find(101); // Re-fetch to avoid cache
         $this->assertCount(1, $post->tags);
-        $post->attachTags([1]);
+        $post->tags()->attach([1]);
         $post = $this->getPostModelInstance()->find(101); // Re-fetch to avoid cache
         $this->assertCount(2, $post->tags);
     }
@@ -111,7 +111,7 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->syncTags([3]);
+        $post->tags()->sync([3]);
         $post = $this->getPostModelInstance()->find(101);
         $tagIds = array_column($post->tags->toArray(), 'id');
         $this->assertEquals([3], $tagIds);
@@ -132,7 +132,7 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->detachTags([9999]); // Should not error
+        $post->tags()->detach([9999]); // Should not error
         $post = $this->getPostModelInstance()->find(101);
         $this->assertCount(2, $post->tags);
     }
@@ -142,7 +142,7 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(101);
-        $post->attachTags([1]);
+        $post->tags()->attach([1]);
         $post = $this->getPostModelInstance()->find(101);
         $this->assertCount(2, $post->tags);
     }
@@ -152,13 +152,13 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->attachTags([1, 3]);
+        $post->tags()->attach([1, 3]);
         $post = $this->getPostModelInstance()->find(102);
         $tagIds = array_column($post->tags->toArray(), 'id');
         $this->assertContains(1, $tagIds);
         $this->assertContains(2, $tagIds);
         $this->assertContains(3, $tagIds);
-        $post->detachTags([1, 2]);
+        $post->tags()->detach([1, 2]);
         $post = $this->getPostModelInstance()->find(102);
         $tagIds = array_column($post->tags->toArray(), 'id');
         $this->assertNotContains(1, $tagIds);
@@ -198,7 +198,7 @@ class TagsIntegrationTest extends TestCase
         $this->seedTagsData();
         $post = $this->getPostModelInstance();
         $post->find(102);
-        $post->syncTags([1, 3]);
+        $post->tags()->sync([1, 3]);
         $post = $this->getPostModelInstance()->find(102);
         $tagIds = array_column($post->tags->toArray(), 'id');
         $this->assertContains(1, $tagIds);

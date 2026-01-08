@@ -15,30 +15,6 @@ trait TagsTrait
         return $this->morphToMany(Tag::class, 'tag_morphs', 'tag_id');
     }
 
-    /**
-     * Attach tags to this model.
-     */
-    public function attachTags(array $tagIds)
-    {
-        $this->tags()->attach($tagIds);
-    }
-
-    /**
-     * Detach tags from this model.
-     */
-    public function detachTags(array $tagIds)
-    {
-        $this->tags()->detach($tagIds);
-    }
-
-    /**
-     * Sync tags for this model.
-     */
-    public function syncTags(array $tagIds)
-    {
-        $this->tags()->sync($tagIds);
-    }
-
     public function scopeTags($builder, array $tagIds = [])
     {
         $table = $builder->getTable();
