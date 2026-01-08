@@ -195,8 +195,10 @@ class RelationHandler
      * Accepts a list of model class names. Internally builds the morph map.
      * Usage: return $this->morphTo([PostModel::class, VideoModel::class]);
      */
-    public function morphTo(array $models): ?Model
+    public function morphTo(array $models): ?Query
     {
+        $this->relationType = 'morphTo';
+        
         $type = $this->model->morph_type;
         $id = $this->model->morph_id;
 
@@ -212,7 +214,7 @@ class RelationHandler
         }
 
         $related = new $map[$type];
-        return $related->find($id);
+        return $related::query()->where($related->getPrimaryKey(), $id);
     }
 
     /**
