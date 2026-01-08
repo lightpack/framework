@@ -10,50 +10,80 @@ namespace Lightpack\Taxonomies;
 trait TaxonomyTrait
 {
     /**
-     * Get all taxonomy nodes (of a given type) attached to this model.
+     * Get all taxonomy nodes attached to this model.
+     * Returns a Builder instance for Taxonomy models.
      */
     public function taxonomies()
     {
-        return $this->pivot(
-            Taxonomy::class,
-            'taxonomy_models',
-            'model_id',
-            'taxonomy_id'
-        )->where('taxonomy_models.model_type', $this->table);
+        return Taxonomy::query()
+            ->join('taxonomy_models', 'taxonomies.id', 'taxonomy_models.taxonomy_id')
+            ->where('taxonomy_models.model_id', '=', $this->{$this->getPrimaryKey()})
+            ->where('taxonomy_models.model_type', '=', $this->table);
     }
 
     /**
      * Attach taxonomy nodes to this model.
-     * @param array $taxonomyIds
      */
     public function attachTaxonomies(array $taxonomyIds)
     {
-        // Optionally filter/validate taxonomy ids by type
-        $this->taxonomies()->attach($taxonomyIds, [
-            'model_type' => $this->table
-        ]);
+        $data = array_map(function($taxonomyId) {
+            return [
+                'taxonomy_id' => $taxonomyId,
+                'model_id' => $this->{$this->getPrimaryKey()},
+                'model_type' => $this->table,
+            ];
+        }, $taxonomyIds);
+
+        if ($data) {
+            $this->getConnection()
+                ->table('taxonomy_models')
+                ->insertIgnore($data);
+        }
     }
 
     /**
      * Detach taxonomy nodes from this model.
-     * @param array $taxonomyIds
      */
     public function detachTaxonomies(array $taxonomyIds)
     {
-        $this->taxonomies()->detach($taxonomyIds, [
-            'model_type' => $this->table
-        ]);
+        $this->getConnection()
+            ->table('taxonomy_models')
+            ->where('model_id', '=', $this->{$this->getPrimaryKey()})
+            ->where('model_type', '=', $this->table)
+            ->whereIn('taxonomy_id', $taxonomyIds)
+            ->delete();
     }
 
     /**
      * Sync taxonomy nodes for this model.
-     * @param array $taxonomyIds
      */
     public function syncTaxonomies(array $taxonomyIds)
     {
-        $this->taxonomies()->sync($taxonomyIds, [
-            'model_type' => $this->table
-        ]);
+        $this->getConnection()->transaction(function() use ($taxonomyIds) {
+            // Get current taxonomy IDs
+            $currentIds = $this->getConnection()
+                ->table('taxonomy_models')
+                ->where('model_id', '=', $this->{$this->getPrimaryKey()})
+                ->where('model_type', '=', $this->table)
+                ->select('taxonomy_id')
+                ->all('taxonomy_id');
+            
+            $currentIds = array_column($currentIds, 'taxonomy_id');
+            
+            // Find IDs to delete and insert
+            $idsToDelete = array_diff($currentIds, $taxonomyIds);
+            $idsToInsert = array_diff($taxonomyIds, $currentIds);
+            
+            // Delete removed taxonomies
+            if ($idsToDelete) {
+                $this->detachTaxonomies($idsToDelete);
+            }
+            
+            // Insert new taxonomies
+            if ($idsToInsert) {
+                $this->attachTaxonomies($idsToInsert);
+            }
+        });
     }
 
     public function scopeTaxonomies($builder, array $taxonomyIds = [])

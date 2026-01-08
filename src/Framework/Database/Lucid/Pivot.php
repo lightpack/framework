@@ -46,7 +46,7 @@ class Pivot extends Builder
             // Get current IDs
             $currentIds = $query->where($this->foreignKey, '=', $this->baseModel->getAttribute($this->baseModel->getPrimaryKey()))
                 ->select($this->associateKey)
-                ->all($this->associateKey);
+                ->all();
 
             $currentIds = array_column($currentIds, $this->associateKey);
 
