@@ -236,10 +236,10 @@ class RelationHandler
     }
 
     /**
-     * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_models)
+     * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_morphs)
      * 
      * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK column.
-     * Example: tag_models table has: tag_id, morph_id, morph_type
+     * Example: tag_morphs table has: tag_id, morph_id, morph_type
      */
     public function morphToMany(string $model, string $pivotTable, string $associateKey): PolymorphicPivot
     {

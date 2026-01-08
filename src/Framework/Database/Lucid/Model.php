@@ -252,7 +252,7 @@ class Model implements JsonSerializable
     }
 
     /**
-     * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_models)
+     * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_morphs)
      * 
      * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK.
      */
