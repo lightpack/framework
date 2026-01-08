@@ -391,11 +391,11 @@ class ModelPolymorphicTest extends TestCase
         $videoId = $this->db->lastInsertId();
 
         // Create tags
-        $this->db->table('tags')->insert(['name' => 'PHP']);
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
         $tagId1 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Laravel']);
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
         $tagId2 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Tutorial']);
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
         $tagId3 = $this->db->lastInsertId();
 
         // Attach tags to posts and videos
@@ -411,7 +411,7 @@ class ModelPolymorphicTest extends TestCase
         $tags = $post->tags()->all();
         $this->assertCount(2, $tags);
         $this->assertEquals('PHP', $tags[0]->name);
-        $this->assertEquals('Laravel', $tags[1]->name);
+        $this->assertEquals('Lightpack', $tags[1]->name);
 
         // Test morphToMany for second post
         $post = $this->db->model(PostModel::class)->find($postId2);
@@ -438,9 +438,9 @@ class ModelPolymorphicTest extends TestCase
         $videoId = $this->db->lastInsertId();
 
         // Create tags
-        $this->db->table('tags')->insert(['name' => 'PHP']);
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
         $tagId1 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Tutorial']);
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
         $tagId2 = $this->db->lastInsertId();
 
         // Attach tags to posts and videos
@@ -481,9 +481,9 @@ class ModelPolymorphicTest extends TestCase
         $postId = $this->db->lastInsertId();
 
         // Create tags
-        $this->db->table('tags')->insert(['name' => 'PHP']);
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
         $tagId1 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Laravel']);
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
         $tagId2 = $this->db->lastInsertId();
 
         // Attach tags using pivot attach
@@ -509,11 +509,11 @@ class ModelPolymorphicTest extends TestCase
         $postId = $this->db->lastInsertId();
 
         // Create tags
-        $this->db->table('tags')->insert(['name' => 'PHP']);
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
         $tagId1 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Laravel']);
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
         $tagId2 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Tutorial']);
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
         $tagId3 = $this->db->lastInsertId();
 
         // Attach all tags
@@ -541,27 +541,27 @@ class ModelPolymorphicTest extends TestCase
         $postId = $this->db->lastInsertId();
 
         // Create tags
-        $this->db->table('tags')->insert(['name' => 'PHP']);
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
         $tagId1 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Laravel']);
+        $this->db->table('tags')->insert(['name' => 'Lightpack', 'slug' => 'lightpack']);
         $tagId2 = $this->db->lastInsertId();
-        $this->db->table('tags')->insert(['name' => 'Tutorial']);
+        $this->db->table('tags')->insert(['name' => 'Tutorial', 'slug' => 'tutorial']);
         $tagId3 = $this->db->lastInsertId();
 
-        // Initially attach PHP and Laravel
+        // Initially attach PHP and Lightpack
         $this->db->table('tag_morphs')->insert([
             ['tag_id' => $tagId1, 'morph_id' => $postId, 'morph_type' => 'posts'],
             ['tag_id' => $tagId2, 'morph_id' => $postId, 'morph_type' => 'posts'],
         ]);
 
-        // Sync to Laravel and Tutorial (should remove PHP, keep Laravel, add Tutorial)
+        // Sync to Lightpack and Tutorial (should remove PHP, keep Lightpack, add Tutorial)
         $post = $this->db->model(PostModel::class)->find($postId);
         $post->tags()->sync([$tagId2, $tagId3]);
 
         // Verify correct tags remain
         $tags = $post->tags()->all();
         $this->assertCount(2, $tags);
-        $this->assertEquals('Laravel', $tags[0]->name);
+        $this->assertEquals('Lightpack', $tags[0]->name);
         $this->assertEquals('Tutorial', $tags[1]->name);
     }
 
@@ -574,7 +574,7 @@ class ModelPolymorphicTest extends TestCase
         $videoId = $this->db->lastInsertId();
 
         // Create tag
-        $this->db->table('tags')->insert(['name' => 'PHP']);
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
         $tagId = $this->db->lastInsertId();
 
         // Attach tag to both post and video
@@ -615,7 +615,7 @@ class ModelPolymorphicTest extends TestCase
         $videoId = $this->db->lastInsertId();
 
         // Create tag
-        $this->db->table('tags')->insert(['name' => 'PHP']);
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
         $tagId = $this->db->lastInsertId();
 
         // Attach tag to posts and video
