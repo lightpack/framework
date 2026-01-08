@@ -124,9 +124,11 @@ class TaxonomiesIntegrationTest extends TestCase
         $post = $this->getPostModelInstance();
         $post->find(101);
         $post->detachTaxonomies([1]);
-        $this->assertCount(1, $post->taxonomies()->all());
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(1, $post->taxonomies);
         $post->attachTaxonomies([1]);
-        $this->assertCount(2, $post->taxonomies()->all());
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(2, $post->taxonomies);
     }
 
     public function testSyncTaxonomies()
@@ -135,7 +137,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $post = $this->getPostModelInstance();
         $post->find(101);
         $post->syncTaxonomies([3]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post = $this->getPostModelInstance()->find(101);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertEquals([3], $taxonomyIds);
     }
 
@@ -145,7 +148,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $post = $this->getPostModelInstance();
         $post->find(101);
         $post->detachTaxonomies([9999]); // Should not error
-        $this->assertCount(2, $post->taxonomies()->all());
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(2, $post->taxonomies);
     }
 
     public function testAttachDuplicateTaxonomy()
@@ -154,7 +158,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $post = $this->getPostModelInstance();
         $post->find(101);
         $post->attachTaxonomies([1]);
-        $this->assertCount(2, $post->taxonomies()->all());
+        $post = $this->getPostModelInstance()->find(101);
+        $this->assertCount(2, $post->taxonomies);
     }
 
     public function testBulkAttachAndDetachTaxonomies()
@@ -163,12 +168,14 @@ class TaxonomiesIntegrationTest extends TestCase
         $post = $this->getPostModelInstance();
         $post->find(102);
         $post->attachTaxonomies([1, 3]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post = $this->getPostModelInstance()->find(102);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertContains(1, $taxonomyIds);
         $this->assertContains(2, $taxonomyIds);
         $this->assertContains(3, $taxonomyIds);
         $post->detachTaxonomies([1, 2]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post = $this->getPostModelInstance()->find(102);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertNotContains(1, $taxonomyIds);
         $this->assertNotContains(2, $taxonomyIds);
         $this->assertContains(3, $taxonomyIds);
@@ -180,7 +187,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $post = $this->getPostModelInstance();
         $post->find(102);
         $post->syncTaxonomies([1, 3]);
-        $taxonomyIds = array_column($post->taxonomies()->all()->toArray(), 'id');
+        $post = $this->getPostModelInstance()->find(102);
+        $taxonomyIds = array_column($post->taxonomies->toArray(), 'id');
         $this->assertContains(1, $taxonomyIds);
         $this->assertContains(3, $taxonomyIds);
         $this->assertNotContains(2, $taxonomyIds);
@@ -199,7 +207,7 @@ class TaxonomiesIntegrationTest extends TestCase
         ]);
         $post = $this->getPostModelInstance();
         $post->find(201);
-        $this->assertCount(0, $post->taxonomies()->all());
+        $this->assertCount(0, $post->taxonomies);
     }
 
     public function testScopeTaxonomiesHierarchicalFiltering()
