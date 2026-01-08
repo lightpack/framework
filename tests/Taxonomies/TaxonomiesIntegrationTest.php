@@ -46,7 +46,7 @@ class TaxonomiesIntegrationTest extends TestCase
             $table->text('meta')->nullable();
             $table->timestamps();
         });
-        $this->schema->createTable('taxonomy_models', function (Table $table) {
+        $this->schema->createTable('taxonomy_morphs', function (Table $table) {
             $table->column('taxonomy_id')->type('bigint')->attribute('unsigned');
             $table->column('morph_id')->type('bigint')->attribute('unsigned');
             $table->varchar('morph_type', 191);
@@ -56,7 +56,7 @@ class TaxonomiesIntegrationTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->schema->dropTable('taxonomy_models');
+        $this->schema->dropTable('taxonomy_morphs');
         $this->schema->dropTable('taxonomies');
         $this->schema->dropTable('posts');
         $this->db = null;
@@ -92,7 +92,7 @@ class TaxonomiesIntegrationTest extends TestCase
             ['id' => 103, 'title' => 'Third Post'],
         ]);
         // Attach taxonomies to posts
-        $this->db->table('taxonomy_models')->insert([
+        $this->db->table('taxonomy_morphs')->insert([
             ['taxonomy_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
             ['taxonomy_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
             ['taxonomy_id' => 2, 'morph_id' => 102, 'morph_type' => 'posts'],
@@ -202,7 +202,7 @@ class TaxonomiesIntegrationTest extends TestCase
             'id' => 201,
             'title' => 'Fake Post for Isolation',
         ]);
-        $this->db->table('taxonomy_models')->insert([
+        $this->db->table('taxonomy_morphs')->insert([
             ['taxonomy_id' => 1, 'morph_id' => 201, 'morph_type' => 'other_model'],
         ]);
         $post = $this->getPostModelInstance();
@@ -222,7 +222,7 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->db->table('posts')->insert([
             ['id' => 301, 'title' => 'Deep Post'],
         ]);
-        $this->db->table('taxonomy_models')->insert([
+        $this->db->table('taxonomy_morphs')->insert([
             ['taxonomy_id' => 4, 'morph_id' => 301, 'morph_type' => 'posts'], // Assigned at level 4
         ]);
         $postModel = $this->getPostModelInstance();
@@ -260,7 +260,7 @@ class TaxonomiesIntegrationTest extends TestCase
     {
         $this->seedTaxonomiesData();
         // Insert taxonomy for a different model_type
-        $this->db->table('taxonomy_models')->insert([
+        $this->db->table('taxonomy_morphs')->insert([
             ['taxonomy_id' => 1, 'morph_id' => 999, 'morph_type' => 'other_model'],
         ]);
         $postModel = $this->getPostModelInstance();

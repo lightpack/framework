@@ -15,7 +15,7 @@ trait TaxonomyTrait
      */
     public function taxonomies()
     {
-        return $this->morphToMany(Taxonomy::class, 'taxonomy_models', 'taxonomy_id');
+        return $this->morphToMany(Taxonomy::class, 'taxonomy_morphs', 'taxonomy_id');
     }
 
     /**
@@ -51,7 +51,7 @@ trait TaxonomyTrait
             $builder->select($table . '.*');
         }
         
-        $builder->join('taxonomy_models AS tx_any', $table . '.id', 'tx_any.morph_id')
+        $builder->join('taxonomy_morphs AS tx_any', $table . '.id', 'tx_any.morph_id')
             ->where('tx_any.morph_type', $this->table)
             ->whereIn('tx_any.taxonomy_id', $taxonomyIds)
             ->groupBy($table . '.id');
