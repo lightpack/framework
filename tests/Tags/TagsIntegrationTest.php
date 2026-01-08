@@ -41,7 +41,7 @@ class TagsIntegrationTest extends TestCase
             $table->varchar('slug');
             $table->timestamps();
         });
-        $this->schema->createTable('tag_models', function(Table $table) {
+        $this->schema->createTable('tag_morphs', function(Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
             $table->column('morph_id')->type('bigint')->attribute('unsigned');
             $table->varchar('morph_type', 191);
@@ -51,7 +51,7 @@ class TagsIntegrationTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->schema->dropTable('tag_models');
+        $this->schema->dropTable('tag_morphs');
         $this->schema->dropTable('tags');
         $this->schema->dropTable('posts');
         $this->db = null;
@@ -85,7 +85,7 @@ class TagsIntegrationTest extends TestCase
             ['id' => 103, 'title' => 'Third Post'],
         ]);
         // Tag posts
-        $this->db->table('tag_models')->insert([
+        $this->db->table('tag_morphs')->insert([
             ['tag_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
             ['tag_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
             ['tag_id' => 2, 'morph_id' => 102, 'morph_type' => 'posts'],
@@ -214,7 +214,7 @@ class TagsIntegrationTest extends TestCase
             'id' => 201,
             'title' => 'Fake Post for Isolation',
         ]);
-        $this->db->table('tag_models')->insert([
+        $this->db->table('tag_morphs')->insert([
             ['tag_id' => 1, 'morph_id' => 201, 'morph_type' => 'other_model'],
         ]);
         $post = $this->getPostModelInstance();

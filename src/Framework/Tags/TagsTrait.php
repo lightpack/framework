@@ -12,7 +12,7 @@ trait TagsTrait
      */
     public function tags()
     {
-        return $this->morphToMany(Tag::class, 'tag_models', 'tag_id');
+        return $this->morphToMany(Tag::class, 'tag_morphs', 'tag_id');
     }
 
     /**
@@ -48,7 +48,7 @@ trait TagsTrait
             $builder->select($table . '.*');
         }
         
-        $builder->join('tag_models AS tg_any', $table . '.id', 'tg_any.morph_id')
+        $builder->join('tag_morphs AS tg_any', $table . '.id', 'tg_any.morph_id')
             ->where('tg_any.morph_type', $this->table)
             ->whereIn('tg_any.tag_id', $tagIds)
             ->groupBy($table . '.id');
