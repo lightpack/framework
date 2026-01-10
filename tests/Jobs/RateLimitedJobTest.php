@@ -184,4 +184,29 @@ class RateLimitedJobTest extends TestCase
         $this->assertIsInt($config['limit']);
         $this->assertIsInt($config['seconds']);
     }
+
+    public function testDefaultKeyGenerationIsCacheSafe()
+    {
+        // Test that default key generation works with Worker
+        $job = new RateLimitedEmailJob();
+        $limiter = new Limiter();
+        
+        // Simulate what Worker does: generate default key
+        $config = $job->rateLimit();
+        $key = $config['key'] ?? 'job:' . str_replace('\\', '.', get_class($job));
+        
+        // Key should not contain backslashes
+        $this->assertStringNotContainsString('\\', $key);
+        
+        // Key should contain dots instead
+        $this->assertStringContainsString('.', $key);
+        
+        // Key should start with job: prefix
+        $this->assertStringStartsWith('job:', $key);
+        
+        // Key should work with limiter (no exceptions)
+        $this->assertTrue($limiter->attempt($key, 2, 1));
+        $this->assertTrue($limiter->attempt($key, 2, 1));
+        $this->assertFalse($limiter->attempt($key, 2, 1)); // Third should fail
+    }
 }
