@@ -4,6 +4,7 @@ namespace Lightpack\Jobs;
 
 use Throwable;
 use Lightpack\Container\Container;
+use Lightpack\Utils\Limiter;
 
 class Worker
 {
@@ -48,6 +49,11 @@ class Worker
     protected Container $container;
 
     /**
+     * @var \Lightpack\Utils\Limiter
+     */
+    protected Limiter $limiter;
+
+    /**
      * @var bool
      */
     protected bool $running = true;
@@ -59,6 +65,7 @@ class Worker
         $this->queues = $options['queues'] ?? ['default'];
         $this->cooldown = $options['cooldown'] ?? 0; // 0 means unlimited run time
         $this->container = Container::getInstance();
+        $this->limiter = new Limiter();
         $this->startTime = time();
         $this->registerSignalHandlers();
     }
@@ -103,6 +110,13 @@ class Worker
         $jobHandler = $this->container->resolve($job->handler);
         $jobHandler->setPayload($job->payload);
 
+        // Check rate limit before executing
+        if (!$this->canExecuteJob($jobHandler)) {
+            $this->logJobRateLimited($job);
+            $this->jobEngine->release($job, '+1 second');
+            return;
+        }
+
         try {
             $this->logJobProcessing($job);
             $this->container->call($job->handler, 'run');
@@ -121,6 +135,29 @@ class Worker
 
             $this->logJobFailed($job);
         }
+    }
+
+    /**
+     * Check if the job can be executed based on rate limiting.
+     */
+    protected function canExecuteJob($jobHandler): bool
+    {
+        $config = $jobHandler->rateLimit();
+        
+        // No rate limit configured
+        if ($config === null) {
+            return true;
+        }
+
+        $limit = $config['limit'] ?? null;
+        $seconds = $config['seconds'] ?? 60;
+        $key = $config['key'] ?? 'job:' . get_class($jobHandler);
+
+        if ($limit === null) {
+            return true;
+        }
+
+        return $this->limiter->attempt($key, $limit, $seconds);
     }
 
     /**
@@ -161,6 +198,16 @@ class Worker
         $status .= "\033[34m" . ' #ID: ' . $job->id . "\033[0m" . PHP_EOL;
 
         fputs(STDERR, $status);
+    }
+
+    protected function logJobRateLimited($job)
+    {
+        $status = str_pad('[RATE LIMITED]', 20, '.', STR_PAD_RIGHT);
+        $status = "\033[33m {$status} \033[0m";
+        $status .= $job->handler;
+        $status .= "\033[34m" . ' #ID: ' . $job->id . "\033[0m" . PHP_EOL;
+
+        fputs(STDOUT, $status);
     }
 
     protected function shouldRegisterSignalHandlers()

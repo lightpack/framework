@@ -122,4 +122,21 @@ class Job
     {
         return $this->retryAfter;
     }
+
+    /**
+     * Configure rate limiting for this job.
+     * 
+     * Return an array with 'limit' and 'seconds' keys, or null to disable.
+     * 
+     * Examples:
+     *   return ['limit' => 10, 'seconds' => 1];     // 10 per second
+     *   return ['limit' => 100, 'seconds' => 60];   // 100 per minute
+     *   return null;                                 // No rate limiting
+     * 
+     * @return array|null ['limit' => int, 'seconds' => int, 'key' => string (optional)]
+     */
+    public function rateLimit(): ?array
+    {
+        return null;
+    }
 }
