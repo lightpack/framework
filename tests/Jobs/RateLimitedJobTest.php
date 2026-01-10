@@ -209,4 +209,70 @@ class RateLimitedJobTest extends TestCase
         $this->assertTrue($limiter->attempt($key, 2, 1));
         $this->assertFalse($limiter->attempt($key, 2, 1)); // Third should fail
     }
+
+    public function testRateLimitSupportsMinutes()
+    {
+        $worker = new Worker(['sleep' => 1, 'queues' => ['default']]);
+        $reflection = new \ReflectionClass($worker);
+        $method = $reflection->getMethod('resolveRateLimitWindow');
+        $method->setAccessible(true);
+        
+        $config = ['minutes' => 5];
+        $seconds = $method->invoke($worker, $config);
+        
+        $this->assertEquals(300, $seconds); // 5 * 60
+    }
+
+    public function testRateLimitSupportsHours()
+    {
+        $worker = new Worker(['sleep' => 1, 'queues' => ['default']]);
+        $reflection = new \ReflectionClass($worker);
+        $method = $reflection->getMethod('resolveRateLimitWindow');
+        $method->setAccessible(true);
+        
+        $config = ['hours' => 1];
+        $seconds = $method->invoke($worker, $config);
+        
+        $this->assertEquals(3600, $seconds); // 1 * 3600
+    }
+
+    public function testRateLimitSupportsDays()
+    {
+        $worker = new Worker(['sleep' => 1, 'queues' => ['default']]);
+        $reflection = new \ReflectionClass($worker);
+        $method = $reflection->getMethod('resolveRateLimitWindow');
+        $method->setAccessible(true);
+        
+        $config = ['days' => 1];
+        $seconds = $method->invoke($worker, $config);
+        
+        $this->assertEquals(86400, $seconds); // 1 * 86400
+    }
+
+    public function testRateLimitSecondsTakesPriority()
+    {
+        $worker = new Worker(['sleep' => 1, 'queues' => ['default']]);
+        $reflection = new \ReflectionClass($worker);
+        $method = $reflection->getMethod('resolveRateLimitWindow');
+        $method->setAccessible(true);
+        
+        // When multiple units provided, seconds takes priority
+        $config = ['seconds' => 90, 'minutes' => 5, 'hours' => 1];
+        $seconds = $method->invoke($worker, $config);
+        
+        $this->assertEquals(90, $seconds);
+    }
+
+    public function testRateLimitDefaultsToSixtySeconds()
+    {
+        $worker = new Worker(['sleep' => 1, 'queues' => ['default']]);
+        $reflection = new \ReflectionClass($worker);
+        $method = $reflection->getMethod('resolveRateLimitWindow');
+        $method->setAccessible(true);
+        
+        $config = []; // No time unit specified
+        $seconds = $method->invoke($worker, $config);
+        
+        $this->assertEquals(60, $seconds);
+    }
 }

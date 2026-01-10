@@ -148,7 +148,7 @@ class Worker
         }
 
         $limit = $config['limit'] ?? null;
-        $seconds = $config['seconds'] ?? 60;
+        $seconds = $this->resolveRateLimitWindow($config);
         $key = $config['key'] ?? 'job:' . str_replace('\\', '.', get_class($jobHandler));
 
         if ($limit === null) {
@@ -160,6 +160,33 @@ class Worker
     }
 
     /**
+     * Resolve the rate limit window from config, supporting multiple time units.
+     * 
+     * Supports: seconds, minutes, hours, days
+     * Priority: seconds > minutes > hours > days > default (60 seconds)
+     */
+    protected function resolveRateLimitWindow(array $config): int
+    {
+        if (isset($config['seconds'])) {
+            return (int) $config['seconds'];
+        }
+
+        if (isset($config['minutes'])) {
+            return (int) $config['minutes'] * 60;
+        }
+
+        if (isset($config['hours'])) {
+            return (int) $config['hours'] * 3600;
+        }
+
+        if (isset($config['days'])) {
+            return (int) $config['days'] * 86400;
+        }
+
+        return 60; // Default: 1 minute
+    }
+
+    /**
      * Release a rate-limited job back to the queue.
      * 
      * The job is delayed until the rate limit window expires to avoid
@@ -168,7 +195,7 @@ class Worker
     protected function releaseRateLimitedJob($job, $jobHandler): void
     {
         $config = $jobHandler->rateLimit();
-        $seconds = $config['seconds'] ?? 60;
+        $seconds = $this->resolveRateLimitWindow($config);
         
         $this->logJobRateLimited($job);
         $this->jobEngine->release($job, '+' . $seconds . ' seconds');
