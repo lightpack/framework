@@ -215,43 +215,6 @@ class RedisEngine extends BaseEngine
         $job->attempts = $jobData['attempts'];
     }
 
-    public function releaseWithoutIncrement($job, string $delay = 'now'): void
-    {
-        // Get current job data
-        $jobData = $this->redis->get($this->getJobKey($job->id));
-        
-        if (!$jobData) {
-            return;
-        }
-        
-        // Update job data without incrementing attempts
-        $jobData['status'] = 'new';
-        $jobData['exception'] = null;
-        $jobData['failed_at'] = null;
-        $jobData['scheduled_at'] = (new Moment)->travel($delay);
-        // Note: attempts is NOT incremented
-        
-        // Save updated job
-        $this->redis->set($this->getJobKey($job->id), $jobData);
-        
-        // Add back to queue
-        $this->redis->zAdd(
-            $this->getQueueKey($job->queue),
-            $this->getTimestamp($jobData['scheduled_at']),
-            $job->id
-        );
-        
-        // Remove from failed queue if it was there
-        $this->redis->zRem($this->getFailedQueueKey(), $job->id);
-        
-        // Update the job object for consistency
-        $job->status = 'new';
-        $job->exception = null;
-        $job->failed_at = null;
-        $job->scheduled_at = $jobData['scheduled_at'];
-        // Note: job->attempts stays the same
-    }
-
     /**
      * Get all available queues
      */

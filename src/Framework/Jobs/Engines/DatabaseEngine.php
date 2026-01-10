@@ -58,17 +58,6 @@ class DatabaseEngine extends BaseEngine
         ]);
     }
 
-    public function releaseWithoutIncrement($job, string $delay = 'now'): void
-    {
-        db()->query("UPDATE jobs SET `status` = :status, `exception` = :exception, `failed_at` = :failed_at, `scheduled_at` = :scheduled_at WHERE `id` = :id", [
-            'status' => 'new',
-            'exception' => null,
-            'failed_at' => null,
-            'scheduled_at' => (new Moment)->travel($delay),
-            'id' => $job->id,
-        ]);
-    }
-
     /**
      * Find the next queued job.
      *

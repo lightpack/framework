@@ -49,16 +49,6 @@ abstract class BaseEngine
     abstract public function release($job, string $delay = 'now'): void;
 
     /**
-     * Release the job back into the queue without incrementing attempts.
-     * 
-     * Used for rate-limited jobs where being throttled should not count as a retry attempt.
-     *
-     * @param obj $job
-     * @param string $delay
-     */
-    abstract public function releaseWithoutIncrement($job, string $delay = 'now'): void;
-
-    /**
      * Deserialize the job payload as an array.
      *
      * @param obj $job
