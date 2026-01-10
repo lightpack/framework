@@ -110,10 +110,8 @@ class Worker
         $jobHandler = $this->container->resolve($job->handler);
         $jobHandler->setPayload($job->payload);
 
-        // Check rate limit before executing
-        if (!$this->canExecuteJob($jobHandler)) {
-            $this->logJobRateLimited($job);
-            $this->jobEngine->release($job, '+1 second');
+        if ($this->isRateLimited($jobHandler)) {
+            $this->releaseRateLimitedJob($job, $jobHandler);
             return;
         }
 
@@ -138,15 +136,15 @@ class Worker
     }
 
     /**
-     * Check if the job can be executed based on rate limiting.
+     * Check if the job is rate limited.
      */
-    protected function canExecuteJob($jobHandler): bool
+    protected function isRateLimited($jobHandler): bool
     {
         $config = $jobHandler->rateLimit();
         
         // No rate limit configured
         if ($config === null) {
-            return true;
+            return false;
         }
 
         $limit = $config['limit'] ?? null;
@@ -154,10 +152,26 @@ class Worker
         $key = $config['key'] ?? 'job:' . get_class($jobHandler);
 
         if ($limit === null) {
-            return true;
+            return false;
         }
 
-        return $this->limiter->attempt($key, $limit, $seconds);
+        // Return true if rate limit exceeded (attempt failed)
+        return !$this->limiter->attempt($key, $limit, $seconds);
+    }
+
+    /**
+     * Release a rate-limited job back to the queue.
+     * 
+     * The job is delayed until the rate limit window expires to avoid
+     * repeatedly hitting the rate limit.
+     */
+    protected function releaseRateLimitedJob($job, $jobHandler): void
+    {
+        $config = $jobHandler->rateLimit();
+        $seconds = $config['seconds'] ?? 60;
+        
+        $this->logJobRateLimited($job);
+        $this->jobEngine->release($job, '+' . $seconds . ' seconds');
     }
 
     /**
