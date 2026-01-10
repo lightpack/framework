@@ -149,7 +149,7 @@ class Worker
 
         $limit = $config['limit'] ?? null;
         $seconds = $config['seconds'] ?? 60;
-        $key = $config['key'] ?? 'job:' . get_class($jobHandler);
+        $key = $config['key'] ?? 'job:' . str_replace('\\', '.', get_class($jobHandler));
 
         if ($limit === null) {
             return false;
