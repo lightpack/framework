@@ -31,4 +31,9 @@ class NullEngine extends BaseEngine
     {
         // Do nothing
     }
+
+    public function releaseWithoutIncrement($job, string $delay = 'now'): void
+    {
+        // Do nothing
+    }
 }

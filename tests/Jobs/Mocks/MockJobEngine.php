@@ -66,6 +66,14 @@ class MockJobEngine extends BaseEngine
         $this->jobs[] = $job;
     }
 
+    public function releaseWithoutIncrement($job, string $delay = 'now'): void
+    {
+        $job = (array) $job;
+        $job['delay'] = $delay;
+        // Note: attempts is NOT incremented
+        $this->jobs[] = $job;
+    }
+
     public function getProcessedJobs(): array
     {
         return $this->processedJobs;

@@ -202,7 +202,7 @@ class Worker
         $seconds = $this->resolveRateLimitWindow($config);
         
         $this->logJobRateLimited($job);
-        $this->jobEngine->release($job, '+' . $seconds . ' seconds');
+        $this->jobEngine->releaseWithoutIncrement($job, '+' . $seconds . ' seconds');
     }
 
     /**
