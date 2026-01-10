@@ -79,6 +79,18 @@ class Job
     }
 
     /**
+     * Set the delay for the job.
+     *
+     * @param string $delay 'strtotime' compatible string (e.g., '+30 seconds', '+1 hour')
+     * @return self
+     */
+    public function delay(string $delay): self
+    {
+        $this->delay = $delay;
+        return $this;
+    }
+
+    /**
      * Dispatch the job into the queue.
      *
      * @param array $payload
