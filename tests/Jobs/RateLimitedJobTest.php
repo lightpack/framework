@@ -263,16 +263,17 @@ class RateLimitedJobTest extends TestCase
         $this->assertEquals(90, $seconds);
     }
 
-    public function testRateLimitDefaultsToSixtySeconds()
+    public function testRateLimitThrowsExceptionWhenNoTimeUnit()
     {
         $worker = new Worker(['sleep' => 1, 'queues' => ['default']]);
         $reflection = new \ReflectionClass($worker);
         $method = $reflection->getMethod('resolveRateLimitWindow');
         $method->setAccessible(true);
         
-        $config = []; // No time unit specified
-        $seconds = $method->invoke($worker, $config);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rate limit configuration must specify a time unit');
         
-        $this->assertEquals(60, $seconds);
+        $config = []; // No time unit specified
+        $method->invoke($worker, $config);
     }
 }

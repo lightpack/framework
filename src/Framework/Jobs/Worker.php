@@ -163,7 +163,9 @@ class Worker
      * Resolve the rate limit window from config, supporting multiple time units.
      * 
      * Supports: seconds, minutes, hours, days
-     * Priority: seconds > minutes > hours > days > default (60 seconds)
+     * Priority: seconds > minutes > hours > days
+     * 
+     * @throws \InvalidArgumentException if no time unit is specified
      */
     protected function resolveRateLimitWindow(array $config): int
     {
@@ -183,7 +185,9 @@ class Worker
             return (int) $config['days'] * 86400;
         }
 
-        return 60; // Default: 1 minute
+        throw new \InvalidArgumentException(
+            'Rate limit configuration must specify a time unit: seconds, minutes, hours, or days'
+        );
     }
 
     /**
