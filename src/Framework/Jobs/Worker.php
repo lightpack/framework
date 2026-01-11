@@ -111,7 +111,7 @@ class Worker
         $jobHandler->setPayload($job->payload);
 
         if ($this->isRateLimited($jobHandler)) {
-            $this->releaseRateLimitedJob($job, $jobHandler);
+            $this->handleRateLimitedJob($job, $jobHandler);
             return;
         }
 
@@ -188,6 +188,21 @@ class Worker
         throw new \InvalidArgumentException(
             'Rate limit configuration must specify a time unit: seconds, minutes, hours, or days'
         );
+    }
+
+    /**
+     * Handle a rate-limited job by checking max attempts and either failing or releasing it.
+     */
+    protected function handleRateLimitedJob($job, $jobHandler): void
+    {
+        if ($jobHandler->maxAttempts() <= $job->attempts + 1) {
+            $this->jobEngine->markFailedJob($job, new \RuntimeException('Job exceeded max attempts due to rate limiting'));
+            $this->container->callIf($job->handler, 'onFailure');
+            $this->logJobFailed($job);
+            return;
+        }
+        
+        $this->releaseRateLimitedJob($job, $jobHandler);
     }
 
     /**
