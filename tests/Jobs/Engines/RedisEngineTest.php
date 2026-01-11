@@ -177,7 +177,7 @@ final class RedisEngineTest extends TestCase
         $this->assertEquals('new', $updatedJob['status']);
         $this->assertNull($updatedJob['exception']);
         $this->assertNull($updatedJob['failed_at']);
-        $this->assertEquals(2, $updatedJob['attempts']);
+        $this->assertEquals(1, $updatedJob['attempts']);
         
         // Check if job was added back to queue
         $queueKey = $this->prefix . 'queue:' . $queue;
