@@ -32,7 +32,7 @@ class NullEngine extends BaseEngine
         // Do nothing
     }
 
-    public function retryFailedJobs($jobId = null): int
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
     {
         // No-op: Null engine doesn't persist failed jobs
         return 0;

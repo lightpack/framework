@@ -84,7 +84,7 @@ class MockJobEngine extends BaseEngine
         return $this->failedJobs;
     }
 
-    public function retryFailedJobs($jobId = null): int
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
     {
         // Mock implementation for testing
         if ($jobId !== null) {
@@ -100,12 +100,19 @@ class MockJobEngine extends BaseEngine
             return 0;
         }
         
-        // Retry all failed jobs
-        $count = count($this->failedJobs);
-        foreach ($this->failedJobs as $failedJob) {
+        // Retry all failed jobs (optionally filtered by queue)
+        $count = 0;
+        foreach ($this->failedJobs as $index => $failedJob) {
+            // If queue filter is specified, check if job belongs to that queue
+            if ($queue !== null && $failedJob['job']->queue !== $queue) {
+                continue;
+            }
+            
             $this->jobs[] = (array) $failedJob['job'];
+            unset($this->failedJobs[$index]);
+            $count++;
         }
-        $this->failedJobs = [];
+        $this->failedJobs = array_values($this->failedJobs);
         return $count;
     }
 }

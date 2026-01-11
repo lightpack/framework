@@ -58,7 +58,7 @@ class DatabaseEngine extends BaseEngine
         ]);
     }
 
-    public function retryFailedJobs($jobId = null): int
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
     {
         if ($jobId !== null) {
             // Retry specific job
@@ -69,8 +69,17 @@ class DatabaseEngine extends BaseEngine
             return $result->rowCount();
         }
         
-        // Retry all failed jobs
-        $result = db()->query("UPDATE jobs SET `status` = 'new', `attempts` = 0, `exception` = NULL, `failed_at` = NULL, `scheduled_at` = NOW() WHERE `status` = 'failed'");
+        // Build WHERE clause
+        $where = "`status` = 'failed'";
+        $params = [];
+        
+        if ($queue !== null) {
+            $where .= " AND `queue` = :queue";
+            $params['queue'] = $queue;
+        }
+        
+        // Retry all failed jobs (optionally filtered by queue)
+        $result = db()->query("UPDATE jobs SET `status` = 'new', `attempts` = 0, `exception` = NULL, `failed_at` = NULL, `scheduled_at` = NOW() WHERE {$where}", $params);
         
         return $result->rowCount();
     }

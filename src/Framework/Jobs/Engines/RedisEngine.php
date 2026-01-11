@@ -274,7 +274,7 @@ class RedisEngine extends BaseEngine
     /**
      * Retry failed jobs
      */
-    public function retryFailedJobs($jobId = null): int
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
     {
         $failedKey = $this->getFailedQueueKey();
         
@@ -307,11 +307,21 @@ class RedisEngine extends BaseEngine
             return 1;
         }
         
-        // Retry all failed jobs
+        // Retry all failed jobs (optionally filtered by queue)
         $failedJobIds = $this->redis->zRange($failedKey, 0, -1);
         $count = 0;
         
         foreach ($failedJobIds as $id) {
+            // If queue filter is specified, check if job belongs to that queue
+            if ($queue !== null) {
+                $jobKey = $this->getJobKey($id);
+                $job = $this->redis->get($jobKey);
+                
+                if (!$job || $job['queue'] !== $queue) {
+                    continue;
+                }
+            }
+            
             $count += $this->retryFailedJobs($id);
         }
         

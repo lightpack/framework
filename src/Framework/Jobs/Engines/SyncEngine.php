@@ -36,7 +36,7 @@ class SyncEngine extends BaseEngine
         // No-op: Sync engine doesn't queue jobs
     }
 
-    public function retryFailedJobs($jobId = null): int
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
     {
         // No-op: Sync engine doesn't persist failed jobs
         return 0;
