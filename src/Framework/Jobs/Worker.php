@@ -209,15 +209,36 @@ class Worker
      * Release a rate-limited job back to the queue.
      * 
      * The job is delayed until the rate limit window expires to avoid
-     * repeatedly hitting the rate limit.
+     * repeatedly hitting the rate limit. Jitter is added by default to
+     * prevent thundering herd when multiple jobs retry simultaneously.
      */
     protected function releaseRateLimitedJob($job, $jobHandler): void
     {
         $config = $jobHandler->rateLimit();
         $seconds = $this->resolveRateLimitWindow($config);
+        $jitterPercent = $config['jitter'] ?? 0.2;
+        
+        $delay = $this->calculateDelayWithJitter($seconds, $jitterPercent);
         
         $this->logJobRateLimited($job);
-        $this->jobEngine->release($job, '+' . $seconds . ' seconds');
+        $this->jobEngine->release($job, '+' . $delay . ' seconds');
+    }
+
+    /**
+     * Calculate delay with jitter to prevent thundering herd.
+     * 
+     * @param int $baseDelay Base delay in seconds
+     * @param float $jitterPercent Jitter as percentage of base delay (0-1)
+     * @return int Final delay in seconds
+     */
+    protected function calculateDelayWithJitter(int $baseDelay, float $jitterPercent): int
+    {
+        if ($jitterPercent > 0) {
+            $jitter = rand(0, (int)($baseDelay * $jitterPercent));
+            return $baseDelay + $jitter;
+        }
+        
+        return $baseDelay;
     }
 
     /**
