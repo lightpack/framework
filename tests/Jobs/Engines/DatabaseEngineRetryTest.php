@@ -9,6 +9,7 @@ use Lightpack\Container\Container;
 final class DatabaseEngineRetryTest extends TestCase
 {
     private $db;
+    private $engine;
     
     protected function setUp(): void
     {
@@ -51,6 +52,9 @@ final class DatabaseEngineRetryTest extends TestCase
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ");
+        
+        // Create engine instance
+        $this->engine = new DatabaseEngine();
     }
     
     protected function tearDown(): void
@@ -72,33 +76,26 @@ final class DatabaseEngineRetryTest extends TestCase
         // Clean up
         $this->db->query("DELETE FROM jobs");
         
-        // Add a failed job
-        $this->db->query("INSERT INTO jobs (handler, payload, queue, status, attempts, exception, failed_at, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
-            'TestJob',
-            json_encode(['key' => 'value']),
-            'default',
-            'failed',
-            3,
-            'Test exception',
-            date('Y-m-d H:i:s'),
-            date('Y-m-d H:i:s'),
-        ]);
+        // Add a job using the engine
+        $this->engine->addJob('TestJob', ['key' => 'value'], 'now', 'default');
         
-        $jobId = $this->db->lastInsertId();
+        // Fetch and mark it as failed
+        $job = $this->engine->fetchNextJob();
+        $exception = new \Exception('Test exception');
+        $this->engine->markFailedJob($job, $exception);
         
-        // Retry the job
-        $engine = new DatabaseEngine();
-        $count = $engine->retryFailedJobs($jobId);
+        // Retry the failed job
+        $count = $this->engine->retryFailedJobs($job->id);
         
         $this->assertEquals(1, $count);
         
         // Verify job was reset
-        $job = $this->db->query("SELECT * FROM jobs WHERE id = ?", [$jobId])->fetch(\PDO::FETCH_OBJ);
+        $updatedJob = $this->db->query("SELECT * FROM jobs WHERE id = ?", [$job->id])->fetch(\PDO::FETCH_OBJ);
         
-        $this->assertEquals('new', $job->status);
-        $this->assertEquals(0, $job->attempts);
-        $this->assertNull($job->exception);
-        $this->assertNull($job->failed_at);
+        $this->assertEquals('new', $updatedJob->status);
+        $this->assertEquals(0, $updatedJob->attempts);
+        $this->assertNull($updatedJob->exception);
+        $this->assertNull($updatedJob->failed_at);
     }
     
     public function testCanRetryAllFailedJobs()
@@ -110,23 +107,16 @@ final class DatabaseEngineRetryTest extends TestCase
         // Clean up
         $this->db->query("DELETE FROM jobs");
         
-        // Add multiple failed jobs
+        // Add multiple jobs using the engine and mark them as failed
         for ($i = 0; $i < 3; $i++) {
-            $this->db->query("INSERT INTO jobs (handler, payload, queue, status, attempts, exception, failed_at, scheduled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
-                'TestJob',
-                json_encode(['key' => 'value']),
-                'default',
-                'failed',
-                3,
-                'Test exception',
-                date('Y-m-d H:i:s'),
-                date('Y-m-d H:i:s'),
-            ]);
+            $this->engine->addJob('TestJob', ['key' => 'value' . $i], 'now', 'default');
+            $job = $this->engine->fetchNextJob();
+            $exception = new \Exception('Test exception');
+            $this->engine->markFailedJob($job, $exception);
         }
         
         // Retry all failed jobs
-        $engine = new DatabaseEngine();
-        $count = $engine->retryFailedJobs();
+        $count = $this->engine->retryFailedJobs();
         
         $this->assertEquals(3, $count);
         
@@ -151,8 +141,7 @@ final class DatabaseEngineRetryTest extends TestCase
         // Clean up
         $this->db->query("DELETE FROM jobs");
         
-        $engine = new DatabaseEngine();
-        $count = $engine->retryFailedJobs(99999);
+        $count = $this->engine->retryFailedJobs(99999);
         
         $this->assertEquals(0, $count);
     }
