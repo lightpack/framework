@@ -124,7 +124,8 @@ class Worker
         } catch (Throwable $e) {
             $jobHandler->setException($e);
 
-            if ($jobHandler->maxAttempts() > $job->attempts + 1) {
+            // Release if current attempts is less than max (more attempts available)
+            if ($job->attempts < $jobHandler->maxAttempts()) {
                 $this->jobEngine->release($job, $jobHandler->retryAfter());
             } else {
                 $this->jobEngine->markFailedJob($job, $e);
@@ -195,7 +196,8 @@ class Worker
      */
     protected function handleRateLimitedJob($job, $jobHandler): void
     {
-        if ($jobHandler->maxAttempts() <= $job->attempts + 1) {
+        // if ($jobHandler->maxAttempts() <= $job->attempts + 1) {
+        if ($job->attempts >= $jobHandler->maxAttempts()) {
             $this->jobEngine->markFailedJob($job, new \RuntimeException('Job exceeded max attempts due to rate limiting'));
             $this->container->callIf($job->handler, 'onFailure');
             $this->logJobFailed($job);

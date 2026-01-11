@@ -53,7 +53,7 @@ class DatabaseEngine extends BaseEngine
             'exception' => null,
             'failed_at' => null,
             'scheduled_at' => (new Moment)->travel($delay),
-            'attempts' => $job->attempts + 1,
+            'attempts' => $job->attempts,
             'id' => $job->id,
         ]);
     }
@@ -95,9 +95,11 @@ class DatabaseEngine extends BaseEngine
 
         // If job found, update its status to 'queued'
         if ($job) {
+            $job->attempts++;
+
             db()->query("UPDATE jobs SET `status` = :status, `attempts` = :attempts WHERE id = :id", [
                 'status' => 'queued',
-                'attempts' => $job->attempts + 1,
+                'attempts' => $job->attempts,
                 'id' => $job->id,
             ]);
         }

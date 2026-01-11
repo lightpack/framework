@@ -192,7 +192,7 @@ class RedisEngine extends BaseEngine
         $jobData['exception'] = null;
         $jobData['failed_at'] = null;
         $jobData['scheduled_at'] = (new Moment)->travel($delay);
-        $jobData['attempts'] = $jobData['attempts'] + 1;
+        // $jobData['attempts'] = $jobData['attempts'] + 1;
         
         // Save updated job
         $this->redis->set($this->getJobKey($job->id), $jobData);
