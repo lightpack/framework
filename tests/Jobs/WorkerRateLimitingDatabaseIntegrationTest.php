@@ -11,10 +11,10 @@ use Lightpack\Jobs\Engines\DatabaseEngine;
 use Lightpack\Container\Container;
 
 /**
- * Integration test for Worker rate limiting functionality.
+ * Integration test for Worker rate limiting functionality with DatabaseEngine.
  * Tests the full flow: Engine → Worker → Limiter → Rate Limited → Release
  */
-final class WorkerRateLimitingIntegrationTest extends TestCase
+final class WorkerRateLimitingDatabaseIntegrationTest extends TestCase
 {
     private $db;
     private $engine;
@@ -248,7 +248,7 @@ class TestRateLimitedJob extends Job
 
     public function run()
     {
-        WorkerRateLimitingIntegrationTest::logExecution($this->payload['id']);
+        WorkerRateLimitingDatabaseIntegrationTest::logExecution($this->payload['id']);
     }
 }
 
@@ -270,7 +270,7 @@ class TestStrictRateLimitedJob extends Job
 
     public function run()
     {
-        WorkerRateLimitingIntegrationTest::logExecution($this->payload['id']);
+        WorkerRateLimitingDatabaseIntegrationTest::logExecution($this->payload['id']);
     }
 }
 
