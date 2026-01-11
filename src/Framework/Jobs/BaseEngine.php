@@ -49,6 +49,14 @@ abstract class BaseEngine
     abstract public function release($job, string $delay = 'now'): void;
 
     /**
+     * Retry failed jobs.
+     *
+     * @param int|string|null $jobId Specific job ID to retry, or null for all
+     * @return int Number of jobs retried
+     */
+    abstract public function retryFailedJobs($jobId = null): int;
+
+    /**
      * Deserialize the job payload as an array.
      *
      * @param obj $job

@@ -270,4 +270,51 @@ class RedisEngine extends BaseEngine
     {
         return strtotime($date);
     }
+
+    /**
+     * Retry failed jobs
+     */
+    public function retryFailedJobs($jobId = null): int
+    {
+        $failedKey = $this->getFailedQueueKey();
+        
+        if ($jobId !== null) {
+            // Retry specific job
+            $jobKey = $this->getJobKey($jobId);
+            $job = $this->redis->get($jobKey);
+            
+            if (!$job || $job['status'] !== 'failed') {
+                return 0;
+            }
+            
+            // Reset job data
+            $job['status'] = 'new';
+            $job['attempts'] = 0;
+            $job['exception'] = null;
+            $job['failed_at'] = null;
+            $job['scheduled_at'] = (new Moment)->now();
+            
+            // Save updated job
+            $this->redis->set($jobKey, $job);
+            
+            // Remove from failed queue
+            $this->redis->zRem($failedKey, $jobId);
+            
+            // Add back to queue
+            $queueKey = $this->getQueueKey($job['queue']);
+            $this->redis->zAdd($queueKey, time(), $jobId);
+            
+            return 1;
+        }
+        
+        // Retry all failed jobs
+        $failedJobIds = $this->redis->zRange($failedKey, 0, -1);
+        $count = 0;
+        
+        foreach ($failedJobIds as $id) {
+            $count += $this->retryFailedJobs($id);
+        }
+        
+        return $count;
+    }
 }

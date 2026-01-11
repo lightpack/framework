@@ -58,6 +58,23 @@ class DatabaseEngine extends BaseEngine
         ]);
     }
 
+    public function retryFailedJobs($jobId = null): int
+    {
+        if ($jobId !== null) {
+            // Retry specific job
+            $result = db()->query("UPDATE jobs SET `status` = 'new', `attempts` = 0, `exception` = NULL, `failed_at` = NULL, `scheduled_at` = NOW() WHERE `id` = :id AND `status` = 'failed'", [
+                'id' => $jobId,
+            ]);
+            
+            return $result->rowCount();
+        }
+        
+        // Retry all failed jobs
+        $result = db()->query("UPDATE jobs SET `status` = 'new', `attempts` = 0, `exception` = NULL, `failed_at` = NULL, `scheduled_at` = NOW() WHERE `status` = 'failed'");
+        
+        return $result->rowCount();
+    }
+
     /**
      * Find the next queued job.
      *

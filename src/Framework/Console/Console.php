@@ -26,6 +26,7 @@ use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ScheduleEvents;
 use Lightpack\Console\Commands\ServeCommand;
 use Lightpack\Console\Commands\WatchCommand;
+use Lightpack\Console\Commands\RetryFailedJobs;
 
 class Console
 {
@@ -44,7 +45,8 @@ class Console
         'migrate:up' => RunMigrationUp::class,
         'migrate:down' => RunMigrationDown::class,
         'create:request' => CreateRequest::class,
-        'process:jobs' => ProcessJobs::class,
+        'process:jobs' => ProcessJobs::class, // deprecated, use jobs:run instead
+        'jobs:run' => ProcessJobs::class,
         'create:job' => CreateJob::class,
         'create:mail' => CreateMail::class,
         'create:seeder' => CreateSeeder::class,
@@ -54,6 +56,7 @@ class Console
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,
+        'jobs:retry' => RetryFailedJobs::class,
     ];
 
     public static function register(string $command, ICommand $handler)
