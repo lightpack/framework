@@ -5,6 +5,7 @@ namespace Lightpack\Jobs;
 use Throwable;
 use Lightpack\Container\Container;
 use Lightpack\Utils\Limiter;
+use Lightpack\Jobs\Exceptions\PermanentJobFailureException;
 
 class Worker
 {
@@ -121,7 +122,14 @@ class Worker
             $this->jobEngine->deleteJob($job);
             $this->container->callIf($job->handler, 'onSuccess');
             $this->logJobProcessed($job);
+        } catch (PermanentJobFailureException $e) {
+            // Permanent failure - don't retry regardless of attempts remaining
+            $jobHandler->setException($e);
+            $this->jobEngine->markFailedJob($job, $e);
+            $this->container->callIf($job->handler, 'onFailure');
+            $this->logJobFailed($job);
         } catch (Throwable $e) {
+            // Temporary failure - retry if attempts remaining
             $jobHandler->setException($e);
 
             // Release if current attempts is less than max (more attempts available)
