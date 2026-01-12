@@ -151,4 +151,31 @@ class Job
     {
         return null;
     }
+
+    /**
+     * Fail the job permanently without retrying.
+     * 
+     * Use this for business logic failures where retrying won't help:
+     * - Invalid data that won't change
+     * - Insufficient balance/credits
+     * - Resource not found (deleted user, etc.)
+     * - Permission denied
+     * 
+     * The job will be marked as failed immediately without consuming retry attempts.
+     * 
+     * Example:
+     * ```php
+     * if ($response['status'] === 'insufficient_balance') {
+     *     $this->failPermanently('SMS Provider: Insufficient balance');
+     * }
+     * ```
+     * 
+     * @param string $reason The reason for permanent failure
+     * @return never
+     * @throws \Lightpack\Jobs\Exceptions\PermanentJobFailureException
+     */
+    protected function failPermanently(string $reason): never
+    {
+        throw new \Lightpack\Jobs\Exceptions\PermanentJobFailureException($reason);
+    }
 }
