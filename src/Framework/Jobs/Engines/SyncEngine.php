@@ -33,6 +33,12 @@ class SyncEngine extends BaseEngine
 
     public function release($job, string $delay = 'now'): void
     {
-        // Do nothing
+        // No-op: Sync engine doesn't queue jobs
+    }
+
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
+    {
+        // No-op: Sync engine doesn't persist failed jobs
+        return 0;
     }
 }

@@ -21,9 +21,9 @@ class FailingMockJob extends Job
         }
     }
 
-    public function onFailure(\Throwable $e)
+    public function onFailure()
     {
-        // Failure callback
+        // Failure callback - exception is available via $this->exception
     }
 
     public function maxAttempts(): int

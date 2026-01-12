@@ -35,6 +35,9 @@ class MockJobEngine extends BaseEngine
                     continue;
                 }
                 
+                // Increment attempts when fetching (like real engines)
+                $job['attempts']++;
+                
                 unset($this->jobs[$index]);
                 $this->jobs = array_values($this->jobs);
                 $this->processedJobs[] = $job;
@@ -62,7 +65,7 @@ class MockJobEngine extends BaseEngine
     {
         $job = (array) $job;
         $job['delay'] = $delay;
-        $job['attempts']++;
+        // Don't increment attempts here - fetchNextJob() already did it
         $this->jobs[] = $job;
     }
 
@@ -79,5 +82,37 @@ class MockJobEngine extends BaseEngine
     public function getFailedJobs(): array
     {
         return $this->failedJobs;
+    }
+
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
+    {
+        // Mock implementation for testing
+        if ($jobId !== null) {
+            // Retry specific job
+            foreach ($this->failedJobs as $index => $failedJob) {
+                if ($failedJob['job']->id === $jobId) {
+                    $this->jobs[] = (array) $failedJob['job'];
+                    unset($this->failedJobs[$index]);
+                    $this->failedJobs = array_values($this->failedJobs);
+                    return 1;
+                }
+            }
+            return 0;
+        }
+        
+        // Retry all failed jobs (optionally filtered by queue)
+        $count = 0;
+        foreach ($this->failedJobs as $index => $failedJob) {
+            // If queue filter is specified, check if job belongs to that queue
+            if ($queue !== null && $failedJob['job']->queue !== $queue) {
+                continue;
+            }
+            
+            $this->jobs[] = (array) $failedJob['job'];
+            unset($this->failedJobs[$index]);
+            $count++;
+        }
+        $this->failedJobs = array_values($this->failedJobs);
+        return $count;
     }
 }

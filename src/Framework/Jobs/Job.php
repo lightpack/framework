@@ -79,6 +79,18 @@ class Job
     }
 
     /**
+     * Set the delay for the job.
+     *
+     * @param string $delay 'strtotime' compatible string (e.g., '+30 seconds', '+1 hour')
+     * @return self
+     */
+    public function delay(string $delay): self
+    {
+        $this->delay = $delay;
+        return $this;
+    }
+
+    /**
      * Dispatch the job into the queue.
      *
      * @param array $payload
@@ -121,5 +133,22 @@ class Job
     public function retryAfter(): string
     {
         return $this->retryAfter;
+    }
+
+    /**
+     * Configure rate limiting for this job.
+     * 
+     * Return an array with 'limit' and 'seconds' keys, or null to disable.
+     * 
+     * Examples:
+     *   return ['limit' => 10, 'seconds' => 1];     // 10 per second
+     *   return ['limit' => 100, 'seconds' => 60];   // 100 per minute
+     *   return null;                                 // No rate limiting
+     * 
+     * @return array|null ['limit' => int, 'seconds' => int, 'key' => string (optional)]
+     */
+    public function rateLimit(): ?array
+    {
+        return null;
     }
 }

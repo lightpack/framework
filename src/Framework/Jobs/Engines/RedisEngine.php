@@ -192,7 +192,7 @@ class RedisEngine extends BaseEngine
         $jobData['exception'] = null;
         $jobData['failed_at'] = null;
         $jobData['scheduled_at'] = (new Moment)->travel($delay);
-        $jobData['attempts'] = $jobData['attempts'] + 1;
+        // $jobData['attempts'] = $jobData['attempts'] + 1;
         
         // Save updated job
         $this->redis->set($this->getJobKey($job->id), $jobData);
@@ -214,7 +214,7 @@ class RedisEngine extends BaseEngine
         $job->scheduled_at = $jobData['scheduled_at'];
         $job->attempts = $jobData['attempts'];
     }
-    
+
     /**
      * Get all available queues
      */
@@ -269,5 +269,62 @@ class RedisEngine extends BaseEngine
     protected function getTimestamp(string $date): int
     {
         return strtotime($date);
+    }
+
+    /**
+     * Retry failed jobs
+     */
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
+    {
+        $failedKey = $this->getFailedQueueKey();
+        
+        if ($jobId !== null) {
+            // Retry specific job
+            $jobKey = $this->getJobKey($jobId);
+            $job = $this->redis->get($jobKey);
+            
+            if (!$job || $job['status'] !== 'failed') {
+                return 0;
+            }
+            
+            // Reset job data
+            $job['status'] = 'new';
+            $job['attempts'] = 0;
+            $job['exception'] = null;
+            $job['failed_at'] = null;
+            $job['scheduled_at'] = (new Moment)->now();
+            
+            // Save updated job
+            $this->redis->set($jobKey, $job);
+            
+            // Remove from failed queue
+            $this->redis->zRem($failedKey, $jobId);
+            
+            // Add back to queue
+            $queueKey = $this->getQueueKey($job['queue']);
+            $this->redis->zAdd($queueKey, time(), $jobId);
+            
+            return 1;
+        }
+        
+        // Retry all failed jobs (optionally filtered by queue)
+        $failedJobIds = $this->redis->zRange($failedKey, 0, -1);
+        $count = 0;
+        
+        foreach ($failedJobIds as $id) {
+            // If queue filter is specified, check if job belongs to that queue
+            if ($queue !== null) {
+                $jobKey = $this->getJobKey($id);
+                $job = $this->redis->get($jobKey);
+                
+                if (!$job || $job['queue'] !== $queue) {
+                    continue;
+                }
+            }
+            
+            $count += $this->retryFailedJobs($id);
+        }
+        
+        return $count;
     }
 }

@@ -53,9 +53,35 @@ class DatabaseEngine extends BaseEngine
             'exception' => null,
             'failed_at' => null,
             'scheduled_at' => (new Moment)->travel($delay),
-            'attempts' => $job->attempts + 1,
+            'attempts' => $job->attempts,
             'id' => $job->id,
         ]);
+    }
+
+    public function retryFailedJobs($jobId = null, ?string $queue = null): int
+    {
+        if ($jobId !== null) {
+            // Retry specific job
+            $result = db()->query("UPDATE jobs SET `status` = 'new', `attempts` = 0, `exception` = NULL, `failed_at` = NULL, `scheduled_at` = NOW() WHERE `id` = :id AND `status` = 'failed'", [
+                'id' => $jobId,
+            ]);
+            
+            return $result->rowCount();
+        }
+        
+        // Build WHERE clause
+        $where = "`status` = 'failed'";
+        $params = [];
+        
+        if ($queue !== null) {
+            $where .= " AND `queue` = :queue";
+            $params['queue'] = $queue;
+        }
+        
+        // Retry all failed jobs (optionally filtered by queue)
+        $result = db()->query("UPDATE jobs SET `status` = 'new', `attempts` = 0, `exception` = NULL, `failed_at` = NULL, `scheduled_at` = NOW() WHERE {$where}", $params);
+        
+        return $result->rowCount();
     }
 
     /**
@@ -78,9 +104,11 @@ class DatabaseEngine extends BaseEngine
 
         // If job found, update its status to 'queued'
         if ($job) {
+            $job->attempts++;
+
             db()->query("UPDATE jobs SET `status` = :status, `attempts` = :attempts WHERE id = :id", [
                 'status' => 'queued',
-                'attempts' => $job->attempts + 1,
+                'attempts' => $job->attempts,
                 'id' => $job->id,
             ]);
         }

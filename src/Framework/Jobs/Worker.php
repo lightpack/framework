@@ -4,6 +4,7 @@ namespace Lightpack\Jobs;
 
 use Throwable;
 use Lightpack\Container\Container;
+use Lightpack\Utils\Limiter;
 
 class Worker
 {
@@ -48,6 +49,11 @@ class Worker
     protected Container $container;
 
     /**
+     * @var \Lightpack\Utils\Limiter
+     */
+    protected Limiter $limiter;
+
+    /**
      * @var bool
      */
     protected bool $running = true;
@@ -59,6 +65,7 @@ class Worker
         $this->queues = $options['queues'] ?? ['default'];
         $this->cooldown = $options['cooldown'] ?? 0; // 0 means unlimited run time
         $this->container = Container::getInstance();
+        $this->limiter = new Limiter();
         $this->startTime = time();
         $this->registerSignalHandlers();
     }
@@ -103,6 +110,11 @@ class Worker
         $jobHandler = $this->container->resolve($job->handler);
         $jobHandler->setPayload($job->payload);
 
+        if ($this->isRateLimited($jobHandler)) {
+            $this->handleRateLimitedJob($job, $jobHandler);
+            return;
+        }
+
         try {
             $this->logJobProcessing($job);
             $this->container->call($job->handler, 'run');
@@ -112,7 +124,8 @@ class Worker
         } catch (Throwable $e) {
             $jobHandler->setException($e);
 
-            if ($jobHandler->maxAttempts() > $job->attempts + 1) {
+            // Release if current attempts is less than max (more attempts available)
+            if ($job->attempts < $jobHandler->maxAttempts()) {
                 $this->jobEngine->release($job, $jobHandler->retryAfter());
             } else {
                 $this->jobEngine->markFailedJob($job, $e);
@@ -121,6 +134,113 @@ class Worker
 
             $this->logJobFailed($job);
         }
+    }
+
+    /**
+     * Check if the job is rate limited.
+     */
+    protected function isRateLimited($jobHandler): bool
+    {
+        $config = $jobHandler->rateLimit();
+        
+        // No rate limit configured
+        if ($config === null) {
+            return false;
+        }
+
+        $limit = $config['limit'] ?? null;
+        $seconds = $this->resolveRateLimitWindow($config);
+        $key = $config['key'] ?? 'job:' . str_replace('\\', '.', get_class($jobHandler));
+
+        if ($limit === null) {
+            return false;
+        }
+
+        // Return true if rate limit exceeded (attempt failed)
+        return !$this->limiter->attempt($key, $limit, $seconds);
+    }
+
+    /**
+     * Resolve the rate limit window from config, supporting multiple time units.
+     * 
+     * Supports: seconds, minutes, hours, days
+     * Priority: seconds > minutes > hours > days
+     * 
+     * @throws \InvalidArgumentException if no time unit is specified
+     */
+    protected function resolveRateLimitWindow(array $config): int
+    {
+        if (isset($config['seconds'])) {
+            return (int) $config['seconds'];
+        }
+
+        if (isset($config['minutes'])) {
+            return (int) $config['minutes'] * 60;
+        }
+
+        if (isset($config['hours'])) {
+            return (int) $config['hours'] * 3600;
+        }
+
+        if (isset($config['days'])) {
+            return (int) $config['days'] * 86400;
+        }
+
+        throw new \InvalidArgumentException(
+            'Rate limit configuration must specify a time unit: seconds, minutes, hours, or days'
+        );
+    }
+
+    /**
+     * Handle a rate-limited job by checking max attempts and either failing or releasing it.
+     */
+    protected function handleRateLimitedJob($job, $jobHandler): void
+    {
+        // if ($jobHandler->maxAttempts() <= $job->attempts + 1) {
+        if ($job->attempts >= $jobHandler->maxAttempts()) {
+            $this->jobEngine->markFailedJob($job, new \RuntimeException('Job exceeded max attempts due to rate limiting'));
+            $this->container->callIf($job->handler, 'onFailure');
+            $this->logJobFailed($job);
+            return;
+        }
+        
+        $this->releaseRateLimitedJob($job, $jobHandler);
+    }
+
+    /**
+     * Release a rate-limited job back to the queue.
+     * 
+     * The job is delayed until the rate limit window expires to avoid
+     * repeatedly hitting the rate limit. Jitter is added by default to
+     * prevent thundering herd when multiple jobs retry simultaneously.
+     */
+    protected function releaseRateLimitedJob($job, $jobHandler): void
+    {
+        $config = $jobHandler->rateLimit();
+        $seconds = $this->resolveRateLimitWindow($config);
+        $jitterPercent = $config['jitter'] ?? 0.2;
+        
+        $delay = $this->calculateDelayWithJitter($seconds, $jitterPercent);
+        
+        $this->logJobRateLimited($job);
+        $this->jobEngine->release($job, '+' . $delay . ' seconds');
+    }
+
+    /**
+     * Calculate delay with jitter to prevent thundering herd.
+     * 
+     * @param int $baseDelay Base delay in seconds
+     * @param float $jitterPercent Jitter as percentage of base delay (0-1)
+     * @return int Final delay in seconds
+     */
+    protected function calculateDelayWithJitter(int $baseDelay, float $jitterPercent): int
+    {
+        if ($jitterPercent > 0) {
+            $jitter = rand(0, (int)($baseDelay * $jitterPercent));
+            return $baseDelay + $jitter;
+        }
+        
+        return $baseDelay;
     }
 
     /**
@@ -161,6 +281,16 @@ class Worker
         $status .= "\033[34m" . ' #ID: ' . $job->id . "\033[0m" . PHP_EOL;
 
         fputs(STDERR, $status);
+    }
+
+    protected function logJobRateLimited($job)
+    {
+        $status = str_pad('[RATE LIMITED]', 20, '.', STR_PAD_RIGHT);
+        $status = "\033[33m {$status} \033[0m";
+        $status .= $job->handler;
+        $status .= "\033[34m" . ' #ID: ' . $job->id . "\033[0m" . PHP_EOL;
+
+        fputs(STDOUT, $status);
     }
 
     protected function shouldRegisterSignalHandlers()
