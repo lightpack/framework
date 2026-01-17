@@ -134,7 +134,7 @@ class AuthManager
 
         $this->populateSession();
 
-        if (request()->input('remember_token')) {
+        if (request()->input('remember')) {
             // Duration in minutes (default: 30 days)
             $duration = $this->normalizedConfig['remember_duration'] ?? (60 * 24 * 30);
             cookie()->set('remember_token', self::$identity->getRememberToken(), $duration);
@@ -160,7 +160,7 @@ class AuthManager
     {
         $fields['last_login_at'] = date('Y-m-d H:i:s');
 
-        if (request()->input('remember_token')) {
+        if (request()->input('remember')) {
             $fields['remember_token'] = $this->generateRememberToken();
         }
 

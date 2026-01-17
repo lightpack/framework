@@ -783,7 +783,7 @@ final class AuthIntegrationTest extends TestCase
                });
         $this->container->instance('cookie', $cookie);
         
-        // Mock request with credentials AND remember_token checkbox
+        // Mock request with credentials AND remember checkbox
         $request = $this->createMock(Request::class);
         $request->expects($this->any())
                 ->method('input')
@@ -792,10 +792,10 @@ final class AuthIntegrationTest extends TestCase
                         return [
                             'email' => 'user@example.com',
                             'password' => 'password123',
-                            'remember_token' => '1',
+                            'remember' => '1',
                         ];
                     }
-                    if ($key === 'remember_token') {
+                    if ($key === 'remember') {
                         return '1';
                     }
                     return null;
@@ -839,10 +839,10 @@ final class AuthIntegrationTest extends TestCase
                         return [
                             'email' => 'user@example.com',
                             'password' => 'password123',
-                            'remember_token' => '1',
+                            'remember' => '1',
                         ];
                     }
-                    if ($key === 'remember_token') {
+                    if ($key === 'remember') {
                         return '1';
                     }
                     return null;
