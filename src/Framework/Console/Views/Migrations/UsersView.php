@@ -43,14 +43,14 @@ return new class extends Migration
             $table->id();
             $table->column('user_id')->type('BIGINT')->attribute('UNSIGNED');
             $table->varchar('name', 55);
-            $table->varchar('token', 100);
+            $table->varchar('token', 100)->unique();
             $table->text('abilities')->nullable();
             $table->datetime('last_used_at')->nullable();
             $table->datetime('expires_at')->nullable();
             $table->timestamps();
 
             $table->foreignKey('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->index(['user_id', 'token']);
+            $table->index('user_id');
         });
     }
 

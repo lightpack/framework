@@ -9,12 +9,10 @@ class CookieAuthenticator extends AbstractAuthenticator
 {
     public function verify(): ?Identity
     {
-        $rememberTokenField = $this->config['fields.remember_token'];
-
-        if (!cookie()->has($rememberTokenField)) {
+        if (!cookie()->has('remember_token')) {
             return null;
         }
-        $cookieFragments =  explode('|', cookie()->get($rememberTokenField) ?? '');
+        $cookieFragments =  explode('|', cookie()->get('remember_token') ?? '');
 
         if (count($cookieFragments) !== 2) {
             return null;

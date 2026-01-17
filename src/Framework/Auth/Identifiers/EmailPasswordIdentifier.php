@@ -6,7 +6,7 @@ use Lightpack\Auth\Identifier;
 use Lightpack\Auth\Identity;
 use Lightpack\Auth\Models\AuthUser;
 
-class DefaultIdentifier implements Identifier
+class EmailPasswordIdentifier implements Identifier
 {
     public function __construct(protected AuthUser $user)
     {

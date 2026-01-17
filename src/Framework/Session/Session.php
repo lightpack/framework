@@ -122,6 +122,26 @@ class Session
         $this->driver->set('_user_agent', $agent);
     }
 
+    public function setIntendedUrl(string $url): void
+    {
+        $this->set('_intended_url', $url);
+    }
+
+    public function getIntendedUrl(?string $default = null): ?string
+    {
+        return $this->get('_intended_url', $default);
+    }
+
+    public function hasIntendedUrl(): bool
+    {
+        return $this->has('_intended_url');
+    }
+
+    public function forgetIntendedUrl(): void
+    {
+        $this->delete('_intended_url');
+    }
+
     /**
      * Check if key uses dot notation
      */

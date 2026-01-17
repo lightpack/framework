@@ -50,16 +50,24 @@ class Redirect extends Response
             ->setHeader('Location', $url);
     }
 
-    public function intended(): self
+    public function intended(string $default = '/'): self
     {
-        $url = $this->session->get('_intended_url', '/');
-
-        $this->session->delete('_intended_url');
+        $url = $this->session->getIntendedUrl($default);
+        $this->session->forgetIntendedUrl();
 
         return $this->setRedirectUrl($url)
             ->setStatus(302)
             ->setMessage('Found')
             ->setHeader('Location', $url);
+    }
+
+    public function intendedRoute(string $name, ...$params): self
+    {
+        if (!$this->session->hasIntendedUrl()) {
+            return $this->route($name, ...$params);
+        }
+        
+        return $this->intended();
     }
 
     public function refresh(): self

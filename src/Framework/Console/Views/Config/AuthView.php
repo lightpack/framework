@@ -12,21 +12,27 @@ class AuthView
 return [
     'auth' => [
         'drivers' => [
+            /**
+             * Default authentication driver based on email/password credentials.
+             */ 
             'default' => [
                 'model' => App\Models\User::class,
-                'identifier' => Lightpack\Auth\Identifiers\DefaultIdentifier::class,
-                'login.url' => 'login',
-                'logout.url' => 'logout',
-                'login.redirect' => 'dashboard',
-                'logout.redirect' => 'login',
-                'fields.id' => 'id',
-                'fields.username' => 'email',
-                'fields.password' => 'password',
-                'fields.remember_token' => 'remember_token',
-                'fields.last_login_at' => 'last_login_at',
+                'identifier' => Lightpack\Auth\Identifiers\EmailPasswordIdentifier::class,
                 'remember_duration' => 60 * 24 * 30, // 30 days in minutes
-                'flash_error' => 'Invalid account credentials.',
             ],
+            // add custom drivers here
+        ],
+
+        'routes' => [
+            /**
+             * Where to redirect unauthenticated users (used by 'auth' filter)
+             */
+            'guest' => 'login',
+
+            /**
+             * Where to redirect authenticated users from guest-only routes (used by 'guest' filter)
+             */
+            'authenticated' => 'dashboard',
         ],
     ],
 ];

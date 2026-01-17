@@ -107,18 +107,9 @@ final class AuthIntegrationTest extends TestCase
         // Auth configuration
         $this->authConfig = [
             'default' => [
-                'identifier' => \Lightpack\Auth\Identifiers\DefaultIdentifier::class,
+                'identifier' => \Lightpack\Auth\Identifiers\EmailPasswordIdentifier::class,
                 'model' => AuthUser::class,
-                'fields.identity' => 'email',
-                'fields.password' => 'password',
-                'fields.remember_token' => 'remember_token',
-                'fields.last_login_at' => 'last_login_at',
-                'login.url' => '/login',
-                'logout.url' => '/logout',
-                'home.url' => '/home',
-                'login.redirect' => '/dashboard',
-                'logout.redirect' => '/login',
-                'flash_error' => 'Invalid credentials',
+                'remember_duration' => 60 * 24 * 30,
             ],
         ];
         
@@ -192,7 +183,7 @@ final class AuthIntegrationTest extends TestCase
     // GUEST USER TESTS
     // ========================================
 
-    public function test_guest_user_is_recognized()
+    public function testGuestUserIsRecognized()
     {
         $this->assertTrue($this->auth->isGuest());
         $this->assertFalse($this->auth->isLoggedIn());
@@ -200,7 +191,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($this->auth->id());
     }
 
-    public function test_guest_user_has_no_session_data()
+    public function testGuestUserHasNoSessionData()
     {
         $this->assertFalse($this->session->has('_logged_in'));
         $this->assertFalse($this->session->has('_auth_id'));
@@ -210,7 +201,7 @@ final class AuthIntegrationTest extends TestCase
     // LOGIN AS TESTS (Direct Login)
     // ========================================
 
-    public function test_can_login_as_user()
+    public function testCanLoginAsUser()
     {
         $user = $this->createTestUser();
         
@@ -222,7 +213,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($user->id, $this->auth->id());
     }
 
-    public function test_login_as_creates_session()
+    public function testLoginAsCreatesSession()
     {
         $user = $this->createTestUser();
         
@@ -232,7 +223,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($user->id, $this->session->get('_auth_id'));
     }
 
-    public function test_login_as_updates_last_login_timestamp()
+    public function testLoginAsUpdatesLastLoginTimestamp()
     {
         $user = $this->createTestUser();
         $beforeLogin = $user->last_login_at;
@@ -245,7 +236,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNotEquals($beforeLogin, $user->last_login_at);
     }
 
-    public function test_login_as_returns_auth_instance_for_chaining()
+    public function testLoginAsReturnsAuthInstanceForChaining()
     {
         $user = $this->createTestUser();
         
@@ -254,7 +245,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertInstanceOf(Auth::class, $result);
     }
 
-    public function test_can_retrieve_logged_in_user()
+    public function testCanRetrieveLoggedInUser()
     {
         $user = $this->createTestUser('john@example.com');
         
@@ -270,7 +261,7 @@ final class AuthIntegrationTest extends TestCase
     // LOGOUT TESTS
     // ========================================
 
-    public function test_can_logout_user()
+    public function testCanLogoutUser()
     {
         $user = $this->createTestUser();
         $this->auth->loginAs($user);
@@ -283,7 +274,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($this->auth->user());
     }
 
-    public function test_logout_destroys_session()
+    public function testLogoutDestroysSession()
     {
         $user = $this->createTestUser();
         $this->auth->loginAs($user);
@@ -294,21 +285,11 @@ final class AuthIntegrationTest extends TestCase
         $this->assertFalse($this->session->has('_auth_id'));
     }
 
-    public function test_logout_returns_redirect()
-    {
-        $user = $this->createTestUser();
-        $this->auth->loginAs($user);
-        
-        $result = $this->auth->logout();
-        
-        $this->assertInstanceOf(Redirect::class, $result);
-    }
-
     // ========================================
     // FORM AUTHENTICATION TESTS
     // ========================================
 
-    public function test_can_authenticate_with_valid_credentials()
+    public function testCanAuthenticateWithValidCredentials()
     {
         $user = $this->createTestUser('user@example.com', 'secret123');
         
@@ -326,7 +307,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($user->id, $authenticatedUser->getId());
     }
 
-    public function test_cannot_authenticate_with_invalid_email()
+    public function testCannotAuthenticateWithInvalidEmail()
     {
         $this->createTestUser('user@example.com', 'secret123');
         
@@ -342,7 +323,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function test_cannot_authenticate_with_invalid_password()
+    public function testCannotAuthenticateWithInvalidPassword()
     {
         $this->createTestUser('user@example.com', 'secret123');
         
@@ -358,7 +339,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function test_cannot_authenticate_with_empty_credentials()
+    public function testCannotAuthenticateWithEmptyCredentials()
     {
         $this->createTestUser();
         
@@ -371,7 +352,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function test_successful_authentication_updates_last_login()
+    public function testSuccessfulAuthenticationUpdatesLastLogin()
     {
         $user = $this->createTestUser('user@example.com', 'secret123');
         
@@ -393,7 +374,7 @@ final class AuthIntegrationTest extends TestCase
     // BEARER TOKEN AUTHENTICATION TESTS
     // ========================================
 
-    public function test_can_authenticate_via_valid_bearer_token()
+    public function testCanAuthenticateViaValidBearerToken()
     {
         $user = $this->createTestUser();
         $accessToken = $user->createToken('test-token');
@@ -410,7 +391,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($user->id, $authenticatedUser->getId());
     }
 
-    public function test_cannot_authenticate_via_invalid_bearer_token()
+    public function testCannotAuthenticateViaInvalidBearerToken()
     {
         $this->createTestUser();
         
@@ -423,7 +404,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function test_cannot_authenticate_without_bearer_token()
+    public function testCannotAuthenticateWithoutBearerToken()
     {
         $this->createTestUser();
         
@@ -436,7 +417,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function test_bearer_authentication_updates_last_used_timestamp()
+    public function testBearerAuthenticationUpdatesLastUsedTimestamp()
     {
         $user = $this->createTestUser();
         $accessToken = $user->createToken('test-token');
@@ -455,7 +436,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNotNull($accessToken->last_used_at);
     }
 
-    public function test_bearer_authentication_updates_user_last_login()
+    public function testBearerAuthenticationUpdatesUserLastLogin()
     {
         $user = $this->createTestUser();
         $accessToken = $user->createToken('test-token');
@@ -472,7 +453,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNotNull($user->last_login_at);
     }
 
-    public function test_cannot_authenticate_with_expired_token()
+    public function testCannotAuthenticateWithExpiredToken()
     {
         $user = $this->createTestUser();
         $accessToken = $user->createToken('test-token', ['*'], date('Y-m-d H:i:s', strtotime('-1 hour')));
@@ -491,7 +472,7 @@ final class AuthIntegrationTest extends TestCase
     // ACCESS TOKEN TESTS
     // ========================================
 
-    public function test_user_can_create_access_token()
+    public function testUserCanCreateAccessToken()
     {
         $user = $this->createTestUser();
         
@@ -503,7 +484,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNotNull($token->plainTextToken);
     }
 
-    public function test_created_token_has_hashed_value_in_database()
+    public function testCreatedTokenHasHashedValueInDatabase()
     {
         $user = $this->createTestUser();
         
@@ -516,7 +497,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals(hash('sha256', $plainToken), $dbToken->token);
     }
 
-    public function test_user_can_create_token_with_abilities()
+    public function testUserCanCreateTokenWithAbilities()
     {
         $user = $this->createTestUser();
         
@@ -530,7 +511,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertFalse($token->can('delete'));
     }
 
-    public function test_user_can_create_token_with_wildcard_abilities()
+    public function testUserCanCreateTokenWithWildcardAbilities()
     {
         $user = $this->createTestUser();
         
@@ -545,7 +526,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertTrue($token->can('anything'));
     }
 
-    public function test_user_can_create_token_with_expiration()
+    public function testUserCanCreateTokenWithExpiration()
     {
         $user = $this->createTestUser();
         $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
@@ -556,7 +537,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertFalse($token->isExpired());
     }
 
-    public function test_token_expiration_is_detected()
+    public function testTokenExpirationIsDetected()
     {
         $user = $this->createTestUser();
         $expiresAt = date('Y-m-d H:i:s', strtotime('-1 hour'));
@@ -566,7 +547,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertTrue($token->isExpired());
     }
 
-    public function test_user_can_delete_all_tokens()
+    public function testUserCanDeleteAllTokens()
     {
         $user = $this->createTestUser();
         $user->createToken('token1');
@@ -582,7 +563,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals(0, $count);
     }
 
-    public function test_user_can_delete_specific_token()
+    public function testUserCanDeleteSpecificToken()
     {
         $user = $this->createTestUser();
         $token1 = $user->createToken('token1');
@@ -598,7 +579,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($token2->id, $remaining->id);
     }
 
-    public function test_user_can_delete_tokens_by_id()
+    public function testUserCanDeleteTokensById()
     {
         $user = $this->createTestUser();
         $token1 = $user->createToken('token1');
@@ -615,7 +596,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($token2->id, $remaining->id);
     }
 
-    public function test_token_abilities_are_checked_correctly()
+    public function testTokenAbilitiesAreCheckedCorrectly()
     {
         $user = $this->createTestUser();
         $token = $user->createToken('my-app', ['read', 'write']);
@@ -638,7 +619,7 @@ final class AuthIntegrationTest extends TestCase
     // REMEMBER ME TESTS
     // ========================================
 
-    public function test_user_can_set_remember_token()
+    public function testUserCanSetRememberToken()
     {
         $user = $this->createTestUser();
         
@@ -651,7 +632,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals('test-remember-token', $user->remember_token);
     }
 
-    public function test_remember_token_is_hidden_in_serialization()
+    public function testRememberTokenIsHiddenInSerialization()
     {
         $user = $this->createTestUser();
         $user->setRememberToken('secret-token');
@@ -666,7 +647,7 @@ final class AuthIntegrationTest extends TestCase
     // SESSION PERSISTENCE TESTS
     // ========================================
 
-    public function test_authenticated_user_persists_across_requests()
+    public function testAuthenticatedUserPersistsAcrossRequests()
     {
         $user = $this->createTestUser();
         $this->auth->loginAs($user);
@@ -679,7 +660,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($user->id, $newAuth->id());
     }
 
-    public function test_user_identity_is_cached_after_first_retrieval()
+    public function testUserIdentityIsCachedAfterFirstRetrieval()
     {
         $user = $this->createTestUser();
         $this->auth->loginAs($user);
@@ -695,7 +676,7 @@ final class AuthIntegrationTest extends TestCase
     // EDGE CASES AND ERROR HANDLING
     // ========================================
 
-    public function test_cannot_get_user_id_when_not_logged_in()
+    public function testCannotGetUserIdWhenNotLoggedIn()
     {
         // Clear any session from previous tests and create fresh auth
         $this->session->destroy();
@@ -706,7 +687,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertNull($freshAuth->id());
     }
 
-    public function test_multiple_users_can_have_separate_sessions()
+    public function testMultipleUsersCanHaveSeparateSessions()
     {
         $user1 = $this->createTestUser('user1@example.com');
         $user2 = $this->createTestUser('user2@example.com');
@@ -721,7 +702,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($user2->id, $this->auth->id());
     }
 
-    public function test_password_is_hidden_in_user_serialization()
+    public function testPasswordIsHiddenInUserSerialization()
     {
         $user = $this->createTestUser();
         
@@ -730,7 +711,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertStringNotContainsString('password', $json);
     }
 
-    public function test_token_relationship_returns_user()
+    public function testTokenRelationshipReturnsUser()
     {
         $user = $this->createTestUser();
         $token = $user->createToken('test');
@@ -743,7 +724,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals($user->id, $tokenUser->id);
     }
 
-    public function test_user_relationship_returns_tokens()
+    public function testUserRelationshipReturnsTokens()
     {
         $user = $this->createTestUser();
         $user->createToken('token1');
@@ -758,17 +739,17 @@ final class AuthIntegrationTest extends TestCase
     // CONFIGURATION TESTS
     // ========================================
 
-    public function test_can_set_custom_driver()
+    public function testCanSetCustomDriver()
     {
         $result = $this->auth->setDriver('default');
         
         $this->assertInstanceOf(Auth::class, $result);
     }
 
-    public function test_can_set_custom_config()
+    public function testCanSetCustomConfig()
     {
         $newConfig = $this->authConfig;
-        $newConfig['default']['login.redirect'] = '/custom-dashboard';
+        $newConfig['default']['remember_duration'] = 60 * 24 * 7; // 7 days
         
         $result = $this->auth->setConfig($newConfig);
         
@@ -778,7 +759,7 @@ final class AuthIntegrationTest extends TestCase
     /**
      * Test that remember me cookie duration is configurable.
      */
-    public function test_remember_me_uses_configurable_duration()
+    public function testRememberMeUsesConfigurableDuration()
     {
         $this->createTestUser('user@example.com', 'password123');
         
@@ -802,7 +783,7 @@ final class AuthIntegrationTest extends TestCase
                });
         $this->container->instance('cookie', $cookie);
         
-        // Mock request with credentials AND remember_token checkbox
+        // Mock request with credentials AND remember checkbox
         $request = $this->createMock(Request::class);
         $request->expects($this->any())
                 ->method('input')
@@ -811,22 +792,22 @@ final class AuthIntegrationTest extends TestCase
                         return [
                             'email' => 'user@example.com',
                             'password' => 'password123',
-                            'remember_token' => '1',
+                            'remember' => '1',
                         ];
                     }
-                    if ($key === 'remember_token') {
+                    if ($key === 'remember') {
                         return '1';
                     }
                     return null;
                 });
         $this->container->instance('request', $request);
         
-        // Create auth with custom config and login (which calls persist())
+        // Create auth with custom config and attempt login (which calls persist())
         $auth = new Auth('default', $customConfig);
-        $result = $auth->login();
+        $result = $auth->attempt();
         
-        // Verify redirect was returned (successful login)
-        $this->assertInstanceOf(Redirect::class, $result);
+        // Verify user was authenticated
+        $this->assertInstanceOf(Identity::class, $result);
         
         // Verify cookie()->set() was called with correct duration
         $this->assertEquals('remember_token', $capturedName);
@@ -834,7 +815,7 @@ final class AuthIntegrationTest extends TestCase
         $this->assertEquals(60 * 24 * 7, $capturedDuration, 'Cookie duration should be 7 days (10080 minutes)');
     }
     
-    public function test_remember_me_defaults_to_30_days()
+    public function testRememberMeDefaultsTo30Days()
     {
         $this->createTestUser('user@example.com', 'password123');
         
@@ -858,10 +839,10 @@ final class AuthIntegrationTest extends TestCase
                         return [
                             'email' => 'user@example.com',
                             'password' => 'password123',
-                            'remember_token' => '1',
+                            'remember' => '1',
                         ];
                     }
-                    if ($key === 'remember_token') {
+                    if ($key === 'remember') {
                         return '1';
                     }
                     return null;
@@ -870,9 +851,9 @@ final class AuthIntegrationTest extends TestCase
         
         // Use default config (no remember_duration set)
         $auth = new Auth('default', $this->authConfig);
-        $result = $auth->login();
+        $result = $auth->attempt();
         
-        $this->assertInstanceOf(Redirect::class, $result);
+        $this->assertInstanceOf(Identity::class, $result);
         $this->assertEquals(60 * 24 * 30, $capturedDuration, 'Cookie duration should default to 30 days (43200 minutes)');
     }
 }
