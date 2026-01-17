@@ -19,8 +19,8 @@ class AuthFilter implements IFilter
 
             // Try remember-me, if it fails, redirect to login
             if (!auth()->recall()) {
-                $loginRoute = config('auth.routes.login', 'login');
-                return redirect()->route($loginRoute);
+                $guestRoute = config('auth.routes.guest', 'login');
+                return redirect()->route($guestRoute);
             }
         }
 

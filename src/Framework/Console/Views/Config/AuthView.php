@@ -23,21 +23,16 @@ return [
             // add custom drivers here
         ],
 
-        /**
-         * Named routes used by auth filters
-         */ 
         'routes' => [
             /**
-             * Where to redirect unauthenticated users 
-             * Note: used by 'auth' filter
+             * Where to redirect unauthenticated users (used by 'auth' filter)
              */
-            'login' => 'login',
+            'guest' => 'login',
 
             /**
-             * Where to redirect authenticated users trying to access guest-only routes 
-             * Note: used by 'guest' filter
+             * Where to redirect authenticated users from guest-only routes (used by 'guest' filter)
              */
-            'home' => 'dashboard',
+            'authenticated' => 'dashboard',
         ],
     ],
 ];
