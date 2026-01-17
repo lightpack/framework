@@ -12,17 +12,32 @@ class AuthView
 return [
     'auth' => [
         'drivers' => [
+            /**
+             * Default authentication driver based on email/password credentials.
+             */ 
             'default' => [
                 'model' => App\Models\User::class,
                 'identifier' => Lightpack\Auth\Identifiers\EmailPasswordIdentifier::class,
                 'remember_duration' => 60 * 24 * 30, // 30 days in minutes
             ],
+            // add custom drivers here
         ],
 
-        // Routes used by auth filters
+        /**
+         * Named routes used by auth filters
+         */ 
         'routes' => [
-            'login' => 'login',      // Named route for login page
-            'home' => 'dashboard',   // Named route for authenticated users
+            /**
+             * Where to redirect unauthenticated users 
+             * Note: used by 'auth' filter
+             */
+            'login' => 'login',
+
+            /**
+             * Where to redirect authenticated users trying to access guest-only routes 
+             * Note: used by 'guest' filter
+             */
+            'home' => 'dashboard',
         ],
     ],
 ];
