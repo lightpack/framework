@@ -79,29 +79,6 @@ class AuthManager
         return self::$identity;
     }
 
-    public function redirectLogin(): Redirect
-    {
-        if (session()->has('_intended_url')) {
-            return redirect()->intended();
-        }
-
-        $url = $this->normalizedConfig['login.redirect'];
-        return redirect()->to($url);
-    }
-
-    public function redirectLogout(): Redirect
-    {
-        $url = $this->normalizedConfig['logout.redirect'];
-
-        return redirect()->to($url);
-    }
-
-    public function redirectLoginUrl(): Redirect
-    {
-        $url = $this->normalizedConfig['login.url'];
-
-        return redirect()->to($url);
-    }
 
     public function attempt(): ?Identity
     {
@@ -157,23 +134,15 @@ class AuthManager
 
         $this->populateSession();
 
-        $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
-
-        if (request()->input($rememberTokenField)) {
+        if (request()->input('remember_token')) {
             // Duration in minutes (default: 30 days)
             $duration = $this->normalizedConfig['remember_duration'] ?? (60 * 24 * 30);
-            cookie()->set($rememberTokenField, self::$identity->getRememberToken(), $duration);
+            cookie()->set('remember_token', self::$identity->getRememberToken(), $duration);
         }
     }
 
-    public function flashError()
-    {
-        $message = $this->normalizedConfig['flash_error'];
 
-        session()->flash('flash_error', $message);
-    }
-
-    public function checkRememberMe()
+    public function checkRememberMe(): ?Identity
     {
         $identity = $this->verify('cookie');
 
@@ -182,22 +151,17 @@ class AuthManager
 
             $this->persist();
             $this->updateLogin();
-
-            return $this->redirectLogin();
         }
 
-        return $this->redirectLoginUrl();
+        return $identity;
     }
 
     public function updateLogin()
     {
-        $lastLoginField = $this->normalizedConfig['fields.last_login_at'];
-        $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
+        $fields['last_login_at'] = date('Y-m-d H:i:s');
 
-        $fields[$lastLoginField] = date('Y-m-d H:i:s');
-
-        if (request()->input($rememberTokenField)) {
-            $fields[$rememberTokenField] = $this->generateRememberToken();
+        if (request()->input('remember_token')) {
+            $fields['remember_token'] = $this->generateRememberToken();
         }
 
         /** @var Identifier */
@@ -208,9 +172,7 @@ class AuthManager
 
     public function updateLastLogin()
     {
-        $lastLoginField = $this->normalizedConfig['fields.last_login_at'];
-
-        $fields[$lastLoginField] = date('Y-m-d H:i:s');
+        $fields['last_login_at'] = date('Y-m-d H:i:s');
 
         $identifier = $this->getIdentifier();
         
@@ -258,9 +220,7 @@ class AuthManager
 
     public function forgetRememberMeCookie()
     {
-        $rememberTokenField = $this->normalizedConfig['fields.remember_token'];
-        
-        cookie()->delete($rememberTokenField);
+        cookie()->delete('remember_token');
     }
 
     protected function getAuthenticator(string $authenticatorType): AbstractAuthenticator

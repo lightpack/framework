@@ -11,7 +11,8 @@ class GuestFilter implements IFilter
     public function before(Request $request, array $params = [])
     {
         if (auth()->isLoggedIn()) {
-            return auth()->redirectLogin();
+            $homeRoute = config()->get('auth.routes.home', 'dashboard');
+            return redirect()->route($homeRoute);
         }
     }
 

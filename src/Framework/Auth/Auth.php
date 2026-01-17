@@ -25,38 +25,21 @@ class Auth
         return $identity;
     }
 
-    public function login()
-    {
-        $identity = $this->manager->verify('form');
-
-        if ($identity) {
-            $this->manager->updateLogin();
-        } else {
-            $this->manager->flashError();
-            return $this->manager->redirectLoginUrl();
-        }
-
-        $this->manager->persist();
-        return $this->manager->redirectLogin();
-    }
-
-    public function logout()
+    public function logout(): void
     {
         $this->manager->clearIdentity();
         $this->manager->forgetRememberMeCookie();
 
         session()->destroy();
-
-        return $this->manager->redirectLogout();
     }
 
-    public function recall()
+    public function recall(): ?Identity
     {
         if (session()->get('_logged_in')) {
-            return $this->manager->redirectLogin();
-        } else {
-            return $this->manager->checkRememberMe();
+            return $this->user();
         }
+
+        return $this->manager->checkRememberMe();
     }
 
     public function id()
@@ -87,7 +70,13 @@ class Auth
 
     public function attempt(): ?Identity
     {
-        return $this->manager->attempt();
+        $identity = $this->manager->attempt();
+
+        if ($identity) {
+            $this->manager->persist();
+        }
+
+        return $identity;
     }
 
     public function setDriver(string $driver): self
@@ -125,20 +114,5 @@ class Auth
         $this->manager->updateLastLogin();
 
         return $this;
-    }
-
-    public function redirectLogin()
-    {
-        return $this->manager->redirectLogin();
-    }
-
-    public function redirectLogout()
-    {
-        return $this->manager->redirectLogout();
-    }
-
-    public function redirectLoginUrl()
-    {
-        return $this->manager->redirectLoginUrl();
     }
 }

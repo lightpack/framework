@@ -14,19 +14,15 @@ return [
         'drivers' => [
             'default' => [
                 'model' => App\Models\User::class,
-                'identifier' => Lightpack\Auth\Identifiers\DefaultIdentifier::class,
-                'login.url' => 'login',
-                'logout.url' => 'logout',
-                'login.redirect' => 'dashboard',
-                'logout.redirect' => 'login',
-                'fields.id' => 'id',
-                'fields.username' => 'email',
-                'fields.password' => 'password',
-                'fields.remember_token' => 'remember_token',
-                'fields.last_login_at' => 'last_login_at',
+                'identifier' => Lightpack\Auth\Identifiers\EmailPasswordIdentifier::class,
                 'remember_duration' => 60 * 24 * 30, // 30 days in minutes
-                'flash_error' => 'Invalid account credentials.',
             ],
+        ],
+
+        // Routes used by auth filters
+        'routes' => [
+            'login' => 'login',      // Named route for login page
+            'home' => 'dashboard',   // Named route for authenticated users
         ],
     ],
 ];
