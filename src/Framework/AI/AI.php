@@ -5,7 +5,6 @@ namespace Lightpack\AI;
 use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
-use Lightpack\Logger\Logger;
 use Lightpack\AI\VectorSearch\VectorSearchInterface;
 use Lightpack\AI\VectorSearch\InMemoryVectorSearch;
 
@@ -17,7 +16,6 @@ abstract class AI
         protected Http $http,
         protected Cache $cache,
         protected Config $config,
-        protected Logger $logger,
     ) {}
 
     /**
@@ -39,16 +37,26 @@ abstract class AI
      *   @type array  $usage          Token usage stats (if available).
      *   @type mixed  $raw            The full raw provider response.
      * }
-     *
-     * @param array $params See interface docblock for supported keys.
-     * @return array See interface docblock for return structure.
      */
-    abstract public function generate(array $params);
+    abstract public function generate(array $params): array;
+
+    /**
+     * Generate a streaming response from the provider.
+     * 
+     * Calls the provided callback for each chunk of text as it arrives.
+     * This method does not return the complete response - use generate() for that.
+     * 
+     * @param array $params Same parameters as generate()
+     * @param callable $onChunk Callback function: fn(string $textChunk) => void
+     * @return void
+     * @throws \Exception If streaming is not supported by the provider
+     */
+    abstract public function generateStream(array $params, callable $onChunk): void;
 
     /**
      * Start a fluent AI task builder for this provider.
      */
-    public function task()
+    public function task(): TaskBuilder
     {
         return new TaskBuilder($this);
     }
@@ -59,7 +67,7 @@ abstract class AI
     public function ask(string $question): string
     {
         $result = $this->task()->prompt($question)->run();
-        return $result['raw'];
+        return $result['raw'] ?? '';
     }
 
     /**
@@ -113,7 +121,7 @@ abstract class AI
     protected function getVectorSearch(): VectorSearchInterface
     {
         if ($this->vectorSearch === null) {
-            $this->vectorSearch = new InMemoryVectorSearch($this->logger);
+            $this->vectorSearch = new InMemoryVectorSearch();
         }
         return $this->vectorSearch;
     }
@@ -122,11 +130,12 @@ abstract class AI
      * Calculate cosine similarity between two vectors.
      * Returns value between 0 (completely different) and 1 (identical).
      * 
-     * Note: This is a utility method that delegates to InMemoryVectorSearch.
+     * Note: This is a utility method that delegates to
+     * InMemoryVectorSearch. If you're using a custom VectorSearchInterface,
+     * this method will throw an exception since vector databases
+     * handle similarity calculations server-side.
      * 
-     * @param array $a First vector
-     * @param array $b Second vector
-     * @return float Similarity score (0-1)
+     * @internal
      */
     public function cosineSimilarity(array $a, array $b): float
     {
@@ -155,25 +164,19 @@ abstract class AI
         throw new \Exception(static::class . ' does not support embeddings');
     }
 
-    protected function makeApiRequest(string $endpoint, array $body, array $headers = [], int $timeout = 10)
+    protected function makeApiRequest(string $endpoint, array $body, array $headers = [], int $timeout = 10): array
     {
-        try {
-            $response = $this->http
-                ->headers($headers)
-                ->timeout($timeout)
-                ->post($endpoint, $body);
+        $response = $this->http
+            ->headers($headers)
+            ->timeout($timeout)
+            ->post($endpoint, $body);
 
-            if ($response->failed()) {
-                $errorMsg = $response->error() ?: 'HTTP error ' . $response->status();
-                $this->logger->error(static::class . ' API response: ' . $response->body());
-                throw new \Exception(static::class . ' API error: ' . $errorMsg);
-            }
-
-            return json_decode($response->body(), true);
-        } catch (\Exception $e) {
-            $this->logger->error(static::class . ' API error: ' . $e->getMessage());
-            throw $e;
+        if ($response->failed()) {
+            $errorMsg = $response->error() ?: 'HTTP error ' . $response->status();
+            throw new \Exception(static::class . ' API error: ' . $errorMsg);
         }
+
+        return json_decode($response->body(), true);
     }
 
     /**
@@ -185,7 +188,7 @@ abstract class AI
     protected function generateCacheKey(array $params): string
     {
         $data = [];
-        $fields = ['model', 'messages', 'temperature', 'max_tokens', 'system'];
+        $fields = ['model', 'messages', 'prompt', 'temperature', 'max_tokens', 'system'];
         foreach ($fields as $field) {
             if (array_key_exists($field, $params)) {
                 $data[$field] = $params[$field];

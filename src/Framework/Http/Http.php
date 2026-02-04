@@ -21,10 +21,11 @@ class Http
     protected mixed $response = null;
     protected int $statusCode = 0;
     protected array $files = [];
+    protected array $responseHeaders = [];
 
     public function __construct()
     {
-        $this->options[CURLOPT_TIMEOUT] = 5;
+        $this->options[CURLOPT_TIMEOUT] = 30;
         $this->options[CURLOPT_FOLLOWLOCATION] = true;
     }
 
@@ -200,6 +201,7 @@ class Http
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_HEADER, true);
 
         // Set headers
         $headers = [];
@@ -237,16 +239,19 @@ class Http
         }
 
         // Execute request
-        $this->response = curl_exec($ch);
+        $response = curl_exec($ch);
         $this->error = curl_error($ch);
         $this->statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
         curl_close($ch);
 
-        // Reset state for next request
-        $this->headers = [];
-        $this->options = [];
-        $this->files = [];
+        // Separate headers and body
+        $headerString = substr($response, 0, $headerSize);
+        $this->response = substr($response, $headerSize);
+        $this->responseHeaders = $this->parseHeaders($headerString);
+
+        $this->resetState();
 
         return $this;
     }
@@ -283,6 +288,75 @@ class Http
     }
 
     /**
+     * Make a streaming HTTP request with chunk callback.
+     * 
+     * Unlike regular HTTP methods, this streams the response in real-time
+     * by calling the provided callback for each chunk of data received.
+     * 
+     * @param string $method HTTP method (GET, POST, PUT, DELETE, etc.)
+     * @param string $url The endpoint URL
+     * @param array|null $data Request body data (will be JSON encoded for POST/PUT/PATCH)
+     * @param callable $onChunk Callback function: fn(string $chunk) => void
+     * @return self
+     * @throws \Exception If the request fails
+     */
+    public function stream(string $method, string $url, ?array $data, callable $onChunk): self
+    {
+        $ch = curl_init();
+        $method = strtoupper($method);
+        
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false); // Don't buffer response
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        
+        // Prepare headers
+        $headers = [];
+        if ($data !== null && !isset($this->headers['Content-Type'])) {
+            $this->headers['Content-Type'] = 'application/json';
+        }
+        
+        foreach ($this->headers as $key => $value) {
+            $headers[] = "$key: $value";
+        }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        // Set request body for methods that support it
+        if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'])) {
+            $body = json_encode($data);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        }
+        
+        // Set custom options (timeout, etc.)
+        foreach ($this->options as $option => $value) {
+            curl_setopt($ch, $option, $value);
+        }
+        
+        // Set write callback for streaming
+        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch, $chunk) use ($onChunk) {
+            $onChunk($chunk);
+            return strlen($chunk); // Must return bytes processed
+        });
+        
+        // Execute streaming request
+        $success = curl_exec($ch);
+        $this->error = curl_error($ch);
+        $this->statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+        
+        // Check for errors
+        if (!$success || $this->statusCode >= 400) {
+            $errorMsg = $this->error ?: 'HTTP error ' . $this->statusCode;
+            throw new \Exception('Streaming request failed: ' . $errorMsg);
+        }
+        
+        $this->resetState();
+        
+        return $this;
+    }
+
+    /**
      * Set custom cURL options for the request.
      * 
      * @param array $options Array of CURLOPT_* options
@@ -306,6 +380,12 @@ class Http
     {
         $fp = fopen($savePath, 'w+');
         
+        if ($fp === false) {
+            throw new \RuntimeException(
+                sprintf('Failed to open file for writing: %s', $savePath)
+            );
+        }
+        
         $this->options[CURLOPT_URL] = $url;
         $this->options[CURLOPT_FILE] = $fp;
         $this->options[CURLOPT_FOLLOWLOCATION] = true;
@@ -324,6 +404,59 @@ class Http
             @unlink($savePath);
         }
         
+        $this->resetState();
+        
         return $success;
+    }
+
+    protected function resetState(): void
+    {
+        $this->headers = [];
+        $this->options = [];
+        $this->files = [];
+    }
+
+    /**
+     * Get all response headers.
+     * 
+     * @return array Associative array of header name => value
+     */
+    public function responseHeaders(): array
+    {
+        return $this->responseHeaders;
+    }
+
+    /**
+     * Get a specific response header value.
+     * Header names are case-insensitive.
+     * 
+     * @param string $name Header name
+     * @return string|null Header value or null if not found
+     */
+    public function responseHeader(string $name): ?string
+    {
+        $name = strtolower($name);
+        return $this->responseHeaders[$name] ?? null;
+    }
+
+    /**
+     * Parse raw header string into associative array.
+     * 
+     * @param string $headerString Raw header string from cURL
+     * @return array Parsed headers (lowercase keys)
+     */
+    protected function parseHeaders(string $headerString): array
+    {
+        $headers = [];
+        $lines = explode("\r\n", $headerString);
+
+        foreach ($lines as $line) {
+            if (strpos($line, ':') !== false) {
+                [$name, $value] = explode(':', $line, 2);
+                $headers[strtolower(trim($name))] = trim($value);
+            }
+        }
+
+        return $headers;
     }
 }

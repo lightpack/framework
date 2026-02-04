@@ -2,10 +2,10 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Console\Output;
 
-class CreateConfig implements ICommand
+class CreateConfig implements CommandInterface
 {
     public function run(array $arguments = [])
     {

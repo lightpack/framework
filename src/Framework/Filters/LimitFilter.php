@@ -4,11 +4,11 @@ namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\IFilter;
+use Lightpack\Filters\FilterInterface;
 use Lightpack\Utils\Limiter;
 use Lightpack\Exceptions\TooManyRequestsException;
 
-class LimitFilter implements IFilter
+class LimitFilter implements FilterInterface
 {
     private Limiter $limiter;
     private $max; // requests

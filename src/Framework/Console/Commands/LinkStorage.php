@@ -2,9 +2,9 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 
-class LinkStorage implements ICommand
+class LinkStorage implements CommandInterface
 {
     public function run(array $arguments = [])
     {

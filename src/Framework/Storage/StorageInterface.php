@@ -2,7 +2,7 @@
 
 namespace Lightpack\Storage;
 
-interface Storage
+interface StorageInterface
 {
     /**
      * Read contents from a file

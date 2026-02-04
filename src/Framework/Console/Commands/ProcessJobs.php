@@ -3,9 +3,9 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Jobs\Worker;
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 
-class ProcessJobs implements ICommand
+class ProcessJobs implements CommandInterface
 {
     public function run(array $arguments = [])
     {

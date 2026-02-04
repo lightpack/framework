@@ -3,9 +3,9 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 
-class CreateEnv implements ICommand
+class CreateEnv implements CommandInterface
 {
     public function run(array $arguments = [])
     {

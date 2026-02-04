@@ -4,11 +4,11 @@ namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\IFilter;
+use Lightpack\Filters\FilterInterface;
 use Lightpack\Exceptions\InvalidCsrfTokenException;
 use Lightpack\Exceptions\SessionExpiredException;
 
-class CsrfFilter implements IFilter
+class CsrfFilter implements FilterInterface
 {
     private array $protectedMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
 

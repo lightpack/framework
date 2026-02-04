@@ -24,7 +24,6 @@ class AiProvider implements ProviderInterface
                 new Http,
                 $container->get('cache'),
                 $container->get('config'),
-                $container->get('logger'),
             ];
 
             return match ($type) {

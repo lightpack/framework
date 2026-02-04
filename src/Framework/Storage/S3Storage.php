@@ -8,7 +8,7 @@ use Aws\CloudFront\UrlSigner;
 use Lightpack\Container\Container;
 use Lightpack\Exceptions\FileUploadException;
 
-class S3Storage implements Storage
+class S3Storage implements StorageInterface
 {
     /**
      * AWS S3 client instance

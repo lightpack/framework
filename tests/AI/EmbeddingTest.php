@@ -5,7 +5,6 @@ use Lightpack\AI\Providers\Gemini;
 use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
-use Lightpack\Logger\Logger;
 
 class EmbeddingTest extends TestCase
 {
@@ -27,8 +26,7 @@ class EmbeddingTest extends TestCase
         $this->ai = new class(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         ) extends Gemini {
             protected function generateEmbedding(string|array $input, array $options = []): array
             {

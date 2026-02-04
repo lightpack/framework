@@ -7,7 +7,6 @@ use Lightpack\AI\Providers\Mistral;
 use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
-use Lightpack\Logger\Logger;
 
 class EmbeddingIntegrationTest extends TestCase
 {
@@ -32,8 +31,7 @@ class EmbeddingIntegrationTest extends TestCase
         $gemini = new Gemini(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
 
         // Test single embedding
@@ -66,8 +64,7 @@ class EmbeddingIntegrationTest extends TestCase
         $gemini = new Gemini(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
 
         // Test batch embedding
@@ -110,8 +107,7 @@ class EmbeddingIntegrationTest extends TestCase
         $gemini = new Gemini(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
 
         // Create knowledge base
@@ -170,8 +166,7 @@ class EmbeddingIntegrationTest extends TestCase
         $openai = new OpenAI(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
 
         $embedding = $openai->embed('Hello world');
@@ -202,8 +197,7 @@ class EmbeddingIntegrationTest extends TestCase
         $mistral = new Mistral(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
 
         $embedding = $mistral->embed('Hello world');

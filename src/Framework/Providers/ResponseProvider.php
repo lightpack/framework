@@ -5,7 +5,6 @@ namespace Lightpack\Providers;
 use Lightpack\Http\Response;
 use Lightpack\Container\Container;
 use Lightpack\Http\Redirect;
-use Lightpack\Utils\Url;
 
 class ResponseProvider implements ProviderInterface
 {

@@ -6,7 +6,7 @@ use Lightpack\Http\Response;
 use Lightpack\View\Template;
 use Lightpack\Container\Container;
 use Lightpack\Pdf\Driver\DriverInterface;
-use Lightpack\Storage\Storage;
+use Lightpack\Storage\StorageInterface;
 
 /**
  * Lightpack PDF Service

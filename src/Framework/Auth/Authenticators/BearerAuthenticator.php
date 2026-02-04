@@ -2,13 +2,13 @@
 
 namespace Lightpack\Auth\Authenticators;
 
-use Lightpack\Auth\AbstractAuthenticator;
-use Lightpack\Auth\Identity;
+use Lightpack\Auth\Authenticator;
+use Lightpack\Auth\IdentityInterface;
 use Lightpack\Auth\Models\AccessToken;
 
-class BearerAuthenticator extends AbstractAuthenticator
+class BearerAuthenticator extends Authenticator
 {
-    public function verify(): ?Identity
+    public function verify(): ?IdentityInterface
     {
         $token = request()->bearerToken();
 

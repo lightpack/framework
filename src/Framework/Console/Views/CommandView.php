@@ -11,9 +11,9 @@ class CommandView
 
 namespace App\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 
-class __COMMAND_NAME__ implements ICommand
+class __COMMAND_NAME__ implements CommandInterface
 {
     public function run(array $arguments = [])
     {

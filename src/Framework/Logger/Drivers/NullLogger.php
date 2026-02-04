@@ -2,9 +2,9 @@
 
 namespace Lightpack\Logger\Drivers;
 
-use Lightpack\Logger\ILogger;
+use Lightpack\Logger\LoggerInterface;
 
-class NullLogger implements ILogger
+class NullLogger implements LoggerInterface
 {
     public function log($level, $message, array $context = [])
     {

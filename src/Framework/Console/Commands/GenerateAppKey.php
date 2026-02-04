@@ -2,11 +2,11 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\File\File;
 use Lightpack\Utils\Str;
 
-class GenerateAppKey implements ICommand
+class GenerateAppKey implements CommandInterface
 {
     public function run(array $arguments = [])
     {

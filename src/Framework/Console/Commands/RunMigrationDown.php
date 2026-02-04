@@ -3,11 +3,11 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Config\Env;
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Database\Adapters\Mysql;
 use Lightpack\Database\Migrations\Migrator;
 
-class RunMigrationDown implements ICommand
+class RunMigrationDown implements CommandInterface
 {
     public function run(array $arguments = [])
     {

@@ -63,8 +63,8 @@ class Filter
             throw new \Exception("Filter class {$filter} does not exist.");
         }
 
-        if (!in_array(IFilter::class, class_implements($filter))) {
-            throw new \Exception("Filter class {$filter} must implement interface " . IFilter::class);
+        if (!in_array(FilterInterface::class, class_implements($filter))) {
+            throw new \Exception("Filter class {$filter} must implement interface " . FilterInterface::class);
         }
     }
 }

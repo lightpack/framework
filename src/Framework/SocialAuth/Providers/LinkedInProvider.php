@@ -5,9 +5,9 @@ namespace Lightpack\SocialAuth\Providers;
 use Lightpack\Config\Config;
 use RuntimeException;
 use Lightpack\Http\Http;
-use Lightpack\SocialAuth\SocialAuth;
+use Lightpack\SocialAuth\SocialAuthInterface;
 
-class LinkedInProvider implements SocialAuth
+class LinkedInProvider implements SocialAuthInterface
 {
     protected array $config;
     protected Http $http;

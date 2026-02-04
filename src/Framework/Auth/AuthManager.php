@@ -15,8 +15,8 @@ class AuthManager
 
     protected $driver;
 
-    /** @var Identity|null */
-    protected static ?Identity $identity = null;
+    /** @var IdentityInterface|null */
+    protected static ?IdentityInterface $identity = null;
 
     protected static $authenticators = [
         'bearer' => BearerAuthenticator::class,
@@ -35,7 +35,7 @@ class AuthManager
      * Set the current identity
      * Used internally by auth system
      */
-    public function setIdentity(Identity $identity): void 
+    public function setIdentity(IdentityInterface $identity): void 
     {
         self::$identity = $identity;
     }
@@ -44,7 +44,7 @@ class AuthManager
         self::$identity = null;
     }
 
-    public function viaToken(): ?Identity
+    public function viaToken(): ?IdentityInterface
     {
         $identity = $this->verify('bearer');
 
@@ -66,7 +66,7 @@ class AuthManager
         }
     }
 
-    public function getAuthUser(): ?Identity
+    public function getAuthUser(): ?IdentityInterface
     {
         if(!self::$identity) {
             if(session()->get('_logged_in')) {
@@ -80,7 +80,7 @@ class AuthManager
     }
 
 
-    public function attempt(): ?Identity
+    public function attempt(): ?IdentityInterface
     {
         $identity = $this->verify('form');
 
@@ -142,7 +142,7 @@ class AuthManager
     }
 
 
-    public function checkRememberMe(): ?Identity
+    public function checkRememberMe(): ?IdentityInterface
     {
         $identity = $this->verify('cookie');
 
@@ -197,7 +197,7 @@ class AuthManager
         return $this;
     }
 
-    public function verify(string $authenticatorType): ?Identity
+    public function verify(string $authenticatorType): ?IdentityInterface
     {
         $identity = $this->getAuthenticator($authenticatorType)->verify();
 
@@ -223,7 +223,7 @@ class AuthManager
         cookie()->delete('remember_token');
     }
 
-    protected function getAuthenticator(string $authenticatorType): AbstractAuthenticator
+    protected function getAuthenticator(string $authenticatorType): Authenticator
     {
         if (!isset(self::$authenticators[$authenticatorType])) {
             throw new \Exception("Authenticator not found for auth driver: '{$authenticatorType}'");
@@ -236,7 +236,7 @@ class AuthManager
         return new $authenticatorClass($identifier, $config);
     }
 
-    protected function getIdentifier(): Identifier
+    protected function getIdentifier(): IdentifierInterface
     {
         if('default' === $this->driver) {
             $identifier = $this->normalizedConfig['identifier'];

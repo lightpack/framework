@@ -14,7 +14,7 @@ class Auth
         $this->manager = new AuthManager($driver, $config);
     }
 
-    public function viaToken(): ?Identity
+    public function viaToken(): ?IdentityInterface
     {
         $identity = $this->manager->verify('bearer');
 
@@ -33,7 +33,7 @@ class Auth
         session()->destroy();
     }
 
-    public function recall(): ?Identity
+    public function recall(): ?IdentityInterface
     {
         if (session()->get('_logged_in')) {
             return $this->user();
@@ -47,7 +47,7 @@ class Auth
         return $this->manager->getAuthId();
     }
 
-    public function user(): ?Identity
+    public function user(): ?IdentityInterface
     {
         return $this->manager->getAuthUser();
     }
@@ -68,7 +68,7 @@ class Auth
         return !$this->isLoggedIn();
     }
 
-    public function attempt(): ?Identity
+    public function attempt(): ?IdentityInterface
     {
         $identity = $this->manager->attempt();
 
@@ -104,10 +104,10 @@ class Auth
      * Login as a specific user without credentials.
      * Useful for testing and user impersonation.
      * 
-     * @param Identity $user The user to login as
+     * @param IdentityInterface $user The user to login as
      * @return self For method chaining
      */
-    public function loginAs(Identity $user): self
+    public function loginAs(IdentityInterface $user): self
     {
         $this->manager->setIdentity($user);
         $this->manager->populateSession();

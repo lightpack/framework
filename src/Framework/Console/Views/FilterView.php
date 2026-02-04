@@ -13,7 +13,7 @@ namespace App\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\IFilter;
+use Lightpack\Filters\FilterInterface;
 
 class __FILTER_NAME__ implements IFilter
 {

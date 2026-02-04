@@ -3,10 +3,10 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Console\Views\ControllerView;
 
-class CreateController implements ICommand
+class CreateController implements CommandInterface
 {
     public function run(array $arguments = [])
     {

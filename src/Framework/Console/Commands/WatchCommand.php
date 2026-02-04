@@ -2,11 +2,11 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Console\Output;
 use Lightpack\File\File;
 
-class WatchCommand implements ICommand
+class WatchCommand implements CommandInterface
 {
     private $paths = [];
     private $extensions = [];

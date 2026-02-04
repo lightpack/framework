@@ -5,7 +5,6 @@ use Lightpack\AI\Providers\Anthropic;
 use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
-use Lightpack\Logger\Logger;
 
 class AnthropicIntegrationTest extends TestCase
 {
@@ -41,8 +40,7 @@ class AnthropicIntegrationTest extends TestCase
         $this->anthropic = new Anthropic(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
     }
 

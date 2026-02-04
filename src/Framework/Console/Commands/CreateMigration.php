@@ -2,11 +2,11 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Console\Views\MigrationView;
 use Lightpack\Console\Output;
 
-class CreateMigration implements ICommand
+class CreateMigration implements CommandInterface
 {
     public function run(array $arguments = [])
     {

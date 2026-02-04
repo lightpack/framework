@@ -2,7 +2,7 @@
 
 namespace Lightpack\Console;
 
-interface ICommand
+interface CommandInterface
 {
     public function run();
 }

@@ -4,9 +4,9 @@ namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\IFilter;
+use Lightpack\Filters\FilterInterface;
 
-class VerifyEmailFilter implements IFilter
+class VerifyEmailFilter implements FilterInterface
 {
     public function before(Request $request, array $params = [])
     {

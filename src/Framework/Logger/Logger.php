@@ -2,7 +2,7 @@
 
 namespace Lightpack\Logger;
 
-use Lightpack\Logger\ILogger;
+use Lightpack\Logger\LoggerInterface;
 
 class Logger
 {
@@ -17,7 +17,7 @@ class Logger
 
     private $logger;
 
-    public function __construct(ILogger $logger)
+    public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }

@@ -6,10 +6,10 @@ use Google\Client as GoogleClient;
 use Google\Service\Oauth2;
 use Google\Service\Oauth2\Userinfo;
 use Lightpack\Config\Config;
-use Lightpack\SocialAuth\SocialAuth;
+use Lightpack\SocialAuth\SocialAuthInterface;
 use RuntimeException;
 
-class GoogleProvider implements SocialAuth
+class GoogleProvider implements SocialAuthInterface
 {
     protected array $config;
     protected GoogleClient $client;

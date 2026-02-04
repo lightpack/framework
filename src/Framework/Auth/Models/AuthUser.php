@@ -2,11 +2,11 @@
 
 namespace Lightpack\Auth\Models;
 
-use Lightpack\Auth\Identity;
+use Lightpack\Auth\IdentityInterface;
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Auth\Models\AccessToken;
 
-class AuthUser extends Model implements Identity
+class AuthUser extends Model implements IdentityInterface
 {
     protected $table = 'users';
 

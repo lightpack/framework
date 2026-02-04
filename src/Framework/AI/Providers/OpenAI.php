@@ -88,4 +88,56 @@ class OpenAI extends AI
         // Batch returns array of embeddings
         return array_map(fn($item) => $item['embedding'] ?? [], $result['data'] ?? []);
     }
+
+    public function generateStream(array $params, callable $onChunk): void
+    {
+        $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
+        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.openai.endpoint');
+        
+        $body = $this->prepareRequestBody($params);
+        $body['stream'] = true;
+        
+        $buffer = '';
+        
+        $this->http
+            ->headers($this->prepareHeaders())
+            ->timeout($this->config->get('ai.http_timeout'))
+            ->stream('POST', $endpoint, $body, function($chunk) use (&$buffer, $onChunk) {
+                $buffer .= $chunk;
+                
+                // Process complete lines (Server-Sent Events format)
+                while (($pos = strpos($buffer, "\n")) !== false) {
+                    $line = substr($buffer, 0, $pos);
+                    $buffer = substr($buffer, $pos + 1);
+                    
+                    // Skip empty lines
+                    if (trim($line) === '') {
+                        continue;
+                    }
+                    
+                    // Parse SSE data line
+                    if (str_starts_with($line, 'data: ')) {
+                        $data = substr($line, 6);
+                        
+                        // Check for stream end
+                        if ($data === '[DONE]') {
+                            return;
+                        }
+                        
+                        // Parse JSON chunk
+                        $json = json_decode($data, true);
+                        if (!$json) {
+                            continue;
+                        }
+                        
+                        // Extract content from delta
+                        $content = $json['choices'][0]['delta']['content'] ?? '';
+                        
+                        if ($content !== '') {
+                            $onChunk($content);
+                        }
+                    }
+                }
+            });
+    }
 }

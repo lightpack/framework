@@ -2,7 +2,7 @@
 
 namespace Lightpack\Uploads;
 
-use Lightpack\Storage\Storage;
+use Lightpack\Storage\StorageInterface;
 use Lightpack\Utils\Image;
 use Lightpack\Container\Container;
 use Lightpack\Jobs\Job;
@@ -176,9 +176,9 @@ class TransformJob extends Job
     /**
      * Get the storage instance.
      *
-     * @return \Lightpack\Storage\Storage
+     * @return \Lightpack\Storage\StorageInterface
      */
-    protected function getStorage(): Storage
+    protected function getStorage(): StorageInterface
     {
         return Container::getInstance()->resolve('storage');
     }

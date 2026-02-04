@@ -253,4 +253,136 @@ class HttpTest extends TestCase
         
         unlink($savePath);
     }
+
+    public function testCanStreamGetRequest()
+    {
+        $http = new Http();
+        $chunks = [];
+        $fullContent = '';
+        
+        $http->stream('GET', $this->baseUrl . '/stream/5', null, function($chunk) use (&$chunks, &$fullContent) {
+            $chunks[] = $chunk;
+            $fullContent .= $chunk;
+        });
+        
+        $this->assertGreaterThan(1, count($chunks), 'Should receive multiple chunks');
+        $this->assertNotEmpty($fullContent, 'Should receive content');
+    }
+
+    public function testCanStreamPostRequest()
+    {
+        $http = new Http();
+        $chunks = [];
+        $fullContent = '';
+        
+        $http->stream('POST', $this->baseUrl . '/post', [
+            'name' => 'john',
+            'email' => 'john@example.com'
+        ], function($chunk) use (&$chunks, &$fullContent) {
+            $chunks[] = $chunk;
+            $fullContent .= $chunk;
+        });
+        
+        $this->assertGreaterThan(0, count($chunks));
+        $this->assertNotEmpty($fullContent);
+        $this->assertStringContainsString('john', $fullContent);
+    }
+
+    public function testCanStreamWithCustomHeaders()
+    {
+        $http = new Http();
+        $chunks = [];
+        
+        $http->headers(['X-Custom' => 'streaming-test'])
+            ->stream('GET', $this->baseUrl . '/headers', null, function($chunk) use (&$chunks) {
+                $chunks[] = $chunk;
+            });
+        
+        $this->assertGreaterThan(0, count($chunks));
+        $fullContent = implode('', $chunks);
+        $this->assertStringContainsString('streaming-test', $fullContent);
+    }
+
+    public function testCanStreamWithTimeout()
+    {
+        $http = new Http();
+        $chunks = [];
+        
+        $http->timeout(10)
+            ->stream('GET', $this->baseUrl . '/delay/1', null, function($chunk) use (&$chunks) {
+                $chunks[] = $chunk;
+            });
+        
+        $this->assertGreaterThan(0, count($chunks));
+    }
+
+    public function testStreamThrowsExceptionOn404()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Streaming request failed');
+        
+        $http = new Http();
+        $http->stream('GET', $this->baseUrl . '/status/404', null, function($chunk) {
+            // Should not reach here
+        });
+    }
+
+    public function testStreamThrowsExceptionOn500()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Streaming request failed');
+        
+        $http = new Http();
+        $http->stream('GET', $this->baseUrl . '/status/500', null, function($chunk) {
+            // Should not reach here
+        });
+    }
+
+    public function testStreamReceivesChunksProgressively()
+    {
+        $http = new Http();
+        $timestamps = [];
+        $startTime = microtime(true);
+        
+        $http->stream('GET', $this->baseUrl . '/stream/3', null, function($chunk) use (&$timestamps, $startTime) {
+            $timestamps[] = microtime(true) - $startTime;
+        });
+        
+        $this->assertGreaterThan(1, count($timestamps), 'Should receive multiple chunks');
+        
+        // Verify chunks arrived over time (not all at once)
+        if (count($timestamps) > 1) {
+            $timeDiff = end($timestamps) - $timestamps[0];
+            $this->assertGreaterThan(0, $timeDiff, 'Chunks should arrive progressively');
+        }
+    }
+
+    public function testStreamWorksWithPutMethod()
+    {
+        $http = new Http();
+        $chunks = [];
+        
+        $http->stream('PUT', $this->baseUrl . '/put', [
+            'name' => 'john',
+            'status' => 'active'
+        ], function($chunk) use (&$chunks) {
+            $chunks[] = $chunk;
+        });
+        
+        $this->assertGreaterThan(0, count($chunks));
+        $fullContent = implode('', $chunks);
+        $this->assertStringContainsString('john', $fullContent);
+    }
+
+    public function testStreamWorksWithDeleteMethod()
+    {
+        $http = new Http();
+        $chunks = [];
+        
+        $http->stream('DELETE', $this->baseUrl . '/delete', null, function($chunk) use (&$chunks) {
+            $chunks[] = $chunk;
+        });
+        
+        $this->assertGreaterThan(0, count($chunks));
+    }
 }

@@ -33,7 +33,7 @@ class Container
      *
      * @return void
      */
-    public static function destroy()
+    public static function destroy(): void
     {
         static::$instance = null;
     }
@@ -100,7 +100,7 @@ class Container
         $this->services[$id] = function () use ($cb) {
             static $instance;
 
-            if ($instance == null) {
+            if ($instance === null) {
                 $instance = $cb($this);
 
                 $this->callIf($instance, '__boot');
@@ -305,11 +305,7 @@ class Container
     protected function filterScalarParameters(array $parameters): array
     {
         return array_filter($parameters, function ($parameter) {
-            if (empty($parameter->getType()) || $parameter->getType()->isBuiltin()) {
-                return true;
-            }
-
-            return $parameter->getType() && $parameter->getType()->isBuiltin();
+            return empty($parameter->getType()) || $parameter->getType()->isBuiltin();
         });
     }
 

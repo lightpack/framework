@@ -4,7 +4,7 @@ namespace Lightpack\Auth;
 
 use Lightpack\Auth\Models\AccessToken;
 
-interface Identity
+interface IdentityInterface
 {
     /**
      * Get the unique identifier for the user.

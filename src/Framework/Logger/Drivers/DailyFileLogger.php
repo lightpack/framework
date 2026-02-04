@@ -2,9 +2,9 @@
 
 namespace Lightpack\Logger\Drivers;
 
-use Lightpack\Logger\ILogger;
+use Lightpack\Logger\LoggerInterface;
 
-class DailyFileLogger implements ILogger
+class DailyFileLogger implements LoggerInterface
 {
     private $basePath;
     private $daysToKeep;

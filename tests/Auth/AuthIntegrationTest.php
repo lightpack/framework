@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Lightpack\Auth\Auth;
-use Lightpack\Auth\Identity;
+use Lightpack\Auth\IdentityInterface;
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Auth\Models\AccessToken;
 use Lightpack\Container\Container;
@@ -252,7 +252,7 @@ final class AuthIntegrationTest extends TestCase
         $this->auth->loginAs($user);
         
         $authUser = $this->auth->user();
-        $this->assertInstanceOf(Identity::class, $authUser);
+        $this->assertInstanceOf(IdentityInterface::class, $authUser);
         $this->assertEquals('john@example.com', $authUser->email);
         $this->assertEquals($user->id, $authUser->getId());
     }
@@ -303,7 +303,7 @@ final class AuthIntegrationTest extends TestCase
         
         $authenticatedUser = $this->auth->attempt();
         
-        $this->assertInstanceOf(Identity::class, $authenticatedUser);
+        $this->assertInstanceOf(IdentityInterface::class, $authenticatedUser);
         $this->assertEquals($user->id, $authenticatedUser->getId());
     }
 
@@ -387,7 +387,7 @@ final class AuthIntegrationTest extends TestCase
         
         $authenticatedUser = $this->auth->viaToken();
         
-        $this->assertInstanceOf(Identity::class, $authenticatedUser);
+        $this->assertInstanceOf(IdentityInterface::class, $authenticatedUser);
         $this->assertEquals($user->id, $authenticatedUser->getId());
     }
 
@@ -807,7 +807,7 @@ final class AuthIntegrationTest extends TestCase
         $result = $auth->attempt();
         
         // Verify user was authenticated
-        $this->assertInstanceOf(Identity::class, $result);
+        $this->assertInstanceOf(IdentityInterface::class, $result);
         
         // Verify cookie()->set() was called with correct duration
         $this->assertEquals('remember_token', $capturedName);
@@ -853,7 +853,7 @@ final class AuthIntegrationTest extends TestCase
         $auth = new Auth('default', $this->authConfig);
         $result = $auth->attempt();
         
-        $this->assertInstanceOf(Identity::class, $result);
+        $this->assertInstanceOf(IdentityInterface::class, $result);
         $this->assertEquals(60 * 24 * 30, $capturedDuration, 'Cookie duration should default to 30 days (43200 minutes)');
     }
 }

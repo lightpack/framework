@@ -2,26 +2,26 @@
 
 namespace Lightpack\Auth;
 
-abstract class AbstractAuthenticator
+abstract class Authenticator
 {
-    /** @var \Lightpack\Auth\Identifier */
+    /** @var \Lightpack\Auth\IdentifierInterface */
     protected $identifier;
 
     /** @var array */
     protected $config;
 
-    public function __construct(Identifier $identifier, array $config)
+    public function __construct(IdentifierInterface $identifier, array $config)
     {
         $this->identifier = $identifier;
         $this->config = $config;
     }
 
-    public function setIdentifier(Identifier $identifier): void
+    public function setIdentifier(IdentifierInterface $identifier): void
     {
         $this->identifier = $identifier;
     }
 
-    public function getIdentifier(): Identifier
+    public function getIdentifier(): IdentifierInterface
     {
         return $this->identifier;
     }
@@ -38,5 +38,5 @@ abstract class AbstractAuthenticator
         return $this;
     }
 
-    abstract public function verify(): ?Identity;
+    abstract public function verify(): ?IdentityInterface;
 }

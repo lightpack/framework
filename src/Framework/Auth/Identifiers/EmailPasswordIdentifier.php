@@ -2,18 +2,18 @@
 
 namespace Lightpack\Auth\Identifiers;
 
-use Lightpack\Auth\Identifier;
-use Lightpack\Auth\Identity;
+use Lightpack\Auth\IdentifierInterface;
+use Lightpack\Auth\IdentityInterface;
 use Lightpack\Auth\Models\AuthUser;
 
-class EmailPasswordIdentifier implements Identifier
+class EmailPasswordIdentifier implements IdentifierInterface
 {
     public function __construct(protected AuthUser $user)
     {
         // ...
     }
 
-    public function findById($id): ?Identity
+    public function findById($id): ?IdentityInterface
     {
         /** @var AuthUser */
         $user = $this->user->find($id);
@@ -25,7 +25,7 @@ class EmailPasswordIdentifier implements Identifier
         return $user;
     }
 
-    public function findByRememberToken($id, string $token): ?Identity
+    public function findByRememberToken($id, string $token): ?IdentityInterface
     {
         $user = $this->user->query()->where('id', '=', $id)->one();
 
@@ -40,7 +40,7 @@ class EmailPasswordIdentifier implements Identifier
         return $user;
     }
 
-    public function findByCredentials(array $credentials): ?Identity
+    public function findByCredentials(array $credentials): ?IdentityInterface
     {
         $user = $this->user->query()->where('email', '=', $credentials['email'])->one();
 

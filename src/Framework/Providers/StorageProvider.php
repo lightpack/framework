@@ -5,7 +5,7 @@ namespace Lightpack\Providers;
 use Lightpack\Container\Container;
 use Lightpack\Storage\LocalStorage;
 use Lightpack\Storage\S3Storage;
-use Lightpack\Storage\Storage;
+use Lightpack\Storage\StorageInterface;
 use Aws\S3\S3Client;
 
 class StorageProvider implements ProviderInterface
@@ -22,7 +22,7 @@ class StorageProvider implements ProviderInterface
             };
         });
 
-        $container->alias(Storage::class, 'storage');
+        $container->alias(StorageInterface::class, 'storage');
     }
     
     /**

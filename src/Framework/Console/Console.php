@@ -27,6 +27,7 @@ use Lightpack\Console\Commands\ScheduleEvents;
 use Lightpack\Console\Commands\ServeCommand;
 use Lightpack\Console\Commands\WatchCommand;
 use Lightpack\Console\Commands\RetryFailedJobs;
+use Lightpack\Console\Commands\CreateTool;
 
 class Console
 {
@@ -57,9 +58,10 @@ class Console
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,
         'jobs:retry' => RetryFailedJobs::class,
+        'create:tool' => CreateTool::class,
     ];
 
-    public static function register(string $command, ICommand $handler)
+    public static function register(string $command, CommandInterface $handler)
     {
         self::$commands[$command] = $handler;
     }

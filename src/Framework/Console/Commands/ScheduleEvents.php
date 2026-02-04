@@ -2,10 +2,10 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Schedule\Schedule;
 
-class ScheduleEvents implements ICommand
+class ScheduleEvents implements CommandInterface
 {
     /** @var Schedule */
     protected $schedule;

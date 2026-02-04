@@ -1,8 +1,19 @@
 <?php
+
 namespace Lightpack\AI;
+
+use Lightpack\AI\Tools\ToolInvoker;
+use Lightpack\AI\Tools\ToolExecutor;
+use Lightpack\AI\AgentExecutor;
+use Lightpack\AI\Support\JsonExtractor;
 
 class TaskBuilder
 {
+    private const MAX_PROMPT_CHARS = 12000;
+    private const MAX_NESTING_LEVEL = 5;
+    private const MAX_ITEMS = 50;
+    private const MAX_STRING_LENGTH = 800;
+
     protected array $messages = [];
     protected $provider;
     protected ?string $prompt = null;
@@ -15,10 +26,14 @@ class TaskBuilder
     protected ?float $temperature = null;
     protected ?int $maxTokens = null;
     protected ?string $system = null;
-    protected ?string $rawResponse = null;
     protected ?bool $useCache = null;
     protected ?int $cacheTtl = null;
-    
+    protected array $tools = [];
+
+    // Agent loop properties
+    protected int $maxTurns = 1;
+    protected ?string $agentGoal = null;
+
     public function __construct($provider)
     {
         $this->provider = $provider;
@@ -47,7 +62,12 @@ class TaskBuilder
             if (is_int($key)) {
                 $normalized[$type] = 'string';
             } else {
-                $normalized[$key] = $type;
+                // Handle both 'key' => 'type' and 'key' => ['type', 'description']
+                if (is_array($type)) {
+                    $normalized[$key] = $type[0]; // Extract just the type
+                } else {
+                    $normalized[$key] = $type;
+                }
             }
         }
         $this->expectSchema = $normalized;
@@ -111,8 +131,109 @@ class TaskBuilder
         return $this;
     }
 
+    /**
+     * Enable multi-turn agent mode with maximum number of turns.
+     * 
+     * @param int $maxTurns Maximum number of thinking-and-action cycles (default: 10)
+     * @return self
+     */
+    public function loop(int $maxTurns = 10): self
+    {
+        $this->maxTurns = $maxTurns;
+        return $this;
+    }
+
+    /**
+     * Set the goal for agent mode.
+     * Agent will work toward this goal across multiple turns.
+     * 
+     * @param string $goal The objective to achieve
+     * @return self
+     */
+    public function goal(string $goal): self
+    {
+        $this->agentGoal = $goal;
+        return $this;
+    }
+
+    public function tool(string $name, mixed $fn, ?string $description = null, array $params = []): self
+    {
+        $meta = ToolInvoker::extractMeta($fn);
+
+        $this->tools[$name] = [
+            'fn' => $fn,
+            'description' => $description ?? $meta['description'] ?? "Tool: {$name}",
+            'params' => !empty($params) ? $params : $meta['params'],
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Stream the AI response as Server-Sent Events (SSE).
+     * 
+     * If callback provided: streams chunks directly to callback (for testing/CLI).
+     * If no callback: returns Response configured for SSE (for HTTP controllers).
+     * 
+     * Examples:
+     * ```php
+     * // HTTP controller - returns Response
+     * return ai()->task()->prompt('Write an essay')->stream();
+     * 
+     * // Testing/CLI - callback receives chunks
+     * ai()->task()->prompt('Count')->stream(function($chunk) {
+     *     echo $chunk;
+     * });
+     * ```
+     * 
+     * @param callable|null $callback Optional callback to receive chunks directly
+     * @return \Lightpack\Http\Response|void Returns Response if no callback, void if callback provided
+     * @throws \Exception If streaming is incompatible with current configuration
+     */
+    public function stream(?callable $callback = null)
+    {
+        // Validate streaming compatibility
+        if ($this->maxTurns > 1) {
+            throw new \Exception('Streaming is not supported in agent mode (loop). Use run() instead.');
+        }
+        
+        if (!empty($this->tools)) {
+            throw new \Exception('Streaming is not supported with tools. Use run() instead.');
+        }
+        
+        if ($this->expectSchema || $this->expectArrayKey) {
+            throw new \Exception('Streaming is not supported with schema extraction (expect/expectArray). Use run() instead.');
+        }
+        
+        // If callback provided, stream directly to it (for testing/CLI)
+        if ($callback !== null) {
+            $params = $this->buildParams();
+            $this->provider->generateStream($params, $callback);
+            return;
+        }
+        
+        // Otherwise, return SSE Response (for HTTP controllers)
+        return response()->sse(function($stream) {
+            $params = $this->buildParams();
+            $this->provider->generateStream($params, function($chunk) use ($stream) {
+                $stream->push('chunk', ['text' => $chunk]);
+            });
+            $stream->push('done');
+        });
+    }
+
     public function run(): array
     {
+        // Multi-turn agent mode
+        if ($this->maxTurns > 1) {
+            return $this->runAgentMode();
+        }
+
+        // Single-turn mode (existing behavior)
+        if (!empty($this->tools) && ($this->prompt !== null || !empty($this->messages))) {
+            return $this->runWithTools();
+        }
+
         $params = $this->buildParams();
         if ($this->useCache !== null) {
             $params['cache'] = $this->useCache;
@@ -121,9 +242,9 @@ class TaskBuilder
             $params['cache_ttl'] = $this->cacheTtl;
         }
         $result = $this->provider->generate($params);
-        $this->rawResponse = $result['text'] ?? '';
+        $rawResponse = $result['text'] ?? '';
 
-        $data = $this->extractAndDecodeJson($this->rawResponse);
+        $data = $this->extractAndDecodeJson($rawResponse);
         $success = false;
         $this->errors = [];
 
@@ -136,6 +257,9 @@ class TaskBuilder
         } elseif ($this->expectSchema && is_array($data)) {
             $data = $this->coerceSchemaOnObject($data);
             $success = true;
+        } elseif (!$this->expectSchema && !$this->expectArrayKey) {
+            // Plain text mode - no schema expected, always success if we got a response
+            $success = !empty($rawResponse);
         }
 
         // Check required fields BEFORE coercion
@@ -154,9 +278,173 @@ class TaskBuilder
         return [
             'success' => $success,
             'data' => $success ? $data : null,
-            'raw' => $this->rawResponse,
+            'raw' => $rawResponse,
             'errors' => $this->errors,
         ];
+    }
+
+    protected function runWithTools(): array
+    {
+        $this->errors = [];
+
+        // Tool-first API requires explicit ->prompt() call. 
+        // We don't extract from ->messages() to avoid losing conversation context 
+        // in tool decisions (e.g., "show me the cheapest one" needs prior context).
+        // For multi-turn tool conversations, use ->prompt() on each turn.
+        $userQuery = $this->prompt ?? '';
+
+        if (empty($userQuery)) {
+            return [
+                'success' => false,
+                'data' => null,
+                'raw' => null,
+                'errors' => ['No user prompt provided'],
+                'tools_used' => [],
+                'tool_results' => [],
+            ];
+        }
+
+        // Use ToolExecutor for tool workflow
+        $executor = new ToolExecutor($this->tools);
+        $aiGenerator = fn($prompt, $temp) => $this->generateRawText($prompt, temperature: $temp);
+
+        $result = $executor->executeToolWorkflow($userQuery, $aiGenerator);
+
+        // Handle tool execution result
+        if (!$result['success']) {
+            return [
+                'success' => false,
+                'data' => null,
+                'raw' => $result['decision_raw'],
+                'errors' => [$result['error']],
+                'tools_used' => $result['tool_name'] ? [$result['tool_name']] : [],
+                'tool_results' => [],
+            ];
+        }
+
+        // If AI decided no tool needed, generate answer directly
+        if ($result['tool_name'] === 'none') {
+            $prompt = "User: {$userQuery}\n\n"
+                . "Provide a helpful answer. If you need more details, ask a clarifying question.";
+
+            $answer = $this->generateRawText($prompt, temperature: $this->temperature ?? 0.3);
+
+            return [
+                'success' => true,
+                'data' => null,
+                'raw' => $answer,
+                'errors' => [],
+                'tools_used' => [],
+                'tool_results' => [],
+            ];
+        }
+
+        // Tool was executed successfully, generate final answer
+        $toolResultText = $this->formatForPrompt($result['tool_result']);
+        $finalPrompt = "User: {$userQuery}\n\n"
+            . "Tool Used: {$result['tool_name']}\n\n"
+            . "Tool Result:\n{$toolResultText}\n\n"
+            . "Rules:\n"
+            . "- Use ONLY the Tool Result for facts.\n"
+            . "- If the Tool Result does not contain enough information, say so explicitly.\n"
+            . "- Do not invent details.\n\n"
+            . "Answer:";
+
+        $answer = $this->generateRawText($finalPrompt, temperature: $this->temperature ?? 0.3);
+
+        return [
+            'success' => true,
+            'data' => null,
+            'raw' => $answer,
+            'errors' => [],
+            'tools_used' => [$result['tool_name']],
+            'tool_results' => [$result['tool_name'] => $result['tool_result']],
+        ];
+    }
+
+
+    protected function generateRawText(string $prompt, float $temperature = 0.3): string
+    {
+        $params = $this->buildParams();
+        $params['prompt'] = $prompt;
+        $params['temperature'] = $temperature;
+
+        $result = $this->provider->generate($params);
+        return (string)($result['text'] ?? '');
+    }
+
+    protected function decodeJsonObject(string $text): ?array
+    {
+        return JsonExtractor::decode($text);
+    }
+
+
+    protected function formatForPrompt(mixed $value): string
+    {
+        if (is_string($value)) {
+            return $this->truncateString($value, self::MAX_PROMPT_CHARS);
+        }
+
+        if (is_scalar($value) || $value === null) {
+            return $this->truncateString((string)$value, self::MAX_PROMPT_CHARS);
+        }
+
+        $normalized = $this->normalizeForPrompt($value, self::MAX_NESTING_LEVEL, self::MAX_ITEMS, self::MAX_STRING_LENGTH);
+        $json = json_encode($normalized, JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR);
+        if (!is_string($json)) {
+            $json = '[unserializable tool result]';
+        }
+
+        return $this->truncateString($json, self::MAX_PROMPT_CHARS);
+    }
+
+    protected function normalizeForPrompt(mixed $value, int $maxDepth, int $maxItems, int $maxStringLen): mixed
+    {
+        if ($maxDepth <= 0) {
+            return '[max depth reached]';
+        }
+
+        if (is_string($value)) {
+            return $this->truncateString($value, $maxStringLen);
+        }
+
+        if (is_scalar($value) || $value === null) {
+            return $value;
+        }
+
+        if (is_array($value)) {
+            $out = [];
+            $count = 0;
+
+            foreach ($value as $k => $v) {
+                if ($count >= $maxItems) {
+                    $out['__truncated__'] = true;
+                    $out['__truncated_reason__'] = 'max items reached';
+                    break;
+                }
+
+                $key = is_string($k) ? $this->truncateString($k, 120) : $k;
+                $out[$key] = $this->normalizeForPrompt($v, $maxDepth - 1, $maxItems, $maxStringLen);
+                $count++;
+            }
+
+            return $out;
+        }
+
+        if (is_object($value)) {
+            return $this->normalizeForPrompt(get_object_vars($value), $maxDepth - 1, $maxItems, $maxStringLen);
+        }
+
+        return '[unsupported tool result type]';
+    }
+
+    protected function truncateString(string $value, int $maxLen): string
+    {
+        if (strlen($value) <= $maxLen) {
+            return $value;
+        }
+
+        return substr($value, 0, $maxLen) . '...';
     }
 
     /**
@@ -167,26 +455,33 @@ class TaskBuilder
         $params = [];
         if (!empty($this->messages)) {
             $params['messages'] = $this->messages;
-            if ($this->system) {
+            if ($this->system !== null) {
                 array_unshift($params['messages'], ['role' => 'system', 'content' => $this->system]);
             }
-            if (($this->expectSchema || $this->expectArrayKey)) {
-                $schemaInstruction = $this->buildSchemaInstruction();
-                array_unshift($params['messages'], ['role' => 'system', 'content' => $schemaInstruction]);
-            }
-        } else {
-            $finalPrompt = $this->prompt;
-            if (($this->expectSchema || $this->expectArrayKey)) {
-                $finalPrompt .= ' ' . $this->buildSchemaInstruction();
-            }
-            $params['prompt'] = $finalPrompt;
-            if ($this->system) {
-                $params['system'] = $this->system;
-            }
         }
-        if ($this->model) $params['model'] = $this->model;
-        if ($this->temperature) $params['temperature'] = $this->temperature;
-        if ($this->maxTokens) $params['max_tokens'] = $this->maxTokens;
+
+        if ($this->prompt) {
+            $schemaInstruction = $this->buildSchemaInstruction();
+            $params['prompt'] = $schemaInstruction
+                ? $this->prompt . "\n\n" . $schemaInstruction
+                : $this->prompt;
+        }
+
+        if ($this->temperature !== null) {
+            $params['temperature'] = $this->temperature;
+        }
+
+        if ($this->maxTokens !== null) {
+            $params['max_tokens'] = $this->maxTokens;
+        }
+
+        if ($this->model) {
+            $params['model'] = $this->model;
+        }
+
+        if ($this->example) {
+            $params['example'] = $this->example;
+        }
         return $params;
     }
 
@@ -195,7 +490,7 @@ class TaskBuilder
      */
     protected function extractAndDecodeJson(string $text)
     {
-        $json = $this->extractJson($text) ?? $text;
+        $json = JsonExtractor::extract($text) ?? $text;
         return json_decode($json, true);
     }
 
@@ -227,14 +522,15 @@ class TaskBuilder
             if (!array_key_exists($key, $data)) {
                 $data[$key] = null;
             }
-            settype($data[$key], $type);
+
+            // Don't coerce null values - preserve them
+            if ($data[$key] !== null) {
+                // Map 'number' to 'float' for settype compatibility
+                $phpType = $type === 'number' ? 'float' : $type;
+                settype($data[$key], $phpType);
+            }
         }
         return $data;
-    }
-
-    public function raw(): string
-    {
-        return $this->rawResponse;
     }
 
     protected function buildSchemaInstruction(): string
@@ -287,46 +583,147 @@ class TaskBuilder
     }
 
     /**
-     * Extract JSON array, multi-object, or object from a string (for messy LLM outputs).
+     * Run in multi-turn agent mode.
+     * Agent will execute multiple turns until goal is achieved or max turns reached.
      */
-    /**
-     * Attempt to extract valid JSON (array or object) from messy LLM output.
-     * Handles the most common LLM output quirks:
-     *
-     *   1. JSON array:
-     *      - Example input: 'Here is your data: [{"a":1},{"b":2}]'
-     *      - Extracted:      '[{"a":1},{"b":2}]'
-     *
-     *   2. Multiple JSON objects (newline or space separated):
-     *      - Example input: '{"a":1}\n{"b":2}\n{"c":3}'
-     *      - Extracted:      '[{"a":1},{"b":2},{"c":3}]'
-     *
-     *   3. Single JSON object:
-     *      - Example input: 'Result: {"a":1, "b":2}'
-     *      - Extracted:      '{"a":1, "b":2}'
-     *
-     *   4. If nothing found, returns null.
-     *
-     * This makes the builder robust to unpredictable LLM output formatting.
-     */
-    protected function extractJson(string $text): ?string
+    protected function runAgentMode(): array
     {
-        // 1. Try to extract a JSON array (most robust, preferred format)
-        if (preg_match('/(\[.*\])/s', $text, $matches)) {
-            return $matches[0];
+        $originalPrompt = $this->prompt;
+
+        // Create agent executor with task executor callback
+        $agent = new AgentExecutor(
+            maxTurns: $this->maxTurns,
+            goal: $this->agentGoal,
+            taskExecutor: function (AgentExecutor $agent) {
+                // Prepare prompt for next turn
+                $this->prompt = $agent->prepareNextTurnPrompt();
+
+                // Execute single turn
+                return $this->executeSingleTurn();
+            }
+        );
+
+        // Run agent loop
+        return $agent->run($originalPrompt);
+    }
+
+    /**
+     * Execute a single turn (either with tools or plain generation).
+     */
+    protected function executeSingleTurn(): array
+    {
+        // In agent mode with tools, we need different behavior than single-turn mode
+        if (!empty($this->tools) && ($this->prompt !== null || !empty($this->messages))) {
+            return $this->executeAgentTurnWithTools();
         }
-        // 2. If multiple JSON objects (e.g., separated by newlines), wrap as array
-        if (preg_match_all('/\{.*?\}/s', $text, $matches) && count($matches[0]) > 1) {
-            // Join all found objects into a valid JSON array
-            return '[' . implode(',', $matches[0]) . ']';
+
+        $params = $this->buildParams();
+        if ($this->useCache !== null) {
+            $params['cache'] = $this->useCache;
         }
-        // 3. Fallback: extract a single JSON object
-        if (preg_match('/\{.*\}/s', $text, $matches)) {
-            return $matches[0];
+        if ($this->cacheTtl !== null) {
+            $params['cache_ttl'] = $this->cacheTtl;
         }
-        // 4. Nothing found: return null
-        return null;
+        $result = $this->provider->generate($params);
+        $rawResponse = $result['text'] ?? '';
+
+        $data = $this->extractAndDecodeJson($rawResponse);
+        $success = false;
+        $this->errors = [];
+
+        $originalData = is_array($data) ? $data : [];
+
+        if ($this->expectArrayKey && is_array($data)) {
+            $data = $this->coerceSchemaOnArray($data);
+            $success = true;
+        } elseif ($this->expectSchema && is_array($data)) {
+            $data = $this->coerceSchemaOnObject($data);
+            $success = true;
+        } elseif (!$this->expectSchema && !$this->expectArrayKey) {
+            $success = !empty($rawResponse);
+        }
+
+        if ($success && !empty($this->requiredFields)) {
+            if ($this->expectArrayKey && is_array($originalData)) {
+                $this->validateRequiredFieldsInArray($originalData);
+            } else {
+                $this->validateRequiredFieldsInObject($originalData);
+            }
+            if (!empty($this->errors)) {
+                $success = false;
+            }
+        }
+
+        return [
+            'success' => $success,
+            'data' => $success ? $data : null,
+            'raw' => $rawResponse,
+            'errors' => $this->errors,
+        ];
+    }
+
+    /**
+     * Execute a single agent turn with tools.
+     * Unlike runWithTools(), this doesn't generate final answer - just executes tool and returns.
+     */
+    protected function executeAgentTurnWithTools(): array
+    {
+        $this->errors = [];
+        $userQuery = $this->prompt ?? '';
+
+        if (empty($userQuery)) {
+            return [
+                'success' => false,
+                'data' => null,
+                'raw' => null,
+                'errors' => ['No user prompt provided'],
+                'tools_used' => [],
+                'tool_results' => [],
+            ];
+        }
+
+        // Use ToolExecutor for tool workflow
+        $executor = new ToolExecutor($this->tools);
+        $aiGenerator = fn($prompt, $temp) => $this->generateRawText($prompt, temperature: $temp);
+
+        $result = $executor->executeToolWorkflow($userQuery, $aiGenerator);
+
+        // Handle tool execution result
+        if (!$result['success']) {
+            return [
+                'success' => false,
+                'data' => null,
+                'raw' => $result['decision_raw'],
+                'errors' => [$result['error']],
+                'tools_used' => $result['tool_name'] ? [$result['tool_name']] : [],
+                'tool_results' => [],
+            ];
+        }
+
+        // If AI decided no tool needed, generate final answer
+        if ($result['tool_name'] === 'none') {
+            // Generate natural language answer instead of returning JSON decision
+            $answer = $this->generateRawText($userQuery, temperature: $this->temperature ?? 0.3);
+            
+            return [
+                'success' => true,
+                'data' => null,
+                'raw' => $answer,
+                'errors' => [],
+                'tools_used' => [],
+                'tool_results' => [],
+            ];
+        }
+
+        // In agent mode, return tool result without generating final answer
+        // Agent will decide in next turn whether to call another tool or finish
+        return [
+            'success' => true,
+            'data' => null,
+            'raw' => "Tool {$result['tool_name']} executed successfully",
+            'errors' => [],
+            'tools_used' => [$result['tool_name']],
+            'tool_results' => [$result['tool_name'] => $result['tool_result']],
+        ];
     }
 }
-
-

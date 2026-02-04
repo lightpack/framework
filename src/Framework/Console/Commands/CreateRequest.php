@@ -3,10 +3,10 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Console\Views\RequestView;
 
-class CreateRequest implements ICommand
+class CreateRequest implements CommandInterface
 {
     public function run(array $arguments = [])
     {

@@ -5,7 +5,6 @@ use Lightpack\AI\Providers\OpenAI;
 use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
-use Lightpack\Logger\Logger;
 
 class OpenAIIntegrationTest extends TestCase
 {
@@ -37,8 +36,7 @@ class OpenAIIntegrationTest extends TestCase
         $this->openai = new OpenAI(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
     }
 

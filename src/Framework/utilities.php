@@ -489,7 +489,7 @@ if (!function_exists('storage')) {
     /**
      * Returns the storage object.
      */
-    function storage(): \Lightpack\Storage\Storage
+    function storage(): \Lightpack\Storage\StorageInterface
     {
         return app('storage');
     }
@@ -697,5 +697,17 @@ if (!function_exists('optional')) {
         }
 
         return $callback ? $callback($value) : $value;
+    }
+}
+
+if (!function_exists('http')) {
+    /**
+     * Get a new HTTP client instance for making API requests.
+     * 
+     * @return \Lightpack\Http\Http
+     */
+    function http(): \Lightpack\Http\Http
+    {
+        return new \Lightpack\Http\Http();
     }
 }

@@ -3,7 +3,7 @@
 namespace Lightpack\Providers;
 
 use Lightpack\Logger\Logger;
-use Lightpack\Logger\ILogger;
+use Lightpack\Logger\LoggerInterface;
 use Lightpack\Logger\Drivers\FileLogger;
 use Lightpack\Logger\Drivers\DailyFileLogger;
 use Lightpack\Logger\Drivers\NullLogger;
@@ -36,6 +36,6 @@ class LogProvider implements ProviderInterface
         });
 
         $container->alias(Logger::class, 'logger');
-        $container->alias(ILogger::class, 'logger');
+        $container->alias(LoggerInterface::class, 'logger');
     }
 }

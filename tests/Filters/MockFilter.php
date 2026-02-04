@@ -2,10 +2,10 @@
 
 use \Lightpack\Http\Request;
 use \Lightpack\Http\Response;
-use \Lightpack\Filters\IFilter;
+use Lightpack\Filters\FilterInterface;
 use Lightpack\Utils\Url;
 
-class MockFilter implements IFilter
+class MockFilter implements FilterInterface
 {
     public function before(Request $request, array $params = [])
     {

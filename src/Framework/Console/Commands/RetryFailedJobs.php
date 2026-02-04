@@ -2,10 +2,10 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Jobs\Connection;
 
-class RetryFailedJobs implements ICommand
+class RetryFailedJobs implements CommandInterface
 {
     public function run(array $arguments = [])
     {

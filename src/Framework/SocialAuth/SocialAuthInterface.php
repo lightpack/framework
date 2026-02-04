@@ -2,7 +2,7 @@
 
 namespace Lightpack\SocialAuth;
 
-interface SocialAuth
+interface SocialAuthInterface
 {
     public function getAuthUrl(array $params = []): string;
     public function getUser(string $code): array;

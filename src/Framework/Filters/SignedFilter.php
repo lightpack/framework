@@ -4,9 +4,9 @@ namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\IFilter;
+use Lightpack\Filters\FilterInterface;
 
-class SignedFilter implements IFilter
+class SignedFilter implements FilterInterface
 {
     public function before(Request $request, array $params = [])
     {

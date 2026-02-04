@@ -2,9 +2,9 @@
 
 namespace Lightpack\Logger\Drivers;
 
-use Lightpack\Logger\ILogger;
+use Lightpack\Logger\LoggerInterface;
 
-class FileLogger implements ILogger
+class FileLogger implements LoggerInterface
 {
     private $filename;
     private $maxFileSize; // max log file in bytes

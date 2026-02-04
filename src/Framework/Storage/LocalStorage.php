@@ -5,7 +5,7 @@ namespace Lightpack\Storage;
 use Lightpack\Exceptions\FileUploadException;
 use Lightpack\File\File;
 
-class LocalStorage extends File implements Storage
+class LocalStorage extends File implements StorageInterface
 {
     public function __construct(protected string $storageDir)
     {

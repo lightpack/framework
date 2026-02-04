@@ -424,4 +424,76 @@ final class ResponseTest extends TestCase
             }
         }
     }
+
+    public function testSseMethod()
+    {
+        $this->response->sse(function($stream) {
+            // Callback will be executed later
+        });
+        
+        // Verify SSE headers are set correctly
+        $headers = $this->response->getHeaders();
+        
+        $this->assertArrayHasKey('Content-Type', $headers);
+        $this->assertArrayHasKey('Cache-Control', $headers);
+        $this->assertArrayHasKey('Connection', $headers);
+        $this->assertArrayHasKey('X-Accel-Buffering', $headers);
+        
+        $this->assertEquals('text/event-stream', $headers['Content-Type']);
+        $this->assertEquals('no-cache', $headers['Cache-Control']);
+        $this->assertEquals('keep-alive', $headers['Connection']);
+        $this->assertEquals('no', $headers['X-Accel-Buffering']);
+        
+        // Verify streaming callback was set
+        $this->assertNotNull($this->response->getStreamCallback());
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testSseMethodStreamObjectHasPushMethod()
+    {
+        $streamObject = null;
+        
+        $this->response->sse(function($stream) use (&$streamObject) {
+            $streamObject = $stream;
+        });
+        
+        // Execute the stream callback to get the stream object
+        ob_start();
+        $this->response->send();
+        ob_end_clean();
+        
+        // Verify stream object has push method
+        $this->assertNotNull($streamObject);
+        $this->assertTrue(method_exists($streamObject, 'push'));
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testSseMethodCallbackExecution()
+    {
+        $callbackExecuted = false;
+        $streamObjectReceived = null;
+        
+        $this->response->sse(function($stream) use (&$callbackExecuted, &$streamObjectReceived) {
+            $callbackExecuted = true;
+            $streamObjectReceived = $stream;
+            
+            // Test that push method exists and can be called
+            $stream->push('test', ['message' => 'Hello']);
+            $stream->push('done');
+        });
+        
+        // Execute the stream by sending response
+        ob_start();
+        $this->response->send();
+        ob_end_clean();
+        
+        // Verify callback was executed
+        $this->assertTrue($callbackExecuted);
+        $this->assertNotNull($streamObjectReceived);
+        $this->assertTrue(method_exists($streamObjectReceived, 'push'));
+    }
 }

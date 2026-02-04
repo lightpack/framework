@@ -2,8 +2,6 @@
 
 namespace Lightpack\AI\VectorSearch;
 
-use Lightpack\Logger\Logger;
-
 /**
  * In-memory vector search implementation using brute-force cosine similarity.
  * 
@@ -12,10 +10,6 @@ use Lightpack\Logger\Logger;
  */ 
 class InMemoryVectorSearch implements VectorSearchInterface
 {
-    public function __construct(
-        private ?Logger $logger = null
-    ) {}
-
     /**
      * Search for similar items using cosine similarity.
      * 

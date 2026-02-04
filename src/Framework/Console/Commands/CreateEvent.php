@@ -2,10 +2,10 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Console\Views\EventView;
 
-class CreateEvent implements ICommand
+class CreateEvent implements CommandInterface
 {
     public function run(array $arguments = [])
     {

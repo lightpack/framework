@@ -2,10 +2,10 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Database\Seeders\DatabaseSeeder;
 
-class SeedCommand implements ICommand
+class SeedCommand implements CommandInterface
 {
     public function run(array $arguments = [])
     {

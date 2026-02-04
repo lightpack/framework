@@ -2,12 +2,12 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\ICommand;
+use Lightpack\Console\CommandInterface;
 use Lightpack\Console\Views\ModelView;
 use Lightpack\Console\Output;
 use Lightpack\Utils\Str;
 
-class CreateModel implements ICommand
+class CreateModel implements CommandInterface
 {
     public function run(array $arguments = [])
     {

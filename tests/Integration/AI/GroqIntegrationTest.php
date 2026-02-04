@@ -5,7 +5,6 @@ use Lightpack\AI\Providers\Groq;
 use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
-use Lightpack\Logger\Logger;
 
 class GroqIntegrationTest extends TestCase
 {
@@ -37,8 +36,7 @@ class GroqIntegrationTest extends TestCase
         $this->groq = new Groq(
             new Http(),
             $this->createMock(Cache::class),
-            $config,
-            $this->createMock(Logger::class)
+            $config
         );
     }
 
