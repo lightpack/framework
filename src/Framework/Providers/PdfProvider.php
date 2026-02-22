@@ -3,26 +3,21 @@ namespace Lightpack\Providers;
 
 use Lightpack\Pdf\Pdf;
 use Lightpack\Container\Container;
-use Lightpack\Pdf\Driver\DompdfDriver;
+use Lightpack\Pdf\PdfManager;
 
 class PdfProvider implements ProviderInterface
 {
     public function register(Container $container)
     {
-        $container->register('pdf', function($container) {
-            $config = $container->get('config')->get('pdf');
-            $driverType = $config['driver'] ?? 'dompdf';
-            $options = $config[$driverType] ?? [];
-            $template = $container->get('template');
-
-            $driver = match ($driverType) {
-                'dompdf' => new DompdfDriver($options),
-                default  => throw new \Exception("Unknown PDF driver: {$driverType}"),
-            };
-
-            return new Pdf($driver, $template, $options);
+        $container->register('pdf.manager', function ($container) {
+            return new PdfManager($container);
         });
 
+        $container->register('pdf', function ($container) {
+            return $container->get('pdf.manager')->driver();
+        });
+
+        $container->alias(PdfManager::class, 'pdf.manager');
         $container->alias(Pdf::class, 'pdf');
     }
 }
