@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
-use Lightpack\Providers\LogProvider;
+use Lightpack\Logger\LogProvider;
 use Lightpack\Logger\Logger;
 use Lightpack\Logger\Drivers\FileLogger;
 use Lightpack\Logger\Drivers\DailyFileLogger;
