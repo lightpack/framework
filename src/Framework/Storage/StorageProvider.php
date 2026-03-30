@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Storage;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
 use Lightpack\Storage\StorageInterface;
 use Lightpack\Storage\StorageManager;

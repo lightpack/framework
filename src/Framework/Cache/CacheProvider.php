@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Cache;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Cache\Cache;
 use Lightpack\Cache\CacheManager;
 use Lightpack\Container\Container;

@@ -2,7 +2,7 @@
 
 namespace Lightpack\Mfa;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Mfa\Factor\NullMfa;
 use Lightpack\Mfa\Factor\EmailMfa;

@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\View;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\View\Template;
 use Lightpack\Container\Container;
 

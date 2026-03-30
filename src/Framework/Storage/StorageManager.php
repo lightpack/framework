@@ -2,7 +2,7 @@
 
 namespace Lightpack\Storage;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Storage\LocalStorage;
 use Lightpack\Storage\S3Storage;

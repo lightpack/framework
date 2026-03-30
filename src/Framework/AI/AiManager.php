@@ -2,7 +2,7 @@
 
 namespace Lightpack\AI;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\AI\Providers\Groq;
 use Lightpack\AI\Providers\OpenAI;

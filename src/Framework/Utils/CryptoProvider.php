@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Utils;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Config\Config;
 use Lightpack\Container\Container;
 use Lightpack\Utils\Crypto;

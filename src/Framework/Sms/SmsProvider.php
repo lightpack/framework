@@ -1,12 +1,12 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Sms;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Sms\Sms;
 use Lightpack\Container\Container;
 use Lightpack\Sms\SmsProviderInterface;
 use Lightpack\Sms\SmsManager;
-use Lightpack\Providers\ProviderInterface;
 
 class SmsProvider implements ProviderInterface
 {

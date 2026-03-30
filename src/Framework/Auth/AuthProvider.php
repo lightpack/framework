@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Auth;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Auth\Auth;
 use Lightpack\Container\Container;
 

@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Routing;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Routing\Router;
 use Lightpack\Container\Container;
 

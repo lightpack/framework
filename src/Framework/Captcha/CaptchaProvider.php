@@ -1,9 +1,9 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Captcha;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Providers\ProviderInterface;
 use Lightpack\Captcha\CaptchaInterface;
 use Lightpack\Captcha\CaptchaManager;
 

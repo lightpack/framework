@@ -1,23 +1,16 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Cable;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
 use Lightpack\Cable\Cable;
 use Lightpack\Cable\CableManager;
 use Lightpack\Cable\Presence;
 use Lightpack\Cable\PresenceManager;
 
-/**
- * Cable Provider
- * 
- * This provider registers the Cable service with the container.
- */
 class CableProvider implements ProviderInterface
 {
-    /**
-     * Register the service provider.
-     */
     public function register(Container $container)
     {
         $container->register('cable.manager', function ($container) {

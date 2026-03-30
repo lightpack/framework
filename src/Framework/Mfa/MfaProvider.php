@@ -1,9 +1,9 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Mfa;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Providers\ProviderInterface;
 use Lightpack\Mfa\MfaInterface;
 use Lightpack\Mfa\MfaManager;
 

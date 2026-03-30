@@ -2,7 +2,7 @@
 
 namespace Lightpack\Mail;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Mail\Drivers\SmtpDriver;
 use Lightpack\Mail\Drivers\ArrayDriver;

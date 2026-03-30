@@ -2,7 +2,7 @@
 
 namespace Lightpack\Cable;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Cable\Drivers\DatabasePresenceDriver;
 use Lightpack\Cable\Drivers\RedisPresenceDriver;

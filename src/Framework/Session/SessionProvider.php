@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Session;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Session\Session;
 use Lightpack\Container\Container;
 use Lightpack\Session\SessionManager;

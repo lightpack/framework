@@ -2,7 +2,7 @@
 
 namespace Lightpack\Cache;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Cache\Drivers\FileDriver;
 use Lightpack\Cache\Drivers\NullDriver;

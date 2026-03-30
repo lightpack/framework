@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Http;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Http\Cookie;
 use Lightpack\Container\Container;
 

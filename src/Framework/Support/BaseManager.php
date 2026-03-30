@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Manager;
+namespace Lightpack\Support;
 
 use Lightpack\Container\Container;
 use Closure;

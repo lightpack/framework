@@ -1,11 +1,11 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Secrets;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
 use Lightpack\Secrets\Secrets;
-use Lightpack\Providers\ProviderInterface;
 
 class SecretsProvider implements ProviderInterface
 {

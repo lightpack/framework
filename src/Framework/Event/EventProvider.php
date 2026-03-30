@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Event;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Event\Event;
 use Lightpack\Container\Container;
 

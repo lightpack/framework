@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Database;
 
+use Lightpack\Support\ProviderInterface;
 use Exception;
 use Lightpack\Container\Container;
 use Lightpack\Database\Adapters\Mysql;

@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Schedule;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Schedule\Schedule;
 use Lightpack\Container\Container;
 

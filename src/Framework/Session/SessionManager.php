@@ -2,7 +2,7 @@
 
 namespace Lightpack\Session;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Session\Drivers\ArrayDriver;
 use Lightpack\Session\Drivers\CacheDriver;

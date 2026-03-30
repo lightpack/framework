@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Redis;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
 use Lightpack\Redis\Redis;
 

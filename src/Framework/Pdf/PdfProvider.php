@@ -1,6 +1,8 @@
 <?php
-namespace Lightpack\Providers;
 
+namespace Lightpack\Pdf;
+
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Pdf\Pdf;
 use Lightpack\Container\Container;
 use Lightpack\Pdf\PdfManager;

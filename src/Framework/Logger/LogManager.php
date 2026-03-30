@@ -2,7 +2,7 @@
 
 namespace Lightpack\Logger;
 
-use Lightpack\Manager\BaseManager;
+use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Logger\Drivers\FileLogger;
 use Lightpack\Logger\Drivers\DailyFileLogger;

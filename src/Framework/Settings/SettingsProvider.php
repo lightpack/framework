@@ -1,10 +1,10 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Settings;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Settings\Settings;
 use Lightpack\Container\Container;
-use Lightpack\Providers\ProviderInterface;
 
 class SettingsProvider implements ProviderInterface
 {

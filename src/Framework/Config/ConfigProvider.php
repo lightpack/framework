@@ -1,7 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Config;
 
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Config\Config;
 use Lightpack\Container\Container;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\Support;
 
 use Lightpack\Container\Container;
 

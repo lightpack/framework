@@ -1,8 +1,8 @@
 <?php
 
-namespace Lightpack\Providers;
+namespace Lightpack\AI;
 
-use Lightpack\Providers\ProviderInterface;
+use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
 use Lightpack\AI\AI;
 use Lightpack\AI\AiManager;
