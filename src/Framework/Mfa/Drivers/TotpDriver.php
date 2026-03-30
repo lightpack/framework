@@ -1,5 +1,5 @@
 <?php
-namespace Lightpack\Mfa\Factor;
+namespace Lightpack\Mfa\Drivers;
 
 use Lightpack\Mfa\MfaInterface;
 use Lightpack\Auth\Models\AuthUser;
@@ -8,9 +8,9 @@ use RobThree\Auth\TwoFactorAuth;
 use RobThree\Auth\Providers\Qr\QRServerProvider;
 
 /**
- * MFA Factor for TOTP (Authenticator Apps)
+ * MFA Driver for TOTP (Authenticator Apps)
  */
-class TotpMfa implements MfaInterface
+class TotpDriver implements MfaInterface
 {
     public function send(AuthUser $user): void
     {

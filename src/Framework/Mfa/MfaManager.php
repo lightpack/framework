@@ -4,11 +4,11 @@ namespace Lightpack\Mfa;
 
 use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
-use Lightpack\Mfa\Factor\NullMfa;
-use Lightpack\Mfa\Factor\EmailMfa;
-use Lightpack\Mfa\Factor\SmsMfa;
-use Lightpack\Mfa\Factor\BackupCodeMfa;
-use Lightpack\Mfa\Factor\TotpMfa;
+use Lightpack\Mfa\Drivers\NullDriver;
+use Lightpack\Mfa\Drivers\EmailDriver;
+use Lightpack\Mfa\Drivers\SmsDriver;
+use Lightpack\Mfa\Drivers\BackupCodeDriver;
+use Lightpack\Mfa\Drivers\TotpDriver;
 use Lightpack\Utils\Otp;
 
 class MfaManager extends BaseManager
@@ -26,11 +26,11 @@ class MfaManager extends BaseManager
     protected function registerBuiltInDrivers(): void
     {
         $this->register('null', function ($container) {
-            return new NullMfa();
+            return new NullDriver();
         });
         
         $this->register('email', function ($container) {
-            return new EmailMfa(
+            return new EmailDriver(
                 $container->get('cache'),
                 $container->get('config'),
                 new Otp()
@@ -38,7 +38,7 @@ class MfaManager extends BaseManager
         });
         
         $this->register('sms', function ($container) {
-            return new SmsMfa(
+            return new SmsDriver(
                 $container->get('cache'),
                 $container->get('config'),
                 new Otp(),
@@ -47,11 +47,11 @@ class MfaManager extends BaseManager
         });
         
         $this->register('totp', function ($container) {
-            return new TotpMfa();
+            return new TotpDriver();
         });
         
         $this->register('backup_code', function ($container) {
-            return new BackupCodeMfa();
+            return new BackupCodeDriver();
         });
     }
     

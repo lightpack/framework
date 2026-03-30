@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Mfa\Factor;
+namespace Lightpack\Mfa\Drivers;
 
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
@@ -10,9 +10,9 @@ use Lightpack\Mfa\Job\SmsMfaJob;
 use Lightpack\Utils\Otp;
 
 /**
- * Email-based MFA factor implementation.
+ * SMS-based MFA driver implementation.
  */
-class SmsMfa extends BaseMfaFactor
+class SmsDriver extends BaseDriver
 {
     public function __construct(
         Cache $cache,

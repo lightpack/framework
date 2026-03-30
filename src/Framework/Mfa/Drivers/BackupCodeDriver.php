@@ -1,14 +1,14 @@
 <?php
-namespace Lightpack\Mfa\Factor;
+namespace Lightpack\Mfa\Drivers;
 
 use Lightpack\Mfa\MfaInterface;
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Mfa\BackupCodeHelper;
 
 /**
- * MFA Factor for Backup Codes
+ * MFA Driver for Backup Codes
  */
-class BackupCodeMfa implements MfaInterface
+class BackupCodeDriver implements MfaInterface
 {
     public function send(AuthUser $user): void
     {

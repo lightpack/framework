@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Mfa\Factor;
+namespace Lightpack\Mfa\Drivers;
 
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
@@ -9,7 +9,7 @@ use Lightpack\Mfa\MfaInterface;
 use Lightpack\Utils\Otp;
 use RuntimeException;
 
-abstract class BaseMfaFactor implements MfaInterface
+abstract class BaseDriver implements MfaInterface
 {
     public function __construct(
         protected Cache $cache,

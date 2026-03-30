@@ -1,13 +1,13 @@
 <?php
 
-namespace Lightpack\Mfa\Factor;
+namespace Lightpack\Mfa\Drivers;
 
 use Lightpack\Mfa\MfaInterface;
 
 /**
- * Null MFA factor for testing or when MFA is disabled.
+ * Null MFA driver for testing or when MFA is disabled.
  */
-class NullMfa implements MfaInterface
+class NullDriver implements MfaInterface
 {
     public function send($user): void
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Mfa\Factor;
+namespace Lightpack\Mfa\Drivers;
 
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
@@ -11,9 +11,9 @@ use Lightpack\Utils\Limiter;
 use Lightpack\Utils\Otp;
 
 /**
- * Email-based MFA factor implementation.
+ * Email-based MFA driver implementation.
  */
-class EmailMfa extends BaseMfaFactor
+class EmailDriver extends BaseDriver
 {
     public function __construct(
         Cache $cache,
