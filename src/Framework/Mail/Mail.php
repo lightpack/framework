@@ -184,7 +184,7 @@ abstract class Mail
         // Get driver from injected MailManager
         $driver = $this->driverName 
             ? $this->mailManager->driver($this->driverName)
-            : $this->mailManager->getDefaultDriver();
+            : $this->mailManager->driver();
         
         return $driver->send([
             'to' => $this->to,
