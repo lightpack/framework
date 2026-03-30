@@ -45,8 +45,7 @@ class SmtpIntegrationTest extends TestCase
         
         // Register MailManager with SMTP driver
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new MailManager();
-        $mailManager->registerDriver('smtp', new SmtpDriver());
+        $mailManager = new MailManager($container);
         $mailManager->setDefaultDriver('smtp');
         $container->register('mail', fn() => $mailManager);
     }
@@ -130,8 +129,7 @@ class SmtpIntegrationTest extends TestCase
         
         // Re-register with invalid credentials
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new MailManager();
-        $mailManager->registerDriver('smtp', new SmtpDriver());
+        $mailManager = new MailManager($container);
         $mailManager->setDefaultDriver('smtp');
         $container->register('mail', fn() => $mailManager);
 

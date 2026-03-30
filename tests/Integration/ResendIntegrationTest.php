@@ -46,8 +46,7 @@ class ResendIntegrationTest extends TestCase
         
         // Register MailManager with Resend driver
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new MailManager();
-        $mailManager->registerDriver('resend', new ResendDriver());
+        $mailManager = new MailManager($container);
         $mailManager->setDefaultDriver('resend');
         $container->register('mail', fn() => $mailManager);
     }
@@ -137,8 +136,7 @@ class ResendIntegrationTest extends TestCase
         
         // Re-register with invalid key
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new MailManager();
-        $mailManager->registerDriver('resend', new ResendDriver());
+        $mailManager = new MailManager($container);
         $mailManager->setDefaultDriver('resend');
         $container->register('mail', fn() => $mailManager);
 
