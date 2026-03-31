@@ -22,6 +22,7 @@ class EmbeddingIntegrationTest extends TestCase
         $config->method('get')->willReturnCallback(function($key, $default = null) use ($apiKey) {
             $map = [
                 'ai.providers.gemini.key' => $apiKey,
+                'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
                 'ai.providers.gemini.embedding_model' => 'text-embedding-004',
                 'ai.http_timeout' => 30,
             ];
@@ -55,6 +56,7 @@ class EmbeddingIntegrationTest extends TestCase
         $config->method('get')->willReturnCallback(function($key, $default = null) use ($apiKey) {
             $map = [
                 'ai.providers.gemini.key' => $apiKey,
+                'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
                 'ai.providers.gemini.embedding_model' => 'text-embedding-004',
                 'ai.http_timeout' => 30,
             ];
@@ -98,6 +100,7 @@ class EmbeddingIntegrationTest extends TestCase
         $config->method('get')->willReturnCallback(function($key, $default = null) use ($apiKey) {
             $map = [
                 'ai.providers.gemini.key' => $apiKey,
+                'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
                 'ai.providers.gemini.embedding_model' => 'text-embedding-004',
                 'ai.http_timeout' => 30,
             ];
@@ -157,6 +160,8 @@ class EmbeddingIntegrationTest extends TestCase
         $config->method('get')->willReturnCallback(function($key, $default = null) use ($apiKey) {
             $map = [
                 'ai.providers.openai.key' => $apiKey,
+                'ai.providers.openai.base_url' => 'https://api.openai.com/v1',
+                'ai.providers.openai.base_url' => 'https://api.openai.com/v1',
                 'ai.providers.openai.embedding_model' => 'text-embedding-3-small',
                 'ai.http_timeout' => 30,
             ];

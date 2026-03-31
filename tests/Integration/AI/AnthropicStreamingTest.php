@@ -25,7 +25,7 @@ class AnthropicStreamingTest extends TestCase
                 'ai.providers.anthropic.key' => $this->apiKey,
                 'ai.providers.anthropic.model' => 'claude-3-haiku-20240307',
                 'ai.providers.anthropic.version' => '2023-06-01',
-                'ai.providers.anthropic.endpoint' => 'https://api.anthropic.com/v1/messages',
+                'ai.providers.anthropic.base_url' => 'https://api.anthropic.com/v1',
                 'ai.http_timeout' => 30,
                 'ai.temperature' => 0.7,
                 'ai.max_tokens' => 150,

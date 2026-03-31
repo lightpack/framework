@@ -24,7 +24,7 @@ class MistralStreamingTest extends TestCase
             $map = [
                 'ai.providers.mistral.key' => $this->apiKey,
                 'ai.providers.mistral.model' => 'mistral-small-latest',
-                'ai.providers.mistral.endpoint' => 'https://api.mistral.ai/v1/chat/completions',
+                'ai.providers.mistral.base_url' => 'https://api.mistral.ai/v1',
                 'ai.http_timeout' => 30,
                 'ai.temperature' => 0.7,
                 'ai.max_tokens' => 150,
