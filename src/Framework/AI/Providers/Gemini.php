@@ -198,24 +198,24 @@ class Gemini extends AI
 
     protected function generateEmbedding(string|array $input, array $options = []): array
     {
-        $model = $options['model'] ?? $this->config->get('ai.providers.gemini.embedding_model', 'text-embedding-004');
+        $model = $options['model'] ?? $this->config->get('ai.providers.gemini.embedding_model', 'gemini-embedding-001');
         $apiKey = $this->config->get('ai.providers.gemini.key');
         $baseUrl = $this->config->get('ai.providers.gemini.base_url');
         
         if (is_string($input)) {
-            $endpoint = $baseUrl . '/models/' . $model . ':embedContent?key=' . $apiKey;
+            $endpoint = $baseUrl . '/models/' . $model . ':embedContent';
             
             $result = $this->makeApiRequest(
                 $endpoint,
                 ['content' => ['parts' => [['text' => $input]]]],
-                ['Content-Type' => 'application/json'],
+                ['Content-Type' => 'application/json', 'x-goog-api-key' => $apiKey],
                 $this->config->get('ai.http_timeout', 15)
             );
             
             return $result['embedding']['values'] ?? [];
         }
         
-        $endpoint = $baseUrl . '/models/' . $model . ':batchEmbedContents?key=' . $apiKey;
+        $endpoint = $baseUrl . '/models/' . $model . ':batchEmbedContents';
         
         $requests = array_map(fn($text) => [
             'model' => 'models/' . $model,
@@ -225,7 +225,7 @@ class Gemini extends AI
         $result = $this->makeApiRequest(
             $endpoint,
             ['requests' => $requests],
-            ['Content-Type' => 'application/json'],
+            ['Content-Type' => 'application/json', 'x-goog-api-key' => $apiKey],
             $this->config->get('ai.http_timeout', 15)
         );
         

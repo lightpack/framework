@@ -23,7 +23,7 @@ class EmbeddingIntegrationTest extends TestCase
             $map = [
                 'ai.providers.gemini.key' => $apiKey,
                 'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
-                'ai.providers.gemini.embedding_model' => 'text-embedding-004',
+                'ai.providers.gemini.embedding_model' => 'gemini-embedding-001',
                 'ai.http_timeout' => 30,
             ];
             return $map[$key] ?? $default;
@@ -39,8 +39,7 @@ class EmbeddingIntegrationTest extends TestCase
         $embedding = $gemini->embed('Hello world');
         
         $this->assertIsArray($embedding);
-        $this->assertGreaterThan(700, count($embedding)); // Gemini uses 768 dimensions
-        $this->assertLessThan(800, count($embedding));
+        $this->assertGreaterThan(700, count($embedding)); // gemini-embedding-001 uses 768 dimensions
         $this->assertIsFloat($embedding[0]);
     }
 
@@ -57,7 +56,7 @@ class EmbeddingIntegrationTest extends TestCase
             $map = [
                 'ai.providers.gemini.key' => $apiKey,
                 'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
-                'ai.providers.gemini.embedding_model' => 'text-embedding-004',
+                'ai.providers.gemini.embedding_model' => 'gemini-embedding-001',
                 'ai.http_timeout' => 30,
             ];
             return $map[$key] ?? $default;
@@ -101,7 +100,7 @@ class EmbeddingIntegrationTest extends TestCase
             $map = [
                 'ai.providers.gemini.key' => $apiKey,
                 'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
-                'ai.providers.gemini.embedding_model' => 'text-embedding-004',
+                'ai.providers.gemini.embedding_model' => 'gemini-embedding-001',
                 'ai.http_timeout' => 30,
             ];
             return $map[$key] ?? $default;

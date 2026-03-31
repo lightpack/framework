@@ -43,6 +43,7 @@ return [
                 'key' => get_env('GEMINI_API_KEY'),
                 'model' => 'gemini-2.0-flash', // Or 'gemini-2.5-flash', 'gemini-pro', etc.
                 'base_url' => 'https://generativelanguage.googleapis.com/v1beta',
+                'embedding_model' => 'gemini-embedding-001',
             ],
         ],
     ],
