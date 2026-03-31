@@ -35,7 +35,7 @@ class OpenAIAgentToolsIntegrationTest extends TestCase
             $map = [
                 'ai.providers.openai.key' => $this->apiKey,
                 'ai.providers.openai.model' => 'gpt-4o-mini',
-                'ai.providers.openai.endpoint' => 'https://api.openai.com/v1/chat/completions',
+                'ai.providers.openai.base_url' => 'https://api.openai.com/v1',
                 'ai.http_timeout' => 60,
                 'ai.temperature' => 0.3,
                 'ai.max_tokens' => 500,

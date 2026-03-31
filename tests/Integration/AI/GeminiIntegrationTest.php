@@ -24,7 +24,7 @@ class GeminiIntegrationTest extends TestCase
             $map = [
                 'ai.providers.gemini.key' => $this->apiKey,
                 'ai.providers.gemini.model' => 'gemini-2.0-flash',
-                'ai.providers.gemini.endpoint' => 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+                'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
                 'ai.http_timeout' => 30,
                 'ai.temperature' => 0.7,
                 'ai.max_tokens' => 100,
@@ -42,6 +42,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testBasicCompletion()
     {
+        sleep(1); // Avoid burst rate limiting
         $result = $this->gemini->generate([
             'prompt' => 'Say "Hello, World!" and nothing else.',
         ]);
@@ -56,6 +57,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testAskMethod()
     {
+        sleep(1); // Avoid burst rate limiting
         $answer = $this->gemini->ask('What is 2+2? Answer with just the number.');
         
         $this->assertIsString($answer);
@@ -64,6 +66,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testTaskBuilderWithSchema()
     {
+        sleep(1); // Avoid burst rate limiting
         $result = $this->gemini->task()
             ->prompt('Extract: Sarah Johnson, age 28')
             ->expect([
@@ -82,6 +85,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testSystemPrompt()
     {
+        sleep(1); // Avoid burst rate limiting
         $result = $this->gemini->task()
             ->system('You are a helpful assistant that always responds in JSON format.')
             ->prompt('Say hello')
@@ -94,6 +98,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testArrayResponse()
     {
+        sleep(1); // Avoid burst rate limiting
         $result = $this->gemini->task()
             ->prompt('List exactly 3 fruits as a JSON array')
             ->expect(['name' => 'string'])
@@ -107,6 +112,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testTemperatureControl()
     {
+        sleep(1); // Avoid burst rate limiting
         $result = $this->gemini->generate([
             'prompt' => 'Say hello',
             'temperature' => 0.1,
@@ -119,6 +125,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testMessageHistory()
     {
+        sleep(1); // Avoid burst rate limiting
         $result = $this->gemini->task()
             ->message('user', 'My name is Charlie')
             ->message('assistant', 'Nice to meet you, Charlie!')
@@ -130,6 +137,7 @@ class GeminiIntegrationTest extends TestCase
 
     public function testMultipleModels()
     {
+        sleep(1); // Avoid burst rate limiting
         // Test with different model
         $result = $this->gemini->generate([
             'prompt' => 'Say hello',
@@ -138,23 +146,5 @@ class GeminiIntegrationTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertNotEmpty($result['text']);
-    }
-
-    public function testOpenAICompatibility()
-    {
-        // Verify OpenAI-compatible response structure
-        $result = $this->gemini->generate([
-            'prompt' => 'Test',
-        ]);
-
-        $this->assertArrayHasKey('text', $result);
-        $this->assertArrayHasKey('finish_reason', $result);
-        $this->assertArrayHasKey('usage', $result);
-        $this->assertArrayHasKey('raw', $result);
-        
-        // Verify raw response has OpenAI structure
-        $raw = $result['raw'];
-        $this->assertArrayHasKey('choices', $raw);
-        $this->assertArrayHasKey('model', $raw);
     }
 }

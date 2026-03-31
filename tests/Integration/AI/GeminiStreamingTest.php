@@ -24,7 +24,7 @@ class GeminiStreamingTest extends TestCase
             $map = [
                 'ai.providers.gemini.key' => $this->apiKey,
                 'ai.providers.gemini.model' => 'gemini-2.0-flash',
-                'ai.providers.gemini.endpoint' => 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+                'ai.providers.gemini.base_url' => 'https://generativelanguage.googleapis.com/v1beta',
                 'ai.http_timeout' => 30,
                 'ai.temperature' => 0.7,
                 'ai.max_tokens' => 150,
@@ -42,6 +42,7 @@ class GeminiStreamingTest extends TestCase
 
     public function testBasicStreaming()
     {
+        sleep(2); // Avoid burst rate limiting
         $chunks = [];
         $fullText = '';
         
@@ -64,6 +65,7 @@ class GeminiStreamingTest extends TestCase
 
     public function testStreamingWithSystemPrompt()
     {
+        sleep(2); // Avoid burst rate limiting
         $chunks = [];
         $fullText = '';
         
@@ -82,6 +84,7 @@ class GeminiStreamingTest extends TestCase
 
     public function testStreamingProgressiveOutput()
     {
+        sleep(2); // Avoid burst rate limiting
         $receivedAt = [];
         $startTime = microtime(true);
         

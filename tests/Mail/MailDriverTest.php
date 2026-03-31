@@ -7,6 +7,7 @@ use Lightpack\Mail\MailManager;
 use Lightpack\Mail\Drivers\ArrayDriver;
 use Lightpack\Mail\Drivers\LogDriver;
 use Lightpack\Mail\Drivers\SmtpDriver;
+use Lightpack\Mail\Drivers\ResendDriver;
 use PHPUnit\Framework\TestCase;
 
 class TestDriverMail extends Mail
@@ -37,10 +38,7 @@ class MailDriverTest extends TestCase
         
         // Register MailManager in container for tests
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new \Lightpack\Mail\MailManager();
-        $mailManager->registerDriver('smtp', new \Lightpack\Mail\Drivers\SmtpDriver());
-        $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
-        $mailManager->registerDriver('log', new \Lightpack\Mail\Drivers\LogDriver());
+        $mailManager = new \Lightpack\Mail\MailManager($container);
         $mailManager->setDefaultDriver('array');
         $container->register('mail', fn() => $mailManager);
         
@@ -58,60 +56,46 @@ class MailDriverTest extends TestCase
 
     public function testMailManagerRegistersDrivers()
     {
-        $manager = new MailManager();
-        $driver = new ArrayDriver();
+        $container = \Lightpack\Container\Container::getInstance();
+        $manager = new MailManager($container);
         
-        $manager->registerDriver('test', $driver);
+        $manager->register('test', fn() => new ArrayDriver());
         
-        $this->assertSame($driver, $manager->driver('test'));
+        $this->assertInstanceOf(ArrayDriver::class, $manager->driver('test'));
     }
 
     public function testMailManagerSetsDefaultDriver()
     {
-        $manager = new MailManager();
-        $driver1 = new ArrayDriver();
-        $driver2 = new LogDriver();
+        $container = \Lightpack\Container\Container::getInstance();
+        $manager = new MailManager($container);
         
-        $manager->registerDriver('driver1', $driver1);
-        $manager->registerDriver('driver2', $driver2);
-        $manager->setDefaultDriver('driver2');
+        $manager->setDefaultDriver('log');
         
-        $this->assertSame($driver2, $manager->getDefaultDriver());
+        $this->assertSame('log', $manager->getDefaultDriver());
+        $this->assertInstanceOf(LogDriver::class, $manager->driver());
     }
 
     public function testMailManagerThrowsExceptionForUnregisteredDriver()
     {
-        $manager = new MailManager();
+        $container = \Lightpack\Container\Container::getInstance();
+        $manager = new MailManager($container);
         
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("Mail driver 'nonexistent' is not registered");
+        $this->expectExceptionMessage("Mail driver not found: nonexistent");
         
         $manager->driver('nonexistent');
     }
 
-    public function testMailManagerThrowsExceptionWhenSettingUnregisteredDefault()
+    public function testMailManagerHasBuiltInDrivers()
     {
-        $manager = new MailManager();
+        $container = \Lightpack\Container\Container::getInstance();
+        $manager = new MailManager($container);
         
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("Mail driver 'nonexistent' is not registered");
-        
-        $manager->setDefaultDriver('nonexistent');
-    }
-
-    public function testMailManagerGetsDriverNames()
-    {
-        $manager = new MailManager();
-        $manager->registerDriver('smtp', new SmtpDriver());
-        $manager->registerDriver('array', new ArrayDriver());
-        $manager->registerDriver('log', new LogDriver());
-        
-        $names = $manager->getDriverNames();
-        
-        $this->assertCount(3, $names);
-        $this->assertContains('smtp', $names);
-        $this->assertContains('array', $names);
-        $this->assertContains('log', $names);
+        // Test that built-in drivers are registered
+        $this->assertInstanceOf(SmtpDriver::class, $manager->driver('smtp'));
+        $this->assertInstanceOf(ResendDriver::class, $manager->driver('resend'));
+        $this->assertInstanceOf(ArrayDriver::class, $manager->driver('array'));
+        $this->assertInstanceOf(LogDriver::class, $manager->driver('log'));
     }
 
     // ===== Driver Tests =====
@@ -270,7 +254,7 @@ class MailDriverTest extends TestCase
     {
         // Register a second driver for testing
         $mailManager = app('mail');
-        $mailManager->registerDriver('test-driver', new ArrayDriver());
+        $mailManager->register('test-driver', fn() => new ArrayDriver());
         
         $mail = TestDriverMail::make();
         $mail->driver('test-driver')

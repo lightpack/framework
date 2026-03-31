@@ -24,7 +24,7 @@ class OpenAIIntegrationTest extends TestCase
             $map = [
                 'ai.providers.openai.key' => $this->apiKey,
                 'ai.providers.openai.model' => 'gpt-3.5-turbo',
-                'ai.providers.openai.endpoint' => 'https://api.openai.com/v1/chat/completions',
+                'ai.providers.openai.base_url' => 'https://api.openai.com/v1',
                 'ai.http_timeout' => 30,
                 'ai.temperature' => 0.7,
                 'ai.max_tokens' => 100,

@@ -3,7 +3,7 @@
 namespace Lightpack\Tests\Mfa;
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Mfa\Factor\TotpMfa;
+use Lightpack\Mfa\Drivers\TotpDriver;
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Container\Container;
 use Lightpack\Mfa\TotpSetupHelper;
@@ -28,7 +28,7 @@ class TotpMfaTest extends TestCase
             };
         });
 
-        $this->factor = new TotpMfa();
+        $this->factor = new TotpDriver();
         $this->user = $this->getMockBuilder(AuthUser::class)
             ->onlyMethods(['save'])
             ->getMock();

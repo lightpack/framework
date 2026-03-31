@@ -3,7 +3,7 @@
 namespace Lightpack\Tests\Mfa;
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Mfa\Factor\BackupCodeMfa;
+use Lightpack\Mfa\Drivers\BackupCodeDriver;
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Mfa\BackupCodeHelper;
 
@@ -14,7 +14,7 @@ class BackupCodeMfaTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->factor = new BackupCodeMfa();
+        $this->factor = new BackupCodeDriver();
         $this->user = $this->getMockBuilder(AuthUser::class)
             ->onlyMethods(['save'])
             ->getMock();

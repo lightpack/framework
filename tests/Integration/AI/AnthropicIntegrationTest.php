@@ -27,7 +27,7 @@ class AnthropicIntegrationTest extends TestCase
             $map = [
                 'ai.providers.anthropic.key' => $this->apiKey,
                 'ai.providers.anthropic.model' => 'claude-sonnet-4-5',
-                'ai.providers.anthropic.endpoint' => 'https://api.anthropic.com/v1/messages',
+                'ai.providers.anthropic.base_url' => 'https://api.anthropic.com/v1',
                 'ai.providers.anthropic.version' => '2023-06-01',
                 'ai.http_timeout' => 30,
                 'ai.temperature' => 0.7,
