@@ -3,7 +3,7 @@
 namespace Lightpack\Tests\Mfa;
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Mfa\Factor\SmsMfa;
+use Lightpack\Mfa\Drivers\SmsDriver;
 use Lightpack\Config\Config;
 use Lightpack\Cache\Cache;
 use Lightpack\Utils\Otp;
@@ -29,7 +29,7 @@ class SmsMfaTest extends TestCase
         $this->user = new AuthUser();
         $this->user->id = 42;
         $this->user->phone = '+1234567890';
-        $this->factor = new SmsMfa($this->cache, $this->config, $this->otp, $this->sms);
+        $this->factor = new SmsDriver($this->cache, $this->config, $this->otp, $this->sms);
 
         Container::getInstance()->register('config', fn() => $this->config);
         Container::getInstance()->register('cache', fn() => $this->cache);
@@ -115,7 +115,7 @@ class SmsMfaTest extends TestCase
 }
 
 // Proxy class for testing protected methods
-class SmsMfaTestProxy extends SmsMfa {
+class SmsMfaTestProxy extends SmsDriver {
     public function publicGenerateCode($user = null) {
         return $this->generateCode($user);
     }

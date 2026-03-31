@@ -24,7 +24,7 @@ class GroqStreamingTest extends TestCase
             $map = [
                 'ai.providers.groq.key' => $this->apiKey,
                 'ai.providers.groq.model' => 'llama-3.3-70b-versatile',
-                'ai.providers.groq.endpoint' => 'https://api.groq.com/openai/v1/chat/completions',
+                'ai.providers.groq.base_url' => 'https://api.groq.com/openai/v1',
                 'ai.http_timeout' => 30,
                 'ai.temperature' => 0.7,
                 'ai.max_tokens' => 150,

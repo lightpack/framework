@@ -2,67 +2,69 @@
 
 namespace Lightpack\Mail;
 
-use Exception;
+use Lightpack\Support\BaseManager;
+use Lightpack\Container\Container;
+use Lightpack\Mail\Drivers\SmtpDriver;
+use Lightpack\Mail\Drivers\ArrayDriver;
+use Lightpack\Mail\Drivers\LogDriver;
+use Lightpack\Mail\Drivers\ResendDriver;
 
 /**
  * Mail Manager - Manages multiple mail drivers
  * 
  * Allows registering custom drivers and switching between them per-mail
  */
-class MailManager
+class MailManager extends BaseManager
 {
-    private array $drivers = [];
-    private string $defaultDriver = 'smtp';
-
-    /**
-     * Register a mail driver
-     */
-    public function registerDriver(string $name, DriverInterface $driver): self
+    public function __construct(Container $container)
     {
-        $this->drivers[$name] = $driver;
-        return $this;
+        parent::__construct($container);
+        $this->registerBuiltInDrivers();
+        $this->setDefaultFromConfig();
     }
-
+    
     /**
-     * Set the default driver
+     * Register built-in mail drivers
      */
-    public function setDefaultDriver(string $name): self
+    protected function registerBuiltInDrivers(): void
     {
-        if (!isset($this->drivers[$name])) {
-            throw new Exception("Mail driver '{$name}' is not registered.");
-        }
-
-        $this->defaultDriver = $name;
-        return $this;
+        $this->register('smtp', function ($container) {
+            return new SmtpDriver();
+        });
+        
+        $this->register('resend', function ($container) {
+            return new ResendDriver();
+        });
+        
+        $this->register('array', function ($container) {
+            return new ArrayDriver();
+        });
+        
+        $this->register('log', function ($container) {
+            return new LogDriver();
+        });
     }
-
+    
     /**
-     * Get a specific driver
+     * Set default driver from config
+     */
+    protected function setDefaultFromConfig(): void
+    {
+        $default = get_env('MAIL_DRIVER', 'smtp');
+        $this->setDefaultDriver($default);
+    }
+    
+    /**
+     * Get mail driver instance
      */
     public function driver(?string $name = null): DriverInterface
     {
         $name = $name ?? $this->defaultDriver;
-
-        if (!isset($this->drivers[$name])) {
-            throw new Exception("Mail driver '{$name}' is not registered.");
-        }
-
-        return $this->drivers[$name];
+        return $this->resolve($name);
     }
-
-    /**
-     * Get the default driver
-     */
-    public function getDefaultDriver(): DriverInterface
+    
+    protected function getErrorMessage(string $name): string
     {
-        return $this->driver($this->defaultDriver);
-    }
-
-    /**
-     * Get all registered driver names
-     */
-    public function getDriverNames(): array
-    {
-        return array_keys($this->drivers);
+        return "Mail driver not found: {$name}";
     }
 }

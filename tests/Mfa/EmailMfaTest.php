@@ -8,7 +8,7 @@ class Mail {
 }
 
 use PHPUnit\Framework\TestCase;
-use Lightpack\Mfa\Factor\EmailMfa;
+use Lightpack\Mfa\Drivers\EmailDriver;
 use Lightpack\Config\Config;
 use Lightpack\Cache\Cache;
 use Lightpack\Utils\Otp;
@@ -31,7 +31,7 @@ class EmailMfaTest extends TestCase
         $this->user = new AuthUser();
         $this->user->id = 42;
         $this->user->email = 'user@example.com';
-        $this->factor = new EmailMfa($this->cache, $this->config, $this->otp);
+        $this->factor = new EmailDriver($this->cache, $this->config, $this->otp);
 
         Container::getInstance()->register('config', fn() => $this->config);
         Container::getInstance()->register('cache', fn() => $this->cache);
@@ -109,7 +109,7 @@ class EmailMfaTest extends TestCase
 }
 
 // Proxy class for testing protected methods
-class EmailMfaTestProxy extends EmailMfa {
+class EmailMfaTestProxy extends EmailDriver {
     public function publicGenerateCode() {
         return $this->generateCode();
     }

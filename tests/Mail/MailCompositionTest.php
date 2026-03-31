@@ -35,10 +35,7 @@ class MailCompositionTest extends TestCase
         
         // Register MailManager in container for tests
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new \Lightpack\Mail\MailManager();
-        $mailManager->registerDriver('smtp', new \Lightpack\Mail\Drivers\SmtpDriver());
-        $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
-        $mailManager->registerDriver('log', new \Lightpack\Mail\Drivers\LogDriver());
+        $mailManager = new \Lightpack\Mail\MailManager($container);
         $mailManager->setDefaultDriver('array');
         $container->register('mail', fn() => $mailManager);
         
@@ -71,7 +68,10 @@ class MailCompositionTest extends TestCase
         $this->assertInstanceOf(\Lightpack\Mail\MailManager::class, $mailManager);
         
         // Verify default driver is accessible
-        $driver = $mailManager->getDefaultDriver();
+        $defaultDriverName = $mailManager->getDefaultDriver();
+        $this->assertSame('array', $defaultDriverName);
+        
+        $driver = $mailManager->driver();
         $this->assertInstanceOf(\Lightpack\Mail\DriverInterface::class, $driver);
     }
 
@@ -414,7 +414,7 @@ class MailCompositionTest extends TestCase
     public function testInvalidMailDriverThrowsException()
     {
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("Mail driver 'invalid_driver' is not registered");
+        $this->expectExceptionMessage("Mail driver not found: invalid_driver");
         
         $mail = TestMail::make();
         $mail->driver('invalid_driver')
@@ -609,10 +609,6 @@ class MailCompositionTest extends TestCase
     {
         $mailManager = app('mail');
         
-        // Verify SMTP driver is registered
-        $drivers = $mailManager->getDriverNames();
-        $this->assertContains('smtp', $drivers);
-        
         // Verify we can get the SMTP driver
         $smtpDriver = $mailManager->driver('smtp');
         $this->assertInstanceOf(\Lightpack\Mail\Drivers\SmtpDriver::class, $smtpDriver);
@@ -621,10 +617,11 @@ class MailCompositionTest extends TestCase
     public function testAllBuiltInDriversAreRegistered()
     {
         $mailManager = app('mail');
-        $drivers = $mailManager->getDriverNames();
         
-        $this->assertContains('smtp', $drivers);
-        $this->assertContains('array', $drivers);
-        $this->assertContains('log', $drivers);
+        // Verify all built-in drivers can be retrieved
+        $this->assertInstanceOf(\Lightpack\Mail\Drivers\SmtpDriver::class, $mailManager->driver('smtp'));
+        $this->assertInstanceOf(\Lightpack\Mail\Drivers\ResendDriver::class, $mailManager->driver('resend'));
+        $this->assertInstanceOf(\Lightpack\Mail\Drivers\ArrayDriver::class, $mailManager->driver('array'));
+        $this->assertInstanceOf(\Lightpack\Mail\Drivers\LogDriver::class, $mailManager->driver('log'));
     }
 }

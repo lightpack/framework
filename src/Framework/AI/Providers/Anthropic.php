@@ -9,7 +9,8 @@ class Anthropic extends AI
     {
         return $this->executeWithCache($params, function() use ($params) {
             $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-            $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.anthropic.endpoint');
+            $baseUrl = $this->config->get('ai.providers.anthropic.base_url');
+            $endpoint = $params['endpoint'] ?? $baseUrl . '/messages';
             
             $result = $this->makeApiRequest(
                 $endpoint,
@@ -41,7 +42,7 @@ class Anthropic extends AI
         $messages = array_map(function($msg) {
             return [
                 'role' => $msg['role'],
-                'content' => is_array($msg['content']) ? implode("\n", $msg['content']) : $msg['content'],
+                'content' => $this->normalizeContent($msg['content']),
             ];
         }, $messages);
 
@@ -52,6 +53,51 @@ class Anthropic extends AI
             'temperature' => $params['temperature'] ?? $this->config->get('ai.temperature'),
             'max_tokens' => (int) ($params['max_tokens'] ?? $this->config->get('ai.max_tokens')),
         ];
+    }
+
+    protected function normalizeContent($content): string|array
+    {
+        if (is_string($content)) {
+            return $content;
+        }
+        
+        if (is_array($content)) {
+            $normalized = [];
+            foreach ($content as $item) {
+                $type = $item['type'] ?? null;
+                
+                if ($type === 'text') {
+                    $normalized[] = ['type' => 'text', 'text' => $item['text']];
+                } elseif ($type === 'image_url') {
+                    // Convert framework's image_url format to Anthropic format
+                    $imageUrl = $item['image_url']['url'] ?? $item['image_url'];
+                    $parsed = $this->parseDataUrl($imageUrl);
+                    if ($parsed) {
+                        $normalized[] = [
+                            'type' => 'image',
+                            'source' => [
+                                'type' => 'base64',
+                                'media_type' => $parsed['mime_type'],
+                                'data' => $parsed['data']
+                            ]
+                        ];
+                    }
+                } elseif ($type === 'document') {
+                    // Convert generic document to Anthropic format
+                    $normalized[] = [
+                        'type' => 'document',
+                        'source' => [
+                            'type' => 'base64',
+                            'media_type' => $item['mime_type'],
+                            'data' => $item['data']
+                        ]
+                    ];
+                }
+            }
+            return $normalized;
+        }
+        
+        return $content;
     }
 
     /**
@@ -89,7 +135,8 @@ class Anthropic extends AI
     public function generateStream(array $params, callable $onChunk): void
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.anthropic.endpoint');
+        $baseUrl = $this->config->get('ai.providers.anthropic.base_url');
+        $endpoint = $params['endpoint'] ?? $baseUrl . '/messages';
         
         $body = $this->prepareRequestBody($params);
         $body['stream'] = true;
