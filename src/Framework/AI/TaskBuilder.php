@@ -29,6 +29,7 @@ class TaskBuilder
     protected ?bool $useCache = null;
     protected ?int $cacheTtl = null;
     protected array $tools = [];
+    protected array $contentParts = [];
 
     // Agent loop properties
     protected int $maxTurns = 1;
@@ -41,8 +42,9 @@ class TaskBuilder
 
     /**
      * Add a message to the chat history (role: user, system, assistant).
+     * Content can be a string or multimodal array.
      */
-    public function message(string $role, string $content): self
+    public function message(string $role, mixed $content): self
     {
         $this->messages[] = ['role' => $role, 'content' => $content];
         return $this;
@@ -167,6 +169,106 @@ class TaskBuilder
         ];
 
         return $this;
+    }
+
+    /**
+     * Add text content to the multimodal message.
+     * 
+     * @param string $text The text content
+     * @return self
+     */
+    public function text(string $text): self
+    {
+        $this->contentParts[] = ['type' => 'text', 'text' => $text];
+        return $this;
+    }
+
+    /**
+     * Add an image from base64 data to the multimodal message.
+     * 
+     * @param string $base64Data Base64-encoded image data
+     * @param string $mimeType MIME type (e.g., 'image/jpeg', 'image/png')
+     * @return self
+     */
+    public function image(string $base64Data, string $mimeType = 'image/jpeg'): self
+    {
+        $this->contentParts[] = [
+            'type' => 'image_url',
+            'image_url' => ['url' => "data:{$mimeType};base64,{$base64Data}"]
+        ];
+        return $this;
+    }
+
+    /**
+     * Add an image from a URL to the multimodal message.
+     * 
+     * @param string $url Image URL (can be http/https or data URL)
+     * @return self
+     */
+    public function imageUrl(string $url): self
+    {
+        $this->contentParts[] = [
+            'type' => 'image_url',
+            'image_url' => ['url' => $url]
+        ];
+        return $this;
+    }
+
+    /**
+     * Attach an image file to the multimodal message.
+     * Reads the file, encodes it to base64, and adds it to the content.
+     * 
+     * @param string $filePath Path to the image file
+     * @return self
+     * @throws \Exception If file doesn't exist or can't be read
+     */
+    public function attachImage(string $filePath): self
+    {
+        if (!file_exists($filePath)) {
+            throw new \Exception("Image file not found: {$filePath}");
+        }
+        
+        $data = base64_encode(file_get_contents($filePath));
+        $mimeType = mime_content_type($filePath);
+        
+        return $this->image($data, $mimeType);
+    }
+
+    /**
+     * Add a document from base64 data to the multimodal message.
+     * 
+     * @param string $base64Data Base64-encoded document data
+     * @param string $mimeType MIME type (e.g., 'application/pdf')
+     * @return self
+     */
+    public function document(string $base64Data, string $mimeType = 'application/pdf'): self
+    {
+        $this->contentParts[] = [
+            'type' => 'document',
+            'data' => $base64Data,
+            'mime_type' => $mimeType
+        ];
+        return $this;
+    }
+
+    /**
+     * Attach a document file to the multimodal message.
+     * Reads the file, encodes it to base64, and adds it to the content.
+     * 
+     * @param string $filePath Path to the document file
+     * @return self
+     * @throws \Exception If file doesn't exist or can't be read
+     */
+    public function attachDocument(string $filePath): self
+    {
+        if (!file_exists($filePath)) {
+            throw new \Exception("Document file not found: {$filePath}");
+        }
+        
+        $data = base64_encode(file_get_contents($filePath));
+        $mimeType = mime_content_type($filePath);
+        
+        return $this->document($data, $mimeType);
     }
 
     /**
@@ -453,7 +555,14 @@ class TaskBuilder
     protected function buildParams(): array
     {
         $params = [];
-        if (!empty($this->messages)) {
+        
+        // If contentParts exist, build a multimodal message
+        if (!empty($this->contentParts)) {
+            $params['messages'] = [['role' => 'user', 'content' => $this->contentParts]];
+            if ($this->system !== null) {
+                array_unshift($params['messages'], ['role' => 'system', 'content' => $this->system]);
+            }
+        } elseif (!empty($this->messages)) {
             $params['messages'] = $this->messages;
             if ($this->system !== null) {
                 array_unshift($params['messages'], ['role' => 'system', 'content' => $this->system]);

@@ -227,4 +227,72 @@ abstract class AI
 
         return $output;
     }
+
+    /**
+     * Detect if content is multimodal (structured with type keys).
+     * 
+     * Multimodal: [['type' => 'text', ...], ['type' => 'image_url', ...]]
+     * Legacy array: ['line1', 'line2']
+     * 
+     * @param mixed $content The content to check
+     * @return bool True if multimodal format detected
+     */
+    protected function isMultimodalContent(mixed $content): bool
+    {
+        return is_array($content) 
+            && !empty($content) 
+            && is_array($first = reset($content)) 
+            && isset($first['type']);
+    }
+
+    /**
+     * Normalize message content for API requests.
+     * 
+     * - Multimodal arrays (with 'type' keys) pass through unchanged
+     * - Legacy string arrays get joined with newlines
+     * - Strings pass through unchanged
+     * 
+     * @param mixed $content The content to normalize
+     * @return mixed Normalized content
+     */
+    protected function normalizeContent(mixed $content): mixed
+    {
+        if (is_array($content) && !$this->isMultimodalContent($content)) {
+            return implode("\n", $content);
+        }
+        
+        return $content;
+    }
+
+    /**
+     * Parse a data URL to extract MIME type and base64 data.
+     * 
+     * @param string $dataUrl The data URL (e.g., 'data:image/jpeg;base64,/9j/4AAQ...')
+     * @return array|null Array with 'mime_type' and 'data' keys, or null if invalid
+     */
+    protected function parseDataUrl(string $dataUrl): ?array
+    {
+        if (!str_starts_with($dataUrl, 'data:')) {
+            return null;
+        }
+        
+        preg_match('/data:([^;]+);base64,(.+)/', $dataUrl, $matches);
+        
+        return $matches ? [
+            'mime_type' => $matches[1],
+            'data' => $matches[2]
+        ] : null;
+    }
+
+    /**
+     * Build a data URL from MIME type and base64 data.
+     * 
+     * @param string $mimeType The MIME type (e.g., 'image/jpeg')
+     * @param string $base64Data The base64-encoded data
+     * @return string The data URL
+     */
+    protected function buildDataUrl(string $mimeType, string $base64Data): string
+    {
+        return "data:{$mimeType};base64,{$base64Data}";
+    }
 }

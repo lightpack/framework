@@ -9,7 +9,8 @@ class Mistral extends AI
     {
         return $this->executeWithCache($params, function() use ($params) {
             $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-            $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.mistral.endpoint');
+            $baseUrl = $this->config->get('ai.providers.mistral.base_url');
+            $endpoint = $params['endpoint'] ?? $baseUrl . '/chat/completions';
             
             $result = $this->makeApiRequest(
                 $endpoint,
@@ -36,7 +37,7 @@ class Mistral extends AI
         $messages = array_map(function($msg) {
             return [
                 'role' => $msg['role'],
-                'content' => is_array($msg['content']) ? implode("\n", $msg['content']) : $msg['content'],
+                'content' => $this->normalizeContent($msg['content']),
             ];
         }, $messages);
 
@@ -46,6 +47,31 @@ class Mistral extends AI
             'temperature' => $params['temperature'] ?? $this->config->get('ai.temperature', 0.7),
             'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.max_tokens', 256),
         ];
+    }
+
+    protected function normalizeContent($content): string|array
+    {
+        if (is_string($content)) {
+            return $content;
+        }
+        
+        if (is_array($content)) {
+            $normalized = [];
+            foreach ($content as $item) {
+                $type = $item['type'] ?? null;
+                
+                if ($type === 'text') {
+                    $normalized[] = ['type' => 'text', 'text' => $item['text']];
+                } elseif ($type === 'image_url') {
+                    $normalized[] = $item;
+                } elseif ($type === 'document') {
+                    continue;
+                }
+            }
+            return $normalized;
+        }
+        
+        return $content;
     }
 
     /**
@@ -77,7 +103,8 @@ class Mistral extends AI
     public function generateStream(array $params, callable $onChunk): void
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.mistral.endpoint');
+        $baseUrl = $this->config->get('ai.providers.mistral.base_url');
+        $endpoint = $params['endpoint'] ?? $baseUrl . '/chat/completions';
         
         $body = $this->prepareRequestBody($params);
         $body['stream'] = true;

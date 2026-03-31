@@ -9,7 +9,8 @@ class OpenAI extends AI
     {
         return $this->executeWithCache($params, function() use ($params) {
             $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-            $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.openai.endpoint');
+            $baseUrl = $this->config->get('ai.providers.openai.base_url');
+            $endpoint = $params['endpoint'] ?? $baseUrl . '/chat/completions';
             
             $result = $this->makeApiRequest(
                 $endpoint,
@@ -45,7 +46,7 @@ class OpenAI extends AI
         $messages = array_map(function($msg) {
             return [
                 'role' => $msg['role'],
-                'content' => is_array($msg['content']) ? implode("\n", $msg['content']) : $msg['content'],
+                'content' => $this->normalizeContent($msg['content']),
             ];
         }, $messages);
         
@@ -55,6 +56,38 @@ class OpenAI extends AI
             'temperature' => $params['temperature'] ?? $this->config->get('ai.temperature'),
             'max_tokens' => $params['max_tokens'] ?? $this->config->get('ai.max_tokens'),
         ];
+    }
+
+    protected function normalizeContent($content): string|array
+    {
+        if (is_string($content)) {
+            return $content;
+        }
+        
+        if (is_array($content)) {
+            $normalized = [];
+            foreach ($content as $item) {
+                $type = $item['type'] ?? null;
+                
+                if ($type === 'text') {
+                    $normalized[] = ['type' => 'text', 'text' => $item['text']];
+                } elseif ($type === 'image_url') {
+                    $normalized[] = $item;
+                } elseif ($type === 'document') {
+                    $dataUrl = $this->buildDataUrl($item['mime_type'], $item['data']);
+                    $normalized[] = [
+                        'type' => 'file',
+                        'file' => [
+                            'file_data' => $dataUrl,
+                            'filename' => 'document.pdf'
+                        ]
+                    ];
+                }
+            }
+            return $normalized;
+        }
+        
+        return $content;
     }
 
     protected function prepareHeaders(): array
@@ -68,7 +101,8 @@ class OpenAI extends AI
     protected function generateEmbedding(string|array $input, array $options = []): array
     {
         $model = $options['model'] ?? $this->config->get('ai.providers.openai.embedding_model', 'text-embedding-3-small');
-        $endpoint = 'https://api.openai.com/v1/embeddings';
+        $baseUrl = $this->config->get('ai.providers.openai.base_url');
+        $endpoint = $baseUrl . '/embeddings';
         
         $result = $this->makeApiRequest(
             $endpoint,
@@ -92,7 +126,8 @@ class OpenAI extends AI
     public function generateStream(array $params, callable $onChunk): void
     {
         $params['messages'] = $params['messages'] ?? [['role' => 'user', 'content' => $params['prompt'] ?? '']];
-        $endpoint = $params['endpoint'] ?? $this->config->get('ai.providers.openai.endpoint');
+        $baseUrl = $this->config->get('ai.providers.openai.base_url');
+        $endpoint = $params['endpoint'] ?? $baseUrl . '/chat/completions';
         
         $body = $this->prepareRequestBody($params);
         $body['stream'] = true;
