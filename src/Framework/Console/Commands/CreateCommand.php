@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\CommandView;
 
-class CreateCommand implements CommandInterface
+class CreateCommand extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide a command class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a command class name.");
+            $this->output->newline();
+            return 1;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid command class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid command class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $template = CommandView::getTemplate();
@@ -28,6 +28,9 @@ class CreateCommand implements CommandInterface
         $directory = './app/Commands';
 
         file_put_contents(DIR_ROOT . '/app/Commands/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Command created: {$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Command created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

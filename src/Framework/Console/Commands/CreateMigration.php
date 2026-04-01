@@ -2,71 +2,71 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\MigrationView;
-use Lightpack\Console\Output;
 
-class CreateMigration implements CommandInterface
+class CreateMigration extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $output = new Output();
         $schemas = self::getPredefinedSchemas();
-        $support = $this->parseSupportArgument($arguments);
+        $support = $this->args->get('support');
 
         if ($support === '') {
-            $this->showError($output, "You must provide a value for --support. Example: --support=users", null, array_keys($schemas));
-            return;
+            $this->showError("You must provide a value for --support. Example: --support=users", null, array_keys($schemas));
+            return 1;
         }
 
         if ($support) {
             if (!isset($schemas[$support])) {
-                $this->showError($output, "Unknown support schema: \"{$support}\".", null, array_keys($schemas));
-                return;
+                $this->showError("Unknown support schema: \"{$support}\".", null, array_keys($schemas));
+                return 1;
             }
             [$filepath, $template] = $this->buildMigrationFile("{$support}_schema", $schemas[$support]);
         } else {
-            $migration = $arguments[0] ?? null;
+            $migration = $this->args->argument(0);
+            
             if (!$migration) {
                 $this->showError(
-                    $output,
                     "Please provide a migration file name.",
                     "You can use --support=<schema> for a predefined migration.",
                     array_keys($schemas)
                 );
-                return;
+                return 1;
             }
             if (!preg_match('/^[\w_]+$/', $migration)) {
-                $this->showError($output, "Migration file name can only contain alphanumeric characters and underscores.");
-                return;
+                $this->showError("Migration file name can only contain alphanumeric characters and underscores.");
+                return 1;
             }
             [$filepath, $template] = $this->buildMigrationFile($migration);
         }
 
         file_put_contents($filepath, $template);
-        $output->newline();
-        $output->success("✓ Migration created in {$filepath}");
-        $output->newline();
+        $this->output->newline();
+        $this->output->success("✓ Migration created in {$filepath}");
+        $this->output->newline();
+        
+        return 0;
     }
 
     /**
      * Outputs error/info blocks with optional tip and supported schemas.
      */
-    protected function showError(Output $output, string $error, ?string $tip = null, ?array $schemas = null): void
+    protected function showError(string $error, ?string $tip = null, ?array $schemas = null): void
     {
-        $output->newline();
-        $output->error($error);
-        $output->newline();
+        $this->output->newline();
+        $this->output->error($error);
+        $this->output->newline();
 
         if ($tip) {
-            $output->newline();
-            $output->info('[Tip]:');
-            $output->line($tip);
+            $this->output->newline();
+            $this->output->info('[Tip]:');
+            $this->output->line($tip);
         }
         if ($schemas) {
-            $output->newline();
-            $output->info("[Supported]:");
-            $output->line(implode(', ', $schemas));
+            $this->output->newline();
+            $this->output->info("[Supported]:");
+            $this->output->line(implode(', ', $schemas));
         }
     }
 

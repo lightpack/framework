@@ -2,20 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 
-class UnlinkStorage implements CommandInterface
+class UnlinkStorage extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
         $link = DIR_ROOT . '/public/uploads';
         
         if(!is_link($link)) {
-            return;
+            $this->output->line("No symlink to remove.");
+            $this->output->newline();
+            return 0;
         }
 
         unlink($link);
 
-        fputs(STDOUT, "✓ Unlinked storage\n\n");
+        $this->output->success("✓ Unlinked storage");
+        $this->output->newline();
+        
+        return 0;
     }
 }

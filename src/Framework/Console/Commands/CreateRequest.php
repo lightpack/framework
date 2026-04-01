@@ -3,19 +3,19 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\RequestView;
 
-class CreateRequest implements CommandInterface
+class CreateRequest extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide a form request class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a form request class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -38,9 +38,9 @@ class CreateRequest implements CommandInterface
         $filename = $directory . '/' . $className;
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid form request class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid form request class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $template = RequestView::getTemplate();
@@ -53,6 +53,9 @@ class CreateRequest implements CommandInterface
         $directory = substr($directory, strlen(DIR_ROOT));
 
         file_put_contents($filename . '.php', $template);
-        fputs(STDOUT, "✓ request created: .{$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Request created: .{$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

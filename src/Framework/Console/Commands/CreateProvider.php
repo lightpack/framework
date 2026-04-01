@@ -2,29 +2,29 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\ProviderView;
 
-class CreateProvider implements CommandInterface
+class CreateProvider extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide a class name for service provider.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a class name for service provider.");
+            $this->output->newline();
+            return 1;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid service provider class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid service provider class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $provider = strtolower(str_replace('Provider', '', $className));
-        $binding = in_array('--instance', $arguments) ? 'factory' : 'register';
+        $binding = $this->args->has('instance') ? 'factory' : 'register';
         $directory = './app/Providers';
         $template = ProviderView::getTemplate();
         $template = str_replace(
@@ -34,6 +34,9 @@ class CreateProvider implements CommandInterface
         );
 
         file_put_contents(DIR_ROOT . '/app/Providers/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Provider created: {$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Provider created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

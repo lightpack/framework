@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\ToolView;
 
-class CreateTool implements CommandInterface
+class CreateTool extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide a tool class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a tool class name.");
+            $this->output->newline();
+            return 1;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid tool class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid tool class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $template = ToolView::getTemplate();
@@ -32,6 +32,9 @@ class CreateTool implements CommandInterface
         }
 
         file_put_contents(DIR_ROOT . '/app/Tools/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Tool created: {$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Tool created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

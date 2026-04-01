@@ -3,32 +3,35 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Config\Env;
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Database\Adapters\Mysql;
 use Lightpack\Database\Migrations\Migrator;
 
-class RunMigrationUp implements CommandInterface
+class RunMigrationUp extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
         if (!file_exists(DIR_ROOT . '/.env')) {
-            fputs(STDOUT, "Running migrations require ./.env which is missing.\n\n");
-            exit;
+            $this->output->error("Running migrations require ./.env which is missing.");
+            $this->output->newline();
+            return 1;
         }
 
         if ('mysql' !== Env::get('DB_DRIVER')) {
-            fputs(STDOUT, "Migrations are supported only for MySQL/MariaDB.\n\n");
-            exit;
+            $this->output->error("Migrations are supported only for MySQL/MariaDB.");
+            $this->output->newline();
+            return 1;
         }
 
-        // Check for --force flag
-        $force = in_array('--force', $arguments);
+        $force = $this->args->has('force');
 
         $confirm = $this->promptConfirmation($force);
 
         if(false === $confirm) {
-            fputs(STDOUT, "\n✓ Migration cancelled.\n");
-            exit;
+            $this->output->newline();
+            $this->output->success("✓ Migration cancelled.");
+            $this->output->newline();
+            return 0;
         }
 
         // Ensure database exists before running migrations
@@ -38,19 +41,22 @@ class RunMigrationUp implements CommandInterface
         
         $migrations = $migrator->run(DIR_ROOT . '/database/migrations');
         
-        fputs(STDOUT, "\n");
+        $this->output->newline();
 
         if(empty($migrations)) {
-            fputs(STDOUT, "✓ Migrations already up-to-date.\n\n");
+            $this->output->success("✓ Migrations already up-to-date.");
+            $this->output->newline();
         } else {
-            fputs(STDOUT, "Migrations:\n");
+            $this->output->line("Migrations:");
 
             foreach ($migrations as $migration) {
-                fputs(STDOUT, "✓ {$migration}\n");
+                $this->output->success("✓ {$migration}");
             }
 
-            fputs(STDOUT, "\n");
+            $this->output->newline();
         }
+        
+        return 0;
     }
 
     private function getConnection()
@@ -66,8 +72,9 @@ class RunMigrationUp implements CommandInterface
                     'options'   => [],
                 ]);
             default:
-                fputs(STDOUT, "Invalid database driver found in ./.env\n\n");
-                exit;
+                $this->output->error("Invalid database driver found in ./.env");
+                $this->output->newline();
+                exit(1);
         }
     }
 
@@ -79,8 +86,8 @@ class RunMigrationUp implements CommandInterface
         }
 
         if ('production' === strtolower(get_env('APP_ENV'))) {
-            fputs(STDOUT, "\n[Production] Are you sure you want to migrate? [y/N]: ");
-            return strtolower(trim(fgets(STDIN))) === 'y';
+            $this->output->newline();
+            return $this->prompt->confirm('[Production] Are you sure you want to migrate?', false);
         } 
 
         return true;
@@ -132,20 +139,22 @@ class RunMigrationUp implements CommandInterface
      */
     private function handleMissingDatabase(string $database): void
     {
-        fputs(STDOUT, "\n");
-        fputs(STDOUT, "⚠ WARNING: The database '{$database}' does not exist on the 'mysql' connection.\n\n");
-        fputs(STDOUT, "Would you like to create it? [y/N]: ");
+        $this->output->newline();
+        $this->output->line("⚠ WARNING: The database '{$database}' does not exist on the 'mysql' connection.");
+        $this->output->newline();
         
-        $response = strtolower(trim(fgets(STDIN)));
-        
-        if ($response !== 'y') {
-            fputs(STDOUT, "\n✓ Operation cancelled. No database was created.\n\n");
-            exit;
+        if (!$this->prompt->confirm("Would you like to create it?", false)) {
+            $this->output->newline();
+            $this->output->success("✓ Operation cancelled. No database was created.");
+            $this->output->newline();
+            exit(0);
         }
         
         $this->createDatabase($database);
         
-        fputs(STDOUT, "\n✓ Database '{$database}' created successfully.\n\n");
+        $this->output->newline();
+        $this->output->success("✓ Database '{$database}' created successfully.");
+        $this->output->newline();
     }
 
     /**
@@ -170,8 +179,10 @@ class RunMigrationUp implements CommandInterface
             // Create the database
             $connection->query("CREATE DATABASE IF NOT EXISTS `{$database}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         } catch (\Exception $e) {
-            fputs(STDOUT, "\n✗ Failed to create database: " . $e->getMessage() . "\n\n");
-            exit;
+            $this->output->newline();
+            $this->output->error("✗ Failed to create database: " . $e->getMessage());
+            $this->output->newline();
+            exit(1);
         }
     }
 }

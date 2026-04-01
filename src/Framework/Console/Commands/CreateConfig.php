@@ -2,114 +2,87 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
-use Lightpack\Console\Output;
+use Lightpack\Console\BaseCommand;
 
-class CreateConfig implements CommandInterface
+class CreateConfig extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $output = new Output();
-        $force = $this->parseForceArgument($arguments);
-
-        // Parse --support argument
-        $support = $this->parseSupportArgument($arguments);
+        $force = $this->args->has('force');
+        $support = $this->args->get('support');
         if ($support === '') {
-            $this->showError($output, "You must provide a value for --support.", null, array_keys(self::getSupportedConfigs()));
-            return;
+            $this->showError("You must provide a value for --support.", null, array_keys(self::getSupportedConfigs()));
+            return 1;
         }
 
         if ($support) {
             $supported = self::getSupportedConfigs();
             if (!isset($supported[$support])) {
                 $this->showError(
-                    $output,
                     "Unknown support config: '{$support}'.",
                     null,
                     array_keys($supported)
                 );
-                return;
+                return 1;
             }
             $viewClass = $supported[$support];
             $targetPath = './config/' . $support . '.php';
             if (!class_exists($viewClass) || !method_exists($viewClass, 'getTemplate')) {
                 $this->showError(
-                    $output,
                     "View class or getTemplate() not found for '{$support}' (expected: {$viewClass}).",
                     null,
                     array_keys($supported)
                 );
-                return;
+                return 1;
             }
             $template = $viewClass::getTemplate();
         } else {
-            $name = $arguments[0] ?? null;
+            $name = $this->args->argument(0);
             if (!$name) {
-                $this->showError($output, "Please provide a config file name.", "You can use --support=<name> for a supported config template.");
-                return;
+                $this->showError("Please provide a config file name.", "You can use --support=<name> for a supported config template.");
+                return 1;
             }
             if (!preg_match('/^[\w_]+$/', $name)) {
-                $this->showError($output, "Config file name can only contain alphanumeric characters and underscores.");
-                return;
+                $this->showError("Config file name can only contain alphanumeric characters and underscores.");
+                return 1;
             }
             $targetPath = './config/' . $name . '.php';
             $template = $this->getDefaultTemplate($name);
         }
 
         if (file_exists($targetPath) && !$force) {
-            $this->showError($output, "Config file already exists: {$targetPath}");
-            return;
+            $this->showError("Config file already exists: {$targetPath}");
+            return 1;
         }
 
         if ($force && file_exists($targetPath)) {
-            $output->infoLabel('Overwrite');
-            $output->info(" Overwriting existing config at {$targetPath}");
+            $this->output->infoLabel('Overwrite');
+            $this->output->info(" Overwriting existing config at {$targetPath}");
         }
 
         file_put_contents($targetPath, $template);
-        $output->newline();
-        $output->success("✓ Config created at {$targetPath}");
-        $output->newline();
+        $this->output->newline();
+        $this->output->success("✓ Config created at {$targetPath}");
+        $this->output->newline();
+        
+        return 0;
     }
 
-    protected function parseForceArgument(array $arguments): bool
+    protected function showError(string $error, ?string $tip = null, ?array $supported = null): void
     {
-        foreach ($arguments as $arg) {
-            if ($arg === '--force') {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected function parseSupportArgument(array $arguments): ?string
-    {
-        foreach ($arguments as $arg) {
-            if ($arg === '--support' || $arg === '--support=') {
-                return '';
-            }
-            if (strpos($arg, '--support=') === 0) {
-                return substr($arg, strlen('--support='));
-            }
-        }
-        return null;
-    }
-
-    protected function showError(Output $output, string $error, ?string $tip = null, ?array $supported = null): void
-    {
-        $output->newline();
-        $output->error($error);
-        $output->newline();
+        $this->output->newline();
+        $this->output->error($error);
+        $this->output->newline();
 
         if ($tip) {
-            $output->newline();
-            $output->info('[Tip]: ');
-            $output->line($tip);
+            $this->output->newline();
+            $this->output->info('[Tip]: ');
+            $this->output->line($tip);
         }
         if ($supported) {
-            $output->newline();
-            $output->info("[Supported]: ");
-            $output->line(implode(', ', $supported));
+            $this->output->newline();
+            $this->output->info("[Supported]: ");
+            $this->output->line(implode(', ', $supported));
         }
     }
 

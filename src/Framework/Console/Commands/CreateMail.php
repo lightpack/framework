@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\MailView;
 
-class CreateMail implements CommandInterface
+class CreateMail extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide the mail class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide the mail class name.");
+            $this->output->newline();
+            return 1;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid mail class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid mail class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $template = MailView::getTemplate();
@@ -28,6 +28,9 @@ class CreateMail implements CommandInterface
         $directory = './app/Mails';
 
         file_put_contents(DIR_ROOT . '/app/Mails/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Mail created: {$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Mail created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

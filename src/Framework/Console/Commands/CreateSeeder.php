@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\SeederView;
 
-class CreateSeeder implements CommandInterface
+class CreateSeeder extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide the seeder class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide the seeder class name.");
+            $this->output->newline();
+            return 1;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid seeder class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid seeder class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $template = SeederView::getTemplate();
@@ -29,11 +29,14 @@ class CreateSeeder implements CommandInterface
 
         $filePath = DIR_ROOT . '/database/seeders/' . $className . '.php';
         if (file_exists($filePath)) {
-            $message = "Seeder class file already exists: {$directory}/{$className}.php\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Seeder class file already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            return 1;
         }
         file_put_contents($filePath, $template);
-        fputs(STDOUT, "✓ Seeder class file created: {$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Seeder class file created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

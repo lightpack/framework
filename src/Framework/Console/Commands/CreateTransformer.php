@@ -2,20 +2,20 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\TransformerView;
 use Lightpack\File\File;
 
-class CreateTransformer implements CommandInterface
+class CreateTransformer extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide a transformer class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a transformer class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -37,9 +37,9 @@ class CreateTransformer implements CommandInterface
         $directory = substr($directory, strlen(DIR_ROOT));
 
         if ($file->exists($filepath)) {
-            $message = "{$className} already exists: .{$directory}/{$className}.php\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("{$className} already exists: .{$directory}/{$className}.php");
+            $this->output->newline();
+            return 1;
         }
 
         $template = TransformerView::getTemplate();
@@ -50,6 +50,9 @@ class CreateTransformer implements CommandInterface
         );
 
         $file->write($filepath, $template);
-        fputs(STDOUT, "✓ Transformer created: .{$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Transformer created: .{$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

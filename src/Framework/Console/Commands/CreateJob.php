@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\JobView;
 
-class CreateJob implements CommandInterface
+class CreateJob extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide the job class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide the job class name.");
+            $this->output->newline();
+            return 1;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid job class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid job class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $template = JobView::getTemplate();
@@ -28,6 +28,9 @@ class CreateJob implements CommandInterface
         $directory = './app/Jobs';
 
         file_put_contents(DIR_ROOT . '/app/Jobs/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Job created: {$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Job created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }

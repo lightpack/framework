@@ -12,15 +12,20 @@ class Runner
     {
         global $argv;
 
-        $command = $argv[1] ?? null;
-        $arguments = $argv;
-
-        array_shift($arguments);
-
-        if(count($arguments) >= 1) {
-            array_shift($arguments);
-        }
+        // Remove script name (php lightpack)
+        $arguments = array_slice($argv, 1);
+        
+        // First argument is the command name
+        $command = $arguments[0] ?? null;
 
         Console::run($command, $arguments);
+    }
+    
+    /**
+     * Create command instance with arguments injected
+     */
+    public static function createCommand(string $commandClass, array $arguments): CommandInterface
+    {
+        return new $commandClass($arguments);
     }
 }

@@ -66,14 +66,14 @@ class Console
         self::$commands[$command] = $handler;
     }
 
-    public static function getCommandHandler(string $command)
+    public static function getCommandHandler(string $command, array $arguments = [])
     {
         if (!isset(self::$commands[$command])) {
             fputs(STDERR, "Invalid command: {$command}\n");
             exit(1);
         }
 
-        return new self::$commands[$command];
+        return new self::$commands[$command]($arguments);
     }
 
     public static function run(?string $command = null, array $arguments = [])
@@ -83,7 +83,7 @@ class Console
             exit(0);
         }
 
-        $handler = self::getCommandHandler($command);
+        $handler = self::getCommandHandler($command, $arguments);
         $handler->run($arguments);
     }
 

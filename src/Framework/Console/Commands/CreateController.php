@@ -3,19 +3,19 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\BaseCommand;
 use Lightpack\Console\Views\ControllerView;
 
-class CreateController implements CommandInterface
+class CreateController extends BaseCommand
 {
-    public function run(array $arguments = [])
+    public function run(array $arguments = []): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
 
         if (null === $className) {
-            $message = "Please provide a controller class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a controller class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -35,9 +35,9 @@ class CreateController implements CommandInterface
         $filename = $directory . '/' . $className;
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid controller class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid controller class name.");
+            $this->output->newline();
+            return 1;
         }
 
         $template = ControllerView::getTemplate();
@@ -50,6 +50,9 @@ class CreateController implements CommandInterface
         $directory = substr($directory, strlen(DIR_ROOT));
 
         file_put_contents($filename . '.php', $template);
-        fputs(STDOUT, "✓ Controller created: .{$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Controller created: .{$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return 0;
     }
 }
