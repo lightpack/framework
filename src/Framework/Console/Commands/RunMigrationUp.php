@@ -3,24 +3,24 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Config\Env;
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Database\Adapters\Mysql;
 use Lightpack\Database\Migrations\Migrator;
 
-class RunMigrationUp extends BaseCommand
+class RunMigrationUp extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         if (!file_exists(DIR_ROOT . '/.env')) {
             $this->output->error("Running migrations require ./.env which is missing.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         if ('mysql' !== Env::get('DB_DRIVER')) {
             $this->output->error("Migrations are supported only for MySQL/MariaDB.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $force = $this->args->has('force');
@@ -31,7 +31,7 @@ class RunMigrationUp extends BaseCommand
             $this->output->newline();
             $this->output->success("✓ Migration cancelled.");
             $this->output->newline();
-            return 0;
+            return self::SUCCESS;
         }
 
         // Ensure database exists before running migrations
@@ -56,7 +56,7 @@ class RunMigrationUp extends BaseCommand
             $this->output->newline();
         }
         
-        return 0;
+        return self::SUCCESS;
     }
 
     private function getConnection()

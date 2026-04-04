@@ -2,11 +2,11 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 
-class ServeCommand extends BaseCommand
+class ServeCommand extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         chdir(DIR_ROOT);
 
@@ -15,6 +15,6 @@ class ServeCommand extends BaseCommand
 
         passthru('"' . PHP_BINARY . '"' . ' -S ' . "'$hostUrl'" . ' -t public');
         
-        return 0;
+        return self::SUCCESS;
     }
 }

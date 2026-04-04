@@ -2,10 +2,10 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\File\File;
 
-class WatchCommand extends BaseCommand
+class WatchCommand extends Command
 {
     private $paths = [];
     private $extensions = [];
@@ -13,13 +13,13 @@ class WatchCommand extends BaseCommand
     private $isFirstRun = true;
     private $file;
 
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $this->file = new File();
         
         if ($this->args->has('help')) {
             $this->showHelp();
-            return 0;
+            return self::SUCCESS;
         }
 
         $isTest = $this->args->has('test');
@@ -32,7 +32,7 @@ class WatchCommand extends BaseCommand
             $this->output->error('No paths specified. Use --path=<paths> option.');
             $this->output->newline();
 
-            return 1;
+            return self::FAILURE;
         }
 
         $this->addPaths($paths);
@@ -42,7 +42,7 @@ class WatchCommand extends BaseCommand
             $this->output->error('No valid paths found.');
             $this->output->newline();
 
-            return 1;
+            return self::FAILURE;
         }
 
         if ($extensions) {
@@ -67,7 +67,7 @@ class WatchCommand extends BaseCommand
         $this->updateFileHashes();
 
         if ($isTest) {
-            return 0;
+            return self::SUCCESS;
         }
 
         while (true) {
@@ -82,7 +82,7 @@ class WatchCommand extends BaseCommand
             sleep(1);
         }
         
-        return 0;
+        return self::SUCCESS;
     }
 
     private function showHelp()

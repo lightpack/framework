@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\MigrationView;
 
-class CreateMigration extends BaseCommand
+class CreateMigration extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $schemas = self::getPredefinedSchemas();
         $support = $this->args->get('support');
 
         if ($support === '') {
             $this->showError("You must provide a value for --support. Example: --support=users", null, array_keys($schemas));
-            return 1;
+            return self::FAILURE;
         }
 
         if ($support) {
             if (!isset($schemas[$support])) {
                 $this->showError("Unknown support schema: \"{$support}\".", null, array_keys($schemas));
-                return 1;
+                return self::FAILURE;
             }
             [$filepath, $template] = $this->buildMigrationFile("{$support}_schema", $schemas[$support]);
         } else {
@@ -32,11 +32,11 @@ class CreateMigration extends BaseCommand
                     "You can use --support=<schema> for a predefined migration.",
                     array_keys($schemas)
                 );
-                return 1;
+                return self::FAILURE;
             }
             if (!preg_match('/^[\w_]+$/', $migration)) {
                 $this->showError("Migration file name can only contain alphanumeric characters and underscores.");
-                return 1;
+                return self::FAILURE;
             }
             [$filepath, $template] = $this->buildMigrationFile($migration);
         }
@@ -46,7 +46,7 @@ class CreateMigration extends BaseCommand
         $this->output->success("✓ Migration created in {$filepath}");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 
     /**

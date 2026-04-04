@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\CommandView;
 
-class CreateCommand extends BaseCommand
+class CreateCommand extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide a command class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid command class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = CommandView::getTemplate();
@@ -31,6 +31,6 @@ class CreateCommand extends BaseCommand
         $this->output->success("✓ Command created: {$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

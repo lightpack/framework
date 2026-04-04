@@ -2,12 +2,12 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Database\Seeders\DatabaseSeeder;
 
-class SeedCommand extends BaseCommand
+class SeedCommand extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $this->output->newline();
 
@@ -20,7 +20,7 @@ class SeedCommand extends BaseCommand
         if (!class_exists($fullyQualifiedClass)) {
             $this->output->error("✖ Seeder class '{$fullyQualifiedClass}' not found");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $confirm = $force || $this->prompt->confirm('Are you sure you want to continue?', false);
@@ -36,6 +36,6 @@ class SeedCommand extends BaseCommand
             $this->output->newline();
         }
         
-        return 0;
+        return self::SUCCESS;
     }
 }

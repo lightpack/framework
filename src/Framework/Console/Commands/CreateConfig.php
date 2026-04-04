@@ -2,17 +2,17 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 
-class CreateConfig extends BaseCommand
+class CreateConfig extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $force = $this->args->has('force');
         $support = $this->args->get('support');
         if ($support === '') {
             $this->showError("You must provide a value for --support.", null, array_keys(self::getSupportedConfigs()));
-            return 1;
+            return self::FAILURE;
         }
 
         if ($support) {
@@ -23,7 +23,7 @@ class CreateConfig extends BaseCommand
                     null,
                     array_keys($supported)
                 );
-                return 1;
+                return self::FAILURE;
             }
             $viewClass = $supported[$support];
             $targetPath = './config/' . $support . '.php';
@@ -33,18 +33,18 @@ class CreateConfig extends BaseCommand
                     null,
                     array_keys($supported)
                 );
-                return 1;
+                return self::FAILURE;
             }
             $template = $viewClass::getTemplate();
         } else {
             $name = $this->args->argument(0);
             if (!$name) {
                 $this->showError("Please provide a config file name.", "You can use --support=<name> for a supported config template.");
-                return 1;
+                return self::FAILURE;
             }
             if (!preg_match('/^[\w_]+$/', $name)) {
                 $this->showError("Config file name can only contain alphanumeric characters and underscores.");
-                return 1;
+                return self::FAILURE;
             }
             $targetPath = './config/' . $name . '.php';
             $template = $this->getDefaultTemplate($name);
@@ -52,7 +52,7 @@ class CreateConfig extends BaseCommand
 
         if (file_exists($targetPath) && !$force) {
             $this->showError("Config file already exists: {$targetPath}");
-            return 1;
+            return self::FAILURE;
         }
 
         if ($force && file_exists($targetPath)) {
@@ -65,7 +65,7 @@ class CreateConfig extends BaseCommand
         $this->output->success("✓ Config created at {$targetPath}");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 
     protected function showError(string $error, ?string $tip = null, ?array $supported = null): void

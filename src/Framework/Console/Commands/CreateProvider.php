@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\ProviderView;
 
-class CreateProvider extends BaseCommand
+class CreateProvider extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide a class name for service provider.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid service provider class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $provider = strtolower(str_replace('Provider', '', $className));
@@ -37,6 +37,6 @@ class CreateProvider extends BaseCommand
         $this->output->success("✓ Provider created: {$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

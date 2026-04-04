@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\MailView;
 
-class CreateMail extends BaseCommand
+class CreateMail extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide the mail class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid mail class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = MailView::getTemplate();
@@ -31,6 +31,6 @@ class CreateMail extends BaseCommand
         $this->output->success("✓ Mail created: {$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

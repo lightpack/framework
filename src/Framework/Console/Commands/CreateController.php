@@ -3,19 +3,19 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\ControllerView;
 
-class CreateController extends BaseCommand
+class CreateController extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide a controller class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -37,7 +37,7 @@ class CreateController extends BaseCommand
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid controller class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = ControllerView::getTemplate();
@@ -53,6 +53,6 @@ class CreateController extends BaseCommand
         $this->output->success("✓ Controller created: .{$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

@@ -2,13 +2,13 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\ModelView;
 use Lightpack\Utils\Str;
 
-class CreateModel extends BaseCommand
+class CreateModel extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
         $tableName = $this->args->get('table');
@@ -18,18 +18,18 @@ class CreateModel extends BaseCommand
         if (!$className) {
             $this->output->error("Please provide a model class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
         
         $paths = $this->resolvePaths($className);
-        if ($paths === null) return 1;
+        if ($paths === null) return self::FAILURE;
         extract($paths); // $baseName, $subdir, $directory, $filePath, $parts
 
-        if (!$this->validateSegments($parts, $baseName)) return 1;
+        if (!$this->validateSegments($parts, $baseName)) return self::FAILURE;
         if (file_exists($filePath)) {
             $this->output->error("[Skipped]: ");
             $this->output->line("Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
-            return 1;
+            return self::FAILURE;
         }
         if (!is_dir($directory)) {
             mkdir($directory, 0777, true);
@@ -44,7 +44,7 @@ class CreateModel extends BaseCommand
         $this->output->success("✓ {$modelType} created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 
     private function resolvePaths(string $className)

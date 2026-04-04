@@ -2,20 +2,20 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\TransformerView;
 use Lightpack\File\File;
 
-class CreateTransformer extends BaseCommand
+class CreateTransformer extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide a transformer class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -39,7 +39,7 @@ class CreateTransformer extends BaseCommand
         if ($file->exists($filepath)) {
             $this->output->error("{$className} already exists: .{$directory}/{$className}.php");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = TransformerView::getTemplate();
@@ -53,6 +53,6 @@ class CreateTransformer extends BaseCommand
         $this->output->success("✓ Transformer created: .{$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

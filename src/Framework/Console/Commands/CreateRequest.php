@@ -3,19 +3,19 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\RequestView;
 
-class CreateRequest extends BaseCommand
+class CreateRequest extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide a form request class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -40,7 +40,7 @@ class CreateRequest extends BaseCommand
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid form request class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = RequestView::getTemplate();
@@ -56,6 +56,6 @@ class CreateRequest extends BaseCommand
         $this->output->success("✓ Request created: .{$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

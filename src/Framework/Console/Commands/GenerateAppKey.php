@@ -2,13 +2,13 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\File\File;
 use Lightpack\Utils\Str;
 
-class GenerateAppKey extends BaseCommand
+class GenerateAppKey extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $file = new File();
         $filepath = realpath(DIR_ROOT . '/.env');
@@ -16,7 +16,7 @@ class GenerateAppKey extends BaseCommand
         if (!$file->exists($filepath)) {
             $this->output->error("No env file found.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $contents = $file->read($filepath);
@@ -30,6 +30,6 @@ class GenerateAppKey extends BaseCommand
         $this->output->success("✓ Generated APP_KEY: {$newKey}.");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

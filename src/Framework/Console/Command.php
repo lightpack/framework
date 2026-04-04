@@ -6,8 +6,11 @@ namespace Lightpack\Console;
  * Base class for all console commands.
  * Provides automatic access to Args, Output, and Prompt utilities.
  */
-abstract class BaseCommand implements CommandInterface
+abstract class Command
 {
+    public const SUCCESS = 0;
+    public const FAILURE = 1;
+    
     protected Args $args;
     protected Output $output;
     protected Prompt $prompt;
@@ -24,7 +27,6 @@ abstract class BaseCommand implements CommandInterface
     
     /**
      * Execute the command
-     * Subclasses implement this method with their logic
      */
-    abstract public function run(array $arguments = []): int;
+    abstract public function run(): int;
 }

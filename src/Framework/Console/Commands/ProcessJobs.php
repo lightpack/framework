@@ -3,11 +3,11 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Jobs\Worker;
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 
-class ProcessJobs extends BaseCommand
+class ProcessJobs extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $queues = $this->parseQueueArgument() ?? ['default'];
         $sleep = $this->args->get('sleep') ?? 5;
@@ -17,7 +17,7 @@ class ProcessJobs extends BaseCommand
 
         $worker->run();
         
-        return 0;
+        return self::SUCCESS;
     }
 
     private function parseQueueArgument()

@@ -2,12 +2,12 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Jobs\Connection;
 
-class RetryFailedJobs extends BaseCommand
+class RetryFailedJobs extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $engine = Connection::getJobEngine();
         $jobId = $this->args->argument(0);
@@ -24,7 +24,7 @@ class RetryFailedJobs extends BaseCommand
                 $this->output->line("No failed jobs to retry.");
             }
             $this->output->newline();
-            return 0;
+            return self::SUCCESS;
         }
         
         if ($jobId) {
@@ -36,6 +36,6 @@ class RetryFailedJobs extends BaseCommand
         }
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

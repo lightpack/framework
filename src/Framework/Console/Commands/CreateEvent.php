@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\EventView;
 
-class CreateEvent extends BaseCommand
+class CreateEvent extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide an event listener class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid event listener class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = EventView::getTemplate();
@@ -31,6 +31,6 @@ class CreateEvent extends BaseCommand
         $this->output->success("✓ Event created: {$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

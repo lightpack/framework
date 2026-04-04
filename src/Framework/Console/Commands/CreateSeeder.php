@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\SeederView;
 
-class CreateSeeder extends BaseCommand
+class CreateSeeder extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide the seeder class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid seeder class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = SeederView::getTemplate();
@@ -31,12 +31,12 @@ class CreateSeeder extends BaseCommand
         if (file_exists($filePath)) {
             $this->output->error("Seeder class file already exists: {$directory}/{$className}.php");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
         file_put_contents($filePath, $template);
         $this->output->success("✓ Seeder class file created: {$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }

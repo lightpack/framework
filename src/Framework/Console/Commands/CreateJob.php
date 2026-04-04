@@ -2,25 +2,25 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\BaseCommand;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\JobView;
 
-class CreateJob extends BaseCommand
+class CreateJob extends Command
 {
-    public function run(array $arguments = []): int
+    public function run(): int
     {
         $className = $this->args->argument(0);
 
         if (null === $className) {
             $this->output->error("Please provide the job class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid job class name.");
             $this->output->newline();
-            return 1;
+            return self::FAILURE;
         }
 
         $template = JobView::getTemplate();
@@ -31,6 +31,6 @@ class CreateJob extends BaseCommand
         $this->output->success("✓ Job created: {$directory}/{$className}.php");
         $this->output->newline();
         
-        return 0;
+        return self::SUCCESS;
     }
 }
