@@ -3,19 +3,20 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\RequestView;
 
-class CreateRequest implements CommandInterface
+class CreateRequest extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide a form request class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a form request class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -38,9 +39,21 @@ class CreateRequest implements CommandInterface
         $filename = $directory . '/' . $className;
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid form request class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid form request class name.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
+        $filePath = $filename . '.php';
+        $displayPath = substr($directory, strlen(DIR_ROOT));
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Request already exists: .{$displayPath}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $template = RequestView::getTemplate();
@@ -50,9 +63,10 @@ class CreateRequest implements CommandInterface
             $template
         );
 
-        $directory = substr($directory, strlen(DIR_ROOT));
-
-        file_put_contents($filename . '.php', $template);
-        fputs(STDOUT, "✓ request created: .{$directory}/{$className}.php\n\n");
+        file_put_contents($filePath, $template);
+        $this->output->success("✓ Request created: .{$displayPath}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

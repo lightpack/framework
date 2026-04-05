@@ -2,38 +2,47 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\SeederView;
 
-class CreateSeeder implements CommandInterface
+class CreateSeeder extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide the seeder class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide the seeder class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid seeder class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid seeder class name.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
+        $directory = './database/seeders';
+        $filePath = DIR_ROOT . '/database/seeders/' . $className . '.php';
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Seeder already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $template = SeederView::getTemplate();
         $template = str_replace('__SEEDER_NAME__', $className, $template);
-        $directory = './database/seeders';
 
-        $filePath = DIR_ROOT . '/database/seeders/' . $className . '.php';
-        if (file_exists($filePath)) {
-            $message = "Seeder class file already exists: {$directory}/{$className}.php\n\n";
-            fputs(STDERR, $message);
-            return;
-        }
         file_put_contents($filePath, $template);
-        fputs(STDOUT, "✓ Seeder class file created: {$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Seeder created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

@@ -2,30 +2,42 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\ProviderView;
 
-class CreateProvider implements CommandInterface
+class CreateProvider extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide a class name for service provider.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a class name for service provider.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid service provider class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid service provider class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $provider = strtolower(str_replace('Provider', '', $className));
-        $binding = in_array('--instance', $arguments) ? 'factory' : 'register';
+        $binding = $this->args->has('instance') ? 'factory' : 'register';
         $directory = './app/Providers';
+        $filePath = DIR_ROOT . '/app/Providers/' . $className . '.php';
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Provider already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
         $template = ProviderView::getTemplate();
         $template = str_replace(
             ['__PROVIDER_NAME__', '__PROVIDER_ALIAS__', '__PROVIDER_BINDING__'], 
@@ -33,7 +45,10 @@ class CreateProvider implements CommandInterface
             $template
         );
 
-        file_put_contents(DIR_ROOT . '/app/Providers/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Provider created: {$directory}/{$className}.php\n\n");
+        file_put_contents($filePath, $template);
+        $this->output->success("✓ Provider created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

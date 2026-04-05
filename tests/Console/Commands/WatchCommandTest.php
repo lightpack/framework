@@ -3,6 +3,8 @@
 namespace Lightpack\Tests\Console\Commands;
 
 use Lightpack\Console\Commands\WatchCommand;
+use Lightpack\Console\Args;
+use Lightpack\File\File;
 use PHPUnit\Framework\TestCase;
 
 class WatchCommandTest extends TestCase
@@ -12,9 +14,12 @@ class WatchCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->command = new WatchCommand();
+        $this->command = new WatchCommand(['--path=' . sys_get_temp_dir()]);
         $this->tempDir = sys_get_temp_dir() . '/watch_test_' . uniqid();
         mkdir($this->tempDir);
+        
+        // Initialize the file property that WatchCommand needs
+        $this->setPrivateProperty($this->command, 'file', new File());
     }
 
     protected function tearDown(): void
@@ -24,19 +29,13 @@ class WatchCommandTest extends TestCase
 
     public function testOptionParsing()
     {
-        $args = ['--path=src,tests', '--ext=php,md', '--run=phpunit'];
-        $result = $this->invokeMethod($this->command, 'getOptionValue', [$args, '--path']);
-        $this->assertEquals('src,tests', $result);
-
-        $result = $this->invokeMethod($this->command, 'getOptionValue', [$args, '--ext']);
-        $this->assertEquals('php,md', $result);
-
-        $result = $this->invokeMethod($this->command, 'getOptionValue', [$args, '--run']);
-        $this->assertEquals('phpunit', $result);
-
-        // Should return null for non-existent option
-        $result = $this->invokeMethod($this->command, 'getOptionValue', [$args, '--foo']);
-        $this->assertNull($result);
+        // Test Args parsing directly since getOptionValue() was removed
+        $args = new Args(['--path=src,tests', '--ext=php,md', '--run=phpunit']);
+        
+        $this->assertEquals('src,tests', $args->get('path'));
+        $this->assertEquals('php,md', $args->get('ext'));
+        $this->assertEquals('phpunit', $args->get('run'));
+        $this->assertNull($args->get('foo'));
     }
 
     public function testPathHandling()

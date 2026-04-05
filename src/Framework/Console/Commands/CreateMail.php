@@ -2,32 +2,47 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\MailView;
 
-class CreateMail implements CommandInterface
+class CreateMail extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide the mail class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide the mail class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid mail class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid mail class name.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
+        $directory = './app/Mails';
+        $filePath = DIR_ROOT . '/app/Mails/' . $className . '.php';
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Mail already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $template = MailView::getTemplate();
         $template = str_replace('__MAIL_NAME__', $className, $template);
-        $directory = './app/Mails';
 
-        file_put_contents(DIR_ROOT . '/app/Mails/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Mail created: {$directory}/{$className}.php\n\n");
+        file_put_contents($filePath, $template);
+        $this->output->success("✓ Mail created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

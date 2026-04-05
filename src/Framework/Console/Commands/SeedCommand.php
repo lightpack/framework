@@ -2,52 +2,40 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Database\Seeders\DatabaseSeeder;
 
-class SeedCommand implements CommandInterface
+class SeedCommand extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        fputs(STDOUT, "\n");
+        $this->output->newline();
 
-        // Extract class name and flags
-        $className = null;
-        $force = false;
-        
-        foreach ($arguments as $arg) {
-            if ($arg === '--force') {
-                $force = true;
-            } elseif (!str_starts_with($arg, '--')) {
-                $className = $arg;
-            }
-        }
-
-        // Default to DatabaseSeeder if no class specified
-        if (!$className) {
-            $className = 'DatabaseSeeder';
-        }
+        $className = $this->args->argument(0) ?? 'DatabaseSeeder';
+        $force = $this->args->has('force');
 
         // Build fully qualified class name
         $fullyQualifiedClass = "Database\\Seeders\\{$className}";
 
-        // Check if class exists
         if (!class_exists($fullyQualifiedClass)) {
-            fputs(STDOUT, "✖ Seeder class '{$fullyQualifiedClass}' not found\n\n");
-            return;
+            $this->output->error("✖ Seeder class '{$fullyQualifiedClass}' not found");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
-        if ($force) {
-            $confirm = 'y';
-        } else {
-            $confirm = readline('Are you sure you want to continue? (y/n) ');
-        }
+        $confirm = $force || $this->prompt->confirm('Are you sure you want to continue?', false);
 
-        if(strtolower($confirm) === 'y') {
+        if($confirm) {
             (new $fullyQualifiedClass)->seed();
-            fputs(STDOUT, "\n✔ Seeded: {$className}\n\n");
+            $this->output->newline();
+            $this->output->success("✔ Seeded: {$className}");
+            $this->output->newline();
         } else {
-            fputs(STDOUT, "\n✔ Database seeding cancelled\n\n");
+            $this->output->newline();
+            $this->output->success("✔ Database seeding cancelled");
+            $this->output->newline();
         }
+        
+        return self::SUCCESS;
     }
 }

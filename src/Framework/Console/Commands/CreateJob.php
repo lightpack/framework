@@ -2,32 +2,47 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\JobView;
 
-class CreateJob implements CommandInterface
+class CreateJob extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide the job class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide the job class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid job class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid job class name.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
+        $directory = './app/Jobs';
+        $filePath = DIR_ROOT . '/app/Jobs/' . $className . '.php';
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Job already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $template = JobView::getTemplate();
         $template = str_replace('__JOB_NAME__', $className, $template);
-        $directory = './app/Jobs';
 
-        file_put_contents(DIR_ROOT . '/app/Jobs/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Job created: {$directory}/{$className}.php\n\n");
+        file_put_contents($filePath, $template);
+        $this->output->success("✓ Job created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

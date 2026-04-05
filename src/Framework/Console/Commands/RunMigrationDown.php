@@ -3,29 +3,31 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Config\Env;
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Database\Adapters\Mysql;
 use Lightpack\Database\Migrations\Migrator;
 
-class RunMigrationDown implements CommandInterface
+class RunMigrationDown extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
         if (!file_exists(DIR_ROOT . '/.env')) {
-            fputs(STDOUT, "Running migrations require ./.env which is missing.\n\n");
-            exit;
+            $this->output->error("Running migrations require ./.env which is missing.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $driver = Env::get('DB_DRIVER');
 
         if ('mysql' !== $driver) {
-            fputs(STDOUT, "Migrations are supported only for MySQL/MariaDB.\n\n");
-            exit;
+            $this->output->error("Migrations are supported only for MySQL/MariaDB.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $migrator = new Migrator($this->getConnection());
-        $steps = $this->getStepsArgument($arguments);
-        $force = in_array('--force', $arguments);
+        $steps = $this->getStepsArgument();
+        $force = $this->args->has('force');
         $confirm = $this->promptConfirmation($steps, $force);
 
         if ($confirm) {
@@ -35,18 +37,20 @@ class RunMigrationDown implements CommandInterface
                 $migrations = $migrator->rollback(DIR_ROOT . '/database/migrations', $steps);
             }
 
-            fputs(STDOUT, "\n");
+            $this->output->newline();
 
             if (empty($migrations)) {
-                fputs(STDOUT, "✓ No migrations to rollback.\n");
+                $this->output->success("✓ No migrations to rollback.");
             } else {
-                fputs(STDOUT, "Rolled back migrations:\n");
+                $this->output->line("Rolled back migrations:");
                 foreach ($migrations as $migration) {
-                    fputs(STDOUT, "✓ {$migration}\n");
+                    $this->output->success("✓ {$migration}");
                 }
-                fputs(STDOUT, "\n");
+                $this->output->newline();
             }
         }
+        
+        return self::SUCCESS;
     }
 
     private function getConnection()
@@ -62,47 +66,47 @@ class RunMigrationDown implements CommandInterface
                     'options'   => [],
                 ]);
             default:
-                fputs(STDOUT, "Invalid database driver found in ./.env\n\n");
-                exit;
+                $this->output->error("Invalid database driver found in ./.env");
+                $this->output->newline();
+                exit(1);
         }
     }
 
-    private function getStepsArgument(array $arguments)
+    private function getStepsArgument()
     {
-        $steps = $arguments[0] ?? null;
-
-        if (null === $steps) {
-            return null;
-        }
-
-        if ('--all' === $steps) {
+        if ($this->args->has('all')) {
             return 'all';
         }
-
-        $steps = explode('=', $steps);
-
-        $steps = $steps[1] ?? null;
-
-        return $steps;
+        
+        $steps = $this->args->get('steps');
+        
+        if ($steps) {
+            return (int) $steps;
+        }
+        
+        // Check first positional argument
+        $firstArg = $this->args->argument(0);
+        if ($firstArg && is_numeric($firstArg)) {
+            return (int) $firstArg;
+        }
+        
+        return null;
     }
 
     private function promptConfirmation(null|string|int $steps = null, bool $force = false): bool
     {
-        // If --force flag is provided, skip confirmation
         if ($force) {
             return true;
         }
 
-        fputs(STDOUT, "\n");
+        $this->output->newline();
 
         if ('all' === $steps) {
-            fputs(STDOUT, "Are you sure you want to rollback all the migrations? [y/N]: ");
+            return $this->prompt->confirm("Are you sure you want to rollback all the migrations?", false);
         } else if (null === $steps || 1 === $steps) {
-            fputs(STDOUT, "Are you sure you want to rollback last batch of migrations? [y/N]: ");
+            return $this->prompt->confirm("Are you sure you want to rollback last batch of migrations?", false);
         } else {
-            fputs(STDOUT, "Are you sure you want to rollback last {$steps} batch of migrations? [y/N]: ");
+            return $this->prompt->confirm("Are you sure you want to rollback last {$steps} batch of migrations?", false);
         }
-
-        return strtolower(trim(fgets(STDIN))) === 'y';
     }
 }

@@ -2,36 +2,51 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\ToolView;
 
-class CreateTool implements CommandInterface
+class CreateTool extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide a tool class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a tool class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid tool class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid tool class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
-        $template = ToolView::getTemplate();
-        $template = str_replace('__TOOL_NAME__', $className, $template);
         $directory = './app/Tools';
+        $filePath = DIR_ROOT . '/app/Tools/' . $className . '.php';
 
         if (!is_dir(DIR_ROOT . '/app/Tools')) {
             mkdir(DIR_ROOT . '/app/Tools', 0755, true);
         }
 
-        file_put_contents(DIR_ROOT . '/app/Tools/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Tool created: {$directory}/{$className}.php\n\n");
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Tool already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
+        $template = ToolView::getTemplate();
+        $template = str_replace('__TOOL_NAME__', $className, $template);
+
+        file_put_contents($filePath, $template);
+        $this->output->success("✓ Tool created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

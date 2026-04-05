@@ -3,20 +3,24 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\File\File;
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 
-class CreateEnv implements CommandInterface
+class CreateEnv extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
         $file = new File();
 
         if ($file->exists(DIR_ROOT . '/.env')) {
-            fputs(STDOUT, ".env file already exists.\n\n");
-            return;
+            $this->output->error(".env file already exists.");
+            $this->output->newline();
+            return self::SUCCESS;
         }
 
         (new File)->copy(DIR_ROOT . '/.env.example', DIR_ROOT . '/.env');
-        fputs(STDOUT, "✓ Created .env file.\n\n");
+        $this->output->success("✓ Created .env file.");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

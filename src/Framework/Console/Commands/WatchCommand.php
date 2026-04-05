@@ -2,44 +2,37 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
-use Lightpack\Console\Output;
+use Lightpack\Console\Command;
 use Lightpack\File\File;
 
-class WatchCommand implements CommandInterface
+class WatchCommand extends Command
 {
     private $paths = [];
     private $extensions = [];
     private $fileHashes = [];
     private $isFirstRun = true;
-    private $output;
     private $file;
 
-    public function __construct()
+    public function run(): int
     {
-        $this->output = new Output();
         $this->file = new File();
-    }
-
-    public function run(array $arguments = [])
-    {
-        if (in_array('--help', $arguments)) {
+        
+        if ($this->args->has('help')) {
             $this->showHelp();
-            return;
+            return self::SUCCESS;
         }
 
-        // Parse arguments
-        $isTest = in_array('--test', $arguments);
-        $paths = $this->getOptionValue($arguments, '--path');
-        $extensions = $this->getOptionValue($arguments, '--ext');
-        $command = $this->getOptionValue($arguments, '--run');
+        $isTest = $this->args->has('test');
+        $paths = $this->args->get('path');
+        $extensions = $this->args->get('ext');
+        $command = $this->args->get('run');
 
         if (!$paths) {
             $this->output->newline();
             $this->output->error('No paths specified. Use --path=<paths> option.');
             $this->output->newline();
 
-            return;
+            return self::FAILURE;
         }
 
         $this->addPaths($paths);
@@ -49,7 +42,7 @@ class WatchCommand implements CommandInterface
             $this->output->error('No valid paths found.');
             $this->output->newline();
 
-            return;
+            return self::FAILURE;
         }
 
         if ($extensions) {
@@ -74,7 +67,7 @@ class WatchCommand implements CommandInterface
         $this->updateFileHashes();
 
         if ($isTest) {
-            return;
+            return self::SUCCESS;
         }
 
         while (true) {
@@ -83,12 +76,13 @@ class WatchCommand implements CommandInterface
                 $this->output->info("🚀 Running command: {$command}");
                 $this->output->newline();
 
-                // Use shell_exec to support aliases and shell features
                 $shell = getenv('SHELL') ?: '/bin/sh';
                 shell_exec("$shell -c '$command'");
             }
             sleep(1);
         }
+        
+        return self::SUCCESS;
     }
 
     private function showHelp()
@@ -129,18 +123,6 @@ class WatchCommand implements CommandInterface
         $this->output->info("  php console watch --path=app --ext=php --run=\"vendor/bin/phpunit\"");
         $this->output->newline();
 
-    }
-
-    private function getOptionValue(array $args, string $option): ?string
-    {
-        foreach ($args as $arg) {
-            // Only support --option=value format
-            if (strpos($arg, $option . '=') === 0) {
-                return substr($arg, strlen($option) + 1);
-            }
-        }
-
-        return null;
     }
 
     private function addPaths(string $pathString)

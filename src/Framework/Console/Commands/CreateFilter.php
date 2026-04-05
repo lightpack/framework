@@ -2,32 +2,47 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\FilterView;
 
-class CreateFilter implements CommandInterface
+class CreateFilter extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide a filter class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a filter class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         if (!preg_match('/^[\w]+$/', $className)) {
-            $message = "Invalid filter class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Invalid filter class name.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
+        $directory = './app/Filters';
+        $filePath = DIR_ROOT . '/app/Filters/' . $className . '.php';
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Filter already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $template = FilterView::getTemplate();
         $template = str_replace('__FILTER_NAME__', $className, $template);
-        $directory = './app/Filters';
 
-        file_put_contents(DIR_ROOT . '/app/Filters/' . $className . '.php', $template);
-        fputs(STDOUT, "✓ Filter created: {$directory}/{$className}.php\n\n");
+        file_put_contents($filePath, $template);
+        $this->output->success("✓ Filter created: {$directory}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

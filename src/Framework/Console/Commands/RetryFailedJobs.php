@@ -2,62 +2,40 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Jobs\Connection;
 
-class RetryFailedJobs implements CommandInterface
+class RetryFailedJobs extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
         $engine = Connection::getJobEngine();
-        $jobId = $this->parseJobIdArgument($arguments);
-        $queue = $this->parseQueueArgument($arguments);
+        $jobId = $this->args->argument(0);
+        $queue = $this->args->get('queue');
         
         $count = $engine->retryFailedJobs($jobId, $queue);
         
         if ($count === 0) {
             if ($jobId) {
-                fputs(STDERR, "Job #{$jobId} not found or not failed.\n");
+                $this->output->error("Job #{$jobId} not found or not failed.");
             } elseif ($queue) {
-                fputs(STDOUT, "No failed jobs to retry in queue '{$queue}'.\n");
+                $this->output->line("No failed jobs to retry in queue '{$queue}'.");
             } else {
-                fputs(STDOUT, "No failed jobs to retry.\n");
+                $this->output->line("No failed jobs to retry.");
             }
-            return;
+            $this->output->newline();
+            return self::SUCCESS;
         }
         
         if ($jobId) {
-            fputs(STDOUT, "✓ Job #{$jobId} queued for retry.\n");
+            $this->output->success("✓ Job #{$jobId} queued for retry.");
         } elseif ($queue) {
-            fputs(STDOUT, "✓ {$count} job(s) from queue '{$queue}' queued for retry.\n");
+            $this->output->success("✓ {$count} job(s) from queue '{$queue}' queued for retry.");
         } else {
-            fputs(STDOUT, "✓ {$count} job(s) queued for retry.\n");
+            $this->output->success("✓ {$count} job(s) queued for retry.");
         }
-    }
-    
-    private function parseJobIdArgument(array $args)
-    {
-        foreach ($args as $arg) {
-            if (is_numeric($arg)) {
-                return (int) $arg;
-            }
-            // For Redis string IDs
-            if (!str_starts_with($arg, '--')) {
-                return $arg;
-            }
-        }
+        $this->output->newline();
         
-        return null;
-    }
-    
-    private function parseQueueArgument(array $args)
-    {
-        foreach ($args as $arg) {
-            if (str_starts_with($arg, '--queue=')) {
-                return substr($arg, 8);
-            }
-        }
-        
-        return null;
+        return self::SUCCESS;
     }
 }

@@ -2,20 +2,21 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Console\Views\TransformerView;
 use Lightpack\File\File;
 
-class CreateTransformer implements CommandInterface
+class CreateTransformer extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        $className = $arguments[0] ?? null;
+        $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
-            $message = "Please provide a transformer class name.\n\n";
-            fputs(STDERR, $message);
-            return;
+            $this->output->error("Please provide a transformer class name.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $parts = explode('\\', trim($className, '/'));
@@ -34,12 +35,15 @@ class CreateTransformer implements CommandInterface
         }
 
         $filepath = $directory . '/' . $className . '.php';
-        $directory = substr($directory, strlen(DIR_ROOT));
+        $displayPath = substr($directory, strlen(DIR_ROOT));
 
-        if ($file->exists($filepath)) {
-            $message = "{$className} already exists: .{$directory}/{$className}.php\n\n";
-            fputs(STDERR, $message);
-            return;
+        if ($file->exists($filepath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Transformer already exists: .{$displayPath}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         $template = TransformerView::getTemplate();
@@ -50,6 +54,9 @@ class CreateTransformer implements CommandInterface
         );
 
         $file->write($filepath, $template);
-        fputs(STDOUT, "✓ Transformer created: .{$directory}/{$className}.php\n\n");
+        $this->output->success("✓ Transformer created: .{$displayPath}/{$className}.php");
+        $this->output->newline();
+        
+        return self::SUCCESS;
     }
 }

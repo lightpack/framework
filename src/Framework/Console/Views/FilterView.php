@@ -15,7 +15,7 @@ use Lightpack\Http\Request;
 use Lightpack\Http\Response;
 use Lightpack\Filters\FilterInterface;
 
-class __FILTER_NAME__ implements IFilter
+class __FILTER_NAME__ implements FilterInterface
 {
     public function before(Request $request, array $params = [])
     {

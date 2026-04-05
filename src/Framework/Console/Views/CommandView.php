@@ -11,13 +11,15 @@ class CommandView
 
 namespace App\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 
-class __COMMAND_NAME__ implements CommandInterface
+class __COMMAND_NAME__ extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
-        fputs(STDOUT, "Hello\n\n");
+        $this->output->line("Hello!");
+        
+        return self::SUCCESS;
     }
 }
 TEMPLATE;

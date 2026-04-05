@@ -2,27 +2,31 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 
-class LinkStorage implements CommandInterface
+class LinkStorage extends Command
 {
-    public function run(array $arguments = [])
+    public function run(): int
     {
         $target = DIR_ROOT . '/storage/uploads/public';
         $link = DIR_ROOT . '/public/uploads';
         
         if(is_link($link)) {
-            fputs(STDOUT, "Symlink already exists.\n\n");
-            return;
+            $this->output->line("Symlink already exists.");
+            $this->output->newline();
+            return self::SUCCESS;
         }
 
         $success = symlink($target, $link);
 
         if($success) {
-            fputs(STDOUT, '✓ Created symlink from "public/uploads" to "storage/uploads/public"' . "\n\n");
-            return;
+            $this->output->success('✓ Created symlink from "public/uploads" to "storage/uploads/public"');
+            $this->output->newline();
+            return self::SUCCESS;
         }
 
-        fputs(STDOUT, "Could not create symlink\n\n");
+        $this->output->error("Could not create symlink");
+        $this->output->newline();
+        return self::FAILURE;
     }
 }

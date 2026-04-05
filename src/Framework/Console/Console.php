@@ -46,7 +46,6 @@ class Console
         'migrate:up' => RunMigrationUp::class,
         'migrate:down' => RunMigrationDown::class,
         'create:request' => CreateRequest::class,
-        'process:jobs' => ProcessJobs::class, // deprecated, use jobs:run instead
         'jobs:run' => ProcessJobs::class,
         'create:job' => CreateJob::class,
         'create:mail' => CreateMail::class,
@@ -61,19 +60,22 @@ class Console
         'create:tool' => CreateTool::class,
     ];
 
-    public static function register(string $command, CommandInterface $handler)
+    public static function register(string $command, Command $handler)
     {
         self::$commands[$command] = $handler;
     }
 
-    public static function getCommandHandler(string $command)
+    public static function getCommandHandler(string $command, array $arguments = [])
     {
         if (!isset(self::$commands[$command])) {
             fputs(STDERR, "Invalid command: {$command}\n");
             exit(1);
         }
 
-        return new self::$commands[$command];
+        // Remove command name from arguments (first element)
+        $commandArguments = array_slice($arguments, 1);
+        
+        return new self::$commands[$command]($commandArguments);
     }
 
     public static function run(?string $command = null, array $arguments = [])
@@ -83,8 +85,9 @@ class Console
             exit(0);
         }
 
-        $handler = self::getCommandHandler($command);
-        $handler->run($arguments);
+        $handler = self::getCommandHandler($command, $arguments);
+        $exitCode = $handler->run();
+        exit($exitCode);
     }
 
     public static function getCommands()

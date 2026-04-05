@@ -2,21 +2,19 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Console\CommandInterface;
+use Lightpack\Console\Command;
 use Lightpack\Schedule\Schedule;
 
-class ScheduleEvents implements CommandInterface
+class ScheduleEvents extends Command
 {
     /** @var Schedule */
     protected $schedule;
 
-    public function __construct()
+    public function run(): int
     {
         $this->schedule = schedule();
-    }
-
-    public function run(array $arguments = [])
-    {
         $this->schedule->run();
+        
+        return self::SUCCESS;
     }
 }
