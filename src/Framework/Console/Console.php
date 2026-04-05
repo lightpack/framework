@@ -46,7 +46,6 @@ class Console
         'migrate:up' => RunMigrationUp::class,
         'migrate:down' => RunMigrationDown::class,
         'create:request' => CreateRequest::class,
-        'process:jobs' => ProcessJobs::class, // deprecated, use jobs:run instead
         'jobs:run' => ProcessJobs::class,
         'create:job' => CreateJob::class,
         'create:mail' => CreateMail::class,
