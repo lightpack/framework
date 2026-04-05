@@ -10,7 +10,7 @@ class ServeCommand extends Command
     {
         chdir(DIR_ROOT);
 
-        $port = $this->args->argument(0) ?? '8000';
+        $port = $this->args->get('port', '8000');
         $hostUrl = '127.0.0.1:' . $port;
 
         passthru('"' . PHP_BINARY . '"' . ' -S ' . "'$hostUrl'" . ' -t public');
