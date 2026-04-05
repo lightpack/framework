@@ -17,8 +17,7 @@ class __COMMAND_NAME__ extends Command
 {
     public function run(): int
     {
-        $this->output->line("Hello from __COMMAND_NAME__!");
-        $this->output->newline();
+        $this->output->line("Hello!");
         
         return self::SUCCESS;
     }

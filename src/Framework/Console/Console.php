@@ -61,7 +61,7 @@ class Console
         'create:tool' => CreateTool::class,
     ];
 
-    public static function register(string $command, CommandInterface $handler)
+    public static function register(string $command, Command $handler)
     {
         self::$commands[$command] = $handler;
     }
@@ -73,7 +73,10 @@ class Console
             exit(1);
         }
 
-        return new self::$commands[$command]($arguments);
+        // Remove command name from arguments (first element)
+        $commandArguments = array_slice($arguments, 1);
+        
+        return new self::$commands[$command]($commandArguments);
     }
 
     public static function run(?string $command = null, array $arguments = [])
