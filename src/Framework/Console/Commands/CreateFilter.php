@@ -10,6 +10,7 @@ class CreateFilter extends Command
     public function run(): int
     {
         $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
             $this->output->error("Please provide a filter class name.");
@@ -23,11 +24,22 @@ class CreateFilter extends Command
             return self::FAILURE;
         }
 
+        $directory = './app/Filters';
+        $filePath = DIR_ROOT . '/app/Filters/' . $className . '.php';
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Filter already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
         $template = FilterView::getTemplate();
         $template = str_replace('__FILTER_NAME__', $className, $template);
-        $directory = './app/Filters';
 
-        file_put_contents(DIR_ROOT . '/app/Filters/' . $className . '.php', $template);
+        file_put_contents($filePath, $template);
         $this->output->success("✓ Filter created: {$directory}/{$className}.php");
         $this->output->newline();
         

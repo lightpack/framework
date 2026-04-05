@@ -11,6 +11,7 @@ class CreateController extends Command
     public function run(): int
     {
         $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
             $this->output->error("Please provide a controller class name.");
@@ -40,6 +41,18 @@ class CreateController extends Command
             return self::FAILURE;
         }
 
+        $filePath = $filename . '.php';
+        $displayPath = substr($directory, strlen(DIR_ROOT));
+
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Controller already exists: .{$displayPath}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
         $template = ControllerView::getTemplate();
         $template = str_replace(
             ['__NAMESPACE__', '__CONTROLLER_NAME__'],
@@ -47,10 +60,8 @@ class CreateController extends Command
             $template
         );
 
-        $directory = substr($directory, strlen(DIR_ROOT));
-
-        file_put_contents($filename . '.php', $template);
-        $this->output->success("✓ Controller created: .{$directory}/{$className}.php");
+        file_put_contents($filePath, $template);
+        $this->output->success("✓ Controller created: .{$displayPath}/{$className}.php");
         $this->output->newline();
         
         return self::SUCCESS;

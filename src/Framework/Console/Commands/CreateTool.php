@@ -10,6 +10,7 @@ class CreateTool extends Command
     public function run(): int
     {
         $className = $this->args->argument(0);
+        $force = $this->args->has('force');
 
         if (null === $className) {
             $this->output->error("Please provide a tool class name.");
@@ -23,15 +24,26 @@ class CreateTool extends Command
             return self::FAILURE;
         }
 
-        $template = ToolView::getTemplate();
-        $template = str_replace('__TOOL_NAME__', $className, $template);
         $directory = './app/Tools';
+        $filePath = DIR_ROOT . '/app/Tools/' . $className . '.php';
 
         if (!is_dir(DIR_ROOT . '/app/Tools')) {
             mkdir(DIR_ROOT . '/app/Tools', 0755, true);
         }
 
-        file_put_contents(DIR_ROOT . '/app/Tools/' . $className . '.php', $template);
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Tool already exists: {$directory}/{$className}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
+        }
+
+        $template = ToolView::getTemplate();
+        $template = str_replace('__TOOL_NAME__', $className, $template);
+
+        file_put_contents($filePath, $template);
         $this->output->success("✓ Tool created: {$directory}/{$className}.php");
         $this->output->newline();
         

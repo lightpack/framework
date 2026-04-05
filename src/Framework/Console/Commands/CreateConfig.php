@@ -51,7 +51,9 @@ class CreateConfig extends Command
         }
 
         if (file_exists($targetPath) && !$force) {
-            $this->showError("Config file already exists: {$targetPath}");
+            $this->showError("Config already exists: {$targetPath}");
+            $this->output->line('Use --force to overwrite.');
+            $this->output->newline();
             return self::FAILURE;
         }
 

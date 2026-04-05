@@ -14,6 +14,7 @@ class CreateModel extends Command
         $tableName = $this->args->get('table');
         $primaryKey = $this->args->get('key');
         $isTenant = $this->args->has('tenant');
+        $force = $this->args->has('force');
         
         if (!$className) {
             $this->output->error("Please provide a model class name.");
@@ -26,9 +27,12 @@ class CreateModel extends Command
         extract($paths); // $baseName, $subdir, $directory, $filePath, $parts
 
         if (!$this->validateSegments($parts, $baseName)) return self::FAILURE;
-        if (file_exists($filePath)) {
-            $this->output->error("[Skipped]: ");
-            $this->output->line("Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
+        if (file_exists($filePath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
             return self::FAILURE;
         }
         if (!is_dir($directory)) {

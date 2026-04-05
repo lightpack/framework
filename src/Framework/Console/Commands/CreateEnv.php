@@ -12,7 +12,7 @@ class CreateEnv extends Command
         $file = new File();
 
         if ($file->exists(DIR_ROOT . '/.env')) {
-            $this->output->line(".env file already exists.");
+            $this->output->error(".env file already exists.");
             $this->output->newline();
             return self::SUCCESS;
         }

@@ -11,6 +11,7 @@ class CreateMigration extends Command
     {
         $schemas = self::getPredefinedSchemas();
         $support = $this->args->get('support');
+        $force = $this->args->has('force');
 
         if ($support === '') {
             $this->showError("You must provide a value for --support. Example: --support=users", null, array_keys($schemas));
@@ -39,6 +40,15 @@ class CreateMigration extends Command
                 return self::FAILURE;
             }
             [$filepath, $template] = $this->buildMigrationFile($migration);
+        }
+
+        if (file_exists($filepath) && !$force) {
+            $this->output->newline();
+            $this->output->error("Migration already exists: {$filepath}");
+            $this->output->newline();
+            $this->output->line("Use --force to overwrite.");
+            $this->output->newline();
+            return self::FAILURE;
         }
 
         file_put_contents($filepath, $template);
