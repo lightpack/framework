@@ -6,7 +6,7 @@ use Lightpack\Console\Command;
 
 class LinkStorage extends Command
 {
-    public function run(): int
+    public function run()
     {
         $target = DIR_ROOT . '/storage/uploads/public';
         $link = DIR_ROOT . '/public/uploads';

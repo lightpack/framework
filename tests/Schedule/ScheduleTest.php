@@ -1,9 +1,9 @@
 <?php
 
+use Lightpack\Console\Command;
 use Lightpack\Schedule\Event;
 use Lightpack\Schedule\Schedule;
 use PHPUnit\Framework\TestCase;
-use Lightpack\Console\CommandInterface;
 use Lightpack\Container\Container;
 
 class ScheduleTest extends TestCase
@@ -56,7 +56,7 @@ class ScheduleTest extends TestCase
 
     public function testExecuteCommand()
     {
-        $mockCommand = $this->createMock(CommandInterface::class);
+        $mockCommand = $this->createMock(Command::class);
         $mockCommand->expects($this->once())
             ->method('run')
             ->with(['--quiet' => true]);

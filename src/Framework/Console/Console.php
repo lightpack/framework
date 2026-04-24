@@ -86,7 +86,7 @@ class Console
         }
 
         $handler = self::getCommandHandler($command, $arguments);
-        $exitCode = $handler->run();
+        $exitCode = $handler->run() ?? 0;
         exit($exitCode);
     }
 

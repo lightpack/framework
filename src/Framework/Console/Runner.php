@@ -20,12 +20,4 @@ class Runner
 
         Console::run($command, $arguments);
     }
-    
-    /**
-     * Create command instance with arguments injected
-     */
-    public static function createCommand(string $commandClass, array $arguments): CommandInterface
-    {
-        return new $commandClass($arguments);
-    }
 }

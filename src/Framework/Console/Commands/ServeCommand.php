@@ -6,7 +6,7 @@ use Lightpack\Console\Command;
 
 class ServeCommand extends Command
 {
-    public function run(): int
+    public function run()
     {
         chdir(DIR_ROOT);
 

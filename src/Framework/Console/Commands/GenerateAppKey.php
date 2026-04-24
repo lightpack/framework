@@ -8,7 +8,7 @@ use Lightpack\Utils\Str;
 
 class GenerateAppKey extends Command
 {
-    public function run(): int
+    public function run()
     {
         $file = new File();
         $filepath = realpath(DIR_ROOT . '/.env');

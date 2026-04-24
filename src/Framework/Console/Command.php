@@ -26,7 +26,10 @@ abstract class Command
     }
     
     /**
-     * Execute the command
+     * Execute the command.
+     *
+     * Commands may return an integer exit code (0 for success, non-zero for failure)
+     * or omit the return entirely, in which case the command is treated as successful.
      */
-    abstract public function run(): int;
+    abstract public function run();
 }

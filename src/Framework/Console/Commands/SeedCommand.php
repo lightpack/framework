@@ -7,7 +7,7 @@ use Database\Seeders\DatabaseSeeder;
 
 class SeedCommand extends Command
 {
-    public function run(): int
+    public function run()
     {
         $this->output->newline();
 

@@ -7,7 +7,7 @@ use Lightpack\Jobs\Connection;
 
 class RetryFailedJobs extends Command
 {
-    public function run(): int
+    public function run()
     {
         $engine = Connection::getJobEngine();
         $jobId = $this->args->argument(0);

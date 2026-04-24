@@ -10,7 +10,7 @@ class ScheduleEvents extends Command
     /** @var Schedule */
     protected $schedule;
 
-    public function run(): int
+    public function run()
     {
         $this->schedule = schedule();
         $this->schedule->run();

@@ -8,7 +8,7 @@ use Lightpack\Console\Views\ControllerView;
 
 class CreateController extends Command
 {
-    public function run(): int
+    public function run()
     {
         $className = $this->args->argument(0);
         $force = $this->args->has('force');
