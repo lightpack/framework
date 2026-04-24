@@ -15,11 +15,9 @@ use Lightpack\Console\Command;
 
 class __COMMAND_NAME__ extends Command
 {
-    public function run(): int
+    public function run()
     {
-        $this->output->line("Hello!");
-        
-        return self::SUCCESS;
+        $this->output->line("hello..");
     }
 }
 TEMPLATE;
