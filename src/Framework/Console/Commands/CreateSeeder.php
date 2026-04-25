@@ -7,7 +7,7 @@ use Lightpack\Console\Views\SeederView;
 
 class CreateSeeder extends Command
 {
-    public function run(): int
+    public function run()
     {
         $className = $this->args->argument(0);
         $force = $this->args->has('force');

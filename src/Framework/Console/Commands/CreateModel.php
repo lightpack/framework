@@ -8,7 +8,7 @@ use Lightpack\Utils\Str;
 
 class CreateModel extends Command
 {
-    public function run(): int
+    public function run()
     {
         $className = $this->args->argument(0);
         $tableName = $this->args->get('table');

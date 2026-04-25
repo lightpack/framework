@@ -7,7 +7,7 @@ use Lightpack\Console\Command;
 
 class ProcessJobs extends Command
 {
-    public function run(): int
+    public function run()
     {
         $queues = $this->parseQueueArgument() ?? ['default'];
         $sleep = $this->args->get('sleep') ?? 5;

@@ -9,7 +9,7 @@ use Lightpack\Database\Migrations\Migrator;
 
 class RunMigrationUp extends Command
 {
-    public function run(): int
+    public function run()
     {
         if (!file_exists(DIR_ROOT . '/.env')) {
             $this->output->error("Running migrations require ./.env which is missing.");

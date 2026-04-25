@@ -7,7 +7,7 @@ use Lightpack\Console\Command;
 
 class CreateEnv extends Command
 {
-    public function run(): int
+    public function run()
     {
         $file = new File();
 

@@ -7,7 +7,7 @@ use Lightpack\Console\Views\MigrationView;
 
 class CreateMigration extends Command
 {
-    public function run(): int
+    public function run()
     {
         $schemas = self::getPredefinedSchemas();
         $support = $this->args->get('support');

@@ -6,7 +6,7 @@ use Lightpack\Console\Command;
 
 class CreateConfig extends Command
 {
-    public function run(): int
+    public function run()
     {
         $force = $this->args->has('force');
         $support = $this->args->get('support');

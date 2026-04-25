@@ -13,7 +13,7 @@ class WatchCommand extends Command
     private $isFirstRun = true;
     private $file;
 
-    public function run(): int
+    public function run()
     {
         $this->file = new File();
         

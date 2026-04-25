@@ -6,7 +6,7 @@ use Lightpack\Console\Command;
 
 class UnlinkStorage extends Command
 {
-    public function run(): int
+    public function run()
     {
         $link = DIR_ROOT . '/public/uploads';
         
