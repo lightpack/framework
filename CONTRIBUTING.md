@@ -4,16 +4,32 @@ Thank you for your interest in contributing to Lightpack Framework! This documen
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Coding Standards](#coding-standards)
-- [Submitting Changes](#submitting-changes)
-- [Running Tests](#running-tests)
-- [Static Analysis](#static-analysis)
-- [Code Style](#code-style)
-- [Branch Naming](#branch-naming)
-- [Commit Messages](#commit-messages)
-- [Reporting Issues](#reporting-issues)
+- [Contributing to Lightpack Framework](#contributing-to-lightpack-framework)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+  - [Development Setup](#development-setup)
+    - [Requirements](#requirements)
+    - [Installation](#installation)
+  - [Coding Standards](#coding-standards)
+    - [Key Patterns](#key-patterns)
+  - [Submitting Changes](#submitting-changes)
+    - [Branch Naming](#branch-naming)
+    - [Commit Messages](#commit-messages)
+  - [Running Tests](#running-tests)
+    - [All Tests (Recommended)](#all-tests-recommended)
+    - [Specific Test Suite](#specific-test-suite)
+    - [With Coverage](#with-coverage)
+    - [Using the Test Runner Script](#using-the-test-runner-script)
+    - [Integration Tests](#integration-tests)
+  - [Static Analysis](#static-analysis)
+  - [Code Style](#code-style)
+    - [Check Style (CI mode)](#check-style-ci-mode)
+    - [Fix Style Automatically](#fix-style-automatically)
+  - [Reporting Issues](#reporting-issues)
+  - [Security](#security)
+  - [Pull Request Process](#pull-request-process)
+  - [Code of Conduct](#code-of-conduct)
+  - [Questions?](#questions)
 
 ## Getting Started
 
@@ -44,7 +60,7 @@ cd framework
 composer install
 
 # Verify setup
-make test
+composer test
 ```
 
 ## Coding Standards
@@ -134,12 +150,6 @@ This runs each test suite individually to prevent cross-suite state contaminatio
 ./vendor/bin/phpunit --testsuite Cache
 ```
 
-### Quick Test Run (Single suite)
-
-```bash
-./vendor/bin/phpunit --testsuite Cache
-```
-
 ### With Coverage
 
 ```bash
@@ -187,7 +197,7 @@ We use PHP-CS-Fixer to enforce a consistent code style.
 ```bash
 composer cs
 # or
-vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+vendor/bin/php-cs-fixer check
 ```
 
 ### Fix Style Automatically
@@ -195,7 +205,7 @@ vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
 ```bash
 composer cs:fix
 # or
-vendor/bin/php-cs-fixer fix --verbose
+vendor/bin/php-cs-fixer fix
 ```
 
 ## Reporting Issues
@@ -220,9 +230,9 @@ If you discover a security vulnerability, please do **not** open a public issue 
 ## Pull Request Process
 
 1. Ensure your branch is up to date with `main`
-2. All tests must pass (`make test`)
-3. Static analysis must pass (`make stan`)
-4. Code style must pass (`make cs`) - or run `make fix` to auto-fix
+2. All tests must pass (`composer test`)
+3. Static analysis must pass (`composer stan`)
+4. Code style must pass (`composer cs`) - or run `composer cs:fix` to auto-fix
 5. Update relevant documentation (README, CHANGELOG, etc.)
 6. Fill out the PR template completely
 7. Request review from maintainers

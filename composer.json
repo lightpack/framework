@@ -59,8 +59,8 @@
     },
     "scripts": {
         "test": "./run-tests.sh",
-        "cs": "php-cs-fixer fix --dry-run --diff --verbose",
-        "cs:fix": "php-cs-fixer fix --verbose",
+        "cs": "php-cs-fixer check",
+        "cs:fix": "php-cs-fixer fix",
         "stan": "phpstan analyse --no-progress",
         "qa": [
             "@test",
