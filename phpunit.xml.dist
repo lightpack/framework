@@ -6,12 +6,6 @@
     colors="true" 
     testdox="true">
     <testsuites>
-        <!-- Run all tests (excluding integration tests by default) -->
-        <testsuite name="All">
-            <directory>./tests</directory>
-            <exclude>./tests/Http/HttpTest.php</exclude>
-        </testsuite>
-        
         <!-- Feature-specific test suites -->
         <testsuite name="AI">
             <directory>./tests/AI</directory>
@@ -60,6 +54,7 @@
         </testsuite>
         <testsuite name="Http">
             <directory>./tests/Http</directory>
+            <exclude>./tests/Http/HttpTest.php</exclude>
         </testsuite>
         <testsuite name="Jobs">
             <directory>./tests/Jobs</directory>

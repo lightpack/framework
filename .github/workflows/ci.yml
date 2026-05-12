@@ -28,8 +28,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, intl, pdo, pdo_mysql, redis
-          coverage: xdebug
+          extensions: mbstring, intl, pdo, pdo_mysql, redis, gd
+          coverage: none
           tools: composer:v2
 
       - name: Get Composer cache directory
@@ -47,7 +47,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --testsuite All --coverage-text
+        run: ./run-tests.sh
 
   static-analysis:
     name: PHPStan

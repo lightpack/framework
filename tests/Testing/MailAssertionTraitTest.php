@@ -36,8 +36,7 @@ class MailAssertionTraitTest extends TestCase
         
         // Register MailManager
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new \Lightpack\Mail\MailManager();
-        $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
+        $mailManager = new \Lightpack\Mail\MailManager($container);
         $mailManager->setDefaultDriver('array');
         $container->register('mail', fn() => $mailManager);
         

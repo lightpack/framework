@@ -60,8 +60,7 @@
         "resend/resend-php": "Required for Resend integration (^0.22.0)"
     },
     "scripts": {
-        "test": "phpunit --testsuite All",
-        "test:suite": "phpunit --testsuite",
+        "test": "./run-tests.sh",
         "cs": "php-cs-fixer fix --dry-run --diff --verbose",
         "cs:fix": "php-cs-fixer fix --verbose",
         "stan": "phpstan analyse --no-progress",

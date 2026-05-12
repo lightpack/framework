@@ -167,9 +167,11 @@ final class RelativeDateQueryTest extends TestCase
         $this->assertGreaterThanOrEqual(1, count($results));
         
         // Verify all results are within last 7 days
-        $sevenDaysAgo = strtotime('-8 days');
+        // Use date comparison to avoid 1-second race conditions
+        $sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
         foreach ($results as $result) {
-            $this->assertGreaterThanOrEqual($sevenDaysAgo, strtotime($result->created_at));
+            $resultDate = date('Y-m-d', strtotime($result->created_at));
+            $this->assertGreaterThanOrEqual($sevenDaysAgo, $resultDate);
         }
         
         $this->query->resetQuery();
@@ -185,9 +187,11 @@ final class RelativeDateQueryTest extends TestCase
         $this->assertGreaterThanOrEqual(1, count($results));
         
         // Verify all results are within last 2 weeks
-        $twoWeeksAgo = strtotime('-2 weeks');
+        // Use date comparison to avoid 1-second race conditions
+        $twoWeeksAgo = date('Y-m-d', strtotime('-2 weeks'));
         foreach ($results as $result) {
-            $this->assertGreaterThanOrEqual($twoWeeksAgo, strtotime($result->created_at));
+            $resultDate = date('Y-m-d', strtotime($result->created_at));
+            $this->assertGreaterThanOrEqual($twoWeeksAgo, $resultDate);
         }
     }
 
@@ -198,9 +202,11 @@ final class RelativeDateQueryTest extends TestCase
         $this->assertGreaterThanOrEqual(1, count($results));
         
         // Verify all results are within last 3 months
-        $threeMonthsAgo = strtotime('-3 months');
+        // Use date comparison to avoid 1-second race conditions
+        $threeMonthsAgo = date('Y-m-d', strtotime('-3 months'));
         foreach ($results as $result) {
-            $this->assertGreaterThanOrEqual($threeMonthsAgo, strtotime($result->created_at));
+            $resultDate = date('Y-m-d', strtotime($result->created_at));
+            $this->assertGreaterThanOrEqual($threeMonthsAgo, $resultDate);
         }
     }
 

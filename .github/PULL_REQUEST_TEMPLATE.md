@@ -20,10 +20,10 @@ Fixes # (issue)
 
 <!-- Mark all that apply with an [x] -->
 
-- [ ] My code follows the project's coding standards (run `make cs`)
+- [ ] My code follows the project's coding standards (run `composer cs`)
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] All new and existing tests pass (`make test`)
-- [ ] Static analysis passes (`make stan`)
+- [ ] All new and existing tests pass (`composer test`)
+- [ ] Static analysis passes (`composer stan`)
 - [ ] I have updated relevant documentation (README, CHANGELOG, etc.)
 - [ ] My changes generate no new warnings
 - [ ] I have tested my changes locally

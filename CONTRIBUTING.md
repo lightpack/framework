@@ -115,18 +115,28 @@ test(database): add coverage for nested transactions
 
 ## Running Tests
 
-### All Tests
+### All Tests (Recommended)
+
+The framework uses process-isolated test suite runs for reliability:
 
 ```bash
-make test
+composer test
 # or
-./vendor/bin/phpunit --testsuite All
+./run-tests.sh
 ```
+
+This runs each test suite individually to prevent cross-suite state contamination.
 
 ### Specific Test Suite
 
 ```bash
 ./vendor/bin/phpunit --testsuite Database
+./vendor/bin/phpunit --testsuite Cache
+```
+
+### Quick Test Run (Single suite)
+
+```bash
 ./vendor/bin/phpunit --testsuite Cache
 ```
 
@@ -146,12 +156,24 @@ make test
 ./run-tests.sh --verbose
 ```
 
+### Integration Tests
+
+Integration tests require external API keys (OpenAI, AWS, Mailtrap, etc.) and are **not run on PRs**.
+
+- **For contributors**: Unit tests via `run-tests.sh` are sufficient.
+- **For maintainers**: Run integration tests locally before merging significant changes or releases:
+  ```bash
+  ./vendor/bin/phpunit --testsuite Integration
+  ./vendor/bin/phpunit --testsuite Http
+  ```
+- **Nightly CI**: Integration tests run automatically every night at 2 AM UTC via GitHub Actions.
+
 ## Static Analysis
 
 We use PHPStan for static analysis. Run it with:
 
 ```bash
-make stan
+composer stan
 # or
 vendor/bin/phpstan analyse --no-progress
 ```
@@ -163,7 +185,7 @@ We use PHP-CS-Fixer to enforce a consistent code style.
 ### Check Style (CI mode)
 
 ```bash
-make cs
+composer cs
 # or
 vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
 ```
@@ -171,7 +193,7 @@ vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
 ### Fix Style Automatically
 
 ```bash
-make fix
+composer cs:fix
 # or
 vendor/bin/php-cs-fixer fix --verbose
 ```
