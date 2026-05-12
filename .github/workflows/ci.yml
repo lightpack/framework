@@ -46,8 +46,19 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
+      - name: Start MySQL
+        run: |
+          sudo systemctl start mysql
+          mysql -u root -proot -e "CREATE DATABASE IF NOT EXISTS test_lightpack;"
+
       - name: Run PHPUnit
         run: ./run-tests.sh
+        env:
+          MYSQL_HOST: localhost
+          MYSQL_PORT: 3306
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root
+          MYSQL_DB: test_lightpack
 
   static-analysis:
     name: PHPStan
