@@ -37,5 +37,6 @@ return (new Config())
             'keep_multiple_spaces_after_comma' => true,
         ],
         'single_trait_insert_per_statement' => true,
+        'new_with_parentheses' => ['named_class' => false, 'anonymous_class' => false],
     ])
     ->setFinder($finder);
