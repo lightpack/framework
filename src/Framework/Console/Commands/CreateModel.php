@@ -15,27 +15,33 @@ class CreateModel extends Command
         $primaryKey = $this->args->get('key');
         $isTenant = $this->args->has('tenant');
         $force = $this->args->has('force');
-        
-        if (!$className) {
+
+        if (! $className) {
             $this->output->error("Please provide a model class name.");
             $this->output->newline();
+
             return self::FAILURE;
         }
-        
+
         $paths = $this->resolvePaths($className);
-        if ($paths === null) return self::FAILURE;
+        if ($paths === null) {
+            return self::FAILURE;
+        }
         extract($paths); // $baseName, $subdir, $directory, $filePath, $parts
 
-        if (!$this->validateSegments($parts, $baseName)) return self::FAILURE;
-        if (file_exists($filePath) && !$force) {
+        if (! $this->validateSegments($parts, $baseName)) {
+            return self::FAILURE;
+        }
+        if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
             $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
+
             return self::FAILURE;
         }
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             mkdir($directory, 0777, true);
         }
 
@@ -43,11 +49,11 @@ class CreateModel extends Command
         $primaryKey = $primaryKey ?? 'id';
         $namespace = $this->computeNamespace($subdir);
         $this->writeModelFile($filePath, $namespace, $baseName, $tableName, $primaryKey, $isTenant);
-        
+
         $modelType = $isTenant ? 'Tenant model' : 'Model';
         $this->output->success("✓ {$modelType} created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
         $this->output->newline();
-        
+
         return self::SUCCESS;
     }
 
@@ -56,6 +62,7 @@ class CreateModel extends Command
         $relativePath = str_replace('\\', '/', $className);
         if (strpos($relativePath, '.') !== false) {
             $this->output->error("Dot notation is not allowed in model names. Use slashes for subdirectories (e.g., Admin/User).");
+
             return null;
         }
         $parts = explode('/', $relativePath);
@@ -63,17 +70,20 @@ class CreateModel extends Command
         $subdir = implode('/', $parts);
         $directory = DIR_ROOT . '/app/Models' . ($subdir ? '/' . $subdir : '');
         $filePath = $directory . '/' . $baseName . '.php';
+
         return compact('baseName', 'subdir', 'directory', 'filePath', 'parts');
     }
 
     private function validateSegments(array $parts, string $baseName): bool
     {
         foreach (array_merge($parts, [$baseName]) as $segment) {
-            if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $segment)) {
+            if (! preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $segment)) {
                 $this->output->error("Invalid model or namespace segment: {$segment}. Each segment must start with a letter and contain only letters, numbers, or underscores.");
+
                 return false;
             }
         }
+
         return true;
     }
 
@@ -105,6 +115,7 @@ class CreateModel extends Command
     private function createTableName(string $text)
     {
         $text = str_replace('Model', '', $text);
+
         return (new Str)->tableize($text);
     }
 }

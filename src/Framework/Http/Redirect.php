@@ -2,9 +2,9 @@
 
 namespace Lightpack\Http;
 
-use Lightpack\Utils\Url;
-use Lightpack\Session\Session;
 use Lightpack\Routing\RouteRegistry;
+use Lightpack\Session\Session;
+use Lightpack\Utils\Url;
 
 class Redirect extends Response
 {
@@ -63,10 +63,10 @@ class Redirect extends Response
 
     public function intendedRoute(string $name, ...$params): self
     {
-        if (!$this->session->hasIntendedUrl()) {
+        if (! $this->session->hasIntendedUrl()) {
             return $this->route($name, ...$params);
         }
-        
+
         return $this->intended();
     }
 

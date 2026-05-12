@@ -4,8 +4,6 @@ namespace Lightpack\Database\Lucid;
 
 use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;
-use Lightpack\Database\Lucid\Model;
-use Lightpack\Database\Lucid\Pivot;
 
 class RelationHandler
 {
@@ -191,14 +189,14 @@ class RelationHandler
 
     /**
      * Polymorphic belongs-to: Comment -> Post|Video
-     * 
+     *
      * Accepts a list of model class names. Internally builds the morph map.
      * Usage: return $this->morphTo([PostModel::class, VideoModel::class]);
      */
     public function morphTo(array $models): ?Query
     {
         $this->relationType = 'morphTo';
-        
+
         $type = $this->model->morph_type;
         $id = $this->model->morph_id;
 
@@ -209,11 +207,12 @@ class RelationHandler
             $map[$table] = $modelClass;
         }
 
-        if (!isset($map[$type])) {
+        if (! isset($map[$type])) {
             return null;
         }
 
         $related = new $map[$type];
+
         return $related::query()->where($related->getPrimaryKey(), $id);
     }
 
@@ -237,7 +236,7 @@ class RelationHandler
 
     /**
      * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_morphs)
-     * 
+     *
      * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK column.
      * Example: tag_morphs table has: tag_id, morph_id, morph_type
      */
@@ -252,7 +251,7 @@ class RelationHandler
         $modelInstance = $this->getConnection()->model($model);
         $tableName = $modelInstance->getTableName();
         $morphType = $this->model->getTableName();
-        
+
         $pivot = new PolymorphicPivot(
             $modelInstance,
             $this->model,
@@ -276,7 +275,7 @@ class RelationHandler
 
     /**
      * Inverse polymorphic many-to-many: e.g. Tag -> many Posts (through tag_morphs)
-     * 
+     *
      * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK column.
      * Example: tag_morphs table has: tag_id, morph_id, morph_type
      */
@@ -291,7 +290,7 @@ class RelationHandler
         $modelInstance = $this->getConnection()->model($model);
         $tableName = $modelInstance->getTableName();
         $morphType = $tableName; // Auto-detect from related model's table
-        
+
         $pivot = new PolymorphicPivot(
             $modelInstance,
             $this->model,

@@ -3,20 +3,42 @@
 namespace Lightpack\Filters;
 
 global $testMocks;
-function auth()    { global $testMocks; return $testMocks['auth']   ?? null; }
-function session() { global $testMocks; return $testMocks['session']?? null; }
-function config($key) { global $testMocks; return $testMocks['config'][$key] ?? null; }
-function app($service) { global $testMocks; return $testMocks['app'][$service] ?? null; }
+function auth()
+{
+    global $testMocks;
+
+    return $testMocks['auth'] ?? null;
+}
+function session()
+{
+    global $testMocks;
+
+    return $testMocks['session'] ?? null;
+}
+function config($key)
+{
+    global $testMocks;
+
+    return $testMocks['config'][$key] ?? null;
+}
+function app($service)
+{
+    global $testMocks;
+
+    return $testMocks['app'][$service] ?? null;
+}
 function redirect()
 {
     // Return a mock object with a route() method
     return new class {
         public $routeCalled = false;
         public $routeName = null;
+
         public function route($name)
         {
             $this->routeCalled = true;
             $this->routeName = $name;
+
             return $this;
         }
     };
@@ -24,10 +46,10 @@ function redirect()
 
 namespace Lightpack\Tests\Mfa;
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Filters\MfaFilter;
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
+use PHPUnit\Framework\TestCase;
 
 class MfaFilterTest extends TestCase
 {
@@ -38,11 +60,12 @@ class MfaFilterTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->filter = new MfaFilter();
+        $this->filter = new MfaFilter;
         $this->request = $this->createMock(Request::class);
         $this->response = $this->createMock(Response::class);
         $this->user = new class {
             public $mfa_enabled = true;
+
             public function sendMfa()
             {
                 $this->mfaSent = true;
@@ -50,7 +73,8 @@ class MfaFilterTest extends TestCase
         };
     }
 
-    private function setTestMocks(array $mocks) {
+    private function setTestMocks(array $mocks)
+    {
         global $testMocks;
         $testMocks = $mocks;
     }
@@ -59,7 +83,12 @@ class MfaFilterTest extends TestCase
     {
         // Simulate no user
         $this->setTestMocks([
-            'auth' => new class { public function user() { return null; } },
+            'auth' => new class {
+                public function user()
+                {
+                    return null;
+                }
+            },
         ]);
         $result = $this->filter->before($this->request);
         $this->assertNull($result);
@@ -69,8 +98,18 @@ class MfaFilterTest extends TestCase
     {
         // Simulate user and session flag
         $this->setTestMocks([
-            'auth' => new class { public function user() { return (object)['mfa_enabled' => true]; } },
-            'session' => new class { public function get($key) { return $key === 'mfa_passed' ? true : null; } },
+            'auth' => new class {
+                public function user()
+                {
+                    return (object)['mfa_enabled' => true];
+                }
+            },
+            'session' => new class {
+                public function get($key)
+                {
+                    return $key === 'mfa_passed' ? true : null;
+                }
+            },
         ]);
         $result = $this->filter->before($this->request);
         $this->assertNull($result);
@@ -79,19 +118,43 @@ class MfaFilterTest extends TestCase
     public function testRedirectsAndSendsMfaIfEnforcedOrEnabled()
     {
         // Simulate user and session
-        $emailFactor = new class { public function send($user) {} };
-        $mfaMock = new class($emailFactor) {
+        $emailFactor = new class {
+            public function send($user)
+            {
+            }
+        };
+        $mfaMock = new class ($emailFactor) {
             private $factor;
-            public function __construct($factor) { $this->factor = $factor; }
-            public function getFactor($type) { return $this->factor; }
+
+            public function __construct($factor)
+            {
+                $this->factor = $factor;
+            }
+
+            public function getFactor($type)
+            {
+                return $this->factor;
+            }
         };
         $this->setTestMocks([
             'auth' => new class {
-                public function user() {
-                    return new class { public $mfa_enabled = true; public function sendMfa() {} };
+                public function user()
+                {
+                    return new class {
+                        public $mfa_enabled = true;
+
+                        public function sendMfa()
+                        {
+                        }
+                    };
                 }
             },
-            'session' => new class { public function get($key) { return null; } },
+            'session' => new class {
+                public function get($key)
+                {
+                    return null;
+                }
+            },
             'config' => ['mfa.enforce' => true],
             'app' => ['mfa' => $mfaMock],
         ]);

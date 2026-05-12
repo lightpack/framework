@@ -2,8 +2,8 @@
 
 namespace Lightpack\Captcha;
 
-use Lightpack\Session\Session;
 use Lightpack\Http\Request;
+use Lightpack\Session\Session;
 
 class NativeCaptcha implements CaptchaInterface
 {
@@ -25,30 +25,34 @@ class NativeCaptcha implements CaptchaInterface
     public function width(int $width): self
     {
         $this->width = $width;
+
         return $this;
     }
 
     public function height(int $height): self
     {
         $this->height = $height;
+
         return $this;
     }
 
     public function font(string $font): self
     {
         $this->font = $font;
+
         return $this;
     }
 
     public function text(string $text): self
     {
         $this->text = $text;
+
         return $this;
     }
 
     public function generate(): string
     {
-        if (!extension_loaded('gd')) {
+        if (! extension_loaded('gd')) {
             throw new \Exception('GD extension is required for CAPTCHA generation.');
         }
         if (empty($this->font)) {
@@ -63,25 +67,26 @@ class NativeCaptcha implements CaptchaInterface
         $bg = imagecolorallocatealpha($im, 255, 255, 255, 0);
         imagefill($im, 0, 0, $bg);
         for ($i = 0; $i < 6; $i++) {
-            $lineColor = imagecolorallocate($im, rand(100,200), rand(100,200), rand(100,200));
+            $lineColor = imagecolorallocate($im, rand(100, 200), rand(100, 200), rand(100, 200));
             imageline($im, rand(0, $this->width), rand(0, $this->height), rand(0, $this->width), rand(0, $this->height), $lineColor);
         }
         for ($i = 0; $i < 150; $i++) {
-            $dotColor = imagecolorallocate($im, rand(100,200), rand(100,200), rand(100,200));
-            imagesetpixel($im, rand(0, $this->width-1), rand(0, $this->height-1), $dotColor);
+            $dotColor = imagecolorallocate($im, rand(100, 200), rand(100, 200), rand(100, 200));
+            imagesetpixel($im, rand(0, $this->width - 1), rand(0, $this->height - 1), $dotColor);
         }
         for ($i = 0; $i < strlen($text); $i++) {
             $fontSize = rand(18, 24);
             $angle = rand(-25, 25);
             $x = (int) (10 + $i * ($this->width - 20) / strlen($text));
             $y = (int) rand($this->height - 15, $this->height - 5);
-            $color = imagecolorallocate($im, rand(0,80), rand(0,80), rand(0,80));
+            $color = imagecolorallocate($im, rand(0, 80), rand(0, 80), rand(0, 80));
             imagettftext($im, $fontSize, $angle, $x, $y, $color, $this->font, $text[$i]);
         }
         ob_start();
         imagepng($im);
         $data = ob_get_clean();
         imagedestroy($im);
+
         return 'data:image/png;base64,' . base64_encode($data);
     }
 
@@ -92,6 +97,7 @@ class NativeCaptcha implements CaptchaInterface
     public function verify(): bool
     {
         $input = $this->request->input('captcha');
+
         return $this->verifyInput($input);
     }
 
@@ -102,6 +108,7 @@ class NativeCaptcha implements CaptchaInterface
             return false;
         }
         $this->session->delete(self::SESSION_KEY);
+
         return $input === $expected;
     }
 }

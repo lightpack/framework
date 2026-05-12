@@ -2,10 +2,10 @@
 
 namespace Lightpack\Tests\Validation\Rules;
 
+use Lightpack\Validation\Rules\File\FileExtensionRule;
 use Lightpack\Validation\Rules\File\FileRule;
 use Lightpack\Validation\Rules\File\FileTypeRule;
 use Lightpack\Validation\Rules\File\ImageRule;
-use Lightpack\Validation\Rules\File\FileExtensionRule;
 use Lightpack\Validation\Rules\File\MultipleFileRule;
 use PHPUnit\Framework\TestCase;
 
@@ -70,7 +70,7 @@ startxref
     {
         // Create test fixtures directory
         $fixturesDir = __DIR__ . '/fixtures';
-        if (!is_dir($fixturesDir)) {
+        if (! is_dir($fixturesDir)) {
             mkdir($fixturesDir);
         }
 
@@ -101,11 +101,11 @@ startxref
 
     public function testBaseFileValidation()
     {
-        $rule = new FileRule();
-        
+        $rule = new FileRule;
+
         // Invalid array structure
         $this->assertFalse($rule(['name' => 'test.jpg']));
-        
+
         // Upload error
         $file = $this->createUploadedFile(['error' => UPLOAD_ERR_INI_SIZE]);
         $this->assertFalse($rule($file));
@@ -114,10 +114,10 @@ startxref
 
     public function testFileSizeValidation()
     {
-        $validator = new \Lightpack\Validation\Validator();
-        
+        $validator = new \Lightpack\Validation\Validator;
+
         $validator->field('file')->fileSize('2MB');
-        
+
         $file = [
             'name' => 'test.txt',
             'type' => 'text/plain',
@@ -139,20 +139,20 @@ startxref
     public function testFileTypeValidation()
     {
         // Create a mock class extending FileTypeRule to override getMimeType
-        $rule = new class(['image/jpeg', 'image/png']) extends FileTypeRule {
-            protected function getMimeType(string $path): string 
+        $rule = new class (['image/jpeg', 'image/png']) extends FileTypeRule {
+            protected function getMimeType(string $path): string
             {
                 return 'image/jpeg';
             }
         };
-        
+
         // Test valid type
         $file = $this->createUploadedFile();
         $this->assertTrue($rule($file));
-        
+
         // Test invalid type
-        $rule = new class(['image/png']) extends FileTypeRule {
-            protected function getMimeType(string $path): string 
+        $rule = new class (['image/png']) extends FileTypeRule {
+            protected function getMimeType(string $path): string
             {
                 return 'image/jpeg';
             }
@@ -163,38 +163,38 @@ startxref
     public function testImageValidation()
     {
         // Create a mock class extending ImageRule to override detection methods
-        $rule = new class([
+        $rule = new class ([
             'min_width' => 100,
             'max_width' => 1000,
             'min_height' => 100,
             'max_height' => 1000,
         ]) extends ImageRule {
-            protected function isImage(string $path): bool 
+            protected function isImage(string $path): bool
             {
                 return true;
             }
-            
-            protected function getDimensions(string $path): array 
+
+            protected function getDimensions(string $path): array
             {
                 return ['width' => 800, 'height' => 600];
             }
         };
-        
+
         // Test valid image
         $file = $this->createUploadedFile();
         $this->assertTrue($rule($file));
-        
+
         // Test invalid dimensions
-        $rule = new class([
+        $rule = new class ([
             'min_width' => 1000,
             'max_width' => 2000,
         ]) extends ImageRule {
-            protected function isImage(string $path): bool 
+            protected function isImage(string $path): bool
             {
                 return true;
             }
-            
-            protected function getDimensions(string $path): array 
+
+            protected function getDimensions(string $path): array
             {
                 return ['width' => 800, 'height' => 600];
             }
@@ -205,11 +205,11 @@ startxref
     public function testFileExtensionValidation()
     {
         $rule = new FileExtensionRule(['jpg', 'png']);
-        
+
         // Valid extension
         $file = $this->createUploadedFile(['name' => 'test.jpg']);
         $this->assertTrue($rule($file));
-        
+
         // Invalid extension
         $file = $this->createUploadedFile(['name' => 'test.gif']);
         $this->assertFalse($rule($file));
@@ -218,11 +218,11 @@ startxref
     public function testMultipleFileValidation()
     {
         $rule = new MultipleFileRule(1, 3);
-        
+
         // Single file
         $file = $this->createUploadedFile();
         $this->assertTrue($rule($file));
-        
+
         // Multiple files within limit
         $files = [
             'name' => ['test1.jpg', 'test2.jpg'],
@@ -232,7 +232,7 @@ startxref
             'size' => [1024, 1024],
         ];
         $this->assertTrue($rule($files));
-        
+
         // Too many files
         $files = [
             'name' => ['test1.jpg', 'test2.jpg', 'test3.jpg', 'test4.jpg'],
@@ -248,7 +248,7 @@ startxref
     {
         $this->setUpFixtures();
 
-        $validator = new \Lightpack\Validation\Validator();
+        $validator = new \Lightpack\Validation\Validator;
         $validator
             // Optional technical specs (PDF)
             ->field('tech_specs')->required()->fileType('application/pdf')->fileSize('5Mb')
@@ -262,18 +262,18 @@ startxref
                 'tmp_name' => [
                     __DIR__ . '/fixtures/800x600.jpg',
                     __DIR__ . '/fixtures/1024x768.jpg',
-                    __DIR__ . '/fixtures/2048x1536.jpg'
+                    __DIR__ . '/fixtures/2048x1536.jpg',
                 ],
                 'error' => [0, 0, 0],
-                'size' => [500 * 1024, 800 * 1024, 1000 * 1024]
+                'size' => [500 * 1024, 800 * 1024, 1000 * 1024],
             ],
             'tech_specs' => [
                 'name' => 'specs.pdf',
                 'type' => 'application/pdf',
                 'tmp_name' => __DIR__ . '/fixtures/test.pdf',
                 'error' => 0,
-                'size' => 1024 * 1024
-            ]
+                'size' => 1024 * 1024,
+            ],
         ];
 
         $validator->setInput($validFiles);

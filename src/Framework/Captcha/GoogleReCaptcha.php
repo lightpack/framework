@@ -24,6 +24,7 @@ class GoogleReCaptcha implements CaptchaInterface
     public function verify(): bool
     {
         $input = $this->request->input('g-recaptcha-response');
+
         return $this->verifyInput($input);
     }
 
@@ -38,14 +39,15 @@ class GoogleReCaptcha implements CaptchaInterface
         ];
         $options = [
             'http' => [
-                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-                'method'  => 'POST',
+                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method' => 'POST',
                 'content' => http_build_query($data),
             ],
         ];
-        $context  = stream_context_create($options);
+        $context = stream_context_create($options);
         $result = $this->fetchVerifyResponse('https://www.google.com/recaptcha/api/siteverify', $options);
         $response = json_decode($result, true);
+
         return isset($response['success']) && $response['success'] === true;
     }
 

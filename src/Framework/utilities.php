@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('app')) {
+if (! function_exists('app')) {
     /**
      * ------------------------------------------------------------
      * Resolves a binding from IoC container if $key is provided.
@@ -25,11 +25,11 @@ if (!function_exists('app')) {
     }
 }
 
-if (!function_exists('redirect')) {
-    /** 
-     * Redirects to the given URI. If URI is not provided, returns the 
+if (! function_exists('redirect')) {
+    /**
+     * Redirects to the given URI. If URI is not provided, returns the
      * redirect instance.
-     * 
+     *
      * @return Lightpack\Http\Redirect
      */
     function redirect()
@@ -38,8 +38,8 @@ if (!function_exists('redirect')) {
     }
 }
 
-if (!function_exists('csrf_input')) {
-    /** 
+if (! function_exists('csrf_input')) {
+    /**
      * Returns an HTML input for CSRF token.
      */
     function csrf_input(): string
@@ -48,7 +48,7 @@ if (!function_exists('csrf_input')) {
     }
 }
 
-if (!function_exists('csrf_token')) {
+if (! function_exists('csrf_token')) {
     /**
      * Returns the CSRF token.
      */
@@ -58,10 +58,10 @@ if (!function_exists('csrf_token')) {
     }
 }
 
-if (!function_exists('_e')) {
+if (! function_exists('_e')) {
     /**
      * Escape HTML special characters to protect against XSS attacks.
-     * 
+     *
      * Converts: & < > " ' to their HTML entity equivalents.
      * Preserves UTF-8 characters (é, ñ, etc.) as-is.
      * Returns empty string if null is provided.
@@ -76,7 +76,7 @@ if (!function_exists('_e')) {
     }
 }
 
-if (!function_exists('get_env')) {
+if (! function_exists('get_env')) {
     /**
      * Gets an environment variable.
      */
@@ -86,7 +86,7 @@ if (!function_exists('get_env')) {
     }
 }
 
-if (!function_exists('set_env')) {
+if (! function_exists('set_env')) {
     /**
      * Sets an environment variable.
      */
@@ -96,11 +96,11 @@ if (!function_exists('set_env')) {
     }
 }
 
-if (!function_exists('route')) {
+if (! function_exists('route')) {
     /**
      * This function returns an instance of route object from
      * the app container.
-     * 
+     *
      * @return \Lightpack\Routing\RouteRegistry
      */
     function route()
@@ -109,7 +109,7 @@ if (!function_exists('route')) {
     }
 }
 
-if (!function_exists('dd')) {
+if (! function_exists('dd')) {
     /**
      * Pretty dump using var_dump()
      */
@@ -123,7 +123,7 @@ if (!function_exists('dd')) {
     }
 }
 
-if (!function_exists('pp')) {
+if (! function_exists('pp')) {
     /**
      * Pretty print using print_r()
      */
@@ -137,10 +137,10 @@ if (!function_exists('pp')) {
     }
 }
 
-if (!function_exists('request')) {
+if (! function_exists('request')) {
     /**
      * Returns the current request object.
-     * 
+     *
      * @return \Lightpack\Http\Request
      */
     function request()
@@ -149,10 +149,10 @@ if (!function_exists('request')) {
     }
 }
 
-if (!function_exists('response')) {
+if (! function_exists('response')) {
     /**
      * Returns a new instance of response.
-     * 
+     *
      * @return \Lightpack\Http\Response
      */
     function response()
@@ -161,10 +161,10 @@ if (!function_exists('response')) {
     }
 }
 
-if (!function_exists('session')) {
+if (! function_exists('session')) {
     /**
      * Returns the session object.
-     * 
+     *
      * @return \Lightpack\Session\Session
      */
     function session()
@@ -173,10 +173,10 @@ if (!function_exists('session')) {
     }
 }
 
-if (!function_exists('cookie')) {
+if (! function_exists('cookie')) {
     /**
      * Returns a new instance of cookie.
-     * 
+     *
      * @return \Lightpack\Http\Cookie
      */
     function cookie()
@@ -185,10 +185,10 @@ if (!function_exists('cookie')) {
     }
 }
 
-if (!function_exists('event')) {
+if (! function_exists('event')) {
     /**
      * Returns the event object.
-     * 
+     *
      * @return \Lightpack\Event\Event
      */
     function event()
@@ -197,10 +197,10 @@ if (!function_exists('event')) {
     }
 }
 
-if (!function_exists('cache')) {
+if (! function_exists('cache')) {
     /**
      * Returns the cache object.
-     * 
+     *
      * @return \Lightpack\Cache\Cache
      */
     function cache()
@@ -209,10 +209,10 @@ if (!function_exists('cache')) {
     }
 }
 
-if (!function_exists('logger')) {
+if (! function_exists('logger')) {
     /**
      * Returns the logger object.
-     * 
+     *
      * @return \Lightpack\Logger\Logger
      */
     function logger()
@@ -221,15 +221,15 @@ if (!function_exists('logger')) {
     }
 }
 
-if (!function_exists('auth')) {
+if (! function_exists('auth')) {
     /**
      * Returns the auth object.
-     * 
+     *
      * @return \Lightpack\Auth\Auth
      */
     function auth(?string $driver = null)
     {
-        if (!$driver) {
+        if (! $driver) {
             return app('auth');
         }
 
@@ -237,7 +237,7 @@ if (!function_exists('auth')) {
     }
 }
 
-if (!function_exists('config')) {
+if (! function_exists('config')) {
     /**
      * Gets config data.
      */
@@ -247,7 +247,7 @@ if (!function_exists('config')) {
     }
 }
 
-if (!function_exists('db')) {
+if (! function_exists('db')) {
     /**
      * Returns PDO database connection instance.
      */
@@ -257,7 +257,7 @@ if (!function_exists('db')) {
     }
 }
 
-if (!function_exists('template')) {
+if (! function_exists('template')) {
     /**
      * Returns an instance of view template.
      */
@@ -267,7 +267,7 @@ if (!function_exists('template')) {
     }
 }
 
-if (!function_exists('url')) {
+if (! function_exists('url')) {
     /**
      * Returns an instance of Url utility.
      */
@@ -281,7 +281,7 @@ if (!function_exists('url')) {
     }
 }
 
-if (!function_exists('str')) {
+if (! function_exists('str')) {
     /**
      * Returns an instance of Str utility.
      */
@@ -295,7 +295,7 @@ if (!function_exists('str')) {
     }
 }
 
-if (!function_exists('arr')) {
+if (! function_exists('arr')) {
     /**
      * Returns an instance of Arr utility.
      */
@@ -309,7 +309,7 @@ if (!function_exists('arr')) {
     }
 }
 
-if (!function_exists('moment')) {
+if (! function_exists('moment')) {
     /**
      * Returns an instance of Moment utility.
      */
@@ -323,7 +323,7 @@ if (!function_exists('moment')) {
     }
 }
 
-if (!function_exists('password')) {
+if (! function_exists('password')) {
     /**
      * Returns an instance of Password utility.
      */
@@ -337,7 +337,7 @@ if (!function_exists('password')) {
     }
 }
 
-if (!function_exists('crypto')) {
+if (! function_exists('crypto')) {
     /**
      * Returns an instance of Crypto utility.
      */
@@ -347,7 +347,7 @@ if (!function_exists('crypto')) {
     }
 }
 
-if (!function_exists('validator')) {
+if (! function_exists('validator')) {
     /**
      * Returns an instance of validator.
      */
@@ -357,7 +357,7 @@ if (!function_exists('validator')) {
     }
 }
 
-if (!function_exists('schedule')) {
+if (! function_exists('schedule')) {
     /**
      * Returns the task scheduler instance.
      */
@@ -367,7 +367,7 @@ if (!function_exists('schedule')) {
     }
 }
 
-if (!function_exists('old')) {
+if (! function_exists('old')) {
     /**
      * View helper that returns the old input value flashed in session.
      */
@@ -375,7 +375,7 @@ if (!function_exists('old')) {
     {
         static $oldInput;
 
-        if (!isset($oldInput)) {
+        if (! isset($oldInput)) {
             $oldInput = session()->flash('_old_input') ?? [];
         }
 
@@ -396,7 +396,7 @@ if (!function_exists('old')) {
     }
 }
 
-if (!function_exists('error')) {
+if (! function_exists('error')) {
     /**
      * View helper that returns the validation error flashed in session.
      */
@@ -404,7 +404,7 @@ if (!function_exists('error')) {
     {
         static $errors;
 
-        if (!isset($errors)) {
+        if (! isset($errors)) {
             $errors = app('session')->flash('_validation_errors') ?? [];
         }
 
@@ -412,7 +412,7 @@ if (!function_exists('error')) {
     }
 }
 
-if (!function_exists('spoof_input')) {
+if (! function_exists('spoof_input')) {
     /**
      * Returns a hidden input field for the spoofed request method.
      */
@@ -422,7 +422,7 @@ if (!function_exists('spoof_input')) {
     }
 }
 
-if (!function_exists('hidden_input')) {
+if (! function_exists('hidden_input')) {
     /**
      * Returns a hidden input field with the given name and value.
      * Automatically escapes the value for security.
@@ -433,10 +433,10 @@ if (!function_exists('hidden_input')) {
     }
 }
 
-if (!function_exists('form_open')) {
+if (! function_exists('form_open')) {
     /**
      * Opens a form with automatic CSRF token injection for POST/PUT/PATCH/DELETE.
-     * 
+     *
      * @param string $action Form action URL
      * @param string $method HTTP method (GET, POST, PUT, PATCH, DELETE)
      * @param array $attributes Additional HTML attributes like classes, id, etc
@@ -475,7 +475,7 @@ if (!function_exists('form_open')) {
     }
 }
 
-if (!function_exists('form_close')) {
+if (! function_exists('form_close')) {
     /**
      * Closes a form tag.
      */
@@ -485,7 +485,7 @@ if (!function_exists('form_close')) {
     }
 }
 
-if (!function_exists('storage')) {
+if (! function_exists('storage')) {
     /**
      * Returns the storage object.
      */
@@ -495,7 +495,7 @@ if (!function_exists('storage')) {
     }
 }
 
-if (!function_exists('asset')) {
+if (! function_exists('asset')) {
     /**
      * Return an instance of asset utility provider.
      */
@@ -509,7 +509,7 @@ if (!function_exists('asset')) {
     }
 }
 
-if (!function_exists('js')) {
+if (! function_exists('js')) {
     /**
      * Return an instance of Js utility provider.
      */
@@ -523,7 +523,7 @@ if (!function_exists('js')) {
     }
 }
 
-if (!function_exists('limiter')) {
+if (! function_exists('limiter')) {
     /**
      * Return an instance of rate limiter utility.
      */
@@ -537,7 +537,7 @@ if (!function_exists('limiter')) {
     }
 }
 
-if (!function_exists('lock')) {
+if (! function_exists('lock')) {
     /**
      * Return an instance of lock utility.
      */
@@ -551,7 +551,7 @@ if (!function_exists('lock')) {
     }
 }
 
-if (!function_exists('url')) {
+if (! function_exists('url')) {
     /**
      * Return an instance of URL utility.
      */
@@ -565,7 +565,7 @@ if (!function_exists('url')) {
     }
 }
 
-if (!function_exists('captcha')) {
+if (! function_exists('captcha')) {
     /**
      * Return configured instance of captcha provider.
      */
@@ -575,7 +575,7 @@ if (!function_exists('captcha')) {
     }
 }
 
-if (!function_exists('ai')) {
+if (! function_exists('ai')) {
     /**
      * Return configured instance of AI provider.
      */
@@ -585,7 +585,7 @@ if (!function_exists('ai')) {
     }
 }
 
-if (!function_exists('sms')) {
+if (! function_exists('sms')) {
     /**
      * Return configured instance of sms provider.
      */
@@ -595,12 +595,12 @@ if (!function_exists('sms')) {
     }
 }
 
-if (!function_exists('halt')) {
+if (! function_exists('halt')) {
     /**
      * Halt execution and throw an HTTP exception with the given status code.
-     * 
+     *
      * If no message is provided, uses the standard HTTP status message.
-     * 
+     *
      * @param int $code HTTP status code (e.g., 404, 403, 500)
      * @param string $message Optional error message
      * @param array $headers Optional HTTP headers
@@ -623,7 +623,7 @@ if (!function_exists('halt')) {
     }
 }
 
-if (!function_exists('pipeline')) {
+if (! function_exists('pipeline')) {
     /**
      * Create a new pipeline instance.
      *
@@ -636,7 +636,7 @@ if (!function_exists('pipeline')) {
     }
 }
 
-if (!function_exists('once')) {
+if (! function_exists('once')) {
     /**
      * Execute a callback only once per request and cache the result.
      * Subsequent calls with the same callback instance return the cached result.
@@ -649,11 +649,11 @@ if (!function_exists('once')) {
         static $cache = null;
 
         if ($cache === null) {
-            $cache = new \SplObjectStorage();
+            $cache = new \SplObjectStorage;
         }
 
         // Use object storage to track unique closures
-        if (!$cache->contains($callback)) {
+        if (! $cache->contains($callback)) {
             $cache[$callback] = $callback();
         }
 
@@ -661,7 +661,7 @@ if (!function_exists('once')) {
     }
 }
 
-if (!function_exists('optional')) {
+if (! function_exists('optional')) {
     /**
      * Safely access properties/methods on a potentially null value.
      * Returns null if the value is null, otherwise returns the value.
@@ -700,14 +700,14 @@ if (!function_exists('optional')) {
     }
 }
 
-if (!function_exists('http')) {
+if (! function_exists('http')) {
     /**
      * Get a new HTTP client instance for making API requests.
-     * 
+     *
      * @return \Lightpack\Http\Http
      */
     function http(): \Lightpack\Http\Http
     {
-        return new \Lightpack\Http\Http();
+        return new \Lightpack\Http\Http;
     }
 }

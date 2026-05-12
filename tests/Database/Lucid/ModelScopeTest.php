@@ -2,12 +2,12 @@
 
 namespace Lightpack\Tests\Database\Lucid;
 
-use Lightpack\Database\Query\Query;
-use Lightpack\Database\Lucid\Model;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
+use Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
+use PHPUnit\Framework\TestCase;
 
 class TenantModel extends Model
 {
@@ -54,8 +54,13 @@ class ModelScopeTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }

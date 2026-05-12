@@ -13,7 +13,7 @@ class NestedFieldMessagesTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     public function testNestedFieldDefaultMessages(): void
@@ -24,8 +24,8 @@ class NestedFieldMessagesTest extends TestCase
                     ['product' => 'Item 1', 'quantity' => '5', 'price' => '100'],
                     ['product' => '', 'quantity' => 'abc', 'price' => '200'],
                     ['product' => 'Item 3', 'quantity' => '3', 'price' => 'invalid'],
-                ]
-            ]
+                ],
+            ],
         ];
 
         $this->validator
@@ -44,15 +44,15 @@ class NestedFieldMessagesTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
-        
+
         // Check that error keys include array indices
         $errors = $this->validator->getErrors();
         $this->assertArrayHasKey('invoice.items.1.product', $errors);
         $this->assertArrayHasKey('invoice.items.1.quantity', $errors);
         $this->assertArrayHasKey('invoice.items.2.price', $errors);
-        
+
         // Verify default messages
         $this->assertStringContainsString('required', strtolower($errors['invoice.items.1.product']));
         $this->assertStringContainsString('integer', strtolower($errors['invoice.items.1.quantity']));
@@ -67,8 +67,8 @@ class NestedFieldMessagesTest extends TestCase
                     ['product' => 'Item 1', 'quantity' => '5', 'price' => '100'],
                     ['product' => '', 'quantity' => 'abc', 'price' => '200'],
                     ['product' => 'Item 3', 'quantity' => '3', 'price' => 'invalid'],
-                ]
-            ]
+                ],
+            ],
         ];
 
         $this->validator
@@ -78,7 +78,7 @@ class NestedFieldMessagesTest extends TestCase
             ->string()
             ->min(3)
             ->message('Product name must be at least 3 characters')
-            
+
             ->field('invoice.items.*.quantity')
             ->required()
             ->message('Quantity is required')
@@ -86,7 +86,7 @@ class NestedFieldMessagesTest extends TestCase
             ->message('Quantity must be a whole number')
             ->min(1)
             ->message('Quantity must be at least 1')
-            
+
             ->field('invoice.items.*.price')
             ->required()
             ->message('Price is required')
@@ -97,11 +97,11 @@ class NestedFieldMessagesTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
-        
+
         $errors = $this->validator->getErrors();
-        
+
         // Verify custom messages are used
         $this->assertEquals('Product name is required', $errors['invoice.items.1.product']);
         $this->assertEquals('Quantity must be a whole number', $errors['invoice.items.1.quantity']);
@@ -120,11 +120,11 @@ class NestedFieldMessagesTest extends TestCase
                             'employees' => [
                                 ['name' => 'John', 'email' => 'john@acme.com'],
                                 ['name' => '', 'email' => 'invalid-email'],
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         $this->validator
@@ -139,17 +139,17 @@ class NestedFieldMessagesTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
-        
+
         $errors = $this->validator->getErrors();
-        
+
         // Check deeply nested error keys with correct indices
         // companies.*.departments.*.employees.* should become
         // companies.0.departments.0.employees.1 for the second employee
         $this->assertArrayHasKey('companies.0.departments.0.employees.1.name', $errors);
         $this->assertArrayHasKey('companies.0.departments.0.employees.1.email', $errors);
-        
+
         // Verify custom messages
         $this->assertEquals('Employee name is required', $errors['companies.0.departments.0.employees.1.name']);
         $this->assertEquals('Employee email must be valid', $errors['companies.0.departments.0.employees.1.email']);
@@ -164,21 +164,21 @@ class NestedFieldMessagesTest extends TestCase
                     ['sku' => 'PROD-001', 'quantity' => '2', 'price' => '99.99'],
                     ['sku' => '', 'quantity' => '', 'price' => '149.99'],
                     ['sku' => 'PROD-003', 'quantity' => 'abc', 'price' => '-10'],
-                ]
-            ]
+                ],
+            ],
         ];
 
         $this->validator
             ->field('order.customer_name')
             ->required()
             ->message('Customer name is required')
-            
+
             ->field('order.items.*.sku')
             ->required()
             ->message('Product SKU is required')
             ->regex('/^PROD-\d{3}$/')
             ->message('SKU must be in format PROD-XXX')
-            
+
             ->field('order.items.*.quantity')
             ->required()
             ->message('Quantity is required')
@@ -186,7 +186,7 @@ class NestedFieldMessagesTest extends TestCase
             ->message('Quantity must be a number')
             ->min(1)
             ->message('Quantity must be at least 1')
-            
+
             ->field('order.items.*.price')
             ->required()
             ->message('Price is required')
@@ -197,15 +197,15 @@ class NestedFieldMessagesTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
-        
+
         $errors = $this->validator->getErrors();
-        
+
         // Item 1 (index 1) errors
         $this->assertEquals('Product SKU is required', $errors['order.items.1.sku']);
         $this->assertEquals('Quantity is required', $errors['order.items.1.quantity']);
-        
+
         // Item 2 (index 2) errors
         $this->assertEquals('Quantity must be a number', $errors['order.items.2.quantity']);
         $this->assertEquals('Price must be positive', $errors['order.items.2.price']);
@@ -217,7 +217,7 @@ class NestedFieldMessagesTest extends TestCase
             'users' => [
                 ['name' => 'John', 'email' => 'john@example.com', 'age' => '25'],
                 ['name' => 'J', 'email' => 'invalid', 'age' => '15'],
-            ]
+            ],
         ];
 
         $this->validator
@@ -226,13 +226,13 @@ class NestedFieldMessagesTest extends TestCase
             ->message('Name is required')
             ->min(3)
             ->message('Name must be at least 3 characters')
-            
+
             ->field('users.*.email')
             ->required()
             ->message('Email is required')
             ->email()
             ->message('Email must be valid')
-            
+
             ->field('users.*.age')
             ->required()
             ->message('Age is required')
@@ -243,11 +243,11 @@ class NestedFieldMessagesTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
-        
+
         $errors = $this->validator->getErrors();
-        
+
         $this->assertEquals('Name must be at least 3 characters', $errors['users.1.name']);
         $this->assertEquals('Email must be valid', $errors['users.1.email']);
         $this->assertEquals('Age must be between 18 and 100', $errors['users.1.age']);
@@ -259,7 +259,7 @@ class NestedFieldMessagesTest extends TestCase
             'items' => [
                 ['name' => 'Item 1', 'price' => '100'],
                 ['name' => '', 'price' => 'invalid'],
-            ]
+            ],
         ];
 
         $this->validator
@@ -273,11 +273,11 @@ class NestedFieldMessagesTest extends TestCase
 
         $this->validator->setInput($data);
         $this->validator->validate();
-        
+
         // Get specific error by full path
         $nameError = $this->validator->getError('items.1.name');
         $priceError = $this->validator->getError('items.1.price');
-        
+
         $this->assertEquals('Item name is required', $nameError);
         $this->assertEquals('Item price must be a number', $priceError);
     }
@@ -289,8 +289,8 @@ class NestedFieldMessagesTest extends TestCase
                 'items' => [
                     ['product' => 'Item 1', 'quantity' => '5', 'price' => '100'],
                     ['product' => 'Item 2', 'quantity' => '3', 'price' => '200'],
-                ]
-            ]
+                ],
+            ],
         ];
 
         $this->validator
@@ -300,12 +300,12 @@ class NestedFieldMessagesTest extends TestCase
             ->string()
             ->min(3)
             ->message('Product name must be at least 3 characters')
-            
+
             ->field('invoice.items.*.quantity')
             ->required()
             ->int()
             ->min(1)
-            
+
             ->field('invoice.items.*.price')
             ->required()
             ->numeric()
@@ -313,7 +313,7 @@ class NestedFieldMessagesTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
         $this->assertEmpty($this->validator->getErrors());
     }

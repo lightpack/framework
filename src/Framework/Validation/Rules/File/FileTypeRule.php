@@ -18,9 +18,9 @@ class FileTypeRule
         $this->message = 'File type must be: ' . implode(', ', $this->allowedTypes);
     }
 
-    public function __invoke($value, array $data = []): bool 
+    public function __invoke($value, array $data = []): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
@@ -30,17 +30,18 @@ class FileTypeRule
         }
 
         // Single file upload
-        if (isset($value['tmp_name']) && !is_array($value['tmp_name'])) {
+        if (isset($value['tmp_name']) && ! is_array($value['tmp_name'])) {
             return in_array($this->getMimeType($value['tmp_name']), $this->allowedTypes);
         }
 
         // Multiple file upload
         if (isset($value['tmp_name']) && is_array($value['tmp_name'])) {
             foreach ($value['tmp_name'] as $tmp_name) {
-                if (!in_array($this->getMimeType($tmp_name), $this->allowedTypes)) {
+                if (! in_array($this->getMimeType($tmp_name), $this->allowedTypes)) {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -50,6 +51,7 @@ class FileTypeRule
     protected function getMimeType(string $path): string
     {
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
+
         return $finfo->file($path) ?: 'application/octet-stream';
     }
 }

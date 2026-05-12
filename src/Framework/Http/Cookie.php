@@ -4,15 +4,15 @@ namespace Lightpack\Http;
 
 /**
  * Cookie
- * 
+ *
  * Represents a cookie object.
- * 
+ *
  * @source Cookie
  */
 class Cookie
 {
     /**
-     * @var string $secret Shared secret used for signing a cookie.
+     * @var string Shared secret used for signing a cookie.
      */
     private $secret;
 
@@ -25,7 +25,8 @@ class Cookie
         $this->secret = $secret;
     }
 
-    public function set(string $key, string $value, int $expire = 0, array $options = []): bool {
+    public function set(string $key, string $value, int $expire = 0, array $options = []): bool
+    {
         $value = $this->hash($value) . ':' . $value;
         $path = $options['path'] ?? '/';
         $domain = $options['domain'] ?? '';
@@ -51,11 +52,11 @@ class Cookie
 
     public function get($key = null)
     {
-        if(! $key) {
+        if (! $key) {
             return $_COOKIE;
         }
 
-        if($this->has($key)) {
+        if ($this->has($key)) {
             return $this->parse($_COOKIE[$key]);
         }
 
@@ -69,8 +70,9 @@ class Cookie
 
     public function delete($key)
     {
-        if($_COOKIE[$key] ?? null) {
+        if ($_COOKIE[$key] ?? null) {
             unset($_COOKIE[$key]);
+
             return $this->set($key, '', time() - 3600);
         }
 
@@ -81,12 +83,12 @@ class Cookie
     {
         return hash_hmac('sha1', $value, $this->secret);
     }
-    
+
     protected function parse($value)
     {
         list($hash, $value) = explode(':', $value);
 
-        if(!$hash || !$value) {
+        if (! $hash || ! $value) {
             return null;
         }
 

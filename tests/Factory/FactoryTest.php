@@ -1,14 +1,14 @@
 <?php
 
-use Lightpack\Faker\Faker;
 use Lightpack\Factory\Factory;
+use Lightpack\Faker\Faker;
 use PHPUnit\Framework\TestCase;
 
 class FactoryTest extends TestCase
 {
     public function testMakeReturnsArrayWithExpectedKeys()
     {
-        $factory = new UserFactory();
+        $factory = new UserFactory;
         $user = $factory->make();
         $this->assertIsArray($user);
         $this->assertArrayHasKey('name', $user);
@@ -19,14 +19,14 @@ class FactoryTest extends TestCase
 
     public function testMakeWithOverrides()
     {
-        $factory = new UserFactory();
+        $factory = new UserFactory;
         $user = $factory->make(['email' => 'custom@example.com']);
         $this->assertSame('custom@example.com', $user['email']);
     }
 
     public function testManyReturnsCorrectCount()
     {
-        $factory = new UserFactory();
+        $factory = new UserFactory;
         $users = $factory->times(5)->make();
         $this->assertCount(5, $users);
         foreach ($users as $user) {
@@ -36,7 +36,7 @@ class FactoryTest extends TestCase
 
     public function testManyWithOverrides()
     {
-        $factory = new UserFactory();
+        $factory = new UserFactory;
         $users = $factory->times(3)->make(['address' => '123 Main St']);
         $this->assertCount(3, $users);
         foreach ($users as $user) {
@@ -50,7 +50,8 @@ class UserFactory extends Factory
 {
     protected function template(): array
     {
-        $faker = new Faker();
+        $faker = new Faker;
+
         return [
             'name' => $faker->name(),
             'email' => $faker->unique()->email(),

@@ -1,4 +1,5 @@
 <?php
+
 namespace Lightpack\Pdf\Driver;
 
 interface DriverInterface

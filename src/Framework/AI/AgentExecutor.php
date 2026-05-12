@@ -21,12 +21,12 @@ class AgentExecutor
         $this->maxTurns = $maxTurns;
         $this->goal = $goal;
         $this->taskExecutor = $taskExecutor;
-        $this->history = new TurnHistory();
+        $this->history = new TurnHistory;
     }
 
     /**
      * Run the agent loop until goal is achieved or max turns reached.
-     * 
+     *
      * @param string $originalPrompt The initial user prompt
      * @return array Result with agent_turns, agent_memory, goal_achieved
      */
@@ -35,24 +35,24 @@ class AgentExecutor
         $currentTurn = 0;
         $allToolsUsed = [];
         $allToolResults = [];
-        
+
         // Initialize history with user's request
         if ($originalPrompt) {
             $this->history->addTurn('user', $originalPrompt, 0);
         }
-        
+
         while ($currentTurn < $this->maxTurns) {
             // Execute single turn
             $result = ($this->taskExecutor)($this);
-            
+
             // Accumulate tools used across all turns
-            if (!empty($result['tools_used'])) {
+            if (! empty($result['tools_used'])) {
                 $allToolsUsed = array_merge($allToolsUsed, $result['tools_used']);
             }
-            if (!empty($result['tool_results'])) {
+            if (! empty($result['tool_results'])) {
                 $allToolResults = array_merge($allToolResults, $result['tool_results']);
             }
-            
+
             // Store turn result in history with tool results
             $this->history->addTurn(
                 'assistant',
@@ -61,7 +61,7 @@ class AgentExecutor
                 $result['tools_used'] ?? [],
                 $result['tool_results'] ?? []
             );
-            
+
             // Check if goal achieved or task complete
             if ($this->isTaskComplete($result)) {
                 return array_merge($result, [
@@ -72,14 +72,14 @@ class AgentExecutor
                     'tool_results' => $allToolResults,
                 ]);
             }
-            
+
             $currentTurn++;
         }
-        
+
         // Max turns reached without completion
         $recentTurns = $this->history->getRecentTurns(1);
-        $lastTurn = !empty($recentTurns) ? $recentTurns[0] : [];
-        
+        $lastTurn = ! empty($recentTurns) ? $recentTurns[0] : [];
+
         return [
             'success' => false,
             'data' => null,
@@ -102,12 +102,12 @@ class AgentExecutor
         if (empty($result['tools_used']) && $result['success']) {
             return true;
         }
-        
+
         // If we have a substantive response with no more tool calls needed, we're done
-        if (!empty($result['raw']) && empty($result['tools_used'])) {
+        if (! empty($result['raw']) && empty($result['tools_used'])) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -133,13 +133,13 @@ class AgentExecutor
     public function prepareNextTurnPrompt(): string
     {
         $historyContext = $this->buildHistoryContext();
-        
+
         if ($this->goal) {
             return "Goal: {$this->goal}\n\n"
                 . "Previous Context:\n{$historyContext}\n\n"
                 . "Continue working towards the goal. What should you do next?";
         }
-        
+
         return "Previous Context:\n{$historyContext}\n\n"
             . "Continue with the task. What should you do next?";
     }

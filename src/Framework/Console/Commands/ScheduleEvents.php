@@ -14,7 +14,7 @@ class ScheduleEvents extends Command
     {
         $this->schedule = schedule();
         $this->schedule->run();
-        
+
         return self::SUCCESS;
     }
 }

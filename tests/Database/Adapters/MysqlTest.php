@@ -13,13 +13,13 @@ final class MysqlTest extends TestCase
         $this->config = require __DIR__ . '/../tmp/mysql.config.php';
     }
 
-    public function  testConnectionException()
+    public function testConnectionException()
     {
         $this->expectException(\Exception::class);
         $this->config['username'] = 'unknown';
         new \Lightpack\Database\Adapters\Mysql($this->config);
     }
-    
+
     public function testCanCreateConnectionInstance()
     {
         $connection = new \Lightpack\Database\Adapters\Mysql($this->config);

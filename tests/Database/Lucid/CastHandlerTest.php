@@ -2,10 +2,10 @@
 
 namespace Lightpack\Tests\Database\Lucid;
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Database\Lucid\CastHandler;
-use InvalidArgumentException;
 use DateTime;
+use InvalidArgumentException;
+use Lightpack\Database\Lucid\CastHandler;
+use PHPUnit\Framework\TestCase;
 
 class CastHandlerTest extends TestCase
 {
@@ -13,7 +13,7 @@ class CastHandlerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->handler = new CastHandler();
+        $this->handler = new CastHandler;
     }
 
     public function testBasicTypeCasting()
@@ -67,7 +67,7 @@ class CastHandlerTest extends TestCase
         $result = $this->handler->cast($date, 'date');
         $this->assertInstanceOf(DateTime::class, $result);
         $this->assertEquals($date, $result->format('Y-m-d'));
-        
+
         // Cast DateTime to DateTime (should return same instance)
         $this->assertSame($datetime, $this->handler->cast($datetime, 'date'));
 
@@ -132,7 +132,7 @@ class CastHandlerTest extends TestCase
         // Unknown type should throw exception
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown cast type: 'unknown_type'");
-        
+
         $this->handler->cast('test', 'unknown_type');
     }
 
@@ -141,7 +141,7 @@ class CastHandlerTest extends TestCase
         // Unknown type should throw exception on uncast too
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown cast type: 'unknown_type'");
-        
+
         $this->handler->uncast('test', 'unknown_type');
     }
 

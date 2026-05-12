@@ -2,18 +2,16 @@
 
 namespace Lightpack\Logger;
 
-use Lightpack\Logger\LoggerInterface;
-
 class Logger
 {
     private const EMERGENCY = 'emergency';
-    private const ALERT    = 'alert';
+    private const ALERT = 'alert';
     private const CRITICAL = 'critical';
-    private const ERROR    = 'error';
-    private const WARNING  = 'warning';
-    private const NOTICE   = 'notice';
-    private const INFO     = 'info';
-    private const DEBUG    = 'debug';
+    private const ERROR = 'error';
+    private const WARNING = 'warning';
+    private const NOTICE = 'notice';
+    private const INFO = 'info';
+    private const DEBUG = 'debug';
 
     private $logger;
 

@@ -15,24 +15,27 @@ class CreateSeeder extends Command
         if (null === $className) {
             $this->output->error("Please provide the seeder class name.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
-        if (!preg_match('/^[\w]+$/', $className)) {
+        if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid seeder class name.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
         $directory = './database/seeders';
         $filePath = DIR_ROOT . '/database/seeders/' . $className . '.php';
 
-        if (file_exists($filePath) && !$force) {
+        if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Seeder already exists: {$directory}/{$className}.php");
             $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -42,7 +45,7 @@ class CreateSeeder extends Command
         file_put_contents($filePath, $template);
         $this->output->success("✓ Seeder created: {$directory}/{$className}.php");
         $this->output->newline();
-        
+
         return self::SUCCESS;
     }
 }

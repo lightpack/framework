@@ -8,14 +8,14 @@ class Url
 {
     /**
      * Generate URL with support for query params.
-     * 
+     *
      * It takes any number of string texts and concatenates them to
      * generate the URL. To append query params, pass an array as
      * key-value pairs, and it will be converted to a query string.
      *
      * For example:
      * Url::to('users', ['sort' => 'asc', 'status' => 'active']);
-     * That  will produce: /users?sort=asc&status=active 
+     * That  will produce: /users?sort=asc&status=active
      */
     public function to(...$params): string
     {
@@ -37,7 +37,7 @@ class Url
         });
 
         // Trim whitespace and slashes from URL params
-        array_walk($params, fn(&$el) => $el = trim($el, '/ '));
+        array_walk($params, fn (&$el) => $el = trim($el, '/ '));
 
         $url = '/' . implode('/', $params) . $queryString;
 
@@ -52,13 +52,13 @@ class Url
      * ------------------------------------------------------------
      * Generates URL for assets in /public folder.
      * ------------------------------------------------------------
-     * 
-     * Usage: 
-     * 
+     *
+     * Usage:
+     *
      * Url::asset('css/styles.css');
      * Url::asset('img/favicon.png');
      * Url::asset('js/scripts.js');
-     * 
+     *
      * @deprecated
      */
     public function asset(string $file): ?string
@@ -78,7 +78,7 @@ class Url
 
     /**
      * Generate a URL for a named route with parameters.
-     * 
+     *
      * @deprecated Use route()->url() instead for better separation of concerns
      * @see \Lightpack\Routing\RouteRegistry::url()
      */
@@ -87,7 +87,7 @@ class Url
         /** @var \Lightpack\Routing\Route */
         $route = Container::getInstance()->get('route')->getByName($routeName);
 
-        if (!$route) {
+        if (! $route) {
             throw new \Exception("Route with name '$routeName' not found.");
         }
 
@@ -98,7 +98,7 @@ class Url
             unset($uri[0]);
         }
 
-        $uriPatterns = array_filter($uri, fn($val) => strpos($val, ':') === 0);
+        $uriPatterns = array_filter($uri, fn ($val) => strpos($val, ':') === 0);
         $lastCharacterForEndParam = substr(end($uriPatterns), -1);
         $minimumRequiredParams = $lastCharacterForEndParam == '?' ? count($uriPatterns) - 1 : count($uriPatterns);
 
@@ -111,7 +111,7 @@ class Url
                 $isOptionalParam = substr($value, -1) == '?';
                 $value = trim($value, ':?');
 
-                if (!$isOptionalParam && !isset($params[$value])) {
+                if (! $isOptionalParam && ! isset($params[$value])) {
                     throw new \Exception("Undefined parameter [:{$value}] for route '{$routeName}'");
                 }
 
@@ -176,12 +176,12 @@ class Url
     {
         // Extract the signature and expiration time from the URL
         $parsedUrl = parse_url($url);
-        if (!isset($parsedUrl['query'])) {
+        if (! isset($parsedUrl['query'])) {
             return false; // URL has no query parameters
         }
 
         parse_str($parsedUrl['query'], $queryParams);
-        if (!isset($queryParams['signature']) || !isset($queryParams['expires'])) {
+        if (! isset($queryParams['signature']) || ! isset($queryParams['expires'])) {
             return false; // URL is missing signature or expires parameter
         }
 
@@ -198,14 +198,14 @@ class Url
 
         // Get the base URL from environment, just like we do when generating URLs
         $baseUrl = get_env('APP_URL') ? rtrim(get_env('APP_URL'), '/') : '';
-        if (!$baseUrl) {
+        if (! $baseUrl) {
             // If no APP_URL, reconstruct from request
             $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
         }
 
         $urlWithoutSignature = $baseUrl . $parsedUrl['path'];
 
-        if (!empty($queryParams)) {
+        if (! empty($queryParams)) {
             $urlWithoutSignature .= '?' . http_build_query($queryParams);
         }
 
@@ -229,7 +229,7 @@ class Url
 
     /**
      * Parse a URL into its components.
-     * 
+     *
      * Returns an array with the following components:
      * - scheme: The URL scheme (e.g., 'http', 'https')
      * - host: The hostname
@@ -239,7 +239,7 @@ class Url
      * - path: The path component
      * - query: Array of query parameters
      * - fragment: The fragment identifier (null if not specified)
-     * 
+     *
      * Example:
      * parse('https://example.com/blog?page=2#comments')
      * Returns: [
@@ -253,7 +253,7 @@ class Url
      */
     public function parse(string $url): array
     {
-        if (!filter_var($url, FILTER_VALIDATE_URL) && !str_starts_with($url, '/')) {
+        if (! filter_var($url, FILTER_VALIDATE_URL) && ! str_starts_with($url, '/')) {
             throw new \InvalidArgumentException('Invalid URL format');
         }
 
@@ -285,7 +285,7 @@ class Url
         }
 
         // Ensure path starts with /
-        if ($components['path'] !== null && !str_starts_with($components['path'], '/')) {
+        if ($components['path'] !== null && ! str_starts_with($components['path'], '/')) {
             $components['path'] = '/' . $components['path'];
         }
 
@@ -294,11 +294,11 @@ class Url
 
     /**
      * Add or update query parameters in a URL.
-     * 
+     *
      * Example:
      * withQuery('https://example.com/search', ['q' => 'php'])
      * Returns: https://example.com/search?q=php
-     * 
+     *
      * // With array parameters
      * withQuery('https://example.com/posts', ['tags' => ['php', 'mysql']])
      * Returns: https://example.com/posts?tags[0]=php&tags[1]=mysql
@@ -313,7 +313,7 @@ class Url
         // Remove null/empty values
         $parts['query'] = array_filter($parts['query'], function ($value) {
             return $value !== null && $value !== '' &&
-                (!is_array($value) || !empty($value));
+                (! is_array($value) || ! empty($value));
         });
 
         // Rebuild URL
@@ -347,7 +347,7 @@ class Url
         }
 
         // Add query string with support for array parameters
-        if (!empty($parts['query'])) {
+        if (! empty($parts['query'])) {
             $newUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
         }
 
@@ -361,12 +361,12 @@ class Url
 
     /**
      * Normalize a URL by cleaning up common issues.
-     * 
+     *
      * This method:
      * - Removes duplicate slashes
      * - Resolves directory traversal (.., .)
      * - Ensures consistent formatting
-     * 
+     *
      * Example:
      * normalize('https://example.com//blog/../api/./users//')
      * Returns: https://example.com/api/users
@@ -390,6 +390,7 @@ class Url
                 }
                 if ($segment === '..') {
                     array_pop($pathSegments);
+
                     continue;
                 }
                 $pathSegments[] = $segment;
@@ -428,7 +429,7 @@ class Url
         $normalizedUrl .= $parts['path'] ?? '';
 
         // Add query string
-        if (!empty($parts['query'])) {
+        if (! empty($parts['query'])) {
             $normalizedUrl .= '?' . http_build_query($parts['query']);
         }
 
@@ -442,7 +443,7 @@ class Url
 
     /**
      * Validate a URL with configurable options.
-     * 
+     *
      * Example:
      * validate('https://example.com', [
      *     'schemes' => ['https'],
@@ -474,16 +475,16 @@ class Url
         }
 
         // Check scheme
-        if ($options['require_scheme'] && !$parts['scheme']) {
+        if ($options['require_scheme'] && ! $parts['scheme']) {
             return false;
         }
 
-        if ($parts['scheme'] && !in_array($parts['scheme'], $options['schemes'])) {
+        if ($parts['scheme'] && ! in_array($parts['scheme'], $options['schemes'])) {
             return false;
         }
 
         // Check host if specified
-        if (!empty($options['allowed_hosts']) && !in_array($parts['host'], $options['allowed_hosts'])) {
+        if (! empty($options['allowed_hosts']) && ! in_array($parts['host'], $options['allowed_hosts'])) {
             return false;
         }
 
@@ -497,7 +498,7 @@ class Url
 
     /**
      * Join URL segments intelligently.
-     * 
+     *
      * Example:
      * join('https://api.com', 'v1/', '/users', '?sort=desc')
      * Returns: https://api.com/v1/users?sort=desc
@@ -553,16 +554,16 @@ class Url
 
     /**
      * Remove query parameters from URL.
-     * 
+     *
      * Example:
      * // Remove specific parameters
      * withoutQuery('example.com?page=1&sort=desc', 'sort')
      * Returns: example.com?page=1
-     * 
+     *
      * // Remove multiple parameters
      * withoutQuery('example.com?utm_source=fb&page=1', ['utm_source', 'utm_medium'])
      * Returns: example.com?page=1
-     * 
+     *
      * // Remove all query parameters
      * withoutQuery('example.com?page=1&sort=desc')
      * Returns: example.com
@@ -590,7 +591,7 @@ class Url
         $baseUrl .= $parts['path'];
 
         // Add remaining query parameters
-        if (!empty($query)) {
+        if (! empty($query)) {
             $baseUrl .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
         }
 
@@ -604,11 +605,11 @@ class Url
 
     /**
      * Add or update fragment in URL.
-     * 
+     *
      * Example:
      * withFragment('example.com', 'section1')
      * Returns: example.com#section1
-     * 
+     *
      * withFragment('example.com#old', 'new')
      * Returns: example.com#new
      */
@@ -624,7 +625,7 @@ class Url
         $baseUrl .= $parts['path'];
 
         // Add query if exists
-        if (!empty($parts['query'])) {
+        if (! empty($parts['query'])) {
             $baseUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
         }
 
@@ -639,11 +640,11 @@ class Url
 
     /**
      * Remove fragment from URL.
-     * 
+     *
      * Example:
      * withoutFragment('example.com#section')
      * Returns: example.com
-     * 
+     *
      * withoutFragment('example.com?page=1#section')
      * Returns: example.com?page=1
      */
@@ -659,7 +660,7 @@ class Url
         $baseUrl .= $parts['path'];
 
         // Add query if exists
-        if (!empty($parts['query'])) {
+        if (! empty($parts['query'])) {
             $baseUrl .= '?' . http_build_query($parts['query'], '', '&', PHP_QUERY_RFC3986);
         }
 

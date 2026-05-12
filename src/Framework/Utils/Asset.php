@@ -36,7 +36,7 @@ class Asset
         'css',    // Stylesheets
         'js',     // JavaScript
         'fonts',  // Web fonts
-        'img'     // Images
+        'img',     // Images
     ];
 
     public function __construct(?string $publicPath = null)
@@ -48,7 +48,7 @@ class Asset
 
     /**
      * Get URL for an asset with optional versioning
-     * 
+     *
      * @param string $path Path to the asset relative to public directory
      * @param bool $version Enable/disable versioning
      * @return string Generated asset URL
@@ -56,7 +56,7 @@ class Asset
     public function url(string $path, bool $version = true): string
     {
         $path = trim($path, '/ ');
-        
+
         if ($version) {
             $versionStamp = $this->getVersion($path);
             if ($versionStamp) {
@@ -73,7 +73,7 @@ class Asset
     protected function getVersion(string $path): ?string
     {
         $realPath = $this->publicPath . '/' . $path;
-        if (!file_exists($realPath)) {
+        if (! file_exists($realPath)) {
             return null;
         }
 
@@ -102,17 +102,19 @@ class Asset
     public function generateVersions(): void
     {
         $versions = [];
-        
+
         foreach ($this->trackDirs as $dir) {
             $path = $this->publicPath . '/' . $dir;
-            if (!is_dir($path)) continue;
+            if (! is_dir($path)) {
+                continue;
+            }
 
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($path)
             );
 
             foreach ($iterator as $file) {
-                if ($file->isFile() && !$file->isLink()) {
+                if ($file->isFile() && ! $file->isLink()) {
                     $relativePath = str_replace($this->publicPath . '/', '', $file->getPathname());
                     $versions[$relativePath] = (string)filemtime($file->getPathname());
                 }
@@ -127,7 +129,7 @@ class Asset
      */
     public function load(string|array $assets): string
     {
-        if(is_string($assets)) {
+        if (is_string($assets)) {
             $assets = [$assets];
         }
 
@@ -145,7 +147,7 @@ class Asset
                 $html .= $this->js($file, $options);
             }
         }
-        
+
         return $html;
     }
 
@@ -177,6 +179,7 @@ class Asset
             null => '',     // No attribute = blocking script
             default => ' defer'
         };
+
         return "<script src='{$url}'{$attribute}></script>\n";
     }
 
@@ -210,19 +213,19 @@ class Asset
                 $path = $mode;
                 $mode = null;
             }
-            
+
             $url = $this->url($path);
             $type = ' type="module"';
             $async = $mode === 'async' ? ' async' : '';
             $html .= "<script{$type} src='{$url}'{$async}></script>\n";
         }
-        
+
         return $html;
     }
 
     /**
      * Add imports to the import map
-     * 
+     *
      * @param array<string,mixed> $imports Array of imports where key is specifier and value is path to local file
      * @return string Import map script tag
      */
@@ -234,7 +237,7 @@ class Asset
         foreach ($imports as $name => $path) {
             $map['imports'][$name] = $this->url($path);
         }
-        
+
         return sprintf(
             "<script type='importmap'>\n%s\n</script>",
             json_encode($map, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
@@ -250,8 +253,12 @@ class Asset
         $cssDir = $this->publicPath . '/css';
 
         // Create directories if they don't exist
-        if (!is_dir($fontDir)) mkdir($fontDir, 0755, true);
-        if (!is_dir($cssDir)) mkdir($cssDir, 0755, true);
+        if (! is_dir($fontDir)) {
+            mkdir($fontDir, 0755, true);
+        }
+        if (! is_dir($cssDir)) {
+            mkdir($cssDir, 0755, true);
+        }
 
         // Build Google Fonts URL with user agent to get woff2 fonts
         $url = sprintf(
@@ -264,8 +271,8 @@ class Asset
         $context = stream_context_create([
             'http' => [
                 'method' => 'GET',
-                'header' => 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            ]
+                'header' => 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ],
         ]);
 
         // Get CSS content
@@ -286,7 +293,7 @@ class Asset
             // Extract properties
             preg_match('/font-weight:\s*(\d+)/', $block, $weightMatch);
             preg_match('/src:\s*url\((.*?)\)/', $block, $urlMatch);
-            
+
             if (empty($weightMatch[1]) || empty($urlMatch[1])) {
                 continue;
             }
@@ -296,7 +303,7 @@ class Asset
 
             // Only store the latin version of the font (usually the last one)
             // or update if we haven't found one yet
-            if (!isset($fontsByWeight[$weight]) || 
+            if (! isset($fontsByWeight[$weight]) ||
                 strpos($block, 'U+0000-00FF') !== false) {
                 $fontsByWeight[$weight] = $url;
             }
@@ -312,13 +319,14 @@ class Asset
             }
 
             // Save font with weight-based name
-            $fileName = sprintf('%s-%d.woff2', 
+            $fileName = sprintf(
+                '%s-%d.woff2',
                 strtolower($family),
                 $weight
             );
-            
+
             $fontPath = $fontDir . '/' . $fileName;
-            if (!@file_put_contents($fontPath, $fontContent)) {
+            if (! @file_put_contents($fontPath, $fontContent)) {
                 throw new \RuntimeException("Failed to save font file to: {$fontPath}");
             }
 
@@ -340,7 +348,7 @@ class Asset
 
         // Save CSS
         $cssFile = $cssDir . '/fonts.css';
-        if (!@file_put_contents($cssFile, $localCss)) {
+        if (! @file_put_contents($cssFile, $localCss)) {
             throw new \RuntimeException("Failed to save CSS file to: {$cssFile}");
         }
 

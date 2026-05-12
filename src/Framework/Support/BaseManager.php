@@ -2,9 +2,9 @@
 
 namespace Lightpack\Support;
 
-use Lightpack\Container\Container;
 use Closure;
 use Exception;
+use Lightpack\Container\Container;
 
 abstract class BaseManager
 {
@@ -12,21 +12,22 @@ abstract class BaseManager
     protected array $instances = [];
     protected array $factories = [];
     protected ?string $defaultDriver = null;
-    
+
     public function __construct(Container $container)
     {
         $this->container = $container;
     }
-    
+
     /**
      * Register a driver factory
      */
     public function register(string $name, Closure $factory): self
     {
         $this->factories[$name] = $factory;
+
         return $this;
     }
-    
+
     /**
      * Extend with custom driver (alias for register)
      */
@@ -34,7 +35,7 @@ abstract class BaseManager
     {
         return $this->register($name, $factory);
     }
-    
+
     /**
      * Set default driver
      */
@@ -42,7 +43,7 @@ abstract class BaseManager
     {
         $this->defaultDriver = $name;
     }
-    
+
     /**
      * Get default driver name
      */
@@ -50,23 +51,23 @@ abstract class BaseManager
     {
         return $this->defaultDriver;
     }
-    
+
     /**
      * Resolve a driver instance (lazy loaded, cached)
      */
     protected function resolve(string $name): object
     {
-        if (!isset($this->instances[$name])) {
-            if (!isset($this->factories[$name])) {
+        if (! isset($this->instances[$name])) {
+            if (! isset($this->factories[$name])) {
                 throw new Exception($this->getErrorMessage($name));
             }
-            
+
             $this->instances[$name] = $this->factories[$name]($this->container);
         }
-        
+
         return $this->instances[$name];
     }
-    
+
     /**
      * Get error message for missing driver
      */

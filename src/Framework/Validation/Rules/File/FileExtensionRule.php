@@ -23,9 +23,9 @@ class FileExtensionRule
         $this->message = 'File extension must be: ' . implode(', ', $this->allowedExtensions);
     }
 
-    public function __invoke($value, array $data = []): bool 
+    public function __invoke($value, array $data = []): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
@@ -38,27 +38,28 @@ class FileExtensionRule
         if (isset($value['name']) && is_array($value['name'])) {
             foreach ($value['name'] as $filename) {
                 $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                
+
                 // Check if it's an alias (e.g., 'jpeg' for 'jpg')
                 if (isset($this->extensionAliases[$extension])) {
                     $extension = $this->extensionAliases[$extension];
                 }
-                
-                if (!in_array($extension, $this->allowedExtensions)) {
+
+                if (! in_array($extension, $this->allowedExtensions)) {
                     return false;
                 }
             }
+
             return true;
         }
 
         // Handle single file
         $extension = strtolower(pathinfo($value['name'], PATHINFO_EXTENSION));
-        
+
         // Check if it's an alias (e.g., 'jpeg' for 'jpg')
         if (isset($this->extensionAliases[$extension])) {
             $extension = $this->extensionAliases[$extension];
         }
-        
+
         return in_array($extension, $this->allowedExtensions);
     }
 }

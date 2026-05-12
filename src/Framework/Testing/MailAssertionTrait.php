@@ -32,11 +32,13 @@ trait MailAssertionTrait
         foreach (Mail::getSentMails() as $mail) {
             if ($mail['subject'] === $subject) {
                 $found = true;
+
                 break;
             }
         }
 
         $this->assertTrue($found, "Expected email with subject '{$subject}', but none found.");
+
         return $this;
     }
 
@@ -46,11 +48,13 @@ trait MailAssertionTrait
         foreach (Mail::getSentMails() as $mail) {
             if (str_contains($mail['html_body'], $text) || str_contains($mail['text_body'], $text)) {
                 $found = true;
+
                 break;
             }
         }
 
         $this->assertTrue($found, "Expected email containing text '{$text}', but none found.");
+
         return $this;
     }
 
@@ -60,11 +64,13 @@ trait MailAssertionTrait
         foreach (Mail::getSentMails() as $mail) {
             if ($mail['from']['email'] === $email) {
                 $found = true;
+
                 break;
             }
         }
 
         $this->assertTrue($found, "Expected email to be sent from {$email}, but it wasn't.");
+
         return $this;
     }
 
@@ -86,12 +92,14 @@ trait MailAssertionTrait
             foreach ($mail['to'] as $recipient) {
                 if ($recipient['email'] === $email) {
                     $sent = true;
+
                     break 2; // Break out of both loops
                 }
             }
         }
 
         $this->assertTrue($sent, "Expected email to be sent to {$email}, but it wasn't.");
+
         return $this;
     }
 
@@ -102,12 +110,14 @@ trait MailAssertionTrait
             foreach ($mail['to'] as $recipient) {
                 if ($recipient['email'] === $email) {
                     $sent = true;
+
                     break 2;
                 }
             }
         }
 
         $this->assertFalse($sent, "Expected no email to be sent to {$email}, but one was sent.");
+
         return $this;
     }
 
@@ -121,21 +131,25 @@ trait MailAssertionTrait
                 foreach ($mail['to'] as $recipient) {
                     if ($recipient['email'] === $email) {
                         $found = true;
+
                         break;
                     }
                 }
-                if (!$found) {
+                if (! $found) {
                     $allFound = false;
+
                     break;
                 }
             }
             if ($allFound) {
                 $allSent = true;
+
                 break;
             }
         }
 
         $this->assertTrue($allSent, "Expected email to be sent to all recipients: " . implode(', ', $emails));
+
         return $this;
     }
 
@@ -146,12 +160,14 @@ trait MailAssertionTrait
             foreach ($mail['cc'] as $recipient) {
                 if ($recipient['email'] === $email) {
                     $found = true;
+
                     break 2;
                 }
             }
         }
 
         $this->assertTrue($found, "Expected email to be CC'd to {$email}, but it wasn't.");
+
         return $this;
     }
 
@@ -162,12 +178,14 @@ trait MailAssertionTrait
             foreach ($mail['bcc'] as $recipient) {
                 if ($recipient['email'] === $email) {
                     $found = true;
+
                     break 2;
                 }
             }
         }
 
         $this->assertTrue($found, "Expected email to be BCC'd to {$email}, but it wasn't.");
+
         return $this;
     }
 
@@ -178,12 +196,14 @@ trait MailAssertionTrait
             foreach ($mail['reply_to'] as $recipient) {
                 if ($recipient['email'] === $email) {
                     $found = true;
+
                     break 2;
                 }
             }
         }
 
         $this->assertTrue($found, "Expected email to have reply-to address {$email}, but it didn't.");
+
         return $this;
     }
 
@@ -194,12 +214,14 @@ trait MailAssertionTrait
             foreach ($mail['attachments'] as $attachment) {
                 if ($attachment['filename'] === $filename) {
                     $found = true;
+
                     break 2; // Break out of both loops
                 }
             }
         }
 
         $this->assertTrue($found, "Expected email to have attachment '{$filename}', but none found.");
+
         return $this;
     }
 
@@ -207,13 +229,15 @@ trait MailAssertionTrait
     {
         $found = false;
         foreach (Mail::getSentMails() as $mail) {
-            if (!empty($mail['attachments'])) {
+            if (! empty($mail['attachments'])) {
                 $found = true;
+
                 break;
             }
         }
 
         $this->assertFalse($found, "Expected email to have no attachments, but attachments were found.");
+
         return $this;
     }
 
@@ -227,21 +251,25 @@ trait MailAssertionTrait
                 foreach ($mail['cc'] as $recipient) {
                     if ($recipient['email'] === $email) {
                         $found = true;
+
                         break;
                     }
                 }
-                if (!$found) {
+                if (! $found) {
                     $allFound = false;
+
                     break;
                 }
             }
             if ($allFound) {
                 $allCced = true;
+
                 break;
             }
         }
 
         $this->assertTrue($allCced, "Expected email to be CC'd to all addresses: " . implode(', ', $emails));
+
         return $this;
     }
 
@@ -255,21 +283,25 @@ trait MailAssertionTrait
                 foreach ($mail['bcc'] as $recipient) {
                     if ($recipient['email'] === $email) {
                         $found = true;
+
                         break;
                     }
                 }
-                if (!$found) {
+                if (! $found) {
                     $allFound = false;
+
                     break;
                 }
             }
             if ($allFound) {
                 $allBcced = true;
+
                 break;
             }
         }
 
         $this->assertTrue($allBcced, "Expected email to be BCC'd to all addresses: " . implode(', ', $emails));
+
         return $this;
     }
 
@@ -283,21 +315,25 @@ trait MailAssertionTrait
                 foreach ($mail['reply_to'] as $recipient) {
                     if ($recipient['email'] === $email) {
                         $found = true;
+
                         break;
                     }
                 }
-                if (!$found) {
+                if (! $found) {
                     $allMatched = false;
+
                     break;
                 }
             }
             if ($allMatched) {
                 $allFound = true;
+
                 break;
             }
         }
 
         $this->assertTrue($allFound, "Expected email to have all reply-to addresses: " . implode(', ', $emails));
+
         return $this;
     }
 
@@ -311,21 +347,25 @@ trait MailAssertionTrait
                 foreach ($mail['attachments'] as $attachment) {
                     if ($attachment['filename'] === $filename) {
                         $fileFound = true;
+
                         break;
                     }
                 }
-                if (!$fileFound) {
+                if (! $fileFound) {
                     $allMatched = false;
+
                     break;
                 }
             }
             if ($allMatched) {
                 $allFound = true;
+
                 break;
             }
         }
 
         $this->assertTrue($allFound, "Expected email to have all attachments: " . implode(', ', $filenames));
+
         return $this;
     }
 }

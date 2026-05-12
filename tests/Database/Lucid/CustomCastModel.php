@@ -1,7 +1,7 @@
 <?php
 
-use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Lucid\Casts\UpperCaseCast;
+use Lightpack\Database\Lucid\Model;
 
 class CustomCastModel extends Model
 {

@@ -18,9 +18,9 @@ class FileSizeRule
         $this->message = "File size must not exceed {$size}";
     }
 
-    public function __invoke($value, array $data = []): bool 
+    public function __invoke($value, array $data = []): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
@@ -30,7 +30,7 @@ class FileSizeRule
         }
 
         // Single file upload
-        if (isset($value['size']) && !is_array($value['size'])) {
+        if (isset($value['size']) && ! is_array($value['size'])) {
             return $value['size'] <= $this->maxBytes;
         }
 
@@ -41,16 +41,17 @@ class FileSizeRule
                     return false;
                 }
             }
+
             return true;
         }
 
         return false;
     }
 
-    private function parseSize(string $size): int 
+    private function parseSize(string $size): int
     {
         $size = strtoupper(trim($size));
-        
+
         // Define units with their byte multipliers
         $units = [
             'B' => 1,
@@ -63,6 +64,7 @@ class FileSizeRule
         if (preg_match('/^(\d+)\s*([KMGB]+)B?$/i', $size, $matches)) {
             $value = (int)$matches[1];
             $unit = $matches[2];
+
             return $value * ($units[$unit] ?? 1);
         }
 

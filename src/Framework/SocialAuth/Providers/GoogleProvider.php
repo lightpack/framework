@@ -26,6 +26,7 @@ class GoogleProvider implements SocialAuthInterface
     public function stateless(): self
     {
         $this->stateless = true;
+
         return $this;
     }
 
@@ -35,7 +36,7 @@ class GoogleProvider implements SocialAuthInterface
             $params['state'] = base64_encode(json_encode([
                 'is_api' => true,
                 'state' => bin2hex(random_bytes(16)),
-                'provider' => 'google'
+                'provider' => 'google',
             ]));
         }
 

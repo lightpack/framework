@@ -2,12 +2,8 @@
 
 namespace Lightpack\Cable;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Cable\Cable;
-use Lightpack\Cable\CableManager;
-use Lightpack\Cable\Presence;
-use Lightpack\Cable\PresenceManager;
+use Lightpack\Support\ProviderInterface;
 
 class CableProvider implements ProviderInterface
 {
@@ -23,7 +19,7 @@ class CableProvider implements ProviderInterface
 
         $container->alias(CableManager::class, 'cable.manager');
         $container->alias(Cable::class, 'cable');
-        
+
         // Register Presence service
         $container->register('presence.manager', function ($container) {
             return new PresenceManager($container);
@@ -32,7 +28,7 @@ class CableProvider implements ProviderInterface
         $container->register('presence', function ($container) {
             return $container->get('presence.manager')->driver();
         });
-        
+
         $container->alias(PresenceManager::class, 'presence.manager');
         $container->alias(Presence::class, 'presence');
     }

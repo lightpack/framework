@@ -2,37 +2,37 @@
 
 namespace Lightpack\Jobs;
 
-use Throwable;
 use Lightpack\Container\Container;
-use Lightpack\Utils\Limiter;
 use Lightpack\Jobs\Exceptions\PermanentJobFailureException;
+use Lightpack\Utils\Limiter;
+use Throwable;
 
 class Worker
 {
-    /** 
-     * @var int 
-     * 
+    /**
+     * @var int
+     *
      * Number of seconds the worker should sleep before checking for new jobs.
      */
     protected int $sleepInterval;
 
     /**
      * @var array
-     * 
+     *
      * List of queues to process.
      */
     protected array  $queues = [];
 
     /**
      * @var int
-     * 
+     *
      * Max number of seconds after which the worker should stop processing jobs.
      */
     protected int $cooldown;
 
     /**
      * @var int
-     * 
+     *
      * Start time of the worker.
      */
     protected $startTime;
@@ -66,7 +66,7 @@ class Worker
         $this->queues = $options['queues'] ?? ['default'];
         $this->cooldown = $options['cooldown'] ?? 0; // 0 means unlimited run time
         $this->container = Container::getInstance();
-        $this->limiter = new Limiter();
+        $this->limiter = new Limiter;
         $this->startTime = time();
         $this->registerSignalHandlers();
     }
@@ -94,7 +94,7 @@ class Worker
         while ($this->running && $job = $this->jobEngine->fetchNextJob($queue)) {
             $this->dispatchJob($job);
 
-            if($this->shouldCooldown()) {
+            if ($this->shouldCooldown()) {
                 $this->pleaseCooldown();
             }
         }
@@ -113,6 +113,7 @@ class Worker
 
         if ($this->isRateLimited($jobHandler)) {
             $this->handleRateLimitedJob($job, $jobHandler);
+
             return;
         }
 
@@ -150,7 +151,7 @@ class Worker
     protected function isRateLimited($jobHandler): bool
     {
         $config = $jobHandler->rateLimit();
-        
+
         // No rate limit configured
         if ($config === null) {
             return false;
@@ -165,15 +166,15 @@ class Worker
         }
 
         // Return true if rate limit exceeded (attempt failed)
-        return !$this->limiter->attempt($key, $limit, $seconds);
+        return ! $this->limiter->attempt($key, $limit, $seconds);
     }
 
     /**
      * Resolve the rate limit window from config, supporting multiple time units.
-     * 
+     *
      * Supports: seconds, minutes, hours, days
      * Priority: seconds > minutes > hours > days
-     * 
+     *
      * @throws \InvalidArgumentException if no time unit is specified
      */
     protected function resolveRateLimitWindow(array $config): int
@@ -209,15 +210,16 @@ class Worker
             $this->jobEngine->markFailedJob($job, new \RuntimeException('Job exceeded max attempts due to rate limiting'));
             $this->container->callIf($job->handler, 'onFailure');
             $this->logJobFailed($job);
+
             return;
         }
-        
+
         $this->releaseRateLimitedJob($job, $jobHandler);
     }
 
     /**
      * Release a rate-limited job back to the queue.
-     * 
+     *
      * The job is delayed until the rate limit window expires to avoid
      * repeatedly hitting the rate limit. Jitter is added by default to
      * prevent thundering herd when multiple jobs retry simultaneously.
@@ -227,16 +229,16 @@ class Worker
         $config = $jobHandler->rateLimit();
         $seconds = $this->resolveRateLimitWindow($config);
         $jitterPercent = $config['jitter'] ?? 0.2;
-        
+
         $delay = $this->calculateDelayWithJitter($seconds, $jitterPercent);
-        
+
         $this->logJobRateLimited($job);
         $this->jobEngine->release($job, '+' . $delay . ' seconds');
     }
 
     /**
      * Calculate delay with jitter to prevent thundering herd.
-     * 
+     *
      * @param int $baseDelay Base delay in seconds
      * @param float $jitterPercent Jitter as percentage of base delay (0-1)
      * @return int Final delay in seconds
@@ -245,9 +247,10 @@ class Worker
     {
         if ($jitterPercent > 0) {
             $jitter = rand(0, (int)($baseDelay * $jitterPercent));
+
             return $baseDelay + $jitter;
         }
-        
+
         return $baseDelay;
     }
 
@@ -340,7 +343,7 @@ class Worker
 
     protected function shouldCooldown(): bool
     {
-        if($this->cooldown == 0) {
+        if ($this->cooldown == 0) {
             return false;
         }
 

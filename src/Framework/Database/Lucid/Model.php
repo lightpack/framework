@@ -7,22 +7,20 @@ use JsonSerializable;
 use Lightpack\Database\DB;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
-use Lightpack\Database\Lucid\AttributeHandler;
-use Lightpack\Database\Lucid\RelationHandler;
 
 class Model implements JsonSerializable
 {
-    /** 
-     * @var string Database table name 
+    /**
+     * @var string Database table name
      */
     protected $table;
 
-    /** 
-     * @var string Table primary key 
+    /**
+     * @var string Table primary key
      */
     protected $primaryKey = 'id';
 
-    /** 
+    /**
      * @var \Lightpack\Database\DB
      */
     protected $connection;
@@ -74,7 +72,7 @@ class Model implements JsonSerializable
 
     /**
      * The transformer(s) for this model.
-     * 
+     *
      * Can be:
      * - string: Single transformer class (e.g., UserTransformer::class)
      * - array: Multiple transformers for different contexts
@@ -83,7 +81,7 @@ class Model implements JsonSerializable
      *             'view' => UserViewTransformer::class
      *         ]
      * - null: No transformation
-     * 
+     *
      * @var string|array|null
      */
     protected $transformer = null;
@@ -95,7 +93,7 @@ class Model implements JsonSerializable
      */
     public function __construct($id = null)
     {
-        $this->attributes = new AttributeHandler();
+        $this->attributes = new AttributeHandler;
         $this->attributes->setHidden($this->hidden);
         $this->attributes->setTimestamps($this->timestamps);
         $this->attributes->setCasts($this->casts);
@@ -112,7 +110,7 @@ class Model implements JsonSerializable
      */
     public function __set($column, $value)
     {
-        if (!method_exists($this, $column)) {
+        if (! method_exists($this, $column)) {
             $this->attributes->set($column, $value);
         }
     }
@@ -129,12 +127,12 @@ class Model implements JsonSerializable
         }
 
         // Check for relation method
-        if (!method_exists($this, $key)) {
+        if (! method_exists($this, $key)) {
             return $this->attributes->get($key);
         }
 
         // Check if relation is allowed to be lazy loaded
-        if ($this->strictMode && !in_array($key, $this->allowedLazyRelations)) {
+        if ($this->strictMode && ! in_array($key, $this->allowedLazyRelations)) {
             throw new \RuntimeException(
                 sprintf(
                     "Strict Mode: Relation '%s' on %s must be eager loaded.",
@@ -161,6 +159,7 @@ class Model implements JsonSerializable
             : $query->one();
 
         $this->relations->cache($key, $result);
+
         return $result;
     }
 
@@ -253,7 +252,7 @@ class Model implements JsonSerializable
 
     /**
      * Polymorphic many-to-many: e.g. Post -> many Tags (through tag_morphs)
-     * 
+     *
      * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK.
      */
     public function morphToMany(string $model, string $pivotTable, string $associateKey)
@@ -263,7 +262,7 @@ class Model implements JsonSerializable
 
     /**
      * Inverse polymorphic many-to-many: e.g. Tag -> many Posts (through tag_morphs)
-     * 
+     *
      * Note: Pivot table MUST have columns: morph_id, morph_type, and the related model's PK.
      */
     public function morphedByMany(string $model, string $pivotTable, string $associateKey)
@@ -278,7 +277,7 @@ class Model implements JsonSerializable
         $this->globalScope($query);
         $data = $query->where($this->primaryKey, '=', $id)->one();
 
-        if (!$data && $fail) {
+        if (! $data && $fail) {
             throw new RecordNotFoundException(
                 sprintf('%s: No record found for ID = %d', get_called_class(), $id)
             );
@@ -342,7 +341,7 @@ class Model implements JsonSerializable
             $this->find($id);
         }
 
-        if (!$this->attributes->get($this->primaryKey)) {
+        if (! $this->attributes->get($this->primaryKey)) {
             return false;
         }
 
@@ -378,7 +377,7 @@ class Model implements JsonSerializable
      */
     public function lastInsertId(): ?int
     {
-        if (!$this->autoIncrements) {
+        if (! $this->autoIncrements) {
             return null;
         }
 
@@ -518,7 +517,7 @@ class Model implements JsonSerializable
         $this->attributes->updateTimestamps(false);
 
         // Error: Manual PK required for non-auto-incrementing models
-        if (!$this->autoIncrements && $this->attributes->get($this->primaryKey) === null) {
+        if (! $this->autoIncrements && $this->attributes->get($this->primaryKey) === null) {
             throw new \RuntimeException('Insert failed: This model does not use an auto-incrementing primary key. You must assign a primary key value before saving.');
         }
 
@@ -635,7 +634,7 @@ class Model implements JsonSerializable
 
     public function clone(array $exclude = []): self
     {
-        if (!$this->attributes->get($this->primaryKey)) {
+        if (! $this->attributes->get($this->primaryKey)) {
             throw new \Exception('You cannot clone a non-existing model instance.');
         }
 
@@ -644,7 +643,7 @@ class Model implements JsonSerializable
         $data = $this->attributes->toArray();
 
         foreach ($data as $key => $value) {
-            if (!in_array($key, $exclude)) {
+            if (! in_array($key, $exclude)) {
                 $instance->setAttribute($key, $value);
             }
         }
@@ -657,7 +656,7 @@ class Model implements JsonSerializable
      */
     public function markRelationLoaded(string $relation): void
     {
-        if (!in_array($relation, $this->loadedRelations)) {
+        if (! in_array($relation, $this->loadedRelations)) {
             $this->loadedRelations[] = $relation;
         }
     }
@@ -683,27 +682,28 @@ class Model implements JsonSerializable
      */
     public function transform(array $options = []): array
     {
-        if (!$this->transformer) {
+        if (! $this->transformer) {
             throw new Exception('No transformer defined for model: ' . get_class($this));
         }
 
         // Single transformer case
         if (is_string($this->transformer)) {
-            $transformer = new $this->transformer();
+            $transformer = new $this->transformer;
         }
         // Multiple transformers case
         else {
             $context = $options['context'];
 
-            if (!isset($this->transformer[$context])) {
+            if (! isset($this->transformer[$context])) {
                 $available = implode(', ', array_keys($this->transformer));
+
                 throw new \RuntimeException(
                     "Invalid transformer context '{$context}' for " . get_class($this) .
                         ". Available contexts: {$available}"
                 );
             }
 
-            $transformer = new $this->transformer[$context]();
+            $transformer = new $this->transformer[$context];
         }
 
         // Apply options

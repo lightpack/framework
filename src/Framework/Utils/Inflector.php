@@ -68,7 +68,7 @@ class Inflector
         '/(us)$/i' => '$1es',
         '/(ase)$/i' => '$1s',
         '/s$/i' => '$1s',
-        '/$/' => "s"
+        '/$/' => "s",
     ];
 
     /** @var array An array of irregular words */
@@ -153,8 +153,8 @@ class Inflector
 
     /**
      * This method returns the plural form of the passed string only if
-     * the passed $number > 1. 
-     * 
+     * the passed $number > 1.
+     *
      * For example: pluralizeIf(2, 'role') returns 'roles',
      */
     public function pluralizeIf(int $number, string $subject): string

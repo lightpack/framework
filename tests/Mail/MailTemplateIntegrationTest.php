@@ -10,18 +10,18 @@ class TestMailWithTemplate extends Mail
 {
     public function dispatch(array $payload = [])
     {
-        $template = new MailTemplate();
+        $template = new MailTemplate;
         $template
             ->heading('Welcome!')
             ->paragraph('Thanks for signing up.')
             ->button('Get Started', $payload['url'] ?? 'https://example.com');
-        
+
         $this->to($payload['to'] ?? 'test@example.com')
             ->subject($payload['subject'] ?? 'Welcome')
             ->template($template)
             ->send();
     }
-    
+
     public static function make(): self
     {
         return new self(app('mail'));
@@ -33,17 +33,17 @@ class MailTemplateIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         putenv('MAIL_DRIVER=array');
         putenv('MAIL_FROM_ADDRESS=sender@example.com');
         putenv('MAIL_FROM_NAME=Test Sender');
         putenv('APP_NAME=Test App');
-        
+
         $container = \Lightpack\Container\Container::getInstance();
         $mailManager = new \Lightpack\Mail\MailManager($container);
         $mailManager->setDefaultDriver('array');
-        $container->register('mail', fn() => $mailManager);
-        
+        $container->register('mail', fn () => $mailManager);
+
         Mail::clearSentMails();
     }
 
@@ -63,17 +63,17 @@ class MailTemplateIntegrationTest extends TestCase
         ]);
 
         $sentMails = Mail::getSentMails();
-        
+
         $this->assertCount(1, $sentMails);
         $this->assertEquals('user@example.com', $sentMails[0]['to'][0]['email']);
         $this->assertEquals('Welcome to Our App', $sentMails[0]['subject']);
-        
+
         // Check HTML body contains template content
         $this->assertStringContainsString('Welcome!', $sentMails[0]['html_body']);
         $this->assertStringContainsString('Thanks for signing up', $sentMails[0]['html_body']);
         $this->assertStringContainsString('Get Started', $sentMails[0]['html_body']);
         $this->assertStringContainsString('https://example.com/start', $sentMails[0]['html_body']);
-        
+
         // Check plain text body was auto-generated
         $this->assertNotEmpty($sentMails[0]['text_body']);
         $this->assertStringContainsString('WELCOME', $sentMails[0]['text_body']);
@@ -83,12 +83,12 @@ class MailTemplateIntegrationTest extends TestCase
 
     public function testTemplateMethodSetsHtmlAndTextBodies()
     {
-        $template = new MailTemplate();
+        $template = new MailTemplate;
         $template
             ->heading('Test Heading')
             ->paragraph('Test paragraph')
             ->button('Click', 'https://example.com');
-        
+
         $mail = TestMailWithTemplate::make();
         $mail->to('user@example.com')
             ->subject('Test')
@@ -96,11 +96,11 @@ class MailTemplateIntegrationTest extends TestCase
             ->send();
 
         $sentMails = Mail::getSentMails();
-        
+
         // HTML body should contain template HTML
         $this->assertStringContainsString('<h1', $sentMails[0]['html_body']);
         $this->assertStringContainsString('Test Heading', $sentMails[0]['html_body']);
-        
+
         // Text body should contain plain text version
         $this->assertStringContainsString('TEST HEADING', $sentMails[0]['text_body']);
         $this->assertStringContainsString('Test paragraph', $sentMails[0]['text_body']);
@@ -108,11 +108,11 @@ class MailTemplateIntegrationTest extends TestCase
 
     public function testTemplateWithoutLayout()
     {
-        $template = new MailTemplate();
+        $template = new MailTemplate;
         $template
             ->paragraph('Simple message')
             ->withoutLayout();
-        
+
         $mail = TestMailWithTemplate::make();
         $mail->to('user@example.com')
             ->subject('Test')
@@ -120,7 +120,7 @@ class MailTemplateIntegrationTest extends TestCase
             ->send();
 
         $sentMails = Mail::getSentMails();
-        
+
         // Should not contain full HTML document structure
         $this->assertStringNotContainsString('<!DOCTYPE html>', $sentMails[0]['html_body']);
         $this->assertStringContainsString('<p', $sentMails[0]['html_body']);
@@ -134,9 +134,9 @@ class MailTemplateIntegrationTest extends TestCase
                 'primary' => '#FF5733',
             ],
         ]);
-        
+
         $template->button('Custom Button', 'https://example.com', 'primary');
-        
+
         $mail = TestMailWithTemplate::make();
         $mail->to('user@example.com')
             ->subject('Test')
@@ -144,13 +144,13 @@ class MailTemplateIntegrationTest extends TestCase
             ->send();
 
         $sentMails = Mail::getSentMails();
-        
+
         $this->assertStringContainsString('#FF5733', $sentMails[0]['html_body']);
     }
 
     public function testComplexEmailTemplate()
     {
-        $template = new MailTemplate();
+        $template = new MailTemplate;
         $template
             ->heading('Order Confirmation', 1)
             ->paragraph('Thank you for your order!')
@@ -170,7 +170,7 @@ class MailTemplateIntegrationTest extends TestCase
             ->divider()
             ->alert('Your order will ship within 2-3 business days.', 'info')
             ->button('Track Order', 'https://example.com/track/12345', 'primary');
-        
+
         $mail = TestMailWithTemplate::make();
         $mail->to('customer@example.com')
             ->subject('Order Confirmation #12345')
@@ -178,7 +178,7 @@ class MailTemplateIntegrationTest extends TestCase
             ->send();
 
         $sentMails = Mail::getSentMails();
-        
+
         // Verify all components are present
         $html = $sentMails[0]['html_body'];
         $this->assertStringContainsString('Order Confirmation', $html);
@@ -186,7 +186,7 @@ class MailTemplateIntegrationTest extends TestCase
         $this->assertStringContainsString('#12345', $html);
         $this->assertStringContainsString('Product A', $html);
         $this->assertStringContainsString('Track Order', $html);
-        
+
         // Verify plain text version
         $text = $sentMails[0]['text_body'];
         $this->assertStringContainsString('ORDER CONFIRMATION', $text);

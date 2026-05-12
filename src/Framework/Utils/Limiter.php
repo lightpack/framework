@@ -5,12 +5,12 @@ namespace Lightpack\Utils;
 use Lightpack\Cache\Cache;
 use Lightpack\Container\Container;
 
-class Limiter 
+class Limiter
 {
     protected Cache $cache;
     protected string $prefix = 'limiter:';
 
-    public function __construct() 
+    public function __construct()
     {
         $this->cache = Container::getInstance()->get('cache');
     }
@@ -23,17 +23,18 @@ class Limiter
      * @param int $seconds Cooldown window in seconds
      * @return bool True if allowed, false if rate limit exceeded
      */
-    public function attempt(string $key, int $max, int $seconds): bool 
+    public function attempt(string $key, int $max, int $seconds): bool
     {
         $key = $this->prefix . $key;
         $hits = (int) ($this->cache->get($key) ?? 0);
-        
+
         if ($hits >= $max) {
             return false;
         }
 
         // First hit sets TTL, subsequent hits preserve it
         $this->cache->set($key, $hits + 1, $seconds, $hits > 0);
+
         return true;
     }
 
@@ -52,11 +53,11 @@ class Limiter
     public function getRemaining(string $key, int $max): int
     {
         $hits = $this->getHits($key);
-        
+
         if ($hits === null) {
             return $max; // No attempts yet
         }
-        
+
         return max(0, $max - $hits);
     }
 }

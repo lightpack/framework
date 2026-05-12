@@ -9,7 +9,7 @@ use Lightpack\Validation\Traits\ValidationMessageTrait;
 class FileRule
 {
     use ValidationMessageTrait;
-    
+
     private array $errors = [
         UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
         UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE',
@@ -25,10 +25,10 @@ class FileRule
         $this->message = 'Invalid file upload';
     }
 
-    public function __invoke($value, array $data = []): bool 
+    public function __invoke($value, array $data = []): bool
     {
         // Handle non-array value
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
@@ -45,7 +45,7 @@ class FileRule
     private function validateSingleFile(array $value): bool
     {
         // Not a file upload
-        if (!isset($value['tmp_name'], $value['error'])) {
+        if (! isset($value['tmp_name'], $value['error'])) {
             return false;
         }
 
@@ -57,12 +57,14 @@ class FileRule
         // Check for other upload errors
         if ($value['error'] !== UPLOAD_ERR_OK) {
             $this->message = $this->errors[$value['error']] ?? 'Unknown upload error';
+
             return false;
         }
 
         // Security check
-        if (!is_uploaded_file($value['tmp_name'])) {
+        if (! is_uploaded_file($value['tmp_name'])) {
             $this->message = 'Invalid file upload';
+
             return false;
         }
 
@@ -72,7 +74,7 @@ class FileRule
     private function validateNestedFiles(array $value): bool
     {
         // Ensure all required keys exist
-        if (!isset($value['tmp_name'], $value['error'])) {
+        if (! isset($value['tmp_name'], $value['error'])) {
             return false;
         }
 
@@ -87,7 +89,7 @@ class FileRule
                 'size' => $value['size'][$key],
             ];
 
-            if (!$this->validateSingleFile($singleFile)) {
+            if (! $this->validateSingleFile($singleFile)) {
                 return false;
             }
         }

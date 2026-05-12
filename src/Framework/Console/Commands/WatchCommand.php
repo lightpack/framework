@@ -15,10 +15,11 @@ class WatchCommand extends Command
 
     public function run()
     {
-        $this->file = new File();
-        
+        $this->file = new File;
+
         if ($this->args->has('help')) {
             $this->showHelp();
+
             return self::SUCCESS;
         }
 
@@ -27,7 +28,7 @@ class WatchCommand extends Command
         $extensions = $this->args->get('ext');
         $command = $this->args->get('run');
 
-        if (!$paths) {
+        if (! $paths) {
             $this->output->newline();
             $this->output->error('No paths specified. Use --path=<paths> option.');
             $this->output->newline();
@@ -81,7 +82,7 @@ class WatchCommand extends Command
             }
             sleep(1);
         }
-        
+
         return self::SUCCESS;
     }
 
@@ -140,7 +141,7 @@ class WatchCommand extends Command
             }
 
             $fullPath = $this->file->sanitizePath($fullPath);
-            if ($this->file->exists($fullPath) && !in_array($fullPath, $this->paths)) {
+            if ($this->file->exists($fullPath) && ! in_array($fullPath, $this->paths)) {
                 $this->paths[] = $fullPath;
             }
         }
@@ -150,17 +151,18 @@ class WatchCommand extends Command
     {
         $this->fileHashes = [];
         foreach ($this->paths as $path) {
-            if (!$this->file->exists($path)) {
+            if (! $this->file->exists($path)) {
                 continue;
             }
 
-            if (!$this->file->isDir($path)) {
+            if (! $this->file->isDir($path)) {
                 $ext = $this->file->extension($path);
-                if (!empty($this->extensions) && !in_array($ext, $this->extensions)) {
+                if (! empty($this->extensions) && ! in_array($ext, $this->extensions)) {
                     continue;
                 }
 
                 $this->fileHashes[$path] = $this->getFileHash($path);
+
                 continue;
             }
 
@@ -171,13 +173,13 @@ class WatchCommand extends Command
                 }
 
                 foreach ($iterator as $file) {
-                    if (!$file->isFile()) {
+                    if (! $file->isFile()) {
                         continue;
                     }
 
                     $filePath = $file->getRealPath();
                     $ext = $this->file->extension($filePath);
-                    if (!empty($this->extensions) && !in_array($ext, $this->extensions)) {
+                    if (! empty($this->extensions) && ! in_array($ext, $this->extensions)) {
                         continue;
                     }
 
@@ -195,37 +197,39 @@ class WatchCommand extends Command
         $changed = false;
 
         foreach ($this->paths as $path) {
-            if (!$this->file->exists($path)) {
-                if (!$this->isFirstRun && isset($this->fileHashes[$path])) {
+            if (! $this->file->exists($path)) {
+                if (! $this->isFirstRun && isset($this->fileHashes[$path])) {
                     $relativePath = str_replace(getcwd() . '/', '', $path);
-        
+
                     $this->output->newline();
                     $this->output->error("🗑️  Deleted: {$relativePath}");
                     $this->output->newline();
 
                     $changed = true;
                 }
+
                 continue;
             }
 
-            if (!$this->file->isDir($path)) {
+            if (! $this->file->isDir($path)) {
                 $ext = $this->file->extension($path);
-                if (!empty($this->extensions) && !in_array($ext, $this->extensions)) {
+                if (! empty($this->extensions) && ! in_array($ext, $this->extensions)) {
                     continue;
                 }
 
                 $currentHash = $this->getFileHash($path);
                 $currentHashes[$path] = $currentHash;
 
-                if (!$this->isFirstRun && (!isset($this->fileHashes[$path]) || $this->fileHashes[$path] !== $currentHash)) {
+                if (! $this->isFirstRun && (! isset($this->fileHashes[$path]) || $this->fileHashes[$path] !== $currentHash)) {
                     $relativePath = str_replace(getcwd() . '/', '', $path);
-        
+
                     $this->output->newline();
                     $this->output->warning("📝 Changed: {$relativePath}");
                     $this->output->newline();
 
                     $changed = true;
                 }
+
                 continue;
             }
 
@@ -236,20 +240,20 @@ class WatchCommand extends Command
                 }
 
                 foreach ($iterator as $file) {
-                    if (!$file->isFile()) {
+                    if (! $file->isFile()) {
                         continue;
                     }
 
                     $filePath = $file->getRealPath();
                     $ext = $this->file->extension($filePath);
-                    if (!empty($this->extensions) && !in_array($ext, $this->extensions)) {
+                    if (! empty($this->extensions) && ! in_array($ext, $this->extensions)) {
                         continue;
                     }
 
                     $currentHash = $this->getFileHash($filePath);
                     $currentHashes[$filePath] = $currentHash;
 
-                    if (!$this->isFirstRun && (!isset($this->fileHashes[$filePath]) || $this->fileHashes[$filePath] !== $currentHash)) {
+                    if (! $this->isFirstRun && (! isset($this->fileHashes[$filePath]) || $this->fileHashes[$filePath] !== $currentHash)) {
                         $relativePath = str_replace(getcwd() . '/', '', $filePath);
 
                         $this->output->newline();
@@ -265,9 +269,9 @@ class WatchCommand extends Command
         }
 
         // Check for deleted files
-        if (!$this->isFirstRun) {
+        if (! $this->isFirstRun) {
             foreach ($this->fileHashes as $filePath => $hash) {
-                if (!isset($currentHashes[$filePath])) {
+                if (! isset($currentHashes[$filePath])) {
                     $relativePath = str_replace(getcwd() . '/', '', $filePath);
 
                     $this->output->newline();

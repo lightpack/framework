@@ -2,8 +2,8 @@
 
 namespace Lightpack\Session;
 
-use Lightpack\Utils\Arr;
 use Lightpack\Config\Config;
+use Lightpack\Utils\Arr;
 
 class Session
 {
@@ -14,7 +14,7 @@ class Session
 
     public function __construct(DriverInterface $driver, Config $config)
     {
-        $this->arr = new Arr();
+        $this->arr = new Arr;
         $this->driver = $driver;
         $this->config = $config;
         $this->name = $this->config->get('session.name', 'lightpack_session');
@@ -22,8 +22,9 @@ class Session
 
     public function set(string $key, $value)
     {
-        if(!$this->hasDotNotation($key)) {
+        if (! $this->hasDotNotation($key)) {
             $this->driver->set($key, $value);
+
             return;
         }
 
@@ -34,22 +35,24 @@ class Session
 
     public function get(?string $key = null, $default = null)
     {
-        if($key === null) {
+        if ($key === null) {
             return $this->driver->get();
         }
 
-        if(!$this->hasDotNotation($key)) {
+        if (! $this->hasDotNotation($key)) {
             return $this->driver->get($key, $default);
         }
 
         [$topKey, $data] = $this->getDataForDotNotation($key);
+
         return $this->arr->get($key, $data) ?? $default;
     }
 
     public function delete(string $key)
     {
-        if(!$this->hasDotNotation($key)) {
+        if (! $this->hasDotNotation($key)) {
             $this->driver->delete($key);
+
             return;
         }
 
@@ -61,6 +64,7 @@ class Session
     public function regenerate(): bool
     {
         $this->delete('_token');
+
         return $this->driver->regenerate();
     }
 
@@ -80,11 +84,12 @@ class Session
 
     public function has(string $key): bool
     {
-        if(!$this->hasDotNotation($key)) {
+        if (! $this->hasDotNotation($key)) {
             return $this->get($key) !== null;
         }
 
         [$topKey, $data] = $this->getDataForDotNotation($key);
+
         return $this->arr->has($key, $data);
     }
 
@@ -92,7 +97,7 @@ class Session
     {
         $token = $this->get('_token');
 
-        if (!$token) {
+        if (! $token) {
             $token = bin2hex(openssl_random_pseudo_bytes(8));
             $this->set('_token', $token);
         }
@@ -104,17 +109,19 @@ class Session
     {
         if ($value) {
             $this->driver->set($key, $value);
+
             return;
         }
 
         $flash = $this->driver->get($key);
         $this->driver->delete($key);
+
         return $flash;
     }
 
     public function hasInvalidAgent(): bool
     {
-        return !$this->verifyAgent();
+        return ! $this->verifyAgent();
     }
 
     public function setUserAgent(string $agent)
@@ -158,6 +165,7 @@ class Session
         $topKey = explode('.', $key)[0];
         $data = [];
         $data[$topKey] = $this->driver->get($topKey) ?? [];
+
         return [$topKey, $data];
     }
 }

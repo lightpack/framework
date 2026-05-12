@@ -84,6 +84,7 @@ class Schedule
     {
         $event = new Event('command', $command, $arguments);
         $this->events[] = $event;
+
         return $event;
     }
 

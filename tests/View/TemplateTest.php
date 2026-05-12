@@ -15,8 +15,8 @@ class TemplateTest extends TestCase
     {
         // Create fixtures directory once for all tests
         self::$fixturesDir = __DIR__ . '/fixtures';
-        
-        if (!is_dir(self::$fixturesDir)) {
+
+        if (! is_dir(self::$fixturesDir)) {
             mkdir(self::$fixturesDir, 0777, true);
         }
     }
@@ -25,13 +25,13 @@ class TemplateTest extends TestCase
     {
         // Create template with explicit views path - no global constant needed!
         $this->template = new Template(self::$fixturesDir);
-        
+
         // Set up container with template instance for helper function
         $container = Container::getInstance();
-        $container->register('template', function() {
+        $container->register('template', function () {
             return $this->template;
         });
-        
+
         // Clean fixtures directory before each test
         $this->cleanFixtures();
     }
@@ -44,7 +44,7 @@ class TemplateTest extends TestCase
 
     private function cleanFixtures(): void
     {
-        if (!is_dir(self::$fixturesDir)) {
+        if (! is_dir(self::$fixturesDir)) {
             return;
         }
 
@@ -61,7 +61,7 @@ class TemplateTest extends TestCase
 
     private function removeDirectory(string $dir): void
     {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return;
         }
 
@@ -77,11 +77,11 @@ class TemplateTest extends TestCase
     {
         $path = self::$fixturesDir . '/' . $name . '.php';
         $dir = dirname($path);
-        
-        if (!is_dir($dir)) {
+
+        if (! is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
-        
+
         file_put_contents($path, $content);
     }
 
@@ -213,7 +213,7 @@ class TemplateTest extends TestCase
 
         $this->template->setData([
             '__embed' => 'dashboard',
-            'title' => 'Dashboard'
+            'title' => 'Dashboard',
         ]);
         $result = $this->template->include('layout');
 
@@ -229,7 +229,7 @@ class TemplateTest extends TestCase
         $this->template->setData([
             '__embed' => 'page',
             'user' => 'Alice',
-            'role' => 'Admin'
+            'role' => 'Admin',
         ]);
         $result = $this->template->include('layout');
 
@@ -283,7 +283,7 @@ class TemplateTest extends TestCase
     public function test_template_throws_exception_for_missing_file()
     {
         $this->expectException(\Lightpack\Exceptions\TemplateNotFoundException::class);
-        
+
         $this->template->include('nonexistent');
     }
 
@@ -332,7 +332,8 @@ class TemplateTest extends TestCase
     /** @test */
     public function test_complex_scenario_parent_with_multiple_includes_and_component()
     {
-        $this->createView('page', 
+        $this->createView(
+            'page',
             '<?= template()->include("header", ["title" => "Home"]) ?>' .
             '<?= template()->component("button", ["label" => "Save"]) ?>' .
             '<?= template()->include("footer") ?>'
@@ -351,7 +352,8 @@ class TemplateTest extends TestCase
     /** @test */
     public function test_embed_with_includes_in_layout_and_child()
     {
-        $this->createView('layout', 
+        $this->createView(
+            'layout',
             '<?= template()->include("header") ?>' .
             '<?= template()->embed() ?>' .
             '<?= template()->include("footer") ?>'
@@ -363,7 +365,7 @@ class TemplateTest extends TestCase
         $this->template->setData([
             '__embed' => 'content',
             'site' => 'Lightpack',
-            'page' => 'Dashboard'
+            'page' => 'Dashboard',
         ]);
         $result = $this->template->include('layout');
 
@@ -471,10 +473,10 @@ class TemplateTest extends TestCase
     {
         // Base layout
         $this->createView('layouts/base', '<!DOCTYPE html><html><body><?= $this->content() ?></body></html>');
-        
+
         // Primary layout extends base
         $this->createView('layouts/primary', '<?php $this->layout("layouts/base") ?><div class="primary"><?= $this->content() ?></div>');
-        
+
         // Page uses primary layout
         $this->createView('users', '<?php $this->layout("layouts/primary") ?><h1>Users</h1>');
 
@@ -488,13 +490,13 @@ class TemplateTest extends TestCase
     {
         // Base layout
         $this->createView('layouts/base', '<html><?= $this->content() ?></html>');
-        
+
         // App layout extends base
         $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= $this->content() ?></body>');
-        
+
         // Admin layout extends app
         $this->createView('layouts/admin', '<?php $this->layout("layouts/app") ?><div class="admin-panel"><?= $this->content() ?></div>');
-        
+
         // Page uses admin layout
         $this->createView('dashboard', '<?php $this->layout("layouts/admin") ?><h1>Admin Dashboard</h1>');
 
@@ -508,16 +510,16 @@ class TemplateTest extends TestCase
     {
         // Base layout
         $this->createView('layouts/base', '<!DOCTYPE html><html><?= $this->content() ?></html>');
-        
+
         // Primary layout
         $this->createView('layouts/primary', '<?php $this->layout("layouts/base") ?><body class="primary"><?= $this->content() ?></body>');
-        
+
         // Secondary layout
         $this->createView('layouts/secondary', '<?php $this->layout("layouts/base") ?><body class="secondary"><?= $this->content() ?></body>');
-        
+
         // Users page with primary layout
         $this->createView('users', '<?php $this->layout("layouts/primary") ?><h1>Users</h1>');
-        
+
         // Books page with secondary layout
         $this->createView('books', '<?php $this->layout("layouts/secondary") ?><h1>Books</h1>');
 
@@ -533,10 +535,10 @@ class TemplateTest extends TestCase
     {
         // Base layout uses data
         $this->createView('layouts/base', '<html><title><?= $site ?></title><?= $this->content() ?></html>');
-        
+
         // App layout uses data and extends base
         $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><nav><?= $site ?></nav><?= $this->content() ?></body>');
-        
+
         // Page uses data and app layout
         $this->createView('home', '<?php $this->layout("layouts/app") ?><h1><?= $page ?></h1>');
 
@@ -552,11 +554,11 @@ class TemplateTest extends TestCase
         // Base layout with include
         $this->createView('layouts/base', '<html><?= template()->include("meta") ?><?= $this->content() ?></html>');
         $this->createView('meta', '<head><title><?= $title ?></title></head>');
-        
+
         // App layout with include
         $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= template()->include("nav") ?><?= $this->content() ?></body>');
         $this->createView('nav', '<nav>Navigation</nav>');
-        
+
         // Page with include
         $this->createView('page', '<?php $this->layout("layouts/app") ?><?= template()->include("content") ?>');
         $this->createView('content', '<main>Content</main>');
@@ -572,11 +574,11 @@ class TemplateTest extends TestCase
     {
         // Base layout
         $this->createView('layouts/base', '<html><?= $this->content() ?></html>');
-        
+
         // App layout with component
         $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= template()->component("header", ["title" => "App"]) ?><?= $this->content() ?></body>');
         $this->createView('header', '<header><?= $title ?></header>');
-        
+
         // Page with component
         $this->createView('page', '<?php $this->layout("layouts/app") ?><?= template()->component("card", ["text" => "Hello"]) ?>');
         $this->createView('card', '<div><?= $text ?></div>');
@@ -591,16 +593,16 @@ class TemplateTest extends TestCase
     {
         // Level 1: Base
         $this->createView('layouts/base', '<html><?= $this->content() ?></html>');
-        
+
         // Level 2: App
         $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><body><?= $this->content() ?></body>');
-        
+
         // Level 3: Section
         $this->createView('layouts/section', '<?php $this->layout("layouts/app") ?><main><?= $this->content() ?></main>');
-        
+
         // Level 4: Subsection
         $this->createView('layouts/subsection', '<?php $this->layout("layouts/section") ?><article><?= $this->content() ?></article>');
-        
+
         // Page
         $this->createView('page', '<?php $this->layout("layouts/subsection") ?><p>Deep nesting works!</p>');
 
@@ -697,10 +699,10 @@ class TemplateTest extends TestCase
     {
         // Base layout with stacks
         $this->createView('layouts/base', '<!DOCTYPE html><html><head><?= $this->stack("meta") ?><?= $this->stack("styles") ?></head><body><?= $this->content() ?><?= $this->stack("scripts") ?></body></html>');
-        
+
         // App layout extends base and adds its own assets
         $this->createView('layouts/app', '<?php $this->layout("layouts/base") ?><?php $this->push("styles") ?><link rel="stylesheet" href="app.css"><?php $this->endPush() ?><div class="app"><?= $this->content() ?></div><?php $this->push("scripts") ?><script>app.js</script><?php $this->endPush() ?>');
-        
+
         // Page uses app layout and adds page-specific assets
         $this->createView('page', '<?php $this->layout("layouts/app") ?><?php $this->push("meta") ?><meta name="description" content="Page"><?php $this->endPush() ?><?php $this->push("styles") ?><link rel="stylesheet" href="page.css"><?php $this->endPush() ?><h1>Page Content</h1><?php $this->push("scripts") ?><script>page.js</script><?php $this->endPush() ?>');
 
@@ -710,7 +712,7 @@ class TemplateTest extends TestCase
         $this->assertStringContainsString('<!DOCTYPE html>', $result);
         $this->assertStringContainsString('<div class="app">', $result);
         $this->assertStringContainsString('<h1>Page Content</h1>', $result);
-        
+
         // Verify all assets are included
         $this->assertStringContainsString('<meta name="description" content="Page">', $result);
         $this->assertStringContainsString('app.css', $result);
@@ -718,5 +720,4 @@ class TemplateTest extends TestCase
         $this->assertStringContainsString('app.js', $result);
         $this->assertStringContainsString('page.js', $result);
     }
-
 }

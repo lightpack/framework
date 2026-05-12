@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Lightpack\Validation\Rules;
 
 use Lightpack\Utils\Arr;
-use Lightpack\Validation\Traits\ValidationMessageTrait;
 use Lightpack\Validation\Traits\FileUploadValidationTrait;
+use Lightpack\Validation\Traits\ValidationMessageTrait;
 
 class RequiredWithRule
 {
@@ -30,14 +30,15 @@ class RequiredWithRule
         $anyFieldPresent = false;
         foreach ($this->fields as $field) {
             $fieldValue = $this->arr->get($field, $data);
-            if (!empty($fieldValue) || $fieldValue === '0' || $fieldValue === 0) {
+            if (! empty($fieldValue) || $fieldValue === '0' || $fieldValue === 0) {
                 $anyFieldPresent = true;
+
                 break;
             }
         }
 
         // If none of the fields are present, this field is not required
-        if (!$anyFieldPresent) {
+        if (! $anyFieldPresent) {
             return true;
         }
 

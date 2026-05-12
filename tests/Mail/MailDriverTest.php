@@ -2,12 +2,12 @@
 
 namespace Lightpack\Tests\Mail;
 
-use Lightpack\Mail\Mail;
-use Lightpack\Mail\MailManager;
 use Lightpack\Mail\Drivers\ArrayDriver;
 use Lightpack\Mail\Drivers\LogDriver;
-use Lightpack\Mail\Drivers\SmtpDriver;
 use Lightpack\Mail\Drivers\ResendDriver;
+use Lightpack\Mail\Drivers\SmtpDriver;
+use Lightpack\Mail\Mail;
+use Lightpack\Mail\MailManager;
 use PHPUnit\Framework\TestCase;
 
 class TestDriverMail extends Mail
@@ -19,7 +19,7 @@ class TestDriverMail extends Mail
             ->body($payload['body'] ?? 'Test Body')
             ->send();
     }
-    
+
     public static function make(): self
     {
         return new self(app('mail'));
@@ -31,17 +31,17 @@ class MailDriverTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         putenv('MAIL_DRIVER=array');
         putenv('MAIL_FROM_ADDRESS=sender@example.com');
         putenv('MAIL_FROM_NAME=Test Sender');
-        
+
         // Register MailManager in container for tests
         $container = \Lightpack\Container\Container::getInstance();
         $mailManager = new \Lightpack\Mail\MailManager($container);
         $mailManager->setDefaultDriver('array');
-        $container->register('mail', fn() => $mailManager);
-        
+        $container->register('mail', fn () => $mailManager);
+
         Mail::clearSentMails();
     }
 
@@ -58,9 +58,9 @@ class MailDriverTest extends TestCase
     {
         $container = \Lightpack\Container\Container::getInstance();
         $manager = new MailManager($container);
-        
-        $manager->register('test', fn() => new ArrayDriver());
-        
+
+        $manager->register('test', fn () => new ArrayDriver);
+
         $this->assertInstanceOf(ArrayDriver::class, $manager->driver('test'));
     }
 
@@ -68,9 +68,9 @@ class MailDriverTest extends TestCase
     {
         $container = \Lightpack\Container\Container::getInstance();
         $manager = new MailManager($container);
-        
+
         $manager->setDefaultDriver('log');
-        
+
         $this->assertSame('log', $manager->getDefaultDriver());
         $this->assertInstanceOf(LogDriver::class, $manager->driver());
     }
@@ -79,10 +79,10 @@ class MailDriverTest extends TestCase
     {
         $container = \Lightpack\Container\Container::getInstance();
         $manager = new MailManager($container);
-        
+
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage("Mail driver not found: nonexistent");
-        
+
         $manager->driver('nonexistent');
     }
 
@@ -90,7 +90,7 @@ class MailDriverTest extends TestCase
     {
         $container = \Lightpack\Container\Container::getInstance();
         $manager = new MailManager($container);
-        
+
         // Test that built-in drivers are registered
         $this->assertInstanceOf(SmtpDriver::class, $manager->driver('smtp'));
         $this->assertInstanceOf(ResendDriver::class, $manager->driver('resend'));
@@ -102,8 +102,8 @@ class MailDriverTest extends TestCase
 
     public function testArrayDriverStoresMails()
     {
-        $driver = new ArrayDriver();
-        
+        $driver = new ArrayDriver;
+
         $data = [
             'to' => [['email' => 'user@example.com', 'name' => 'User']],
             'from' => ['email' => 'sender@example.com', 'name' => 'Sender'],
@@ -115,9 +115,9 @@ class MailDriverTest extends TestCase
             'reply_to' => [],
             'attachments' => [],
         ];
-        
+
         $driver->send($data);
-        
+
         $sentMails = ArrayDriver::getSentMails();
         $this->assertCount(1, $sentMails);
         $this->assertArrayHasKey('id', $sentMails[0]);
@@ -126,8 +126,8 @@ class MailDriverTest extends TestCase
 
     public function testArrayDriverClearsMails()
     {
-        $driver = new ArrayDriver();
-        
+        $driver = new ArrayDriver;
+
         $data = [
             'to' => [['email' => 'user@example.com', 'name' => '']],
             'from' => ['email' => 'sender@example.com', 'name' => ''],
@@ -139,10 +139,10 @@ class MailDriverTest extends TestCase
             'reply_to' => [],
             'attachments' => [],
         ];
-        
+
         $driver->send($data);
         $this->assertCount(1, ArrayDriver::getSentMails());
-        
+
         ArrayDriver::clearSentMails();
         $this->assertCount(0, ArrayDriver::getSentMails());
     }
@@ -152,15 +152,15 @@ class MailDriverTest extends TestCase
     public function testLogDriverWritesToFile()
     {
         putenv('MAIL_DRIVER=log');
-        
+
         $logFile = DIR_STORAGE . '/logs/mails.json';
-        
+
         if (file_exists($logFile)) {
             unlink($logFile);
         }
-        
-        $driver = new LogDriver();
-        
+
+        $driver = new LogDriver;
+
         $data = [
             'to' => [['email' => 'user@example.com', 'name' => 'User']],
             'from' => ['email' => 'sender@example.com', 'name' => 'Sender'],
@@ -172,16 +172,16 @@ class MailDriverTest extends TestCase
             'reply_to' => [],
             'attachments' => [],
         ];
-        
+
         $driver->send($data);
-        
+
         $this->assertFileExists($logFile);
-        
+
         $logs = json_decode(file_get_contents($logFile), true);
         $this->assertIsArray($logs);
         $this->assertCount(1, $logs);
         $this->assertEquals('Log Test', $logs[0]['subject']);
-        
+
         unlink($logFile);
     }
 
@@ -189,7 +189,7 @@ class MailDriverTest extends TestCase
     {
         $logFile = DIR_STORAGE . '/logs/mails.json';
         $logsDir = dirname($logFile);
-        
+
         // Remove directory if exists
         if (file_exists($logFile)) {
             unlink($logFile);
@@ -197,9 +197,9 @@ class MailDriverTest extends TestCase
         if (is_dir($logsDir)) {
             rmdir($logsDir);
         }
-        
-        $driver = new LogDriver();
-        
+
+        $driver = new LogDriver;
+
         $data = [
             'to' => [['email' => 'user@example.com', 'name' => '']],
             'from' => ['email' => 'sender@example.com', 'name' => ''],
@@ -211,12 +211,12 @@ class MailDriverTest extends TestCase
             'reply_to' => [],
             'attachments' => [],
         ];
-        
+
         $driver->send($data);
-        
+
         $this->assertDirectoryExists($logsDir);
         $this->assertFileExists($logFile);
-        
+
         unlink($logFile);
     }
 
@@ -235,7 +235,7 @@ class MailDriverTest extends TestCase
             ->subject('Test')
             ->body('Body')
             ->send();
-        
+
         $sentMails = Mail::getSentMails();
         $this->assertCount(1, $sentMails);
     }
@@ -244,7 +244,7 @@ class MailDriverTest extends TestCase
     {
         // This test verifies the driver() method exists and works
         $mail = TestDriverMail::make();
-        
+
         // Should not throw exception
         $result = $mail->driver('array');
         $this->assertInstanceOf(Mail::class, $result);
@@ -254,15 +254,15 @@ class MailDriverTest extends TestCase
     {
         // Register a second driver for testing
         $mailManager = app('mail');
-        $mailManager->register('test-driver', fn() => new ArrayDriver());
-        
+        $mailManager->register('test-driver', fn () => new ArrayDriver);
+
         $mail = TestDriverMail::make();
         $mail->driver('test-driver')
             ->to('user@example.com')
             ->subject('Test')
             ->body('Body')
             ->send();
-        
+
         // Should work without errors
         $this->assertTrue(true);
     }
@@ -276,7 +276,7 @@ class MailDriverTest extends TestCase
             ->subject('Test')
             ->body('Body')
             ->send();
-        
+
         $sentMails = Mail::getSentMails();
         $this->assertIsArray($sentMails[0]['cc']);
         $this->assertIsArray($sentMails[0]['bcc']);
@@ -295,7 +295,7 @@ class MailDriverTest extends TestCase
             ->subject('Test')
             ->body('Body')
             ->send();
-        
+
         $sentMails = Mail::getSentMails();
         $this->assertCount(3, $sentMails[0]['to']);
         $this->assertEquals('user1@example.com', $sentMails[0]['to'][0]['email']);
@@ -311,7 +311,7 @@ class MailDriverTest extends TestCase
         $tempFile2 = tempnam(sys_get_temp_dir(), 'mail_test_');
         file_put_contents($tempFile1, 'Content 1');
         file_put_contents($tempFile2, 'Content 2');
-        
+
         $mail = TestDriverMail::make();
         $mail->to('user@example.com')
             ->subject('Test')
@@ -319,12 +319,12 @@ class MailDriverTest extends TestCase
             ->attach($tempFile1, 'custom-name.txt')
             ->attach($tempFile2)
             ->send();
-        
+
         $sentMails = Mail::getSentMails();
         $this->assertCount(2, $sentMails[0]['attachments']);
         $this->assertEquals('custom-name.txt', $sentMails[0]['attachments'][0]['filename']);
         $this->assertEquals('', $sentMails[0]['attachments'][1]['filename']);
-        
+
         unlink($tempFile1);
         unlink($tempFile2);
     }
@@ -333,10 +333,10 @@ class MailDriverTest extends TestCase
     {
         $mail1 = TestDriverMail::make();
         $mail1->to('user1@example.com')->subject('Test 1')->body('Body 1')->send();
-        
+
         $mail2 = TestDriverMail::make();
         $mail2->to('user2@example.com')->subject('Test 2')->body('Body 2')->send();
-        
+
         $sentMails = Mail::getSentMails();
         $this->assertNotEquals($sentMails[0]['id'], $sentMails[1]['id']);
     }
@@ -344,15 +344,15 @@ class MailDriverTest extends TestCase
     public function testTimestampIsReasonable()
     {
         $beforeTime = time();
-        
+
         $mail = TestDriverMail::make();
         $mail->to('user@example.com')->subject('Test')->body('Body')->send();
-        
+
         $afterTime = time();
-        
+
         $sentMails = Mail::getSentMails();
         $timestamp = $sentMails[0]['timestamp'];
-        
+
         $this->assertGreaterThanOrEqual($beforeTime, $timestamp);
         $this->assertLessThanOrEqual($afterTime, $timestamp);
     }
@@ -365,7 +365,7 @@ class MailDriverTest extends TestCase
             ->subject('Test')
             ->body('Body')
             ->send();
-        
+
         $sentMails = Mail::getSentMails();
         $this->assertEquals('custom@example.com', $sentMails[0]['from']['email']);
         $this->assertEquals('Custom Sender', $sentMails[0]['from']['name']);
@@ -379,7 +379,7 @@ class MailDriverTest extends TestCase
             ->body('<h1>HTML Body</h1>')
             ->altBody('Plain text body')
             ->send();
-        
+
         $sentMails = Mail::getSentMails();
         $this->assertEquals('<h1>HTML Body</h1>', $sentMails[0]['html_body']);
         $this->assertEquals('Plain text body', $sentMails[0]['text_body']);

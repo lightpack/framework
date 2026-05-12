@@ -10,7 +10,6 @@ class EmailRule
 {
     use ValidationMessageTrait;
 
-    
     public function __construct()
     {
         $this->message = 'Must be a valid email address';

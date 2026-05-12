@@ -2,11 +2,8 @@
 
 namespace Lightpack\Logger;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Logger\Logger;
-use Lightpack\Logger\LoggerInterface;
-use Lightpack\Logger\LogManager;
 use Lightpack\Container\Container;
+use Lightpack\Support\ProviderInterface;
 
 class LogProvider implements ProviderInterface
 {

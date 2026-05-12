@@ -4,8 +4,8 @@ namespace Lightpack\Tests\Session\Drivers;
 
 use Lightpack\Cache\Cache;
 use Lightpack\Cache\Drivers\ArrayDriver;
-use Lightpack\Http\Cookie;
 use Lightpack\Config\Config;
+use Lightpack\Http\Cookie;
 use Lightpack\Session\Drivers\CacheDriver;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +24,7 @@ class CacheDriverTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         if (headers_sent()) {
             $this->markTestSkipped('Headers already sent - cannot test session functionality');
         }
@@ -32,30 +32,33 @@ class CacheDriverTest extends TestCase
         // Set session name
         session_name('test_session');
 
-        $this->cache = new Cache(new ArrayDriver());
-        
+        $this->cache = new Cache(new ArrayDriver);
+
         // Mock cookie operations
         $this->cookie = $this->createMock(Cookie::class);
         $this->cookie->method('get')
-            ->willReturnCallback(fn($key) => $this->cookieData[$key] ?? null);
+            ->willReturnCallback(fn ($key) => $this->cookieData[$key] ?? null);
         $this->cookie->method('set')
-            ->willReturnCallback(function($key, $value) {
+            ->willReturnCallback(function ($key, $value) {
                 $this->cookieData[$key] = $value;
+
                 return true;
             });
         $this->cookie->method('delete')
-            ->willReturnCallback(function($key) {
+            ->willReturnCallback(function ($key) {
                 unset($this->cookieData[$key]);
+
                 return true;
             });
 
         // Mock config
         $this->config = $this->createMock(Config::class);
         $this->config->method('get')
-            ->willReturnCallback(function($key, $default = null) {
+            ->willReturnCallback(function ($key, $default = null) {
                 $values = [
                     'session.lifetime' => 5, // 5 seconds for testing
                 ];
+
                 return $values[$key] ?? $default;
             });
 
@@ -100,7 +103,7 @@ class CacheDriverTest extends TestCase
     {
         $this->driver->start();
         $this->driver->set('key', 'value');
-        
+
         $oldSessionId = $this->getSessionId();
         $this->driver->regenerate();
         $newSessionId = $this->getSessionId();
@@ -139,10 +142,10 @@ class CacheDriverTest extends TestCase
     {
         $this->driver->start();
         $this->driver->set('key', 'value');
-        
+
         // Force clear the cache to simulate expiry
         $this->cache->flush();
-        
+
         // Start a new session
         $newDriver = new CacheDriver($this->cache, $this->cookie, $this->config);
         $newDriver->start();
@@ -154,6 +157,7 @@ class CacheDriverTest extends TestCase
         $reflection = new \ReflectionClass($this->driver);
         $property = $reflection->getProperty('sessionId');
         $property->setAccessible(true);
+
         return $property->getValue($this->driver);
     }
 }

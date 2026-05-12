@@ -13,7 +13,7 @@ final class ConfigTest extends TestCase
 
     public function testConfigCanAddNewKeys()
     {
-        $config = new \Lightpack\Config\Config();
+        $config = new \Lightpack\Config\Config;
         $config->set('name', 'Lightpack');
         $this->assertEquals('Lightpack', $config->get('name'));
     }

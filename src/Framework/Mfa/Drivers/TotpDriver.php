@@ -1,11 +1,10 @@
 <?php
+
 namespace Lightpack\Mfa\Drivers;
 
-use Lightpack\Mfa\MfaInterface;
 use Lightpack\Auth\Models\AuthUser;
+use Lightpack\Mfa\MfaInterface;
 use Lightpack\Mfa\TotpSetupHelper;
-use RobThree\Auth\TwoFactorAuth;
-use RobThree\Auth\Providers\Qr\QRServerProvider;
 
 /**
  * MFA Driver for TOTP (Authenticator Apps)
@@ -21,11 +20,12 @@ class TotpDriver implements MfaInterface
     {
         $secret = $user->mfa_totp_secret;
 
-        if (!$input || empty($secret)) {
+        if (! $input || empty($secret)) {
             return false;
         }
-        
+
         $tfa = TotpSetupHelper::getTotpInstance();
+
         return $tfa->verifyCode($secret, $input);
 
 

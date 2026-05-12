@@ -16,7 +16,7 @@ final class EventTest extends TestCase
 
     public function setUp(): void
     {
-        $this->container = new Container();
+        $this->container = new Container;
         $this->event = new Event($this->container);
     }
 
@@ -32,15 +32,16 @@ final class EventTest extends TestCase
         $this->event->subscribe('event1', 'EventHandler2');
         $this->event->subscribe('event2', 'EventHandler3');
         $this->event->subscribe('event2', 'EventHandler4');
-        
+
         $this->assertEquals(
             [
-                'event1'  => ['EventHandler1', 'EventHandler2'],
-                'event2'  => ['EventHandler3', 'EventHandler4'],
-            ], 
+                'event1' => ['EventHandler1', 'EventHandler2'],
+                'event2' => ['EventHandler3', 'EventHandler4'],
+            ],
             $this->event->getSubscribers()
         );
     }
+
     public function testUnsubscribeMethod()
     {
         $this->event->subscribe('event1', 'EventHandler1');
@@ -54,17 +55,19 @@ final class EventTest extends TestCase
 
         $this->assertEquals(
             [
-                'event1'  => ['EventHandler1'],
-                'event2'  => ['EventHandler3'],
-            ], 
+                'event1' => ['EventHandler1'],
+                'event2' => ['EventHandler3'],
+            ],
             $this->event->getSubscribers()
         );
     }
+
     public function testEventNotFoundException()
     {
         $this->expectException(\Lightpack\Exceptions\EventNotFoundException::class);
         $this->event->fire('event');
     }
+
     public function testEventHandlerMethodNotFoundException()
     {
         $mockEvent = $this->getMockBuilder(\stdClass::class)->getMock();

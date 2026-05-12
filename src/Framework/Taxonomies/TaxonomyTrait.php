@@ -21,12 +21,12 @@ trait TaxonomyTrait
     public function scopeTaxonomies($builder, array $taxonomyIds = [])
     {
         $table = $builder->getTable();
-        
+
         // Only set select if user hasn't already specified columns
         if (empty($builder->columns)) {
             $builder->select($table . '.*');
         }
-        
+
         $builder->join('taxonomy_morphs AS tx_any', $table . '.id', 'tx_any.morph_id')
             ->where('tx_any.morph_type', $this->table)
             ->whereIn('tx_any.taxonomy_id', $taxonomyIds)

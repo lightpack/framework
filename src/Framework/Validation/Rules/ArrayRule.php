@@ -27,7 +27,7 @@ class ArrayRule
 
     public function __invoke($value, array $data = []): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 

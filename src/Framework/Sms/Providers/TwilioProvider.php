@@ -2,9 +2,9 @@
 
 namespace Lightpack\Sms\Providers;
 
-use Twilio\Rest\Client;
 use Lightpack\Logger\Logger;
 use Lightpack\Sms\SmsProviderInterface;
+use Twilio\Rest\Client;
 
 class TwilioProvider implements SmsProviderInterface
 {
@@ -24,12 +24,14 @@ class TwilioProvider implements SmsProviderInterface
                 'from' => $this->from,
                 'body' => $message,
             ]);
+
             return true;
         } catch (\Exception $e) {
             $this->log->error('[Twilio SMS] ' . $e->getMessage(), [
                 'phone' => $phone,
                 'message' => $message,
             ]);
+
             return false;
         }
     }

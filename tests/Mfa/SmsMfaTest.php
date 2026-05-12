@@ -2,14 +2,14 @@
 
 namespace Lightpack\Tests\Mfa;
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Mfa\Drivers\SmsDriver;
-use Lightpack\Config\Config;
-use Lightpack\Cache\Cache;
-use Lightpack\Utils\Otp;
 use Lightpack\Auth\Models\AuthUser;
-use Lightpack\Sms\Sms;
+use Lightpack\Cache\Cache;
+use Lightpack\Config\Config;
 use Lightpack\Container\Container;
+use Lightpack\Mfa\Drivers\SmsDriver;
+use Lightpack\Sms\Sms;
+use Lightpack\Utils\Otp;
+use PHPUnit\Framework\TestCase;
 
 class SmsMfaTest extends TestCase
 {
@@ -24,16 +24,16 @@ class SmsMfaTest extends TestCase
     {
         $this->cache = $this->createMock(Cache::class);
         $this->config = $this->createMock(Config::class);
-        $this->otp = new Otp();
+        $this->otp = new Otp;
         $this->sms = $this->createMock(Sms::class);
-        $this->user = new AuthUser();
+        $this->user = new AuthUser;
         $this->user->id = 42;
         $this->user->phone = '+1234567890';
         $this->factor = new SmsDriver($this->cache, $this->config, $this->otp, $this->sms);
 
-        Container::getInstance()->register('config', fn() => $this->config);
-        Container::getInstance()->register('cache', fn() => $this->cache);
-        Container::getInstance()->register('sms', fn() => $this->sms);
+        Container::getInstance()->register('config', fn () => $this->config);
+        Container::getInstance()->register('cache', fn () => $this->cache);
+        Container::getInstance()->register('sms', fn () => $this->sms);
     }
 
     public function testSendSetsCodeInCache()
@@ -60,13 +60,13 @@ class SmsMfaTest extends TestCase
                     $this->equalTo('limiter:mfa_sms_resend_42'),
                     $this->equalTo(1),
                     $this->equalTo(10),
-                    $this->equalTo(false)
+                    $this->equalTo(false),
                 ],
                 // Second: the actual MFA code key
                 [
                     $this->equalTo('mfa_sms_42'),
                     $this->isType('string'),
-                    $this->equalTo(300)
+                    $this->equalTo(300),
                 ]
             );
         $this->sms->expects($this->once())
@@ -115,8 +115,10 @@ class SmsMfaTest extends TestCase
 }
 
 // Proxy class for testing protected methods
-class SmsMfaTestProxy extends SmsDriver {
-    public function publicGenerateCode($user = null) {
+class SmsMfaTestProxy extends SmsDriver
+{
+    public function publicGenerateCode($user = null)
+    {
         return $this->generateCode($user);
     }
 }

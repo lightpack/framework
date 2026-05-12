@@ -5,9 +5,7 @@ namespace Lightpack\Mfa\Drivers;
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
-use Lightpack\Mfa\MfaInterface;
 use Lightpack\Mfa\Job\EmailMfaJob;
-use Lightpack\Utils\Limiter;
 use Lightpack\Utils\Otp;
 
 /**
@@ -35,5 +33,4 @@ class EmailDriver extends BaseDriver
             'mfa_code' => $code,
         ]);
     }
-
 }

@@ -15,7 +15,7 @@ class AddColumn
         $sql = "ALTER TABLE {$table->getName()} ";
         $sql .= $columns->compile();
 
-        if($constraints = $table->foreignKeys()->compile()) {
+        if ($constraints = $table->foreignKeys()->compile()) {
             $sql .= ', ' . $constraints;
         }
 

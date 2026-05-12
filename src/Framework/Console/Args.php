@@ -36,7 +36,7 @@ class Args
 
     /**
      * Get a positional argument by index (0-based)
-     * 
+     *
      * @param int $index The index of the positional argument
      * @return string|null The argument value or null if not found
      */

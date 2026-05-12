@@ -2,8 +2,8 @@
 
 namespace Lightpack\Cache\Drivers;
 
-use Lightpack\Database\DB;
 use Lightpack\Cache\DriverInterface;
+use Lightpack\Database\DB;
 use Lightpack\Database\Schema\Schema;
 
 class DatabaseDriver implements DriverInterface
@@ -30,7 +30,7 @@ class DatabaseDriver implements DriverInterface
             ->where('expires_at', '>', time())
             ->one();
 
-        if (!$entry) {
+        if (! $entry) {
             return null;
         }
 

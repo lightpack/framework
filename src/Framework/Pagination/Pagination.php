@@ -71,6 +71,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     public function withPath($path)
     {
         $this->path = url()->to($path);
+
         return $this;
     }
 
@@ -105,6 +106,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
         if ($next) {
             $query = $this->getQuery($next);
+
             return "<a href=\"{$this->path}?{$query}\">Next</a>";
         }
     }
@@ -115,6 +117,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
         if ($prev) {
             $query = $this->getQuery($prev);
+
             return "<a href=\"{$this->path}?{$query}\">Prev</a>";
         }
     }
@@ -125,6 +128,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
         if ($next) {
             $query = $this->getQuery($next);
+
             return $this->path . '?' . $query;
         }
     }
@@ -135,6 +139,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
         if ($prev) {
             $query = $this->getQuery($prev);
+
             return $this->path . '?' . $query;
         }
     }
@@ -168,6 +173,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     public function url(int $page)
     {
         $query = $this->getQuery($page);
+
         return $this->path . '?' . $query;
     }
 

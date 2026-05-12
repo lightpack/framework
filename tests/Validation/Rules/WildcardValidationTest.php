@@ -13,7 +13,7 @@ class WildcardValidationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     // ========================================
@@ -26,8 +26,8 @@ class WildcardValidationTest extends TestCase
             'emails' => [
                 'john@example.com',
                 'jane@example.com',
-                'invalid-email'
-            ]
+                'invalid-email',
+            ],
         ];
 
         $this->validator
@@ -37,7 +37,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -47,8 +47,8 @@ class WildcardValidationTest extends TestCase
             'emails' => [
                 'john@example.com',
                 'jane@example.com',
-                'bob@example.com'
-            ]
+                'bob@example.com',
+            ],
         ];
 
         $this->validator
@@ -58,7 +58,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -72,8 +72,8 @@ class WildcardValidationTest extends TestCase
             'users' => [
                 ['name' => 'John', 'email' => 'john@example.com'],
                 ['name' => 'Jane', 'email' => 'jane@example.com'],
-                ['name' => 'Bob', 'email' => 'invalid']
-            ]
+                ['name' => 'Bob', 'email' => 'invalid'],
+            ],
         ];
 
         $this->validator
@@ -87,7 +87,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -97,8 +97,8 @@ class WildcardValidationTest extends TestCase
             'users' => [
                 ['name' => 'John', 'email' => 'john@example.com'],
                 ['name' => 'Jane', 'email' => 'jane@example.com'],
-                ['name' => 'Bob', 'email' => 'bob@example.com']
-            ]
+                ['name' => 'Bob', 'email' => 'bob@example.com'],
+            ],
         ];
 
         $this->validator
@@ -112,7 +112,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -128,17 +128,17 @@ class WildcardValidationTest extends TestCase
                     'name' => 'Acme Corp',
                     'employees' => [
                         ['name' => 'John', 'email' => 'john@acme.com'],
-                        ['name' => 'Jane', 'email' => 'jane@acme.com']
-                    ]
+                        ['name' => 'Jane', 'email' => 'jane@acme.com'],
+                    ],
                 ],
                 [
                     'name' => 'Tech Inc',
                     'employees' => [
                         ['name' => 'Bob', 'email' => 'invalid'],
-                        ['name' => 'Alice', 'email' => 'alice@tech.com']
-                    ]
-                ]
-            ]
+                        ['name' => 'Alice', 'email' => 'alice@tech.com'],
+                    ],
+                ],
+            ],
         ];
 
         $this->validator
@@ -154,7 +154,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -166,17 +166,17 @@ class WildcardValidationTest extends TestCase
                     'name' => 'Acme Corp',
                     'employees' => [
                         ['name' => 'John', 'email' => 'john@acme.com'],
-                        ['name' => 'Jane', 'email' => 'jane@acme.com']
-                    ]
+                        ['name' => 'Jane', 'email' => 'jane@acme.com'],
+                    ],
                 ],
                 [
                     'name' => 'Tech Inc',
                     'employees' => [
                         ['name' => 'Bob', 'email' => 'bob@tech.com'],
-                        ['name' => 'Alice', 'email' => 'alice@tech.com']
-                    ]
-                ]
-            ]
+                        ['name' => 'Alice', 'email' => 'alice@tech.com'],
+                    ],
+                ],
+            ],
         ];
 
         $this->validator
@@ -192,7 +192,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -203,7 +203,7 @@ class WildcardValidationTest extends TestCase
     public function testWildcardWithNumericValidation(): void
     {
         $data = [
-            'prices' => ['100', '200', 'invalid', '400']
+            'prices' => ['100', '200', 'invalid', '400'],
         ];
 
         $this->validator
@@ -214,14 +214,14 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
     public function testWildcardWithIntValidation(): void
     {
         $data = [
-            'quantities' => ['10', '20', '30']
+            'quantities' => ['10', '20', '30'],
         ];
 
         $this->validator
@@ -232,7 +232,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -246,8 +246,8 @@ class WildcardValidationTest extends TestCase
             'users' => [
                 ['name' => 'John', 'roles' => ['admin', 'user']],
                 ['name' => 'Jane', 'roles' => ['user']],
-                ['name' => 'Bob', 'roles' => []]
-            ]
+                ['name' => 'Bob', 'roles' => []],
+            ],
         ];
 
         $this->validator
@@ -257,7 +257,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -268,7 +268,7 @@ class WildcardValidationTest extends TestCase
     public function testWildcardWithInValidation(): void
     {
         $data = [
-            'statuses' => ['active', 'pending', 'invalid', 'active']
+            'statuses' => ['active', 'pending', 'invalid', 'active'],
         ];
 
         $this->validator
@@ -278,14 +278,14 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
     public function testWildcardWithInValidationPasses(): void
     {
         $data = [
-            'statuses' => ['active', 'pending', 'inactive', 'active']
+            'statuses' => ['active', 'pending', 'inactive', 'active'],
         ];
 
         $this->validator
@@ -295,7 +295,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -306,7 +306,7 @@ class WildcardValidationTest extends TestCase
     public function testWildcardWithEmptyArray(): void
     {
         $data = [
-            'emails' => []
+            'emails' => [],
         ];
 
         $this->validator
@@ -315,7 +315,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Empty arrays pass validation - no items to validate
         $this->assertTrue($result->passes());
     }
@@ -323,7 +323,7 @@ class WildcardValidationTest extends TestCase
     public function testWildcardWithRequiredArray(): void
     {
         $data = [
-            'emails' => []
+            'emails' => [],
         ];
 
         $this->validator
@@ -336,7 +336,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Array itself must have at least 1 item
         $this->assertTrue($result->fails());
     }
@@ -348,7 +348,7 @@ class WildcardValidationTest extends TestCase
     public function testWildcardWithNonArrayValue(): void
     {
         $data = [
-            'emails' => 'not-an-array'
+            'emails' => 'not-an-array',
         ];
 
         $this->validator
@@ -358,7 +358,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('must be an array', $this->validator->getError('emails.*'));
     }
@@ -373,8 +373,8 @@ class WildcardValidationTest extends TestCase
             'products' => [
                 ['name' => 'Product 1', 'price' => '100', 'stock' => '50'],
                 ['name' => 'P', 'price' => '50', 'stock' => 'invalid'],
-                ['name' => 'Product 3', 'price' => '200', 'stock' => '30']
-            ]
+                ['name' => 'Product 3', 'price' => '200', 'stock' => '30'],
+            ],
         ];
 
         $this->validator
@@ -393,26 +393,26 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
     public function testWildcardWithCustomValidation(): void
     {
         $data = [
-            'codes' => ['CODE-001', 'CODE-002', 'INVALID', 'CODE-003']
+            'codes' => ['CODE-001', 'CODE-002', 'INVALID', 'CODE-003'],
         ];
 
         $this->validator
             ->field('codes.*')
             ->required()
-            ->custom(function($value) {
+            ->custom(function ($value) {
                 return (bool) preg_match('/^CODE-\\d{3}$/', $value);
             }, 'Invalid code format');
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -427,9 +427,9 @@ class WildcardValidationTest extends TestCase
                 'items' => [
                     ['product_id' => '1', 'quantity' => '2', 'price' => '99.99'],
                     ['product_id' => '2', 'quantity' => '1', 'price' => '149.99'],
-                    ['product_id' => '3', 'quantity' => '0', 'price' => '29.99']
-                ]
-            ]
+                    ['product_id' => '3', 'quantity' => '0', 'price' => '29.99'],
+                ],
+            ],
         ];
 
         $this->validator
@@ -447,7 +447,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -458,9 +458,9 @@ class WildcardValidationTest extends TestCase
                 'phones' => [
                     ['type' => 'mobile', 'number' => '1234567890'],
                     ['type' => 'home', 'number' => '0987654321'],
-                    ['type' => 'invalid', 'number' => '123']
-                ]
-            ]
+                    ['type' => 'invalid', 'number' => '123'],
+                ],
+            ],
         ];
 
         $this->validator
@@ -474,7 +474,7 @@ class WildcardValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 }

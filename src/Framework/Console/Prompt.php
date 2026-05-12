@@ -7,6 +7,7 @@ class Prompt
     public function ask(string $question): string
     {
         $this->writePrompt($question);
+
         return trim($this->readInput());
     }
 
@@ -67,7 +68,7 @@ class Prompt
 
             if ($canSelectMultiple) {
                 $selectedOptions = array_unique(explode(',', $input));
-                $selectedOptions = array_map(fn($item) => trim($item), $selectedOptions);
+                $selectedOptions = array_map(fn ($item) => trim($item), $selectedOptions);
             } else {
                 $selectedOptions = [$input];
             }
@@ -91,6 +92,7 @@ class Prompt
     {
         $handle = fopen("php://stdin", "r");
         $line = fgets($handle);
+
         return trim($line);
     }
 }

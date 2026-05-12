@@ -2,8 +2,6 @@
 
 namespace Lightpack\Database\Lucid\Casts;
 
-use Lightpack\Database\Lucid\Casts\CastInterface;
-
 /**
  * Example custom cast that converts strings to uppercase.
  */

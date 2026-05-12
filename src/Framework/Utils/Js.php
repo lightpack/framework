@@ -2,15 +2,15 @@
 
 namespace Lightpack\Utils;
 
-class Js 
+class Js
 {
     /**
      * Convert PHP variable to safe JavaScript code
      */
-    public function encode(mixed $data, bool $asObject = true): string 
+    public function encode(mixed $data, bool $asObject = true): string
     {
         // Convert to JSON with proper escaping
-        $json = json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP | 
+        $json = json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP |
                                  JSON_HEX_APOS | JSON_HEX_QUOT);
 
         return $asObject ? $json : "JSON.parse('" . addslashes($json) . "')";
@@ -19,7 +19,7 @@ class Js
     /**
      * Create a JavaScript variable declaration
      */
-    public function var(string $name, mixed $value): string 
+    public function var(string $name, mixed $value): string
     {
         return "var {$name} = " . $this->encode($value) . ";";
     }
@@ -27,7 +27,7 @@ class Js
     /**
      * Create a JavaScript constant declaration
      */
-    public function const(string $name, mixed $value): string 
+    public function const(string $name, mixed $value): string
     {
         return "const {$name} = " . $this->encode($value) . ";";
     }
@@ -35,7 +35,7 @@ class Js
     /**
      * Create a JavaScript let declaration
      */
-    public function let(string $name, mixed $value): string 
+    public function let(string $name, mixed $value): string
     {
         return "let {$name} = " . $this->encode($value) . ";";
     }

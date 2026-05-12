@@ -10,7 +10,7 @@ class InRule
 {
     use ValidationMessageTrait;
 
-    public function __construct(private readonly array $values) 
+    public function __construct(private readonly array $values)
     {
         $this->message = "Must be one of: " . implode(', ', $values);
     }
@@ -19,10 +19,11 @@ class InRule
     {
         if (is_array($value)) {
             foreach ($value as $item) {
-                if (!in_array($item, $this->values, true)) {
+                if (! in_array($item, $this->values, true)) {
                     return false;
                 }
             }
+
             return true;
         }
 

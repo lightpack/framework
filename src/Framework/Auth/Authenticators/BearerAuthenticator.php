@@ -17,18 +17,18 @@ class BearerAuthenticator extends Authenticator
         }
 
         $tokenHash = hash('sha256', $token);
-        
+
         // Find token and check expiration with proper SQL grouping
         $accessToken = AccessToken::query()
             ->where('token', $tokenHash)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('expires_at')
                   ->orWhere('expires_at', '>', date('Y-m-d H:i:s'));
             })
             ->orderBy('id', 'DESC')
             ->one();
 
-        if (!$accessToken) {
+        if (! $accessToken) {
             return null;
         }
 
@@ -37,7 +37,7 @@ class BearerAuthenticator extends Authenticator
         $accessToken->save();
 
         $user = $accessToken->user;
-        
+
         // Set the current access token on the user
         $user->currentAccessToken = $accessToken;
 

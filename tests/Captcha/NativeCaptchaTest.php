@@ -22,13 +22,13 @@ class NativeCaptchaTest extends TestCase
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $this->font = __DIR__ . '/FreeSans.ttf';
-        if (!file_exists($this->font)) {
+        if (! file_exists($this->font)) {
             $this->markTestSkipped('Test font not found: ' . $this->font);
         }
-        $this->config = new Config();
-        $this->driver = new ArrayDriver();
+        $this->config = new Config;
+        $this->driver = new ArrayDriver;
         $this->session = new Session($this->driver, $this->config);
-        $this->request = new Request();
+        $this->request = new Request;
     }
 
     protected function tearDown(): void

@@ -4,7 +4,6 @@ namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\FilterInterface;
 
 class CorsFilter implements FilterInterface
 {

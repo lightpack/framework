@@ -4,9 +4,9 @@ namespace Lightpack\Mfa\Drivers;
 
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Cache\Cache;
-use Lightpack\Sms\Sms;
 use Lightpack\Config\Config;
 use Lightpack\Mfa\Job\SmsMfaJob;
+use Lightpack\Sms\Sms;
 use Lightpack\Utils\Otp;
 
 /**
@@ -38,6 +38,4 @@ class SmsDriver extends BaseDriver
             'message' => $message,
         ]);
     }
-
 }
-

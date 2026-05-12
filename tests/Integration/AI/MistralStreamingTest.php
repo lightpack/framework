@@ -1,10 +1,10 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\AI\Providers\Mistral;
-use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
+use Lightpack\Http\Http;
+use PHPUnit\Framework\TestCase;
 
 class MistralStreamingTest extends TestCase
 {
@@ -14,13 +14,13 @@ class MistralStreamingTest extends TestCase
     protected function setUp(): void
     {
         $this->apiKey = getenv('MISTRAL_API_KEY');
-        
-        if (!$this->apiKey) {
+
+        if (! $this->apiKey) {
             $this->markTestSkipped('MISTRAL_API_KEY environment variable not set');
         }
 
         $config = $this->createMock(Config::class);
-        $config->method('get')->willReturnCallback(function($key, $default = null) {
+        $config->method('get')->willReturnCallback(function ($key, $default = null) {
             $map = [
                 'ai.providers.mistral.key' => $this->apiKey,
                 'ai.providers.mistral.model' => 'mistral-small-latest',
@@ -30,11 +30,12 @@ class MistralStreamingTest extends TestCase
                 'ai.max_tokens' => 150,
                 'ai.cache_ttl' => 3600,
             ];
+
             return $map[$key] ?? $default;
         });
 
         $this->mistral = new Mistral(
-            new Http(),
+            new Http,
             $this->createMock(Cache::class),
             $config
         );
@@ -44,18 +45,18 @@ class MistralStreamingTest extends TestCase
     {
         $chunks = [];
         $fullText = '';
-        
+
         $this->mistral->task()
             ->prompt('Count from 1 to 5, one number per line.')
-            ->stream(function($chunk) use (&$chunks, &$fullText) {
+            ->stream(function ($chunk) use (&$chunks, &$fullText) {
                 $chunks[] = $chunk;
                 $fullText .= $chunk;
             });
-        
+
         $this->assertGreaterThan(1, count($chunks), 'Should receive multiple chunks');
         $this->assertNotEmpty($fullText, 'Should receive text content');
         $this->assertMatchesRegularExpression('/[1-5]/', $fullText, 'Should contain numbers');
-        
+
         echo "\n\n=== Mistral Streaming Test ===\n";
         echo "Total chunks: " . count($chunks) . "\n";
         echo "Full text:\n" . $fullText . "\n";
@@ -66,15 +67,15 @@ class MistralStreamingTest extends TestCase
     {
         $chunks = [];
         $fullText = '';
-        
+
         $this->mistral->task()
             ->system('You are a helpful assistant. Be concise.')
             ->prompt('What is PHP?')
-            ->stream(function($chunk) use (&$chunks, &$fullText) {
+            ->stream(function ($chunk) use (&$chunks, &$fullText) {
                 $chunks[] = $chunk;
                 $fullText .= $chunk;
             });
-        
+
         $this->assertGreaterThan(1, count($chunks));
         $this->assertNotEmpty($fullText);
         $this->assertStringContainsStringIgnoringCase('php', $fullText);
@@ -84,15 +85,15 @@ class MistralStreamingTest extends TestCase
     {
         $receivedAt = [];
         $startTime = microtime(true);
-        
+
         $this->mistral->task()
             ->prompt('Write a short 3-sentence story.')
-            ->stream(function($chunk) use (&$receivedAt, $startTime) {
+            ->stream(function ($chunk) use (&$receivedAt, $startTime) {
                 $receivedAt[] = microtime(true) - $startTime;
             });
-        
+
         $this->assertGreaterThan(2, count($receivedAt), 'Should receive multiple chunks');
-        
+
         if (count($receivedAt) > 1) {
             $timeDiff = end($receivedAt) - $receivedAt[0];
             $this->assertGreaterThan(0, $timeDiff, 'Chunks should arrive progressively');

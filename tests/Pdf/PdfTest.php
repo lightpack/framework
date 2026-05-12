@@ -3,8 +3,8 @@
 namespace Tests\Pdf;
 
 use Lightpack\Container\Container;
-use Lightpack\Pdf\Pdf;
 use Lightpack\Pdf\Driver\DompdfDriver;
+use Lightpack\Pdf\Pdf;
 use Lightpack\Storage\LocalStorage;
 use Lightpack\View\Template;
 use PHPUnit\Framework\TestCase;
@@ -135,7 +135,7 @@ class PdfTest extends TestCase
         $tempDir = sys_get_temp_dir();
         $storage = new LocalStorage($tempDir);
 
-        Container::getInstance()->register('storage', fn() => $storage);
+        Container::getInstance()->register('storage', fn () => $storage);
 
         $this->pdf->html('<h1>Save PDF</h1>');
         $path = 'test-save.pdf';

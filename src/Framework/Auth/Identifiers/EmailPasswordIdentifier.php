@@ -18,7 +18,7 @@ class EmailPasswordIdentifier implements IdentifierInterface
         /** @var AuthUser */
         $user = $this->user->find($id);
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -29,7 +29,7 @@ class EmailPasswordIdentifier implements IdentifierInterface
     {
         $user = $this->user->query()->where('id', '=', $id)->one();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -44,11 +44,11 @@ class EmailPasswordIdentifier implements IdentifierInterface
     {
         $user = $this->user->query()->where('email', '=', $credentials['email'])->one();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
-        if (!password()->verify($credentials['password'], $user->password)) {
+        if (! password()->verify($credentials['password'], $user->password)) {
             return null;
         }
 

@@ -14,7 +14,7 @@ class BeforeRule
         private readonly string $date,
         private readonly ?string $format = null
     ) {
-        $this->message = $format 
+        $this->message = $format
             ? "Date must be before {$date} (format: {$format})"
             : "Date must be before {$date}";
     }
@@ -24,11 +24,13 @@ class BeforeRule
         if ($this->format) {
             $date = \DateTime::createFromFormat($this->format, $value);
             $compare = \DateTime::createFromFormat($this->format, $this->date);
+
             return $date && $compare && $date < $compare;
         }
 
         $date = strtotime($value);
         $compare = strtotime($this->date);
+
         return $date !== false && $compare !== false && $date < $compare;
     }
 }

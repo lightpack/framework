@@ -1,7 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Schema\Compilers\IndexKey;
+use PHPUnit\Framework\TestCase;
 
 class IndexKeyTest extends TestCase
 {
@@ -13,7 +13,7 @@ class IndexKeyTest extends TestCase
             $columns[] = 'very_long_column_name_' . $i;
         }
         $indexType = 'UNIQUE';
-        $indexKey = new IndexKey();
+        $indexKey = new IndexKey;
         $sql = $indexKey->compile($columns, $indexType);
         // Extract the index name from the SQL
         $matches = [];
@@ -27,7 +27,7 @@ class IndexKeyTest extends TestCase
     {
         $columns = ['foo', 'bar'];
         $indexType = 'UNIQUE';
-        $indexKey = new IndexKey();
+        $indexKey = new IndexKey;
         $sql = $indexKey->compile($columns, $indexType);
         $this->assertStringContainsString('foo_bar_unique', $sql);
     }
@@ -37,7 +37,7 @@ class IndexKeyTest extends TestCase
         $columns = ['foo', 'bar'];
         $indexType = 'UNIQUE';
         $customName = 'my_custom_index';
-        $indexKey = new IndexKey();
+        $indexKey = new IndexKey;
         $sql = $indexKey->compile($columns, $indexType, $customName);
         $this->assertStringContainsString($customName, $sql);
     }

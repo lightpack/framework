@@ -1,10 +1,10 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\AI\Providers\Gemini;
-use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
+use Lightpack\Http\Http;
+use PHPUnit\Framework\TestCase;
 
 class GeminiIntegrationTest extends TestCase
 {
@@ -14,13 +14,13 @@ class GeminiIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->apiKey = getenv('GEMINI_API_KEY');
-        
-        if (!$this->apiKey) {
+
+        if (! $this->apiKey) {
             $this->markTestSkipped('GEMINI_API_KEY environment variable not set');
         }
 
         $config = $this->createMock(Config::class);
-        $config->method('get')->willReturnCallback(function($key, $default = null) {
+        $config->method('get')->willReturnCallback(function ($key, $default = null) {
             $map = [
                 'ai.providers.gemini.key' => $this->apiKey,
                 'ai.providers.gemini.model' => 'gemini-2.0-flash',
@@ -30,11 +30,12 @@ class GeminiIntegrationTest extends TestCase
                 'ai.max_tokens' => 100,
                 'ai.cache_ttl' => 3600,
             ];
+
             return $map[$key] ?? $default;
         });
 
         $this->gemini = new Gemini(
-            new Http(),
+            new Http,
             $this->createMock(Cache::class),
             $config
         );
@@ -59,7 +60,7 @@ class GeminiIntegrationTest extends TestCase
     {
         sleep(1); // Avoid burst rate limiting
         $answer = $this->gemini->ask('What is 2+2? Answer with just the number.');
-        
+
         $this->assertIsString($answer);
         $this->assertNotEmpty($answer);
     }

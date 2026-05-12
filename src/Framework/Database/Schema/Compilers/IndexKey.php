@@ -7,7 +7,7 @@ class IndexKey
     public function compile(string|array $columns, string $indexType, ?string $indexName = null): string
     {
         // if the columns is a string, we are adding single index else composite index
-        if(is_string($columns)) {
+        if (is_string($columns)) {
             return $this->compileSingleIndex($columns, $indexType, $indexName);
         }
 
@@ -20,12 +20,13 @@ class IndexKey
         if (str_starts_with($column, '`') && str_ends_with($column, '`')) {
             return $column;
         }
+
         return '`' . str_replace('`', '', $column) . '`';
     }
 
     private function compileSingleIndex(string $column, string $indexType, ?string $indexName = null): string
     {
-        if(is_null($indexName)) {
+        if (is_null($indexName)) {
             $indexName = $column . '_' . strtolower($indexType);
         }
 
@@ -33,7 +34,7 @@ class IndexKey
 
         $sql = "{$indexType} {$indexName} ({$column})";
 
-        if($indexType === 'PRIMARY') {
+        if ($indexType === 'PRIMARY') {
             $sql = "{$indexType} KEY ({$column})";
         }
 

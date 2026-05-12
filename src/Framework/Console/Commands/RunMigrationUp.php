@@ -11,15 +11,17 @@ class RunMigrationUp extends Command
 {
     public function run()
     {
-        if (!file_exists(DIR_ROOT . '/.env')) {
+        if (! file_exists(DIR_ROOT . '/.env')) {
             $this->output->error("Running migrations require ./.env which is missing.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
         if ('mysql' !== Env::get('DB_DRIVER')) {
             $this->output->error("Migrations are supported only for MySQL/MariaDB.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -27,10 +29,11 @@ class RunMigrationUp extends Command
 
         $confirm = $this->promptConfirmation($force);
 
-        if(false === $confirm) {
+        if (false === $confirm) {
             $this->output->newline();
             $this->output->success("✓ Migration cancelled.");
             $this->output->newline();
+
             return self::SUCCESS;
         }
 
@@ -38,12 +41,12 @@ class RunMigrationUp extends Command
         $this->ensureDatabaseExists();
 
         $migrator = new Migrator($this->getConnection());
-        
+
         $migrations = $migrator->run(DIR_ROOT . '/database/migrations');
-        
+
         $this->output->newline();
 
-        if(empty($migrations)) {
+        if (empty($migrations)) {
             $this->output->success("✓ Migrations already up-to-date.");
             $this->output->newline();
         } else {
@@ -55,7 +58,7 @@ class RunMigrationUp extends Command
 
             $this->output->newline();
         }
-        
+
         return self::SUCCESS;
     }
 
@@ -64,12 +67,12 @@ class RunMigrationUp extends Command
         switch (Env::get('DB_DRIVER')) {
             case 'mysql':
                 return new Mysql([
-                    'host'      => Env::get('DB_HOST'),
-                    'port'      => Env::get('DB_PORT'),
-                    'username'  => Env::get('DB_USER'),
-                    'password'  => Env::get('DB_PSWD'),
-                    'database'  => Env::get('DB_NAME'),
-                    'options'   => [],
+                    'host' => Env::get('DB_HOST'),
+                    'port' => Env::get('DB_PORT'),
+                    'username' => Env::get('DB_USER'),
+                    'password' => Env::get('DB_PSWD'),
+                    'database' => Env::get('DB_NAME'),
+                    'options' => [],
                 ]);
             default:
                 $this->output->error("Invalid database driver found in ./.env");
@@ -87,8 +90,9 @@ class RunMigrationUp extends Command
 
         if ('production' === strtolower(get_env('APP_ENV'))) {
             $this->output->newline();
+
             return $this->prompt->confirm('[Production] Are you sure you want to migrate?', false);
-        } 
+        }
 
         return true;
     }
@@ -101,7 +105,7 @@ class RunMigrationUp extends Command
     private function ensureDatabaseExists(): void
     {
         $database = Env::get('DB_NAME');
-        
+
         try {
             // Try to connect with the database specified
             $this->getConnection();
@@ -125,9 +129,9 @@ class RunMigrationUp extends Command
     private function isDatabaseMissingError(\Exception $e): bool
     {
         $message = $e->getMessage();
-        
+
         // MySQL error 1049: Unknown database
-        return str_contains($message, 'Unknown database') || 
+        return str_contains($message, 'Unknown database') ||
                str_contains($message, "SQLSTATE[HY000] [1049]");
     }
 
@@ -142,16 +146,16 @@ class RunMigrationUp extends Command
         $this->output->newline();
         $this->output->line("⚠ WARNING: The database '{$database}' does not exist on the 'mysql' connection.");
         $this->output->newline();
-        
-        if (!$this->prompt->confirm("Would you like to create it?", false)) {
+
+        if (! $this->prompt->confirm("Would you like to create it?", false)) {
             $this->output->newline();
             $this->output->success("✓ Operation cancelled. No database was created.");
             $this->output->newline();
             exit(0);
         }
-        
+
         $this->createDatabase($database);
-        
+
         $this->output->newline();
         $this->output->success("✓ Database '{$database}' created successfully.");
         $this->output->newline();
@@ -168,14 +172,14 @@ class RunMigrationUp extends Command
         try {
             // Connect without specifying a database
             $connection = new Mysql([
-                'host'      => Env::get('DB_HOST'),
-                'port'      => Env::get('DB_PORT'),
-                'username'  => Env::get('DB_USER'),
-                'password'  => Env::get('DB_PSWD'),
-                'database'  => null, // No database specified
-                'options'   => [],
+                'host' => Env::get('DB_HOST'),
+                'port' => Env::get('DB_PORT'),
+                'username' => Env::get('DB_USER'),
+                'password' => Env::get('DB_PSWD'),
+                'database' => null, // No database specified
+                'options' => [],
             ]);
-            
+
             // Create the database
             $connection->query("CREATE DATABASE IF NOT EXISTS `{$database}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         } catch (\Exception $e) {

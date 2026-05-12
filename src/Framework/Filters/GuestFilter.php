@@ -4,7 +4,6 @@ namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\FilterInterface;
 
 class GuestFilter implements FilterInterface
 {
@@ -12,6 +11,7 @@ class GuestFilter implements FilterInterface
     {
         if (auth()->isLoggedIn()) {
             $authenticatedRoute = config('auth.routes.authenticated', 'dashboard');
+
             return redirect()->route($authenticatedRoute);
         }
     }

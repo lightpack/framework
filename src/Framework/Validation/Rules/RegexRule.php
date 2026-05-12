@@ -10,7 +10,7 @@ class RegexRule
 {
     use ValidationMessageTrait;
 
-    public function __construct(private readonly string $pattern) 
+    public function __construct(private readonly string $pattern)
     {
         $this->message = "Must match pattern: {$pattern}";
     }

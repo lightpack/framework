@@ -30,7 +30,7 @@ class DefaultDriver implements DriverInterface
 
         // Save path (prevents shared hosting collisions)
         $savePath = $this->config->get('session.path');
-        if ($savePath && !is_dir($savePath)) {
+        if ($savePath && ! is_dir($savePath)) {
             @mkdir($savePath, 0755, true);
         }
         if ($savePath && is_dir($savePath)) {
@@ -38,8 +38,8 @@ class DefaultDriver implements DriverInterface
         }
 
         // Security baseline
-        ini_set('session.use_only_cookies', TRUE);
-        ini_set('session.use_trans_sid', FALSE);
+        ini_set('session.use_only_cookies', true);
+        ini_set('session.use_trans_sid', false);
         ini_set('session.use_strict_mode', '1');
         ini_set('session.cookie_httponly', $this->config->get('session.http_only'));
         ini_set('session.cookie_secure', $this->config->get('session.https'));

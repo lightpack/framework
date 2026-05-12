@@ -13,14 +13,14 @@ class Response
         201 => 'Created',
         202 => 'Accepted',
         204 => 'No Content',
-        
+
         // 3xx Redirection
         301 => 'Moved Permanently',
         302 => 'Found',
         303 => 'See Other',
         304 => 'Not Modified',
         307 => 'Temporary Redirect',
-        
+
         // 4xx Client Errors
         400 => 'Bad Request',
         401 => 'Unauthorized',
@@ -29,7 +29,7 @@ class Response
         405 => 'Method Not Allowed',
         409 => 'Conflict',
         422 => 'Unprocessable Entity',
-        
+
         // 5xx Server Errors
         500 => 'Internal Server Error',
         501 => 'Not Implemented',
@@ -157,12 +157,12 @@ class Response
     public function setStatus(int $status): self
     {
         $this->status = $status;
-        
+
         // Set standard message if available
         if (isset(self::STATUS_MESSAGES[$status])) {
             $this->message = self::STATUS_MESSAGES[$status];
         }
-        
+
         return $this;
     }
 
@@ -172,6 +172,7 @@ class Response
     public function setHeader(string $name, string $value): self
     {
         $this->headers[$name] = $value;
+
         return $this;
     }
 
@@ -195,6 +196,7 @@ class Response
     public function setMessage(string $message): self
     {
         $this->message = $message;
+
         return $this;
     }
 
@@ -204,6 +206,7 @@ class Response
     public function setType(string $type): self
     {
         $this->type = $type;
+
         return $this;
     }
 
@@ -213,6 +216,7 @@ class Response
     public function setBody(string $body): self
     {
         $this->body = $body;
+
         return $this;
     }
 
@@ -222,6 +226,7 @@ class Response
     public function setRedirectUrl(string $url): self
     {
         $this->redirectUrl = $url;
+
         return $this;
     }
 
@@ -235,7 +240,7 @@ class Response
 
     /**
      * This method sets the HTTP response content as JSON.
-     * 
+     *
      * @param  mixed  $data The data to be encoded as JSON.
      */
     public function json($data): self
@@ -254,25 +259,27 @@ class Response
 
     /**
      * This method sets the HTTP response content as JSON.
-     * 
+     *
      * @param  string  $data    XML formatted string.
      */
     public function xml(string $data): self
     {
         $this->setType('text/xml');
         $this->setBody($data);
+
         return $this;
     }
 
     /**
      * This method sets the HTTP response content as plain text.
-     * 
+     *
      * @param  string  $data    Text content.
      */
     public function text(string $data): self
     {
         $this->setType('text/plain');
         $this->setBody($data);
+
         return $this;
     }
 
@@ -288,13 +295,13 @@ class Response
         $name = $name ?? basename($path);
 
         $headers = array_merge([
-            'Content-Type'              => MimeTypes::getMime($path),
-            'Content-Disposition'       => 'attachment; filename="' . $name . '"',
+            'Content-Type' => MimeTypes::getMime($path),
+            'Content-Disposition' => 'attachment; filename="' . $name . '"',
             'Content-Transfer-Encoding' => 'binary',
-            'Expires'                   => 0,
-            'Cache-Control'             => 'private',
-            'Pragma'                    => 'private',
-            'Content-Length'            => filesize($path),
+            'Expires' => 0,
+            'Cache-Control' => 'private',
+            'Pragma' => 'private',
+            'Content-Length' => filesize($path),
         ], $headers);
 
         $this->setBody(file_get_contents($path));
@@ -304,7 +311,7 @@ class Response
     }
 
     /**
-     * This method streams a file download to the client in chunks, 
+     * This method streams a file download to the client in chunks,
      * which is memory-efficient for large files.
      *
      * @param string $path  The path of file to download.
@@ -314,47 +321,47 @@ class Response
      */
     public function downloadStream(string $path, ?string $name = null, array $headers = [], int $chunkSize = 1048576): self
     {
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             throw new \RuntimeException("File not found: {$path}");
         }
-        
+
         $name = $name ?? basename($path);
 
         $headers = array_merge([
-            'Content-Type'              => MimeTypes::getMime($path),
-            'Content-Disposition'       => 'attachment; filename="' . $name . '"',
+            'Content-Type' => MimeTypes::getMime($path),
+            'Content-Disposition' => 'attachment; filename="' . $name . '"',
             'Content-Transfer-Encoding' => 'binary',
-            'Expires'                   => 0,
-            'Cache-Control'             => 'private',
-            'Pragma'                    => 'private',
-            'Content-Length'            => filesize($path),
+            'Expires' => 0,
+            'Cache-Control' => 'private',
+            'Pragma' => 'private',
+            'Content-Length' => filesize($path),
         ], $headers);
 
         $this->setHeaders($headers);
-        
+
         // Use a streaming callback instead of loading the entire file
-        $this->stream(function() use ($path, $chunkSize) {
+        $this->stream(function () use ($path, $chunkSize) {
             $handle = fopen($path, 'rb');
-            
+
             // Disable output buffering to prevent memory build-up
             if (ob_get_level()) {
                 ob_end_clean();
             }
-            
+
             // Send the file in chunks to keep memory usage low
-            while (!feof($handle)) {
+            while (! feof($handle)) {
                 echo fread($handle, $chunkSize);
                 flush();
-                
+
                 // Allow the script to be terminated if the client disconnects
                 if (connection_status() !== CONNECTION_NORMAL) {
                     break;
                 }
             }
-            
+
             fclose($handle);
         });
-        
+
         return $this;
     }
 
@@ -370,7 +377,7 @@ class Response
         $name = $name ?? basename($path);
 
         $headers = array_merge([
-            'Content-Disposition' => 'inline; filename=' . $name
+            'Content-Disposition' => 'inline; filename=' . $name,
         ], $headers);
 
         return $this->download($path, $name, $headers);
@@ -390,7 +397,7 @@ class Response
         $name = $name ?? basename($path);
 
         $headers = array_merge([
-            'Content-Disposition' => 'inline; filename=' . $name
+            'Content-Disposition' => 'inline; filename=' . $name,
         ], $headers);
 
         return $this->downloadStream($path, $name, $headers, $chunkSize);
@@ -404,6 +411,7 @@ class Response
         $template = app('template')->setData($data)->include($file);
 
         $this->setBody($template);
+
         return $this;
     }
 
@@ -413,6 +421,7 @@ class Response
     public function setTestMode(bool $enabled = true): self
     {
         $this->testMode = $enabled;
+
         return $this;
     }
 
@@ -421,15 +430,15 @@ class Response
      */
     public function send(): void
     {
-        if (!headers_sent()) {
+        if (! headers_sent()) {
             $this->sendHeaders();
         }
 
-        if (!$this->redirectUrl) {
+        if (! $this->redirectUrl) {
             $this->sendContent();
         }
 
-        if (!$this->testMode) {
+        if (! $this->testMode) {
             exit;
         }
     }
@@ -471,18 +480,19 @@ class Response
 
     /**
      * Stream content using a callback function.
-     * 
+     *
      * @param callable $callback Function that writes to output
      */
     public function stream(callable $callback): self
     {
         $this->streamCallback = $callback;
+
         return $this;
     }
 
     /**
      * Get the stream callback function.
-     * 
+     *
      * @return callable|null The stream callback function
      */
     public function getStreamCallback()
@@ -497,18 +507,18 @@ class Response
     {
         // Merge default security headers with any custom ones
         $headers = array_merge(self::SECURITY_HEADERS, $customHeaders);
-        
+
         // Set HSTS only on HTTPS
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
         }
-        
+
         return $this->setHeaders($headers);
     }
 
     /**
      * Configure response for Server-Sent Events (SSE) streaming.
-     * 
+     *
      * @param callable $callback Callback that receives stream object with push() method
      * @return self
      */
@@ -519,18 +529,18 @@ class Response
              ->setHeader('Cache-Control', 'no-cache')
              ->setHeader('Connection', 'keep-alive')
              ->setHeader('X-Accel-Buffering', 'no');
-        
+
         // Set up streaming
-        $this->stream(function() use ($callback) {
+        $this->stream(function () use ($callback) {
             $callback($this->createEventStream());
         });
-        
+
         return $this;
     }
 
     /**
      * Create an anonymous class for SSE event streaming.
-     * 
+     *
      * @return object Object with push() method for sending SSE events
      */
     protected function createEventStream(): object
@@ -540,7 +550,7 @@ class Response
             {
                 $payload = array_merge(['event' => $event], $data);
                 echo "data: " . json_encode($payload) . "\n\n";
-                
+
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
@@ -560,19 +570,19 @@ class Response
     public function cache(int $maxAge, array $options = []): self
     {
         $directives = ['max-age=' . $maxAge];
-        
+
         // Public by default
-        if (!isset($options['public']) || $options['public']) {
+        if (! isset($options['public']) || $options['public']) {
             $directives[] = 'public';
         } else {
             $directives[] = 'private';
         }
-        
+
         // Mark as immutable if specified
         if (isset($options['immutable']) && $options['immutable']) {
             $directives[] = 'immutable';
         }
-        
+
         // Set cache headers
         return $this->setHeaders([
             'Cache-Control' => implode(', ', $directives),
@@ -595,7 +605,7 @@ class Response
 
     /**
      * Set Last-Modified header
-     * 
+     *
      * @param int|string|\DateTimeInterface $time Timestamp, date string, or DateTime
      */
     public function setLastModified($time): self

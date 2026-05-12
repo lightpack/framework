@@ -2,13 +2,13 @@
 
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Model;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use Lightpack\Logger\Drivers\NullLogger;
 use Lightpack\Logger\Logger;
 use Lightpack\Tags\Tag;
 use Lightpack\Tags\TagsTrait;
+use PHPUnit\Framework\TestCase;
 
 class TagsIntegrationTest extends TestCase
 {
@@ -26,22 +26,22 @@ class TagsIntegrationTest extends TestCase
         $container->register('db', function () {
             return $this->db;
         });
-        $container->register('logger', fn() => new Logger(new NullLogger));
+        $container->register('logger', fn () => new Logger(new NullLogger));
 
         // Create tables
         $this->schema = new Schema($this->db);
-        $this->schema->createTable('posts', function(Table $table) {
+        $this->schema->createTable('posts', function (Table $table) {
             $table->id();
             $table->varchar('title');
             $table->timestamps();
         });
-        $this->schema->createTable('tags', function(Table $table) {
+        $this->schema->createTable('tags', function (Table $table) {
             $table->id();
             $table->varchar('name');
             $table->varchar('slug');
             $table->timestamps();
         });
-        $this->schema->createTable('tag_morphs', function(Table $table) {
+        $this->schema->createTable('tag_morphs', function (Table $table) {
             $table->column('tag_id')->type('bigint')->attribute('unsigned');
             $table->column('morph_id')->type('bigint')->attribute('unsigned');
             $table->varchar('morph_type', 191);
@@ -57,7 +57,8 @@ class TagsIntegrationTest extends TestCase
         $this->db = null;
     }
 
-    protected function getPostModelInstance() {
+    protected function getPostModelInstance()
+    {
         return new class extends Model {
             use TagsTrait;
             protected $table = 'posts';
@@ -66,7 +67,8 @@ class TagsIntegrationTest extends TestCase
         };
     }
 
-    protected function getTagModelInstance() {
+    protected function getTagModelInstance()
+    {
         return new class extends Tag {};
     }
 
@@ -225,11 +227,11 @@ class TagsIntegrationTest extends TestCase
     public function testFilterPostsByMultipleTagsReturnsNoDuplicates()
     {
         $this->seedTagsData();
-        
+
         // Post 101 has both tags 1 and 2
         // Without deduplication, it would appear twice in results (once per tag)
         $posts = $this->getPostModelInstance()::filters(['tags' => [1,2]])->all();
-        
+
         // Count how many times post 101 appears in the result set
         $post101Count = 0;
         foreach ($posts as $post) {
@@ -237,10 +239,10 @@ class TagsIntegrationTest extends TestCase
                 $post101Count++;
             }
         }
-        
+
         // Should appear exactly once, not twice
         $this->assertEquals(1, $post101Count, 'Post 101 should appear exactly once, not duplicated');
-        
+
         // Total should be 2 unique posts (101 and 102), not more due to duplicates
         $this->assertCount(2, $posts, 'Should return 2 unique posts, not duplicates');
     }
@@ -248,21 +250,21 @@ class TagsIntegrationTest extends TestCase
     public function testFilterPostsWithCustomColumnSelection()
     {
         $this->seedTagsData();
-        
+
         // User specifies custom columns with tag filter
         // This tests that GROUP BY works with custom column selection
         $builder = $this->getPostModelInstance()::filters(['tags' => [1,2]]);
         $builder->select('posts.id', 'posts.title');
         $posts = $builder->all();
-        
+
         // Should still return unique posts without duplicates
         $this->assertCount(2, $posts, 'Should return 2 unique posts with custom columns');
-        
+
         // Verify the selected columns are accessible
         $firstPost = $posts->first();
         $this->assertNotNull($firstPost->id);
         $this->assertNotNull($firstPost->title);
-        
+
         // Verify no duplicates - post 101 should appear only once
         $postIds = $posts->column('id');
         $this->assertEquals(2, count($postIds), 'Should have 2 posts');

@@ -1,9 +1,10 @@
 <?php
+
 namespace Lightpack\Mfa\Drivers;
 
-use Lightpack\Mfa\MfaInterface;
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Mfa\BackupCodeHelper;
+use Lightpack\Mfa\MfaInterface;
 
 /**
  * MFA Driver for Backup Codes
@@ -19,7 +20,7 @@ class BackupCodeDriver implements MfaInterface
     {
         $codes = $user->mfa_backup_codes;
 
-        if (!$input || empty($codes)) {
+        if (! $input || empty($codes)) {
             return false;
         }
 
@@ -28,8 +29,10 @@ class BackupCodeDriver implements MfaInterface
         if ($valid) {
             $user->mfa_backup_codes = $codes;
             $user->save();
+
             return true;
         }
+
         return false;
     }
 

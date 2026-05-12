@@ -1,4 +1,5 @@
 <?php
+
 namespace Lightpack\Audit;
 
 trait AuditTrait
@@ -14,7 +15,7 @@ trait AuditTrait
     {
         $data['audit_type'] = $this->table;
         $data['audit_id'] = $this->id;
-        
+
         return Audit::log($data);
     }
 }

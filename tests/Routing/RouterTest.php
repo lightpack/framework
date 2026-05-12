@@ -117,7 +117,7 @@ final class RouterTest extends TestCase
             'route' => '/news/:num/author/:slug',
             'path' => '/news/23/author/bob',
             'params' => ['num' => 23, 'slug' => 'bob'],
-            'filters' => ['auth', 'csrf']
+            'filters' => ['auth', 'csrf'],
         ];
 
         foreach ($meta as $key => $value) {

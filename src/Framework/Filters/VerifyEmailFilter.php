@@ -4,7 +4,6 @@ namespace Lightpack\Filters;
 
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Filters\FilterInterface;
 
 class VerifyEmailFilter implements FilterInterface
 {
@@ -13,7 +12,7 @@ class VerifyEmailFilter implements FilterInterface
         /** @var \App\Models\UserModel $user */
         $user = auth()->user();
 
-        if (!$user || !$user->email_verified_at) {
+        if (! $user || ! $user->email_verified_at) {
             if ($request->expectsJson()) {
                 return response()->setStatus(403)->json([
                     'error' => 'Your email address is not verified.',

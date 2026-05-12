@@ -59,7 +59,7 @@ final class StrTest extends TestCase
 
     public function testHumanize()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('Lazy brown fox', $str->humanize('lazy_brown_fox'));
         $this->assertEquals('Lazy brown fox', $str->humanize('lazy-brown-fox'));
         $this->assertEquals('Lazy brown fox', $str->humanize('lazyBrownFox'));
@@ -69,7 +69,7 @@ final class StrTest extends TestCase
 
     public function testHeadline()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('Lazy Brown Fox', $str->headline('lazy_brown_fox'));
         $this->assertEquals('Lazy Brown Fox', $str->headline('lazy-brown-fox'));
         $this->assertEquals('Lazy Brown Fox', $str->headline('lazyBrownFox'));
@@ -79,13 +79,13 @@ final class StrTest extends TestCase
 
     public function testTableize()
     {
-        $str = new Str();
-        
+        $str = new Str;
+
         // Basic cases
         $this->assertEquals('users', $str->tableize('User'));
         $this->assertEquals('users', $str->tableize('user'));
         $this->assertEquals('users', $str->tableize('users'));
-        
+
         // Multi-word cases
         $this->assertEquals('user_groups', $str->tableize('UserGroup'));
         $this->assertEquals('user_groups', $str->tableize('User Group'));
@@ -93,17 +93,17 @@ final class StrTest extends TestCase
         $this->assertEquals('user_groups', $str->tableize('user_groups'));
         $this->assertEquals('blog_post_comments', $str->tableize('BlogPostComment'));
         $this->assertEquals('blog_post_comments', $str->tableize('Blog Post Comment'));
-        
+
         // Mixed formats
         $this->assertEquals('user_profile_photos', $str->tableize('User_Profile_Photo'));
         $this->assertEquals('user_profile_photos', $str->tableize('userProfilePhoto'));
         $this->assertEquals('blog_posts', $str->tableize('Blog_Post'));
         $this->assertEquals('blog_posts', $str->tableize('blogPost'));
-        
+
         // Already plural/underscored
         $this->assertEquals('blog_posts', $str->tableize('blog_posts'));
         $this->assertEquals('user_photos', $str->tableize('user_photos'));
-        
+
         // Edge cases
         $this->assertEquals('posts', $str->tableize('Post'));
         $this->assertEquals('posts', $str->tableize('posts'));
@@ -113,30 +113,30 @@ final class StrTest extends TestCase
 
     public function testClassify()
     {
-        $str = new Str();
-        
+        $str = new Str;
+
         // Basic cases
         $this->assertEquals('User', $str->classify('user'));
         $this->assertEquals('User', $str->classify('users'));
         $this->assertEquals('User', $str->classify('User'));
-        
+
         // Multi-word cases
         $this->assertEquals('UserGroup', $str->classify('user_group'));
         $this->assertEquals('UserGroup', $str->classify('user_groups'));
         $this->assertEquals('UserGroup', $str->classify('user group'));
         $this->assertEquals('BlogPostComment', $str->classify('blog_post_comments'));
         $this->assertEquals('BlogPostComment', $str->classify('blog post comments'));
-        
+
         // Mixed formats
         $this->assertEquals('UserProfilePhoto', $str->classify('User_Profile_Photos'));
         $this->assertEquals('UserProfilePhoto', $str->classify('userProfilePhotos'));
         $this->assertEquals('BlogPost', $str->classify('Blog_posts'));
         $this->assertEquals('BlogPost', $str->classify('blogPosts'));
-        
+
         // Already singular/PascalCase
         $this->assertEquals('BlogPost', $str->classify('BlogPost'));
         $this->assertEquals('UserPhoto', $str->classify('UserPhoto'));
-        
+
         // Edge cases
         $this->assertEquals('Post', $str->classify('Post'));
         $this->assertEquals('Post', $str->classify('posts'));
@@ -171,27 +171,27 @@ final class StrTest extends TestCase
 
     public function testSlug()
     {
-        $str = new Str();
-        
+        $str = new Str;
+
         // Basic slugification
         $this->assertEquals('simple-blog', $str->slug('simple blog'));
         $this->assertEquals('this-is-blog-id-123', $str->slug('This is blog_id 123'));
         $this->assertEquals('what-is-seo', $str->slug('What is SEO?'));
         $this->assertEquals('learn-c-programming', $str->slug('Learn C++ Programming'));
-        
+
         // Empty string handling
         $this->assertEquals('', $str->slug(''));
         $this->assertEquals('', $str->slug(' '));
-        
+
         // Custom separators
         $this->assertEquals('hello_world', $str->slug('Hello World', '_'));
         $this->assertEquals('hello-world', $str->slug('Hello World', '1'));
-        
+
         // Multiple spaces and special characters
         $this->assertEquals('hello-world', $str->slug('Hello    World'));
         $this->assertEquals('hello-world', $str->slug('Hello----World'));
         $this->assertEquals('hello-world', $str->slug('Hello....World'));
-        
+
         // Numbers and special characters
         $this->assertEquals('article-123-test', $str->slug('Article #123 & Test!'));
         $this->assertEquals('100-percent', $str->slug('100% %% Percent'));
@@ -199,14 +199,14 @@ final class StrTest extends TestCase
 
     public function testSlugWithUTF8()
     {
-        $str = new Str();
-        
+        $str = new Str;
+
         // International characters
         $this->assertEquals('uber-grunen', $str->slug('über grünen'));
         $this->assertEquals('cafe-francais', $str->slug('café français'));
         $this->assertEquals('hello-world', $str->slug('hello world!@#$%^&*()'));
         $this->assertEquals('ni-hao', $str->slug('你好')); // Chinese characters
-        
+
         // Special spaces and punctuation
         $this->assertEquals('hello-world', $str->slug('hello　world')); // Ideographic space
         $this->assertEquals('hello-world', $str->slug('hello—world')); // Em dash
@@ -233,7 +233,7 @@ final class StrTest extends TestCase
 
     public function testRandom()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals(16, strlen($str->random(16)));
         $this->assertEquals(1, strlen($str->random(1)));
     }
@@ -246,7 +246,7 @@ final class StrTest extends TestCase
 
     public function testRandomWithValidLength()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals(1, strlen($str->random(1)));
         $this->assertEquals(2, strlen($str->random(2)));
         $this->assertEquals(16, strlen($str->random(16)));
@@ -261,7 +261,7 @@ final class StrTest extends TestCase
 
     public function testTruncate()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('Hello...', $str->truncate('Hello World', 5));
         $this->assertEquals('Hello World', $str->truncate('Hello World', 11));
         $this->assertEquals('Hello***', $str->truncate('Hello World', 5, '***'));
@@ -270,14 +270,14 @@ final class StrTest extends TestCase
 
     public function testTruncateWithUTF8()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('über...', $str->truncate('über grünen', 4));
         $this->assertEquals('café...', $str->truncate('café français', 4));
     }
 
     public function testLimit()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('one two...', $str->limit('one two three four', 2));
         $this->assertEquals('one two three', $str->limit('one two three', 3));
         $this->assertEquals('one***', $str->limit('one two three', 1, '***'));
@@ -285,7 +285,7 @@ final class StrTest extends TestCase
 
     public function testPad()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('Hello     ', $str->pad('Hello', 10));
         $this->assertEquals('     Hello', $str->pad('Hello', 10, ' ', STR_PAD_LEFT));
         $this->assertEquals('**Hello***', $str->pad('Hello', 10, '*', STR_PAD_BOTH));
@@ -293,28 +293,28 @@ final class StrTest extends TestCase
 
     public function testTitle()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('Hello World', $str->title('hello world'));
         $this->assertEquals('Über Grünen', $str->title('über grünen'));
     }
 
     public function testUpper()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('HELLO WORLD', $str->upper('Hello World'));
         $this->assertEquals('ÜBER GRÜNEN', $str->upper('über grünen'));
     }
 
     public function testLower()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('hello world', $str->lower('Hello World'));
         $this->assertEquals('über grünen', $str->lower('ÜBER GRÜNEN'));
     }
 
     public function testEscape()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('&lt;h1&gt;Hello&lt;/h1&gt;', $str->escape('<h1>Hello</h1>'));
         $this->assertEquals('&quot;quoted&quot;', $str->escape('"quoted"'));
         $this->assertEquals('Tom &amp; Jerry', $str->escape('Tom & Jerry'));
@@ -322,7 +322,7 @@ final class StrTest extends TestCase
 
     public function testIsEmail()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isEmail('test@example.com'));
         $this->assertTrue($str->isEmail('test.name@sub.example.com'));
         $this->assertFalse($str->isEmail('invalid.email'));
@@ -331,7 +331,7 @@ final class StrTest extends TestCase
 
     public function testIsUrl()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isUrl('http://example.com'));
         $this->assertTrue($str->isUrl('https://sub.example.com/path?query=1'));
         $this->assertFalse($str->isUrl('not-a-url'));
@@ -340,7 +340,7 @@ final class StrTest extends TestCase
 
     public function testIsIp()
     {
-        $str = new Str();
+        $str = new Str;
         // IPv4
         $this->assertTrue($str->isIp('192.168.1.1'));
         $this->assertTrue($str->isIp('127.0.0.1'));
@@ -354,7 +354,7 @@ final class StrTest extends TestCase
 
     public function testIsHex()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isHex('#fff'));
         $this->assertTrue($str->isHex('#000000'));
         $this->assertTrue($str->isHex('#FF0000'));
@@ -365,7 +365,7 @@ final class StrTest extends TestCase
 
     public function testIsUuid()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isUuid('123e4567-e89b-42d3-a456-556642440000'));
         $this->assertFalse($str->isUuid('123e4567-e89b-12d3-a456-556642440000')); // Not v4
         $this->assertFalse($str->isUuid('not-a-uuid'));
@@ -373,7 +373,7 @@ final class StrTest extends TestCase
 
     public function testIsDomain()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isDomain('example.com'));
         $this->assertTrue($str->isDomain('sub.example.com'));
         $this->assertTrue($str->isDomain('sub-domain.example.com'));
@@ -384,7 +384,7 @@ final class StrTest extends TestCase
 
     public function testIsBase64()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isBase64(base64_encode('Hello World')));
         $this->assertTrue($str->isBase64('SGVsbG8gV29ybGQ=')); // "Hello World"
         $this->assertFalse($str->isBase64('Not Base64!'));
@@ -393,7 +393,7 @@ final class StrTest extends TestCase
 
     public function testIsMimeType()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isMimeType('text/plain'));
         $this->assertTrue($str->isMimeType('application/json'));
         $this->assertTrue($str->isMimeType('image/jpeg'));
@@ -404,7 +404,7 @@ final class StrTest extends TestCase
 
     public function testIsPath()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isPath('/path/to/file.txt'));
         $this->assertTrue($str->isPath('file.txt'));
         $this->assertTrue($str->isPath('./file.txt'));
@@ -414,7 +414,7 @@ final class StrTest extends TestCase
 
     public function testIsJson()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertTrue($str->isJson('{"name":"John","age":30}'));
         $this->assertTrue($str->isJson('[1,2,3]'));
         $this->assertTrue($str->isJson('{"nested":{"key":"value"}}'));
@@ -424,7 +424,7 @@ final class StrTest extends TestCase
 
     public function testFilename()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('file.txt', $str->filename('/path/to/file.txt'));
         $this->assertEquals('file.txt', $str->filename('file.txt'));
         $this->assertEquals('image.jpg', $str->filename('/var/www/html/uploads/image.jpg'));
@@ -433,7 +433,7 @@ final class StrTest extends TestCase
 
     public function testStem()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('file', $str->stem('/path/to/file.txt'));
         $this->assertEquals('image', $str->stem('/var/www/html/uploads/image.jpg'));
         $this->assertEquals('script', $str->stem('script.min.js'));
@@ -442,7 +442,7 @@ final class StrTest extends TestCase
 
     public function testExt()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('txt', $str->ext('/path/to/file.txt'));
         $this->assertEquals('jpg', $str->ext('/var/www/html/uploads/image.jpg'));
         $this->assertEquals('js', $str->ext('script.min.js'));
@@ -452,7 +452,7 @@ final class StrTest extends TestCase
 
     public function testDir()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('/path/to', $str->dir('/path/to/file.txt'));
         $this->assertEquals('/var/www/html/uploads', $str->dir('/var/www/html/uploads/image.jpg'));
         $this->assertEquals('.', $str->dir('file.txt'));
@@ -461,7 +461,7 @@ final class StrTest extends TestCase
 
     public function testStrip()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('Hello World', $str->strip('<p>Hello World</p>'));
         $this->assertEquals('Hello World', $str->strip('<script>alert("xss");</script>Hello World'));
         $this->assertEquals('', $str->strip(''));
@@ -469,7 +469,7 @@ final class StrTest extends TestCase
 
     public function testAlphanumeric()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('HelloWorld123', $str->alphanumeric('Hello, World! 123'));
         $this->assertEquals('Test123', $str->alphanumeric('Test@123!'));
         $this->assertEquals('', $str->alphanumeric('!@#$%^&*()'));
@@ -477,7 +477,7 @@ final class StrTest extends TestCase
 
     public function testAlpha()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('HelloWorld', $str->alpha('Hello, World! 123'));
         $this->assertEquals('Test', $str->alpha('Test@123!'));
         $this->assertEquals('', $str->alpha('123'));
@@ -485,7 +485,7 @@ final class StrTest extends TestCase
 
     public function testNumber()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('123', $str->number('Hello123World'));
         $this->assertEquals('12345', $str->number('Price: $123.45'));
         $this->assertEquals('', $str->number('No numbers here'));
@@ -493,7 +493,7 @@ final class StrTest extends TestCase
 
     public function testCollapse()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('Hello World', $str->collapse('Hello   World'));
         $this->assertEquals('Hello World', $str->collapse("Hello\n\tWorld"));
         $this->assertEquals('', $str->collapse(''));
@@ -501,7 +501,7 @@ final class StrTest extends TestCase
 
     public function testInitials()
     {
-        $str = new Str();
+        $str = new Str;
         $this->assertEquals('JD', $str->initials('John Doe'));
         $this->assertEquals('ABC', $str->initials('Alice Bob Charlie'));
         $this->assertEquals('J', $str->initials('john'));
@@ -511,28 +511,28 @@ final class StrTest extends TestCase
 
     public function testExcerpt()
     {
-        $str = new Str();
+        $str = new Str;
         $text = 'This is a very long text that needs to be shortened';
-        
+
         // Test with default length and end
         $this->assertEquals($text, $str->excerpt($text));
-        
+
         // Test with custom length
         $this->assertEquals('This is a very long...', $str->excerpt($text, 20));
-        
+
         // Test with custom end
         $this->assertEquals('This is a very long[...]', $str->excerpt($text, 20, '[...]'));
-        
+
         // Test with short text
         $this->assertEquals('Hello', $str->excerpt('Hello', 20));
-        
+
         // Test with empty text
         $this->assertEquals('', $str->excerpt(''));
     }
 
     public function testOtp()
     {
-        $str = new Str();
+        $str = new Str;
 
         // Test default length (6)
         $otp = $str->otp();
@@ -555,8 +555,8 @@ final class StrTest extends TestCase
 
     public function testOtpWithInvalidLength()
     {
-        $str = new Str();
-        
+        $str = new Str;
+
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('OTP length must be at least 1');
         $str->otp(0);

@@ -10,7 +10,8 @@ class EncryptedDriver implements DriverInterface
     public function __construct(
         private DriverInterface $driver,
         private Crypto $crypto
-    ) {}
+    ) {
+    }
 
     public function start()
     {
@@ -35,7 +36,7 @@ class EncryptedDriver implements DriverInterface
     public function get(?string $key = null, $default = null)
     {
         $data = $this->driver->get($key, $default);
-        
+
         if ($data === null) {
             return $default;
         }
@@ -46,7 +47,7 @@ class EncryptedDriver implements DriverInterface
 
         // Decrypt all session data
         return array_map(
-            fn($value) => $this->decryptValue($value),
+            fn ($value) => $this->decryptValue($value),
             $data
         );
     }
@@ -68,12 +69,13 @@ class EncryptedDriver implements DriverInterface
 
     private function decryptValue($value)
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $value;
         }
 
         try {
             $decrypted = $this->crypto->decrypt($value);
+
             return $decrypted ? unserialize($decrypted) : $value;
         } catch (\Exception $e) {
             // If decryption fails, return original value

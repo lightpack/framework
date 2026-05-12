@@ -3,9 +3,9 @@
 namespace Lightpack\Testing;
 
 use Lightpack\Exceptions\InvalidUrlSignatureException;
-use Lightpack\Utils\Arr;
-use Lightpack\Http\Redirect;
 use Lightpack\Exceptions\RouteNotFoundException;
+use Lightpack\Http\Redirect;
+use Lightpack\Utils\Arr;
 
 trait AssertionTrait
 {
@@ -102,7 +102,8 @@ trait AssertionTrait
         $errors = session()->get('_validation_errors', []);
 
         if (empty($keys)) {
-            $this->assertTrue(!empty($errors), 'Session has no validation errors');
+            $this->assertTrue(! empty($errors), 'Session has no validation errors');
+
             return $this;
         }
 
@@ -121,7 +122,8 @@ trait AssertionTrait
         $old = session()->get('_old_input', []);
 
         if (empty($keys)) {
-            $this->assertTrue(!empty($old), 'Session has no old input data');
+            $this->assertTrue(! empty($old), 'Session has no old input data');
+
             return $this;
         }
 
@@ -146,6 +148,7 @@ trait AssertionTrait
     public function assertCookieHas(string $key): self
     {
         $this->assertTrue(cookie()->has($key), "Failed asserting that cookie '{$key}' exists");
+
         return $this;
     }
 
@@ -160,6 +163,7 @@ trait AssertionTrait
     {
         $this->assertTrue(cookie()->has($key), "Failed asserting that cookie '{$key}' exists");
         $this->assertEquals($value, cookie()->get($key), "Failed asserting that cookie '{$key}' has value '{$value}'");
+
         return $this;
     }
 
@@ -172,17 +176,18 @@ trait AssertionTrait
     public function assertCookieMissing(string $key): self
     {
         $this->assertFalse(cookie()->has($key), "Failed asserting that cookie '{$key}' is missing");
+
         return $this;
     }
 
     /**
      * Assert that the next request will throw InvalidUrlSignatureException.
-     * 
+     *
      * Use this before making a request to a signed URL that should fail
      * due to invalid, expired, or missing signature.
      *
      * @return void
-     * 
+     *
      * @example
      * $this->assertInvalidUrlSignature();
      * $this->request('GET', '/download/123?signature=bad');

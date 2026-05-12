@@ -1,8 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Database\Schema\Table;
 use Lightpack\Database\Schema\Schema;
+use Lightpack\Database\Schema\Table;
+use PHPUnit\Framework\TestCase;
 
 final class SchemaTest extends TestCase
 {
@@ -54,7 +54,7 @@ final class SchemaTest extends TestCase
         $this->schema->alterTable('products')->add(function (Table $table) {
             $table->column('description')->type('text');
         });
-        
+
         // Assert that the column was added
         $this->assertTrue(in_array('description', $this->schema->inspectColumns('products')));
     }
@@ -74,7 +74,7 @@ final class SchemaTest extends TestCase
             $table->column('description')->type('varchar')->length(150);
         });
 
-        // Assert if column modified successfully, we should get its type 
+        // Assert if column modified successfully, we should get its type
         $this->assertEquals('varchar(150)', $this->schema->inspectColumn('products', 'description')['Type']);
     }
 
@@ -240,7 +240,6 @@ final class SchemaTest extends TestCase
         $this->assertEquals('slug', $resultSlug['Column_name']);
         $this->assertEquals('sku', $resultSku['Column_name']);
     }
-
 
     public function testSchemaCanAlterTableAddCompositeIndex()
     {

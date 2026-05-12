@@ -1,39 +1,42 @@
 <?php
+
 namespace Lightpack\AI\Support;
 
 class SchemaValidator
 {
     protected array $errors = [];
-    
+
     public function validate(array $params, array $schema): ?array
     {
         $this->errors = [];
-        
+
         $normalized = $this->normalizeSchema($schema);
-        
+
         foreach ($normalized as $key => $type) {
-            if (!array_key_exists($key, $params) || $params[$key] === null) {
+            if (! array_key_exists($key, $params) || $params[$key] === null) {
                 $this->errors[] = "Missing required parameter: {$key}";
+
                 continue;
             }
-            
+
             $value = $params[$key];
-            if (!$this->matchesType($value, $type)) {
+            if (! $this->matchesType($value, $type)) {
                 $this->errors[] = "Invalid parameter type for {$key}: expected {$type}";
+
                 continue;
             }
-            
+
             $params[$key] = $this->coerce($value, $type);
         }
-        
+
         return empty($this->errors) ? $params : null;
     }
-    
+
     public function errors(): array
     {
         return $this->errors;
     }
-    
+
     protected function normalizeSchema(array $schema): array
     {
         $normalized = [];
@@ -44,9 +47,10 @@ class SchemaValidator
                 $normalized[$key] = is_array($type) ? ($type[0] ?? 'string') : $type;
             }
         }
+
         return $normalized;
     }
-    
+
     protected function matchesType(mixed $value, string $type): bool
     {
         return match ($type) {
@@ -58,7 +62,7 @@ class SchemaValidator
             default => true,
         };
     }
-    
+
     protected function coerce(mixed $value, string $type): mixed
     {
         return match ($type) {

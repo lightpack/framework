@@ -9,8 +9,6 @@ use Lightpack\Utils\Crypto;
 use Lightpack\Utils\Url;
 use PHPUnit\Framework\TestCase;
 
-use function PHPUnit\Framework\once;
-
 final class UrlTest extends TestCase
 {
     /** @var Url */
@@ -18,7 +16,7 @@ final class UrlTest extends TestCase
 
     public function setUp(): void
     {
-        $this->url = new Url();
+        $this->url = new Url;
     }
 
     public function tearDown(): void
@@ -56,7 +54,7 @@ final class UrlTest extends TestCase
     {
         // Add routes
         $container = Container::getInstance();
-        $container->instance('request', new Request());
+        $container->instance('request', new Request);
         $routeRegistery = new RouteRegistry($container);
         $routeRegistery->get('/foo', 'DummyController')->name('foo');
         $routeRegistery->get('/foo/:num', 'DummyController')->name('foo.num');
@@ -81,7 +79,7 @@ final class UrlTest extends TestCase
 
         // Add routes
         $container = Container::getInstance();
-        $container->instance('request', new Request());
+        $container->instance('request', new Request);
         $routeRegistery = new RouteRegistry($container);
         $routeRegistery->get('/users', 'DummyController')->name('users');
         $routeRegistery->bootRouteNames();
@@ -95,7 +93,7 @@ final class UrlTest extends TestCase
             ->method('hash')
             ->willReturn('encryptedSignature');
 
-        // Set the Container 
+        // Set the Container
         Container::getInstance()->instance('crypto', $cryptoMock);
 
         // Generate the signed URL
@@ -129,7 +127,7 @@ final class UrlTest extends TestCase
             ->method('hash')
             ->willReturn('encryptedSignature');
 
-        // Set the Container 
+        // Set the Container
         Container::getInstance()->instance('crypto', $cryptoMock);
 
         // Assertions
@@ -201,8 +199,8 @@ final class UrlTest extends TestCase
             $this->url->withQuery('https://example.com/search', [
                 'filter' => [
                     'tags' => ['php'],
-                    'year' => '2024'
-                ]
+                    'year' => '2024',
+                ],
             ])
         );
 
@@ -269,28 +267,28 @@ final class UrlTest extends TestCase
         // Test valid URLs
         $this->assertTrue($this->url->validate('https://example.com'));
         $this->assertTrue($this->url->validate('http://localhost:8080'));
-        
+
         // Test with custom schemes
         $this->assertTrue($this->url->validate('https://example.com', [
-            'schemes' => ['https']
+            'schemes' => ['https'],
         ]));
         $this->assertFalse($this->url->validate('http://example.com', [
-            'schemes' => ['https']
+            'schemes' => ['https'],
         ]));
-        
+
         // Test with allowed hosts
         $this->assertTrue($this->url->validate('https://example.com', [
-            'allowed_hosts' => ['example.com']
+            'allowed_hosts' => ['example.com'],
         ]));
         $this->assertFalse($this->url->validate('https://evil.com', [
-            'allowed_hosts' => ['example.com']
+            'allowed_hosts' => ['example.com'],
         ]));
-        
+
         // Test URL length
         $this->assertFalse($this->url->validate('https://example.com', [
-            'max_length' => 10
+            'max_length' => 10,
         ]));
-        
+
         // Test invalid URLs
         $this->assertFalse($this->url->validate('not-a-url'));
         $this->assertFalse($this->url->validate('http://'));
@@ -304,37 +302,37 @@ final class UrlTest extends TestCase
             'https://api.com/v1/users',
             $this->url->join('https://api.com', 'v1', 'users')
         );
-        
+
         // Test with slashes
         $this->assertEquals(
             'https://api.com/v1/users',
             $this->url->join('https://api.com/', '/v1/', '/users/')
         );
-        
+
         // Test with query string
         $this->assertEquals(
             'https://api.com/v1/users?sort=desc',
             $this->url->join('https://api.com', 'v1', 'users', '?sort=desc')
         );
-        
+
         // Test with fragment
         $this->assertEquals(
             'https://api.com/v1/users#section',
             $this->url->join('https://api.com', 'v1', 'users#section')
         );
-        
+
         // Test with query and fragment
         $this->assertEquals(
             'https://api.com/v1/users?sort=desc#section',
             $this->url->join('https://api.com', 'v1', 'users?sort=desc#section')
         );
-        
+
         // Test with empty segments
         $this->assertEquals(
             'https://api.com/users',
             $this->url->join('https://api.com', '', 'users')
         );
-        
+
         // Test with no segments
         $this->assertEquals('', $this->url->join());
     }
@@ -346,7 +344,7 @@ final class UrlTest extends TestCase
             'https://example.com/posts?page=1',
             $this->url->withoutQuery('https://example.com/posts?page=1&sort=desc', 'sort')
         );
-        
+
         // Test removing multiple parameters
         $this->assertEquals(
             'https://example.com/search?q=php',
@@ -355,19 +353,19 @@ final class UrlTest extends TestCase
                 ['utm_source', 'utm_medium']
             )
         );
-        
+
         // Test removing non-existent parameters
         $this->assertEquals(
             'https://example.com/posts?page=1',
             $this->url->withoutQuery('https://example.com/posts?page=1', 'sort')
         );
-        
+
         // Test removing all parameters
         $this->assertEquals(
             'https://example.com/posts',
             $this->url->withoutQuery('https://example.com/posts?page=1&sort=desc', ['page', 'sort'])
         );
-        
+
         // Test with no query parameters
         $this->assertEquals(
             'https://example.com/posts',
@@ -394,25 +392,25 @@ final class UrlTest extends TestCase
             'https://example.com/posts#section1',
             $this->url->withFragment('https://example.com/posts', 'section1')
         );
-        
+
         // Test updating existing fragment
         $this->assertEquals(
             'https://example.com/posts#new',
             $this->url->withFragment('https://example.com/posts#old', 'new')
         );
-        
+
         // Test with query parameters
         $this->assertEquals(
             'https://example.com/posts?page=1#section',
             $this->url->withFragment('https://example.com/posts?page=1', 'section')
         );
-        
+
         // Test with hash in fragment
         $this->assertEquals(
             'https://example.com/posts#section',
             $this->url->withFragment('https://example.com/posts', '#section')
         );
-        
+
         // Test with empty fragment
         $this->assertEquals(
             'https://example.com/posts',
@@ -427,19 +425,19 @@ final class UrlTest extends TestCase
             'https://example.com/posts',
             $this->url->withoutFragment('https://example.com/posts#section')
         );
-        
+
         // Test with query parameters
         $this->assertEquals(
             'https://example.com/posts?page=1',
             $this->url->withoutFragment('https://example.com/posts?page=1#section')
         );
-        
+
         // Test without fragment
         $this->assertEquals(
             'https://example.com/posts',
             $this->url->withoutFragment('https://example.com/posts')
         );
-        
+
         // Test with empty fragment
         $this->assertEquals(
             'https://example.com/posts',

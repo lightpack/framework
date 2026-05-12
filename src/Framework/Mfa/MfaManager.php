@@ -2,13 +2,13 @@
 
 namespace Lightpack\Mfa;
 
-use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
-use Lightpack\Mfa\Drivers\NullDriver;
-use Lightpack\Mfa\Drivers\EmailDriver;
-use Lightpack\Mfa\Drivers\SmsDriver;
 use Lightpack\Mfa\Drivers\BackupCodeDriver;
+use Lightpack\Mfa\Drivers\EmailDriver;
+use Lightpack\Mfa\Drivers\NullDriver;
+use Lightpack\Mfa\Drivers\SmsDriver;
 use Lightpack\Mfa\Drivers\TotpDriver;
+use Lightpack\Support\BaseManager;
 use Lightpack\Utils\Otp;
 
 class MfaManager extends BaseManager
@@ -19,42 +19,42 @@ class MfaManager extends BaseManager
         $this->registerBuiltInDrivers();
         $this->setDefaultFromConfig();
     }
-    
+
     /**
      * Register built-in MFA drivers (factors)
      */
     protected function registerBuiltInDrivers(): void
     {
         $this->register('null', function ($container) {
-            return new NullDriver();
+            return new NullDriver;
         });
-        
+
         $this->register('email', function ($container) {
             return new EmailDriver(
                 $container->get('cache'),
                 $container->get('config'),
-                new Otp()
+                new Otp
             );
         });
-        
+
         $this->register('sms', function ($container) {
             return new SmsDriver(
                 $container->get('cache'),
                 $container->get('config'),
-                new Otp(),
+                new Otp,
                 $container->get('sms')
             );
         });
-        
+
         $this->register('totp', function ($container) {
-            return new TotpDriver();
+            return new TotpDriver;
         });
-        
+
         $this->register('backup_code', function ($container) {
-            return new BackupCodeDriver();
+            return new BackupCodeDriver;
         });
     }
-    
+
     /**
      * Set default driver from config
      */
@@ -65,16 +65,17 @@ class MfaManager extends BaseManager
             $this->setDefaultDriver($default);
         }
     }
-    
+
     /**
      * Get MFA driver (factor) instance
      */
     public function driver(?string $name = null): MfaInterface
     {
         $name = $name ?? $this->defaultDriver;
+
         return $this->resolve($name);
     }
-    
+
     /**
      * Get all registered driver names
      */
@@ -82,7 +83,7 @@ class MfaManager extends BaseManager
     {
         return array_keys($this->factories);
     }
-    
+
     protected function getErrorMessage(string $name): string
     {
         return "MFA driver not found: {$name}";

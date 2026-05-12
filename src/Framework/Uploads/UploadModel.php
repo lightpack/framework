@@ -2,12 +2,12 @@
 
 namespace Lightpack\Uploads;
 
-use Lightpack\Database\Lucid\Model;
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\Model;
 
 /**
  * UploadModel
- * 
+ *
  * Represents an uploaded file in the database with methods
  * to access its URL, path, and other metadata.
  */
@@ -19,14 +19,14 @@ class UploadModel extends Model
      * @var string
      */
     protected $table = 'uploads';
-    
+
     /**
      * The primary key for the model.
      *
      * @var string
      */
     protected $primaryKey = 'id';
-    
+
     /**
      * The attributes that should be cast.
      *
@@ -35,7 +35,7 @@ class UploadModel extends Model
     protected $casts = [
         'meta' => 'array',
     ];
-    
+
     /**
      * Get the storage instance.
      *
@@ -45,7 +45,7 @@ class UploadModel extends Model
     {
         return Container::getInstance()->resolve('storage');
     }
-    
+
     /**
      * Get the URL for the file.
      *
@@ -56,7 +56,7 @@ class UploadModel extends Model
     {
         return $this->storage()->url($this->getPath($variant));
     }
-    
+
     /**
      * Get the relative storage path for the uploaded file.
      *
@@ -81,10 +81,10 @@ class UploadModel extends Model
         if ($variant) {
             return "{$path}/{$variant}";
         }
-        
+
         return $path;
     }
-    
+
     /**
      * Check if the file exists.
      *
@@ -94,14 +94,14 @@ class UploadModel extends Model
     public function exists(?string $variant = null): bool
     {
         $path = $this->getPath();
-        
+
         if ($variant) {
             $path = $this->getPath($variant);
         }
-        
+
         return $this->storage()->exists($path);
     }
-    
+
     /**
      * Get the file's metadata.
      *
@@ -114,10 +114,10 @@ class UploadModel extends Model
         if ($key === null) {
             return $this->meta ?? [];
         }
-        
+
         return $this->meta[$key] ?? $default;
     }
-    
+
     /**
      * Check if the file is an image.
      *
@@ -127,7 +127,7 @@ class UploadModel extends Model
     {
         return $this->type === 'image';
     }
-    
+
     /**
      * Check if the file is a document.
      *
@@ -137,7 +137,7 @@ class UploadModel extends Model
     {
         return $this->type === 'document';
     }
-    
+
     /**
      * Check if the file is a video.
      *
@@ -147,7 +147,7 @@ class UploadModel extends Model
     {
         return $this->type === 'video';
     }
-    
+
     /**
      * Check if the file is an audio file.
      *
@@ -157,7 +157,7 @@ class UploadModel extends Model
     {
         return $this->type === 'audio';
     }
-    
+
     /**
      * Check if the file is a spreadsheet.
      *
@@ -167,7 +167,7 @@ class UploadModel extends Model
     {
         return $this->type === 'spreadsheet';
     }
-    
+
     /**
      * Check if the file is a presentation.
      *
@@ -177,7 +177,7 @@ class UploadModel extends Model
     {
         return $this->type === 'presentation';
     }
-    
+
     /**
      * Check if the file is an archive.
      *

@@ -2,8 +2,8 @@
 
 namespace Lightpack\Tests\Config;
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Config\Env;
+use PHPUnit\Framework\TestCase;
 
 class EnvTest extends TestCase
 {

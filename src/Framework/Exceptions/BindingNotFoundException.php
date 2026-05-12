@@ -2,4 +2,6 @@
 
 namespace Lightpack\Exceptions;
 
-class BindingNotFoundException extends \Exception {}    
+class BindingNotFoundException extends \Exception
+{
+}

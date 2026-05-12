@@ -21,13 +21,13 @@ class ImageRule
             'min_height' => null,
             'max_height' => null,
         ], $constraints);
-        
+
         $this->message = 'Invalid image dimensions';
     }
 
-    public function __invoke($value, array $data = []): bool 
+    public function __invoke($value, array $data = []): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
@@ -37,17 +37,18 @@ class ImageRule
         }
 
         // Single file upload
-        if (isset($value['tmp_name']) && !is_array($value['tmp_name'])) {
+        if (isset($value['tmp_name']) && ! is_array($value['tmp_name'])) {
             return $this->validateSingleImage($value['tmp_name']);
         }
 
         // Multiple file upload
         if (isset($value['tmp_name']) && is_array($value['tmp_name'])) {
             foreach ($value['tmp_name'] as $tmp_name) {
-                if (!$this->validateSingleImage($tmp_name)) {
+                if (! $this->validateSingleImage($tmp_name)) {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -56,8 +57,9 @@ class ImageRule
 
     private function validateSingleImage(string $path): bool
     {
-        if (!$this->isImage($path)) {
+        if (! $this->isImage($path)) {
             $this->message = 'Invalid image file';
+
             return false;
         }
 
@@ -65,21 +67,25 @@ class ImageRule
 
         if ($this->constraints['min_width'] && $this->dimensions['width'] < $this->constraints['min_width']) {
             $this->message = sprintf('Image width must be at least %d pixels', $this->constraints['min_width']);
+
             return false;
         }
 
         if ($this->constraints['max_width'] && $this->dimensions['width'] > $this->constraints['max_width']) {
             $this->message = sprintf('Image width must not exceed %d pixels', $this->constraints['max_width']);
+
             return false;
         }
 
         if ($this->constraints['min_height'] && $this->dimensions['height'] < $this->constraints['min_height']) {
             $this->message = sprintf('Image height must be at least %d pixels', $this->constraints['min_height']);
+
             return false;
         }
 
         if ($this->constraints['max_height'] && $this->dimensions['height'] > $this->constraints['max_height']) {
             $this->message = sprintf('Image height must not exceed %d pixels', $this->constraints['max_height']);
+
             return false;
         }
 
@@ -90,13 +96,14 @@ class ImageRule
     {
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
         $type = $finfo->file($path);
+
         return $type && str_starts_with($type, 'image/');
     }
 
     protected function getDimensions(string $path): array
     {
         $info = @getimagesize($path);
-        
+
         if ($info === false) {
             return ['width' => 0, 'height' => 0];
         }

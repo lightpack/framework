@@ -1,7 +1,7 @@
 <?php
 
-use Lightpack\Database\Lucid\Model;
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\Model;
 use PHPUnit\Framework\TestCase;
 
 class BooleanCastTestModel extends Model
@@ -36,8 +36,13 @@ class BooleanCastTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -51,7 +56,7 @@ class BooleanCastTest extends TestCase
 
     public function testBooleanCastStoresTrueAsOne(): void
     {
-        $product = new BooleanCastTestModel();
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
         $product->is_active = true;
         $product->save();
@@ -64,7 +69,7 @@ class BooleanCastTest extends TestCase
 
     public function testBooleanCastStoresFalseAsZero(): void
     {
-        $product = new BooleanCastTestModel();
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
         $product->is_active = false;
         $product->save();
@@ -82,7 +87,7 @@ class BooleanCastTest extends TestCase
         $id = $this->db->lastInsertId();
 
         $product = new BooleanCastTestModel($id);
-        
+
         $this->assertTrue($product->is_active);
         $this->assertIsBool($product->is_active);
     }
@@ -94,7 +99,7 @@ class BooleanCastTest extends TestCase
         $id = $this->db->lastInsertId();
 
         $product = new BooleanCastTestModel($id);
-        
+
         $this->assertFalse($product->is_active);
         $this->assertIsBool($product->is_active);
     }
@@ -103,8 +108,8 @@ class BooleanCastTest extends TestCase
     {
         // Simulate checked checkbox: sends 'on' or '1'
         $checkboxValue = 'on';
-        
-        $product = new BooleanCastTestModel();
+
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
         $product->is_active = $checkboxValue; // Will be cast to bool
         $product->save();
@@ -122,8 +127,8 @@ class BooleanCastTest extends TestCase
     {
         // Simulate unchecked checkbox: sends nothing, defaults to false
         $checkboxValue = false;
-        
-        $product = new BooleanCastTestModel();
+
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
         $product->is_active = $checkboxValue;
         $product->save();
@@ -139,7 +144,7 @@ class BooleanCastTest extends TestCase
 
     public function testMultipleBooleanFields(): void
     {
-        $product = new BooleanCastTestModel();
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
         $product->is_active = true;
         $product->is_featured = false;
@@ -147,7 +152,7 @@ class BooleanCastTest extends TestCase
         $product->save();
 
         $retrieved = new BooleanCastTestModel($product->id);
-        
+
         $this->assertTrue($retrieved->is_active);
         $this->assertFalse($retrieved->is_featured);
         $this->assertTrue($retrieved->in_stock);
@@ -155,7 +160,7 @@ class BooleanCastTest extends TestCase
 
     public function testBooleanUpdateFromTrueToFalse(): void
     {
-        $product = new BooleanCastTestModel();
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
         $product->is_active = true;
         $product->save();
@@ -177,7 +182,7 @@ class BooleanCastTest extends TestCase
 
     public function testBooleanUpdateFromFalseToTrue(): void
     {
-        $product = new BooleanCastTestModel();
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
         $product->is_active = false;
         $product->save();
@@ -199,9 +204,9 @@ class BooleanCastTest extends TestCase
 
     public function testBooleanWithStringValues(): void
     {
-        $product = new BooleanCastTestModel();
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
-        
+
         // Test truthy string values
         $product->is_active = '1';
         $product->save();
@@ -220,9 +225,9 @@ class BooleanCastTest extends TestCase
 
     public function testBooleanWithNumericValues(): void
     {
-        $product = new BooleanCastTestModel();
+        $product = new BooleanCastTestModel;
         $product->name = 'Test Product';
-        
+
         // Test numeric 1
         $product->is_active = 1;
         $product->save();
@@ -238,13 +243,13 @@ class BooleanCastTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown cast type: 'boolean'");
-        
+
         // Create a model with invalid cast type
         $model = new class extends Model {
             protected $table = 'products';
             protected $casts = ['is_active' => 'boolean'];  // Invalid - should be 'bool'
         };
-        
+
         $model->name = 'Test Product';
         $model->is_active = true;
         $model->save();  // Should throw exception

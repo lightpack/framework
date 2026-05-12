@@ -2,9 +2,9 @@
 
 namespace Lightpack\Filters;
 
+use Lightpack\Container\Container;
 use Lightpack\Http\Request;
 use Lightpack\Http\Response;
-use Lightpack\Container\Container;
 
 class Filter
 {
@@ -59,11 +59,11 @@ class Filter
 
     private function ensureFilterIsValid(string $filter): void
     {
-        if (!class_exists($filter)) {
+        if (! class_exists($filter)) {
             throw new \Exception("Filter class {$filter} does not exist.");
         }
 
-        if (!in_array(FilterInterface::class, class_implements($filter))) {
+        if (! in_array(FilterInterface::class, class_implements($filter))) {
             throw new \Exception("Filter class {$filter} must implement interface " . FilterInterface::class);
         }
     }

@@ -73,7 +73,7 @@ class RelationLoader
         $include = $value;
 
         if (is_callable($value)) {
-            if (!is_string($key)) {
+            if (! is_string($key)) {
                 throw new \Exception("Relation key must be a string.");
             }
             $constraint = $value;
@@ -87,7 +87,7 @@ class RelationLoader
             return;
         }
 
-        if (!method_exists($this->model, $relation)) {
+        if (! method_exists($this->model, $relation)) {
             throw new \Exception("Trying to eager load `{$relation}` but no relationship has been defined.");
         }
 
@@ -96,7 +96,7 @@ class RelationLoader
         $ids = $this->getRelationIds($models, $this->model->getRelationType());
         $pivotKeyName = $this->getPivotKeyName($this->model->getRelationType());
 
-        if (!$ids) {
+        if (! $ids) {
             return;
         }
 
@@ -120,7 +120,7 @@ class RelationLoader
         $include = $value;
 
         if (is_callable($value)) {
-            if (!is_string($key)) {
+            if (! is_string($key)) {
                 throw new \Exception("Relation key must be a string.");
             }
             $constraint = $value;
@@ -145,7 +145,7 @@ class RelationLoader
                     }
                 }
 
-                if (!$model->hasAttribute($include . '_count')) {
+                if (! $model->hasAttribute($include . '_count')) {
                     $model->{$include . '_count'} = 0;
                 }
             }
@@ -163,6 +163,7 @@ class RelationLoader
 
         // hasMany and belongsTo
         $ids = $models->column($this->model->getRelatingForeignKey());
+
         return array_unique($ids);
     }
 
@@ -191,9 +192,11 @@ class RelationLoader
             switch ($this->model->getRelationType()) {
                 case 'hasOne':
                     $model->setAttribute($relation, $children->first([$this->model->getRelatingForeignKey() => $model->{$this->model->getPrimaryKey()}]));
+
                     break;
                 case 'belongsTo':
                     $model->setAttribute($relation, $children->find($model->{$this->model->getRelatingForeignKey()}));
+
                     break;
                 case 'hasMany':
                 case 'hasManyThrough':
@@ -201,9 +204,10 @@ class RelationLoader
                     $model->setAttribute($relation, $children->filter(function ($child) use ($model) {
                         return $child->{$this->model->getRelatingKey()} === $model->{$this->model->getPrimaryKey()};
                     }));
+
                     break;
             }
-            
+
             $model->markRelationLoaded($relation);
         }
     }

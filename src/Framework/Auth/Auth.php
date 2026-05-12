@@ -58,14 +58,14 @@ class Auth
         if ($this->manager->getAuthUser()) {
             return true;
         }
-        
+
         // Check if authenticated via session (web login)
         return session()->get('_logged_in', false);
     }
 
     public function isGuest(): bool
     {
-        return !$this->isLoggedIn();
+        return ! $this->isLoggedIn();
     }
 
     public function attempt(): ?IdentityInterface
@@ -103,7 +103,7 @@ class Auth
     /**
      * Login as a specific user without credentials.
      * Useful for testing and user impersonation.
-     * 
+     *
      * @param IdentityInterface $user The user to login as
      * @return self For method chaining
      */

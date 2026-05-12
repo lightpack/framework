@@ -9,7 +9,7 @@ use Lightpack\Validation\Traits\ValidationMessageTrait;
 class MultipleFileRule
 {
     use ValidationMessageTrait;
-    
+
     private ?int $min;
     private ?int $max;
 
@@ -20,9 +20,9 @@ class MultipleFileRule
         $this->message = $this->buildMessage();
     }
 
-    public function __invoke($value, array $data = []): bool 
+    public function __invoke($value, array $data = []): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
@@ -43,11 +43,13 @@ class MultipleFileRule
 
         if ($this->min !== null && $count < $this->min) {
             $this->message = "Must upload at least {$this->min} files";
+
             return false;
         }
 
         if ($this->max !== null && $count > $this->max) {
             $this->message = "Cannot upload more than {$this->max} files";
+
             return false;
         }
 

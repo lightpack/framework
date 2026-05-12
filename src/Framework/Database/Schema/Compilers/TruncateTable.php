@@ -6,6 +6,6 @@ class TruncateTable
 {
     public function compile(string $table): string
     {
-       return "TRUNCATE {$table};";
+        return "TRUNCATE {$table};";
     }
 }

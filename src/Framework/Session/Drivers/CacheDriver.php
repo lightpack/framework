@@ -2,10 +2,10 @@
 
 namespace Lightpack\Session\Drivers;
 
-use Lightpack\Session\DriverInterface;
 use Lightpack\Cache\Cache;
-use Lightpack\Http\Cookie;
 use Lightpack\Config\Config;
+use Lightpack\Http\Cookie;
+use Lightpack\Session\DriverInterface;
 
 class CacheDriver implements DriverInterface
 {
@@ -17,7 +17,7 @@ class CacheDriver implements DriverInterface
     private string $prefix = 'session:';
     private Config $config;
 
-    public function __construct(Cache $cache, Cookie $cookie, Config $config) 
+    public function __construct(Cache $cache, Cookie $cookie, Config $config)
     {
         $this->cache = $cache;
         $this->cookie = $cookie;
@@ -34,11 +34,11 @@ class CacheDriver implements DriverInterface
 
         // Get or generate session ID
         $this->sessionId = $this->cookie->get(session_name()) ?: $this->generateSessionId();
-        
+
         // Set cookie with same lifetime as session
         $lifetime = (int) $this->config->get('session.lifetime', 7200);
         $this->cookie->set(
-            session_name(), 
+            session_name(),
             $this->sessionId,
             time() + $lifetime,
             [
@@ -52,7 +52,7 @@ class CacheDriver implements DriverInterface
 
         // Load session data with TTL check
         $data = $this->cache->get($this->getCacheKey());
-        
+
         // If no data or TTL expired, start fresh
         if ($data === null) {
             $this->data = [];
@@ -88,10 +88,10 @@ class CacheDriver implements DriverInterface
     {
         // Delete old session
         $this->cache->delete($this->getCacheKey());
-        
+
         // Generate new session ID
         $this->sessionId = $this->generateSessionId();
-        
+
         // Set new cookie
         $this->cookie->set(session_name(), $this->sessionId);
 
@@ -107,7 +107,7 @@ class CacheDriver implements DriverInterface
             $this->cache->delete($this->getCacheKey());
             $this->cookie->delete(session_name());
         }
-        
+
         $this->data = [];
         $this->started = false;
         $this->sessionId = '';
@@ -130,10 +130,10 @@ class CacheDriver implements DriverInterface
 
     private function save(): void
     {
-        if (!$this->started) {
+        if (! $this->started) {
             return;
         }
-        
+
         // Use session lifetime from config for cache TTL
         $lifetime = (int) $this->config->get('session.lifetime', 7200);
         $this->cache->set($this->getCacheKey(), $this->data, $lifetime);

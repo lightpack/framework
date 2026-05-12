@@ -3,7 +3,6 @@
 use Lightpack\Cache\Cache;
 use Lightpack\Cache\Drivers\ArrayDriver;
 use Lightpack\Config\Config;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Schema\Schema;
@@ -12,6 +11,7 @@ use Lightpack\Logger\Drivers\NullLogger;
 use Lightpack\Logger\Logger;
 use Lightpack\Settings\Settings;
 use Lightpack\Settings\SettingsTrait;
+use PHPUnit\Framework\TestCase;
 
 class SettingsIntegrationTest extends TestCase
 {
@@ -26,19 +26,19 @@ class SettingsIntegrationTest extends TestCase
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
 
         $this->container = Container::getInstance();
-        $this->container->register('db', fn() => $this->db);
-        $this->container->register('cache', fn() => new Cache(new ArrayDriver));
-        $this->container->register('logger', fn() => new Logger(new NullLogger));
+        $this->container->register('db', fn () => $this->db);
+        $this->container->register('cache', fn () => new Cache(new ArrayDriver));
+        $this->container->register('logger', fn () => new Logger(new NullLogger));
 
-        $config = new Config();
+        $config = new Config;
         $config->set('settings', [
             'cache' => true,
             'ttl' => 3600,
         ]);
-        $this->container->register('config', fn() => $config);
+        $this->container->register('config', fn () => $config);
 
         $this->schema = new Schema($this->db);
-        $this->schema->createTable('settings', function(Table $table) {
+        $this->schema->createTable('settings', function (Table $table) {
             $table->id();
             $table->varchar('`key`', 150);
             $table->varchar('key_type', 25)->nullable();
@@ -188,7 +188,7 @@ class SettingsIntegrationTest extends TestCase
 
     public function testTraitOnModel()
     {
-        $this->container->register('settings', fn() => $this->getSettingsInstance());
+        $this->container->register('settings', fn () => $this->getSettingsInstance());
         $user = new class extends Model {
             use SettingsTrait;
             protected $table = 'users';

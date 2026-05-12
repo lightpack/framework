@@ -14,7 +14,7 @@ final class FilterTest extends TestCase
 
     public function setUp(): void
     {
-        $this->request = new \Lightpack\Http\Request();
+        $this->request = new \Lightpack\Http\Request;
         $this->response = new \Lightpack\Http\Response(new Url);
         $this->filter = new \Lightpack\Filters\Filter(Container::getInstance(), $this->request, $this->response);
     }
@@ -43,11 +43,11 @@ final class FilterTest extends TestCase
         $this->assertInstanceOf(\Lightpack\Http\Response::class, $result);
         $this->assertTrue($result->getBody() == 'hello');
     }
-    
+
     public function __testFilterBeforeMethod()
     {
         $this->request->setMethod('post');
-        $request = new \Lightpack\Http\Request();
+        $request = new \Lightpack\Http\Request;
         $this->mockFilter->before($request);
         $this->assertTrue($request->input('framework') == 'Lightpack');
     }

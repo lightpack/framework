@@ -1,8 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\SocialAuth\Providers\GoogleProvider;
 use Lightpack\Config\Config;
+use Lightpack\SocialAuth\Providers\GoogleProvider;
+use PHPUnit\Framework\TestCase;
 
 class GoogleProviderTest extends TestCase
 {
@@ -23,7 +23,7 @@ class GoogleProviderTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'redirect_uri' => 'http://localhost/callback',
-            'scopes' => ['email']
+            'scopes' => ['email'],
         ]);
         $provider = new GoogleProvider($mockConfig);
         $url = $provider->stateless()->getAuthUrl();
@@ -38,7 +38,7 @@ class GoogleProviderTest extends TestCase
             'client_id' => 'web-client-id',
             'client_secret' => 'web-client-secret',
             'redirect_uri' => 'http://localhost/web-callback',
-            'scopes' => ['profile']
+            'scopes' => ['profile'],
         ]);
         $provider = new GoogleProvider($mockConfig);
         $url = $provider->getAuthUrl();
@@ -53,7 +53,7 @@ class GoogleProviderTest extends TestCase
             'client_id' => 'id',
             'client_secret' => 'secret',
             'redirect_uri' => 'http://localhost/callback',
-            'scopes' => ['email']
+            'scopes' => ['email'],
         ]);
         $provider = new GoogleProvider($mockConfig);
         $this->expectException(\RuntimeException::class);

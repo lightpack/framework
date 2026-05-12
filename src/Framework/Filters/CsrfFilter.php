@@ -2,11 +2,10 @@
 
 namespace Lightpack\Filters;
 
-use Lightpack\Http\Request;
-use Lightpack\Http\Response;
-use Lightpack\Filters\FilterInterface;
 use Lightpack\Exceptions\InvalidCsrfTokenException;
 use Lightpack\Exceptions\SessionExpiredException;
+use Lightpack\Http\Request;
+use Lightpack\Http\Response;
 
 class CsrfFilter implements FilterInterface
 {
@@ -14,19 +13,19 @@ class CsrfFilter implements FilterInterface
 
     public function before(Request $request, array $params = [])
     {
-        if(get_env('APP_ENV') == 'testing') {
+        if (get_env('APP_ENV') == 'testing') {
             return;
         }
 
-        if(!in_array($request->method(), $this->protectedMethods)) {
+        if (! in_array($request->method(), $this->protectedMethods)) {
             return;
         }
 
-        if(!session()->has('_token')) {
+        if (! session()->has('_token')) {
             throw new SessionExpiredException('Your session has expired. Please refresh the page and try again.');
         }
 
-        if($request->csrfToken() !== session()->get('_token')) {
+        if ($request->csrfToken() !== session()->get('_token')) {
             throw new InvalidCsrfTokenException('CSRF security token is invalid');
         }
     }
@@ -34,5 +33,5 @@ class CsrfFilter implements FilterInterface
     public function after(Request $request, Response $response, array $params = []): Response
     {
         return $response;
-    } 
+    }
 }

@@ -52,7 +52,7 @@ class Event
 
     protected function throwExceptionIfEventNotFound(string $event): void
     {
-        if (!isset($this->subscribers[$event])) {
+        if (! isset($this->subscribers[$event])) {
             throw new EventNotFoundException(
                 sprintf(
                     'Event `%s` is not registered',
@@ -64,7 +64,7 @@ class Event
 
     public function throwExceptionIfHandleMethodNotFound(object $subscriber)
     {
-        if (!method_exists($subscriber, 'handle')) {
+        if (! method_exists($subscriber, 'handle')) {
             throw new EventHandlerMethodNotFoundException(sprintf('The handle() method is not defined in event class `%s`', get_class($subscriber)));
         }
     }

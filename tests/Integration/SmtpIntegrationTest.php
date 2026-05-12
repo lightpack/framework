@@ -4,14 +4,13 @@ namespace Lightpack\Tests\Integration;
 
 use Lightpack\Mail\Mail;
 use Lightpack\Mail\MailManager;
-use Lightpack\Mail\Drivers\SmtpDriver;
 use PHPUnit\Framework\TestCase;
 
 /**
  * SMTP Integration Test
- * 
+ *
  * This test actually sends emails via SMTP to verify the mail system works end-to-end.
- * 
+ *
  * Setup:
  * 1. Create a Mailtrap account (https://mailtrap.io)
  * 2. Get your SMTP credentials
@@ -20,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  *    - MAILTRAP_PORT
  *    - MAILTRAP_USERNAME
  *    - MAILTRAP_PASSWORD
- * 
+ *
  * Run: ./vendor/bin/phpunit tests/Integration/SmtpIntegrationTest.php
  */
 class SmtpIntegrationTest extends TestCase
@@ -28,12 +27,12 @@ class SmtpIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Skip if Mailtrap credentials not configured
-        if (!get_env('MAILTRAP_HOST')) {
+        if (! get_env('MAILTRAP_HOST')) {
             $this->markTestSkipped('Mailtrap credentials not configured. Set MAILTRAP_* environment variables.');
         }
-        
+
         // Configure SMTP with Mailtrap
         putenv('MAIL_HOST=' . get_env('MAILTRAP_HOST'));
         putenv('MAIL_PORT=' . get_env('MAILTRAP_PORT'));
@@ -42,18 +41,19 @@ class SmtpIntegrationTest extends TestCase
         putenv('MAIL_ENCRYPTION=tls');
         putenv('MAIL_FROM_ADDRESS=test@example.com');
         putenv('MAIL_FROM_NAME=Integration Test');
-        
+
         // Register MailManager with SMTP driver
         $container = \Lightpack\Container\Container::getInstance();
         $mailManager = new MailManager($container);
         $mailManager->setDefaultDriver('smtp');
-        $container->register('mail', fn() => $mailManager);
+        $container->register('mail', fn () => $mailManager);
     }
 
     public function testSmtpSendsBasicEmail()
     {
-        $mail = new class(app('mail')) extends Mail {
-            public function dispatch(array $payload = []) {
+        $mail = new class (app('mail')) extends Mail {
+            public function dispatch(array $payload = [])
+            {
                 $this->to('recipient@example.com', 'Test Recipient')
                     ->subject('SMTP Integration Test')
                     ->body('<h1>Hello from Lightpack!</h1><p>This is a real SMTP test.</p>')
@@ -63,16 +63,17 @@ class SmtpIntegrationTest extends TestCase
 
         // This will actually send via SMTP (throws exception on failure)
         $mail->dispatch();
-        
+
         $this->assertTrue(true, 'Email sent successfully via SMTP');
-        
+
         echo "\n✅ Email sent! Check your Mailtrap inbox.\n";
     }
 
     public function testSmtpSendsEmailWithAllFeatures()
     {
-        $mail = new class(app('mail')) extends Mail {
-            public function dispatch(array $payload = []) {
+        $mail = new class (app('mail')) extends Mail {
+            public function dispatch(array $payload = [])
+            {
                 $this->to('user1@example.com', 'User One')
                     ->to('user2@example.com', 'User Two')
                     ->cc('manager@example.com', 'Manager')
@@ -86,9 +87,9 @@ class SmtpIntegrationTest extends TestCase
         };
 
         $mail->dispatch();
-        
+
         $this->assertTrue(true, 'Complex email sent successfully');
-        
+
         echo "\n✅ Complex email sent! Verify in Mailtrap:\n";
         echo "   - 2 recipients (To)\n";
         echo "   - 1 CC\n";
@@ -103,8 +104,9 @@ class SmtpIntegrationTest extends TestCase
         $tempFile = tempnam(sys_get_temp_dir(), 'smtp_test_');
         file_put_contents($tempFile, "This is a test attachment.\nLine 2\nLine 3");
 
-        $mail = new class(app('mail')) extends Mail {
-            public function dispatch(array $payload = []) {
+        $mail = new class (app('mail')) extends Mail {
+            public function dispatch(array $payload = [])
+            {
                 $this->to('recipient@example.com')
                     ->subject('Attachment Test')
                     ->body('<h1>Email with Attachment</h1>')
@@ -114,11 +116,11 @@ class SmtpIntegrationTest extends TestCase
         };
 
         $mail->dispatch(['file' => $tempFile]);
-        
+
         $this->assertTrue(true, 'Email with attachment sent successfully');
-        
+
         unlink($tempFile);
-        
+
         echo "\n✅ Email with attachment sent! Check Mailtrap for 'test-document.txt'\n";
     }
 
@@ -126,15 +128,16 @@ class SmtpIntegrationTest extends TestCase
     {
         // Temporarily set invalid credentials
         putenv('MAIL_PASSWORD=invalid_password');
-        
+
         // Re-register with invalid credentials
         $container = \Lightpack\Container\Container::getInstance();
         $mailManager = new MailManager($container);
         $mailManager->setDefaultDriver('smtp');
-        $container->register('mail', fn() => $mailManager);
+        $container->register('mail', fn () => $mailManager);
 
-        $mail = new class(app('mail')) extends Mail {
-            public function dispatch(array $payload = []) {
+        $mail = new class (app('mail')) extends Mail {
+            public function dispatch(array $payload = [])
+            {
                 $this->to('test@example.com')
                     ->subject('Should Fail')
                     ->body('This should not send')
@@ -144,7 +147,7 @@ class SmtpIntegrationTest extends TestCase
 
         $this->expectException(\Exception::class);
         $mail->dispatch();
-        
+
         echo "\n✅ Invalid credentials properly rejected\n";
     }
 }

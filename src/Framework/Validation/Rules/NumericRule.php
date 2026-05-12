@@ -10,7 +10,6 @@ class NumericRule
 {
     use ValidationMessageTrait;
 
-    
     public function __construct()
     {
         $this->message = 'Must be a numeric value';

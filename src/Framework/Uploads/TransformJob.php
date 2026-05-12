@@ -2,14 +2,14 @@
 
 namespace Lightpack\Uploads;
 
-use Lightpack\Storage\StorageInterface;
-use Lightpack\Utils\Image;
 use Lightpack\Container\Container;
 use Lightpack\Jobs\Job;
+use Lightpack\Storage\StorageInterface;
+use Lightpack\Utils\Image;
 
 /**
  * TransformJob
- * 
+ *
  * Handles image transformations for uploaded files.
  */
 class TransformJob extends Job
@@ -53,12 +53,12 @@ class TransformJob extends Job
      * @var \Lightpack\Uploads\UploadModel
      */
     protected $upload;
-    
+
     /**
      * @var array
      */
     protected $transformations;
-    
+
     /**
      * Execute the job.
      *
@@ -70,15 +70,15 @@ class TransformJob extends Job
         $this->transformations = $this->payload['transformations'];
 
         // Only process image files
-        if (!$this->isImage()) {
+        if (! $this->isImage()) {
             return;
         }
-        
+
         $storage = $this->getStorage();
         $originalFilePath = $this->upload->getPath();
         $fileContent = $storage->read($originalFilePath);
-        
-        if(!$fileContent) {
+
+        if (! $fileContent) {
             return;
         }
 
@@ -87,7 +87,7 @@ class TransformJob extends Job
             $this->processTransformation($variant, $options, $fileContent);
         }
     }
-    
+
     /**
      * Process a single transformation.
      *
@@ -104,7 +104,7 @@ class TransformJob extends Job
         // Create a temporary file
         $tempFile = tempnam(sys_get_temp_dir(), 'transform_');
         file_put_contents($tempFile, $fileContent);
-        
+
         // Create image instance
         $image = $this->createImage($tempFile);
 
@@ -125,30 +125,30 @@ class TransformJob extends Job
                 $image->{$method}(...$params);
             }
         }
-        
+
         // Save the transformed image to a temporary file with proper extension
         $extension = $this->upload->extension;
         $transformedTempFile = tempnam(sys_get_temp_dir(), 'transformed_');
         $transformedTempFileWithExt = $transformedTempFile . '.' . $extension;
         rename($transformedTempFile, $transformedTempFileWithExt);
-        
+
         // Save the image with the proper extension
         $image->save($transformedTempFileWithExt);
-        
+
         // Store the transformed file
         $transformedContent = file_get_contents($transformedTempFileWithExt);
         $storage->write($transformedFilePath, $transformedContent);
-        
+
         // Clean up temporary files
         if (file_exists($tempFile)) {
             unlink($tempFile);
         }
-        
+
         if (file_exists($transformedTempFileWithExt)) {
             unlink($transformedTempFileWithExt);
         }
     }
-    
+
     /**
      * Create an image instance.
      *
@@ -159,7 +159,7 @@ class TransformJob extends Job
     {
         return new Image($path);
     }
-    
+
     /**
      * Check if the upload is one of the supported image formats.
      *
@@ -169,10 +169,10 @@ class TransformJob extends Job
     {
         $mimeType = $this->upload->mime_type;
         $imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        
+
         return in_array($mimeType, $imageTypes);
     }
-    
+
     /**
      * Get the storage instance.
      *

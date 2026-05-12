@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Exceptions\BindingNotFoundException;
 use Lightpack\Exceptions\ServiceNotFoundException;
+use PHPUnit\Framework\TestCase;
 
 require 'classes/A.php';
 require 'classes/B.php';
@@ -40,25 +40,27 @@ final class ContainerTest extends TestCase
     public function testContainerHasMethod()
     {
         $this->container->register('service', function () {
-            return new stdClass();
+            return new stdClass;
         });
         $this->assertTrue($this->container->has('service'));
         $this->assertFalse($this->container->has('mailer'));
     }
+
     public function testContainerGetMethod()
     {
         $this->container->register('service', function () {
-            return new stdClass();
+            return new stdClass;
         });
         $this->assertInstanceOf(stdClass::class, $this->container->get('service'));
         $this->assertSame($this->container->get('service'), $this->container->get('service'));
         $this->expectException(\Lightpack\Exceptions\ServiceNotFoundException::class);
         $this->container->get('mailer');
     }
+
     public function testContainerFactoryMethod()
     {
         $this->container->factory('service', function () {
-            return new stdClass();
+            return new stdClass;
         });
         $this->assertNotSame($this->container->get('service'), $this->container->get('service'));
         $this->assertInstanceOf(stdClass::class, $this->container->get('service'));
@@ -176,8 +178,8 @@ final class ContainerTest extends TestCase
 
     public function testContainerReturnsSameInstanceWhenResolvedWithAlias()
     {
-        $this->container->register('service', function() {
-            return new ServiceA();
+        $this->container->register('service', function () {
+            return new ServiceA;
         });
 
         $this->container->alias(Service::class, 'service');
@@ -199,7 +201,7 @@ final class ContainerTest extends TestCase
 
     public function testContainerCanAliasMultipleInterfacesWithSameInstance()
     {
-        $this->container->instance('x', new X());
+        $this->container->instance('x', new X);
         $this->container->alias(InterfaceFoo::class, 'x');
         $this->container->alias(InterfaceBar::class, 'x');
 

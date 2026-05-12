@@ -3,7 +3,6 @@
 namespace Lightpack\Database\Lucid;
 
 use Lightpack\Database\Query\Query;
-use Lightpack\Database\Lucid\Pagination;
 
 class Builder extends Query
 {
@@ -32,13 +31,14 @@ class Builder extends Query
     public function all()
     {
         $results = parent::all();
+
         return $this->hydrate($results);
     }
 
     public function one()
     {
         $result = parent::one();
-        
+
         if ($result) {
             $result = $this->hydrateItem((array) $result);
         }
@@ -53,10 +53,10 @@ class Builder extends Query
 
     /**
      * Find a model by its primary key within the current query scope.
-     * 
+     *
      * This method adds a WHERE clause for the primary key and returns a single model.
      * It respects any existing WHERE clauses from relationships or other query constraints.
-     * 
+     *
      * @param mixed $id The primary key value to search for
      * @param bool $fail Whether to throw an exception if the record is not found (default: true)
      * @return Model|null The found model instance or null if not found (when $fail is false)
@@ -65,37 +65,38 @@ class Builder extends Query
     public function find($id, bool $fail = true): ?Model
     {
         $primaryKey = $this->model->getPrimaryKey();
-        
+
         // Add WHERE clause for the primary key
         $this->where($primaryKey, '=', $id);
-        
+
         // Execute the query
         $result = $this->one();
-        
+
         // Handle not found case
-        if (!$result && $fail) {
+        if (! $result && $fail) {
             throw new \Lightpack\Exceptions\RecordNotFoundException(
                 sprintf('%s: No record found for ID = %s', get_class($this->model), $id)
             );
         }
-        
+
         return $result;
     }
 
     /**
-     * @param integer|null $limit
-     * @param integer|null $page
+     * @param int|null $limit
+     * @param int|null $page
      * @return \Lightpack\Database\Lucid\Pagination
      */
     public function paginate(?int $limit = null, ?int $page = null)
     {
         $pagination = parent::paginate($limit, $page);
-        
+
         if ($pagination->items()) {
             $items = $this->hydrate($pagination->items());
+
             return new Pagination($items, $pagination->total(), $pagination->limit(), $pagination->currentPage());
         }
-        
+
         return new Pagination(new Collection([]), $pagination->total(), $pagination->limit(), $pagination->currentPage());
     }
 
@@ -140,6 +141,7 @@ class Builder extends Query
         $relations = func_get_args();
         $includes = is_array($relations[0]) ? $relations[0] : $relations;
         $this->relationLoader->setIncludes($includes);
+
         return $this;
     }
 
@@ -148,19 +150,20 @@ class Builder extends Query
         $relations = func_get_args();
         $includes = is_array($relations[0]) ? $relations[0] : $relations;
         $this->relationLoader->setCountIncludes($includes);
+
         return $this;
     }
 
     public function has(string $relation, ?string $operator = null, ?string $count = null, ?callable $constraint = null): self
     {
-        if (!method_exists($this->model, $relation)) {
+        if (! method_exists($this->model, $relation)) {
             throw new \Exception("Relation {$relation} does not exist.");
         }
 
         $relatingTable = $this->model->{$relation}()->table;
 
         // Count query
-        if (!is_null($operator) && !is_null($count)) {
+        if (! is_null($operator) && ! is_null($count)) {
             return $this->buildCountQuery($relatingTable, $operator, $count, $constraint);
         }
 
@@ -192,6 +195,7 @@ class Builder extends Query
         }
 
         $bindings[] = $count;
+
         return $this->whereRaw('(' . $query->toSql() . ')' . ' ' . $operator . ' ' . '?', $bindings);
     }
 

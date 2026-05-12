@@ -14,7 +14,7 @@ trait ValidationMessageTrait
     /**
      * Get the validation error message
      */
-    public function getMessage(): string 
+    public function getMessage(): string
     {
         return $this->message;
     }

@@ -2,7 +2,6 @@
 
 namespace Lightpack\Auth;
 
-use Lightpack\Http\Redirect;
 use Lightpack\Auth\Authenticators\BearerAuthenticator;
 use Lightpack\Auth\Authenticators\CookieAuthenticator;
 use Lightpack\Auth\Authenticators\FormAuthenticator;
@@ -35,12 +34,13 @@ class AuthManager
      * Set the current identity
      * Used internally by auth system
      */
-    public function setIdentity(IdentityInterface $identity): void 
+    public function setIdentity(IdentityInterface $identity): void
     {
         self::$identity = $identity;
     }
 
-    public function clearIdentity() {
+    public function clearIdentity()
+    {
         self::$identity = null;
     }
 
@@ -68,8 +68,8 @@ class AuthManager
 
     public function getAuthUser(): ?IdentityInterface
     {
-        if(!self::$identity) {
-            if(session()->get('_logged_in')) {
+        if (! self::$identity) {
+            if (session()->get('_logged_in')) {
                 return self::$identity = $this->getIdentifier()->findById(session()->get('_auth_id'));
             }
 
@@ -78,7 +78,6 @@ class AuthManager
 
         return self::$identity;
     }
-
 
     public function attempt(): ?IdentityInterface
     {
@@ -113,7 +112,7 @@ class AuthManager
 
     public function getNormalizedConfig()
     {
-        if (!isset($this->normalizedConfig)) {
+        if (! isset($this->normalizedConfig)) {
             throw new \Exception("Configuration not found for auth driver: '{$this->driver}'");
         }
 
@@ -128,7 +127,7 @@ class AuthManager
 
     public function persist()
     {
-        if (!self::$identity) {
+        if (! self::$identity) {
             return;
         }
 
@@ -140,7 +139,6 @@ class AuthManager
             cookie()->set('remember_token', self::$identity->getRememberToken(), $duration);
         }
     }
-
 
     public function checkRememberMe(): ?IdentityInterface
     {
@@ -175,7 +173,7 @@ class AuthManager
         $fields['last_login_at'] = date('Y-m-d H:i:s');
 
         $identifier = $this->getIdentifier();
-        
+
         $identifier->updateLogin(self::$identity->getId(), $fields);
     }
 
@@ -201,7 +199,7 @@ class AuthManager
     {
         $identity = $this->getAuthenticator($authenticatorType)->verify();
 
-        if($identity) {
+        if ($identity) {
             self::$identity = $identity;
         }
 
@@ -225,7 +223,7 @@ class AuthManager
 
     protected function getAuthenticator(string $authenticatorType): Authenticator
     {
-        if (!isset(self::$authenticators[$authenticatorType])) {
+        if (! isset(self::$authenticators[$authenticatorType])) {
             throw new \Exception("Authenticator not found for auth driver: '{$authenticatorType}'");
         }
 
@@ -238,7 +236,7 @@ class AuthManager
 
     protected function getIdentifier(): IdentifierInterface
     {
-        if('default' === $this->driver) {
+        if ('default' === $this->driver) {
             $identifier = $this->normalizedConfig['identifier'];
             $model = $this->normalizedConfig['model'];
 

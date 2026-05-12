@@ -1,4 +1,5 @@
 <?php
+
 namespace Lightpack\Mfa;
 
 use Lightpack\Auth\Models\AuthUser;

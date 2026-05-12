@@ -2,46 +2,46 @@
 
 namespace Tests\Utils;
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Utils\Asset;
+use PHPUnit\Framework\TestCase;
 
 class AssetTest extends TestCase
 {
     private string $publicPath;
     private Asset $asset;
-    
+
     protected function setUp(): void
     {
         parent::setUp();
         $this->publicPath = __DIR__ . '/fixtures/public';
-        
+
         // Create test directories
         mkdir($this->publicPath . '/css', 0777, true);
         mkdir($this->publicPath . '/js', 0777, true);
         mkdir($this->publicPath . '/img', 0777, true);
         mkdir($this->publicPath . '/fonts', 0777, true);
-        
+
         // Create test files
         file_put_contents($this->publicPath . '/css/app.css', 'body { color: black; }');
         file_put_contents($this->publicPath . '/js/app.js', 'console.log("test");');
         file_put_contents($this->publicPath . '/img/logo.png', 'fake-image-content');
-        
+
         $this->asset = new Asset($this->publicPath);
     }
-    
+
     protected function tearDown(): void
     {
         // Clean up test files
         $this->deleteDirectory($this->publicPath);
         parent::tearDown();
     }
-    
+
     private function deleteDirectory(string $dir): void
     {
-        if (!file_exists($dir)) {
+        if (! file_exists($dir)) {
             return;
         }
-        
+
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $path = $dir . '/' . $file;
@@ -81,9 +81,9 @@ class AssetTest extends TestCase
     {
         $html = $this->asset->load([
             'css/app.css',
-            'js/app.js'
+            'js/app.js',
         ]);
-        
+
         // Should contain both CSS and JS tags
         $this->assertStringContainsString("<link rel='stylesheet'", $html);
         $this->assertStringContainsString("<script src='", $html);
@@ -95,7 +95,7 @@ class AssetTest extends TestCase
     {
         $html = $this->asset->load([
             'css/app.css',
-            'css/other.css'
+            'css/other.css',
         ]);
 
         // Should only contain CSS tags
@@ -107,7 +107,7 @@ class AssetTest extends TestCase
     {
         $html = $this->asset->load([
             'js/app.js',
-            'js/other.js'
+            'js/other.js',
         ]);
 
         // Should only contain JS tags
@@ -178,9 +178,9 @@ class AssetTest extends TestCase
         $html = $this->asset->module([
             'js/app.js',
             'js/utils.js' => 'async',
-            'js/vendor.js'
+            'js/vendor.js',
         ]);
-        
+
         $this->assertEquals(3, substr_count($html, '<script type="module"'));
         $this->assertEquals(1, substr_count($html, 'async'));
         $this->assertStringContainsString("js/app.js", $html);
@@ -206,7 +206,7 @@ class AssetTest extends TestCase
     {
         $html = $this->asset->importMap([
             'uikit' => 'js/uikit.js',
-            'app' => 'js/app.js'
+            'app' => 'js/app.js',
         ]);
 
         $this->assertStringContainsString('"imports":', $html);
@@ -219,7 +219,7 @@ class AssetTest extends TestCase
     public function testImportMapWithSingleImport(): void
     {
         $html = $this->asset->importMap([
-            'app' => 'js/app.js'
+            'app' => 'js/app.js',
         ]);
 
         $this->assertStringContainsString('"imports":', $html);
@@ -233,10 +233,10 @@ class AssetTest extends TestCase
     public function testVersionManifestGeneration(): void
     {
         $this->asset->generateVersions();
-        
+
         $manifest = $this->publicPath . '/assets.json';
         $this->assertFileExists($manifest);
-        
+
         $versions = json_decode(file_get_contents($manifest), true);
         $this->assertArrayHasKey('css/app.css', $versions);
         $this->assertArrayHasKey('js/app.js', $versions);
@@ -245,10 +245,10 @@ class AssetTest extends TestCase
     public function testVersionManifestReading(): void
     {
         $this->asset->generateVersions();
-        
+
         // Clear internal versions cache
         $this->asset = new Asset($this->publicPath);
-        
+
         $url = $this->asset->url('css/app.css');
         $this->assertStringContainsString('?v=', $url);
     }
@@ -257,13 +257,13 @@ class AssetTest extends TestCase
     {
         // Create a file outside tracked directories
         file_put_contents($this->publicPath . '/random.txt', 'test');
-        
+
         $this->asset->generateVersions();
         $versions = json_decode(
             file_get_contents($this->publicPath . '/assets.json'),
             true
         );
-        
+
         $this->assertArrayNotHasKey('random.txt', $versions);
     }
 }

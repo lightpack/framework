@@ -1,10 +1,10 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\AI\Providers\OpenAI;
-use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
+use Lightpack\Http\Http;
+use PHPUnit\Framework\TestCase;
 
 class OpenAIIntegrationTest extends TestCase
 {
@@ -14,13 +14,13 @@ class OpenAIIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->apiKey = getenv('OPENAI_API_KEY');
-        
-        if (!$this->apiKey) {
+
+        if (! $this->apiKey) {
             $this->markTestSkipped('OPENAI_API_KEY environment variable not set');
         }
 
         $config = $this->createMock(Config::class);
-        $config->method('get')->willReturnCallback(function($key, $default = null) {
+        $config->method('get')->willReturnCallback(function ($key, $default = null) {
             $map = [
                 'ai.providers.openai.key' => $this->apiKey,
                 'ai.providers.openai.model' => 'gpt-3.5-turbo',
@@ -30,11 +30,12 @@ class OpenAIIntegrationTest extends TestCase
                 'ai.max_tokens' => 100,
                 'ai.cache_ttl' => 3600,
             ];
+
             return $map[$key] ?? $default;
         });
 
         $this->openai = new OpenAI(
-            new Http(),
+            new Http,
             $this->createMock(Cache::class),
             $config
         );
@@ -57,7 +58,7 @@ class OpenAIIntegrationTest extends TestCase
     public function testAskMethod()
     {
         $answer = $this->openai->ask('What is 2+2? Answer with just the number.');
-        
+
         $this->assertIsString($answer);
         $this->assertNotEmpty($answer);
     }
@@ -138,7 +139,7 @@ class OpenAIIntegrationTest extends TestCase
 
         // May succeed or fail depending on if model includes both fields
         $this->assertIsBool($result['success']);
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->assertNotEmpty($result['errors']);
         }
     }

@@ -14,14 +14,14 @@ trait UploadTrait
     {
         $query = $this->hasMany(UploadModel::class, 'model_id')
             ->where('model_type', $this->getTableName());
-            
+
         if ($collection) {
             $query->where('collection', $collection);
         }
-        
+
         return $query;
     }
-    
+
     /**
      * Get the first upload for a specific collection.
      */
@@ -29,7 +29,7 @@ trait UploadTrait
     {
         return $this->uploads($collection)->one();
     }
-    
+
     /**
      * Attach a file to the model.
      *
@@ -43,15 +43,15 @@ trait UploadTrait
     public function attach(string $key, array $config = []): UploadModel
     {
         $upload = $this->getUploadService()->save($this, $key, $config);
-        
+
         // Process transformations if defined
         if (isset($config['transformations'])) {
             $this->transformUpload($upload, $config['transformations']);
         }
-        
+
         return $upload;
     }
-    
+
     /**
      * Attach multiple files to the model.
      *
@@ -65,17 +65,17 @@ trait UploadTrait
     public function attachMultiple(string $key, array $config = []): array
     {
         $uploads = $this->getUploadService()->saveMultiple($this, $key, $config);
-        
+
         // Process transformations if defined
         if (isset($config['transformations'])) {
             foreach ($uploads as $upload) {
                 $this->transformUpload($upload, $config['transformations']);
             }
         }
-        
+
         return $uploads;
     }
-    
+
     /**
      * Attach a file from a URL.
      *
@@ -89,15 +89,15 @@ trait UploadTrait
     public function attachFromUrl(string $url, array $config = []): UploadModel
     {
         $upload = $this->getUploadService()->saveFromUrl($this, $url, $config);
-        
+
         // Process transformations if defined
         if (isset($config['transformations'])) {
             $this->transformUpload($upload, $config['transformations']);
         }
-        
+
         return $upload;
     }
-    
+
     /**
      * Detach an upload from the model.
      *
@@ -108,18 +108,18 @@ trait UploadTrait
         $upload = new UploadModel($uploadId);
         $this->getUploadService()->delete($upload);
     }
-    
+
     /**
      * Transform an upload according to the specified configurations.
      */
     protected function transformUpload(UploadModel $upload, array $transformations)
     {
         (new TransformJob)->dispatch([
-            'upload_id' => $upload->id, 
-            'transformations' => $transformations
+            'upload_id' => $upload->id,
+            'transformations' => $transformations,
         ]);
     }
-    
+
     /**
      * Get the upload service instance.
      */

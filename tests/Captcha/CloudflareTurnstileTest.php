@@ -14,7 +14,7 @@ class CloudflareTurnstileTest extends TestCase
         parent::setUp();
         $_POST = [];
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        $this->request = new Request();
+        $this->request = new Request;
     }
 
     protected function tearDown(): void

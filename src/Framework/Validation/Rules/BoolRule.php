@@ -10,7 +10,6 @@ class BoolRule
 {
     use ValidationMessageTrait;
 
-    
     public function __construct()
     {
         $this->message = 'Must be a boolean value';
@@ -24,6 +23,7 @@ class BoolRule
 
         if (is_string($value)) {
             $value = strtolower($value);
+
             return in_array($value, ['true', 'false', '1', '0', 'yes', 'no', 'on', 'off']);
         }
 

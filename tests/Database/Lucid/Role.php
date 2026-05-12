@@ -2,10 +2,10 @@
 
 require_once 'User.php';
 
-use \Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\Model;
 
 class Role extends Model
-{   
+{
     protected $table = 'roles';
 
     public function users()

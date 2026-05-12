@@ -13,11 +13,11 @@ class Config
     {
         $this->arr = new Arr;
         $configDir = $configDir ?? (defined('DIR_CONFIG') ? \DIR_CONFIG : null);
-        
+
         if ($configDir === null) {
             throw new \RuntimeException('Config directory not specified and DIR_CONFIG constant not defined');
         }
-        
+
         $configs = glob($configDir . '/*.php');
 
         foreach ($configs as $config) {
@@ -35,7 +35,7 @@ class Config
 
     public function set(string $key, $value)
     {
-        if(!$this->arr->has($key, $this->config)) {
+        if (! $this->arr->has($key, $this->config)) {
             $this->arr->set($key, $value, $this->config);
         }
     }

@@ -4,7 +4,7 @@ namespace Lightpack\Mail;
 
 /**
  * MailTemplate - email templating building blocks
- * 
+ *
  * Features:
  * - Table-based layouts for maximum email client compatibility
  * - Automatic CSS inlining
@@ -61,7 +61,7 @@ class MailTemplate
 
     public function __construct(array $config = [])
     {
-        if (!empty($config['colors'])) {
+        if (! empty($config['colors'])) {
             $sanitized = [];
             foreach ($config['colors'] as $key => $value) {
                 $sanitized[$key] = $this->escape($value);
@@ -69,7 +69,7 @@ class MailTemplate
             $this->colors = array_merge($this->colors, $sanitized);
         }
 
-        if (!empty($config['fonts'])) {
+        if (! empty($config['fonts'])) {
             $sanitized = [];
             foreach ($config['fonts'] as $key => $value) {
                 $sanitized[$key] = $this->escape($value);
@@ -77,7 +77,7 @@ class MailTemplate
             $this->fonts = array_merge($this->fonts, $sanitized);
         }
 
-        if (!empty($config['spacing'])) {
+        if (! empty($config['spacing'])) {
             $sanitized = [];
             foreach ($config['spacing'] as $key => $value) {
                 $sanitized[$key] = $this->escape($value);
@@ -106,6 +106,7 @@ class MailTemplate
             $sanitized[$key] = $this->escape($value);
         }
         $this->colors = array_merge($this->colors, $sanitized);
+
         return $this;
     }
 
@@ -120,12 +121,13 @@ class MailTemplate
             $sanitized[$key] = $this->escape($value);
         }
         $this->fonts = array_merge($this->fonts, $sanitized);
+
         return $this;
     }
 
     /**
      * Set logo for header (replaces app name text)
-     * 
+     *
      * @param string $url Logo URL
      * @param int $width Logo width in pixels (default: 120)
      * @param int|null $height Logo height in pixels (null = auto, maintains aspect ratio)
@@ -137,6 +139,7 @@ class MailTemplate
         $this->logoWidth = $width;
         $this->logoHeight = $height;
         $this->logoMaxHeight = $maxHeight;
+
         return $this;
     }
 
@@ -146,6 +149,7 @@ class MailTemplate
     public function footer(string $text): self
     {
         $this->data['footer_text'] = $text;
+
         return $this;
     }
 
@@ -155,6 +159,7 @@ class MailTemplate
     public function footerLinks(array $links): self
     {
         $this->data['footer_links'] = $links;
+
         return $this;
     }
 
@@ -164,6 +169,7 @@ class MailTemplate
     public function setData(array $data): self
     {
         $this->data = array_merge($this->data, $data);
+
         return $this;
     }
 
@@ -173,6 +179,7 @@ class MailTemplate
     public function useLayout(?string $layout): self
     {
         $this->layout = $layout;
+
         return $this;
     }
 
@@ -182,6 +189,7 @@ class MailTemplate
     public function withoutLayout(): self
     {
         $this->layout = null;
+
         return $this;
     }
 
@@ -191,11 +199,11 @@ class MailTemplate
     public function toHtml(): string
     {
         $content = $this->renderComponents();
-        
+
         if ($this->layout === null) {
             return $content;
         }
-        
+
         return $this->wrapInLayout($content);
     }
 
@@ -204,10 +212,10 @@ class MailTemplate
      */
     public function render(array $data = []): string
     {
-        if (!empty($data)) {
+        if (! empty($data)) {
             $this->data = array_merge($this->data, $data);
         }
-        
+
         return $this->toHtml();
     }
 
@@ -217,14 +225,14 @@ class MailTemplate
     public function toPlainText(): string
     {
         $text = '';
-        
+
         foreach ($this->components as $component) {
             $text .= $this->componentToPlainText($component);
         }
-        
+
         // Clean up excessive whitespace
         $text = preg_replace('/\n{3,}/', "\n\n", $text);
-        
+
         return trim($text);
     }
 
@@ -234,11 +242,11 @@ class MailTemplate
     protected function renderComponents(): string
     {
         $html = '';
-        
+
         foreach ($this->components as $component) {
             $html .= $this->renderComponent($component) . "\n";
         }
-        
+
         return $html;
     }
 
@@ -277,9 +285,9 @@ class MailTemplate
             'divider' => str_repeat('-', 50) . "\n\n",
             'alert' => '[' . strtoupper($component['alertType']) . '] ' . $component['text'] . "\n\n",
             'code' => $component['code'] . "\n\n",
-            'bulletList' => implode("\n", array_map(fn($item) => '• ' . $item, $component['items'])) . "\n\n",
-            'keyValueTable' => implode("\n", array_map(fn($k, $v) => $k . ': ' . $v, array_keys($component['data']), $component['data'])) . "\n\n",
-            'table' => implode("\n", array_map(fn($row) => implode(' | ', $row), array_merge([$component['headers']], $component['rows']))) . "\n\n",
+            'bulletList' => implode("\n", array_map(fn ($item) => '• ' . $item, $component['items'])) . "\n\n",
+            'keyValueTable' => implode("\n", array_map(fn ($k, $v) => $k . ': ' . $v, array_keys($component['data']), $component['data'])) . "\n\n",
+            'table' => implode("\n", array_map(fn ($row) => implode(' | ', $row), array_merge([$component['headers']], $component['rows']))) . "\n\n",
             'image' => '[Image: ' . ($component['alt'] ?? 'Image') . ']' . "\n\n",
             'link' => $component['url'] . "\n\n",
             default => '',
@@ -354,13 +362,13 @@ HTML;
      */
     protected function renderOptionalHeader(string $appName): string
     {
-        if (!$this->logoUrl) {
+        if (! $this->logoUrl) {
             return '';
         }
-        
+
         $escapedLogoUrl = $this->escape($this->logoUrl);
         $escapedAppName = $this->escape($appName);
-        
+
         // Build inline styles for logo
         $styles = [
             'width: ' . $this->logoWidth . 'px',
@@ -369,7 +377,7 @@ HTML;
             'margin: 0 auto',
             'border: 0',
         ];
-        
+
         // Add height control
         if ($this->logoHeight !== null) {
             // Explicit height set
@@ -379,9 +387,9 @@ HTML;
             $styles[] = 'height: auto';
             $styles[] = 'max-height: ' . $this->logoMaxHeight . 'px';
         }
-        
+
         $styleAttr = implode('; ', $styles) . ';';
-        
+
         return <<<HTML
         <tr>
             <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
@@ -398,27 +406,27 @@ HTML;
     {
         $footerText = $this->data['footer_text'] ?? null;
         $footerLinks = $this->data['footer_links'] ?? [];
-        
+
         // Don't render footer if nothing is provided
-        if (!$footerText && empty($footerLinks)) {
+        if (! $footerText && empty($footerLinks)) {
             return '';
         }
-        
+
         $content = '';
-        
+
         if ($footerText) {
             // Don't escape footer text - allow HTML entities like &copy;
             $content .= '<p style="margin: 0 0 ' . $this->spacing['sm'] . '; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . $footerText . '</p>';
         }
-        
-        if (!empty($footerLinks)) {
+
+        if (! empty($footerLinks)) {
             $linkHtml = [];
             foreach ($footerLinks as $text => $url) {
                 $linkHtml[] = '<a href="' . $this->escape($url) . '" style="color: ' . $this->colors['primary'] . '; text-decoration: none; font-family: ' . $this->fonts['family'] . ';">' . $this->escape($text) . '</a>';
             }
             $content .= '<p style="margin: 0; font-size: ' . $this->fonts['sizeSmall'] . '; color: ' . $this->colors['textLight'] . '; font-family: ' . $this->fonts['family'] . ';">' . implode(' | ', $linkHtml) . '</p>';
         }
-        
+
         return <<<HTML
         <tr>
             <td style="padding: {$this->spacing['lg']} 0; text-align: center;">
@@ -439,7 +447,7 @@ HTML;
             'url' => $this->escape($url),
             'color' => $color,
         ];
-        
+
         return $this;
     }
 
@@ -473,7 +481,7 @@ HTML;
             'text' => $this->escape($text),
             'level' => max(1, min(3, $level)), // Clamp between 1-3
         ];
-        
+
         return $this;
     }
 
@@ -508,7 +516,7 @@ HTML;
             'type' => 'paragraph',
             'text' => $this->escape($text),
         ];
-        
+
         return $this;
     }
 
@@ -534,7 +542,7 @@ HTML;
             'type' => 'html',
             'content' => $content, // NOT escaped - allows HTML entities
         ];
-        
+
         return $this;
     }
 
@@ -548,7 +556,7 @@ HTML;
             'url' => $this->escape($url),
             'text' => $text ? $this->escape($text) : null,
         ];
-        
+
         return $this;
     }
 
@@ -570,7 +578,7 @@ HTML;
     protected function renderLink(array $component): string
     {
         $displayText = $component['text'] ?? $component['url'];
-        
+
         return <<<HTML
 <p style="margin: 0 0 {$this->spacing['md']}; font-size: {$this->fonts['sizeBase']}; word-break: break-all; overflow-wrap: break-word; font-family: {$this->fonts['family']};">
     <a href="{$component['url']}" style="color: {$this->colors['primary']}; text-decoration: underline; word-break: break-all; font-family: {$this->fonts['family']};">{$displayText}</a>
@@ -586,7 +594,7 @@ HTML;
         $this->components[] = [
             'type' => 'divider',
         ];
-        
+
         return $this;
     }
 
@@ -610,7 +618,7 @@ HTML;
             'text' => $this->escape($text),
             'alertType' => $type,
         ];
-        
+
         return $this;
     }
 
@@ -650,7 +658,7 @@ HTML;
             'type' => 'code',
             'code' => $this->escape($code),
         ];
-        
+
         return $this;
     }
 
@@ -677,9 +685,9 @@ HTML;
     {
         $this->components[] = [
             'type' => 'bulletList',
-            'items' => array_map(fn($item) => $this->escape($item), $items),
+            'items' => array_map(fn ($item) => $this->escape($item), $items),
         ];
-        
+
         return $this;
     }
 
@@ -706,6 +714,7 @@ HTML;
         }
 
         $content .= '</table>';
+
         return $content;
     }
 
@@ -718,12 +727,12 @@ HTML;
         foreach ($data as $key => $value) {
             $escaped[$this->escape($key)] = $this->escape($value);
         }
-        
+
         $this->components[] = [
             'type' => 'keyValueTable',
             'data' => $escaped,
         ];
-        
+
         return $this;
     }
 
@@ -751,6 +760,7 @@ HTML;
         }
 
         $content .= '</table>';
+
         return $content;
     }
 
@@ -760,14 +770,14 @@ HTML;
     protected function renderTable(array $component): string
     {
         $content = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: ' . $this->spacing['lg'] . ' 0; border: 1px solid ' . $this->colors['border'] . '; border-radius: 4px; overflow: hidden; font-family: ' . $this->fonts['family'] . ';">';
-        
+
         // Header row
         $content .= '<tr style="background-color: ' . $this->colors['background'] . ';">';
         foreach ($component['headers'] as $header) {
             $content .= '<th style="padding: ' . $this->spacing['md'] . '; text-align: left; font-weight: 600; color: ' . $this->colors['text'] . '; font-size: ' . $this->fonts['sizeBase'] . '; font-family: ' . $this->fonts['family'] . ';">' . $header . '</th>';
         }
         $content .= '</tr>';
-        
+
         // Data rows
         foreach ($component['rows'] as $row) {
             $content .= '<tr>';
@@ -776,31 +786,32 @@ HTML;
             }
             $content .= '</tr>';
         }
-        
+
         $content .= '</table>';
+
         return $content;
     }
 
     /**
      * Add a multi-column table component
-     * 
+     *
      * @param array $headers Column headers (e.g., ['Name', 'Email', 'Status'])
      * @param array $rows Array of row data (e.g., [['John', 'john@example.com', 'Active'], ...])
      */
     public function table(array $headers, array $rows): self
     {
-        $escapedHeaders = array_map(fn($h) => $this->escape($h), $headers);
+        $escapedHeaders = array_map(fn ($h) => $this->escape($h), $headers);
         $escapedRows = array_map(
-            fn($row) => array_map(fn($cell) => $this->escape($cell), $row),
+            fn ($row) => array_map(fn ($cell) => $this->escape($cell), $row),
             $rows
         );
-        
+
         $this->components[] = [
             'type' => 'table',
             'headers' => $escapedHeaders,
             'rows' => $escapedRows,
         ];
-        
+
         return $this;
     }
 
@@ -816,7 +827,7 @@ HTML;
             'width' => $width,
             'align' => $align,
         ];
-        
+
         return $this;
     }
 
@@ -828,7 +839,7 @@ HTML;
         $align = $component['align'] === 'center' ? 'center' : 'left';
         $widthStyle = $component['width'] ? 'width: ' . $component['width'] . 'px; ' : '';
         $maxWidth = $component['width'] ? 'max-width: ' . $component['width'] . 'px; ' : 'max-width: 100%; ';
-        
+
         return <<<HTML
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: {$this->spacing['lg']} 0; font-family: {$this->fonts['family']};">
     <tr>

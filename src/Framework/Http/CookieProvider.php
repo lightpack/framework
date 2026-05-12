@@ -2,9 +2,8 @@
 
 namespace Lightpack\Http;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Http\Cookie;
 use Lightpack\Container\Container;
+use Lightpack\Support\ProviderInterface;
 
 class CookieProvider implements ProviderInterface
 {
@@ -12,6 +11,7 @@ class CookieProvider implements ProviderInterface
     {
         $container->register('cookie', function ($container) {
             $secret = get_env('APP_KEY', 'secret');
+
             return new Cookie($secret);
         });
 

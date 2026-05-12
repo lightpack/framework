@@ -15,12 +15,14 @@ class CreateProvider extends Command
         if (null === $className) {
             $this->output->error("Please provide a class name for service provider.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
-        if (!preg_match('/^[\w]+$/', $className)) {
+        if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid service provider class name.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -29,26 +31,27 @@ class CreateProvider extends Command
         $directory = './app/Providers';
         $filePath = DIR_ROOT . '/app/Providers/' . $className . '.php';
 
-        if (file_exists($filePath) && !$force) {
+        if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Provider already exists: {$directory}/{$className}.php");
             $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
         $template = ProviderView::getTemplate();
         $template = str_replace(
-            ['__PROVIDER_NAME__', '__PROVIDER_ALIAS__', '__PROVIDER_BINDING__'], 
-            [$className, $provider, $binding], 
+            ['__PROVIDER_NAME__', '__PROVIDER_ALIAS__', '__PROVIDER_BINDING__'],
+            [$className, $provider, $binding],
             $template
         );
 
         file_put_contents($filePath, $template);
         $this->output->success("✓ Provider created: {$directory}/{$className}.php");
         $this->output->newline();
-        
+
         return self::SUCCESS;
     }
 }

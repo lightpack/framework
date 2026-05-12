@@ -4,7 +4,7 @@ use Lightpack\Database\Lucid\Transformer;
 
 class ProductViewTransformer extends Transformer
 {
-    protected function data($model): array 
+    protected function data($model): array
     {
         return [
             'id' => $model->id,

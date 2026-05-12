@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Cache\Drivers\DatabaseDriver;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
+use PHPUnit\Framework\TestCase;
 
 final class DatabaseDriverTest extends TestCase
 {
@@ -25,7 +25,7 @@ final class DatabaseDriverTest extends TestCase
         $this->databaseDriver = new DatabaseDriver($this->db);
 
         // create cache table
-        $this->schema->createTable('cache', function(Table $table) {
+        $this->schema->createTable('cache', function (Table $table) {
             $table->varchar('`key`', 255)->primary();
             $table->column('value')->type('longtext');
             $table->column('expires_at')->type('int')->attribute('UNSIGNED');
@@ -41,8 +41,13 @@ final class DatabaseDriverTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -64,7 +69,7 @@ final class DatabaseDriverTest extends TestCase
     {
         $this->databaseDriver->set('name', 'Lightpack', time() + 60);
         $this->assertTrue($this->databaseDriver->has('name'));
-        
+
         $this->databaseDriver->delete('name');
         $this->assertFalse($this->databaseDriver->has('name'));
     }
@@ -79,10 +84,10 @@ final class DatabaseDriverTest extends TestCase
     {
         $expiry = time() + 60;
         $this->databaseDriver->set('key', 'original', $expiry);
-        
+
         // Update with preserveTtl
         $this->databaseDriver->set('key', 'updated', time() + 3600, true);
-        
+
         // Get raw entry to check expiry
         $entry = $this->db->table('cache')->where('key', 'key')->one();
         $this->assertEquals($expiry, $entry->expires_at);
@@ -92,9 +97,9 @@ final class DatabaseDriverTest extends TestCase
     {
         $this->databaseDriver->set('key1', 'value1', time() + 60);
         $this->databaseDriver->set('key2', 'value2', time() + 60);
-        
+
         $this->databaseDriver->flush();
-        
+
         $this->assertFalse($this->databaseDriver->has('key1'));
         $this->assertFalse($this->databaseDriver->has('key2'));
     }
@@ -107,10 +112,10 @@ final class DatabaseDriverTest extends TestCase
             'null' => null,
             'bool' => true,
         ];
-        
+
         $this->databaseDriver->set('complex', $data, time() + 60);
         $retrieved = $this->databaseDriver->get('complex');
-        
+
         $this->assertEquals($data, $retrieved);
     }
 

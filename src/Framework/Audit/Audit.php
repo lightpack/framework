@@ -12,7 +12,7 @@ class Audit
      */
     public static function log(array $data): AuditLog
     {
-        $log = new AuditLog();
+        $log = new AuditLog;
         $log->user_id = $data['user_id'] ?? null;
         $log->action = $data['action'] ?? '';
         $log->audit_type = $data['audit_type'] ?? '';
@@ -25,6 +25,7 @@ class Audit
         $log->message = $data['message'] ?? null;
         $log->created_at = date('Y-m-d H:i:s');
         $log->save();
+
         return $log;
     }
 }

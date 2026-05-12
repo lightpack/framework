@@ -2,10 +2,8 @@
 
 namespace Lightpack\AI;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\AI\AI;
-use Lightpack\AI\AiManager;
+use Lightpack\Support\ProviderInterface;
 
 class AiProvider implements ProviderInterface
 {

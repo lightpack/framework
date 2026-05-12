@@ -51,7 +51,7 @@ class Event
 
     public function isDue(): bool
     {
-        return $this->cron->isDue(new \DateTime());
+        return $this->cron->isDue(new \DateTime);
     }
 
     /**
@@ -69,12 +69,12 @@ class Event
     {
         $cron = new Cron($this->cronExpression);
 
-        return $this->cron->nextDueAt(new \DateTime());
+        return $this->cron->nextDueAt(new \DateTime);
     }
 
     public function previousDueAt(): ?\DateTime
     {
-        return $this->cron->previousDueAt(new \DateTime());
+        return $this->cron->previousDueAt(new \DateTime);
     }
 
     /**
@@ -117,7 +117,6 @@ class Event
         return $this->cron("*/{$minutes} * * * *");
     }
 
-
     /**
      * Update the event to run at a specific time (HH:MM), keeping day/month/weekday unchanged.
      *
@@ -143,6 +142,7 @@ class Event
     {
         return $this->cron('0 0 * * 1');
     }
+
     /**
      * Set the event to run on Tuesday at midnight.
      */
@@ -150,6 +150,7 @@ class Event
     {
         return $this->cron('0 0 * * 2');
     }
+
     /**
      * Set the event to run on Wednesday at midnight.
      */
@@ -157,6 +158,7 @@ class Event
     {
         return $this->cron('0 0 * * 3');
     }
+
     /**
      * Set the event to run on Thursday at midnight.
      */
@@ -164,6 +166,7 @@ class Event
     {
         return $this->cron('0 0 * * 4');
     }
+
     /**
      * Set the event to run on Friday at midnight.
      */
@@ -171,6 +174,7 @@ class Event
     {
         return $this->cron('0 0 * * 5');
     }
+
     /**
      * Set the event to run on Saturday at midnight.
      */
@@ -178,6 +182,7 @@ class Event
     {
         return $this->cron('0 0 * * 6');
     }
+
     /**
      * Set the event to run on Sunday at midnight.
      */
@@ -192,6 +197,7 @@ class Event
     public function monthlyOn(int $day, string $time = '00:00'): self
     {
         [$hour, $minute] = explode(':', $time);
+
         // Cast to int to remove leading zeros
         return $this->cron(((int)$minute) . ' ' . ((int)$hour) . " {$day} * *");
     }

@@ -8,14 +8,14 @@ trait FileUploadValidationTrait
 {
     private function isSingleFileUpload($value): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
         // Check for required keys in single file upload
         $requiredKeys = ['name', 'type', 'tmp_name', 'error', 'size'];
         foreach ($requiredKeys as $key) {
-            if (!isset($value[$key])) {
+            if (! isset($value[$key])) {
                 return false;
             }
             // For single file upload, these values should not be arrays
@@ -29,7 +29,7 @@ trait FileUploadValidationTrait
 
     private function isMultiUpload($value): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return false;
         }
 
@@ -44,7 +44,7 @@ trait FileUploadValidationTrait
             // Check all required keys are arrays
             $requiredKeys = ['name', 'type', 'tmp_name', 'error', 'size'];
             foreach ($requiredKeys as $key) {
-                if (!isset($value[$key]) || !is_array($value[$key])) {
+                if (! isset($value[$key]) || ! is_array($value[$key])) {
                     return false;
                 }
                 // All arrays should have the same length
@@ -52,6 +52,7 @@ trait FileUploadValidationTrait
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -66,7 +67,7 @@ trait FileUploadValidationTrait
 
     private function isEmptySingleFileUpload($value): bool
     {
-        if (!$this->isSingleFileUpload($value)) {
+        if (! $this->isSingleFileUpload($value)) {
             return false;
         }
 
@@ -84,7 +85,7 @@ trait FileUploadValidationTrait
 
     private function isEmptyMultiFileUpload($value): bool
     {
-        if (!$this->isMultiUpload($value)) {
+        if (! $this->isMultiUpload($value)) {
             return false;
         }
 
@@ -94,7 +95,7 @@ trait FileUploadValidationTrait
         }
 
         // Single file with UPLOAD_ERR_NO_FILE is considered empty
-        if (isset($value['error']) && !is_array($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
+        if (isset($value['error']) && ! is_array($value['error']) && $value['error'] === UPLOAD_ERR_NO_FILE) {
             return true;
         }
 
@@ -112,6 +113,7 @@ trait FileUploadValidationTrait
                         return false;
                     }
                 }
+
                 return true;
             }
         }

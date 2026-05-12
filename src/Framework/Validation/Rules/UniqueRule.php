@@ -10,7 +10,6 @@ class UniqueRule
 {
     use ValidationMessageTrait;
 
-    
     public function __construct()
     {
         $this->message = 'Values must be unique';
@@ -18,7 +17,7 @@ class UniqueRule
 
     public function __invoke($value): bool
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return true;
         }
 

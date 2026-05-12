@@ -2,10 +2,10 @@
 
 require_once 'Product.php';
 
-use \Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\Model;
 
 class Owner extends Model
-{   
+{
     protected $table = 'owners';
 
     public function product()

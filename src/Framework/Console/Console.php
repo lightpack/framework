@@ -2,32 +2,32 @@
 
 namespace Lightpack\Console;
 
-use Lightpack\Console\Commands\CreateEvent;
-use Lightpack\Console\Commands\CreateModel;
-use Lightpack\Console\Commands\CreateFilter;
 use Lightpack\Console\Commands\CreateCommand;
 use Lightpack\Console\Commands\CreateConfig;
-use Lightpack\Console\Commands\LinkStorage;
-use Lightpack\Console\Commands\UnlinkStorage;
-use Lightpack\Console\Commands\CreateProvider;
-use Lightpack\Console\Commands\CreateMigration;
 use Lightpack\Console\Commands\CreateController;
 use Lightpack\Console\Commands\CreateEnv;
+use Lightpack\Console\Commands\CreateEvent;
+use Lightpack\Console\Commands\CreateFilter;
 use Lightpack\Console\Commands\CreateJob;
-use Lightpack\Console\Commands\RunMigrationUp;
-use Lightpack\Console\Commands\RunMigrationDown;
-use Lightpack\Console\Commands\CreateRequest;
-use Lightpack\Console\Commands\ProcessJobs;
 use Lightpack\Console\Commands\CreateMail;
+use Lightpack\Console\Commands\CreateMigration;
+use Lightpack\Console\Commands\CreateModel;
+use Lightpack\Console\Commands\CreateProvider;
+use Lightpack\Console\Commands\CreateRequest;
 use Lightpack\Console\Commands\CreateSeeder;
+use Lightpack\Console\Commands\CreateTool;
 use Lightpack\Console\Commands\CreateTransformer;
 use Lightpack\Console\Commands\GenerateAppKey;
-use Lightpack\Console\Commands\SeedCommand;
-use Lightpack\Console\Commands\ScheduleEvents;
-use Lightpack\Console\Commands\ServeCommand;
-use Lightpack\Console\Commands\WatchCommand;
+use Lightpack\Console\Commands\LinkStorage;
+use Lightpack\Console\Commands\ProcessJobs;
 use Lightpack\Console\Commands\RetryFailedJobs;
-use Lightpack\Console\Commands\CreateTool;
+use Lightpack\Console\Commands\RunMigrationDown;
+use Lightpack\Console\Commands\RunMigrationUp;
+use Lightpack\Console\Commands\ScheduleEvents;
+use Lightpack\Console\Commands\SeedCommand;
+use Lightpack\Console\Commands\ServeCommand;
+use Lightpack\Console\Commands\UnlinkStorage;
+use Lightpack\Console\Commands\WatchCommand;
 
 class Console
 {
@@ -67,14 +67,14 @@ class Console
 
     public static function getCommandHandler(string $command, array $arguments = [])
     {
-        if (!isset(self::$commands[$command])) {
+        if (! isset(self::$commands[$command])) {
             fputs(STDERR, "Invalid command: {$command}\n");
             exit(1);
         }
 
         // Remove command name from arguments (first element)
         $commandArguments = array_slice($arguments, 1);
-        
+
         return new self::$commands[$command]($commandArguments);
     }
 
@@ -96,8 +96,8 @@ class Console
     }
 
     public static function bootstrap()
-    {   
-        foreach(self::$commands as $command => $handler) {
+    {
+        foreach (self::$commands as $command => $handler) {
             self::register($command, new $handler);
         }
     }

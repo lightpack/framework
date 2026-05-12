@@ -15,10 +15,10 @@ require_once 'TimestampCastModel.php';
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
 use Lightpack\Database\Lucid\Collection;
-use PHPUnit\Framework\TestCase;
-use \Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Query\Query;
 use Lightpack\Exceptions\RecordNotFoundException;
+use PHPUnit\Framework\TestCase;
 
 final class ModelTest extends TestCase
 {
@@ -48,8 +48,13 @@ final class ModelTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -152,7 +157,7 @@ final class ModelTest extends TestCase
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
 
-        if (!isset($owner->id)) {
+        if (! isset($owner->id)) {
             $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Bob']);
         }
 
@@ -193,7 +198,7 @@ final class ModelTest extends TestCase
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
 
-        if (!isset($owner->id)) {
+        if (! isset($owner->id)) {
             $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Bob']);
             $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
         }
@@ -491,7 +496,7 @@ final class ModelTest extends TestCase
 
     public function testLastInsertId()
     {
-        $product = new Product();
+        $product = new Product;
         $product->name = 'Dummy Product';
         $product->color = '#CCC';
         $product->save();
@@ -521,7 +526,7 @@ final class ModelTest extends TestCase
 
     public function testModelSetAttribute()
     {
-        $product = new Product();
+        $product = new Product;
         $product->setAttribute('name', 'Dummy Product');
         $product->setAttribute('color', '#CCC');
         $product->save();
@@ -583,7 +588,7 @@ final class ModelTest extends TestCase
     public function testRecordNotFoundException()
     {
         $this->expectException(RecordNotFoundException::class);
-        $product = new Product();
+        $product = new Product;
         $product->find(99999);
     }
 
@@ -628,7 +633,7 @@ final class ModelTest extends TestCase
 
     public function testItSetsTimestampAttributes()
     {
-        $article = new Article();
+        $article = new Article;
         $article->title = 'My Article';
         $article->save();
 
@@ -1670,7 +1675,7 @@ final class ModelTest extends TestCase
         $projects = $projectModel::query()->all();
 
         // filter out projects having name 'Project 2'
-        $filteredProjects = $projects->filter(fn($project) => $project->name !== 'Project 2');
+        $filteredProjects = $projects->filter(fn ($project) => $project->name !== 'Project 2');
 
         // Assertions
         $this->assertCount(3, $projects);
@@ -1791,7 +1796,7 @@ final class ModelTest extends TestCase
             ['name' => 'Project 3'],
         ]);
 
-        // get all projects 
+        // get all projects
         $project = $this->db->model(Project::class);
         $projects = $project::query()->all();
         $projects->each(function ($project) {
@@ -1814,12 +1819,12 @@ final class ModelTest extends TestCase
             ['name' => 'Project 3'],
         ]);
 
-        // get all projects 
+        // get all projects
         $project = $this->db->model(Project::class);
         $projects = $project::query()->all();
         $filteredProjects = $projects
-            ->filter(fn($project) => $project->name !== 'Project 1')
-            ->each(fn($project) => $project->toUppercase());
+            ->filter(fn ($project) => $project->name !== 'Project 1')
+            ->each(fn ($project) => $project->toUppercase());
 
         // Assertions
         $this->assertCount(3, $projects);
@@ -1843,7 +1848,7 @@ final class ModelTest extends TestCase
         // Get all projects and filter active ones
         $projectModel = $this->db->model(Project::class);
         $projects = $projectModel::query()->all();
-        $activeProjects = $projects->filter(fn($project) => $project->status === 'active');
+        $activeProjects = $projects->filter(fn ($project) => $project->status === 'active');
 
         // Test ids() method
         $this->assertEquals([1, 3, 4], $activeProjects->ids());
@@ -1934,7 +1939,7 @@ final class ModelTest extends TestCase
         // Test first() with multiple conditions
         $firstActiveProject3 = $projects->first([
             'status' => 'active',
-            'name' => 'Project 3'
+            'name' => 'Project 3',
         ]);
         $this->assertNotNull($firstActiveProject3);
         $this->assertEquals('Project 3', $firstActiveProject3->name);
@@ -1952,7 +1957,7 @@ final class ModelTest extends TestCase
     public function testModelAttributeCasting()
     {
         // Test all types of casting
-        $now = new \DateTime();
+        $now = new \DateTime;
 
         $data = [
             'string_col' => 123,
@@ -1962,7 +1967,7 @@ final class ModelTest extends TestCase
             'json_col' => json_encode(['key' => 'value', 'nested' => ['foo' => 'bar']]),
             'date_col' => $now->format('Y-m-d'),
             'datetime_col' => $now->format('Y-m-d H:i:s'),
-            'timestamp_col' => $now->format('Y-m-d H:i:s')
+            'timestamp_col' => $now->format('Y-m-d H:i:s'),
         ];
 
         $this->db->table('cast_models')->insert($data);
@@ -2047,7 +2052,7 @@ final class ModelTest extends TestCase
     public function testModelAttributeCastingWithSave()
     {
         $model = $this->db->model(CastModel::class);
-        $now = new \DateTime();
+        $now = new \DateTime;
 
         // Test creating through model
         $model->string_col = 123;
@@ -2172,7 +2177,7 @@ final class ModelTest extends TestCase
     public function testModelChangeTracking()
     {
         // Test fresh model has no changes
-        $model = new Project();
+        $model = new Project;
         $this->assertFalse($model->isDirty());
         $this->assertEmpty($model->getDirty());
 
@@ -2188,7 +2193,7 @@ final class ModelTest extends TestCase
         $this->assertTrue($model->isDirty('status'));
         $this->assertEquals(['name', 'status'], $model->getDirty());
 
-        // Test modified attributes list stays the same 
+        // Test modified attributes list stays the same
         $model->name = 'Test';
         $this->assertEquals(['name', 'status'], $model->getDirty());
 
@@ -2405,25 +2410,25 @@ final class ModelTest extends TestCase
 
         // Verify database received properly uncast values
         $raw = $this->db->table('cast_models')->where('id', $model->id)->one();
-        
+
         // String should be string in DB
         $this->assertEquals('123', $raw->string_col);
-        
+
         // Integer should be stored as is
         $this->assertEquals('456', $raw->integer_col);
-        
+
         // JSON should be JSON string
         $this->assertEquals(['key' => 'value'], json_decode($raw->json_col, true));
-        
+
         // Date should be Y-m-d format
         $this->assertEquals('2025-03-18', $raw->date_col);
-        
+
         // Datetime should be Y-m-d H:i:s format
         $this->assertEquals('2025-03-18 22:30:00', $raw->datetime_col);
-        
+
         // Timestamp should be Y-m-d H:i:s format (stored as datetime string)
         $this->assertEquals('2025-03-18 22:30:00', $raw->timestamp_col);
-        
+
         // Verify the value is cast back to integer when retrieved
         $this->assertIsInt($model->timestamp_col);
         $this->assertEquals($now->getTimestamp(), $model->timestamp_col);
@@ -2451,7 +2456,7 @@ final class ModelTest extends TestCase
 
         // Modify project name
         $project->name = 'Updated Project';
-        
+
         // Save should work without trying to save the tasks relation
         $project->save();
 
@@ -2482,7 +2487,7 @@ final class ModelTest extends TestCase
 
         // Modify project
         $project->name = 'Updated Project';
-        
+
         // Save should work without trying to save the manager relation
         $project->save();
 
@@ -2514,7 +2519,7 @@ final class ModelTest extends TestCase
 
         // Modify task
         $task->name = 'Updated Task';
-        
+
         // Save should work without trying to save the project relation
         $task->save();
 
@@ -2553,7 +2558,7 @@ final class ModelTest extends TestCase
 
         // Modify user
         $user->name = 'Updated User';
-        
+
         // Save should work without trying to save the roles relation
         $user->save();
 
@@ -2580,12 +2585,12 @@ final class ModelTest extends TestCase
         // Verify tasks are loaded as an attribute
         $this->assertTrue($project->hasAttribute('tasks'));
         $this->assertInstanceOf(Collection::class, $project->getAttribute('tasks'));
-        
+
         // Try to save - this will call toDatabaseArray internally
         // If the bug exists, this will fail with "Collection cannot be converted to string"
         $project->name = 'Updated Project';
         $project->save();
-        
+
         // If we got here, the bug is fixed!
         $updated = $this->db->table('projects')->where('id', $projectId)->one();
         $this->assertEquals('Updated Project', $updated->name);
@@ -2594,13 +2599,13 @@ final class ModelTest extends TestCase
     /**
      * Test that array casts are properly uncast when saving a model
      * even when only updating a different field.
-     * 
+     *
      * This is a regression test for a bug where:
      * 1. Load model with array cast from DB
      * 2. Update a DIFFERENT field (not the array field)
      * 3. Call save()
      * 4. The array field should be uncast to JSON, not saved as array
-     * 
+     *
      * Bug scenario: Bearer token authentication was failing because
      * when updating last_used_at, the abilities array wasn't being uncast.
      */
@@ -2611,28 +2616,28 @@ final class ModelTest extends TestCase
         $model->string_col = 'Test';
         $model->json_col = ['foo' => 'bar', 'nested' => ['a', 'b', 'c']];
         $model->save();
-        
+
         $id = $model->id;
-        
+
         // Load the model from database (json_col will be cast to array)
         $loaded = $this->db->model(CastModel::class)->find($id);
-        
+
         // Verify json_col is an array after loading
         $this->assertIsArray($loaded->json_col);
         $this->assertEquals(['foo' => 'bar', 'nested' => ['a', 'b', 'c']], $loaded->json_col);
-        
+
         // Now update a DIFFERENT field (not json_col)
         $loaded->string_col = 'Updated';
-        
+
         // Save should properly uncast json_col back to JSON string
         $loaded->save();
-        
+
         // Verify the database has JSON string, not array
         $raw = $this->db->table('cast_models')->where('id', '=', $id)->one();
         $this->assertIsString($raw->json_col);
         $this->assertEquals(['foo' => 'bar', 'nested' => ['a', 'b', 'c']], json_decode($raw->json_col, true));
         $this->assertEquals('Updated', $raw->string_col);
-        
+
         // Load again and verify json_col is still properly cast
         $reloaded = $this->db->model(CastModel::class)->find($id);
         $this->assertIsArray($reloaded->json_col);
@@ -2649,19 +2654,19 @@ final class ModelTest extends TestCase
         // Setup: Create a product with multiple options
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
-        
+
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => 'Red']);
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Material', 'value' => 'Wood']);
-        
+
         // Get the second option's ID
         $allOptions = $this->db->table('options')->where('product_id', '=', $product->id)->orderBy('id', 'ASC')->all();
         $secondOptionId = $allOptions[1]->id;
-        
+
         // Test: Use find() on relationship
         $productModel = $this->db->model(Product::class)->find($product->id);
         $foundOption = $productModel->options()->find($secondOptionId);
-        
+
         // Assertions
         $this->assertInstanceOf(Option::class, $foundOption);
         $this->assertEquals($secondOptionId, $foundOption->id);
@@ -2677,10 +2682,10 @@ final class ModelTest extends TestCase
     {
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
-        
+
         $productModel = $this->db->model(Product::class)->find($product->id);
         $foundOption = $productModel->options()->find(99999, false);
-        
+
         $this->assertNull($foundOption);
     }
 
@@ -2690,10 +2695,10 @@ final class ModelTest extends TestCase
     public function testHasManyRelationshipFindThrowsExceptionWhenNotFoundAndFailIsTrue()
     {
         $this->expectException(RecordNotFoundException::class);
-        
+
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
-        
+
         $productModel = $this->db->model(Product::class)->find($product->id);
         $productModel->options()->find(99999, true);
     }
@@ -2707,20 +2712,20 @@ final class ModelTest extends TestCase
         // Create two products
         $this->db->table('products')->insert(['name' => 'Product A', 'color' => '#AAA']);
         $this->db->table('products')->insert(['name' => 'Product B', 'color' => '#BBB']);
-        
+
         $productA = $this->db->table('products')->where('name', '=', 'Product A')->one();
         $productB = $this->db->table('products')->where('name', '=', 'Product B')->one();
-        
+
         // Create options for both products
         $this->db->table('options')->insert(['product_id' => $productA->id, 'name' => 'Option A1', 'value' => 'ValA']);
         $this->db->table('options')->insert(['product_id' => $productB->id, 'name' => 'Option B1', 'value' => 'ValB']);
-        
+
         $optionB = $this->db->table('options')->where('product_id', '=', $productB->id)->one();
-        
+
         // Try to find Product B's option through Product A's relationship
         $productAModel = $this->db->model(Product::class)->find($productA->id);
         $foundOption = $productAModel->options()->find($optionB->id, false);
-        
+
         // Should return null because the option doesn't belong to Product A
         $this->assertNull($foundOption);
     }
@@ -2733,12 +2738,12 @@ final class ModelTest extends TestCase
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'John Doe']);
-        
+
         $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
-        
+
         $productModel = $this->db->model(Product::class)->find($product->id);
         $foundOwner = $productModel->owner()->find($owner->id);
-        
+
         $this->assertInstanceOf(Owner::class, $foundOwner);
         $this->assertEquals($owner->id, $foundOwner->id);
         $this->assertEquals('John Doe', $foundOwner->name);
@@ -2752,10 +2757,10 @@ final class ModelTest extends TestCase
     {
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
-        
+
         $productModel = $this->db->model(Product::class)->find($product->id);
         $foundOwner = $productModel->owner()->find(99999, false);
-        
+
         $this->assertNull($foundOwner);
     }
 
@@ -2767,12 +2772,12 @@ final class ModelTest extends TestCase
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
         $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Jane Doe']);
-        
+
         $owner = $this->db->table('owners')->where('product_id', '=', $product->id)->one();
-        
+
         $ownerModel = $this->db->model(Owner::class)->find($owner->id);
         $foundProduct = $ownerModel->product()->find($product->id);
-        
+
         $this->assertInstanceOf(Product::class, $foundProduct);
         $this->assertEquals($product->id, $foundProduct->id);
         $this->assertEquals('Test Product', $foundProduct->name);
@@ -2790,21 +2795,21 @@ final class ModelTest extends TestCase
             ['name' => 'editor'],
             ['name' => 'viewer'],
         ]);
-        
+
         $user = $this->db->table('users')->where('name', '=', 'Alice')->one();
         $adminRole = $this->db->table('roles')->where('name', '=', 'admin')->one();
         $editorRole = $this->db->table('roles')->where('name', '=', 'editor')->one();
-        
+
         // Attach roles to user
         $this->db->table('role_user')->insert([
             ['user_id' => $user->id, 'role_id' => $adminRole->id],
             ['user_id' => $user->id, 'role_id' => $editorRole->id],
         ]);
-        
+
         // Test find() on pivot relationship
         $userModel = $this->db->model(User::class)->find($user->id);
         $foundRole = $userModel->roles()->find($editorRole->id);
-        
+
         $this->assertInstanceOf(Role::class, $foundRole);
         $this->assertEquals($editorRole->id, $foundRole->id);
         $this->assertEquals('editor', $foundRole->name);
@@ -2820,18 +2825,18 @@ final class ModelTest extends TestCase
             ['name' => 'admin'],
             ['name' => 'guest'],
         ]);
-        
+
         $user = $this->db->table('users')->where('name', '=', 'Bob')->one();
         $adminRole = $this->db->table('roles')->where('name', '=', 'admin')->one();
         $guestRole = $this->db->table('roles')->where('name', '=', 'guest')->one();
-        
+
         // Only attach admin role
         $this->db->table('role_user')->insert(['user_id' => $user->id, 'role_id' => $adminRole->id]);
-        
+
         // Try to find guest role (not attached to this user)
         $userModel = $this->db->model(User::class)->find($user->id);
         $foundRole = $userModel->roles()->find($guestRole->id, false);
-        
+
         $this->assertNull($foundRole);
     }
 
@@ -2842,16 +2847,16 @@ final class ModelTest extends TestCase
     {
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
-        
+
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => 'Red']);
-        
+
         $option = $this->db->table('options')->where('name', '=', 'Color')->one();
-        
+
         // This tests that find() properly adds to existing WHERE clauses
         $productModel = $this->db->model(Product::class)->find($product->id);
         $foundOption = $productModel->options()->where('name', '=', 'Color')->find($option->id);
-        
+
         $this->assertInstanceOf(Option::class, $foundOption);
         $this->assertEquals('Color', $foundOption->name);
         $this->assertEquals('Red', $foundOption->value);
@@ -2865,16 +2870,16 @@ final class ModelTest extends TestCase
     {
         $this->db->table('products')->insert(['name' => 'Test Product', 'color' => '#FFF']);
         $product = $this->db->table('products')->orderBy('id', 'DESC')->one();
-        
+
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Size', 'value' => 'XL']);
         $this->db->table('options')->insert(['product_id' => $product->id, 'name' => 'Color', 'value' => 'Red']);
-        
+
         $sizeOption = $this->db->table('options')->where('name', '=', 'Size')->one();
-        
+
         // Try to find the Size option but with a WHERE clause that doesn't match
         $productModel = $this->db->model(Product::class)->find($product->id);
         $foundOption = $productModel->options()->where('name', '=', 'Color')->find($sizeOption->id, false);
-        
+
         // Should return null because the option with this ID has name='Size', not 'Color'
         $this->assertNull($foundOption);
     }

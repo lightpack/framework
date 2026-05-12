@@ -2,10 +2,10 @@
 
 namespace Lightpack\Jobs\Engines;
 
-use Throwable;
-use Lightpack\Utils\Moment;
 use Lightpack\Jobs\BaseEngine;
 use Lightpack\Redis\Redis;
+use Lightpack\Utils\Moment;
+use Throwable;
 
 class RedisEngine extends BaseEngine
 {
@@ -13,12 +13,12 @@ class RedisEngine extends BaseEngine
      * Redis client instance
      */
     protected Redis $redis;
-    
+
     /**
      * Key prefix for Redis
      */
     protected string $prefix;
-    
+
     /**
      * Constructor
      */
@@ -27,7 +27,7 @@ class RedisEngine extends BaseEngine
         $this->redis = $redis;
         $this->prefix = $prefix;
     }
-    
+
     /**
      * Add a job to the queue
      */
@@ -43,18 +43,18 @@ class RedisEngine extends BaseEngine
             'attempts' => 0,
             'created_at' => (new Moment)->now(),
         ];
-        
+
         // Store the job data
         $this->redis->set($this->getJobKey($job['id']), $job);
-        
+
         // Add to the queue set
         $this->redis->zAdd(
-            $this->getQueueKey($queue), 
+            $this->getQueueKey($queue),
             $this->getTimestamp($job['scheduled_at']),
             $job['id']
         );
     }
-    
+
     /**
      * Fetch the next job from the queue
      */
@@ -62,10 +62,10 @@ class RedisEngine extends BaseEngine
     {
         $now = time();
         $queues = $queue ? [$queue] : $this->getQueues();
-        
+
         foreach ($queues as $queueName) {
             $queueKey = $this->getQueueKey($queueName);
-            
+
             // Get jobs scheduled before or at current time
             $jobIds = $this->redis->zRangeByScore(
                 $queueKey,
@@ -73,63 +73,64 @@ class RedisEngine extends BaseEngine
                 $now,
                 ['limit' => [0, 1]]
             );
-            
+
             if (empty($jobIds)) {
                 continue;
             }
-            
+
             $jobId = $jobIds[0];
             $jobKey = $this->getJobKey($jobId);
-            
+
             // Use Redis transaction to ensure atomicity
             $this->redis->watch($queueKey);
-            
+
             // Check if job still exists in queue (could have been taken by another worker)
             $score = $this->redis->zScore($queueKey, $jobId);
             if ($score === false) {
                 $this->redis->unwatch();
+
                 continue;
             }
-            
+
             // Start transaction
             $tx = $this->redis->multi();
-            
+
             // Remove from queue
             $tx->zRem($queueKey, $jobId);
-            
+
             // Execute transaction
             $result = $tx->exec();
-            
+
             // If transaction failed (another worker took the job), try next queue
             if ($result === false || $result[0] === 0) {
                 continue;
             }
-            
+
             // Get the job data
             $job = $this->redis->get($jobKey);
-            
-            if (!$job) {
+
+            if (! $job) {
                 continue;
             }
-            
+
             // Update job status and attempts
             $job['status'] = 'queued';
             $job['attempts'] = $job['attempts'] + 1;
             $job['updated_at'] = (new Moment)->now();
-            
+
             // Save updated job
             $this->redis->set($jobKey, $job);
-            
+
             // Convert to object for compatibility with the interface
             $jobObject = (object) $job;
             $this->deserializePayload($jobObject);
-            
+
             return $jobObject;
         }
-        
+
         return null;
     }
-    
+
     /**
      * Delete a job
      */
@@ -137,11 +138,11 @@ class RedisEngine extends BaseEngine
     {
         // Remove from job storage
         $this->redis->delete($this->getJobKey($job->id));
-        
+
         // Remove from failed jobs if it exists there
         $this->redis->zRem($this->getFailedQueueKey(), $job->id);
     }
-    
+
     /**
      * Mark a job as failed
      */
@@ -149,32 +150,32 @@ class RedisEngine extends BaseEngine
     {
         // Get current job data
         $jobData = $this->redis->get($this->getJobKey($job->id));
-        
-        if (!$jobData) {
+
+        if (! $jobData) {
             return;
         }
-        
+
         // Update job data
         $jobData['status'] = 'failed';
         $jobData['exception'] = (string) $e;
         $jobData['failed_at'] = (new Moment)->now();
-        
+
         // Save updated job
         $this->redis->set($this->getJobKey($job->id), $jobData);
-        
+
         // Add to failed queue
         $this->redis->zAdd(
             $this->getFailedQueueKey(),
             time(),
             $job->id
         );
-        
+
         // Update the job object for consistency
         $job->status = 'failed';
         $job->exception = (string) $e;
         $job->failed_at = $jobData['failed_at'];
     }
-    
+
     /**
      * Release a job back to the queue
      */
@@ -182,31 +183,31 @@ class RedisEngine extends BaseEngine
     {
         // Get current job data
         $jobData = $this->redis->get($this->getJobKey($job->id));
-        
-        if (!$jobData) {
+
+        if (! $jobData) {
             return;
         }
-        
+
         // Update job data
         $jobData['status'] = 'new';
         $jobData['exception'] = null;
         $jobData['failed_at'] = null;
         $jobData['scheduled_at'] = (new Moment)->travel($delay);
         // $jobData['attempts'] = $jobData['attempts'] + 1;
-        
+
         // Save updated job
         $this->redis->set($this->getJobKey($job->id), $jobData);
-        
+
         // Add back to queue
         $this->redis->zAdd(
             $this->getQueueKey($job->queue),
             $this->getTimestamp($jobData['scheduled_at']),
             $job->id
         );
-        
+
         // Remove from failed queue if it was there
         $this->redis->zRem($this->getFailedQueueKey(), $job->id);
-        
+
         // Update the job object for consistency
         $job->status = 'new';
         $job->exception = null;
@@ -222,15 +223,15 @@ class RedisEngine extends BaseEngine
     {
         $keys = $this->redis->keys($this->prefix . 'queue:*');
         $queues = [];
-        
+
         foreach ($keys as $key) {
             $parts = explode(':', $key);
             $queues[] = end($parts);
         }
-        
+
         return $queues;
     }
-    
+
     /**
      * Generate a unique job ID
      */
@@ -238,7 +239,7 @@ class RedisEngine extends BaseEngine
     {
         return uniqid('job_', true);
     }
-    
+
     /**
      * Get Redis key for a job
      */
@@ -246,7 +247,7 @@ class RedisEngine extends BaseEngine
     {
         return $this->prefix . 'job:' . $jobId;
     }
-    
+
     /**
      * Get Redis key for a queue
      */
@@ -254,7 +255,7 @@ class RedisEngine extends BaseEngine
     {
         return $this->prefix . 'queue:' . $queue;
     }
-    
+
     /**
      * Get Redis key for failed jobs
      */
@@ -262,7 +263,7 @@ class RedisEngine extends BaseEngine
     {
         return $this->prefix . 'failed';
     }
-    
+
     /**
      * Convert date string to timestamp
      */
@@ -277,54 +278,54 @@ class RedisEngine extends BaseEngine
     public function retryFailedJobs($jobId = null, ?string $queue = null): int
     {
         $failedKey = $this->getFailedQueueKey();
-        
+
         if ($jobId !== null) {
             // Retry specific job
             $jobKey = $this->getJobKey($jobId);
             $job = $this->redis->get($jobKey);
-            
-            if (!$job || $job['status'] !== 'failed') {
+
+            if (! $job || $job['status'] !== 'failed') {
                 return 0;
             }
-            
+
             // Reset job data
             $job['status'] = 'new';
             $job['attempts'] = 0;
             $job['exception'] = null;
             $job['failed_at'] = null;
             $job['scheduled_at'] = (new Moment)->now();
-            
+
             // Save updated job
             $this->redis->set($jobKey, $job);
-            
+
             // Remove from failed queue
             $this->redis->zRem($failedKey, $jobId);
-            
+
             // Add back to queue
             $queueKey = $this->getQueueKey($job['queue']);
             $this->redis->zAdd($queueKey, time(), $jobId);
-            
+
             return 1;
         }
-        
+
         // Retry all failed jobs (optionally filtered by queue)
         $failedJobIds = $this->redis->zRange($failedKey, 0, -1);
         $count = 0;
-        
+
         foreach ($failedJobIds as $id) {
             // If queue filter is specified, check if job belongs to that queue
             if ($queue !== null) {
                 $jobKey = $this->getJobKey($id);
                 $job = $this->redis->get($jobKey);
-                
-                if (!$job || $job['queue'] !== $queue) {
+
+                if (! $job || $job['queue'] !== $queue) {
                     continue;
                 }
             }
-            
+
             $count += $this->retryFailedJobs($id);
         }
-        
+
         return $count;
     }
 }

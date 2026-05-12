@@ -134,7 +134,7 @@ final class CronTest extends TestCase
     public function testIsDue()
     {
         $cronExpression = '* * * * *'; // Every minute
-        $currentDateTime = new \DateTime();
+        $currentDateTime = new \DateTime;
         $cron = new Cron($cronExpression);
 
         $this->assertTrue($cron->isDue($currentDateTime));
@@ -143,7 +143,7 @@ final class CronTest extends TestCase
     public function testIsNotDue()
     {
         $cronExpression = '0 0 * * *'; // Every day at midnight
-        $currentDateTime = new \DateTime();
+        $currentDateTime = new \DateTime;
         $cron = new Cron($cronExpression);
 
         $this->assertFalse($cron->isDue($currentDateTime));
@@ -243,7 +243,7 @@ final class CronTest extends TestCase
         $cron = new Cron($cronExpression);
 
         // Set the current time to any valid minute
-        $currentDateTime = new \DateTime();
+        $currentDateTime = new \DateTime;
 
         $this->assertTrue($cron->minuteIsDue($currentDateTime));
         $this->assertTrue($cron->hourIsDue($currentDateTime));
@@ -265,7 +265,6 @@ final class CronTest extends TestCase
         $this->assertTrue($cron->weekdayIsDue($currentDateTime));
         $this->assertFalse($cron->isDue($currentDateTime));
     }
-
 
     public function testFullCronExpressionIsDue()
     {

@@ -20,11 +20,12 @@ class Route
     private string $verb;
 
     /**
-     * @var string $controller Controller class name.
+     * @var string Controller class name.
      */
     public function setController(string $controller): self
     {
         $this->controller = $controller;
+
         return $this;
     }
 
@@ -43,6 +44,7 @@ class Route
     public function setAction(string $action): self
     {
         $this->action = $action;
+
         return $this;
     }
 
@@ -85,6 +87,7 @@ class Route
     public function setParams(array $params): self
     {
         $this->params = $params;
+
         return $this;
     }
 
@@ -103,6 +106,7 @@ class Route
     public function setPath(string $path): self
     {
         $this->path = $path;
+
         return $this;
     }
 
@@ -120,6 +124,7 @@ class Route
     public function setUri(string $uri): self
     {
         $this->uri = $uri;
+
         return $this;
     }
 
@@ -137,6 +142,7 @@ class Route
     public function setVerb(string $verb): self
     {
         $this->verb = $verb;
+
         return $this;
     }
 
@@ -151,6 +157,7 @@ class Route
     public function name(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -167,6 +174,7 @@ class Route
     public function pattern(array $pattern): self
     {
         $this->pattern = $pattern;
+
         return $this;
     }
 

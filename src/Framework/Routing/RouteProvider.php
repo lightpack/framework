@@ -2,9 +2,8 @@
 
 namespace Lightpack\Routing;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Routing\RouteRegistry;
+use Lightpack\Support\ProviderInterface;
 
 class RouteProvider implements ProviderInterface
 {

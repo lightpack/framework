@@ -2,9 +2,9 @@
 
 namespace Lightpack\Pdf;
 
-use Lightpack\Support\BaseManager;
 use Lightpack\Container\Container;
 use Lightpack\Pdf\Driver\DompdfDriver;
+use Lightpack\Support\BaseManager;
 
 class PdfManager extends BaseManager
 {
@@ -14,7 +14,7 @@ class PdfManager extends BaseManager
         $this->registerBuiltInDrivers();
         $this->setDefaultFromConfig();
     }
-    
+
     /**
      * Register built-in PDF drivers
      */
@@ -23,7 +23,7 @@ class PdfManager extends BaseManager
         $this->register('dompdf', function ($container) {
             $config = $container->get('config');
             $options = $config->get('pdf.dompdf', []);
-            
+
             return new Pdf(
                 new DompdfDriver($options),
                 $container->get('template'),
@@ -31,7 +31,7 @@ class PdfManager extends BaseManager
             );
         });
     }
-    
+
     /**
      * Set default driver from config
      */
@@ -40,16 +40,17 @@ class PdfManager extends BaseManager
         $default = $this->container->get('config')->get('pdf.driver', 'dompdf');
         $this->setDefaultDriver($default);
     }
-    
+
     /**
      * Get PDF driver instance
      */
     public function driver(?string $name = null): Pdf
     {
         $name = $name ?? $this->defaultDriver;
+
         return $this->resolve($name);
     }
-    
+
     protected function getErrorMessage(string $name): string
     {
         return "PDF driver not found: {$name}";

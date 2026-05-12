@@ -63,7 +63,7 @@ class Column
     public function enum(array $values): self
     {
         $this->columnType = 'ENUM';
-        
+
         $this->columnLength = implode(',', array_map(function ($value) {
             return "'" . $value . "'";
         }, $values));
@@ -156,7 +156,7 @@ class Column
 
     public function compileIndex()
     {
-        if (!$this->columnIndexType) {
+        if (! $this->columnIndexType) {
             return null;
         }
 
@@ -169,7 +169,7 @@ class Column
 
         $escapedColumnName = IdentifierEscaper::escape($this->columnName);
         $index .= " ($escapedColumnName)";
-        
+
         return $index;
     }
 
@@ -196,7 +196,7 @@ class Column
         }
 
         if (isset($this->columnDefaultValue)) {
-            if(is_bool($this->columnDefaultValue)) {
+            if (is_bool($this->columnDefaultValue)) {
                 $column .= " DEFAULT " . ($this->columnDefaultValue ? '1' : '0');
             } else {
                 if ($this->columnDefaultValue !== 'NULL' && $this->columnDefaultValue !== 'CURRENT_TIMESTAMP') {
@@ -204,7 +204,7 @@ class Column
                 } else {
                     $default = "{$this->columnDefaultValue}";
                 }
-    
+
                 $column .= " DEFAULT {$default}";
             }
         }

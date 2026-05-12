@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Lightpack\Validation\Rules;
 
 use Lightpack\Utils\Arr;
-use Lightpack\Validation\Traits\ValidationMessageTrait;
 use Lightpack\Validation\Traits\FileUploadValidationTrait;
+use Lightpack\Validation\Traits\ValidationMessageTrait;
 
 class RequiredIfRule
 {
@@ -35,7 +35,7 @@ class RequiredIfRule
             return false;
         }
 
-        if(is_array($value) && ($this->isEmptySingleFileUpload($value) || $this->isEmptyMultiFileUpload($value))) {
+        if (is_array($value) && ($this->isEmptySingleFileUpload($value) || $this->isEmptyMultiFileUpload($value))) {
             return false;
         }
 

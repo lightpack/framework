@@ -2,8 +2,8 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Jobs\Worker;
 use Lightpack\Console\Command;
+use Lightpack\Jobs\Worker;
 
 class ProcessJobs extends Command
 {
@@ -16,19 +16,20 @@ class ProcessJobs extends Command
         $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
 
         $worker->run();
-        
+
         return self::SUCCESS;
     }
 
     private function parseQueueArgument()
     {
         $queue = $this->args->get('queue');
-        
+
         if ($queue) {
             $queues = explode(',', $queue);
+
             return array_map('trim', $queues);
         }
-        
+
         return null;
     }
 }

@@ -51,6 +51,7 @@ abstract class ModelFactory extends Factory
         foreach ($batchData as $attributes) {
             $models[] = $this->saveSingle($modelClass, $attributes);
         }
+
         return $models;
     }
 
@@ -62,11 +63,12 @@ abstract class ModelFactory extends Factory
      */
     protected function saveSingle(string $modelClass, array $attributes)
     {
-        $model = new $modelClass();
+        $model = new $modelClass;
         foreach ($attributes as $key => $value) {
             $model->{$key} = $value;
         }
         $model->insert();
+
         return $model;
     }
 }

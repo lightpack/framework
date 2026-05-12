@@ -95,7 +95,7 @@ class RouteRegistry
         if ($uri === '') {
             return $prefix === '' ? '/' : $prefix;
         }
-        
+
         // Otherwise join with single slash
         return $prefix . '/' . $uri;
     }
@@ -117,7 +117,7 @@ class RouteRegistry
             $options['filter'] = array_unique((array)$oldOptions['filter']);
         }
         // Inherit host if not set
-        if (!isset($options['host']) && isset($oldOptions['host'])) {
+        if (! isset($options['host']) && isset($oldOptions['host'])) {
             $options['host'] = $oldOptions['host'];
         }
         // Merge all options
@@ -166,26 +166,26 @@ class RouteRegistry
 
             if (preg_match('@^' . $regex . '$@', $path, $matches)) {
                 \array_shift($matches);
-                
+
                 // Trim slashes from matches
-                $matches = array_map(function($match) {
+                $matches = array_map(function ($match) {
                     return trim($match, '/');
                 }, $matches);
 
                 $routeParams = [];
 
-                if($params) {
-                    foreach($params as $key => $param) {
+                if ($params) {
+                    foreach ($params as $key => $param) {
                         $routeParams[$param] = $matches[$key] ?? null;
                     }
                 } else {
                     $routeParams = $matches;
                 }
-                
+
                 /** @var Route */
                 $route = $this->routes[$this->container->get('request')->method()][$routeUri];
                 $route->setParams($routeParams);
-                
+
                 $route->setPath($path);
 
                 return $route;
@@ -215,7 +215,7 @@ class RouteRegistry
             throw new \Exception('Empty route path');
         }
 
-        $route = new Route();
+        $route = new Route;
         $route->setController($controller)->setAction($action)->filter($this->options['filter'])->setUri($uri)->setVerb($method);
 
         if ($this->options['host'] ?? false) {
@@ -286,7 +286,7 @@ class RouteRegistry
 
         $compiledRegex = trim(implode('', $parts), '/');
         // For host-based routes, don't add leading slash to regex
-        if (!$hasHost) {
+        if (! $hasHost) {
             $compiledRegex = '/' . $compiledRegex;
         }
 
@@ -323,21 +323,21 @@ class RouteRegistry
 
     /**
      * Generate a URL for a named route with parameters.
-     * 
+     *
      * This method resolves a named route and generates its URL by replacing
      * route parameters with provided values. Extra parameters are appended
      * as query string.
-     * 
+     *
      * @param string $routeName The name of the route
      * @param array $params Route parameters and query string parameters
      * @return string The generated URL
      * @throws \Exception If route is not found or required parameters are missing
-     * 
+     *
      * @example
      * // Route: /users/:id/posts/:slug?
      * route()->url('user.posts', ['id' => 1, 'slug' => 'hello'])
      * // Returns: /users/1/posts/hello
-     * 
+     *
      * route()->url('user.posts', ['id' => 1, 'page' => 2])
      * // Returns: /users/1/posts?page=2
      */
@@ -345,7 +345,7 @@ class RouteRegistry
     {
         $route = $this->getByName($routeName);
 
-        if (!$route) {
+        if (! $route) {
             throw new \Exception("Route with name '$routeName' not found.");
         }
 
@@ -356,7 +356,7 @@ class RouteRegistry
             unset($uri[0]);
         }
 
-        $uriPatterns = array_filter($uri, fn($val) => strpos($val, ':') === 0);
+        $uriPatterns = array_filter($uri, fn ($val) => strpos($val, ':') === 0);
         $lastCharacterForEndParam = substr(end($uriPatterns), -1);
         $minimumRequiredParams = $lastCharacterForEndParam == '?' ? count($uriPatterns) - 1 : count($uriPatterns);
 
@@ -369,7 +369,7 @@ class RouteRegistry
                 $isOptionalParam = substr($value, -1) == '?';
                 $value = trim($value, ':?');
 
-                if (!$isOptionalParam && !isset($params[$value])) {
+                if (! $isOptionalParam && ! isset($params[$value])) {
                     throw new \Exception("Undefined parameter [:{$value}] for route '{$routeName}'");
                 }
 
@@ -385,16 +385,16 @@ class RouteRegistry
 
     /**
      * Generate a signed URL for a named route.
-     * 
+     *
      * Signed URLs contain a cryptographic signature that prevents tampering.
      * They also include an expiration timestamp for time-limited access.
-     * 
+     *
      * @param string $routeName The name of the route
      * @param array $params Route parameters and query string parameters
      * @param int $expiration Expiration time in seconds (default: 3600)
      * @return string The signed URL with signature and expiration
      * @throws \Exception If route is not found or required parameters are missing
-     * 
+     *
      * @example
      * route()->sign('download', ['file' => 'report.pdf'], 3600)
      * // Returns: /download/report.pdf?signature=abc123&expires=1234567890

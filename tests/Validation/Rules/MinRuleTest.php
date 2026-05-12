@@ -13,7 +13,7 @@ class MinRuleTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     // ========================================
@@ -30,7 +30,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -44,7 +44,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be less than 100', $this->validator->getError('price'));
     }
@@ -59,7 +59,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -73,7 +73,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -87,7 +87,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -101,7 +101,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -115,7 +115,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -129,7 +129,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -143,7 +143,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -161,7 +161,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -175,7 +175,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -189,7 +189,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -203,7 +203,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -221,7 +221,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -235,7 +235,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -249,7 +249,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -264,7 +264,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('tags'));
     }
@@ -279,7 +279,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields pass validation when empty
         $this->assertTrue($result->passes());
     }
@@ -299,7 +299,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('field'));
     }
@@ -314,7 +314,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields pass validation when empty
         $this->assertTrue($result->passes());
     }
@@ -330,7 +330,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('field'));
     }
@@ -345,7 +345,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields pass validation when empty
         $this->assertTrue($result->passes());
     }
@@ -360,7 +360,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -379,7 +379,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('price'));
     }
@@ -395,7 +395,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -411,7 +411,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be less than 100', $this->validator->getError('price'));
     }
@@ -431,7 +431,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertEquals('Price must be at least $100', $this->validator->getError('price'));
     }
@@ -446,7 +446,7 @@ class MinRuleTest extends TestCase
         $data = [
             'name' => 'Test Product',
             'price' => '150.00',
-            'stock' => '10'
+            'stock' => '10',
         ];
 
         $this->validator
@@ -457,7 +457,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -467,7 +467,7 @@ class MinRuleTest extends TestCase
         $data = [
             'name' => 'Test Product',
             'price' => '47.00',
-            'stock' => '10'
+            'stock' => '10',
         ];
 
         $this->validator
@@ -478,7 +478,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be less than 100', $this->validator->getError('price'));
     }
@@ -494,7 +494,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -509,7 +509,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -531,7 +531,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be less than 8', $this->validator->getError('password'));
     }
@@ -548,7 +548,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -566,7 +566,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be less than 1000', $this->validator->getError('price'));
     }
@@ -583,7 +583,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -599,7 +599,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -615,7 +615,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -635,7 +635,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Passes because 123 >= 8 (numeric validation)
         $this->assertTrue($result->passes());
     }
@@ -651,7 +651,7 @@ class MinRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Fails because string length 3 < 5
         $this->assertTrue($result->fails());
     }

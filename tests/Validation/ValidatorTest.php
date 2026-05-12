@@ -13,7 +13,7 @@ class ValidatorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     public function testBasicValidation(): void
@@ -65,7 +65,7 @@ class ValidatorTest extends TestCase
         $this->validator
             ->field('age')
             ->required()
-            ->custom(fn($value) => $value >= 18, 'Must be 18 or older');
+            ->custom(fn ($value) => $value >= 18, 'Must be 18 or older');
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
@@ -76,7 +76,7 @@ class ValidatorTest extends TestCase
     {
         // Test 1: Basic array validation with required and min length
         $data = [
-            'skills' => ['', 'php', '']
+            'skills' => ['', 'php', ''],
         ];
 
         $this->validator
@@ -93,11 +93,11 @@ class ValidatorTest extends TestCase
             'users' => [
                 ['name' => 'Jo', 'email' => 'invalid-email', 'age' => '17'],
                 ['name' => 'Jane', 'email' => 'jane@example.com', 'age' => '25'],
-                ['name' => '', 'email' => '', 'age' => 'not-numeric']
-            ]
+                ['name' => '', 'email' => '', 'age' => 'not-numeric'],
+            ],
         ];
 
-        $validator = new Validator();
+        $validator = new Validator;
         $validator
             ->field('users.*.name')
             ->required()
@@ -117,11 +117,11 @@ class ValidatorTest extends TestCase
         $data = [
             'contacts' => [
                 ['email' => 'john@example.com', 'phone' => '1234567890'],
-                ['email' => 'jane@example.com', 'phone' => '9876543210']
-            ]
+                ['email' => 'jane@example.com', 'phone' => '9876543210'],
+            ],
         ];
 
-        $validator = new Validator();
+        $validator = new Validator;
         $validator
             ->field('contacts.*.email')
             ->required()
@@ -129,7 +129,7 @@ class ValidatorTest extends TestCase
             ->field('contacts.*.phone')
             ->required()
             ->numeric()
-            ->custom(fn($value) => strlen((string) $value) === 10, 'Phone must be exactly 10 digits');
+            ->custom(fn ($value) => strlen((string) $value) === 10, 'Phone must be exactly 10 digits');
 
         $validator->setInput($data);
         $result = $validator->validate();
@@ -175,9 +175,9 @@ class ValidatorTest extends TestCase
             'user' => [
                 'profile' => [
                     'name' => '',
-                    'age' => 15
-                ]
-            ]
+                    'age' => 15,
+                ],
+            ],
         ];
 
         $this->validator
@@ -185,7 +185,7 @@ class ValidatorTest extends TestCase
             ->required()
             ->field('user.profile.age')
             ->required()
-            ->custom(fn($value) => $value >= 18);
+            ->custom(fn ($value) => $value >= 18);
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
@@ -278,7 +278,7 @@ class ValidatorTest extends TestCase
         $data = [
             'valid' => '15',
             'invalid' => '25',
-            'non_numeric' => 'abc'
+            'non_numeric' => 'abc',
         ];
 
         $this->validator
@@ -296,7 +296,7 @@ class ValidatorTest extends TestCase
         // Test chained between validation
         $data = [
             'age' => '25',
-            'score' => '85.5'
+            'score' => '85.5',
         ];
 
         $this->validator
@@ -357,7 +357,7 @@ class ValidatorTest extends TestCase
         $data = [
             'password' => 'secret123',
             'confirm_password' => 'secret123',
-            'wrong_confirm' => 'different'
+            'wrong_confirm' => 'different',
         ];
 
         $this->validator
@@ -376,7 +376,7 @@ class ValidatorTest extends TestCase
         $data = [
             'current_password' => 'secret123',
             'new_password' => 'newpass456',
-            'wrong_new' => 'secret123'
+            'wrong_new' => 'secret123',
         ];
 
         $this->validator
@@ -419,7 +419,7 @@ class ValidatorTest extends TestCase
         $data = [
             'name' => 'José',
             'invalid' => 'John123',
-            'numbers' => '123'
+            'numbers' => '123',
         ];
 
         $this->validator
@@ -440,7 +440,7 @@ class ValidatorTest extends TestCase
         $data = [
             'username' => 'José123',
             'invalid' => 'John_123',
-            'valid' => '123abc'
+            'valid' => '123abc',
         ];
 
         $this->validator
@@ -461,7 +461,7 @@ class ValidatorTest extends TestCase
         $data = [
             'color' => 'red',
             'invalid' => 'orange',
-            'valid' => 'blue'
+            'valid' => 'blue',
         ];
 
         $this->validator
@@ -482,7 +482,7 @@ class ValidatorTest extends TestCase
         $data = [
             'color' => 'red',
             'invalid' => 'orange',
-            'valid' => 'blue'
+            'valid' => 'blue',
         ];
 
         $this->validator
@@ -503,7 +503,7 @@ class ValidatorTest extends TestCase
         $data = [
             'valid' => 'abcdef',
             'invalid' => '@#$%^&',
-            'empty' => ''
+            'empty' => '',
         ];
 
         $this->validator
@@ -534,7 +534,7 @@ class ValidatorTest extends TestCase
                         'state' => 'CA',
                         'zip' => '941',  // Invalid: too short
                         'country' => 'US',
-                        'is_primary' => true
+                        'is_primary' => true,
                     ],
                     [
                         'type' => 'office',
@@ -543,7 +543,7 @@ class ValidatorTest extends TestCase
                         'state' => 'CA',
                         'zip' => '95113',
                         'country' => 'US',
-                        'is_primary' => true  // Invalid: multiple primary addresses
+                        'is_primary' => true,  // Invalid: multiple primary addresses
                     ],
                     [
                         'type' => 'invalid-type',  // Invalid: not in allowed types
@@ -552,10 +552,10 @@ class ValidatorTest extends TestCase
                         'state' => 'CA',
                         'zip' => '94041',
                         'country' => 'XX',  // Invalid: invalid country code
-                        'is_primary' => false
-                    ]
-                ]
-            ]
+                        'is_primary' => false,
+                    ],
+                ],
+            ],
         ];
 
         $this->validator
@@ -595,6 +595,7 @@ class ValidatorTest extends TestCase
                         $primaryCount++;
                     }
                 }
+
                 return $primaryCount === 1;
             }, 'Only one address can be marked as primary');
 
@@ -757,7 +758,7 @@ class ValidatorTest extends TestCase
 
     public function testBasicArrayValidation()
     {
-        $validator = new Validator();
+        $validator = new Validator;
 
         // Test valid array
         $validator->field('items')->required()->array();
@@ -772,7 +773,7 @@ class ValidatorTest extends TestCase
 
     public function testArrayMinValidation()
     {
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('items')->required()->array(2);
 
         // Test with less items than minimum
@@ -790,7 +791,7 @@ class ValidatorTest extends TestCase
 
     public function testArrayMaxValidation()
     {
-        $validator = new Validator();
+        $validator = new Validator;
 
         // Test with less than maximum
         $validator->field('items')->required()->array(null, 2);
@@ -810,7 +811,7 @@ class ValidatorTest extends TestCase
 
     public function testArrayMinMaxValidation()
     {
-        $validator = new Validator();
+        $validator = new Validator;
 
         // Test with less than minimum
         $validator->field('items')->required()->array(2, 4);
@@ -840,7 +841,7 @@ class ValidatorTest extends TestCase
 
     public function testErrorMessages()
     {
-        $validator = new Validator();
+        $validator = new Validator;
 
         // Test min error message
         $validator->field('items')->required()->array(2);
@@ -863,8 +864,8 @@ class ValidatorTest extends TestCase
 
     public function testChainedRuleMessages()
     {
-        $validator = new Validator();
-        
+        $validator = new Validator;
+
         // Define custom messages for each rule
         $messages = [
             'email' => [
@@ -911,8 +912,8 @@ class ValidatorTest extends TestCase
 
     public function testPasswordValidationRules()
     {
-        $validator = new Validator();
-        
+        $validator = new Validator;
+
         // Test valid password
         $validator->field('password')->required()->between(8, 32)->hasUppercase()->hasLowercase()->hasNumber()->hasSymbol();
 

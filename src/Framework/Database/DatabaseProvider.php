@@ -2,11 +2,10 @@
 
 namespace Lightpack\Database;
 
-use Lightpack\Support\ProviderInterface;
 use Exception;
 use Lightpack\Container\Container;
 use Lightpack\Database\Adapters\Mysql;
-use Lightpack\Database\DB;
+use Lightpack\Support\ProviderInterface;
 
 class DatabaseProvider implements ProviderInterface
 {
@@ -28,12 +27,12 @@ class DatabaseProvider implements ProviderInterface
     protected function mysql($config)
     {
         return new Mysql([
-            'host'      => $config->get('db.mysql.host'),
-            'port'      => $config->get('db.mysql.port'),
-            'username'  => $config->get('db.mysql.username'),
-            'password'  => $config->get('db.mysql.password'),
-            'database'  => $config->get('db.mysql.database'),
-            'options'   => $config->get('db.mysql.options'),
+            'host' => $config->get('db.mysql.host'),
+            'port' => $config->get('db.mysql.port'),
+            'username' => $config->get('db.mysql.username'),
+            'password' => $config->get('db.mysql.password'),
+            'database' => $config->get('db.mysql.database'),
+            'options' => $config->get('db.mysql.options'),
         ]);
     }
 

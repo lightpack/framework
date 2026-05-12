@@ -15,9 +15,11 @@ abstract class BaseDriver implements MfaInterface
         protected Cache $cache,
         protected Config $config,
         protected Otp $otp,
-    ) {}
+    ) {
+    }
 
     abstract protected function getType(): string; // 'email', 'sms', etc.
+
     abstract protected function doSend(AuthUser $user, string $code): void;
 
     public function send(AuthUser $user): void
@@ -35,13 +37,17 @@ abstract class BaseDriver implements MfaInterface
 
     public function validate(AuthUser $user, ?string $input): bool
     {
-        if(!$input) return false;
+        if (! $input) {
+            return false;
+        }
         $key = $this->getCacheKey($user);
         $code = $this->cache->get($key);
         if ($code && $input == $code) {
             $this->cache->delete($key);
+
             return true;
         }
+
         return false;
     }
 
@@ -61,6 +67,7 @@ abstract class BaseDriver implements MfaInterface
         if ($bypass) {
             return $bypass;
         }
+
         return $this->otp
             ->length($this->config->get('mfa.' . $this->getType() . '.code_length', 6))
             ->type($this->config->get('mfa.' . $this->getType() . '.code_type', 'numeric'))
@@ -71,13 +78,13 @@ abstract class BaseDriver implements MfaInterface
     {
         $maxAttempts = $this->config->get('mfa.' . $this->getType() . '.resend_max', 1);
         $intervalSeconds = $this->config->get('mfa.' . $this->getType() . '.resend_interval', 10);
-        $limiter = new \Lightpack\Utils\Limiter();
+        $limiter = new \Lightpack\Utils\Limiter;
         $key = 'mfa_resend_' . $user->id;
         if ($this->getType() !== 'email') {
             $key = 'mfa_' . $this->getType() . '_resend_' . $user->id;
         }
 
-        if (!$limiter->attempt($key, $maxAttempts, $intervalSeconds)) {
+        if (! $limiter->attempt($key, $maxAttempts, $intervalSeconds)) {
             throw new RuntimeException("Please wait before requesting a new MFA code.");
         }
     }

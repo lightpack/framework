@@ -29,6 +29,7 @@ class Faker
     {
         if ($customLocalePath && file_exists($customLocalePath)) {
             $this->data = require $customLocalePath;
+
             return;
         }
         $base = __DIR__ . '/Locales/';
@@ -52,6 +53,7 @@ class Faker
         }
         // fallback to English
         $en = require __DIR__ . '/Locales/en.php';
+
         return $en[$key] ?? [];
     }
 
@@ -66,12 +68,14 @@ class Faker
     public function firstName(): string
     {
         $firstNames = $this->getData('firstNames');
+
         return $firstNames[mt_rand(0, count($firstNames) - 1)];
     }
 
     public function lastName(): string
     {
         $lastNames = $this->getData('lastNames');
+
         return $lastNames[mt_rand(0, count($lastNames) - 1)];
     }
 
@@ -85,6 +89,7 @@ class Faker
         $user = strtolower(preg_replace('/\s+/', '', $this->name()));
         $domains = $this->getData('domains');
         $domain = $domains[mt_rand(0, count($domains) - 1)];
+
         return "$user@{$domain}";
     }
 
@@ -111,6 +116,7 @@ class Faker
             $out[] = $wordList[mt_rand(0, count($wordList) - 1)];
         }
         $str = ucfirst(implode(' ', $out)) . '.';
+
         return $str;
     }
 
@@ -120,18 +126,21 @@ class Faker
         for ($i = 0; $i < $sentences; $i++) {
             $out[] = $this->sentence(mt_rand(7, 15));
         }
+
         return implode(' ', $out);
     }
 
     public function date(string $format = 'Y-m-d'): string
     {
         $timestamp = mt_rand(strtotime('-10 years'), time());
+
         return date($format, $timestamp);
     }
 
     public function datetime(string $format = 'Y-m-d H:i:s'): string
     {
         $timestamp = mt_rand(strtotime('-1 year'), time());
+
         return date($format, $timestamp);
     }
 
@@ -143,6 +152,7 @@ class Faker
         }
         $data[6] = chr((ord($data[6]) & 0x0f) | 0x40); // version 4
         $data[8] = chr((ord($data[8]) & 0x3f) | 0x80); // variant
+
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
@@ -170,6 +180,7 @@ class Faker
         for ($i = 0; $i < 8; $i++) {
             $number .= mt_rand(0, 9);
         }
+
         return $prefix . $number;
     }
 
@@ -184,6 +195,7 @@ class Faker
         $city = $this->city();
         $state = $this->state();
         $country = $this->country();
+
         return "$num $street, $city, $state, $country";
     }
 
@@ -193,6 +205,7 @@ class Faker
     public function city(): string
     {
         $cities = $this->getData('cities');
+
         return $cities[mt_rand(0, count($cities) - 1)];
     }
 
@@ -202,6 +215,7 @@ class Faker
     public function state(): string
     {
         $states = $this->getData('states');
+
         return $states[mt_rand(0, count($states) - 1)];
     }
 
@@ -211,6 +225,7 @@ class Faker
     public function country(): string
     {
         $countries = $this->getData('countries');
+
         return $countries[mt_rand(0, count($countries) - 1)];
     }
 
@@ -220,6 +235,7 @@ class Faker
     public function company(): string
     {
         $companies = $this->getData('companies');
+
         return $companies[mt_rand(0, count($companies) - 1)];
     }
 
@@ -229,6 +245,7 @@ class Faker
     public function domainName(): string
     {
         $domains = $this->getData('domains');
+
         return $domains[mt_rand(0, count($domains) - 1)];
     }
 
@@ -236,6 +253,7 @@ class Faker
     {
         $domain = $this->domainName();
         $user = strtolower(preg_replace('/\s+/', '', $this->name()));
+
         return "https://$domain/$user";
     }
 
@@ -249,6 +267,7 @@ class Faker
         $first = strtolower($firstNames[mt_rand(0, count($firstNames) - 1)]);
         $last = strtolower($lastNames[mt_rand(0, count($lastNames) - 1)]);
         $num = mt_rand(1, 99);
+
         return "$first.$last$num";
     }
 
@@ -269,6 +288,7 @@ class Faker
         for ($i = 0; $i < 8; $i++) {
             $segments[] = dechex(mt_rand(0, 0xffff));
         }
+
         return implode(':', $segments);
     }
 
@@ -281,6 +301,7 @@ class Faker
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         ];
+
         return $browsers[mt_rand(0, count($browsers) - 1)];
     }
 
@@ -303,6 +324,7 @@ class Faker
         for ($i = 0; $i < $length; $i++) {
             $pass .= $chars[mt_rand(0, $max)];
         }
+
         return $pass;
     }
 
@@ -323,6 +345,7 @@ class Faker
         $timestamp = strtotime("-{$age} years");
         // Add random days within a year for more realism
         $timestamp -= mt_rand(0, 364) * 86400;
+
         return date('Y-m-d', $timestamp);
     }
 
@@ -333,7 +356,8 @@ class Faker
     {
         $formats = ['#####', '######', '### ###', '#####-####'];
         $format = $formats[mt_rand(0, count($formats) - 1)];
-        return preg_replace_callback('/#/', fn() => mt_rand(0, 9), $format);
+
+        return preg_replace_callback('/#/', fn () => mt_rand(0, 9), $format);
     }
 
     /**
@@ -342,6 +366,7 @@ class Faker
     public function jobTitle(): string
     {
         $jobTitles = $this->getData('jobTitles');
+
         return $jobTitles[mt_rand(0, count($jobTitles) - 1)];
     }
 
@@ -351,6 +376,7 @@ class Faker
     public function productName(): string
     {
         $productNames = $this->getData('productNames');
+
         return $productNames[mt_rand(0, count($productNames) - 1)];
     }
 
@@ -371,6 +397,7 @@ class Faker
         while (strlen($number) < $length) {
             $number .= mt_rand(0, 9);
         }
+
         // Format as groups of 4 digits
         return trim(chunk_split($number, 4, ' '));
     }
@@ -401,9 +428,9 @@ class Faker
     {
         $min = (int)str_pad('1', $digits, '0');
         $max = (int)str_pad('', $digits, '9');
+
         return str_pad((string)mt_rand($min, (int)$max), $digits, '0', STR_PAD_LEFT);
     }
-
 
     /**
      * Generate a slug from random words.
@@ -415,6 +442,7 @@ class Faker
         for ($i = 0; $i < $words; $i++) {
             $chosen[] = $wordList[mt_rand(0, count($wordList) - 1)];
         }
+
         return strtolower(implode('-', $chosen));
     }
 
@@ -424,6 +452,7 @@ class Faker
     public function price(float $min = 1, float $max = 9999, string $currency = '$'): string
     {
         $amount = $this->float($min, $max, 2);
+
         return $currency . number_format($amount, 2);
     }
 
@@ -441,7 +470,7 @@ class Faker
      */
     public function arrayOf(string $method, int $count, ...$args): array
     {
-        if (!method_exists($this, $method)) {
+        if (! method_exists($this, $method)) {
             throw new \InvalidArgumentException("Method '$method' does not exist in " . static::class);
         }
 
@@ -449,6 +478,7 @@ class Faker
         for ($i = 0; $i < $count; $i++) {
             $result[] = $this->$method(...$args);
         }
+
         return $result;
     }
 }

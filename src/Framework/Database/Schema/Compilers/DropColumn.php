@@ -8,7 +8,7 @@ class DropColumn
     {
         $sql = "ALTER TABLE {$table}";
 
-        foreach($columns as $column) {
+        foreach ($columns as $column) {
             $sql .= " DROP {$column},";
         }
 

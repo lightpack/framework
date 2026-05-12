@@ -4,7 +4,6 @@ namespace Lightpack\Tests\File;
 
 use Lightpack\File\File;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 use SplFileInfo;
 
 class FileTest extends TestCase
@@ -16,12 +15,12 @@ class FileTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->file = new File();
+        $this->file = new File;
         $this->testDir = __DIR__ . '/tmp';
         $this->testFile = $this->testDir . '/test.txt';
-        
+
         // Create test directory
-        if (!is_dir($this->testDir)) {
+        if (! is_dir($this->testDir)) {
             mkdir($this->testDir);
         }
     }
@@ -127,7 +126,7 @@ class FileTest extends TestCase
     {
         $content = str_repeat('a', 1024); // 1KB
         $this->file->write($this->testFile, $content);
-        
+
         $this->assertEquals(1024, $this->file->size($this->testFile));
         $this->assertEquals('1KB', $this->file->size($this->testFile, true));
     }
@@ -136,8 +135,10 @@ class FileTest extends TestCase
     {
         $this->file->write($this->testFile, 'test');
         $this->assertIsInt($this->file->modified($this->testFile));
-        $this->assertMatchesRegularExpression('/[A-Z][a-z]{2} \d{1,2}, \d{4}/', 
-            $this->file->modified($this->testFile, true));
+        $this->assertMatchesRegularExpression(
+            '/[A-Z][a-z]{2} \d{1,2}, \d{4}/',
+            $this->file->modified($this->testFile, true)
+        );
     }
 
     public function testMakeDirCreatesDirectory()
@@ -159,10 +160,10 @@ class FileTest extends TestCase
     {
         $destDir = $this->testDir . '_copy';
         $this->file->write($this->testFile, 'test');
-        
+
         $this->assertTrue($this->file->copyDir($this->testDir, $destDir));
         $this->assertTrue(file_exists($destDir . '/test.txt'));
-        
+
         // Clean up
         $this->file->removeDir($destDir);
     }
@@ -171,11 +172,11 @@ class FileTest extends TestCase
     {
         $destDir = $this->testDir . '_moved';
         $this->file->write($this->testFile, 'test');
-        
+
         $this->assertTrue($this->file->moveDir($this->testDir, $destDir));
         $this->assertFalse(is_dir($this->testDir));
         $this->assertTrue(file_exists($destDir . '/test.txt'));
-        
+
         // Clean up
         $this->file->removeDir($destDir);
     }
@@ -184,11 +185,11 @@ class FileTest extends TestCase
     {
         $file1 = $this->testDir . '/old.txt';
         $file2 = $this->testDir . '/new.txt';
-        
+
         $this->file->write($file1, 'old');
         sleep(1);
         $this->file->write($file2, 'new');
-        
+
         $recent = $this->file->recent($this->testDir);
         $this->assertInstanceOf(SplFileInfo::class, $recent);
         $this->assertEquals('new.txt', $recent->getFilename());
@@ -198,7 +199,7 @@ class FileTest extends TestCase
     {
         $this->file->write($this->testFile, 'test');
         $files = $this->file->traverse($this->testDir);
-        
+
         $this->assertIsArray($files);
         $this->assertArrayHasKey('test.txt', $files);
         $this->assertInstanceOf(SplFileInfo::class, $files['test.txt']);
@@ -213,11 +214,11 @@ class FileTest extends TestCase
     {
         $content = 'test content';
         $this->file->write($this->testFile, $content);
-        
+
         // Test default SHA256
         $expectedSha = hash('sha256', $content);
         $this->assertEquals($expectedSha, $this->file->hash($this->testFile));
-        
+
         // Test MD5
         $expectedMd5 = hash('md5', $content);
         $this->assertEquals($expectedMd5, $this->file->hash($this->testFile, 'md5'));
@@ -235,10 +236,10 @@ class FileTest extends TestCase
     {
         $oldContent = 'old content';
         $newContent = 'new content';
-        
+
         // Create file with old content
         $this->file->write($this->testFile, $oldContent);
-        
+
         // Overwrite with new content
         $this->assertTrue($this->file->atomic($this->testFile, $newContent));
         $this->assertEquals($newContent, file_get_contents($this->testFile));
@@ -248,13 +249,13 @@ class FileTest extends TestCase
     {
         // Create a directory with the same name to force rename failure
         $this->file->makeDir($this->testFile);
-        
+
         $this->assertFalse($this->file->atomic($this->testFile, 'test'));
-        
+
         // No temp files should be left behind
         $files = glob(dirname($this->testFile) . '/*.tmp.*');
         $this->assertEmpty($files);
-        
+
         // Cleanup
         rmdir($this->testFile);
     }

@@ -1,10 +1,10 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\AI\Providers\Anthropic;
-use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
+use Lightpack\Http\Http;
+use PHPUnit\Framework\TestCase;
 
 class AnthropicIntegrationTest extends TestCase
 {
@@ -14,16 +14,16 @@ class AnthropicIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->apiKey = getenv('ANTHROPIC_API_KEY');
-        
-        if (!$this->apiKey) {
+
+        if (! $this->apiKey) {
             $this->markTestSkipped('ANTHROPIC_API_KEY environment variable not set');
         }
-        
+
         // Avoid rate limiting - wait 5 seconds between tests
         sleep(5);
 
         $config = $this->createMock(Config::class);
-        $config->method('get')->willReturnCallback(function($key, $default = null) {
+        $config->method('get')->willReturnCallback(function ($key, $default = null) {
             $map = [
                 'ai.providers.anthropic.key' => $this->apiKey,
                 'ai.providers.anthropic.model' => 'claude-sonnet-4-5',
@@ -34,11 +34,12 @@ class AnthropicIntegrationTest extends TestCase
                 'ai.max_tokens' => 100,
                 'ai.cache_ttl' => 3600,
             ];
+
             return $map[$key] ?? $default;
         });
 
         $this->anthropic = new Anthropic(
-            new Http(),
+            new Http,
             $this->createMock(Cache::class),
             $config
         );
@@ -61,7 +62,7 @@ class AnthropicIntegrationTest extends TestCase
     public function testAskMethod()
     {
         $answer = $this->anthropic->ask('What is 2+2? Answer with just the number.');
-        
+
         $this->assertIsString($answer);
         $this->assertNotEmpty($answer);
     }

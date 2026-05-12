@@ -2,16 +2,16 @@
 
 namespace Lightpack\Tests\Jobs;
 
-use Lightpack\Jobs\Job;
-use Lightpack\Jobs\Worker;
 use Lightpack\Jobs\Connection;
 use Lightpack\Jobs\Engines\RedisEngine;
+use Lightpack\Jobs\Job;
+use Lightpack\Jobs\Worker;
 use Lightpack\Redis\Redis;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Integration tests for Worker rate limiting with Redis engine.
- * 
+ *
  * These tests verify that the Worker correctly integrates with the RedisEngine
  * and Limiter to enforce rate limits, release rate-limited jobs back to the queue,
  * and handle jobs that exceed their maximum attempts.
@@ -26,7 +26,7 @@ class WorkerRateLimitingRedisIntegrationTest extends TestCase
     {
         // Reset execution log
         self::$executionLog = [];
-        
+
         // Clear cache FIRST to ensure clean state
         $cacheDir = sys_get_temp_dir() . '/lightpack_cache';
         if (is_dir($cacheDir)) {
@@ -34,10 +34,10 @@ class WorkerRateLimitingRedisIntegrationTest extends TestCase
         } else {
             mkdir($cacheDir, 0777, true);
         }
-        
+
         // Create Redis connection
-        $this->redis = new Redis();
-        
+        $this->redis = new Redis;
+
         // Try to connect to Redis, skip test if not available
         try {
             $this->redis->connect('127.0.0.1', 6379);
@@ -49,10 +49,10 @@ class WorkerRateLimitingRedisIntegrationTest extends TestCase
         } catch (\Exception $e) {
             $this->markTestSkipped('Redis is not available: ' . $e->getMessage());
         }
-        
+
         // Setup container - force fresh registrations
         $container = \Lightpack\Container\Container::getInstance();
-        
+
         // Unregister existing services to ensure clean state
         $reflection = new \ReflectionClass($container);
         $servicesProperty = $reflection->getProperty('services');
@@ -60,29 +60,29 @@ class WorkerRateLimitingRedisIntegrationTest extends TestCase
         $services = $servicesProperty->getValue($container);
         unset($services['redis'], $services['cache']);
         $servicesProperty->setValue($container, $services);
-        
+
         // Register Redis instance in container so Connection can use it
-        $container->register('redis', function() {
+        $container->register('redis', function () {
             return $this->redis;
         });
-        
+
         // Register cache service for rate limiting
         $container->register('cache', function () use ($cacheDir) {
             return new \Lightpack\Cache\Cache(
                 new \Lightpack\Cache\Drivers\FileDriver($cacheDir)
             );
         });
-        
+
         // Configure Connection to use RedisEngine BEFORE creating any engines
         putenv('JOB_ENGINE=redis');
         putenv('REDIS_JOB_PREFIX=test_jobs:');
-        
+
         // Force reset Connection's static engine so it picks up the new env var
         $reflection = new \ReflectionClass(\Lightpack\Jobs\Connection::class);
         $property = $reflection->getProperty('engine');
         $property->setAccessible(true);
         $property->setValue(null, null);
-        
+
         // Create engine
         $this->engine = new RedisEngine($this->redis, 'test_jobs:');
 
@@ -97,13 +97,13 @@ class WorkerRateLimitingRedisIntegrationTest extends TestCase
             $this->redis->flushDB();
             $this->redis->select(0); // Switch back to default DB
         }
-        
+
         // Clear cache
         $cacheDir = sys_get_temp_dir() . '/lightpack_cache';
         if (is_dir($cacheDir)) {
             array_map('unlink', glob("$cacheDir/*"));
         }
-        
+
         // Clear execution log
         self::$executionLog = [];
     }
@@ -174,12 +174,12 @@ class WorkerRateLimitingRedisIntegrationTest extends TestCase
         $jobData = $this->redis->get('test_jobs:job:' . $job2->id);
         $this->assertNotNull($jobData);
         $this->assertEquals('new', $jobData['status']);
-        
+
         // Check that scheduled_at is in the future (with jitter, should be between 5-10 seconds)
         $scheduledAt = strtotime($jobData['scheduled_at']);
         $now = time();
         $delay = $scheduledAt - $now;
-        
+
         $this->assertGreaterThanOrEqual(4, $delay, 'Job should be delayed by at least 4 seconds');
         $this->assertLessThanOrEqual(30, $delay, 'Job should be delayed by at most 30 seconds (5s base + jitter can add up to 100% + tolerance)');
     }
@@ -250,7 +250,7 @@ class TestRedisRateLimitedJob extends Job
 class TestRedisStrictRateLimitedJob extends Job
 {
     protected $attempts = 5; // High enough to not fail during rate limit test
-    
+
     public function rateLimit(): ?array
     {
         return [

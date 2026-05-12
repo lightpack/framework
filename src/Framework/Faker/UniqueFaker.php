@@ -69,8 +69,9 @@ class UniqueFaker
             $attempts++;
 
             // If the value is unique, return it immediately
-            if (!in_array($value, $this->generated, true)) {
+            if (! in_array($value, $this->generated, true)) {
                 $this->generated[] = $value;
+
                 return $value;
             }
         } while ($attempts < $maxAttempts);

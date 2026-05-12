@@ -58,6 +58,7 @@ class Taxonomy extends Model
 
         $query->where('id', '!=', $this->id);
         $query->orderBy('sort_order')->orderBy('id');
+
         return $query->all();
     }
 
@@ -83,6 +84,7 @@ class Taxonomy extends Model
                 $descendants[] = $descendant;
             }
         }
+
         return new Collection($descendants);
     }
 
@@ -96,6 +98,7 @@ class Taxonomy extends Model
         if ($children) {
             $node['children'] = $children;
         }
+
         return $node;
     }
 
@@ -107,9 +110,10 @@ class Taxonomy extends Model
      */
     public function fullSlug(string $separator = '/'): string
     {
-        $slugs = array_map(fn($node) => $node->slug, $this->ancestors()->getItems());
+        $slugs = array_map(fn ($node) => $node->slug, $this->ancestors()->getItems());
         $slugs[] = $this->slug;
-        $slugs = array_filter($slugs, fn($slug) => (string)$slug !== '');
+        $slugs = array_filter($slugs, fn ($slug) => (string)$slug !== '');
+
         return implode($separator, $slugs);
     }
 
@@ -122,6 +126,7 @@ class Taxonomy extends Model
     {
         $trail = $this->ancestors()->getItems();
         $trail[] = $this;
+
         return $trail;
     }
 
@@ -194,6 +199,7 @@ class Taxonomy extends Model
     public static function forest(): array
     {
         $roots = self::roots();
-        return array_map(fn($root) => $root->tree(), $roots->getItems());
+
+        return array_map(fn ($root) => $root->tree(), $roots->getItems());
     }
 }

@@ -48,6 +48,7 @@ class DbUniqueRule
         }
 
         $fields = implode(', ', $this->columns);
+
         return "The combination of {$fields} has already been taken";
     }
 }

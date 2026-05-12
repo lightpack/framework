@@ -2,8 +2,8 @@
 
 namespace Lightpack\Rbac;
 
-use Lightpack\Rbac\Models\Role;
 use Lightpack\Rbac\Models\Permission;
+use Lightpack\Rbac\Models\Role;
 
 trait RbacTrait
 {
@@ -80,7 +80,7 @@ trait RbacTrait
      */
     public function cannot($permission): bool
     {
-        return !$this->can($permission);
+        return ! $this->can($permission);
     }
 
     /**

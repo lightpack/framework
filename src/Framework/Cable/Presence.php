@@ -2,11 +2,9 @@
 
 namespace Lightpack\Cable;
 
-use Lightpack\Cable\PresenceDriverInterface;
-
 /**
  * Presence
- * 
+ *
  * This class manages presence channels, tracking which users are online
  * in real-time channels and broadcasting presence updates.
  */
@@ -16,12 +14,12 @@ class Presence
      * @var Cable
      */
     protected $cable;
-    
+
     /**
      * @var Lightpack\Cable\Drivers\PresenceDriverInterface
      */
     protected $driver;
-    
+
     /**
      * Create a new presence manager
      */
@@ -30,7 +28,7 @@ class Presence
         $this->cable = $cable;
         $this->driver = $driver;
     }
-    
+
     /**
      * Join a presence channel
      */
@@ -38,10 +36,10 @@ class Presence
     {
         $this->driver->join($userId, $channel);
         $this->broadcast($channel);
-        
+
         return $this;
     }
-    
+
     /**
      * Leave a presence channel
      */
@@ -49,10 +47,10 @@ class Presence
     {
         $this->driver->leave($userId, $channel);
         $this->broadcast($channel);
-        
+
         return $this;
     }
-    
+
     /**
      * Send a heartbeat to keep presence active
      */
@@ -63,7 +61,7 @@ class Presence
 
         return $this;
     }
-    
+
     /**
      * Get users present in a channel
      */
@@ -71,7 +69,7 @@ class Presence
     {
         return $this->driver->getUsers($channel);
     }
-    
+
     /**
      * Get channels a user is present in
      */
@@ -79,21 +77,21 @@ class Presence
     {
         return $this->driver->getChannels($userId);
     }
-    
+
     /**
      * Broadcast presence update to a channel
      */
     protected function broadcast(string $channel): void
     {
         $users = $this->getUsers($channel);
-        
+
         $this->cable->to($channel)->emit('presence:update', [
             'users' => $users,
             'count' => count($users),
             'timestamp' => time(),
         ]);
     }
-    
+
     /**
      * Clean up stale presence records
      */

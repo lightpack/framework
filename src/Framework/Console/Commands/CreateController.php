@@ -2,9 +2,9 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\File\File;
 use Lightpack\Console\Command;
 use Lightpack\Console\Views\ControllerView;
+use Lightpack\File\File;
 
 class CreateController extends Command
 {
@@ -16,6 +16,7 @@ class CreateController extends Command
         if (null === $className) {
             $this->output->error("Please provide a controller class name.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -35,21 +36,23 @@ class CreateController extends Command
 
         $filename = $directory . '/' . $className;
 
-        if (!preg_match('/^[\w]+$/', $className)) {
+        if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid controller class name.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
         $filePath = $filename . '.php';
         $displayPath = substr($directory, strlen(DIR_ROOT));
 
-        if (file_exists($filePath) && !$force) {
+        if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Controller already exists: .{$displayPath}/{$className}.php");
             $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -63,7 +66,7 @@ class CreateController extends Command
         file_put_contents($filePath, $template);
         $this->output->success("✓ Controller created: .{$displayPath}/{$className}.php");
         $this->output->newline();
-        
+
         return self::SUCCESS;
     }
 }

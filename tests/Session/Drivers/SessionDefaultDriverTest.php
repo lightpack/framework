@@ -1,13 +1,13 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Session\Drivers\DefaultDriver;
 use Lightpack\Config\Config;
+use Lightpack\Session\Drivers\DefaultDriver;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @note IMPORTANT: Run these tests with --stderr option to prevent PHPUnit output from sending headers
  * Example: vendor/bin/phpunit --stderr tests/Framework/Session/Drivers/DefaultDriverTest.php
- * 
+ *
  * This is necessary because:
  * 1. PHPUnit's output normally goes to stdout, which sends headers
  * 2. Sessions must be started before any headers are sent
@@ -25,7 +25,7 @@ class SessionDefaultDriverTest extends TestCase
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_destroy();
         }
-        
+
         if (headers_sent()) {
             $this->markTestSkipped('Headers already sent - cannot test session functionality');
         }
@@ -33,7 +33,7 @@ class SessionDefaultDriverTest extends TestCase
         // Start with clean session
         $_SESSION = [];
         $_SERVER['HTTP_USER_AGENT'] = 'PHPUnit Test Browser';
-        
+
         // Mock config with session settings
         $this->config = $this->createMock(Config::class);
         $this->config->method('get')
@@ -44,7 +44,7 @@ class SessionDefaultDriverTest extends TestCase
                 ['session.https', false, false],
                 ['session.same_site', 'lax', 'lax'],
             ]);
-        
+
         $this->driver = new DefaultDriver($this->config);
         $this->driver->start();
     }
@@ -117,7 +117,7 @@ class SessionDefaultDriverTest extends TestCase
         $_SESSION['key2'] = 'value2';
 
         $this->driver->destroy();
-        
+
         $this->assertEmpty($_SESSION);
     }
 

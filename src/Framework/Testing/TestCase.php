@@ -3,9 +3,9 @@
 namespace Lightpack\Testing;
 
 use Lightpack\App;
-use Lightpack\Mail\Mail;
-use Lightpack\Http\Response;
 use Lightpack\Container\Container;
+use Lightpack\Http\Response;
+use Lightpack\Mail\Mail;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
 /**
@@ -32,14 +32,14 @@ class TestCase extends BaseTestCase
 
         Mail::clearSentMails();
 
-        if(method_exists($this, 'beginTransaction')) {
+        if (method_exists($this, 'beginTransaction')) {
             $this->beginTransaction();
         }
     }
 
     protected function tearDown(): void
     {
-        if(method_exists($this, 'rollbackTransaction')) {
+        if (method_exists($this, 'rollbackTransaction')) {
             $this->rollbackTransaction();
         }
 
@@ -67,7 +67,7 @@ class TestCase extends BaseTestCase
         } else {
             $params['_token'] = csrf_token();
             $_POST = $params;
-            $_GET = $queryParams; 
+            $_GET = $queryParams;
         }
 
         $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
@@ -148,7 +148,7 @@ class TestCase extends BaseTestCase
 
     public function getArrayResponse(): array
     {
-        if (!$this->isJsonRequest) {
+        if (! $this->isJsonRequest) {
             return [];
         }
 
@@ -159,16 +159,19 @@ class TestCase extends BaseTestCase
     {
         if ($this->isMultipartFormdata) {
             $_SERVER['CONTENT_TYPE'] = 'multipart/form-data';
+
             return;
         }
 
         if ($this->isJsonRequest) {
             $_SERVER['CONTENT_TYPE'] = 'application/json';
+
             return;
         }
 
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
+
             return;
         }
 

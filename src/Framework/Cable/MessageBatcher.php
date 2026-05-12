@@ -4,7 +4,7 @@ namespace Lightpack\Cable;
 
 /**
  * Message Batcher
- * 
+ *
  * This class batches multiple messages to reduce database writes.
  */
 class MessageBatcher
@@ -13,7 +13,7 @@ class MessageBatcher
      * @var Cable
      */
     protected $cable;
-    
+
     /**
      * @var string|null
      */
@@ -28,7 +28,7 @@ class MessageBatcher
      * @var int
      */
     protected $batchSize = 100;
-    
+
     /**
      * Create a new message batcher.
      *
@@ -50,6 +50,7 @@ class MessageBatcher
     public function channel(string $channel): self
     {
         $this->channel = $channel;
+
         return $this;
     }
 
@@ -62,9 +63,10 @@ class MessageBatcher
     public function batchSize(int $size): self
     {
         $this->batchSize = $size;
+
         return $this;
     }
-    
+
     /**
      * Add a message to the batch
      *
@@ -83,7 +85,7 @@ class MessageBatcher
         }
         $this->messages[] = [
             'event' => $event,
-            'payload' => $payload
+            'payload' => $payload,
         ];
 
         // Flush if batch size reached
@@ -93,7 +95,7 @@ class MessageBatcher
 
         return $this;
     }
-    
+
     /**
      * Flush all messages in the batch
      *
@@ -111,7 +113,7 @@ class MessageBatcher
         $this->cable->to($this->channel)->emit('batch', [
             'events' => $this->messages,
             'count' => count($this->messages),
-            'timestamp' => time()
+            'timestamp' => time(),
         ]);
         // Clear batch
         $this->messages = [];

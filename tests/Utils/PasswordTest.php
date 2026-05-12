@@ -9,7 +9,7 @@ final class PasswordTest extends TestCase
 {
     public function testPasswordCanVerifyHash()
     {
-        $password = new Password();
+        $password = new Password;
         $verified = $password->verify('lightpack', $password->hash('lightpack'));
 
         $this->assertTrue($verified);
@@ -17,7 +17,7 @@ final class PasswordTest extends TestCase
 
     public function testGenerateRandomPassword()
     {
-        $password = new Password();
+        $password = new Password;
         $pass1 = $password->generate();
         $pass2 = $password->generate(16);
 
@@ -31,7 +31,7 @@ final class PasswordTest extends TestCase
 
     public function testPasswordStrength()
     {
-        $password = new Password();
+        $password = new Password;
 
         $this->assertEquals('weak', $password->strength('123456'));
         $this->assertEquals('weak', $password->strength('12345678'));

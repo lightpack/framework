@@ -14,7 +14,7 @@ final class ResponseTest extends TestCase
         $this->response = new \Lightpack\Http\Response(new Url);
         $this->response->setTestMode(true);
     }
-    
+
     public function testResponseSetStatusMethod()
     {
         $this->assertSame($this->response,  $this->response->setStatus(200));
@@ -26,7 +26,7 @@ final class ResponseTest extends TestCase
         $this->response->setStatus(302);
         $this->assertEquals(302, $this->response->getStatus());
     }
-    
+
     public function testResponseSetMessageMethod()
     {
         $this->assertSame($this->response,  $this->response->setMessage('Found'));
@@ -37,7 +37,7 @@ final class ResponseTest extends TestCase
         $this->response->setMessage('Found');
         $this->assertEquals('Found', $this->response->getMessage());
     }
-    
+
     public function testResponseSetTypeMethod()
     {
         $this->assertSame($this->response,  $this->response->setType('text/xml'));
@@ -177,7 +177,7 @@ final class ResponseTest extends TestCase
         $this->assertEquals(gmdate('D, d M Y H:i:s', $time) . ' GMT', $this->response->getHeader('Last-Modified'));
 
         // Test with DateTime
-        $date = new DateTime();
+        $date = new DateTime;
         $this->response->setLastModified($date);
         $this->assertEquals(gmdate('D, d M Y H:i:s', $date->getTimestamp()) . ' GMT', $this->response->getHeader('Last-Modified'));
 
@@ -209,7 +209,7 @@ final class ResponseTest extends TestCase
     public function testStreamMethod()
     {
         $output = null;
-        $this->response->stream(function() use (&$output) {
+        $this->response->stream(function () use (&$output) {
             $output = "Hello Stream";
             echo $output;
         });
@@ -218,7 +218,7 @@ final class ResponseTest extends TestCase
         ob_start();
         $this->response->send();
         $result = ob_get_clean();
-        
+
         $this->assertEquals($output, $result);
     }
 
@@ -229,19 +229,19 @@ final class ResponseTest extends TestCase
     {
         $this->response
             ->setHeader('Content-Type', 'text/csv')
-            ->stream(function() {
+            ->stream(function () {
                 echo "data,more data";
             });
 
         // Verify headers are set correctly
         $headers = $this->response->getHeaders();
         $this->assertEquals('text/csv', $headers['Content-Type']);
-        
+
         // Test output by sending response
         ob_start();
         $this->response->send();
         $result = ob_get_clean();
-        
+
         $this->assertEquals("data,more data", $result);
     }
 
@@ -251,7 +251,7 @@ final class ResponseTest extends TestCase
     public function testStreamCsvMethod()
     {
         $output = null;
-        $this->response->streamCsv(function() use (&$output) {
+        $this->response->streamCsv(function () use (&$output) {
             $output = "Name,Email\nJohn,john@example.com\n";
             echo $output;
         }, 'users.csv');
@@ -278,18 +278,18 @@ final class ResponseTest extends TestCase
         $tempFile = sys_get_temp_dir() . '/test_download_' . uniqid() . '.txt';
         $testContent = str_repeat('Test content line ' . PHP_EOL, 100); // Create some content
         file_put_contents($tempFile, $testContent);
-        
+
         try {
             // Test the downloadStream method
             $this->response->downloadStream($tempFile, 'test-download.txt');
-            
+
             // Verify headers
             $headers = $this->response->getHeaders();
             $this->assertEquals('text/plain', $headers['Content-Type']);
             $this->assertEquals('attachment; filename="test-download.txt"', $headers['Content-Disposition']);
             $this->assertEquals('binary', $headers['Content-Transfer-Encoding']);
             $this->assertEquals(filesize($tempFile), $headers['Content-Length']);
-            
+
             // Verify streaming callback was set (we can't easily test the actual streaming)
             $this->assertNotNull($this->response->getStreamCallback());
         } finally {
@@ -299,7 +299,7 @@ final class ResponseTest extends TestCase
             }
         }
     }
-    
+
     /**
      * @runInSeparateProcess
      */
@@ -309,11 +309,11 @@ final class ResponseTest extends TestCase
         $tempFile = sys_get_temp_dir() . '/test_download_' . uniqid() . '.txt';
         $testContent = str_repeat('Test content line ' . PHP_EOL, 100);
         file_put_contents($tempFile, $testContent);
-        
+
         try {
             // Test with custom chunk size
             $this->response->downloadStream($tempFile, 'test-download.txt', [], 512);
-            
+
             // We need to add a getter for the stream callback to properly test this
             // For now, we just verify the method doesn't throw exceptions
             $this->assertTrue(true);
@@ -324,7 +324,7 @@ final class ResponseTest extends TestCase
             }
         }
     }
-    
+
     /**
      * @runInSeparateProcess
      */
@@ -333,16 +333,16 @@ final class ResponseTest extends TestCase
         // Create a temporary test file
         $tempFile = sys_get_temp_dir() . '/test_download_' . uniqid() . '.txt';
         file_put_contents($tempFile, 'Test content');
-        
+
         try {
             // Test with custom headers
             $customHeaders = [
                 'Cache-Control' => 'no-cache',
-                'X-Custom-Header' => 'Custom Value'
+                'X-Custom-Header' => 'Custom Value',
             ];
-            
+
             $this->response->downloadStream($tempFile, 'test-download.txt', $customHeaders);
-            
+
             // Verify headers
             $headers = $this->response->getHeaders();
             $this->assertEquals('no-cache', $headers['Cache-Control']);
@@ -354,7 +354,7 @@ final class ResponseTest extends TestCase
             }
         }
     }
-    
+
     /**
      * @runInSeparateProcess
      * @expectedException \RuntimeException
@@ -374,18 +374,18 @@ final class ResponseTest extends TestCase
         $tempFile = sys_get_temp_dir() . '/test_file_' . uniqid() . '.txt';
         $testContent = str_repeat('Test content line ' . PHP_EOL, 100);
         file_put_contents($tempFile, $testContent);
-        
+
         try {
             // Test the fileStream method
             $this->response->fileStream($tempFile, 'test-view.txt');
-            
+
             // Verify headers
             $headers = $this->response->getHeaders();
             $this->assertEquals('text/plain', $headers['Content-Type']);
             $this->assertEquals('inline; filename=test-view.txt', $headers['Content-Disposition']);
             $this->assertEquals('binary', $headers['Content-Transfer-Encoding']);
             $this->assertEquals(filesize($tempFile), $headers['Content-Length']);
-            
+
             // Verify streaming callback was set
             $this->assertNotNull($this->response->getStreamCallback());
         } finally {
@@ -395,7 +395,7 @@ final class ResponseTest extends TestCase
             }
         }
     }
-    
+
     /**
      * @runInSeparateProcess
      */
@@ -404,15 +404,15 @@ final class ResponseTest extends TestCase
         // Create a temporary test file
         $tempFile = sys_get_temp_dir() . '/test_file_' . uniqid() . '.txt';
         file_put_contents($tempFile, 'Test content');
-        
+
         try {
             // Test with custom headers
             $customHeaders = [
-                'X-Custom-Header' => 'Custom Value'
+                'X-Custom-Header' => 'Custom Value',
             ];
-            
+
             $this->response->fileStream($tempFile, 'test-view.txt', $customHeaders);
-            
+
             // Verify headers
             $headers = $this->response->getHeaders();
             $this->assertEquals('inline; filename=test-view.txt', $headers['Content-Disposition']);
@@ -427,23 +427,23 @@ final class ResponseTest extends TestCase
 
     public function testSseMethod()
     {
-        $this->response->sse(function($stream) {
+        $this->response->sse(function ($stream) {
             // Callback will be executed later
         });
-        
+
         // Verify SSE headers are set correctly
         $headers = $this->response->getHeaders();
-        
+
         $this->assertArrayHasKey('Content-Type', $headers);
         $this->assertArrayHasKey('Cache-Control', $headers);
         $this->assertArrayHasKey('Connection', $headers);
         $this->assertArrayHasKey('X-Accel-Buffering', $headers);
-        
+
         $this->assertEquals('text/event-stream', $headers['Content-Type']);
         $this->assertEquals('no-cache', $headers['Cache-Control']);
         $this->assertEquals('keep-alive', $headers['Connection']);
         $this->assertEquals('no', $headers['X-Accel-Buffering']);
-        
+
         // Verify streaming callback was set
         $this->assertNotNull($this->response->getStreamCallback());
     }
@@ -454,16 +454,16 @@ final class ResponseTest extends TestCase
     public function testSseMethodStreamObjectHasPushMethod()
     {
         $streamObject = null;
-        
-        $this->response->sse(function($stream) use (&$streamObject) {
+
+        $this->response->sse(function ($stream) use (&$streamObject) {
             $streamObject = $stream;
         });
-        
+
         // Execute the stream callback to get the stream object
         ob_start();
         $this->response->send();
         ob_end_clean();
-        
+
         // Verify stream object has push method
         $this->assertNotNull($streamObject);
         $this->assertTrue(method_exists($streamObject, 'push'));
@@ -476,21 +476,21 @@ final class ResponseTest extends TestCase
     {
         $callbackExecuted = false;
         $streamObjectReceived = null;
-        
-        $this->response->sse(function($stream) use (&$callbackExecuted, &$streamObjectReceived) {
+
+        $this->response->sse(function ($stream) use (&$callbackExecuted, &$streamObjectReceived) {
             $callbackExecuted = true;
             $streamObjectReceived = $stream;
-            
+
             // Test that push method exists and can be called
             $stream->push('test', ['message' => 'Hello']);
             $stream->push('done');
         });
-        
+
         // Execute the stream by sending response
         ob_start();
         $this->response->send();
         ob_end_clean();
-        
+
         // Verify callback was executed
         $this->assertTrue($callbackExecuted);
         $this->assertNotNull($streamObjectReceived);

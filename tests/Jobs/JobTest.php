@@ -2,9 +2,8 @@
 
 namespace Lightpack\Tests\Jobs;
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Jobs\Job;
-use Throwable;
+use PHPUnit\Framework\TestCase;
 
 class TestJob extends Job
 {
@@ -18,24 +17,24 @@ class JobTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->job = new TestJob();
+        $this->job = new TestJob;
     }
 
     public function testJobCanSetAndGetPayload()
     {
         $payload = ['key' => 'value'];
-        
+
         $this->job->setPayload($payload);
-        
+
         $this->assertEquals($payload, $this->job->getPayload());
     }
 
     public function testJobCanSetAndGetException()
     {
         $exception = new \Exception('Test exception');
-        
+
         $this->job->setException($exception);
-        
+
         $this->assertSame($exception, $this->job->getException());
     }
 
@@ -45,7 +44,7 @@ class JobTest extends TestCase
         $reflection = new \ReflectionClass($this->job);
         $property = $reflection->getProperty('queue');
         $property->setAccessible(true);
-        
+
         $this->assertEquals('default', $property->getValue($this->job));
     }
 
@@ -54,7 +53,7 @@ class JobTest extends TestCase
         $reflection = new \ReflectionClass($this->job);
         $property = $reflection->getProperty('delay');
         $property->setAccessible(true);
-        
+
         $this->assertEquals('now', $property->getValue($this->job));
     }
 
@@ -63,7 +62,7 @@ class JobTest extends TestCase
         $reflection = new \ReflectionClass($this->job);
         $property = $reflection->getProperty('attempts');
         $property->setAccessible(true);
-        
+
         $this->assertEquals(1, $property->getValue($this->job));
     }
 
@@ -72,7 +71,7 @@ class JobTest extends TestCase
         $reflection = new \ReflectionClass($this->job);
         $property = $reflection->getProperty('retryAfter');
         $property->setAccessible(true);
-        
+
         $this->assertEquals('now', $property->getValue($this->job));
     }
 }
