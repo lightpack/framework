@@ -123,7 +123,7 @@ class MfaFilterTest extends TestCase
             {
             }
         };
-        $mfaMock = new class ($emailFactor) {
+        $mfaManager = new class ($emailFactor) {
             private $factor;
 
             public function __construct($factor)
@@ -131,7 +131,7 @@ class MfaFilterTest extends TestCase
                 $this->factor = $factor;
             }
 
-            public function getFactor($type)
+            public function driver($type = null)
             {
                 return $this->factor;
             }
@@ -156,7 +156,7 @@ class MfaFilterTest extends TestCase
                 }
             },
             'config' => ['mfa.enforce' => true],
-            'app' => ['mfa' => $mfaMock],
+            'app' => ['mfa.manager' => $mfaManager],
         ]);
         $result = $this->filter->before($this->request);
         // Should be a redirect response (simulate by checking for not null)

@@ -24,7 +24,7 @@ class MfaFilter implements FilterInterface
         // If MFA enforced or user has enabled MFA
         if (config('mfa.enforce') || $user->mfa_enabled) {
             $mfaProvider = config('mfa.default', 'null');
-            app('mfa')->getFactor($mfaProvider)->send($user);
+            app('mfa.manager')->driver($mfaProvider)->send($user);
 
             return redirect()->route('mfa.verify.show');
         }
