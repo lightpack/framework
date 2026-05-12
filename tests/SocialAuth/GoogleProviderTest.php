@@ -43,8 +43,7 @@ class GoogleProviderTest extends TestCase
         $provider = new GoogleProvider($mockConfig);
         $url = $provider->getAuthUrl();
         $this->assertStringContainsString('client_id=web-client-id', $url);
-        // In web flow, state is not set by provider logic, so do not assert its presence
-        $this->assertStringContainsString('&state&', $url);
+        $this->assertStringContainsString('state=', $url);
     }
 
     public function test_get_user_throws_on_invalid_token()
@@ -57,13 +56,6 @@ class GoogleProviderTest extends TestCase
             'scopes' => ['email']
         ]);
         $provider = new GoogleProvider($mockConfig);
-        // Patch the GoogleClient to simulate failure
-        $reflection = new \ReflectionClass($provider);
-        $clientProp = $reflection->getProperty('client');
-        $clientProp->setAccessible(true);
-        $mockClient = $this->createMock(\Google_Client::class);
-        $mockClient->method('fetchAccessTokenWithAuthCode')->willReturn([]);
-        $clientProp->setValue($provider, $mockClient);
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Failed to get access token from Google');
         $provider->getUser('bad-code');

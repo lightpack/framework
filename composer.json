@@ -46,7 +46,6 @@
         "robthree/twofactorauth": "^1.8",
         "bacon/bacon-qr-code": "^3.0",
         "aws/aws-sdk-php": "^3.342",
-        "google/apiclient": "^2.0",
         "resend/resend-php": "^0.22.0"
     },
     "suggest": {
@@ -56,7 +55,6 @@
         "robthree/twofactorauth": "Required for Two-Factor Authentication (^1.8)",
         "bacon/bacon-qr-code": "Required for server-side QR code generation (^2.0)",
         "aws/aws-sdk-php": "Required for S3Storage driver (^3.342)",
-        "google/apiclient": "Required for GoogleProvider (^2.0)",
         "resend/resend-php": "Required for Resend integration (^0.22.0)"
     },
     "scripts": {
