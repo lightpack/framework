@@ -178,16 +178,6 @@ Integration tests require external API keys (OpenAI, AWS, Mailtrap, etc.) and ar
   ```
 - **Nightly CI**: Integration tests run automatically every night at 2 AM UTC via GitHub Actions.
 
-## Static Analysis
-
-We use PHPStan for static analysis. Run it with:
-
-```bash
-composer stan
-# or
-vendor/bin/phpstan analyse --no-progress
-```
-
 ## Code Style
 
 We use PHP-CS-Fixer to enforce a consistent code style.
@@ -231,11 +221,10 @@ If you discover a security vulnerability, please do **not** open a public issue 
 
 1. Ensure your branch is up to date with `main`
 2. All tests must pass (`composer test`)
-3. Static analysis must pass (`composer stan`)
-4. Code style must pass (`composer cs`) - or run `composer cs:fix` to auto-fix
-5. Update relevant documentation (README, CHANGELOG, etc.)
-6. Fill out the PR template completely
-7. Request review from maintainers
+3. Code style must pass (`composer cs`) - or run `composer cs:fix` to auto-fix
+4. Update relevant documentation (README, CHANGELOG, etc.)
+5. Fill out the PR template completely
+6. Request review from maintainers
 
 ## Code of Conduct
 
