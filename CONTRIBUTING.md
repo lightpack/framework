@@ -213,6 +213,10 @@ Before opening an issue:
    - Expected vs actual behavior
    - Error logs or stack traces
 
+## Security
+
+If you discover a security vulnerability, please do **not** open a public issue or discussion. See our [Security Policy](SECURITY.md) for responsible disclosure instructions.
+
 ## Pull Request Process
 
 1. Ensure your branch is up to date with `main`
