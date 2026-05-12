@@ -1,0 +1,20 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - src/Framework
+
+    excludePaths:
+        - src/Framework/Console/Commands/*
+
+    ignoreErrors:
+        # Framework uses dynamic container resolution
+        - '#Call to an undefined method Lightpack\\Container\\Container::#'
+
+    reportUnmatchedIgnoredErrors: false
+
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false

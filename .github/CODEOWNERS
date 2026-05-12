@@ -1,0 +1,8 @@
+# Global default: all PRs need review from the maintainer
+* @pradeep-tiwari
+
+# Core framework changes require maintainer review
+/src/Framework/App.php @pradeep-tiwari
+/src/Framework/Database/ @pradeep-tiwari
+/src/Framework/Routing/ @pradeep-tiwari
+/src/Framework/Http/ @pradeep-tiwari

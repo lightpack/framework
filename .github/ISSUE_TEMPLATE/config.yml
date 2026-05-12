@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a Question
+    url: https://github.com/lightpack/framework/discussions
+    about: Please ask questions in GitHub Discussions instead of opening an issue.
+  - name: Security Vulnerability
+    url: https://github.com/lightpack/framework/security/advisories/new
+    about: Please report security vulnerabilities privately through GitHub Security Advisories.
