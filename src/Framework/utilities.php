@@ -239,10 +239,16 @@ if (! function_exists('auth')) {
 
 if (! function_exists('config')) {
     /**
-     * Gets config data.
+     * Gets config data or returns the Config instance.
+     *
+     * @return mixed|\Lightpack\Config\Config
      */
-    function config($key, $default = null)
+    function config(?string $key = null, $default = null)
     {
+        if ($key === null) {
+            return app('config');
+        }
+
         return app('config')->get($key, $default);
     }
 }

@@ -40,6 +40,11 @@ class Config
         }
     }
 
+    public function has(string $key): bool
+    {
+        return $this->arr->has($key, $this->config);
+    }
+
     private function loadConfig($file): array
     {
         return include $file;
