@@ -42,7 +42,7 @@ class Asset
     public function __construct(?string $publicPath = null)
     {
         $this->publicPath = $publicPath ?? DIR_ROOT . '/public';
-        $this->baseUrl = get_env('ASSET_URL') ?? get_env('APP_URL');
+        $this->baseUrl = get_env('ASSET_URL') ?: get_env('APP_URL');
         $this->manifestPath = $this->publicPath . '/assets.json';
     }
 
