@@ -35,9 +35,7 @@ class Config
 
     public function set(string $key, $value)
     {
-        if (! $this->arr->has($key, $this->config)) {
-            $this->arr->set($key, $value, $this->config);
-        }
+        $this->arr->set($key, $value, $this->config);
     }
 
     public function has(string $key): bool
