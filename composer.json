@@ -42,7 +42,7 @@
         "phpmailer/phpmailer": "^6.9.2",
         "dompdf/dompdf": "^2.0",
         "twilio/sdk": "^7.0",
-        "robthree/twofactorauth": "^1.8",
+        "robthree/twofactorauth": "^1.8 || ^3.0",
         "bacon/bacon-qr-code": "^3.0",
         "aws/aws-sdk-php": "^3.342",
         "resend/resend-php": "^0.22.0"
