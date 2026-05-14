@@ -52,7 +52,7 @@
         "dompdf/dompdf": "Required for PDF generation (^2.0)",
         "twilio/sdk": "Required for Twilio SMS integration (^7.0)",
         "robthree/twofactorauth": "Required for Two-Factor Authentication (^1.8)",
-        "bacon/bacon-qr-code": "Required for server-side QR code generation (^2.0)",
+        "bacon/bacon-qr-code": "Required for server-side QR code generation (^3.0)",
         "aws/aws-sdk-php": "Required for S3Storage driver (^3.342)",
         "resend/resend-php": "Required for Resend integration (^0.22.0)"
     },
