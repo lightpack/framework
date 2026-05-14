@@ -4,7 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     reviewers:
       - "pradeep-tiwari"
     labels:
@@ -12,3 +12,13 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "pradeep-tiwari"
+    labels:
+      - "dependencies"
