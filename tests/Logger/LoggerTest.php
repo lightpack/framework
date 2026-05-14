@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Lightpack\Logger\Drivers\FileLogger;
 use Lightpack\Logger\Logger;
 use PHPUnit\Framework\TestCase;
-use Lightpack\Logger\Drivers\FileLogger;
 
 final class LoggerTest extends TestCase
 {

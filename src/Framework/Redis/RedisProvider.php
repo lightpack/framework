@@ -2,9 +2,8 @@
 
 namespace Lightpack\Redis;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Redis\Redis;
+use Lightpack\Support\ProviderInterface;
 
 class RedisProvider implements ProviderInterface
 {
@@ -14,7 +13,7 @@ class RedisProvider implements ProviderInterface
         $container->register('redis', function ($container) {
             $config = $container->get('config');
             $redisConfig = $config->get('redis.default', []);
-            
+
             return new Redis($redisConfig);
         });
 

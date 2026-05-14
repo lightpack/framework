@@ -2,8 +2,8 @@
 
 namespace Lightpack\Tests\Utils;
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Utils\Pipeline;
+use PHPUnit\Framework\TestCase;
 
 class PipelineTest extends TestCase
 {
@@ -11,7 +11,7 @@ class PipelineTest extends TestCase
     {
         $result = (new Pipeline(1))
             ->through([
-                fn($value) => $value + 1,
+                fn ($value) => $value + 1,
             ])
             ->run();
 
@@ -22,9 +22,9 @@ class PipelineTest extends TestCase
     {
         $result = (new Pipeline(1))
             ->through([
-                fn($value) => $value + 1,  // 1 + 1 = 2
-                fn($value) => $value * 2,  // 2 * 2 = 4
-                fn($value) => $value - 1,  // 4 - 1 = 3
+                fn ($value) => $value + 1,  // 1 + 1 = 2
+                fn ($value) => $value * 2,  // 2 * 2 = 4
+                fn ($value) => $value - 1,  // 4 - 1 = 3
             ])
             ->run();
 
@@ -35,8 +35,8 @@ class PipelineTest extends TestCase
     {
         $result = (new Pipeline(['name' => 'john']))
             ->through([
-                fn($data) => array_merge($data, ['age' => 25]),
-                fn($data) => array_merge($data, ['email' => 'john@example.com']),
+                fn ($data) => array_merge($data, ['age' => 25]),
+                fn ($data) => array_merge($data, ['email' => 'john@example.com']),
             ])
             ->run();
 
@@ -49,17 +49,19 @@ class PipelineTest extends TestCase
 
     public function testPipelineWithObjects()
     {
-        $user = new \stdClass();
+        $user = new \stdClass;
         $user->name = 'John';
 
         $result = (new Pipeline($user))
             ->through([
-                function($user) {
+                function ($user) {
                     $user->age = 25;
+
                     return $user;
                 },
-                function($user) {
+                function ($user) {
                     $user->email = 'john@example.com';
+
                     return $user;
                 },
             ])
@@ -75,12 +77,14 @@ class PipelineTest extends TestCase
         $result = (new Pipeline(10))
             ->through([
                 new class {
-                    public function __invoke($value) {
+                    public function __invoke($value)
+                    {
                         return $value * 2;
                     }
                 },
                 new class {
-                    public function __invoke($value) {
+                    public function __invoke($value)
+                    {
                         return $value + 5;
                     }
                 },
@@ -103,9 +107,9 @@ class PipelineTest extends TestCase
     {
         $result = (new Pipeline('hello'))
             ->through([
-                fn($str) => strtoupper($str),
-                fn($str) => $str . ' WORLD',
-                fn($str) => str_replace(' ', '_', $str),
+                fn ($str) => strtoupper($str),
+                fn ($str) => $str . ' WORLD',
+                fn ($str) => str_replace(' ', '_', $str),
             ])
             ->run();
 
@@ -116,8 +120,8 @@ class PipelineTest extends TestCase
     {
         $result = pipeline(5)
             ->through([
-                fn($n) => $n * 2,
-                fn($n) => $n + 3,
+                fn ($n) => $n * 2,
+                fn ($n) => $n + 3,
             ])
             ->run();
 
@@ -135,19 +139,22 @@ class PipelineTest extends TestCase
         $result = pipeline($data)
             ->through([
                 // Capitalize names
-                function($data) {
+                function ($data) {
                     $data['first_name'] = ucfirst($data['first_name']);
                     $data['last_name'] = ucfirst($data['last_name']);
+
                     return $data;
                 },
                 // Cast age to int
-                function($data) {
+                function ($data) {
                     $data['age'] = (int) $data['age'];
+
                     return $data;
                 },
                 // Add full name
-                function($data) {
+                function ($data) {
                     $data['full_name'] = $data['first_name'] . ' ' . $data['last_name'];
+
                     return $data;
                 },
             ])
@@ -165,16 +172,19 @@ class PipelineTest extends TestCase
 
         pipeline('start')
             ->through([
-                function($value) use (&$log) {
+                function ($value) use (&$log) {
                     $log[] = 'pipe1';
+
                     return $value;
                 },
-                function($value) use (&$log) {
+                function ($value) use (&$log) {
                     $log[] = 'pipe2';
+
                     return $value;
                 },
-                function($value) use (&$log) {
+                function ($value) use (&$log) {
                     $log[] = 'pipe3';
+
                     return $value;
                 },
             ])
@@ -187,9 +197,9 @@ class PipelineTest extends TestCase
     {
         $result = pipeline(10)
             ->through([
-                fn($n) => $n * 2,              // 10 * 2 = 20
-                fn($n) => $n > 15 ? null : $n, // 20 > 15, returns null
-                fn($n) => $n ?? 100,           // null ?? 100 = 100
+                fn ($n) => $n * 2,              // 10 * 2 = 20
+                fn ($n) => $n > 15 ? null : $n, // 20 > 15, returns null
+                fn ($n) => $n ?? 100,           // null ?? 100 = 100
             ])
             ->run();
 
@@ -203,22 +213,25 @@ class PipelineTest extends TestCase
         $result = pipeline($data)
             ->through([
                 // Validate email
-                function($data) {
-                    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                function ($data) {
+                    if (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                         throw new \Exception('Invalid email');
                     }
+
                     return $data;
                 },
                 // Validate age
-                function($data) {
+                function ($data) {
                     if ($data['age'] < 18) {
                         throw new \Exception('Must be 18+');
                     }
+
                     return $data;
                 },
                 // Add validated flag
-                function($data) {
+                function ($data) {
                     $data['validated'] = true;
+
                     return $data;
                 },
             ])
@@ -230,9 +243,10 @@ class PipelineTest extends TestCase
     public function testPipelineResolvesClassNamesFromContainer()
     {
         // Arrange: Register a service in container
-        app()->register('test_service', function() {
+        app()->register('test_service', function () {
             return new class {
-                public function getValue() {
+                public function getValue()
+                {
                     return 'injected';
                 }
             };
@@ -267,9 +281,9 @@ class PipelineTest extends TestCase
         $result = pipeline(10)
             ->through([
                 PipelineTestDoublePipe::class,           // 10 * 2 = 20
-                fn($n) => $n + 5,                        // 20 + 5 = 25
+                fn ($n) => $n + 5,                        // 20 + 5 = 25
                 PipelineTestSquarePipe::class,           // 25 * 25 = 625
-                fn($n) => $n / 5,                        // 625 / 5 = 125
+                fn ($n) => $n / 5,                        // 625 / 5 = 125
             ])
             ->run();
 
@@ -281,8 +295,8 @@ class PipelineTest extends TestCase
         $result = pipeline(10)
             ->through([
                 PipelineTestDoublePipe::class,           // Class name
-                new PipelineTestAddFivePipe(),           // Instance
-                fn($n) => $n - 3,                        // Closure
+                new PipelineTestAddFivePipe,           // Instance
+                fn ($n) => $n - 3,                        // Closure
             ])
             ->run();
 
@@ -292,15 +306,21 @@ class PipelineTest extends TestCase
     public function testPipelineWithComplexDependencyInjection()
     {
         // Register multiple services as objects
-        app()->register('multiplier', function() {
+        app()->register('multiplier', function () {
             return new class {
-                public function getValue() { return 3; }
+                public function getValue()
+                {
+                    return 3;
+                }
             };
         });
 
-        app()->register('adder', function() {
+        app()->register('adder', function () {
             return new class {
-                public function getValue() { return 7; }
+                public function getValue()
+                {
+                    return 7;
+                }
             };
         });
 
@@ -366,6 +386,7 @@ class PipelineTestPipeWithDependency
     {
         // Use injected service
         $this->service->getValue(); // Proves DI worked
+
         return $value * 2;
     }
 }

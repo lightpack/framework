@@ -15,7 +15,7 @@ final class DispatcherTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/lightpack/hello';
 
-        $this->container = new Container();
+        $this->container = new Container;
 
         $this->container->register('request', function ($container) {
             return new \Lightpack\Http\Request('/lightpack');

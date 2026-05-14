@@ -19,7 +19,7 @@ class ToolExecutor
 
     /**
      * Decide which tool to use based on user query.
-     * 
+     *
      * @param string $userQuery The user's question/request
      * @param callable $aiGenerator Function to call AI provider: fn(string $prompt, float $temp) => string
      * @return array ['tool' => string, 'params' => array, 'raw' => string]
@@ -28,27 +28,27 @@ class ToolExecutor
     {
         $decisionPrompt = $this->buildToolDecisionPrompt($userQuery);
         $decisionText = $aiGenerator($decisionPrompt, 0.0);
-        
+
         $decision = $this->decodeJsonObject($decisionText);
 
-        if (!is_array($decision)) {
+        if (! is_array($decision)) {
             return [
                 'tool' => null,
                 'params' => null,
                 'raw' => $decisionText,
-                'error' => 'Failed to parse tool decision JSON'
+                'error' => 'Failed to parse tool decision JSON',
             ];
         }
 
         $toolName = $decision['tool'] ?? null;
         $toolParams = $decision['params'] ?? null;
 
-        if (!is_string($toolName) || $toolName === '') {
+        if (! is_string($toolName) || $toolName === '') {
             return [
                 'tool' => null,
                 'params' => null,
                 'raw' => $decisionText,
-                'error' => 'Tool decision missing "tool"'
+                'error' => 'Tool decision missing "tool"',
             ];
         }
 
@@ -56,68 +56,68 @@ class ToolExecutor
             'tool' => $toolName,
             'params' => $toolParams,
             'raw' => $decisionText,
-            'error' => null
+            'error' => null,
         ];
     }
 
     /**
      * Validate tool parameters against schema.
-     * 
+     *
      * @param string $toolName Name of the tool
      * @param mixed $params Parameters to validate
      * @return array ['valid' => bool, 'params' => array|null, 'errors' => array]
      */
     public function validateToolParams(string $toolName, mixed $params): array
     {
-        if (!isset($this->tools[$toolName])) {
+        if (! isset($this->tools[$toolName])) {
             return [
                 'valid' => false,
                 'params' => null,
-                'errors' => ["Unknown tool: {$toolName}"]
+                'errors' => ["Unknown tool: {$toolName}"],
             ];
         }
 
-        if (!is_array($params)) {
+        if (! is_array($params)) {
             return [
                 'valid' => false,
                 'params' => null,
-                'errors' => ['Tool decision missing "params" object']
+                'errors' => ['Tool decision missing "params" object'],
             ];
         }
 
         $toolDef = $this->tools[$toolName];
-        $validator = new SchemaValidator();
+        $validator = new SchemaValidator;
         $validatedParams = $validator->validate($params, $toolDef['params'] ?? []);
 
         if ($validatedParams === null) {
             return [
                 'valid' => false,
                 'params' => null,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ];
         }
 
         return [
             'valid' => true,
             'params' => $validatedParams,
-            'errors' => []
+            'errors' => [],
         ];
     }
 
     /**
      * Invoke a tool with validated parameters.
-     * 
+     *
      * @param string $toolName Name of the tool to invoke
      * @param array $params Validated parameters
      * @return array ['success' => bool, 'result' => mixed, 'error' => string|null]
      */
     public function invokeTool(string $toolName, array $params): array
     {
-        if (!isset($this->tools[$toolName])) {
+        if (! isset($this->tools[$toolName])) {
             return [
                 'success' => false,
                 'result' => null,
-                'error' => "Unknown tool: {$toolName}"
+                'error' => "Unknown tool: {$toolName}",
             ];
         }
 
@@ -125,23 +125,24 @@ class ToolExecutor
 
         try {
             $result = ToolInvoker::invoke($toolDef['fn'], $params);
+
             return [
                 'success' => true,
                 'result' => $result,
-                'error' => null
+                'error' => null,
             ];
         } catch (\Throwable $e) {
             return [
                 'success' => false,
                 'result' => null,
-                'error' => 'Tool execution failed: ' . $e->getMessage()
+                'error' => 'Tool execution failed: ' . $e->getMessage(),
             ];
         }
     }
 
     /**
      * Execute complete tool workflow: decide -> validate -> invoke.
-     * 
+     *
      * @param string $userQuery User's question
      * @param callable $aiGenerator AI provider function
      * @return array Complete execution result
@@ -150,14 +151,14 @@ class ToolExecutor
     {
         // Step 1: Decide which tool to use
         $decision = $this->decideToolToUse($userQuery, $aiGenerator);
-        
+
         if ($decision['error'] !== null) {
             return [
                 'success' => false,
                 'tool_name' => null,
                 'tool_result' => null,
                 'decision_raw' => $decision['raw'],
-                'error' => $decision['error']
+                'error' => $decision['error'],
             ];
         }
 
@@ -170,32 +171,32 @@ class ToolExecutor
                 'tool_name' => 'none',
                 'tool_result' => null,
                 'decision_raw' => $decision['raw'],
-                'error' => null
+                'error' => null,
             ];
         }
 
         // Step 2: Validate parameters
         $validation = $this->validateToolParams($toolName, $decision['params']);
-        
-        if (!$validation['valid']) {
+
+        if (! $validation['valid']) {
             return [
                 'success' => false,
                 'tool_name' => $toolName,
                 'tool_result' => null,
                 'decision_raw' => $decision['raw'],
-                'error' => implode(', ', $validation['errors'])
+                'error' => implode(', ', $validation['errors']),
             ];
         }
 
         // Step 3: Invoke tool
         $invocation = $this->invokeTool($toolName, $validation['params']);
-        
+
         return [
             'success' => $invocation['success'],
             'tool_name' => $toolName,
             'tool_result' => $invocation['result'],
             'decision_raw' => $decision['raw'],
-            'error' => $invocation['error']
+            'error' => $invocation['error'],
         ];
     }
 
@@ -248,13 +249,13 @@ class ToolExecutor
     protected function decodeJsonObject(string $text): mixed
     {
         $text = trim($text);
-        
+
         if (preg_match('/```(?:json)?\s*(\{.*?\})\s*```/s', $text, $matches)) {
             $text = $matches[1];
         }
-        
+
         $decoded = json_decode($text, true);
-        
+
         return (json_last_error() === JSON_ERROR_NONE) ? $decoded : null;
     }
 }

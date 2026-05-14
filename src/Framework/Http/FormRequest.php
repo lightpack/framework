@@ -2,9 +2,9 @@
 
 namespace Lightpack\Http;
 
-use Lightpack\Session\Session;
 use Lightpack\Container\Container;
 use Lightpack\Exceptions\ValidationException;
+use Lightpack\Session\Session;
 use Lightpack\Validation\Validator;
 
 abstract class FormRequest extends Request
@@ -19,7 +19,7 @@ abstract class FormRequest extends Request
     public function __boot(Container $container, Validator $validator, Redirect $redirect, Session $session)
     {
         $this->validator = $validator;
-        
+
         $container->call($this, 'rules');
         $container->call($this, 'data');
 
@@ -35,15 +35,15 @@ abstract class FormRequest extends Request
             ]);
 
             $container->call($this, 'beforeSend');
+
             return;
         }
 
         $container->call($this, 'beforeRedirect');
         $redirect->back();
 
-        throw new ValidationException();
+        throw new ValidationException;
     }
-
 
     protected function data()
     {

@@ -30,10 +30,10 @@ class TenantModelTest extends TestCase
 
         $config = require __DIR__ . '/../tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
-        
+
         // Drop tables first to ensure clean state
         $this->db->query("DROP TABLE IF EXISTS posts, articles");
-        
+
         // Create tables
         $this->db->query("
             CREATE TABLE `posts` (
@@ -80,8 +80,13 @@ class TenantModelTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
 
@@ -93,7 +98,7 @@ class TenantModelTest extends TestCase
     {
         $this->db->query("DROP TABLE IF EXISTS posts, articles");
         $this->db = null;
-        
+
         // Clear tenant context after each test
         TenantContext::clear();
     }
@@ -103,9 +108,9 @@ class TenantModelTest extends TestCase
     public function testQueryAllFiltersByTenant()
     {
         TenantContext::set(1);
-        
+
         $posts = Post::query()->all();
-        
+
         $this->assertCount(2, $posts);
         foreach ($posts as $post) {
             $this->assertEquals(1, $post->tenant_id);
@@ -115,20 +120,20 @@ class TenantModelTest extends TestCase
     public function testQueryCountFiltersByTenant()
     {
         TenantContext::set(1);
-        
+
         $count = Post::query()->count();
-        
+
         $this->assertEquals(2, $count);
     }
 
     public function testQueryWithWhereFiltersByTenant()
     {
         TenantContext::set(1);
-        
+
         $posts = Post::query()
             ->where('title', 'LIKE', '%Post%')
             ->all();
-        
+
         $this->assertCount(2, $posts);
         foreach ($posts as $post) {
             $this->assertEquals(1, $post->tenant_id);
@@ -138,11 +143,11 @@ class TenantModelTest extends TestCase
     public function testFindFiltersByTenant()
     {
         TenantContext::set(1);
-        
+
         // Get first post from tenant 1
         $post = Post::query()->one();
         $postId = $post->id;
-        
+
         // Should be able to find it
         $found = (new Post)->find($postId);
         $this->assertEquals($postId, $found->id);
@@ -152,15 +157,15 @@ class TenantModelTest extends TestCase
     public function testFindThrowsExceptionForOtherTenant()
     {
         TenantContext::set(1);
-        
+
         // Get a post from tenant 2
         TenantContext::set(2);
         $post = Post::query()->one();
         $tenant2PostId = $post->id;
-        
+
         // Switch back to tenant 1
         TenantContext::set(1);
-        
+
         // Should not be able to find tenant 2's post
         $this->expectException(RecordNotFoundException::class);
         (new Post)->find($tenant2PostId);
@@ -169,9 +174,9 @@ class TenantModelTest extends TestCase
     public function testCustomTenantColumn()
     {
         TenantContext::set(1);
-        
+
         $articles = Article::query()->all();
-        
+
         $this->assertCount(2, $articles);
         foreach ($articles as $article) {
             $this->assertEquals(1, $article->site_id);
@@ -183,14 +188,14 @@ class TenantModelTest extends TestCase
     public function testSaveAutoAssignsTenant()
     {
         TenantContext::set(1);
-        
-        $post = new Post();
+
+        $post = new Post;
         $post->title = 'New Post';
         $post->content = 'New Content';
         $post->save();
-        
+
         $this->assertEquals(1, $post->tenant_id);
-        
+
         // Verify in database
         $found = $this->db->table('posts')
             ->where('id', $post->id)
@@ -201,37 +206,37 @@ class TenantModelTest extends TestCase
     public function testInsertAutoAssignsTenant()
     {
         TenantContext::set(1);
-        
-        $post = new Post();
+
+        $post = new Post;
         $post->title = 'New Post';
         $post->content = 'New Content';
         $post->insert();
-        
+
         $this->assertEquals(1, $post->tenant_id);
     }
 
     public function testSaveDoesNotOverrideExplicitTenant()
     {
         TenantContext::set(1);
-        
-        $post = new Post();
+
+        $post = new Post;
         $post->title = 'New Post';
         $post->content = 'New Content';
         $post->tenant_id = 2;  // Explicitly set to different tenant
         $post->save();
-        
+
         $this->assertEquals(2, $post->tenant_id);
     }
 
     public function testCustomTenantColumnAutoAssigned()
     {
         TenantContext::set(1);
-        
-        $article = new Article();
+
+        $article = new Article;
         $article->title = 'New Article';
         $article->body = 'New Body';
         $article->save();
-        
+
         $this->assertEquals(1, $article->site_id);
     }
 
@@ -240,10 +245,10 @@ class TenantModelTest extends TestCase
     public function testUpdateOnlyAffectsTenantRecords()
     {
         TenantContext::set(1);
-        
+
         // Update all posts (should only affect tenant 1)
         Post::query()->update(['content' => 'Updated']);
-        
+
         // Check tenant 1 posts are updated
         $tenant1Posts = $this->db->table('posts')
             ->where('tenant_id', 1)
@@ -251,7 +256,7 @@ class TenantModelTest extends TestCase
         foreach ($tenant1Posts as $post) {
             $this->assertEquals('Updated', $post->content);
         }
-        
+
         // Check tenant 2 posts are unchanged
         $tenant2Posts = $this->db->table('posts')
             ->where('tenant_id', 2)
@@ -264,14 +269,14 @@ class TenantModelTest extends TestCase
     public function testModelUpdateFiltersByTenant()
     {
         TenantContext::set(1);
-        
+
         $post = Post::query()->one();
         $post->title = 'Updated Title';
         $post->save();
-        
+
         // Verify tenant_id didn't change
         $this->assertEquals(1, $post->tenant_id);
-        
+
         // Verify in database
         $found = $this->db->table('posts')
             ->where('id', $post->id)
@@ -283,28 +288,28 @@ class TenantModelTest extends TestCase
     public function testDirectUpdateMethodFiltersByTenant()
     {
         TenantContext::set(1);
-        
+
         $post = Post::query()->one();
         $post->title = 'Updated via update()';
         $post->update();
-        
+
         $this->assertEquals(1, $post->tenant_id);
     }
 
     public function testUpdateAllowsExplicitTenantChange()
     {
         TenantContext::set(1);
-        
+
         $post = Post::query()->one();
         $originalId = $post->id;
-        
+
         // Explicitly change tenant
         $post->tenant_id = 2;
         $post->update();  // Use update() not save()
-        
+
         // Verify tenant changed
         $this->assertEquals(2, $post->tenant_id);
-        
+
         // Verify in database
         $found = $this->db->table('posts')
             ->where('id', $originalId)
@@ -317,16 +322,16 @@ class TenantModelTest extends TestCase
     public function testDeleteOnlyAffectsTenantRecords()
     {
         TenantContext::set(1);
-        
+
         // Delete all posts (should only affect tenant 1)
         Post::query()->delete();
-        
+
         // Check tenant 1 posts are deleted
         $tenant1Count = $this->db->table('posts')
             ->where('tenant_id', 1)
             ->count();
         $this->assertEquals(0, $tenant1Count);
-        
+
         // Check tenant 2 posts still exist
         $tenant2Count = $this->db->table('posts')
             ->where('tenant_id', 2)
@@ -337,18 +342,18 @@ class TenantModelTest extends TestCase
     public function testModelDeleteFiltersByTenant()
     {
         TenantContext::set(1);
-        
+
         $post = Post::query()->one();
         $postId = $post->id;
-        
+
         $post->delete();
-        
+
         // Verify deleted
         $found = $this->db->table('posts')
             ->where('id', $postId)
             ->one();
         $this->assertNull($found);
-        
+
         // Verify tenant 2 posts still exist
         $tenant2Count = $this->db->table('posts')
             ->where('tenant_id', 2)
@@ -362,9 +367,9 @@ class TenantModelTest extends TestCase
     {
         // No tenant set (context is null)
         TenantContext::clear();
-        
+
         $posts = Post::query()->all();
-        
+
         // Should return all posts from all tenants
         $this->assertCount(4, $posts);
     }
@@ -372,13 +377,13 @@ class TenantModelTest extends TestCase
     public function testNoTenantContextDoesNotSetTenantOnSave()
     {
         TenantContext::clear();
-        
-        $post = new Post();
+
+        $post = new Post;
         $post->title = 'No Tenant Post';
         $post->content = 'Content';
         $post->tenant_id = 99;  // Must set manually
         $post->save();
-        
+
         $this->assertEquals(99, $post->tenant_id);
     }
 
@@ -387,9 +392,9 @@ class TenantModelTest extends TestCase
     public function testQueryWithoutScopesBypassesTenantFilter()
     {
         TenantContext::set(1);
-        
+
         $allPosts = Post::queryWithoutScopes()->all();
-        
+
         // Should return all posts from all tenants
         $this->assertCount(4, $allPosts);
     }
@@ -397,20 +402,20 @@ class TenantModelTest extends TestCase
     public function testQueryWithoutScopesAllowsCrossTenantOperations()
     {
         TenantContext::set(1);
-        
+
         // Get a post from tenant 2 using queryWithoutScopes
         $tenant2Post = Post::queryWithoutScopes()
             ->where('tenant_id', 2)
             ->one();
-        
+
         $this->assertEquals(2, $tenant2Post->tenant_id);
-        
+
         // To move between tenants, use raw query or table() method
         // because Model's update() applies globalScope which would prevent the update
         $this->db->table('posts')
             ->where('id', $tenant2Post->id)
             ->update(['tenant_id' => 1]);
-        
+
         // Verify it moved
         $found = $this->db->table('posts')
             ->where('id', $tenant2Post->id)

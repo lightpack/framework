@@ -1,8 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\SocialAuth\Providers\LinkedInProvider;
 use Lightpack\Config\Config;
+use Lightpack\SocialAuth\Providers\LinkedInProvider;
+use PHPUnit\Framework\TestCase;
 
 class LinkedInProviderTest extends TestCase
 {
@@ -23,7 +23,7 @@ class LinkedInProviderTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'redirect_uri' => 'http://localhost/linkedin-callback',
-            'scopes' => ['r_liteprofile', 'r_emailaddress']
+            'scopes' => ['r_liteprofile', 'r_emailaddress'],
         ]);
         $provider = new LinkedInProvider($mockConfig);
         $url = $provider->stateless()->getAuthUrl();
@@ -38,7 +38,7 @@ class LinkedInProviderTest extends TestCase
             'client_id' => 'web-client-id',
             'client_secret' => 'web-client-secret',
             'redirect_uri' => 'http://localhost/linkedin-web-callback',
-            'scopes' => ['r_liteprofile']
+            'scopes' => ['r_liteprofile'],
         ]);
         $provider = new LinkedInProvider($mockConfig);
         $url = $provider->getAuthUrl();
@@ -54,7 +54,7 @@ class LinkedInProviderTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'redirect_uri' => 'http://localhost/linkedin-callback',
-            'scopes' => ['r_liteprofile', 'r_emailaddress']
+            'scopes' => ['r_liteprofile', 'r_emailaddress'],
         ]);
         $provider = new LinkedInProvider($mockConfig);
         $this->expectException(\RuntimeException::class);

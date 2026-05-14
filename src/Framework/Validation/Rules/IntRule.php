@@ -10,10 +10,9 @@ class IntRule
 {
     use ValidationMessageTrait;
 
-    
     public function __construct()
     {
-       $this->message = 'Must be an integer';
+        $this->message = 'Must be an integer';
     }
 
     public function __invoke($value): bool

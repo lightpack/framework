@@ -2,24 +2,26 @@
 
 namespace Lightpack\SocialAuth\Controllers;
 
-use RuntimeException;
 use Lightpack\SocialAuth\Models\SocialAccountModel;
+use RuntimeException;
 
 class SocialAuthController
 {
     public function redirect(string $provider)
     {
-            $providerClass = $this->getProvider($provider);
-            
-            if (request()->expectsJson()) {
-                $authUrl = $providerClass->stateless()->getAuthUrl();
-                return response()->json(['auth_url' => $authUrl]);
-            }
-            
-            // Web flow - use session
-            session()->set('social_auth_provider', $provider);
-            $authUrl = $providerClass->getAuthUrl();
-            return redirect()->to($authUrl);
+        $providerClass = $this->getProvider($provider);
+
+        if (request()->expectsJson()) {
+            $authUrl = $providerClass->stateless()->getAuthUrl();
+
+            return response()->json(['auth_url' => $authUrl]);
+        }
+
+        // Web flow - use session
+        session()->set('social_auth_provider', $provider);
+        $authUrl = $providerClass->getAuthUrl();
+
+        return redirect()->to($authUrl);
     }
 
     public function callback(string $provider)
@@ -32,7 +34,7 @@ class SocialAuthController
                     return $this->handleApiCallback($provider);
                 }
             }
-            
+
             return $this->handleWebCallback($provider);
         } catch (\Exception $e) {
             return $this->handleCallbackError($e);
@@ -42,17 +44,17 @@ class SocialAuthController
     protected function handleApiCallback(string $provider)
     {
         $state = request()->query('state');
-        if (!$state) {
+        if (! $state) {
             throw new RuntimeException('Invalid authentication state', 401);
         }
 
         $stateData = json_decode(base64_decode($state), true);
-        if (!isset($stateData['provider']) || $stateData['provider'] !== $provider || !($stateData['is_api'] ?? false)) {
+        if (! isset($stateData['provider']) || $stateData['provider'] !== $provider || ! ($stateData['is_api'] ?? false)) {
             throw new RuntimeException('Invalid authentication state', 401);
         }
 
         $user = $this->authenticateUser($provider);
-        
+
         return response()->json([
             'access_token' => $user->createToken($provider . '-api-auth'),
             'token_type' => 'Bearer',
@@ -60,7 +62,7 @@ class SocialAuthController
         ]);
     }
 
-    protected function handleWebCallback(string $provider) 
+    protected function handleWebCallback(string $provider)
     {
         // Verify session state
         if ($provider !== session()->get('social_auth_provider')) {
@@ -68,10 +70,10 @@ class SocialAuthController
         }
 
         $user = $this->authenticateUser($provider);
-        
+
         auth()->loginAs($user);
         session()->delete('social_auth_provider');
-        
+
         return redirect()->route('dashboard');
     }
 
@@ -84,19 +86,20 @@ class SocialAuthController
 
         $providerClass = $this->getProvider($provider);
         $providerUser = $providerClass->getUser($code);
-        
+
         return $this->findOrCreateUser($provider, $providerUser);
     }
 
     protected function handleCallbackError(\Exception $e)
     {
         $code = $e->getCode() ?: 500;
-        
+
         if (request()->expectsJson()) {
             return response()->json(['error' => $e->getMessage()], $code);
         }
-        
+
         session()->flash('error', $e->getMessage());
+
         return redirect()->route('login');
     }
 
@@ -104,7 +107,7 @@ class SocialAuthController
     {
         $providerClass = config('social.providers.' . $providerKey . '.provider');
 
-        if (!$providerClass) {
+        if (! $providerClass) {
             throw new RuntimeException('Unsupported authentication provider: ' . $providerKey, 400);
         }
 
@@ -129,7 +132,7 @@ class SocialAuthController
             ->where('email', $providerUser['email'])
             ->one();
 
-        if (!$user) {
+        if (! $user) {
             $user = new $userClass;
             $user->name = $providerUser['name'];
             $user->email = $providerUser['email'];

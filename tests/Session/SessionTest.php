@@ -1,9 +1,9 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Session\Session;
-use Lightpack\Session\DriverInterface;
 use Lightpack\Config\Config;
+use Lightpack\Session\DriverInterface;
+use Lightpack\Session\Session;
+use PHPUnit\Framework\TestCase;
 
 class SessionTest extends TestCase
 {
@@ -15,15 +15,15 @@ class SessionTest extends TestCase
     {
         $this->driver = $this->createMock(DriverInterface::class);
         $this->config = $this->createMock(Config::class);
-        
+
         // Setup config mock to return session settings
         $this->config->method('get')
             ->willReturnMap([
                 ['session.name', 'lightpack_session', 'lightpack_session'],
                 ['session.lifetime', 7200, 7200],
-                ['session.same_site', 'lax', 'lax']
+                ['session.same_site', 'lax', 'lax'],
             ]);
-            
+
         $this->session = new Session($this->driver, $this->config);
     }
 
@@ -92,7 +92,7 @@ class SessionTest extends TestCase
     {
         $this->driver->expects($this->once())
             ->method('set')
-            ->with('_token', $this->callback(function($value) {
+            ->with('_token', $this->callback(function ($value) {
                 return strlen($value) === 16 && ctype_xdigit($value);
             }));
 
@@ -179,10 +179,11 @@ class SessionTest extends TestCase
     public function testGetWithDotNotationRetrievesNestedValue()
     {
         $this->driver->method('get')
-            ->willReturnCallback(function($key) {
-                if($key === 'user') {
+            ->willReturnCallback(function ($key) {
+                if ($key === 'user') {
                     return ['profile' => ['name' => 'John Doe']];
                 }
+
                 return null;
             });
 
@@ -193,8 +194,8 @@ class SessionTest extends TestCase
     public function testSetWithDotNotationPreservesExistingValues()
     {
         $this->driver->method('get')
-            ->willReturnCallback(function($key) {
-                if($key === 'user') {
+            ->willReturnCallback(function ($key) {
+                if ($key === 'user') {
                     return [
                         'profile' => [
                             'name' => 'John Doe',
@@ -202,6 +203,7 @@ class SessionTest extends TestCase
                         ],
                     ];
                 }
+
                 return null;
             });
 
@@ -221,10 +223,11 @@ class SessionTest extends TestCase
     public function testGetWithDotNotationReturnsDefaultForMissingKey()
     {
         $this->driver->method('get')
-            ->willReturnCallback(function($key) {
-                if($key === 'user') {
+            ->willReturnCallback(function ($key) {
+                if ($key === 'user') {
                     return ['profile' => ['name' => 'John Doe']];
                 }
+
                 return null;
             });
 
@@ -235,10 +238,11 @@ class SessionTest extends TestCase
     public function testSetWithDotNotationOverwritesScalarWithArray()
     {
         $this->driver->method('get')
-            ->willReturnCallback(function($key) {
-                if($key === 'user') {
+            ->willReturnCallback(function ($key) {
+                if ($key === 'user') {
                     return 'scalar value';
                 }
+
                 return null;
             });
 
@@ -259,9 +263,9 @@ class SessionTest extends TestCase
             'user' => [
                 'profile' => [
                     'email' => 'john@example.com',
-                    'name' => 'John Doe'
-                ]
-            ]
+                    'name' => 'John Doe',
+                ],
+            ],
         ];
 
         $this->driver->expects($this->once())
@@ -273,8 +277,8 @@ class SessionTest extends TestCase
             ->method('set')
             ->with('user', [
                 'profile' => [
-                    'name' => 'John Doe'
-                ]
+                    'name' => 'John Doe',
+                ],
             ]);
 
         $this->session->delete('user.profile.email');
@@ -285,9 +289,9 @@ class SessionTest extends TestCase
         $data = [
             'user' => [
                 'profile' => [
-                    'name' => 'John Doe'
-                ]
-            ]
+                    'name' => 'John Doe',
+                ],
+            ],
         ];
 
         $this->driver->expects($this->once())
@@ -299,8 +303,8 @@ class SessionTest extends TestCase
             ->method('set')
             ->with('user', [
                 'profile' => [
-                    'name' => 'John Doe'
-                ]
+                    'name' => 'John Doe',
+                ],
             ]);
 
         $this->session->delete('user.profile.email');

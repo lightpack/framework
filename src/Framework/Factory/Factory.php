@@ -22,6 +22,7 @@ abstract class Factory
     public function times(int $count): static
     {
         $this->batchCount = $count;
+
         return $this;
     }
 
@@ -34,8 +35,10 @@ abstract class Factory
         if ($this->batchCount !== null) {
             $result = $this->items($this->batchCount, $overrides);
             $this->batchCount = null;
+
             return $result;
         }
+
         return $this->item($overrides);
     }
 
@@ -56,6 +59,7 @@ abstract class Factory
         for ($i = 0; $i < $count; $i++) {
             $result[] = $this->item($overrides);
         }
+
         return $result;
     }
 }

@@ -9,7 +9,7 @@ class Seeder
 {
     public function run(string|array $seeder)
     {
-        if (!is_array($seeder)) {
+        if (! is_array($seeder)) {
             $seeder = [$seeder];
         }
 

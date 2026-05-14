@@ -1,7 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Console\Output;
+use PHPUnit\Framework\TestCase;
 
 class OutputTest extends TestCase
 {
@@ -98,7 +98,7 @@ class OutputTest extends TestCase
         ob_start();
         (new Output)->successLabel('SUCCESS');
         $actual = ob_get_clean();
-        
+
         $this->assertEquals($expected, $actual);
     }
 
@@ -119,7 +119,7 @@ class OutputTest extends TestCase
         ob_start();
         (new Output)->warningLabel('WARNING');
         $actual = ob_get_clean();
-        
+
         $this->assertEquals($expected, $actual);
     }
 
@@ -146,7 +146,7 @@ class OutputTest extends TestCase
 
     public function testPadMethod()
     {
-        $output = new Output();
+        $output = new Output;
 
         // Test case 1
         $repeat = str_repeat('.', 20 - strlen('Hello'));

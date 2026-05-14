@@ -2,9 +2,9 @@
 
 namespace Lightpack\Webhook;
 
-use Lightpack\Http\Response;
 use Lightpack\Exceptions\HttpException;
 use Lightpack\Http\Request;
+use Lightpack\Http\Response;
 
 abstract class BaseWebhookHandler
 {
@@ -16,7 +16,8 @@ abstract class BaseWebhookHandler
         protected Request $request,
         protected array $config,
         protected string $provider
-    ) {}
+    ) {
+    }
 
     /**
      * Handle the webhook request.
@@ -63,7 +64,7 @@ abstract class BaseWebhookHandler
         $secret = $this->config['secret'] ?? null;
         $algo = $this->config['algo'] ?? null;
 
-        if (!$secret) {
+        if (! $secret) {
             $verified = false;
         }
 
@@ -77,7 +78,7 @@ abstract class BaseWebhookHandler
             $verified = hash_equals($secret, $providedSignature);
         }
 
-        if(!$verified) {
+        if (! $verified) {
             throw new HttpException('Invalid webhook signature', 401);
         }
 

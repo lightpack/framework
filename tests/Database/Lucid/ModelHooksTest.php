@@ -2,38 +2,37 @@
 
 namespace Lightpack\Tests\Database\Lucid;
 
-use Lightpack\Database\Query\Query;
-use Lightpack\Database\Lucid\Model;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
+use Lightpack\Database\Lucid\Model;
+use PHPUnit\Framework\TestCase;
 
-class TestHookModel extends Model 
+class TestHookModel extends Model
 {
     protected $table = 'users';
     private $hooksCalled = [];
 
-    public function getHooksCalled(): array 
+    public function getHooksCalled(): array
     {
         return $this->hooksCalled;
     }
 
-    protected function beforeSave() 
+    protected function beforeSave()
     {
         $this->hooksCalled[] = 'beforeSave';
     }
 
-    protected function afterSave() 
+    protected function afterSave()
     {
         $this->hooksCalled[] = 'afterSave';
     }
 
-    protected function beforeDelete() 
+    protected function beforeDelete()
     {
         $this->hooksCalled[] = 'beforeDelete';
     }
 
-    protected function afterDelete() 
+    protected function afterDelete()
     {
         $this->hooksCalled[] = 'afterDelete';
     }
@@ -59,12 +58,12 @@ class TestHookModel extends Model
     }
 }
 
-class ModelHooksTest extends TestCase 
+class ModelHooksTest extends TestCase
 {
     private ?DB $db;
     private TestHookModel $TestHookModel;
 
-    protected function setUp(): void 
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -84,8 +83,13 @@ class ModelHooksTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -97,43 +101,43 @@ class ModelHooksTest extends TestCase
         $this->db = null;
     }
 
-    public function testSaveHooks() 
+    public function testSaveHooks()
     {
         $this->TestHookModel->name = 'Test User';
         $this->TestHookModel->save();
         $hooks = $this->TestHookModel->getHooksCalled();
-        
+
         $this->assertContains('beforeSave', $hooks);
         $this->assertContains('afterSave', $hooks);
     }
 
-    public function testDeleteHooks() 
+    public function testDeleteHooks()
     {
         $this->TestHookModel->name = 'Test User';
         $this->TestHookModel->save();
 
         $this->TestHookModel->delete();
         $hooks = $this->TestHookModel->getHooksCalled();
-        
+
         $this->assertContains('beforeDelete', $hooks);
         $this->assertContains('afterDelete', $hooks);
     }
 
-    public function testHookModelOrder() 
+    public function testHookModelOrder()
     {
         $this->TestHookModel->name = 'Test User';
         $this->TestHookModel->save();
         $hooks = $this->TestHookModel->getHooksCalled();
-        
+
         $saveIndex = array_search('beforeSave', $hooks);
         $afterSaveIndex = array_search('afterSave', $hooks);
-        
+
         $this->assertLessThan($afterSaveIndex, $saveIndex, 'beforeSave should be called before afterSave');
     }
 
     public function testInsertHooks()
     {
-        $model = new TestHookModel();
+        $model = new TestHookModel;
         $model->name = 'Insert User';
         $model->insert();
         $hooks = $model->getHooksCalled();
@@ -144,7 +148,7 @@ class ModelHooksTest extends TestCase
 
     public function testUpdateHooks()
     {
-        $model = new TestHookModel();
+        $model = new TestHookModel;
         $model->name = 'Update User';
         $model->save();
         $model->getHooksCalled(); // Clear hooks from save

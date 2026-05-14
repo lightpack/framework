@@ -10,6 +10,7 @@ class IdentifierEscaper
         if (str_starts_with($identifier, '`') && str_ends_with($identifier, '`')) {
             return $identifier;
         }
+
         return '`' . str_replace('`', '', $identifier) . '`';
     }
 }

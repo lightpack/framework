@@ -1,8 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\SocialAuth\Providers\GitHubProvider;
 use Lightpack\Config\Config;
+use Lightpack\SocialAuth\Providers\GitHubProvider;
+use PHPUnit\Framework\TestCase;
 
 class GitHubProviderTest extends TestCase
 {
@@ -23,7 +23,7 @@ class GitHubProviderTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'redirect_uri' => 'http://localhost/github-callback',
-            'scopes' => ['read:user', 'user:email']
+            'scopes' => ['read:user', 'user:email'],
         ]);
         $provider = new GitHubProvider($mockConfig);
         $url = $provider->stateless()->getAuthUrl();
@@ -38,7 +38,7 @@ class GitHubProviderTest extends TestCase
             'client_id' => 'web-client-id',
             'client_secret' => 'web-client-secret',
             'redirect_uri' => 'http://localhost/github-web-callback',
-            'scopes' => ['read:user']
+            'scopes' => ['read:user'],
         ]);
         $provider = new GitHubProvider($mockConfig);
         $url = $provider->getAuthUrl();
@@ -53,7 +53,7 @@ class GitHubProviderTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'redirect_uri' => 'http://localhost/github-callback',
-            'scopes' => ['read:user', 'user:email']
+            'scopes' => ['read:user', 'user:email'],
         ]);
         $provider = new GitHubProvider($mockConfig);
         $this->expectException(\RuntimeException::class);

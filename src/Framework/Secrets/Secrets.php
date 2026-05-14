@@ -3,7 +3,6 @@
 namespace Lightpack\Secrets;
 
 use Lightpack\Database\DB;
-
 use Lightpack\Utils\Crypto;
 
 class Secrets
@@ -23,12 +22,14 @@ class Secrets
     public function group(string $group): self
     {
         $this->group = $group;
+
         return $this;
     }
 
     public function owner(?int $ownerId): self
     {
         $this->ownerId = $ownerId;
+
         return $this;
     }
 
@@ -43,11 +44,12 @@ class Secrets
         }
 
         $record = $query->one();
-        if (!$record) {
+        if (! $record) {
             return $default;
         }
         $decrypted = $this->crypto->decrypt($record->value);
         $value = json_decode($decrypted, true);
+
         return $value;
     }
 
@@ -96,6 +98,7 @@ class Secrets
                 $decrypted = $oldCrypto->decrypt($secret->value);
                 if ($decrypted === false) {
                     $fail++;
+
                     continue;
                 }
                 $reencrypted = $newCrypto->encrypt($decrypted);

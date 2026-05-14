@@ -12,7 +12,7 @@ class CustomRule
 
     private $callback;
 
-    public function __construct(callable $callback, string $message = 'Validation failed') 
+    public function __construct(callable $callback, string $message = 'Validation failed')
     {
         $this->callback = $callback;
         $this->message = $message;

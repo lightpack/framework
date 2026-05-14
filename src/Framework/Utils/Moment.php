@@ -8,7 +8,7 @@ use InvalidArgumentException;
 
 /**
  * Simple datetime utility class.
- * 
+ *
  * This class handles datetime operations with proper timezone support.
  * All internal operations are done in UTC and can be converted to any timezone
  * for display purposes.
@@ -44,6 +44,7 @@ class Moment
     public function format(string $format): self
     {
         $this->format = $format;
+
         return $this;
     }
 
@@ -54,6 +55,7 @@ class Moment
     {
         try {
             $this->timezone = new DateTimeZone($timezone);
+
             return $this;
         } catch (\Exception $e) {
             throw new InvalidArgumentException("Invalid timezone: {$timezone}");
@@ -125,6 +127,7 @@ class Moment
         try {
             $date1 = $this->create($datetime1);
             $date2 = $this->create($datetime2);
+
             return $date1->diff($date2, true);
         } catch (\Exception $e) {
             throw new InvalidArgumentException("Invalid datetime format provided");
@@ -145,6 +148,7 @@ class Moment
     {
         try {
             $datetime = $this->create();
+
             return $datetime->modify($modifier)->format($format ?? $this->format);
         } catch (\Exception $e) {
             throw new InvalidArgumentException("Invalid modifier: {$modifier}");

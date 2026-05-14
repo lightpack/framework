@@ -24,6 +24,7 @@ class CloudflareTurnstile implements CaptchaInterface
     public function verify(): bool
     {
         $input = $this->request->input('cf-turnstile-response');
+
         return $this->verifyInput($input);
     }
 
@@ -38,13 +39,14 @@ class CloudflareTurnstile implements CaptchaInterface
         ];
         $options = [
             'http' => [
-                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-                'method'  => 'POST',
+                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method' => 'POST',
                 'content' => http_build_query($data),
             ],
         ];
         $result = $this->fetchVerifyResponse('https://challenges.cloudflare.com/turnstile/v0/siteverify', $options);
         $response = json_decode($result, true);
+
         return isset($response['success']) && $response['success'] === true;
     }
 

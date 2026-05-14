@@ -2,14 +2,14 @@
 
 namespace Lightpack\Utils;
 
-use RuntimeException;
 use InvalidArgumentException;
+use RuntimeException;
 
 class Process
 {
-    const STDIN = 0;
-    const STDOUT = 1;
-    const STDERR = 2;
+    public const STDIN = 0;
+    public const STDOUT = 1;
+    public const STDERR = 2;
 
     private $resource = null;
     private string $output = '';
@@ -31,6 +31,7 @@ class Process
             throw new InvalidArgumentException('Timeout must be greater than 0 seconds');
         }
         $this->timeout = $seconds;
+
         return $this;
     }
 
@@ -75,11 +76,12 @@ class Process
 
     public function setDirectory(string $directory): self
     {
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             throw new InvalidArgumentException('Invalid working directory: ' . $directory);
         }
 
         $this->workingDirectory = $directory;
+
         return $this;
     }
 
@@ -95,16 +97,16 @@ class Process
                 throw new InvalidArgumentException('Command array cannot be empty');
             }
             foreach ($command as $arg) {
-                if (!is_string($arg) && (!is_numeric($arg) || $arg === '')) {
+                if (! is_string($arg) && (! is_numeric($arg) || $arg === '')) {
                     throw new InvalidArgumentException('Command argument cannot be empty');
                 }
             }
-        } elseif (!is_string($command) || trim($command) === '') {
+        } elseif (! is_string($command) || trim($command) === '') {
             throw new InvalidArgumentException('Command string cannot be empty');
         }
     }
 
-    private function executeProcess(string|array $command, ?callable $callback = null): void 
+    private function executeProcess(string|array $command, ?callable $callback = null): void
     {
         $this->validateCommand($command);
 
@@ -127,6 +129,7 @@ class Process
             $this->closeProcess();
         } catch (\Exception $e) {
             $this->cleanup();
+
             throw $e;
         } finally {
             $this->isRunning = false;
@@ -138,16 +141,17 @@ class Process
         $startTime = time();
         while (true) {
             $status = proc_get_status($this->resource);
-            
-            if (!$status['running']) {
+
+            if (! $status['running']) {
                 $this->exitCode = $status['exitcode'];
                 $this->processRemainingOutput($callback);
+
                 break;
             }
 
             // Process stdout
             if (isset($this->pipes[self::STDOUT])) {
-                while (!feof($this->pipes[self::STDOUT]) && ($line = fgets($this->pipes[self::STDOUT])) !== false) {
+                while (! feof($this->pipes[self::STDOUT]) && ($line = fgets($this->pipes[self::STDOUT])) !== false) {
                     $callback($line, 'stdout');
                     // $this->output .= $line;
                 }
@@ -155,7 +159,7 @@ class Process
 
             // Process stderr
             if (isset($this->pipes[self::STDERR])) {
-                while (!feof($this->pipes[self::STDERR]) && ($line = fgets($this->pipes[self::STDERR])) !== false) {
+                while (! feof($this->pipes[self::STDERR]) && ($line = fgets($this->pipes[self::STDERR])) !== false) {
                     $callback($line, 'stderr');
                     // $this->error .= $line;
                 }
@@ -170,7 +174,7 @@ class Process
     {
         // Process remaining stdout
         if (isset($this->pipes[self::STDOUT])) {
-            while (!feof($this->pipes[self::STDOUT]) && ($line = fgets($this->pipes[self::STDOUT])) !== false) {
+            while (! feof($this->pipes[self::STDOUT]) && ($line = fgets($this->pipes[self::STDOUT])) !== false) {
                 $callback($line, 'stdout');
                 $this->output .= $line;
             }
@@ -178,7 +182,7 @@ class Process
 
         // Process remaining stderr
         if (isset($this->pipes[self::STDERR])) {
-            while (!feof($this->pipes[self::STDERR]) && ($line = fgets($this->pipes[self::STDERR])) !== false) {
+            while (! feof($this->pipes[self::STDERR]) && ($line = fgets($this->pipes[self::STDERR])) !== false) {
                 $callback($line, 'stderr');
                 $this->error .= $line;
             }
@@ -198,7 +202,7 @@ class Process
         $escapedCommand = $this->escapeCommand($command);
         $this->resource = proc_open($escapedCommand, $this->descriptorSpec, $this->pipes, $this->getDirectory());
 
-        if (!is_resource($this->resource)) {
+        if (! is_resource($this->resource)) {
             throw new RuntimeException('Failed to start the process');
         }
 
@@ -213,17 +217,17 @@ class Process
     private function closePipes(): void
     {
         foreach ($this->pipes as $pipe) {
-            if (!is_resource($pipe)) {
+            if (! is_resource($pipe)) {
                 continue;
             }
 
             if (get_resource_type($pipe) === 'stream') {
                 $type = array_search($pipe, $this->pipes, true);
-                
+
                 // Read remaining output
                 if ($type === self::STDOUT || $type === self::STDERR) {
                     $content = '';
-                    while (!feof($pipe)) {
+                    while (! feof($pipe)) {
                         $content .= fread($pipe, 8192);
                     }
                     if ($type === self::STDOUT) {
@@ -240,7 +244,7 @@ class Process
 
     private function closeProcess(): void
     {
-        if (!is_resource($this->resource)) {
+        if (! is_resource($this->resource)) {
             return;
         }
 
@@ -275,9 +279,10 @@ class Process
         while (true) {
             try {
                 $status = proc_get_status($this->resource);
-                
-                if (!$status['running']) {
+
+                if (! $status['running']) {
                     $this->exitCode = $status['exitcode'];
+
                     break;
                 }
 
@@ -292,6 +297,7 @@ class Process
                 usleep(1000);
             } catch (\Exception $e) {
                 $this->cleanup();
+
                 throw $e;
             }
         }
@@ -300,7 +306,7 @@ class Process
     private function readPendingOutput(): void
     {
         foreach ([self::STDOUT, self::STDERR] as $type) {
-            if (!isset($this->pipes[$type]) || !is_resource($this->pipes[$type])) {
+            if (! isset($this->pipes[$type]) || ! is_resource($this->pipes[$type])) {
                 continue;
             }
 
@@ -324,13 +330,15 @@ class Process
                 // For shell operators, use sh -c
                 return '/bin/sh -c ' . escapeshellarg($command);
             }
+
             return escapeshellcmd($command);
         }
 
-        return implode(' ', array_map(function($arg) {
+        return implode(' ', array_map(function ($arg) {
             if (empty($arg) && $arg !== '0') {
                 throw new InvalidArgumentException('Command argument cannot be empty');
             }
+
             return escapeshellarg((string)$arg);
         }, $command));
     }

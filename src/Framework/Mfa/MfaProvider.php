@@ -2,10 +2,8 @@
 
 namespace Lightpack\Mfa;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Mfa\MfaInterface;
-use Lightpack\Mfa\MfaManager;
+use Lightpack\Support\ProviderInterface;
 
 class MfaProvider implements ProviderInterface
 {

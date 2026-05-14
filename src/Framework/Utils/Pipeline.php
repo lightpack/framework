@@ -33,6 +33,7 @@ class Pipeline
     public function through(array $pipes): self
     {
         $this->pipes = $pipes;
+
         return $this;
     }
 
@@ -67,17 +68,17 @@ class Pipeline
         if (is_object($pipe) && method_exists($pipe, '__invoke')) {
             return $pipe;
         }
-        
+
         // Already a callable (closure, function name, etc.)
         if (is_callable($pipe)) {
             return $pipe;
         }
-        
+
         // Class name string - resolve from container with DI
         if (is_string($pipe) && class_exists($pipe)) {
             return app($pipe);
         }
-        
+
         throw new \InvalidArgumentException(
             "Invalid pipe: " . (is_string($pipe) ? $pipe : gettype($pipe))
         );

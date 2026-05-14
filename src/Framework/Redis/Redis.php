@@ -6,11 +6,11 @@ class Redis
 {
     /**
      * Redis connection instance
-     * 
+     *
      * @var \Redis|null
      */
     protected $connection;
-    
+
     /**
      * Redis connection parameters
      *
@@ -26,7 +26,7 @@ class Redis
         'retry_interval' => 0,
         'prefix' => '',
     ];
-    
+
     /**
      * Constructor
      *
@@ -36,21 +36,21 @@ class Redis
     {
         $this->config = array_merge($this->config, $config);
     }
-    
+
     /**
      * Get Redis connection
-     * 
+     *
      * @return \Redis
      */
     public function connection()
     {
-        if (!$this->connection) {
+        if (! $this->connection) {
             $this->connect();
         }
-        
+
         return $this->connection;
     }
-    
+
     /**
      * Connect to Redis server
      *
@@ -59,12 +59,12 @@ class Redis
      */
     public function connect()
     {
-        if (!extension_loaded('redis')) {
+        if (! extension_loaded('redis')) {
             throw new \RuntimeException('Redis extension is not loaded');
         }
-        
-        $this->connection = new \Redis();
-        
+
+        $this->connection = new \Redis;
+
         $this->connection->connect(
             $this->config['host'],
             $this->config['port'],
@@ -72,26 +72,26 @@ class Redis
             null,
             $this->config['retry_interval']
         );
-        
+
         if ($this->config['read_timeout']) {
             $this->connection->setOption(\Redis::OPT_READ_TIMEOUT, $this->config['read_timeout']);
         }
-        
+
         if ($this->config['password']) {
             $this->connection->auth($this->config['password']);
         }
-        
+
         if ($this->config['database']) {
             $this->connection->select($this->config['database']);
         }
-        
+
         if ($this->config['prefix']) {
             $this->connection->setOption(\Redis::OPT_PREFIX, $this->config['prefix']);
         }
-        
+
         return $this;
     }
-    
+
     /**
      * Check if key exists
      *
@@ -102,7 +102,7 @@ class Redis
     {
         return (bool) $this->connection()->exists($key);
     }
-    
+
     /**
      * Get value by key
      *
@@ -112,14 +112,14 @@ class Redis
     public function get($key)
     {
         $value = $this->connection()->get($key);
-        
+
         if ($value === false) {
             return null;
         }
-        
+
         return $this->unserialize($value);
     }
-    
+
     /**
      * Set key value pair
      *
@@ -131,14 +131,14 @@ class Redis
     public function set($key, $value, $ttl = null)
     {
         $value = $this->serialize($value);
-        
+
         if ($ttl) {
             return $this->connection()->setex($key, $ttl, $value);
         }
-        
+
         return $this->connection()->set($key, $value);
     }
-    
+
     /**
      * Delete key
      *
@@ -149,7 +149,7 @@ class Redis
     {
         return (bool) $this->connection()->del($key);
     }
-    
+
     /**
      * Delete multiple keys
      *
@@ -161,10 +161,10 @@ class Redis
         if (empty($keys)) {
             return true;
         }
-        
+
         return (bool) $this->connection()->del(...$keys);
     }
-    
+
     /**
      * Increment value
      *
@@ -176,7 +176,7 @@ class Redis
     {
         return $this->connection()->incrBy($key, $value);
     }
-    
+
     /**
      * Decrement value
      *
@@ -188,7 +188,7 @@ class Redis
     {
         return $this->connection()->decrBy($key, $value);
     }
-    
+
     /**
      * Set expiration time for key
      *
@@ -200,7 +200,7 @@ class Redis
     {
         return $this->connection()->expire($key, $ttl);
     }
-    
+
     /**
      * Get time to live for key
      *
@@ -211,7 +211,7 @@ class Redis
     {
         return $this->connection()->ttl($key);
     }
-    
+
     /**
      * Flush database
      *
@@ -221,7 +221,7 @@ class Redis
     {
         return $this->connection()->flushDB();
     }
-    
+
     /**
      * Get all keys matching pattern
      *
@@ -232,7 +232,7 @@ class Redis
     {
         return $this->connection()->keys($pattern);
     }
-    
+
     /**
      * Serialize value
      *
@@ -243,7 +243,7 @@ class Redis
     {
         return is_numeric($value) ? $value : serialize($value);
     }
-    
+
     /**
      * Unserialize value
      *
@@ -255,12 +255,12 @@ class Redis
         if (is_numeric($value)) {
             return $value;
         }
-        
+
         $unserializedValue = @unserialize($value);
-        
+
         return $unserializedValue === false ? $value : $unserializedValue;
     }
-    
+
     /**
      * Magic method to pass calls to the Redis connection
      *

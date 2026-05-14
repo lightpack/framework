@@ -2,4 +2,6 @@
 
 namespace Lightpack\Exceptions;
 
-class EventHandlerMethodNotFoundException extends \Exception {}
+class EventHandlerMethodNotFoundException extends \Exception
+{
+}

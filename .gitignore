@@ -16,6 +16,7 @@ composer.lock
 .phpunit.result.cache
 .php_cs.cache
 .php_cs.dist.cache
+.php-cs-fixer.cache
 .phpstan.cache
 .phplint.cache
 phpunit.xml
@@ -25,8 +26,6 @@ code-coverage/
 coverage/
 *.log
 storage/*
-:memory
-php:
 
 # Project specific
 notes.txt

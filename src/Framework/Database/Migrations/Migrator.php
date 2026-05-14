@@ -44,7 +44,7 @@ class Migrator
 
             // Execute migration
             $migrationClass = require $migrationFilepath;
-            $migrationClass = new $migrationClass();
+            $migrationClass = new $migrationClass;
             $migrationClass->boot($this->schema, $this->connection);
             $sql = $migrationClass->up();
 
@@ -66,7 +66,7 @@ class Migrator
      * Rollback migrations.
      *
      * @param string $path Migration rollback directory.
-     * @param integer|null $steps No. of batches to rollback.
+     * @param int|null $steps No. of batches to rollback.
      * @return array Array of rolled back migratins.
      */
     public function rollback(string $path, ?int $steps = null): array
@@ -82,7 +82,7 @@ class Migrator
             // Get migrations for the last batch
             $lastBatchMigrations = $this->getLastBatchMigrations();
 
-            if(empty($lastBatchMigrations)) {
+            if (empty($lastBatchMigrations)) {
                 break;
             }
 
@@ -92,7 +92,7 @@ class Migrator
 
                 // Execute migration
                 $migrationClass = require $migrationFilepath;
-                $migrationClass = new $migrationClass();
+                $migrationClass = new $migrationClass;
                 $migrationClass->boot($this->schema, $this->connection);
                 $sql = $migrationClass->down();
 

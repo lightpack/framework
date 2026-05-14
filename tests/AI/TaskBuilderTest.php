@@ -1,8 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\AI\TaskBuilder;
 use Lightpack\AI\Tools\ToolInterface;
+use PHPUnit\Framework\TestCase;
 
 class FakeProvider
 {
@@ -21,7 +21,7 @@ class TestTool implements ToolInterface
     {
         self::$invoked = true;
         self::$receivedParams = $params;
-        
+
         return ['result' => 'success', 'product_id' => $params['product_id']];
     }
 
@@ -34,7 +34,7 @@ class TestTool implements ToolInterface
     {
         return [
             'product_id' => ['string', 'Product identifier'],
-            'quantity' => ['int', 'Quantity to order']
+            'quantity' => ['int', 'Quantity to order'],
         ];
     }
 
@@ -49,12 +49,12 @@ class TaskBuilderTest extends TestCase
 {
     public function testPromptWithSchema()
     {
-        $builder = new TaskBuilder(new FakeProvider());
+        $builder = new TaskBuilder(new FakeProvider);
         $result = $builder
             ->prompt('What is your name and age?')
             ->expect([
                 'name' => 'string',
-                'age'  => 'int',
+                'age' => 'int',
             ])
             ->run();
 
@@ -75,7 +75,7 @@ class TaskBuilderTest extends TestCase
             ->prompt('What is your name and age?')
             ->expect([
                 'name' => 'string',
-                'age'  => 'int',
+                'age' => 'int',
             ])
             ->required('name', 'age')
             ->run();
@@ -131,6 +131,7 @@ class TaskBuilderTest extends TestCase
             public function generate($params)
             {
                 $this->lastParams = $params;
+
                 return ['text' => 'ok'];
             }
         };
@@ -162,7 +163,7 @@ class TaskBuilderTest extends TestCase
         };
 
         $result = (new TaskBuilder($provider))
-            ->tool('dummy', fn($p) => ['ok' => true], 'Dummy tool', ['id' => ['string', 'Id']])
+            ->tool('dummy', fn ($p) => ['ok' => true], 'Dummy tool', ['id' => ['string', 'Id']])
             ->prompt('hello')
             ->run();
 
@@ -195,6 +196,7 @@ class TaskBuilderTest extends TestCase
         $result = (new TaskBuilder($provider))
             ->tool('get_status', function ($params) use (&$toolCalled) {
                 $toolCalled = true;
+
                 return ['order_id' => $params['order_id'], 'status' => 'shipped'];
             }, 'Get order status', ['order_id' => ['string', 'Order id']])
             ->prompt('status of my order')
@@ -223,7 +225,7 @@ class TaskBuilderTest extends TestCase
         };
 
         $result = (new TaskBuilder($provider))
-            ->tool('get_status', fn($params) => ['status' => 'shipped'], 'Get order status', ['order_id' => ['string', 'Order id']])
+            ->tool('get_status', fn ($params) => ['status' => 'shipped'], 'Get order status', ['order_id' => ['string', 'Order id']])
             ->prompt('status of my order')
             ->run();
 
@@ -315,7 +317,7 @@ class TaskBuilderTest extends TestCase
             }
         };
 
-        $toolInstance = new TestTool();
+        $toolInstance = new TestTool;
 
         $result = (new TaskBuilder($provider))
             ->tool('test_tool', $toolInstance)

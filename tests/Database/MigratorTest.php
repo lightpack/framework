@@ -1,9 +1,9 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Database\Migrations\Migrator;
 use Lightpack\Database\Adapters\Mysql;
+use Lightpack\Database\Migrations\Migrator;
 use Lightpack\Database\Schema\Schema;
+use PHPUnit\Framework\TestCase;
 
 final class MigratorTest extends TestCase
 {
@@ -38,7 +38,9 @@ final class MigratorTest extends TestCase
 
     private function deleteDir($dir)
     {
-        if (!is_dir($dir)) return;
+        if (! is_dir($dir)) {
+            return;
+        }
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $path = "$dir/$file";
@@ -60,6 +62,7 @@ return new class {
 PHP;
         $code = sprintf($code, addslashes($upSql), addslashes($downSql));
         file_put_contents($filePath, $code);
+
         return $filePath;
     }
 

@@ -12,9 +12,9 @@ class ArrayDriver implements DriverInterface
     {
         $data['id'] = uniqid();
         $data['timestamp'] = time();
-        
+
         static::$sentMails[] = $data;
-        
+
         return true;
     }
 

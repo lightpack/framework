@@ -3,12 +3,12 @@
 require_once __DIR__ . '/../Lucid/Product.php';
 
 use Lightpack\Container\Container;
+use Lightpack\Database\DB;
 use Lightpack\Database\Lucid\Collection;
+use Lightpack\Database\Lucid\Pagination as LucidPagination;
+use Lightpack\Database\Query\Query;
 use Lightpack\Http\Request;
 use Lightpack\Pagination\Pagination as BasePagination;
-use Lightpack\Database\Lucid\Pagination as LucidPagination;
-use Lightpack\Database\DB;
-use Lightpack\Database\Query\Query;
 use PHPUnit\Framework\TestCase;
 
 final class QueryTest extends TestCase
@@ -33,7 +33,7 @@ final class QueryTest extends TestCase
             return $this->db;
         });
         $container->register('request', function () {
-            return new Request();
+            return new Request;
         });
 
         // Set Request URI
@@ -913,7 +913,7 @@ final class QueryTest extends TestCase
         $callbackExecuted = false;
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->query->chunk(0, fn() => '');
+        $this->query->chunk(0, fn () => '');
     }
 
     public function testQueryChunkWithExactlyOneChunkSize()

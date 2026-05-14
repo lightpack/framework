@@ -13,7 +13,7 @@ class MaxRuleTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     // ========================================
@@ -30,7 +30,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -44,7 +44,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be greater than 100', $this->validator->getError('price'));
     }
@@ -59,7 +59,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -73,7 +73,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -87,7 +87,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -101,7 +101,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -115,7 +115,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -129,7 +129,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // -5 < -3, so it passes max(-3) validation
         $this->assertTrue($result->passes());
     }
@@ -144,7 +144,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // -2 > -3, so it fails max(-3) validation
         $this->assertTrue($result->fails());
     }
@@ -159,7 +159,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -177,7 +177,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -191,7 +191,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -205,7 +205,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -219,7 +219,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -237,7 +237,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -251,7 +251,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -265,7 +265,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -280,7 +280,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('tags'));
     }
@@ -295,7 +295,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields pass validation when empty
         $this->assertTrue($result->passes());
     }
@@ -315,7 +315,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('field'));
     }
@@ -330,7 +330,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields pass validation when empty
         $this->assertTrue($result->passes());
     }
@@ -346,7 +346,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('field'));
     }
@@ -361,7 +361,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields pass validation when empty
         $this->assertTrue($result->passes());
     }
@@ -376,7 +376,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -395,7 +395,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required', $this->validator->getError('price'));
     }
@@ -411,7 +411,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -427,7 +427,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be greater than 1000', $this->validator->getError('price'));
     }
@@ -447,7 +447,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertEquals('Price cannot exceed $1000', $this->validator->getError('price'));
     }
@@ -462,7 +462,7 @@ class MaxRuleTest extends TestCase
         $data = [
             'name' => 'Test Product',
             'price' => '500.00',
-            'stock' => '10'
+            'stock' => '10',
         ];
 
         $this->validator
@@ -473,7 +473,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -483,7 +483,7 @@ class MaxRuleTest extends TestCase
         $data = [
             'name' => 'Test Product',
             'price' => '15000.00',
-            'stock' => '10'
+            'stock' => '10',
         ];
 
         $this->validator
@@ -494,7 +494,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be greater than 10000', $this->validator->getError('price'));
     }
@@ -510,7 +510,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -525,7 +525,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -547,7 +547,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be greater than 10', $this->validator->getError('password'));
     }
@@ -564,7 +564,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -582,7 +582,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be greater than 10000', $this->validator->getError('price'));
     }
@@ -599,7 +599,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -615,7 +615,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -631,7 +631,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -651,7 +651,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Passes because 5 <= 10 (numeric validation)
         $this->assertTrue($result->passes());
     }
@@ -667,7 +667,7 @@ class MaxRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Fails because string length 16 > 10
         $this->assertTrue($result->fails());
     }

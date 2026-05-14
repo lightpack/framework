@@ -12,7 +12,7 @@ class MailTestHelper
      */
     public static function extractEmails(array $recipients): array
     {
-        return array_map(fn($r) => $r['email'], $recipients);
+        return array_map(fn ($r) => $r['email'], $recipients);
     }
 
     /**

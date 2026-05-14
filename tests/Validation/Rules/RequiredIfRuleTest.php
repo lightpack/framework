@@ -13,14 +13,14 @@ class RequiredIfRuleTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     public function testRequiredIfConditionMet(): void
     {
         $data = [
             'status' => 'rejected',
-            'reason' => ''
+            'reason' => '',
         ];
 
         $this->validator
@@ -29,7 +29,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('required when status is rejected', $this->validator->getError('reason'));
     }
@@ -38,7 +38,7 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'status' => 'rejected',
-            'reason' => 'Not suitable'
+            'reason' => 'Not suitable',
         ];
 
         $this->validator
@@ -47,7 +47,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -55,7 +55,7 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'status' => 'approved',
-            'reason' => ''
+            'reason' => '',
         ];
 
         $this->validator
@@ -64,7 +64,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -72,9 +72,9 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'user' => [
-                'type' => 'business'
+                'type' => 'business',
             ],
-            'company_name' => ''
+            'company_name' => '',
         ];
 
         $this->validator
@@ -83,7 +83,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -91,9 +91,9 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'user' => [
-                'type' => 'business'
+                'type' => 'business',
             ],
-            'company_name' => 'Acme Corp'
+            'company_name' => 'Acme Corp',
         ];
 
         $this->validator
@@ -102,7 +102,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -110,7 +110,7 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'payment_method' => 1,
-            'card_number' => ''
+            'card_number' => '',
         ];
 
         $this->validator
@@ -119,7 +119,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -127,7 +127,7 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'has_discount' => true,
-            'discount_code' => ''
+            'discount_code' => '',
         ];
 
         $this->validator
@@ -136,7 +136,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -149,8 +149,8 @@ class RequiredIfRuleTest extends TestCase
                 'type' => '',
                 'tmp_name' => '',
                 'error' => UPLOAD_ERR_NO_FILE,
-                'size' => 0
-            ]
+                'size' => 0,
+            ],
         ];
 
         $this->validator
@@ -159,7 +159,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -167,7 +167,7 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'status' => 'rejected',
-            'reason' => 'Too short'
+            'reason' => 'Too short',
         ];
 
         $this->validator
@@ -177,7 +177,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertStringContainsString('not be less than', $this->validator->getError('reason'));
     }
@@ -186,7 +186,7 @@ class RequiredIfRuleTest extends TestCase
     {
         $data = [
             'status' => 'rejected',
-            'reason' => ''
+            'reason' => '',
         ];
 
         $this->validator
@@ -196,7 +196,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $this->assertEquals('Please provide a reason for rejection', $this->validator->getError('reason'));
     }
@@ -207,7 +207,7 @@ class RequiredIfRuleTest extends TestCase
             'order_type' => 'delivery',
             'delivery_address' => '',
             'payment_method' => 'card',
-            'card_number' => ''
+            'card_number' => '',
         ];
 
         $this->validator
@@ -218,7 +218,7 @@ class RequiredIfRuleTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
         $errors = $this->validator->getErrors();
         $this->assertArrayHasKey('delivery_address', $errors);

@@ -28,8 +28,13 @@ class CustomCastTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -53,7 +58,7 @@ class CustomCastTest extends TestCase
 
         // Custom cast should convert to uppercase on get
         $this->assertEquals('JOHN DOE', $model->string_col);
-        
+
         // Built-in cast should still work
         $this->assertSame(25, $model->integer_col);
         $this->assertIsInt($model->integer_col);
@@ -61,7 +66,7 @@ class CustomCastTest extends TestCase
 
     public function testCustomCastOnSet()
     {
-        $model = new CustomCastModel();
+        $model = new CustomCastModel;
         $model->string_col = 'JANE DOE';
         $model->integer_col = '30';
         $model->save();
@@ -77,13 +82,13 @@ class CustomCastTest extends TestCase
 
     public function testCustomCastWithNullValue()
     {
-        $model = new CustomCastModel();
+        $model = new CustomCastModel;
         $model->string_col = null;
         $model->integer_col = null;
         $model->save();
 
         $refetched = new CustomCastModel($model->id);
-        
+
         $this->assertNull($refetched->string_col);
         $this->assertNull($refetched->integer_col);
     }
@@ -91,17 +96,17 @@ class CustomCastTest extends TestCase
     public function testBuiltInCastsStillWork()
     {
         // Verify that adding custom cast support didn't break built-in casts
-        $model = new CustomCastModel();
+        $model = new CustomCastModel;
         $model->string_col = 'test';
         $model->integer_col = '42';
         $model->save();
 
         $refetched = new CustomCastModel($model->id);
-        
+
         // Built-in int cast should work
         $this->assertIsInt($refetched->integer_col);
         $this->assertSame(42, $refetched->integer_col);
-        
+
         // Custom cast should work
         $this->assertEquals('TEST', $refetched->string_col);
     }

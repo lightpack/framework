@@ -4,13 +4,13 @@ namespace Lightpack;
 
 use JsonSerializable;
 use Lightpack\Config\Env;
-use Lightpack\Debug\Handler;
-use Lightpack\Http\Response;
 use Lightpack\Console\Console;
-use Lightpack\Routing\Dispatcher;
 use Lightpack\Container\Container;
 use Lightpack\Debug\ExceptionRenderer;
+use Lightpack\Debug\Handler;
 use Lightpack\Exceptions\FilterNotFoundException;
+use Lightpack\Http\Response;
+use Lightpack\Routing\Dispatcher;
 
 final class App
 {
@@ -207,10 +207,10 @@ final class App
             // if $filterAlias has ':' then it is a filter with parameters.
             [$filterName, $params] = explode(':', $filterAlias) + [1 => []];
             $filterName = trim($filterName);
-            $params = !empty($params) ? explode(',', $params) : [];
+            $params = ! empty($params) ? explode(',', $params) : [];
             $params = array_map('trim', $params);
 
-            if (!array_key_exists($filterName, $filters)) {
+            if (! array_key_exists($filterName, $filters)) {
                 throw new FilterNotFoundException(
                     "No filter class registered for: {$filterName}"
                 );

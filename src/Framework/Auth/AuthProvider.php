@@ -2,9 +2,8 @@
 
 namespace Lightpack\Auth;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Auth\Auth;
 use Lightpack\Container\Container;
+use Lightpack\Support\ProviderInterface;
 
 class AuthProvider implements ProviderInterface
 {
@@ -12,7 +11,7 @@ class AuthProvider implements ProviderInterface
     {
         $container->register('auth', function ($container) {
             $config = $container->get('config')->get('auth.drivers');
-        
+
             return new Auth('default', $config);
         });
 

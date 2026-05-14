@@ -1,9 +1,9 @@
 <?php
 
 use Lightpack\Container\Container;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
+use PHPUnit\Framework\TestCase;
 
 class RbacTraitIntegrationTest extends TestCase
 {
@@ -25,33 +25,38 @@ class RbacTraitIntegrationTest extends TestCase
         });
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
 
         // Create RBAC tables
         $this->schema = new Schema($this->db);
-        $this->schema->createTable('users', function(Table $table) {
+        $this->schema->createTable('users', function (Table $table) {
             $table->id();
             $table->varchar('name');
             $table->timestamps();
         });
-        $this->schema->createTable('roles', function(Table $table) {
+        $this->schema->createTable('roles', function (Table $table) {
             $table->id();
             $table->varchar('name');
             $table->timestamps();
         });
-        $this->schema->createTable('permissions', function(Table $table) {
+        $this->schema->createTable('permissions', function (Table $table) {
             $table->id();
             $table->varchar('name');
             $table->timestamps();
         });
-        $this->schema->createTable('user_role', function(Table $table) {
+        $this->schema->createTable('user_role', function (Table $table) {
             $table->column('user_id')->type('bigint')->attribute('unsigned');
             $table->column('role_id')->type('bigint')->attribute('unsigned');
         });
-        $this->schema->createTable('role_permission', function(Table $table) {
+        $this->schema->createTable('role_permission', function (Table $table) {
             $table->column('role_id')->type('bigint')->attribute('unsigned');
             $table->column('permission_id')->type('bigint')->attribute('unsigned');
         });
@@ -67,7 +72,8 @@ class RbacTraitIntegrationTest extends TestCase
         $this->db = null;
     }
 
-    protected function getUserModelInstance() {
+    protected function getUserModelInstance()
+    {
         return new class extends \Lightpack\Database\Lucid\Model {
             use \Lightpack\Rbac\RbacTrait;
             protected $table = 'users';
@@ -76,11 +82,13 @@ class RbacTraitIntegrationTest extends TestCase
         };
     }
 
-    protected function getRoleModelInstance() {
+    protected function getRoleModelInstance()
+    {
         return new class extends \Lightpack\Rbac\Models\Role {};
     }
 
-    protected function getPermissionModelInstance() {
+    protected function getPermissionModelInstance()
+    {
         return new class extends \Lightpack\Rbac\Models\Permission {};
     }
 
@@ -171,7 +179,7 @@ class RbacTraitIntegrationTest extends TestCase
     {
         $this->seedRbacData();
         $this->db->table('role_permission')->insert([
-            ['role_id' => 1, 'permission_id' => 11]
+            ['role_id' => 1, 'permission_id' => 11],
         ]);
         $user = $this->getUserModelInstance();
         $user->find(99);
@@ -260,7 +268,7 @@ class RbacTraitIntegrationTest extends TestCase
         $this->db->table('users')->insert(['id' => 100, 'name' => 'Other User']);
         $this->db->table('user_role')->insert([['user_id' => 100, 'role_id' => 2]]); // editor
         $users = $this->getUserModelInstance()::filters(['permission' => 10])->all();
-        $userIds =$users->column('user_id');
+        $userIds = $users->column('user_id');
         $this->assertContains(99, $userIds);
         $this->assertNotContains(100, $userIds);
     }
@@ -290,11 +298,11 @@ class RbacTraitIntegrationTest extends TestCase
         $this->seedRbacData();
         // Assign 'edit_post' permission to editor role as well
         $this->db->table('role_permission')->insert([
-            ['role_id' => 2, 'permission_id' => 10]
+            ['role_id' => 2, 'permission_id' => 10],
         ]);
         // Assign 'editor' role to user 99
         $this->db->table('user_role')->insert([
-            ['user_id' => 99, 'role_id' => 2]
+            ['user_id' => 99, 'role_id' => 2],
         ]);
         $user = $this->getUserModelInstance();
         $user->find(99);
@@ -384,4 +392,3 @@ class RbacTraitIntegrationTest extends TestCase
         $this->assertFalse($user->can('delete_post'));
     }
 }
-

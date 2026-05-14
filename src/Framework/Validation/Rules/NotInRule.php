@@ -10,13 +10,13 @@ class NotInRule
 {
     use ValidationMessageTrait;
 
-    public function __construct(private readonly array $values) 
+    public function __construct(private readonly array $values)
     {
         $this->message = "Must not be one of: " . implode(', ', $values);
     }
 
     public function __invoke($value): bool
     {
-        return !in_array($value, $this->values, true);
+        return ! in_array($value, $this->values, true);
     }
 }

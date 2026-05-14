@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Cache\Drivers\FileDriver;
+use PHPUnit\Framework\TestCase;
 
 final class FileDriverTest extends TestCase
 {
@@ -56,7 +56,7 @@ final class FileDriverTest extends TestCase
         $this->assertTrue($cache->has('key2'));
 
         $cache->flush();
-        
+
         $this->assertFalse($cache->has('key1'));
         $this->assertFalse($cache->has('key2'));
     }

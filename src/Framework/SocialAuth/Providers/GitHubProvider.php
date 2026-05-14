@@ -3,9 +3,9 @@
 namespace Lightpack\SocialAuth\Providers;
 
 use Lightpack\Config\Config;
-use RuntimeException;
 use Lightpack\Http\Http;
 use Lightpack\SocialAuth\SocialAuthInterface;
+use RuntimeException;
 
 class GitHubProvider implements SocialAuthInterface
 {
@@ -17,7 +17,7 @@ class GitHubProvider implements SocialAuthInterface
     {
         $this->config = $config->get('social.providers.github');
         $this->http = new Http;
-        
+
         if (empty($this->config['client_id']) || empty($this->config['client_secret'])) {
             throw new RuntimeException('GitHub OAuth credentials not configured');
         }
@@ -26,6 +26,7 @@ class GitHubProvider implements SocialAuthInterface
     public function stateless(): self
     {
         $this->stateless = true;
+
         return $this;
     }
 
@@ -35,7 +36,7 @@ class GitHubProvider implements SocialAuthInterface
             $params['state'] = base64_encode(json_encode([
                 'is_api' => true,
                 'state' => bin2hex(random_bytes(16)),
-                'provider' => 'github'
+                'provider' => 'github',
             ]));
         }
 
@@ -96,6 +97,7 @@ class GitHubProvider implements SocialAuthInterface
                 foreach ($response->json() as $email) {
                     if ($email['primary'] && $email['verified']) {
                         $userInfo['email'] = $email['email'];
+
                         break;
                     }
                 }

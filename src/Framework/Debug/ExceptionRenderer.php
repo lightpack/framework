@@ -2,8 +2,8 @@
 
 namespace Lightpack\Debug;
 
-use Throwable;
 use Lightpack\Exceptions\HttpException;
+use Throwable;
 
 class ExceptionRenderer
 {
@@ -33,13 +33,13 @@ class ExceptionRenderer
     public function render(Throwable $exc, string $errorType = 'Exception'): void
     {
         // Clean the output buffer first.
-        while(\ob_get_level() !== 0) {
+        while (\ob_get_level() !== 0) {
             \ob_end_clean();
         }
 
-        if(PHP_SAPI === 'cli') {
+        if (PHP_SAPI === 'cli') {
             $this->renderCli($exc, $errorType);
-        }elseif($this->environment !== 'development') {
+        } elseif ($this->environment !== 'development') {
             $this->renderProductionTemplate($exc);
         } else {
             $this->renderDevelopmentTemplate($exc, $errorType);
@@ -76,12 +76,12 @@ class ExceptionRenderer
     {
         return request()->expectsJson() ? 'json' : 'http';
 
-        return 'http'; 
+        return 'http';
     }
 
     private function getCodePreview(string $file, int $line): ?string
     {
-        if(!file_exists($file)) {
+        if (! file_exists($file)) {
             return null;
         }
 
@@ -103,6 +103,7 @@ class ExceptionRenderer
                 $preview .= "<div class='error-line'>";
                 $preview .= "<span class='line'>" . ($i + 1) . '</span>';
                 $preview .= "<span class='text'>" . htmlentities($text, ENT_QUOTES) . '</span></div>';
+
                 continue;
             }
 
@@ -117,14 +118,14 @@ class ExceptionRenderer
     private function sendHeaders(int|string $statusCode)
     {
         // Defensive: Only allow valid HTTP status codes (100-599)
-        if (!is_int($statusCode) || $statusCode < 100 || $statusCode > 599) {
+        if (! is_int($statusCode) || $statusCode < 100 || $statusCode > 599) {
             $statusCode = 500;
         }
-        
-        if (!headers_sent()) {
+
+        if (! headers_sent()) {
             header("HTTP/1.1 $statusCode", true, $statusCode);
 
-            if($this->getResponseFormat() === 'json') {
+            if ($this->getResponseFormat() === 'json') {
                 header('Content-Type:application/json');
             } else {
                 header('Content-Type:text/html');
@@ -163,27 +164,27 @@ class ExceptionRenderer
         $message = $exc->getMessage() ?: 'We are facing some technical issues. We will be back soon.';
         $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . "/production/layout.php";
         $statusCodeTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . "/production/{$statusCode}.php";
-        $errorTemplateNotFound = !file_exists($statusCodeTemplate);
-        
-        if('http' == $this->getResponseFormat()) {
-            if(file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
+        $errorTemplateNotFound = ! file_exists($statusCodeTemplate);
+
+        if ('http' == $this->getResponseFormat()) {
+            if (file_exists(DIR_VIEWS . '/errors/' . $statusCode . '.php')) {
                 $template = $statusCode;
                 $errorTemplate = DIR_VIEWS . "/errors/{$statusCode}.php";
-            } elseif(file_exists(DIR_VIEWS . '/errors/fallback.php')) {
+            } elseif (file_exists(DIR_VIEWS . '/errors/fallback.php')) {
                 $errorTemplate = DIR_VIEWS . "/errors/fallback.php";
             }
         }
 
         $this->sendHeaders($statusCode);
 
-        if($exc instanceof HttpException) {
+        if ($exc instanceof HttpException) {
             foreach ($exc->getHeaders() as $name => $value) {
                 header("$name: $value");
             }
         }
 
         $this->renderTemplate($errorTemplate, [
-            'code' => 'HTTP: ' . $statusCode, 
+            'code' => 'HTTP: ' . $statusCode,
             'status_code' => $statusCode,
             'error_template_not_found' => $errorTemplateNotFound,
             'message' => $message,
@@ -195,13 +196,13 @@ class ExceptionRenderer
     {
         $trace = $exc->getTrace();
         $vendorPath = 'vendor/lightpack/framework/';
-        
+
         // Look for the first file that's not in the framework
         foreach ($trace as $item) {
-            if (!isset($item['file'])) {
+            if (! isset($item['file'])) {
                 continue;
             }
-            
+
             if (strpos($item['file'], $vendorPath) === false) {
                 return [
                     'file' => $item['file'],
@@ -209,7 +210,7 @@ class ExceptionRenderer
                 ];
             }
         }
-        
+
         // If no application file found, return the original exception location
         return [
             'file' => $exc->getFile(),
@@ -220,15 +221,15 @@ class ExceptionRenderer
     private function renderDevelopmentTemplate(Throwable $exc, string $errorType = 'Exception')
     {
         $errorTemplate = __DIR__ . '/templates/' . $this->getResponseFormat() . '/development.php';
-        
-        if($errorType === 'Error') {
+
+        if ($errorType === 'Error') {
             $errorType = $this->getErrorType($exc->getCode());
         }
-        
+
         $statusCode = $exc->getCode() ?: 500;
         $statusCode = (int) $statusCode;
         $relevantTrace = $this->findRelevantTrace($exc);
-        
+
         $data['type'] = $errorType;
         $data['code'] = $statusCode;
         $data['message'] = $exc->getMessage();

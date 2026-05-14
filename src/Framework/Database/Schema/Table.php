@@ -28,8 +28,8 @@ class Table
     public function __construct(string $tableName, DB $connection)
     {
         $this->tableName = $tableName;
-        $this->tableColumns = new ColumnCollection();
-        $this->tableKeys = new ForeignKeyCollection();
+        $this->tableColumns = new ColumnCollection;
+        $this->tableKeys = new ForeignKeyCollection;
         $this->connection = $connection;
     }
 
@@ -158,7 +158,6 @@ class Table
         return $column;
     }
 
-
     /**
      * Add an INT column.
      */
@@ -167,6 +166,7 @@ class Table
         $column = new Column($name);
         $column->type('INT')->length($length);
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -178,6 +178,7 @@ class Table
         $column = new Column($name);
         $column->type('BIGINT');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -189,6 +190,7 @@ class Table
         $column = new Column($name);
         $column->type('SMALLINT');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -200,6 +202,7 @@ class Table
         $column = new Column($name);
         $column->type('TINYINT');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -211,6 +214,7 @@ class Table
         $column = new Column($name);
         $column->type('DATE');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -222,6 +226,7 @@ class Table
         $column = new Column($name);
         $column->type('TIME');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -233,6 +238,7 @@ class Table
         $column = new Column($name);
         $column->type('TIMESTAMP');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -244,6 +250,7 @@ class Table
         $column = new Column($name);
         $column->type('YEAR');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -255,6 +262,7 @@ class Table
         $column = new Column($name);
         $column->type('JSON');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -277,6 +285,7 @@ class Table
         $column = new Column($name);
         $column->type('CHAR')->length($length);
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -288,6 +297,7 @@ class Table
         $column = new Column($name);
         $column->type('TINYTEXT');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -299,6 +309,7 @@ class Table
         $column = new Column($name);
         $column->type('MEDIUMTEXT');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -310,6 +321,7 @@ class Table
         $column = new Column($name);
         $column->type('LONGTEXT');
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -321,6 +333,7 @@ class Table
         $column = new Column($name);
         $column->type('VARCHAR')->length(45);
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -332,6 +345,7 @@ class Table
         $column = new Column($name);
         $column->type('VARCHAR')->length(17);
         $this->tableColumns->add($column);
+
         return $column;
     }
 
@@ -447,7 +461,7 @@ class Table
 
     public function primary(string|array $columns): void
     {
-        if($this->altering()) {
+        if ($this->altering()) {
             $this->addPrimaryIndex($columns);
         } else {
             $this->indexes[] = (new IndexKey)->compile($columns, 'PRIMARY');
@@ -456,12 +470,12 @@ class Table
 
     /**
      * Drop primary key from the table.
-     * 
+     *
      * Note: Dropping the primary key does not remove the column from the table but only the primary key constraint.
-     * 
-     * Remember that there can be only one auto column and it must be defined as a key. So if the primary key is defined as auto, 
+     *
+     * Remember that there can be only one auto column and it must be defined as a key. So if the primary key is defined as auto,
      * you will need to remove the auto attribute first.
-     * 
+     *
      * Also do not forget to drop or alter foreign keys referencing the primary key.
      */
     public function dropPrimary(): void
@@ -473,13 +487,13 @@ class Table
 
     /**
      * Add unique index to one or more columns.
-     * 
-     * NOTE: You should remove duplicate values from the columns before 
+     *
+     * NOTE: You should remove duplicate values from the columns before
      * adding unique index otherwise it may result in "mysql error 1062".
      */
     public function unique(string|array $columns, ?string $indexName = null): void
     {
-        if($this->altering()) {
+        if ($this->altering()) {
             $this->addUniqueIndex($columns, $indexName);
         } else {
             $this->indexes[] = (new IndexKey)->compile($columns, 'UNIQUE', $indexName);
@@ -495,7 +509,7 @@ class Table
 
     public function index(string|array $columns, ?string $indexName = null): void
     {
-        if($this->altering()) {
+        if ($this->altering()) {
             $this->addIndex($columns, $indexName);
         } else {
             $this->indexes[] = (new IndexKey)->compile($columns, 'INDEX', $indexName);
@@ -511,7 +525,7 @@ class Table
 
     public function fulltext(string|array $columns, ?string $indexName = null): void
     {
-        if($this->altering()) {
+        if ($this->altering()) {
             $this->addFulltextIndex($columns, $indexName);
         } else {
             $this->indexes[] = (new IndexKey)->compile($columns, 'FULLTEXT', $indexName);
@@ -527,7 +541,7 @@ class Table
 
     public function spatial(string|array $columns, ?string $indexName = null): void
     {
-        if($this->altering()) {
+        if ($this->altering()) {
             $this->addSpatialIndex($columns, $indexName);
         } else {
             $this->indexes[] = (new IndexKey)->compile($columns, 'SPATIAL', $indexName);
@@ -583,7 +597,7 @@ class Table
     }
 
     /**
-     * Set context to 'create' mode which will help to determine if current 
+     * Set context to 'create' mode which will help to determine if current
      * table column, index or key is being added.
      */
     public function createContext(): self
@@ -594,7 +608,7 @@ class Table
     }
 
     /**
-     * Set context to 'create' mode which will help to determine if current 
+     * Set context to 'create' mode which will help to determine if current
      * table column, index or key is being modified.
      */
     public function alterContext(): self

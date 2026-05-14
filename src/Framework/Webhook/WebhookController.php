@@ -2,8 +2,8 @@
 
 namespace Lightpack\Webhook;
 
-use Lightpack\Http\Request;
 use Lightpack\Config\Config;
+use Lightpack\Http\Request;
 use Lightpack\Http\Response;
 
 class WebhookController
@@ -12,7 +12,8 @@ class WebhookController
         protected Config $config,
         protected Request $request,
         protected Response $response
-    ) {}
+    ) {
+    }
 
     /**
      * Generic handler for all webhook providers.
@@ -23,9 +24,9 @@ class WebhookController
         $config = $this->config->get('webhooks');
 
         if (
-            !isset($config[$provider]) ||
-            !isset($config[$provider]['handler']) ||
-            !class_exists($config[$provider]['handler'])
+            ! isset($config[$provider]) ||
+            ! isset($config[$provider]['handler']) ||
+            ! class_exists($config[$provider]['handler'])
         ) {
             return $this->response
                 ->setStatus(404)
@@ -45,6 +46,7 @@ class WebhookController
         } catch (\Throwable $e) {
             $webhookEvent->status = 'failed';
             $webhookEvent->save();
+
             throw $e;
         }
 

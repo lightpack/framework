@@ -14,18 +14,21 @@ class Otp
     public function length(int $length): self
     {
         $this->length = $length;
+
         return $this;
     }
 
     public function type(string $type): self
     {
         $this->type = $type;
+
         return $this;
     }
 
     public function charset(string $charset): self
     {
         $this->charset = $charset;
+
         return $this;
     }
 
@@ -43,6 +46,7 @@ class Otp
         if ($this->type === 'numeric') {
             $max = (int) str_repeat('9', $length);
             $num = random_int(0, $max);
+
             return str_pad((string)$num, $length, '0', STR_PAD_LEFT);
         }
 
@@ -57,6 +61,7 @@ class Otp
         }
 
         $pool = str_repeat($chars, (int) ceil($length / strlen($chars)));
+
         return substr(str_shuffle($pool), 0, $length);
     }
 }

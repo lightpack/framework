@@ -16,6 +16,7 @@ class CreateTransformer extends Command
         if (null === $className) {
             $this->output->error("Please provide a transformer class name.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -37,12 +38,13 @@ class CreateTransformer extends Command
         $filepath = $directory . '/' . $className . '.php';
         $displayPath = substr($directory, strlen(DIR_ROOT));
 
-        if ($file->exists($filepath) && !$force) {
+        if ($file->exists($filepath) && ! $force) {
             $this->output->newline();
             $this->output->error("Transformer already exists: .{$displayPath}/{$className}.php");
             $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -56,7 +58,7 @@ class CreateTransformer extends Command
         $file->write($filepath, $template);
         $this->output->success("✓ Transformer created: .{$displayPath}/{$className}.php");
         $this->output->newline();
-        
+
         return self::SUCCESS;
     }
 }

@@ -14,20 +14,20 @@ class PolymorphicPivot extends Pivot
      * @param string $pivot Name of the pivot table.
      * @param string $associateKey The pivot table column that references the related model (e.g., 'tag_id').
      * @param string $morphType The morph type value (e.g., 'posts').
-     * 
+     *
      * Note: Polymorphic pivot tables MUST have columns named 'morph_id' and 'morph_type'.
      * This enforced naming keeps things predictable and consistent with morphMany/morphOne/morphTo.
      */
     public function __construct(
-        Model $model, 
-        Model $baseModel, 
+        Model $model,
+        Model $baseModel,
         string $pivotTable,
         string $associateKey,
         string $morphType
     ) {
         // Polymorphic pivot always uses 'morph_id' as foreign key
         parent::__construct($model, $baseModel, $pivotTable, 'morph_id', $associateKey);
-        
+
         $this->morphType = $morphType;
     }
 
@@ -38,6 +38,7 @@ class PolymorphicPivot extends Pivot
     {
         $query = new Query($this->pivotTable, $this->getConnection());
         $query->where('morph_type', '=', $this->morphType);
+
         return $query;
     }
 
@@ -92,7 +93,7 @@ class PolymorphicPivot extends Pivot
      */
     public function attach($ids, array $attributes = [])
     {
-        if (!is_array($ids)) {
+        if (! is_array($ids)) {
             $ids = [$ids];
         }
 
@@ -115,7 +116,7 @@ class PolymorphicPivot extends Pivot
      */
     public function detach($ids, array $attributes = [])
     {
-        if (!is_array($ids)) {
+        if (! is_array($ids)) {
             $ids = [$ids];
         }
 

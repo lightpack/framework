@@ -8,18 +8,18 @@ use PDOStatement;
 
 /**
  * Database connection and query manager.
- * 
+ *
  * This class provides a clean interface for database operations including
  * query building, execution, and transaction management.
- * 
- * Transaction Management: this class implements a counter-based approach to 
+ *
+ * Transaction Management: this class implements a counter-based approach to
  * nested transactions:
- * 
+ *
  * Transaction Nesting:
  *    - First begin() starts a real database transaction
  *    - Subsequent begin() calls increment an internal counter
  *    - Only the outermost commit()/rollback() affects the database
- * 
+ *
  * Key Design Principles:
  *    - Clean Separation: Each transaction unit is truly atomic
  *    - Simple & Reliable: No complex savepoint management
@@ -89,18 +89,19 @@ class DB
         try {
             $this->statement = $this->connection->prepare($sql);
             $this->statement->execute($params ?? []);
+
             return $this->statement;
         } catch (\PDOException $e) {
             // Log the detailed error for debugging
             $this->logError($e, $sql, $params);
-            
+
             throw $e;
         }
     }
 
     /**
      * Takes a classname as string and returns a Lucid Model
-     * instance thereby making the class database connection 
+     * instance thereby making the class database connection
      * aware.
      *
      * @param string $model
@@ -152,12 +153,12 @@ class DB
 
     /**
      * Returns current transaction nesting level.
-     * 
+     *
      * Useful for:
      * - Debugging transaction state
      * - Testing nested transaction behavior
      * - Understanding current transaction context
-     * 
+     *
      * Values:
      * - Level 0: No active transaction
      * - Level 1: In a top-level transaction
@@ -165,42 +166,44 @@ class DB
      *
      * @return int Current transaction nesting level
      */
-    public function getTransactionLevel(): int 
+    public function getTransactionLevel(): int
     {
         return $this->transactionLevel;
     }
 
     /**
      * Initiates a transaction or increments nesting level.
-     * 
+     *
      * Behavior:
      * - First call: Starts real database transaction
      * - Subsequent calls: Increments nesting counter
      *
      * @throws PDOException If the driver does not support transactions
-     * @return boolean True on success
+     * @return bool True on success
      */
     public function begin(): bool
     {
-        if (!$this->inTransaction()) {
+        if (! $this->inTransaction()) {
             $this->transactionLevel = 1;
+
             return $this->connection->beginTransaction();
         }
-        
+
         $this->transactionLevel++;
+
         return true;
     }
 
     /**
      * Commits the current transaction or decrements nesting level.
-     * 
+     *
      * Behavior:
      * - No transaction active: Throws PDOException
      * - In nested transaction: Decrements counter only
      * - In top-level transaction: Commits all changes
-     * 
+     *
      * @throws PDOException If there is no active transaction
-     * @return boolean True on success
+     * @return bool True on success
      */
     public function commit(): bool
     {
@@ -210,23 +213,25 @@ class DB
 
         if ($this->transactionLevel > 1) {
             $this->transactionLevel--;
+
             return true;
         }
 
         $this->transactionLevel = 0;
+
         return $this->connection->commit();
     }
 
     /**
      * Rolls back the current transaction or decrements nesting level.
-     * 
+     *
      * Behavior:
      * - No transaction active: Throws PDOException
      * - In nested transaction: Decrements counter only
      * - In top-level transaction: Rolls back all changes
      *
      * @throws PDOException If there is no active transaction
-     * @return boolean True on success
+     * @return bool True on success
      */
     public function rollback(): bool
     {
@@ -236,29 +241,31 @@ class DB
 
         if ($this->transactionLevel > 1) {
             $this->transactionLevel--;
+
             return true;
         }
 
         $this->transactionLevel = 0;
+
         return $this->connection->rollBack();
     }
 
     /**
      * Quotes a string for use as a database identifier (table names, column names, etc.)
-     * 
+     *
      * @param string $identifier The identifier to quote
      * @return string The quoted identifier
      */
-    public function quoteIdentifier(string $identifier): string 
+    public function quoteIdentifier(string $identifier): string
     {
         // Split identifier into parts (for handling table.column format)
         $parts = explode('.', $identifier);
-        
+
         // Quote each part separately
-        $parts = array_map(function($part) {
+        $parts = array_map(function ($part) {
             return '`' . str_replace('`', '``', trim($part)) . '`';
         }, $parts);
-        
+
         // Join the parts back together
         return implode('.', $parts);
     }
@@ -305,7 +312,7 @@ class DB
 
     protected function logQuery($sql, $params)
     {
-        if (!get_env('APP_DEBUG')) {
+        if (! get_env('APP_DEBUG')) {
             return;
         }
 
@@ -337,7 +344,7 @@ class DB
     /**
      * Checks if inside a transaction.
      *
-     * @return boolean TRUE if a transaction is currently active, FALSE otherwise.
+     * @return bool TRUE if a transaction is currently active, FALSE otherwise.
      */
     public function inTransaction(): bool
     {
@@ -346,11 +353,11 @@ class DB
 
     /**
      * Execute a closure within a transaction.
-     * 
+     *
      * Uses our counter-based transaction implementation to provide a clean,
-     * closure-based API for transaction handling. The closure may optionally 
+     * closure-based API for transaction handling. The closure may optionally
      * return a value which will be available after successful commit.
-     * 
+     *
      * Example:
      * ```php
      * $result = $db->transaction(function() {
@@ -359,7 +366,7 @@ class DB
      *     return $user;  // Optional
      * });
      * ```
-     * 
+     *
      * @param callable $callback Closure containing transaction operations
      * @return mixed|null Value returned by closure after successful commit
      * @throws \Exception Rethrows any exception after rollback
@@ -367,13 +374,15 @@ class DB
     public function transaction(callable $callback)
     {
         $this->begin();
-        
+
         try {
             $result = $callback();
             $this->commit();
+
             return $result;
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->rollback();
+
             throw $e;
         }
     }

@@ -8,12 +8,12 @@ class Env
 
     public static function load(string $path): void
     {
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return;
         }
 
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        
+
         foreach ($lines as $line) {
             $line = (string) $line;
             if (str_starts_with(trim($line), '#')) {
@@ -27,7 +27,7 @@ class Env
 
                 // Remove quotes if present
                 $value = trim($value, '"\'');
-                
+
                 // Handle special values
                 $value = match (strtolower($value)) {
                     'true', '(true)' => true,
@@ -39,17 +39,19 @@ class Env
                 // Priority: $_ENV > $_SERVER > .env file
                 if (array_key_exists($key, $_ENV)) {
                     self::$cache[$key] = $_ENV[$key];
+
                     continue;
                 }
-                
+
                 if (array_key_exists($key, $_SERVER)) {
                     self::$cache[$key] = $_SERVER[$key];
+
                     continue;
                 }
 
                 // Handle variable interpolation
                 if (is_string($value) && str_contains($value, '${')) {
-                    $value = preg_replace_callback('/\${([^}]+)}/', function($matches) {
+                    $value = preg_replace_callback('/\${([^}]+)}/', function ($matches) {
                         return (string) (self::get($matches[1]) ?? '');
                     }, $value);
                 }
@@ -68,21 +70,21 @@ class Env
         if (array_key_exists($key, self::$cache)) {
             return self::$cache[$key];
         }
-        
+
         if (array_key_exists($key, $_ENV)) {
             return $_ENV[$key];
         }
-        
+
         if (array_key_exists($key, $_SERVER)) {
             return $_SERVER[$key];
         }
-        
+
         // Check process environment (set via putenv())
         $value = getenv($key);
         if ($value !== false) {
             return $value;
         }
-        
+
         return $default;
     }
 

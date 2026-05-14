@@ -2,4 +2,6 @@
 
 namespace Lightpack\Exceptions;
 
-class FileUploadException extends \Exception {}
+class FileUploadException extends \Exception
+{
+}

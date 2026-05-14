@@ -2,8 +2,8 @@
 
 namespace Lightpack\Tests\Console\Commands;
 
-use Lightpack\Console\Commands\WatchCommand;
 use Lightpack\Console\Args;
+use Lightpack\Console\Commands\WatchCommand;
 use Lightpack\File\File;
 use PHPUnit\Framework\TestCase;
 
@@ -17,9 +17,9 @@ class WatchCommandTest extends TestCase
         $this->command = new WatchCommand(['--path=' . sys_get_temp_dir()]);
         $this->tempDir = sys_get_temp_dir() . '/watch_test_' . uniqid();
         mkdir($this->tempDir);
-        
+
         // Initialize the file property that WatchCommand needs
-        $this->setPrivateProperty($this->command, 'file', new File());
+        $this->setPrivateProperty($this->command, 'file', new File);
     }
 
     protected function tearDown(): void
@@ -31,7 +31,7 @@ class WatchCommandTest extends TestCase
     {
         // Test Args parsing directly since getOptionValue() was removed
         $args = new Args(['--path=src,tests', '--ext=php,md', '--run=phpunit']);
-        
+
         $this->assertEquals('src,tests', $args->get('path'));
         $this->assertEquals('php,md', $args->get('ext'));
         $this->assertEquals('phpunit', $args->get('run'));
@@ -47,7 +47,7 @@ class WatchCommandTest extends TestCase
         // Test path parsing
         $this->invokeMethod($this->command, 'addPaths', [$this->tempDir]);
         $paths = $this->getPrivateProperty($this->command, 'paths');
-        
+
         $this->assertCount(1, $paths);
         $this->assertContains($this->tempDir, $paths);
     }
@@ -62,23 +62,27 @@ class WatchCommandTest extends TestCase
 
         // Set extensions to watch
         $this->setPrivateProperty($this->command, 'extensions', ['php']);
-        
+
         // Add paths and get initial hashes
         $this->invokeMethod($this->command, 'addPaths', [$this->tempDir]);
         $this->invokeMethod($this->command, 'updateFileHashes');
-        
+
         $hashes = $this->getPrivateProperty($this->command, 'fileHashes');
-        
+
         // Should only track .php files
         $this->assertCount(1, $hashes);
         $hasPhpFile = false;
         $hasTxtFile = false;
-        
+
         foreach ($hashes as $path => $hash) {
-            if (str_ends_with($path, '.php')) $hasPhpFile = true;
-            if (str_ends_with($path, '.txt')) $hasTxtFile = true;
+            if (str_ends_with($path, '.php')) {
+                $hasPhpFile = true;
+            }
+            if (str_ends_with($path, '.txt')) {
+                $hasTxtFile = true;
+            }
         }
-        
+
         $this->assertTrue($hasPhpFile, 'Should track .php files');
         $this->assertFalse($hasTxtFile, 'Should not track .txt files');
     }
@@ -88,6 +92,7 @@ class WatchCommandTest extends TestCase
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
         $method->setAccessible(true);
+
         return $method->invokeArgs($object, $parameters);
     }
 
@@ -96,6 +101,7 @@ class WatchCommandTest extends TestCase
         $reflection = new \ReflectionClass(get_class($object));
         $property = $reflection->getProperty($propertyName);
         $property->setAccessible(true);
+
         return $property->getValue($object);
     }
 
@@ -109,7 +115,7 @@ class WatchCommandTest extends TestCase
 
     private function removeDirectory(string $dir)
     {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return;
         }
 

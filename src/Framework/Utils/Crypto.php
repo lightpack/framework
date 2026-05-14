@@ -36,8 +36,8 @@ class Crypto
     }
 
     /**
-     * This method returns a 64 characters long random token hashed 
-     * using SHA-256. 
+     * This method returns a 64 characters long random token hashed
+     * using SHA-256.
      */
     public function token(): string
     {

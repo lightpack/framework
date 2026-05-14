@@ -2,9 +2,6 @@
 
 namespace Lightpack\Database\Lucid;
 
-use Lightpack\Database\Lucid\Model;
-use Lightpack\Database\Lucid\Collection;
-
 abstract class Transformer
 {
     protected array $includes = [];
@@ -24,6 +21,7 @@ abstract class Transformer
             foreach ($model as $item) {
                 $result[] = $this->transform($item);
             }
+
             return $result;
         }
 
@@ -53,6 +51,7 @@ abstract class Transformer
     public function fields(array $fields): self
     {
         $this->fields = $fields;
+
         return $this;
     }
 
@@ -87,6 +86,7 @@ abstract class Transformer
             foreach ($relation as $item) {
                 $results[] = $transformer->transform($item);
             }
+
             return $results;
         }
 
@@ -96,9 +96,10 @@ abstract class Transformer
     protected function parseInclude(string $include): array
     {
         $parts = explode('.', $include);
+
         return [
             array_shift($parts),
-            $parts
+            $parts,
         ];
     }
 
@@ -113,11 +114,11 @@ abstract class Transformer
     protected function resolveTransformer(string $relation): Transformer
     {
         $transformers = $this->transformerMap();
-        
-        if (!isset($transformers[$relation])) {
+
+        if (! isset($transformers[$relation])) {
             throw new \RuntimeException(
                 sprintf(
-                    "No transformer defined for relation '%s'. Define it in %s::transformerMap().", 
+                    "No transformer defined for relation '%s'. Define it in %s::transformerMap().",
                     $relation,
                     get_class($this)
                 )
@@ -129,7 +130,7 @@ abstract class Transformer
             $transformer = new $transformer;
         }
 
-        if (!$transformer instanceof Transformer) {
+        if (! $transformer instanceof Transformer) {
             throw new \RuntimeException(
                 sprintf(
                     "Invalid transformer for relation '%s'. Must be a Transformer instance or class name.",
@@ -143,7 +144,7 @@ abstract class Transformer
 
     protected function getNestedFields(): array
     {
-        if (!$this->currentRelation) {
+        if (! $this->currentRelation) {
             return [];
         }
 
@@ -168,7 +169,7 @@ abstract class Transformer
     protected function filterFields(array $data): array
     {
         // Only filter if fields are explicitly specified
-        if (!isset($this->fields['self'])) {
+        if (! isset($this->fields['self'])) {
             return $data;
         }
 
@@ -178,12 +179,13 @@ abstract class Transformer
                 $filtered[$field] = $data[$field];
             }
         }
+
         return $filtered;
     }
 
     protected function shouldLoadRelation(Model $model, string $relation): bool
     {
-        if (!method_exists($model, $relation)) {
+        if (! method_exists($model, $relation)) {
             return false;
         }
 

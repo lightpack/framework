@@ -1,13 +1,12 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+use Lightpack\Container\Container;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
-use Lightpack\Container\Container;
-use Lightpack\Webhook\WebhookController;
-use Lightpack\Webhook\WebhookEvent;
-use Lightpack\Webhook\BaseWebhookHandler;
 use Lightpack\Http\Response;
+use Lightpack\Webhook\BaseWebhookHandler;
+use Lightpack\Webhook\WebhookEvent;
+use PHPUnit\Framework\TestCase;
 
 class WebhookReceiverTest extends TestCase
 {
@@ -33,11 +32,16 @@ class WebhookReceiverTest extends TestCase
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $this->schema = new Schema($this->db);
         $this->container = Container::getInstance();
-        $this->container->register('db', fn() => $this->db);
+        $this->container->register('db', fn () => $this->db);
         $this->container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
 
@@ -53,7 +57,7 @@ class WebhookReceiverTest extends TestCase
 
     private function createWebhookEventsTable()
     {
-        $this->schema->createTable('webhook_events', function(Table $table) {
+        $this->schema->createTable('webhook_events', function (Table $table) {
             $table->id();
             $table->varchar('provider', 64);
             $table->varchar('event_id', 128)->nullable();
@@ -75,10 +79,10 @@ class WebhookReceiverTest extends TestCase
 
     private function getWebhookControllerInstance()
     {
-        $config = new \Lightpack\Config\Config();
+        $config = new \Lightpack\Config\Config;
         $config->set('webhooks', $this->testConfig['webhooks']);
-        $request = new \Lightpack\Http\Request();
-        $response = new \Lightpack\Http\Response();
+        $request = new \Lightpack\Http\Request;
+        $response = new \Lightpack\Http\Response;
 
         return new \Lightpack\Webhook\WebhookController($config, $request, $response);
     }
@@ -125,6 +129,7 @@ class WebhookReceiverTest extends TestCase
         $this->setRequest($payload, $signature);
         $this->testConfig['webhooks']['dummy']['handler'] = ExceptionThrowingWebhookHandler::class;
         $controller = $this->getWebhookControllerInstance();
+
         try {
             $controller->handle('dummy');
         } catch (\Throwable $e) {

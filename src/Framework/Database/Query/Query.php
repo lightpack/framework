@@ -35,6 +35,7 @@ class Query
     public function setConnection(DB $connection)
     {
         $this->connection = $connection;
+
         return $this;
     }
 
@@ -51,6 +52,7 @@ class Query
     public function setTable(string $table)
     {
         $this->table = $table;
+
         return $this;
     }
 
@@ -85,7 +87,7 @@ class Query
         // Loop data to prepare for parameter binding and validate types
         foreach ($data as $row) {
             foreach ($row as $value) {
-                if (!$this->isValidParameterType($value)) {
+                if (! $this->isValidParameterType($value)) {
                     throw new \InvalidArgumentException(
                         'Invalid parameter type. Allowed types are: null, bool, int, float, string, DateTime'
                     );
@@ -100,6 +102,7 @@ class Query
         $result = $this->connection->query($query, $this->bindings);
 
         $this->resetQuery();
+
         return $result;
     }
 
@@ -127,6 +130,7 @@ class Query
         $query = $compiler->compileUpdate(array_keys($data));
         $stmt = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+
         return $stmt->rowCount();
     }
 
@@ -142,18 +146,21 @@ class Query
         $query = $compiler->compileDelete();
         $stmt = $this->connection->query($query, $this->bindings);
         $this->resetQuery();
+
         return $stmt->rowCount();
     }
 
     public function alias(string $alias): static
     {
         $this->components['alias'] = $alias;
+
         return $this;
     }
 
     public function select(string ...$columns): static
     {
         $this->components['columns'] = $columns;
+
         return $this;
     }
 
@@ -178,6 +185,7 @@ class Query
         if ($bindings) {
             $this->bindings = array_merge($this->bindings, $bindings);
         }
+
         return $this;
     }
 
@@ -195,7 +203,7 @@ class Query
         // Operators that don't require a value
         $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
 
-        if (!in_array($operator, $operators)) {
+        if (! in_array($operator, $operators)) {
             if ($value === null) {
                 $value = $operator;
                 $operator = '=';
@@ -204,6 +212,7 @@ class Query
         }
 
         $this->components['having'][] = compact('column', 'operator', 'value', 'joiner');
+
         return $this;
     }
 
@@ -233,6 +242,7 @@ class Query
         if ($values) {
             $this->bindings = array_merge($this->bindings, $values);
         }
+
         return $this;
     }
 
@@ -253,6 +263,7 @@ class Query
     public function forUpdate(): static
     {
         $this->components['lock']['for_update'] = true;
+
         return $this;
     }
 
@@ -262,6 +273,7 @@ class Query
     public function skipLocked(): static
     {
         $this->components['lock']['skip_locked'] = true;
+
         return $this;
     }
 
@@ -269,18 +281,20 @@ class Query
     {
         $this->table = $table;
         $this->components['alias'] = $alias;
+
         return $this;
     }
 
     public function distinct(): static
     {
         $this->components['distinct'] = true;
+
         return $this;
     }
 
     /**
      * This method is used to conditionally build the where clause.
-     * 
+     *
      * @param string|Closure $column
      * @param string|null $operator
      * @param mixed $value
@@ -298,7 +312,7 @@ class Query
         // Operators that don't require a value
         $operators = ['IS NULL', 'IS NOT NULL', 'IS TRUE', 'IS NOT TRUE', 'IS FALSE', 'IS NOT FALSE'];
 
-        if (!in_array($operator, $operators)) {
+        if (! in_array($operator, $operators)) {
             if ($value === null) {
                 $value = $operator;
                 $operator = '=';
@@ -321,18 +335,21 @@ class Query
         if ($values) {
             $this->bindings = array_merge($this->bindings, $values);
         }
+
         return $this;
     }
 
     public function orWhereRaw(string $where, array $values = []): static
     {
         $this->whereRaw($where, $values, 'OR');
+
         return $this;
     }
 
     public function orWhere($column, ?string $operator = null, $value = null): static
     {
         $this->where($column, $operator, $value, 'OR');
+
         return $this;
     }
 
@@ -340,24 +357,28 @@ class Query
     {
         if ($values instanceof Closure) {
             $this->where($column, 'IN', $values, $joiner);
+
             return $this;
         }
 
         // Handle empty/null values: always false condition
         if (empty($values)) {
             $this->whereRaw('1=0', [], $joiner);
+
             return $this;
         }
 
         $operator = 'IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
         $this->bindings = array_merge($this->bindings, $values);
+
         return $this;
     }
 
     public function orWhereIn($column, $values): static
     {
         $this->whereIn($column, $values, 'OR');
+
         return $this;
     }
 
@@ -365,48 +386,56 @@ class Query
     {
         if ($values instanceof Closure) {
             $this->where($column, 'NOT IN', $values, $joiner);
+
             return $this;
         }
 
         // Handle empty/null values: always true condition
         if (empty($values)) {
             $this->whereRaw('1=1', [], $joiner);
+
             return $this;
         }
 
         $operator = 'NOT IN';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner');
         $this->bindings = array_merge($this->bindings, $values);
+
         return $this;
     }
 
     public function orWhereNotIn($column, $values): static
     {
         $this->whereNotIn($column, $values, 'OR');
+
         return $this;
     }
 
     public function whereNull(string $column): static
     {
         $this->where($column, 'IS NULL');
+
         return $this;
     }
 
     public function whereNotNull(string $column): static
     {
         $this->where($column, 'IS NOT NULL');
+
         return $this;
     }
 
     public function orWhereNull(string $column): static
     {
         $this->orWhere($column, 'IS NULL');
+
         return $this;
     }
 
     public function orWhereNotNull(string $column): static
     {
         $this->orWhere($column, 'IS NOT NULL');
+
         return $this;
     }
 
@@ -414,7 +443,7 @@ class Query
      * Add a full-text search clause using the database's native full-text search.
      *
      * Only supports databases with native full-text search (e.g., MySQL/MariaDB MATCH ... AGAINST).
-     * Requires a full-text index on the target columns. 
+     * Requires a full-text index on the target columns.
      * Only supports boolean mode.
      *
      * Example:
@@ -432,6 +461,7 @@ class Query
             return '`' . str_replace('`', '', $col) . '`';
         }, $columns));
         $sql = "MATCH($columnsSql) AGAINST (? $mode)";
+
         return $this->whereRaw($sql, [$term]);
     }
 
@@ -453,6 +483,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->whereRaw("DATE(`$column`) $operator ?", [$value]);
     }
 
@@ -470,6 +501,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->orWhereRaw("DATE(`$column`) $operator ?", [$value]);
     }
 
@@ -491,6 +523,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->whereRaw("YEAR(`$column`) $operator ?", [(int)$value]);
     }
 
@@ -508,6 +541,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->orWhereRaw("YEAR(`$column`) $operator ?", [(int)$value]);
     }
 
@@ -531,10 +565,10 @@ class Query
             $value = $operator;
             $operator = '=';
         }
-        
+
         // Convert month name to number
         $value = $this->normalizeMonth($value);
-        
+
         return $this->whereRaw("MONTH(`$column`) $operator ?", [(int)$value]);
     }
 
@@ -552,10 +586,10 @@ class Query
             $value = $operator;
             $operator = '=';
         }
-        
+
         // Convert month name to number
         $value = $this->normalizeMonth($value);
-        
+
         return $this->orWhereRaw("MONTH(`$column`) $operator ?", [(int)$value]);
     }
 
@@ -571,7 +605,7 @@ class Query
         if (is_numeric($month)) {
             return (int)$month;
         }
-        
+
         // Convert month name to number
         $monthMap = [
             'jan' => 1, 'january' => 1,
@@ -587,19 +621,19 @@ class Query
             'nov' => 11, 'november' => 11,
             'dec' => 12, 'december' => 12,
         ];
-        
+
         $monthLower = strtolower(trim($month));
-        
+
         if (isset($monthMap[$monthLower])) {
             return $monthMap[$monthLower];
         }
-        
+
         // If not found, try to parse as date string
         $timestamp = strtotime($month);
         if ($timestamp !== false) {
             return (int)date('n', $timestamp);
         }
-        
+
         // Default to the value as-is (will be cast to int)
         return (int)$month;
     }
@@ -622,6 +656,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->whereRaw("DAY(`$column`) $operator ?", [(int)$value]);
     }
 
@@ -639,6 +674,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->orWhereRaw("DAY(`$column`) $operator ?", [(int)$value]);
     }
 
@@ -660,6 +696,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->whereRaw("TIME(`$column`) $operator ?", [$value]);
     }
 
@@ -677,6 +714,7 @@ class Query
             $value = $operator;
             $operator = '=';
         }
+
         return $this->orWhereRaw("TIME(`$column`) $operator ?", [$value]);
     }
 
@@ -712,7 +750,7 @@ class Query
     {
         // Get current day of week (1=Monday, 7=Sunday)
         $dayOfWeek = (int) date('N');
-        
+
         if ($dayOfWeek === 7) {
             // If today is Sunday, week is from last Monday to today
             $startOfWeek = date('Y-m-d', strtotime('monday last week'));
@@ -722,7 +760,7 @@ class Query
             $startOfWeek = date('Y-m-d', strtotime('monday this week'));
             $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
         }
-        
+
         return $this->whereDate($column, '>=', $startOfWeek)
                     ->whereDate($column, '<=', $endOfWeek);
     }
@@ -737,6 +775,7 @@ class Query
     {
         $startOfLastWeek = date('Y-m-d', strtotime('monday last week'));
         $endOfLastWeek = date('Y-m-d', strtotime('sunday last week'));
+
         return $this->whereDate($column, '>=', $startOfLastWeek)
                     ->whereDate($column, '<=', $endOfLastWeek);
     }
@@ -762,6 +801,7 @@ class Query
     public function lastMonth(string $column = 'created_at'): static
     {
         $lastMonth = date('Y-m', strtotime('-1 month'));
+
         return $this->whereYear($column, date('Y', strtotime($lastMonth)))
                     ->whereMonth($column, date('m', strtotime($lastMonth)));
     }
@@ -798,6 +838,7 @@ class Query
     public function lastDays(int $days, string $column = 'created_at'): static
     {
         $startDate = date('Y-m-d', strtotime("-{$days} days"));
+
         return $this->whereDate($column, '>=', $startDate);
     }
 
@@ -811,6 +852,7 @@ class Query
     public function lastWeeks(int $weeks, string $column = 'created_at'): static
     {
         $startDate = date('Y-m-d', strtotime("-{$weeks} weeks"));
+
         return $this->whereDate($column, '>=', $startDate);
     }
 
@@ -824,6 +866,7 @@ class Query
     public function lastMonths(int $months, string $column = 'created_at'): static
     {
         $startDate = date('Y-m-d', strtotime("-{$months} months"));
+
         return $this->whereDate($column, '>=', $startDate);
     }
 
@@ -838,6 +881,7 @@ class Query
     public function olderThan(int $value, string $unit, string $column = 'created_at'): static
     {
         $date = date('Y-m-d H:i:s', strtotime("-{$value} {$unit}"));
+
         return $this->where($column, '<', $date);
     }
 
@@ -852,6 +896,7 @@ class Query
     public function newerThan(int $value, string $unit, string $column = 'created_at'): static
     {
         $date = date('Y-m-d H:i:s', strtotime("-{$value} {$unit}"));
+
         return $this->where($column, '>', $date);
     }
 
@@ -911,12 +956,14 @@ class Query
         $type = 'where_between';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner', 'type');
         $this->bindings = array_merge($this->bindings, $values);
+
         return $this;
     }
 
     public function orWhereBetween($column, $values): static
     {
         $this->whereBetween($column, $values, 'OR');
+
         return $this;
     }
 
@@ -926,59 +973,68 @@ class Query
         $type = 'where_not_between';
         $this->components['where'][] = compact('column', 'operator', 'values', 'joiner', 'type');
         $this->bindings = array_merge($this->bindings, $values);
+
         return $this;
     }
 
     public function orWhereNotBetween($column, $values): static
     {
         $this->whereNotBetween($column, $values, 'OR');
+
         return $this;
     }
 
     public function whereTrue(string $column): static
     {
         $this->where($column, 'IS TRUE');
+
         return $this;
     }
 
     public function orWhereTrue(string $column): static
     {
         $this->orWhere($column, 'IS TRUE');
+
         return $this;
     }
 
     public function whereFalse(string $column): static
     {
         $this->where($column, 'IS FALSE');
+
         return $this;
     }
 
     public function orWhereFalse(string $column): static
     {
         $this->orWhere($column, 'IS FALSE');
+
         return $this;
     }
 
     public function whereExists(Closure $callback): static
     {
-        $query = new Query();
+        $query = new Query;
         $callback($query);
         $this->components['where'][] = ['type' => 'where_exists', 'sub_query' => $query->toSql()];
         $this->bindings = array_merge($this->bindings, $query->bindings);
+
         return $this;
     }
 
     public function whereNotExists(Closure $callback): static
     {
-        $query = new Query();
+        $query = new Query;
         $callback($query);
         $this->components['where'][] = ['type' => 'where_not_exists', 'sub_query' => $query->toSql()];
+
         return $this;
     }
 
     public function join(string $table, string $column1, string $column2, $type = 'INNER')
     {
         $this->components['join'][] = compact('table', 'column1', 'column2', 'type');
+
         return $this;
     }
 
@@ -986,6 +1042,7 @@ class Query
     {
         $type = 'LEFT';
         $this->components['join'][] = compact('table', 'column1', 'column2', 'type');
+
         return $this;
     }
 
@@ -993,18 +1050,21 @@ class Query
     {
         $type = 'RIGHT';
         $this->components['join'][] = compact('table', 'column1', 'column2', 'type');
+
         return $this;
     }
 
     public function groupBy(string ...$columns)
     {
         $this->components['group'] = $columns;
+
         return $this;
     }
 
     public function orderBy(string $column, $sort = 'ASC')
     {
         $this->components['order'][] = compact('column', 'sort');
+
         return $this;
     }
 
@@ -1045,20 +1105,22 @@ class Query
     public function limit(int $limit)
     {
         $this->components['limit'] = $limit;
+
         return $this;
     }
 
     public function offset(int $offset)
     {
         $this->components['offset'] = $offset;
+
         return $this;
     }
 
     /**
      * This method paginates the results of the query.
      *
-     * @param integer|null $limit
-     * @param integer|null $page
+     * @param int|null $limit
+     * @param int|null $page
      * @return \Lightpack\Pagination\Pagination
      */
     public function paginate(?int $limit = null, ?int $page = null)
@@ -1094,7 +1156,7 @@ class Query
 
     public function notExists(): bool
     {
-        return !$this->exists();
+        return ! $this->exists();
     }
 
     public function count()
@@ -1265,12 +1327,14 @@ class Query
     public function getCompiledSelect()
     {
         $compiler = new Compiler($this);
+
         return $compiler->compileSelect();
     }
 
     public function getCompiledCount()
     {
         $compiler = new Compiler($this);
+
         return $compiler->compileCountQuery();
     }
 
@@ -1312,28 +1376,30 @@ class Query
 
     protected function whereColumnIsAClosure(Closure $callback, string $joiner)
     {
-        $query = new Query();
+        $query = new Query;
         call_user_func($callback, $query);
         $compiler = new Compiler($query);
         $subQuery = substr($compiler->compileWhere(), 6); // strip WHERE prefix
         $this->components['where'][] = ['type' => 'where_logical_group', 'sub_query' => $subQuery, 'joiner' => $joiner];
         $this->bindings = array_merge($this->bindings, $query->bindings);
+
         return $this;
     }
 
     protected function whereValueIsAClosure(Closure $callback, string $column, string $operator, string $joiner)
     {
-        $query = new Query();
+        $query = new Query;
         call_user_func($callback, $query);
         $subQuery = $query->toSql();
         $this->components['where'][] = ['type' => 'where_sub_query', 'sub_query' => $subQuery, 'joiner' => $joiner, 'column' => $column, 'operator' => $operator];
         $this->bindings = array_merge($this->bindings, $query->bindings);
+
         return $this;
     }
 
     /**
      * Conditionally add a where clause if the condition is a truthy value.
-     * 
+     *
      * @param mixed $condition The condition to check
      * @param string|Closure $column Column name or closure
      * @param string|null $operator Operator (optional)
@@ -1350,7 +1416,7 @@ class Query
 
     /**
      * Execute a query callback when condition is a truthy value.
-     * 
+     *
      * @param mixed $condition The condition to check
      * @param Closure $callback Callback to execute if condition is true
      */
@@ -1388,14 +1454,14 @@ class Query
         }
 
         // Handle both single and bulk upsert
-        if (!is_array(reset($data))) {
+        if (! is_array(reset($data))) {
             $data = [$data];
         }
 
         // Validate data types
         foreach ($data as $row) {
             foreach ($row as $value) {
-                if (!$this->isValidParameterType($value)) {
+                if (! $this->isValidParameterType($value)) {
                     throw new \InvalidArgumentException(
                         'Invalid parameter type. Allowed types are: null, bool, int, float, string, DateTime'
                     );
@@ -1416,6 +1482,7 @@ class Query
         $result = $this->connection->query($query, $this->bindings);
 
         $this->resetQuery();
+
         return $result;
     }
 
@@ -1440,6 +1507,7 @@ class Query
         $result = $this->connection->query($query, $this->bindings);
 
         $this->resetQuery();
+
         return $result;
     }
 }

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
 use Lightpack\Database\Lucid\Model;
@@ -12,21 +11,26 @@ use Lightpack\Exceptions\FileUploadException;
 use Lightpack\Http\Request;
 use Lightpack\Storage\LocalStorage;
 use Lightpack\Uploads\UploadTrait;
+use PHPUnit\Framework\TestCase;
 
 // Test config class for jobs that need config values
-class TestConfig {
+class TestConfig
+{
     protected $data = [
         'uploads.queue' => 'test-queue',
         'uploads.max_attempts' => 2,
         'uploads.retry_after' => '5 seconds',
     ];
-    public function get($key, $default = null) {
+
+    public function get($key, $default = null)
+    {
         return $this->data[$key] ?? $default;
     }
 }
 
 // Minimal test model for uploads
-class TestModel extends Model {
+class TestModel extends Model
+{
     use UploadTrait;
     protected $table = 'test_models';
     protected $primaryKey = 'id';
@@ -51,7 +55,7 @@ final class UploadTraitTest extends TestCase
         $this->schema = new Schema($this->db);
 
         // Create uploads and test_models tables
-        $this->schema->createTable('uploads', function(Table $table) {
+        $this->schema->createTable('uploads', function (Table $table) {
             $table->id();
             $table->varchar('model_type');
             $table->column('model_id')->type('bigint')->attribute('unsigned');
@@ -66,7 +70,7 @@ final class UploadTraitTest extends TestCase
             $table->column('meta')->type('json')->nullable();
             $table->timestamps();
         });
-        $this->schema->createTable('test_models', function(Table $table) {
+        $this->schema->createTable('test_models', function (Table $table) {
             $table->id();
             $table->varchar('name', 100)->nullable();
             $table->timestamps();
@@ -74,39 +78,44 @@ final class UploadTraitTest extends TestCase
 
         // Setup container
         $this->container = Container::getInstance();
-        $this->container->register('db', fn() => $this->db);
-        $this->container->register('logger', fn() => new class {
-            public function error($message, $context = []) {}
-            public function critical($message, $context = []) {}
+        $this->container->register('db', fn () => $this->db);
+        $this->container->register('logger', fn () => new class {
+            public function error($message, $context = [])
+            {
+            }
+
+            public function critical($message, $context = [])
+            {
+            }
         });
-        $this->container->register('config', fn() => new TestConfig());
-        $this->container->register('request', fn() => new Request());
+        $this->container->register('config', fn () => new TestConfig);
+        $this->container->register('request', fn () => new Request);
         $this->container->alias(Request::class, 'request');
 
         // Setup uploads directory
         $this->uploadsDir = sys_get_temp_dir() . '/lightpack_uploads_test';
-        if (!is_dir($this->uploadsDir)) {
+        if (! is_dir($this->uploadsDir)) {
             mkdir($this->uploadsDir, 0777, true);
         }
         // Point storage to temp uploads dir
-        $this->container->register('storage', fn() => new LocalStorage($this->uploadsDir));
+        $this->container->register('storage', fn () => new LocalStorage($this->uploadsDir));
 
         // Prepare fixtures dir
         $this->fixturesDir = __DIR__ . '/fixtures';
-        if (!is_dir($this->fixturesDir)) {
+        if (! is_dir($this->fixturesDir)) {
             mkdir($this->fixturesDir, 0777, true);
         }
         // Create sample files if missing
-        if (!file_exists($this->fixturesDir . '/test.txt')) {
+        if (! file_exists($this->fixturesDir . '/test.txt')) {
             file_put_contents($this->fixturesDir . '/test.txt', 'sample text file');
         }
-        if (!file_exists($this->fixturesDir . '/test.jpg')) {
+        if (! file_exists($this->fixturesDir . '/test.jpg')) {
             // Create a small blank jpeg
             $im = imagecreatetruecolor(10, 10);
             imagejpeg($im, $this->fixturesDir . '/test.jpg');
             imagedestroy($im);
         }
-        if (!file_exists($this->fixturesDir . '/test.pdf')) {
+        if (! file_exists($this->fixturesDir . '/test.pdf')) {
             file_put_contents($this->fixturesDir . '/test.pdf', '%PDF-1.4\n%Test PDF');
         }
 
@@ -131,13 +140,21 @@ final class UploadTraitTest extends TestCase
         unset($_SERVER['X_LIGHTPACK_TEST_UPLOAD']);
     }
 
-    private function rrmdir($dir) {
-        if (!is_dir($dir)) return;
+    private function rrmdir($dir)
+    {
+        if (! is_dir($dir)) {
+            return;
+        }
         foreach (scandir($dir) as $file) {
-            if ($file === '.' || $file === '..') continue;
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
             $path = "$dir/$file";
-            if (is_dir($path)) $this->rrmdir($path);
-            else unlink($path);
+            if (is_dir($path)) {
+                $this->rrmdir($path);
+            } else {
+                unlink($path);
+            }
         }
         rmdir($dir);
     }
@@ -147,7 +164,7 @@ final class UploadTraitTest extends TestCase
      */
     private function setTestFile(string $field, string $fixtureName, string $mimeType = 'text/plain')
     {
-        // Copies a file from test fixtures directory to a real temporary file 
+        // Copies a file from test fixtures directory to a real temporary file
         // (simulating what PHP does for real uploads).
         $src = $this->fixturesDir . '/' . $fixtureName;
         $tmp = tempnam(sys_get_temp_dir(), 'upload_');
@@ -160,7 +177,7 @@ final class UploadTraitTest extends TestCase
                 'tmp_name' => $tmp,
                 'error' => UPLOAD_ERR_OK,
                 'size' => filesize($src),
-            ]
+            ],
         ];
     }
 
@@ -192,11 +209,12 @@ final class UploadTraitTest extends TestCase
                 'tmp_name' => $tmp_names,
                 'error' => $errors,
                 'size' => $sizes,
-            ]
+            ],
         ];
     }
 
-    public function test_single_file_upload_and_retrieval() {
+    public function test_single_file_upload_and_retrieval()
+    {
         $this->setTestFile('file', 'test.txt', 'text/plain');
         $upload = $this->model->attach('file', [
             'collection' => 'test',
@@ -213,7 +231,8 @@ final class UploadTraitTest extends TestCase
         $this->assertEquals('test', $upload->collection);
     }
 
-    public function test_multiple_file_uploads_and_retrieval() {
+    public function test_multiple_file_uploads_and_retrieval()
+    {
         $this->setTestFilesArray('files', [
             ['fixture' => 'test.txt', 'mime' => 'text/plain'],
             ['fixture' => 'test.pdf', 'mime' => 'application/pdf'],
@@ -228,7 +247,8 @@ final class UploadTraitTest extends TestCase
         }
     }
 
-    public function test_private_upload_and_visibility() {
+    public function test_private_upload_and_visibility()
+    {
         $this->setTestFile('file', 'test.txt', 'text/plain');
         $upload = $this->model->attach('file', [
             'collection' => 'secret',
@@ -240,7 +260,8 @@ final class UploadTraitTest extends TestCase
         $this->assertStringContainsString('/private/', $upload->getPath());
     }
 
-    public function test_singleton_upload_replaces_previous() {
+    public function test_singleton_upload_replaces_previous()
+    {
         $this->setTestFile('file', 'test.txt', 'text/plain');
         $upload1 = $this->model->attach('file', [
             'collection' => 'avatar',
@@ -257,7 +278,8 @@ final class UploadTraitTest extends TestCase
         $this->assertNotEquals($upload1->id, $upload2->id);
     }
 
-    public function test_upload_and_detach_file() {
+    public function test_upload_and_detach_file()
+    {
         $this->setTestFile('file', 'test.txt', 'text/plain');
         $upload = $this->model->attach('file', ['collection' => 'temp']);
         $fullPath = $this->uploadsDir . '/' . $upload->getPath();
@@ -266,12 +288,14 @@ final class UploadTraitTest extends TestCase
         $this->assertFalse(file_exists($fullPath));
     }
 
-    public function test_upload_non_existent_file_throws_exception() {
+    public function test_upload_non_existent_file_throws_exception()
+    {
         $this->expectException(FileUploadException::class);
         $this->model->attach('no_file', ['collection' => 'fail']);
     }
 
-    public function test_image_upload_with_transformations() {
+    public function test_image_upload_with_transformations()
+    {
         $this->setTestFile('file', 'test.jpg', 'image/jpeg');
         $transformations = [
             'thumb_small' => ['resize', 'width' => 48, 'height' => 48],
@@ -287,7 +311,7 @@ final class UploadTraitTest extends TestCase
         foreach ($transformations as $variant => $opts) {
             $variantPath = $this->uploadsDir . '/' . $upload->getPath($variant);
             $this->assertFileExists($variantPath, "Variant file missing: $variantPath");
-            
+
             // Assert check dimensions
             $imageInfo = getimagesize($variantPath);
             $this->assertEquals($opts['width'], $imageInfo[0], "Width mismatch for $variant");
@@ -297,7 +321,8 @@ final class UploadTraitTest extends TestCase
         }
     }
 
-    public function test_multiple_image_uploads_with_transformations() {
+    public function test_multiple_image_uploads_with_transformations()
+    {
         $this->setTestFilesArray('images', [
             ['fixture' => 'test.jpg', 'mime' => 'image/jpeg'],
             ['fixture' => 'test.jpg', 'mime' => 'image/jpeg'],

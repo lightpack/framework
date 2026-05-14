@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Utils\Moment;
+use PHPUnit\Framework\TestCase;
 
 final class MomentTest extends TestCase
 {
@@ -23,7 +23,7 @@ final class MomentTest extends TestCase
 
     public function testDefaultTimezoneIsUTC()
     {
-        $moment = new Moment();
+        $moment = new Moment;
         $this->assertEquals('UTC', $moment->getTimezone());
     }
 
@@ -44,15 +44,15 @@ final class MomentTest extends TestCase
         // Create two moments with different timezones
         $utcMoment = new Moment('UTC');
         $istMoment = new Moment('Asia/Kolkata');
-        
+
         // Get current time in both timezones
         $utcTime = new DateTime('now', new DateTimeZone('UTC'));
         $istTime = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
-        
+
         // Format for hour comparison (avoiding minute/second precision issues in testing)
         $utcHour = $utcTime->format('H');
         $istHour = $istTime->format('H');
-        
+
         // Test that the hours differ by 5.5 (or 4.5 during DST)
         $hourDiff = ($istHour - $utcHour + 24) % 24;
         $this->assertTrue($hourDiff == 5 || $hourDiff == 6, 'IST should be ahead of UTC by 5/6 hours');
@@ -64,7 +64,7 @@ final class MomentTest extends TestCase
             ->format('Y-m-d')
             ->setTimezone('Asia/Kolkata')
             ->now();
-        
+
         $this->assertIsString($result);
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $result);
     }
@@ -72,7 +72,7 @@ final class MomentTest extends TestCase
     public function testToday()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d'), $this->moment->today());
         $this->assertEquals(date('Y-m-d'), $this->moment->today('Y-m-d'));
     }
@@ -80,7 +80,7 @@ final class MomentTest extends TestCase
     public function testTomorrow()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d', strtotime('tomorrow')), $this->moment->tomorrow());
         $this->assertEquals(date('Y-m-d', strtotime('tomorrow')), $this->moment->tomorrow('Y-m-d'));
     }
@@ -88,7 +88,7 @@ final class MomentTest extends TestCase
     public function testYesterday()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d', strtotime('yesterday')), $this->moment->yesterday());
         $this->assertEquals(date('Y-m-d', strtotime('yesterday')), $this->moment->yesterday('Y-m-d'));
     }
@@ -96,7 +96,7 @@ final class MomentTest extends TestCase
     public function testNext()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d', strtotime('next monday')), $this->moment->next('monday'));
         $this->assertEquals(date('Y/m/d', strtotime('next monday')), $this->moment->next('mon'));
 
@@ -107,7 +107,7 @@ final class MomentTest extends TestCase
     public function testLast()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d', strtotime('last monday')), $this->moment->last('monday'));
         $this->assertEquals(date('Y/m/d', strtotime('last monday')), $this->moment->last('mon'));
 
@@ -118,7 +118,7 @@ final class MomentTest extends TestCase
     public function testThisMonthEnd()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d', strtotime('last day of this month')), $this->moment->thisMonthEnd());
         $this->assertEquals(date('Y-m-d', strtotime('last day of this month')), $this->moment->thisMonthEnd('Y-m-d'));
     }
@@ -126,7 +126,7 @@ final class MomentTest extends TestCase
     public function testNextMonthEnd()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d', strtotime('last day of next month')), $this->moment->nextMonthEnd());
         $this->assertEquals(date('Y-m-d', strtotime('last day of next month')), $this->moment->nextMonthEnd('Y-m-d'));
     }
@@ -134,7 +134,7 @@ final class MomentTest extends TestCase
     public function testLastMonthEnd()
     {
         $this->moment->format('Y/m/d');
-        
+
         $this->assertEquals(date('Y/m/d', strtotime('last day of last month')), $this->moment->lastMonthEnd());
         $this->assertEquals(date('Y-m-d', strtotime('last day of last month')), $this->moment->lastMonthEnd('Y-m-d'));
     }
@@ -143,7 +143,7 @@ final class MomentTest extends TestCase
     {
         // Set timezone to ensure consistent testing
         $this->moment->setTimezone('UTC');
-        
+
         $diff = $this->moment->diff('2021-07-23 14:25:45', '2019-03-14 08:23:12');
 
         $this->assertEquals(2, $diff->y); // years

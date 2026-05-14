@@ -5,8 +5,8 @@ namespace Lightpack\Http;
 use Lightpack\Exceptions\InvalidHttpMethodException;
 use Lightpack\Exceptions\InvalidUrlSignatureException;
 use Lightpack\Routing\Route;
-use Lightpack\Utils\Url;
 use Lightpack\Utils\Arr;
+use Lightpack\Utils\Url;
 
 class Request
 {
@@ -38,7 +38,7 @@ class Request
         $this->basepath = $basepath ?? dirname($_SERVER['SCRIPT_NAME']);
         $this->files = new Files($_FILES ?? []);
         $this->headers = new Header;
-        $this->arr = new Arr();
+        $this->arr = new Arr;
         $this->setMethod();
     }
 
@@ -165,12 +165,14 @@ class Request
             }
             // Merge query params and JSON body, JSON body takes precedence
             $data = array_merge($_GET, $this->jsonBody ?? []);
+
             return $key === null ? $data : $this->arr->get($key, $data, $default);
         }
 
         // For spoofed methods, merge POST and query params (POST takes precedence)
         if ($this->isSpoofed()) {
             $data = array_merge($_GET, $_POST);
+
             return $key === null ? $data : $this->arr->get($key, $data, $default);
         }
 
@@ -199,13 +201,13 @@ class Request
 
     /**
      * Get the value of a file or files associated with a given key.
-     * 
+     *
      * It returns null if the key is not found, an UploadedFile if the
      * key has a single file, or an array of UploadedFile objects if
      * the key has multiple files.
      *
      * @param string|null $key The key to retrieve the file(s) for. If null, returns all files.
-     * @return null|UploadedFile|UploadedFile[] 
+     * @return null|UploadedFile|UploadedFile[]
      */
     public function file(?string $key = null)
     {
@@ -304,11 +306,13 @@ class Request
         // Check forwarded host from load balancer
         if ($this->headers->has('X-Forwarded-Host')) {
             $hosts = explode(',', $this->headers->get('X-Forwarded-Host'));
+
             // Strip port if present
             return explode(':', trim($hosts[0]))[0];
         }
 
         $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
+
         // Strip port if present
         return explode(':', $host)[0];
     }
@@ -430,7 +434,7 @@ class Request
             $this->isSpoofed = isset($_POST['_method']);
         }
 
-        if (!in_array($method, self::$verbs)) {
+        if (! in_array($method, self::$verbs)) {
             throw new InvalidHttpMethodException('Invalid HTTP request method ' . $method);
         }
 
@@ -439,7 +443,7 @@ class Request
         return $this;
     }
 
-    /** 
+    /**
      * Set the resolved route instance for the current request.
      */
     public function setRoute(Route $route): self
@@ -467,7 +471,7 @@ class Request
     public function matchesRoute($patterns): bool
     {
         $route = $this->route();
-        if (!$route || !$route->getName()) {
+        if (! $route || ! $route->getName()) {
             return false;
         }
         $name = $route->getName();
@@ -476,12 +480,13 @@ class Request
                 return true;
             }
         }
+
         return false;
     }
 
     /**
      * Get the route parameters.
-     * 
+     *
      * @return mixed The value of the specified parameter, or an array of all parameters if $key is null.
      */
     public function params(?string $key, $default = null)
@@ -507,7 +512,7 @@ class Request
 
     public function hasInValidSignature(array $ignoredParameters = []): bool
     {
-        return !$this->hasValidSignature($ignoredParameters);
+        return ! $this->hasValidSignature($ignoredParameters);
     }
 
     private function parseBody()
@@ -552,7 +557,7 @@ class Request
 
     /**
      * Get the client's IP address.
-     * 
+     *
      * @throws \RuntimeException if IP address cannot be determined
      */
     public function ip(): string
@@ -560,6 +565,7 @@ class Request
         // Check X-Forwarded-For from load balancer/proxy
         if ($this->headers->has('X-Forwarded-For')) {
             $ips = explode(',', $this->headers->get('X-Forwarded-For'));
+
             return trim($ips[0]);
         }
 
@@ -568,7 +574,7 @@ class Request
             return $this->headers->get('X-Real-IP');
         }
 
-        if (!isset($_SERVER['REMOTE_ADDR'])) {
+        if (! isset($_SERVER['REMOTE_ADDR'])) {
             throw new \RuntimeException('Could not determine client IP address');
         }
 

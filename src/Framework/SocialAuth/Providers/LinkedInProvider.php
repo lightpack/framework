@@ -3,9 +3,9 @@
 namespace Lightpack\SocialAuth\Providers;
 
 use Lightpack\Config\Config;
-use RuntimeException;
 use Lightpack\Http\Http;
 use Lightpack\SocialAuth\SocialAuthInterface;
+use RuntimeException;
 
 class LinkedInProvider implements SocialAuthInterface
 {
@@ -17,7 +17,7 @@ class LinkedInProvider implements SocialAuthInterface
     {
         $this->config = $config->get('social.providers.linkedin');
         $this->http = new Http;
-        
+
         if (empty($this->config['client_id']) || empty($this->config['client_secret'])) {
             throw new RuntimeException('LinkedIn OAuth credentials not configured');
         }
@@ -26,6 +26,7 @@ class LinkedInProvider implements SocialAuthInterface
     public function stateless(): self
     {
         $this->stateless = true;
+
         return $this;
     }
 
@@ -35,7 +36,7 @@ class LinkedInProvider implements SocialAuthInterface
             $params['state'] = base64_encode(json_encode([
                 'is_api' => true,
                 'state' => bin2hex(random_bytes(16)),
-                'provider' => 'linkedin'
+                'provider' => 'linkedin',
             ]));
         }
 
@@ -71,7 +72,7 @@ class LinkedInProvider implements SocialAuthInterface
         $tokens = $response->json();
         $idToken = $tokens['id_token'] ?? null;
 
-        if (!$idToken) {
+        if (! $idToken) {
             throw new RuntimeException('No ID token received from LinkedIn');
         }
 
@@ -82,8 +83,8 @@ class LinkedInProvider implements SocialAuthInterface
         }
 
         $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $tokenParts[1])), true);
-        
-        if (!$payload) {
+
+        if (! $payload) {
             throw new RuntimeException('Failed to decode ID token');
         }
 

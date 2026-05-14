@@ -1,4 +1,5 @@
 <?php
+
 namespace Lightpack\Pdf\Driver;
 
 use Dompdf\Dompdf;
@@ -11,7 +12,7 @@ class DompdfDriver implements DriverInterface
 
     public function __construct(array $options = [])
     {
-        $dompdfOptions = new Options();
+        $dompdfOptions = new Options;
         foreach ($options as $key => $value) {
             $dompdfOptions->set($key, $value);
         }
@@ -38,9 +39,9 @@ class DompdfDriver implements DriverInterface
     {
         $this->applyMeta();
         $this->dompdf->render();
+
         return $this->dompdf->output();
     }
-
 
     protected function applyMeta()
     {

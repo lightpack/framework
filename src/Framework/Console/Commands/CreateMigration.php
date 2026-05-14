@@ -15,39 +15,44 @@ class CreateMigration extends Command
 
         if ($support === '') {
             $this->showError("You must provide a value for --support. Example: --support=users", null, array_keys($schemas));
+
             return self::FAILURE;
         }
 
         if ($support) {
-            if (!isset($schemas[$support])) {
+            if (! isset($schemas[$support])) {
                 $this->showError("Unknown support schema: \"{$support}\".", null, array_keys($schemas));
+
                 return self::FAILURE;
             }
             [$filepath, $template] = $this->buildMigrationFile("{$support}_schema", $schemas[$support]);
         } else {
             $migration = $this->args->argument(0);
-            
-            if (!$migration) {
+
+            if (! $migration) {
                 $this->showError(
                     "Please provide a migration file name.",
                     "You can use --support=<schema> for a predefined migration.",
                     array_keys($schemas)
                 );
+
                 return self::FAILURE;
             }
-            if (!preg_match('/^[\w_]+$/', $migration)) {
+            if (! preg_match('/^[\w_]+$/', $migration)) {
                 $this->showError("Migration file name can only contain alphanumeric characters and underscores.");
+
                 return self::FAILURE;
             }
             [$filepath, $template] = $this->buildMigrationFile($migration);
         }
 
-        if (file_exists($filepath) && !$force) {
+        if (file_exists($filepath) && ! $force) {
             $this->output->newline();
             $this->output->error("Migration already exists: {$filepath}");
             $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -55,7 +60,7 @@ class CreateMigration extends Command
         $this->output->newline();
         $this->output->success("✓ Migration created in {$filepath}");
         $this->output->newline();
-        
+
         return self::SUCCESS;
     }
 
@@ -89,9 +94,9 @@ class CreateMigration extends Command
         $filename = "{$timestamp}_{$name}.php";
         $filepath = "./database/migrations/{$filename}";
         $template = $templateClass ? $templateClass::getTemplate() : MigrationView::getTemplate();
+
         return [$filepath, $template];
     }
-
 
     /**
      * Parses the --support argument. Returns string value, or empty string if --support= is present with no value, or null if not present.
@@ -106,6 +111,7 @@ class CreateMigration extends Command
                 return substr($arg, strlen('--support='));
             }
         }
+
         return null;
     }
 
@@ -115,6 +121,7 @@ class CreateMigration extends Command
             $migration = date('YmdHis') . '_' . $support . '_schema';
             $migrationFilepath = './database/migrations/' . $migration . '.php';
             $template = $schemas[$support]::getTemplate();
+
             return [$migrationFilepath, $template];
         } else {
             $output->newline();
@@ -123,6 +130,7 @@ class CreateMigration extends Command
             $output->newline();
             $output->infoLabel();
             $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
+
             return null;
         }
     }
@@ -138,18 +146,21 @@ class CreateMigration extends Command
             $output->infoLabel(' Tip ');
             $output->info("You can use --support=<schema> for a predefined migration.");
             $output->info("Supported: " . implode(', ', array_keys($schemas)) . ".");
+
             return null;
         }
-        if (!preg_match('/^[\w_]+$/', $migration)) {
+        if (! preg_match('/^[\w_]+$/', $migration)) {
             $output->newline();
             $output->errorLabel();
             $output->newline();
             $output->error("Migration file name can only contain alphanumeric characters and underscores.");
+
             return null;
         }
         $migration = date('YmdHis') . '_' . $migration;
         $migrationFilepath = './database/migrations/' . $migration . '.php';
         $template = MigrationView::getTemplate();
+
         return [$migrationFilepath, $template];
     }
 

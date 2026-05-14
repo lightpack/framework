@@ -4,7 +4,7 @@ use Lightpack\Database\Lucid\Transformer;
 
 class ProjectTransformer extends Transformer
 {
-    protected function data($model): array 
+    protected function data($model): array
     {
         return [
             'id' => $model->id,
@@ -12,7 +12,7 @@ class ProjectTransformer extends Transformer
         ];
     }
 
-    protected function transformerMap(): array 
+    protected function transformerMap(): array
     {
         return [
             'tasks' => TaskTransformer::class,

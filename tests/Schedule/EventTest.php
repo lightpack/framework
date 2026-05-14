@@ -1,7 +1,7 @@
 <?php
 
-use Lightpack\Schedule\Event;
 use Lightpack\Schedule\Cron;
+use Lightpack\Schedule\Event;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -67,7 +67,7 @@ class ScheduleEventTest extends TestCase
         // Set the mock Cron instance
         $event->setCronInstance($cron);
 
-        $dateTime = new DateTime();
+        $dateTime = new DateTime;
         $isDueAt = $event->isDueAt($dateTime);
 
         $this->assertTrue($isDueAt);

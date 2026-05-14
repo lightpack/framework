@@ -19,7 +19,7 @@ abstract class Migration
     protected $connection;
 
     abstract public function up(): void;
-    
+
     abstract public function down(): void;
 
     /**
@@ -72,7 +72,7 @@ abstract class Migration
 
     /**
      * Boot migration.
-     * 
+     *
      * @internal This method is called by the migration runner.
      */
     public function boot(Schema $schema, DB $connection): void

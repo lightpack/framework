@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Cache\Drivers\NullDriver;
+use PHPUnit\Framework\TestCase;
 
 final class NullDriverTest extends TestCase
 {
     public function testCanStoreItem()
     {
-        $nullStorage = new NullDriver();
+        $nullStorage = new NullDriver;
         $nullStorage->set('name', 'Lightpack', time() + (5 * 60));
 
         $this->assertFalse($nullStorage->has('name'));
@@ -18,7 +18,7 @@ final class NullDriverTest extends TestCase
 
     public function testCanDeleteItem()
     {
-        $nullStorage = new NullDriver();
+        $nullStorage = new NullDriver;
         $nullStorage->set('name', 'Lightpack', time() + (5 * 60));
 
         $this->assertFalse($nullStorage->has('name'));

@@ -2,8 +2,6 @@
 
 namespace Lightpack\Routing;
 
-use Lightpack\Http\Request;
-
 /**
  * Responsible to determine the correct controller/action to execute.
  */

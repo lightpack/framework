@@ -2,9 +2,8 @@
 
 namespace Lightpack\Config;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Config\Config;
 use Lightpack\Container\Container;
+use Lightpack\Support\ProviderInterface;
 
 class ConfigProvider implements ProviderInterface
 {
@@ -13,6 +12,7 @@ class ConfigProvider implements ProviderInterface
         $container->register('config', function ($container) {
             // Pass DIR_CONFIG if defined, otherwise Config will throw an exception
             $configDir = defined('DIR_CONFIG') ? \DIR_CONFIG : null;
+
             return new Config($configDir);
         });
 

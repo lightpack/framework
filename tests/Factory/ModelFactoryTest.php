@@ -1,9 +1,9 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
-use Lightpack\Factory\ModelFactory;
 use Lightpack\Database\Lucid\Model;
+use Lightpack\Factory\ModelFactory;
+use PHPUnit\Framework\TestCase;
 
 class TestFactoryModel extends Model
 {
@@ -45,10 +45,15 @@ class ModelFactoryTest extends TestCase
         )');
 
         $container = Container::getInstance();
-        $container->register('db', fn() => $this->db);
-        $container->register('logger', fn() => new class {
-            public function error($message, $context = []) {}
-            public function critical($message, $context = []) {}
+        $container->register('db', fn () => $this->db);
+        $container->register('logger', fn () => new class {
+            public function error($message, $context = [])
+            {
+            }
+
+            public function critical($message, $context = [])
+            {
+            }
         });
     }
 
@@ -72,7 +77,7 @@ class ModelFactoryTest extends TestCase
     {
         $factory = new DummyTestFactory;
         $models = $factory->times(2)->save([
-            'name' => 'Batch Name'
+            'name' => 'Batch Name',
         ]);
 
         $this->assertCount(2, $models);

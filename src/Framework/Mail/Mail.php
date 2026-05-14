@@ -26,11 +26,11 @@ abstract class Mail
     public function __construct(MailManager $mailManager)
     {
         $this->mailManager = $mailManager;
-        
+
         // Set default from address
         $this->from = [
             'email' => get_env('MAIL_FROM_ADDRESS'),
-            'name' => get_env('MAIL_FROM_NAME', '')
+            'name' => get_env('MAIL_FROM_NAME', ''),
         ];
     }
 
@@ -41,18 +41,21 @@ abstract class Mail
     public function driver(string $name): self
     {
         $this->driverName = $name;
+
         return $this;
     }
 
     public function from(string $address, string $name = ''): self
     {
         $this->from = ['email' => $address, 'name' => $name];
+
         return $this;
     }
 
     public function to(string $address, string $name = ''): self
     {
         $this->to[] = ['email' => $address, 'name' => $name];
+
         return $this;
     }
 
@@ -63,6 +66,7 @@ abstract class Mail
                 list($email, $recipientName) = $this->normalizeAddress($key, $value);
                 $this->replyTo[] = ['email' => $email, 'name' => $recipientName];
             }
+
             return $this;
         }
 
@@ -80,6 +84,7 @@ abstract class Mail
                 list($email, $recipientName) = $this->normalizeAddress($key, $value);
                 $this->cc[] = ['email' => $email, 'name' => $recipientName];
             }
+
             return $this;
         }
 
@@ -97,6 +102,7 @@ abstract class Mail
                 list($email, $recipientName) = $this->normalizeAddress($key, $value);
                 $this->bcc[] = ['email' => $email, 'name' => $recipientName];
             }
+
             return $this;
         }
 
@@ -117,6 +123,7 @@ abstract class Mail
                     $this->attachments[] = ['path' => $key, 'filename' => $value];
                 }
             }
+
             return $this;
         }
 
@@ -130,18 +137,21 @@ abstract class Mail
     public function subject(string $subject): self
     {
         $this->subject = $subject;
+
         return $this;
     }
 
     public function body(string $body): self
     {
         $this->htmlBody = $body;
+
         return $this;
     }
 
     public function altBody(string $body): self
     {
         $this->textBody = $body;
+
         return $this;
     }
 
@@ -180,12 +190,12 @@ abstract class Mail
     public function send()
     {
         $this->renderViews();
-        
+
         // Get driver from injected MailManager
-        $driver = $this->driverName 
+        $driver = $this->driverName
             ? $this->mailManager->driver($this->driverName)
             : $this->mailManager->driver();
-        
+
         return $driver->send([
             'to' => $this->to,
             'from' => $this->from,
@@ -234,6 +244,4 @@ abstract class Mail
 
         return [$key, $value];
     }
-
 }
-

@@ -38,19 +38,19 @@ class Template
 
     /**
      * @deprecated Use layout() and content() instead.
-     * 
-     * Render the embedded child template if __embed is set, 
+     *
+     * Render the embedded child template if __embed is set,
      * else return empty string.
      */
     public function embed(): string
     {
-        if (!$this->embeddedTemplate) {
+        if (! $this->embeddedTemplate) {
             return '';
         }
-        
+
         $template = $this->embeddedTemplate;
         $this->embeddedTemplate = null; // Prevent recursion
-        
+
         // Render embedded template directly with current data (no merge needed)
         return $this->renderTemplateWithData($template, $this->data);
     }
@@ -115,7 +115,7 @@ class Template
         $stack = $this->currentStack;
         $this->currentStack = null;
 
-        if (!isset($this->stacks[$stack])) {
+        if (! isset($this->stacks[$stack])) {
             $this->stacks[$stack] = [];
         }
 
@@ -127,7 +127,7 @@ class Template
      */
     public function stack(string $stack): string
     {
-        if (!isset($this->stacks[$stack])) {
+        if (! isset($this->stacks[$stack])) {
             return '';
         }
 
@@ -136,7 +136,7 @@ class Template
 
     protected function throwExceptionIfTemplateNotFound(string $template)
     {
-        if (!file_exists($template)) {
+        if (! file_exists($template)) {
             throw new \Lightpack\Exceptions\TemplateNotFoundException(
                 sprintf("Error: Could not load template %s", $template)
             );
@@ -157,7 +157,7 @@ class Template
         // Save layout state for nested renders (includes/components)
         $savedLayoutFile = $this->layoutFile;
         $this->layoutFile = null;
-        
+
         $obLevel = ob_get_level();
         ob_start();
 
@@ -171,13 +171,14 @@ class Template
 
         // Check if this template declared a layout
         $declaredLayout = $this->layoutFile;
-        
+
         // Restore saved layout state
         $this->layoutFile = $savedLayoutFile;
 
         // If a layout was declared, render it with the current output as content
         if ($declaredLayout) {
             $this->childContent = $output;
+
             return $this->renderTemplateWithData($declaredLayout, $data);
         }
 

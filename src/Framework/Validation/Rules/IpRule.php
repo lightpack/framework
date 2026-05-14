@@ -9,7 +9,7 @@ use Lightpack\Validation\Traits\ValidationMessageTrait;
 class IpRule
 {
     use ValidationMessageTrait;
-    
+
     public function __construct(private ?string $version = null)
     {
         $this->message = 'Must be a valid IP address';
@@ -29,6 +29,7 @@ class IpRule
         } elseif ($this->version === 'v6') {
             return filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false;
         }
+
         return filter_var($value, FILTER_VALIDATE_IP) !== false;
     }
 }

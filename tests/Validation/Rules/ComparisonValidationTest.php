@@ -13,7 +13,7 @@ class ComparisonValidationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     // ========================================
@@ -30,7 +30,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -44,7 +44,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -58,7 +58,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -72,7 +72,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Strict comparison: '1' !== 1
         $this->assertTrue($result->fails());
     }
@@ -87,7 +87,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -101,7 +101,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -119,7 +119,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -133,7 +133,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -147,7 +147,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Strict comparison: '1' !== 1
         $this->assertTrue($result->passes());
     }
@@ -160,7 +160,7 @@ class ComparisonValidationTest extends TestCase
     {
         $data = [
             'password' => 'secret123',
-            'password_confirmation' => 'secret123'
+            'password_confirmation' => 'secret123',
         ];
 
         $this->validator
@@ -169,7 +169,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -177,7 +177,7 @@ class ComparisonValidationTest extends TestCase
     {
         $data = [
             'password' => 'secret123',
-            'password_confirmation' => 'different'
+            'password_confirmation' => 'different',
         ];
 
         $this->validator
@@ -186,7 +186,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -194,7 +194,7 @@ class ComparisonValidationTest extends TestCase
     {
         $data = [
             'value1' => '1',
-            'value2' => 1
+            'value2' => 1,
         ];
 
         $this->validator
@@ -203,7 +203,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Strict comparison: '1' !== 1
         $this->assertTrue($result->fails());
     }
@@ -212,9 +212,9 @@ class ComparisonValidationTest extends TestCase
     {
         $data = [
             'user' => [
-                'email' => 'test@example.com'
+                'email' => 'test@example.com',
             ],
-            'email_confirmation' => 'test@example.com'
+            'email_confirmation' => 'test@example.com',
         ];
 
         $this->validator
@@ -223,7 +223,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -235,7 +235,7 @@ class ComparisonValidationTest extends TestCase
     {
         $data = [
             'old_password' => 'old123',
-            'new_password' => 'new456'
+            'new_password' => 'new456',
         ];
 
         $this->validator
@@ -244,7 +244,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -252,7 +252,7 @@ class ComparisonValidationTest extends TestCase
     {
         $data = [
             'old_password' => 'secret123',
-            'new_password' => 'secret123'
+            'new_password' => 'secret123',
         ];
 
         $this->validator
@@ -261,7 +261,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -269,7 +269,7 @@ class ComparisonValidationTest extends TestCase
     {
         $data = [
             'value1' => '1',
-            'value2' => 1
+            'value2' => 1,
         ];
 
         $this->validator
@@ -278,7 +278,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Strict comparison: '1' !== 1
         $this->assertTrue($result->passes());
     }
@@ -297,7 +297,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -311,7 +311,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -325,7 +325,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -339,7 +339,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -353,7 +353,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -367,7 +367,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -381,7 +381,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -395,7 +395,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -409,7 +409,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -427,7 +427,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -441,7 +441,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -455,7 +455,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -469,7 +469,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -483,7 +483,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields skip validation when empty
         $this->assertTrue($result->passes());
     }
@@ -502,7 +502,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -516,7 +516,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -530,7 +530,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -544,7 +544,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -558,7 +558,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -572,7 +572,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -586,7 +586,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -600,7 +600,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -614,7 +614,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -628,7 +628,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields skip validation when empty
         $this->assertTrue($result->passes());
     }
@@ -643,7 +643,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Optional fields skip validation when empty
         $this->assertTrue($result->passes());
     }
@@ -659,7 +659,7 @@ class ComparisonValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 }

@@ -2,9 +2,8 @@
 
 namespace Lightpack\Mail;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Mail\MailManager;
+use Lightpack\Support\ProviderInterface;
 
 class MailProvider implements ProviderInterface
 {

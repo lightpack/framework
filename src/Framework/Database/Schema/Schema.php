@@ -4,9 +4,8 @@ namespace Lightpack\Database\Schema;
 
 use Lightpack\Database\DB;
 use Lightpack\Database\Schema\Compilers\AlterTable;
-use Lightpack\Database\Schema\Table;
-use Lightpack\Database\Schema\Compilers\DropTable;
 use Lightpack\Database\Schema\Compilers\CreateTable;
+use Lightpack\Database\Schema\Compilers\DropTable;
 use Lightpack\Database\Schema\Compilers\TruncateTable;
 
 class Schema
@@ -30,7 +29,7 @@ class Schema
     public function alterTable(string $table): Table
     {
         $table = new Table($table, $this->connection);
-        
+
         return $table->alterContext();
     }
 
@@ -60,7 +59,7 @@ class Schema
 
         $this->connection->query($sql);
     }
-    
+
     /**
      * Inspect the list of tables in the database.
      * It returns an array of table names.
@@ -82,7 +81,7 @@ class Schema
 
     /**
      * Inspect the list of columns in a table.
-     * 
+     *
      * This method returns an array of column names.
      */
     public function inspectColumns(string $table): array
@@ -117,7 +116,7 @@ class Schema
 
     /**
      * Inspect the list of indexes in a table.
-     * 
+     *
      * It returns an array of index names.
      */
     public function inspectIndexes(string $table): array
@@ -183,12 +182,13 @@ class Schema
         ", [$table, $foreignKey]);
 
         $row = $result->fetch(\PDO::FETCH_ASSOC);
+
         return $row ?: null;
     }
 
     /**
      * Inspect the list of fulltext indexes in a table.
-     * 
+     *
      * It returns an array of fulltext index names.
      */
     public function inspectFullTextIndexes(string $table)
@@ -221,6 +221,7 @@ class Schema
         ", [$table, $index]);
 
         $row = $result->fetch(\PDO::FETCH_ASSOC);
+
         return $row ?: null;
     }
 

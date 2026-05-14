@@ -3,17 +3,20 @@
 namespace Lightpack\Tests\Mfa;
 
 // Dummy mailer class for tests
-class Mail {
-    public function dispatch(...$args) { /* no-op for test */ }
+class Mail
+{
+    public function dispatch(...$args)
+    { /* no-op for test */
+    }
 }
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Mfa\Drivers\EmailDriver;
-use Lightpack\Config\Config;
-use Lightpack\Cache\Cache;
-use Lightpack\Utils\Otp;
 use Lightpack\Auth\Models\AuthUser;
+use Lightpack\Cache\Cache;
+use Lightpack\Config\Config;
 use Lightpack\Container\Container;
+use Lightpack\Mfa\Drivers\EmailDriver;
+use Lightpack\Utils\Otp;
+use PHPUnit\Framework\TestCase;
 
 class EmailMfaTest extends TestCase
 {
@@ -27,14 +30,14 @@ class EmailMfaTest extends TestCase
     {
         $this->cache = $this->createMock(Cache::class);
         $this->config = $this->createMock(Config::class);
-        $this->otp = new Otp();
-        $this->user = new AuthUser();
+        $this->otp = new Otp;
+        $this->user = new AuthUser;
         $this->user->id = 42;
         $this->user->email = 'user@example.com';
         $this->factor = new EmailDriver($this->cache, $this->config, $this->otp);
 
-        Container::getInstance()->register('config', fn() => $this->config);
-        Container::getInstance()->register('cache', fn() => $this->cache);
+        Container::getInstance()->register('config', fn () => $this->config);
+        Container::getInstance()->register('cache', fn () => $this->cache);
     }
 
     public function testSendSetsCodeInCache()
@@ -60,13 +63,13 @@ class EmailMfaTest extends TestCase
                     $this->equalTo('limiter:mfa_resend_42'),
                     $this->equalTo(1),
                     $this->equalTo(10),
-                    $this->equalTo(false)
+                    $this->equalTo(false),
                 ],
                 // Second: the actual MFA code key
                 [
                     $this->equalTo('mfa_email_42'),
                     $this->isType('string'),
-                    $this->equalTo(300)
+                    $this->equalTo(300),
                 ]
             );
 
@@ -109,8 +112,10 @@ class EmailMfaTest extends TestCase
 }
 
 // Proxy class for testing protected methods
-class EmailMfaTestProxy extends EmailDriver {
-    public function publicGenerateCode() {
+class EmailMfaTestProxy extends EmailDriver
+{
+    public function publicGenerateCode()
+    {
         return $this->generateCode();
     }
 }

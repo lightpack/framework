@@ -19,7 +19,7 @@ class CryptoTest extends TestCase
         $crypto = new Crypto('secret');
         $encrypted1 = $crypto->encrypt('Hello World');
         $encrypted2 = $crypto->encrypt('Hello World');
-        
+
         $this->assertNotEquals($encrypted1, $encrypted2);
         $this->assertEquals('Hello World', $crypto->decrypt($encrypted1));
         $this->assertEquals('Hello World', $crypto->decrypt($encrypted2));

@@ -14,7 +14,7 @@ class ServeCommand extends Command
         $hostUrl = '127.0.0.1:' . $port;
 
         passthru('"' . PHP_BINARY . '"' . ' -S ' . "'$hostUrl'" . ' -t public');
-        
+
         return self::SUCCESS;
     }
 }

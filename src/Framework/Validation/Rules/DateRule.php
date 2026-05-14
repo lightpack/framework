@@ -10,9 +10,9 @@ class DateRule
 {
     use ValidationMessageTrait;
 
-    public function __construct(private readonly ?string $format = null) 
+    public function __construct(private readonly ?string $format = null)
     {
-        $this->message = $format 
+        $this->message = $format
             ? "Must be a valid date in format {$format}"
             : 'Must be a valid date';
     }
@@ -21,6 +21,7 @@ class DateRule
     {
         if ($this->format) {
             $date = \DateTime::createFromFormat($this->format, $value);
+
             return $date && $date->format($this->format) === $value;
         }
 

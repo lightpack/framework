@@ -18,13 +18,14 @@ class TotpSetupHelper
     public static function generateSecret(): string
     {
         $tfa = self::getTotpInstance();
+
         return $tfa->createSecret();
     }
 
     /**
      * Get the otpauth:// URI for TOTP setup
      * This is the single source of truth for QR code generation
-     * 
+     *
      * @param string $secret The TOTP secret
      * @param string $userEmail User's email address
      * @return string The otpauth:// URI
@@ -34,14 +35,14 @@ class TotpSetupHelper
         $issuer = urlencode(self::getIssuerName());
         $email = urlencode($userEmail);
         $label = "{$issuer}:{$email}";
-        
+
         return "otpauth://totp/{$label}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30";
     }
 
     /**
      * Generate QR code as SVG (for PDFs, emails, reports)
      * Requires: composer require bacon/bacon-qr-code
-     * 
+     *
      * @param string $secret The TOTP secret
      * @param string $userEmail User's email address
      * @param int $size QR code size in pixels (default: 256)
@@ -50,7 +51,7 @@ class TotpSetupHelper
      */
     public static function getQrCodeSvg(string $secret, string $userEmail, int $size = 256): string
     {
-        if (!class_exists('BaconQrCode\\Writer')) {
+        if (! class_exists('BaconQrCode\\Writer')) {
             throw new \RuntimeException(
                 'bacon/bacon-qr-code is required for server-side QR generation. ' .
                 'Install it with: composer require bacon/bacon-qr-code'
@@ -58,20 +59,21 @@ class TotpSetupHelper
         }
 
         $otpAuthUri = self::getOtpAuthUri($secret, $userEmail);
-        
+
         $renderer = new \BaconQrCode\Renderer\ImageRenderer(
             new \BaconQrCode\Renderer\RendererStyle\RendererStyle($size),
-            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd
         );
-        
+
         $writer = new \BaconQrCode\Writer($renderer);
+
         return $writer->writeString($otpAuthUri);
     }
 
     /**
      * Generate QR code as PNG data URI (for inline embedding)
      * Requires: composer require bacon/bacon-qr-code
-     * 
+     *
      * @param string $secret The TOTP secret
      * @param string $userEmail User's email address
      * @param int $size QR code size in pixels (default: 256)
@@ -80,7 +82,7 @@ class TotpSetupHelper
      */
     public static function getQrCodeDataUri(string $secret, string $userEmail, int $size = 256): string
     {
-        if (!class_exists('BaconQrCode\\Writer')) {
+        if (! class_exists('BaconQrCode\\Writer')) {
             throw new \RuntimeException(
                 'bacon/bacon-qr-code is required for server-side QR generation. ' .
                 'Install it with: composer require bacon/bacon-qr-code'
@@ -88,15 +90,15 @@ class TotpSetupHelper
         }
 
         $otpAuthUri = self::getOtpAuthUri($secret, $userEmail);
-        
+
         $renderer = new \BaconQrCode\Renderer\ImageRenderer(
             new \BaconQrCode\Renderer\RendererStyle\RendererStyle($size),
-            new \BaconQrCode\Renderer\Image\ImagickImageBackEnd()
+            new \BaconQrCode\Renderer\Image\ImagickImageBackEnd
         );
-        
+
         $writer = new \BaconQrCode\Writer($renderer);
         $pngData = $writer->writeString($otpAuthUri);
-        
+
         return 'data:image/png;base64,' . base64_encode($pngData);
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 namespace Lightpack\AI\Tools;
 
 class ToolInvoker
@@ -8,19 +9,20 @@ class ToolInvoker
         if ($tool instanceof \Closure) {
             return $tool($params);
         }
-        
+
         if (is_object($tool) && is_callable($tool)) {
             return $tool($params);
         }
-        
+
         if (is_string($tool) && class_exists($tool)) {
-            $instance = new $tool();
+            $instance = new $tool;
+
             return $instance($params);
         }
-        
+
         throw new \InvalidArgumentException('Tool must be closure, invokable object, or class string');
     }
-    
+
     public static function extractMeta(mixed $tool): array
     {
         if (is_string($tool) && class_exists($tool)) {
@@ -29,15 +31,16 @@ class ToolInvoker
                 'params' => method_exists($tool, 'params') ? $tool::params() : [],
             ];
         }
-        
-        if (is_object($tool) && !$tool instanceof \Closure) {
+
+        if (is_object($tool) && ! $tool instanceof \Closure) {
             $class = get_class($tool);
+
             return [
                 'description' => method_exists($class, 'description') ? $class::description() : null,
                 'params' => method_exists($class, 'params') ? $class::params() : [],
             ];
         }
-        
+
         return ['description' => null, 'params' => []];
     }
 }

@@ -2,10 +2,9 @@
 
 namespace Lightpack\Utils;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Config\Config;
 use Lightpack\Container\Container;
-use Lightpack\Utils\Crypto;
+use Lightpack\Support\ProviderInterface;
 
 class CryptoProvider implements ProviderInterface
 {
@@ -23,7 +22,7 @@ class CryptoProvider implements ProviderInterface
 
     private function ensureAppKeyIsSet(Config $config)
     {
-        if (!$config->get('app.key')) {
+        if (! $config->get('app.key')) {
             throw new \Exception('Encryption key has not been set in .env: APP_KEY');
         }
     }

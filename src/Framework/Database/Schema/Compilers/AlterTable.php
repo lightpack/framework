@@ -44,7 +44,6 @@ class AlterTable
         return $sql;
     }
 
-
     public function compileDropIndex(string $table, string $indexName): string
     {
         $sql = "ALTER TABLE {$table} DROP INDEX {$indexName}";

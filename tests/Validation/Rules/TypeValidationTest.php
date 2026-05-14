@@ -13,7 +13,7 @@ class TypeValidationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     // ========================================
@@ -30,7 +30,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -44,7 +44,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -58,7 +58,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -72,7 +72,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -86,7 +86,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -100,7 +100,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -118,7 +118,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -132,7 +132,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -146,7 +146,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -160,7 +160,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -174,7 +174,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -188,7 +188,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -206,7 +206,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -220,7 +220,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -234,7 +234,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -248,7 +248,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -262,7 +262,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -276,7 +276,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -290,7 +290,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -308,7 +308,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -322,7 +322,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         // Empty optional fields skip validation
         $this->assertTrue($result->passes());
     }
@@ -337,7 +337,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -351,7 +351,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -365,7 +365,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -383,7 +383,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -397,7 +397,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -411,7 +411,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -425,7 +425,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -439,7 +439,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -453,7 +453,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -467,7 +467,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -481,7 +481,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -495,7 +495,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -509,7 +509,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -523,7 +523,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -537,7 +537,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -551,7 +551,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -565,7 +565,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -579,7 +579,7 @@ class TypeValidationTest extends TestCase
         $data = [
             'age' => '25',
             'price' => '99.99',
-            'quantity' => '10'
+            'quantity' => '10',
         ];
 
         $this->validator
@@ -592,7 +592,7 @@ class TypeValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 }

@@ -60,8 +60,8 @@ class ArrTest extends TestCase
             'users' => [
                 ['name' => 'John', 'profile' => ['age' => 30]],
                 ['name' => 'Jane', 'profile' => ['age' => 25]],
-                ['name' => 'Bob', 'profile' => ['age' => 35]]
-            ]
+                ['name' => 'Bob', 'profile' => ['age' => 35]],
+            ],
         ];
 
         $arr = new Arr;
@@ -86,27 +86,27 @@ class ArrTest extends TestCase
                     'teams' => [
                         ['name' => 'frontend', 'members' => [
                             ['name' => 'John', 'skills' => ['js', 'react']],
-                            ['name' => 'Jane', 'skills' => ['vue', 'angular']]
+                            ['name' => 'Jane', 'skills' => ['vue', 'angular']],
                         ]],
                         ['name' => 'backend', 'members' => [
                             ['name' => 'Bob', 'skills' => ['php', 'mysql']],
-                            ['name' => 'Alice', 'skills' => ['python', 'postgres']]
-                        ]]
-                    ]
+                            ['name' => 'Alice', 'skills' => ['python', 'postgres']],
+                        ]],
+                    ],
                 ],
                 'design' => [
                     'teams' => [
                         ['name' => 'ui', 'members' => [
                             ['name' => 'Mike', 'skills' => ['figma', 'sketch']],
-                            ['name' => 'Sara', 'skills' => ['photoshop', 'illustrator']]
+                            ['name' => 'Sara', 'skills' => ['photoshop', 'illustrator']],
                         ]],
                         ['name' => 'ux', 'members' => [
                             ['name' => 'Tom', 'skills' => ['research', 'prototyping']],
-                            ['name' => 'Emma', 'skills' => ['wireframing', 'testing']]
-                        ]]
-                    ]
-                ]
-            ]
+                            ['name' => 'Emma', 'skills' => ['wireframing', 'testing']],
+                        ]],
+                    ],
+                ],
+            ],
         ];
 
         $arr = new Arr;
@@ -151,14 +151,14 @@ class ArrTest extends TestCase
     public function testWildcardEdgeCases()
     {
         $arr = new Arr;
-        
+
         // Test empty array
         $this->assertNull($arr->get('*.test', []));
-        
+
         // Test invalid path with multiple wildcards
         $data = ['key' => 'value'];
         $this->assertNull($arr->get('*.*.*.test', $data));
-        
+
         // Test wildcard at start
         $data = ['users' => [['name' => 'John'], ['name' => 'Jane']]];
         $this->assertEquals(
@@ -197,9 +197,9 @@ class ArrTest extends TestCase
             'user' => [
                 'profile' => [
                     'name' => 'John',
-                    'email' => 'john@example.com'
-                ]
-            ]
+                    'email' => 'john@example.com',
+                ],
+            ],
         ];
 
         $arr->delete('user.profile.email', $data);
@@ -229,8 +229,8 @@ class ArrTest extends TestCase
 
     public function testTree()
     {
-        $arr = new Arr();
-        
+        $arr = new Arr;
+
         // Test basic tree structure
         $items = [
             ['id' => 1, 'parent_id' => 0, 'name' => 'Category 1'],
@@ -254,22 +254,22 @@ class ArrTest extends TestCase
                             [
                                 'id' => 4,
                                 'parent_id' => 2,
-                                'name' => 'Category 4'
-                            ]
-                        ]
+                                'name' => 'Category 4',
+                            ],
+                        ],
                     ],
                     [
                         'id' => 3,
                         'parent_id' => 1,
-                        'name' => 'Category 3'
-                    ]
-                ]
+                        'name' => 'Category 3',
+                    ],
+                ],
             ],
             [
                 'id' => 5,
                 'parent_id' => 0,
-                'name' => 'Category 5'
-            ]
+                'name' => 'Category 5',
+            ],
         ];
 
         $tree = $arr->tree($items);
@@ -279,7 +279,7 @@ class ArrTest extends TestCase
         $items = [
             ['item_id' => 1, 'pid' => null, 'title' => 'Root'],
             ['item_id' => 2, 'pid' => 1, 'title' => 'Child 1'],
-            ['item_id' => 3, 'pid' => 1, 'title' => 'Child 2']
+            ['item_id' => 3, 'pid' => 1, 'title' => 'Child 2'],
         ];
 
         $expected = [
@@ -291,15 +291,15 @@ class ArrTest extends TestCase
                     [
                         'item_id' => 2,
                         'pid' => 1,
-                        'title' => 'Child 1'
+                        'title' => 'Child 1',
                     ],
                     [
                         'item_id' => 3,
                         'pid' => 1,
-                        'title' => 'Child 2'
-                    ]
-                ]
-            ]
+                        'title' => 'Child 2',
+                    ],
+                ],
+            ],
         ];
 
         $tree = $arr->tree($items, null, 'item_id', 'pid');
@@ -313,7 +313,7 @@ class ArrTest extends TestCase
             ['id' => 'root', 'parent_id' => '', 'name' => 'Root'],
             ['id' => 'a1', 'parent_id' => 'root', 'name' => 'A1'],
             ['id' => 'a2', 'parent_id' => 'root', 'name' => 'A2'],
-            ['id' => 'b1', 'parent_id' => 'a1', 'name' => 'B1']
+            ['id' => 'b1', 'parent_id' => 'a1', 'name' => 'B1'],
         ];
 
         $expected = [
@@ -330,17 +330,17 @@ class ArrTest extends TestCase
                             [
                                 'id' => 'b1',
                                 'parent_id' => 'a1',
-                                'name' => 'B1'
-                            ]
-                        ]
+                                'name' => 'B1',
+                            ],
+                        ],
                     ],
                     [
                         'id' => 'a2',
                         'parent_id' => 'root',
-                        'name' => 'A2'
-                    ]
-                ]
-            ]
+                        'name' => 'A2',
+                    ],
+                ],
+            ],
         ];
 
         $tree = $arr->tree($items, '');
@@ -349,17 +349,17 @@ class ArrTest extends TestCase
 
     public function testTranspose()
     {
-        $arr = new Arr();
+        $arr = new Arr;
 
         // Test basic transposition
         $data = [
             'name' => ['John', 'Jane'],
-            'age' => [25, 30]
+            'age' => [25, 30],
         ];
 
         $expected = [
             ['name' => 'John', 'age' => 25],
-            ['name' => 'Jane', 'age' => 30]
+            ['name' => 'Jane', 'age' => 30],
         ];
 
         $this->assertEquals($expected, $arr->transpose($data));
@@ -370,7 +370,7 @@ class ArrTest extends TestCase
             'type' => ['image/jpeg', 'image/jpeg'],
             'tmp_name' => ['/tmp/php123', '/tmp/php456'],
             'error' => [0, 0],
-            'size' => [1024, 2048]
+            'size' => [1024, 2048],
         ];
 
         $expected = [
@@ -379,15 +379,15 @@ class ArrTest extends TestCase
                 'type' => 'image/jpeg',
                 'tmp_name' => '/tmp/php123',
                 'error' => 0,
-                'size' => 1024
+                'size' => 1024,
             ],
             [
                 'name' => 'photo2.jpg',
                 'type' => 'image/jpeg',
                 'tmp_name' => '/tmp/php456',
                 'error' => 0,
-                'size' => 2048
-            ]
+                'size' => 2048,
+            ],
         ];
 
         $this->assertEquals($expected, $arr->transpose($files));
@@ -396,7 +396,7 @@ class ArrTest extends TestCase
         $this->assertEquals(
             [
                 ['name' => 'photo1.jpg', 'size' => 1024],
-                ['name' => 'photo2.jpg', 'size' => 2048]
+                ['name' => 'photo2.jpg', 'size' => 2048],
             ],
             $arr->transpose($files, ['name', 'size'])
         );
@@ -413,12 +413,12 @@ class ArrTest extends TestCase
         // Test with missing values
         $data = [
             'name' => ['John', 'Jane'],
-            'age' => [25] // Missing second age
+            'age' => [25], // Missing second age
         ];
 
         $expected = [
             ['name' => 'John', 'age' => 25],
-            ['name' => 'Jane'] // No age for Jane
+            ['name' => 'Jane'], // No age for Jane
         ];
 
         $this->assertEquals($expected, $arr->transpose($data));

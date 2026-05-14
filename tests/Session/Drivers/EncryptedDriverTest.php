@@ -2,10 +2,10 @@
 
 namespace Lightpack\Tests\Session\Drivers;
 
-use Lightpack\Utils\Crypto;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Session\DriverInterface;
 use Lightpack\Session\Drivers\EncryptedDriver;
+use Lightpack\Utils\Crypto;
+use PHPUnit\Framework\TestCase;
 
 class EncryptedDriverTest extends TestCase
 {
@@ -65,8 +65,9 @@ class EncryptedDriverTest extends TestCase
             ->method('set')
             ->with(
                 $this->equalTo($key),
-                $this->callback(function($encryptedValue) use ($value) {
+                $this->callback(function ($encryptedValue) use ($value) {
                     $decrypted = unserialize($this->crypto->decrypt($encryptedValue));
+
                     return $decrypted == $value;
                 })
             );
@@ -96,7 +97,7 @@ class EncryptedDriverTest extends TestCase
         ];
 
         $encryptedData = array_map(
-            fn($value) => $this->crypto->encrypt(serialize($value)), 
+            fn ($value) => $this->crypto->encrypt(serialize($value)),
             $data
         );
 

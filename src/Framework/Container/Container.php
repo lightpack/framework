@@ -14,7 +14,7 @@ class Container
     protected static $instance;
 
     /**
-     * Get the instance of the container. If the instance does not exist, 
+     * Get the instance of the container. If the instance does not exist,
      * create a new instance. This makes the container a singleton.
      *
      * @return Container
@@ -22,7 +22,7 @@ class Container
     public static function getInstance(): Container
     {
         if (is_null(self::$instance)) {
-            self::$instance = new static();
+            self::$instance = new static;
         }
 
         return self::$instance;
@@ -50,8 +50,8 @@ class Container
     }
 
     /**
-     * Get a service from the container. 
-     * 
+     * Get a service from the container.
+     *
      * @param string $id
      * @return mixed
      * @throws ServiceNotFoundException
@@ -69,12 +69,12 @@ class Container
     }
 
     /**
-     * Register a service in the container. 
-     * 
-     * This method will return a new instance of the service every 
-     * time it is called. Also, the service creation will be 
+     * Register a service in the container.
+     *
+     * This method will return a new instance of the service every
+     * time it is called. Also, the service creation will be
      * deferred until it is requested for the first time.
-     * 
+     *
      * @param string $id
      * @param Closure $service
      * @return void
@@ -85,14 +85,14 @@ class Container
     }
 
     /**
-     * Register a service in the container. 
-     * 
-     * This method will register the service as a singleton. Also the 
+     * Register a service in the container.
+     *
+     * This method will register the service as a singleton. Also the
      * service creation will be deferred until it is requested.
-     * 
+     *
      * @param string $id The service id.
      * @param callable $cb The service callback.
-     * 
+     *
      * @return void
      */
     public function register(string $id, callable $cb): void
@@ -112,7 +112,7 @@ class Container
 
     private function throwExceptionIfServiceNotFound(string $id): void
     {
-        if (!$this->has($id)) {
+        if (! $this->has($id)) {
             throw new \Lightpack\Exceptions\ServiceNotFoundException(
                 sprintf(
                     'Service `%s` is not registered',
@@ -133,7 +133,7 @@ class Container
             return $this->get($id);
         }
 
-        if (!array_key_exists($id, $this->aliases)) {
+        if (! array_key_exists($id, $this->aliases)) {
             $resolvedInstance = $this->resolveWithReflection($id);
 
             $this->callIf($resolvedInstance, '__boot');
@@ -202,11 +202,11 @@ class Container
 
     /**
      * Bind an instance to the container.
-     * 
+     *
      * @param string $id Alias for the instance
      * @param object $instance Instance to be bound
-     * 
-     * @return object 
+     *
+     * @return object
      */
     public function instance(string $id, object $instance): object
     {
@@ -289,7 +289,6 @@ class Container
         return $method->invokeArgs($instance, $dependencies);
     }
 
-
     /**
      * Call a method on an object or class only if the method exists.
      */
@@ -312,23 +311,23 @@ class Container
     protected function filterNonScalarParameters(array $parameters): array
     {
         return array_filter($parameters, function ($parameter) {
-            return $parameter->getType() && !$parameter->getType()->isBuiltin();
+            return $parameter->getType() && ! $parameter->getType()->isBuiltin();
         });
     }
 
     /**
      * Register an alias for a service.
-     * 
-     * Multiple interfaces, abstracts, or concrete classes can be 
+     *
+     * Multiple interfaces, abstracts, or concrete classes can be
      * aliased against a single alias key.
-     * 
+     *
      * @param string $alias Alias for the service.
      * @param string $type Service class name.
-     * 
+     *
      * @return void
-     * 
+     *
      * Example:
-     * 
+     *
      * $container->alias(InterfaceFoo::class, 'x');
      * $container->alias(InterfaceBar::class, 'y');
      * $container->alias(X::class, 'x');

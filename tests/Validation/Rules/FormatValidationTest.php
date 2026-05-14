@@ -13,7 +13,7 @@ class FormatValidationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     // ========================================
@@ -30,7 +30,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -44,7 +44,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -58,7 +58,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -72,7 +72,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -86,7 +86,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -100,7 +100,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -118,7 +118,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -132,7 +132,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -146,7 +146,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -160,7 +160,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -174,7 +174,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -188,7 +188,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -206,7 +206,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -220,7 +220,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -234,7 +234,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -248,7 +248,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -262,7 +262,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -276,7 +276,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -290,7 +290,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -308,7 +308,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -322,7 +322,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -336,7 +336,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -350,7 +350,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -364,7 +364,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -378,7 +378,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -392,7 +392,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -406,7 +406,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -424,7 +424,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -438,7 +438,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -452,7 +452,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -466,7 +466,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -480,7 +480,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -498,7 +498,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -512,7 +512,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -526,7 +526,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -540,7 +540,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -554,7 +554,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -568,7 +568,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -586,7 +586,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -600,7 +600,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -614,7 +614,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -628,7 +628,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->passes());
     }
 
@@ -642,7 +642,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -656,7 +656,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 
@@ -670,7 +670,7 @@ class FormatValidationTest extends TestCase
 
         $this->validator->setInput($data);
         $result = $this->validator->validate();
-        
+
         $this->assertTrue($result->fails());
     }
 }

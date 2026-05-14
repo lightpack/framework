@@ -33,6 +33,7 @@ class AuditLog extends Model
         $new = is_array($this->new_values) ? $this->new_values : [];
         $added = array_diff_assoc($new, $old);
         $removed = array_diff_assoc($old, $new);
+
         return ['added' => $added, 'removed' => $removed];
     }
 

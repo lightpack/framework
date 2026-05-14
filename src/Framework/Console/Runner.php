@@ -14,7 +14,7 @@ class Runner
 
         // Remove script name (php lightpack)
         $arguments = array_slice($argv, 1);
-        
+
         // First argument is the command name
         $command = $arguments[0] ?? null;
 

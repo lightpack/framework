@@ -15,7 +15,7 @@ class TestMailForAssertions extends Mail
             ->body($payload['body'] ?? 'Test Body')
             ->send();
     }
-    
+
     public static function make(): self
     {
         return new self(app('mail'));
@@ -29,18 +29,17 @@ class MailAssertionTraitTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         putenv('MAIL_DRIVER=array');
         putenv('MAIL_FROM_ADDRESS=sender@example.com');
         putenv('MAIL_FROM_NAME=Test Sender');
-        
+
         // Register MailManager
         $container = \Lightpack\Container\Container::getInstance();
-        $mailManager = new \Lightpack\Mail\MailManager();
-        $mailManager->registerDriver('array', new \Lightpack\Mail\Drivers\ArrayDriver());
+        $mailManager = new \Lightpack\Mail\MailManager($container);
         $mailManager->setDefaultDriver('array');
-        $container->register('mail', fn() => $mailManager);
-        
+        $container->register('mail', fn () => $mailManager);
+
         Mail::clearSentMails();
     }
 

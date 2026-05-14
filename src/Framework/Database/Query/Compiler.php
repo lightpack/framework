@@ -28,6 +28,7 @@ class Compiler
         $sql = array_filter($sql, function ($v) {
             return empty($v) === false;
         });
+
         return trim(implode(' ', $sql));
     }
 
@@ -44,6 +45,7 @@ class Compiler
         $sql = array_filter($sql, function ($v) {
             return empty($v) === false;
         });
+
         return trim(implode(' ', $sql));
     }
 
@@ -109,6 +111,7 @@ class Compiler
         // Compile the ON DUPLICATE KEY UPDATE part
         $updates = array_map(function ($col) {
             $quotedCol = $this->query->getConnection()->quoteIdentifier($col);
+
             return "{$quotedCol} = ?";
         }, $updateColumns);
 
@@ -149,6 +152,7 @@ class Compiler
     {
         $where = $this->where();
         $table = $this->query->getConnection()->quoteIdentifier($this->query->table);
+
         return "DELETE FROM {$table} {$where}";
     }
 
@@ -179,6 +183,7 @@ class Compiler
         if (empty($allColumns)) {
             return '*';
         }
+
         return implode(', ', $allColumns);
     }
 
@@ -191,7 +196,7 @@ class Compiler
 
     private function join()
     {
-        if (!$this->query->join) {
+        if (! $this->query->join) {
             return '';
         }
 
@@ -211,7 +216,7 @@ class Compiler
 
     private function where(): string
     {
-        if (!$this->query->where) {
+        if (! $this->query->where) {
             return '';
         }
 
@@ -224,30 +229,35 @@ class Compiler
             // Workaround for where exists queries
             if (isset($where['type']) && $where['type'] === 'where_exists') {
                 $wheres[] = 'AND EXISTS' . ' ' . '(' . $where['sub_query'] . ')';
+
                 continue;
             }
 
             // Workaround for where not exists queries
             if (isset($where['type']) && $where['type'] === 'where_not_exists') {
                 $wheres[] = 'NOT EXISTS' . ' ' . '(' . $where['sub_query'] . ')';
+
                 continue;
             }
 
             // Workaround for where group logical params
             if (isset($where['type']) && $where['type'] === 'where_logical_group') {
                 $wheres[] = $where['joiner'] . ' (' . $where['sub_query'] . ')';
+
                 continue;
             }
 
             // Workaround for where sub query
             if (isset($where['type']) && $where['type'] === 'where_sub_query') {
                 $wheres[] = $where['joiner'] . ' ' . $this->wrap($where['column']) . ' ' . $where['operator'] . ' ' . '(' . $where['sub_query'] . ')';
+
                 continue;
             }
 
             // Workaround for raw where queries
             if (isset($where['type']) && $where['type'] === 'where_raw') {
                 $wheres[] = strtoupper($where['joiner']) . ' ' . $where['where'];
+
                 continue;
             }
 
@@ -255,6 +265,7 @@ class Compiler
             if (isset($where['type']) && ($where['type'] === 'where_between' || $where['type'] === 'where_not_between')) {
                 $parameters = $this->parameterize(2);
                 $wheres[] = strtoupper($where['joiner']) . ' ' . $this->wrap($where['column']) . ' ' . $where['operator'] . ' ' . '?' . ' AND ' . '?';
+
                 continue;
             }
 
@@ -269,7 +280,7 @@ class Compiler
                 $parameters = '(' . $parameters . ')';
             }
 
-            if (!isset($where['value']) && !isset($where['values'])) {
+            if (! isset($where['value']) && ! isset($where['values'])) {
                 $parameters = '';
             }
 
@@ -298,7 +309,7 @@ class Compiler
 
     private function groupBy()
     {
-        if (!$this->query->group) {
+        if (! $this->query->group) {
             return '';
         }
 
@@ -314,7 +325,7 @@ class Compiler
      */
     private function having()
     {
-        if (!$this->query->having) {
+        if (! $this->query->having) {
             return '';
         }
 
@@ -324,6 +335,7 @@ class Compiler
             // Raw HAVING
             if (isset($having['type']) && $having['type'] === 'having_raw') {
                 $havings[] = strtoupper($having['joiner']) . ' ' . $having['having'];
+
                 continue;
             }
 
@@ -350,12 +362,13 @@ class Compiler
         if (strpos($havings, 'AND') === 0) {
             $havings = trim(substr($havings, 3));
         }
+
         return $havings ? 'HAVING ' . $havings : '';
     }
 
     private function orderBy()
     {
-        if (!$this->query->order) {
+        if (! $this->query->order) {
             return '';
         }
 
@@ -373,7 +386,7 @@ class Compiler
 
     private function limit()
     {
-        if (!$this->query->limit) {
+        if (! $this->query->limit) {
             return '';
         }
 
@@ -382,7 +395,7 @@ class Compiler
 
     private function offset()
     {
-        if (!$this->query->offset) {
+        if (! $this->query->offset) {
             return '';
         }
 
@@ -391,7 +404,7 @@ class Compiler
 
     private function lock()
     {
-        if (!$this->query->lock) {
+        if (! $this->query->lock) {
             return '';
         }
 
@@ -424,8 +437,10 @@ class Compiler
     {
         if (strpos(strtolower($table), ' as ') !== false) {
             $parts = explode(' ', $table);
+
             return $this->wrap($parts[0]) . ' AS ' . $this->wrap($parts[2]);
         }
+
         return $this->wrap($table);
     }
 
@@ -448,8 +463,10 @@ class Compiler
             foreach ($parts as &$part) {
                 $part = $this->wrap($part);
             }
+
             return $parts[0] . ' AS ' . $parts[2];
         }
+
         return $this->wrap($column);
     }
 
@@ -462,6 +479,7 @@ class Compiler
         if (count($segments) == 2) {
             return $this->wrap($segments[0]) . '.' . $this->wrap($segments[1]);
         }
+
         return '`' . str_replace('`', '``', $value) . '`';
     }
 }

@@ -58,7 +58,7 @@ class DbUniqueRuleTest extends TestCase
 
     public function testDbUniquePassesWhenValueDoesNotExist(): void
     {
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->dbUnique('test_users', 'email');
 
         $validator->setInput(['email' => 'new@example.com']);
@@ -70,10 +70,10 @@ class DbUniqueRuleTest extends TestCase
         // Insert test data
         db()->table('test_users')->insert([
             'email' => 'existing@example.com',
-            'username' => 'testuser'
+            'username' => 'testuser',
         ]);
 
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->dbUnique('test_users', 'email');
 
         $validator->setInput(['email' => 'existing@example.com']);
@@ -86,12 +86,12 @@ class DbUniqueRuleTest extends TestCase
         // Insert test data
         db()->table('test_users')->insert([
             'email' => 'user@example.com',
-            'username' => 'testuser'
+            'username' => 'testuser',
         ]);
         $id = $this->db->lastInsertId();
 
         // Should pass when ignoring the same record
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->dbUnique('test_users', 'email', ignoreId: $id);
 
         $validator->setInput(['email' => 'user@example.com']);
@@ -103,17 +103,17 @@ class DbUniqueRuleTest extends TestCase
         // Insert two records
         db()->table('test_users')->insert([
             'email' => 'user1@example.com',
-            'username' => 'user1'
+            'username' => 'user1',
         ]);
         $id1 = $this->db->lastInsertId();
 
         db()->table('test_users')->insert([
             'email' => 'user2@example.com',
-            'username' => 'user2'
+            'username' => 'user2',
         ]);
 
         // Should fail when trying to use user2's email while updating user1
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->dbUnique('test_users', 'email', ignoreId: $id1);
 
         $validator->setInput(['email' => 'user2@example.com']);
@@ -126,16 +126,16 @@ class DbUniqueRuleTest extends TestCase
         db()->table('test_users')->insert([
             'email' => 'user@example.com',
             'username' => 'user1',
-            'organization_id' => 1
+            'organization_id' => 1,
         ]);
 
         // Should pass - same email but different organization
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->dbUnique('test_users', ['email', 'organization_id']);
 
         $validator->setInput([
             'email' => 'user@example.com',
-            'organization_id' => 2
+            'organization_id' => 2,
         ]);
         $this->assertTrue($validator->validate()->passes());
     }
@@ -146,16 +146,16 @@ class DbUniqueRuleTest extends TestCase
         db()->table('test_users')->insert([
             'email' => 'user@example.com',
             'username' => 'user1',
-            'organization_id' => 1
+            'organization_id' => 1,
         ]);
 
         // Should fail - same email and organization
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->dbUnique('test_users', ['email', 'organization_id']);
 
         $validator->setInput([
             'email' => 'user@example.com',
-            'organization_id' => 1
+            'organization_id' => 1,
         ]);
         $this->assertTrue($validator->validate()->fails());
         $this->assertStringContainsString('combination', $validator->getError('email'));
@@ -167,16 +167,16 @@ class DbUniqueRuleTest extends TestCase
         db()->table('test_posts')->insert([
             'slug' => 'hello-world',
             'category_id' => 1,
-            'title' => 'Hello World'
+            'title' => 'Hello World',
         ]);
 
         // Should pass - same slug but different category
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('slug')->dbUnique('test_posts', ['slug', 'category_id']);
 
         $validator->setInput([
             'slug' => 'hello-world',
-            'category_id' => 2
+            'category_id' => 2,
         ]);
         $this->assertTrue($validator->validate()->passes());
     }
@@ -187,17 +187,17 @@ class DbUniqueRuleTest extends TestCase
         db()->table('test_posts')->insert([
             'slug' => 'hello-world',
             'category_id' => 1,
-            'title' => 'Hello World'
+            'title' => 'Hello World',
         ]);
         $id = $this->db->lastInsertId();
 
         // Should pass - updating the same record
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('slug')->dbUnique('test_posts', ['slug', 'category_id'], ignoreId: $id);
 
         $validator->setInput([
             'slug' => 'hello-world',
-            'category_id' => 1
+            'category_id' => 1,
         ]);
         $this->assertTrue($validator->validate()->passes());
     }
@@ -214,11 +214,11 @@ class DbUniqueRuleTest extends TestCase
 
         db()->table('test_custom')->insert([
             'uuid' => 'abc-123',
-            'code' => 'CODE001'
+            'code' => 'CODE001',
         ]);
 
         // Should pass when ignoring with custom ID column
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('code')->dbUnique('test_custom', 'code', ignoreId: 'abc-123', idColumn: 'uuid');
 
         $validator->setInput(['code' => 'CODE001']);
@@ -232,10 +232,10 @@ class DbUniqueRuleTest extends TestCase
         // When no column specified, should use current field name
         db()->table('test_users')->insert([
             'email' => 'test@example.com',
-            'username' => 'testuser'
+            'username' => 'testuser',
         ]);
 
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->dbUnique('test_users');
 
         $validator->setInput(['email' => 'test@example.com']);
@@ -244,7 +244,7 @@ class DbUniqueRuleTest extends TestCase
 
     public function testDbUniqueChainedWithOtherRules(): void
     {
-        $validator = new Validator();
+        $validator = new Validator;
         $validator
             ->field('email')
             ->required()
@@ -259,11 +259,11 @@ class DbUniqueRuleTest extends TestCase
         // Test with valid but existing email
         db()->table('test_users')->insert([
             'email' => 'existing@example.com',
-            'username' => 'testuser'
+            'username' => 'testuser',
         ]);
 
         // Create new validator instance for second test
-        $validator = new Validator();
+        $validator = new Validator;
         $validator
             ->field('email')
             ->required()
@@ -279,10 +279,10 @@ class DbUniqueRuleTest extends TestCase
     {
         db()->table('test_users')->insert([
             'email' => 'taken@example.com',
-            'username' => 'testuser'
+            'username' => 'testuser',
         ]);
 
-        $validator = new Validator();
+        $validator = new Validator;
         $validator
             ->field('email')
             ->dbUnique('test_users', 'email')
@@ -297,10 +297,10 @@ class DbUniqueRuleTest extends TestCase
     {
         db()->table('test_users')->insert([
             'email' => 'user@example.com',
-            'username' => 'takenuser'
+            'username' => 'takenuser',
         ]);
 
-        $validator = new Validator();
+        $validator = new Validator;
         $validator
             ->field('email')
             ->dbUnique('test_users', 'email')
@@ -309,7 +309,7 @@ class DbUniqueRuleTest extends TestCase
 
         $validator->setInput([
             'email' => 'user@example.com',
-            'username' => 'takenuser'
+            'username' => 'takenuser',
         ]);
 
         $this->assertTrue($validator->validate()->fails());

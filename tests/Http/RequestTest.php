@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Lightpack\Exceptions\InvalidHttpMethodException;
 use Lightpack\Http\Request;
-use Lightpack\Utils\Arr;
 use PHPUnit\Framework\TestCase;
 
 final class RequestTest extends TestCase
@@ -197,7 +196,7 @@ final class RequestTest extends TestCase
         $this->expectException(InvalidHttpMethodException::class);
 
         $_SERVER['REQUEST_METHOD'] = 'GETPOST';
-        $request = new Request();
+        $request = new Request;
     }
 
     public function testRequestIsAjax()
@@ -255,15 +254,15 @@ final class RequestTest extends TestCase
             'user' => [
                 'profile' => [
                     'name' => 'John Doe',
-                    'email' => 'john@example.com'
+                    'email' => 'john@example.com',
                 ],
                 'settings' => [
-                    'theme' => 'dark'
-                ]
-            ]
+                    'theme' => 'dark',
+                ],
+            ],
         ];
 
-        $request = new Request();
+        $request = new Request;
 
         // Test nested access
         $this->assertEquals('John Doe', $request->input('user.profile.name'));
@@ -281,12 +280,12 @@ final class RequestTest extends TestCase
             'data' => [
                 'items' => [
                     ['id' => 1, 'name' => 'Item 1'],
-                    ['id' => 2, 'name' => 'Item 2']
-                ]
-            ]
+                    ['id' => 2, 'name' => 'Item 2'],
+                ],
+            ],
         ];
 
-        $request = new Request(); // Create new instance for POST test
+        $request = new Request; // Create new instance for POST test
 
         // Test array access with dot notation
         $this->assertEquals('Item 1', $request->input('data.items.0.name'));
@@ -309,9 +308,9 @@ final class RequestTest extends TestCase
             'user' => [
                 'profile' => [
                     'name' => 'Jane Doe',
-                    'email' => 'jane@example.com'
-                ]
-            ]
+                    'email' => 'jane@example.com',
+                ],
+            ],
         ]);
 
         // Configure the mock
@@ -339,32 +338,32 @@ final class RequestTest extends TestCase
             'users' => [
                 ['id' => 1, 'name' => 'John', 'role' => 'admin'],
                 ['id' => 2, 'name' => 'Jane', 'role' => 'user'],
-                ['id' => 3, 'name' => 'Bob', 'role' => 'user']
+                ['id' => 3, 'name' => 'Bob', 'role' => 'user'],
             ],
             'settings' => [
                 'notifications' => [
                     ['type' => 'email', 'enabled' => true],
                     ['type' => 'sms', 'enabled' => false],
-                    ['type' => 'push', 'enabled' => true]
-                ]
+                    ['type' => 'push', 'enabled' => true],
+                ],
             ],
             'departments' => [
                 'tech' => [
                     'teams' => [
                         ['name' => 'Frontend', 'members' => [['name' => 'Alice'], ['name' => ['Bob', 'Meghan']]]],
-                        ['name' => 'Backend', 'members' => [['name' => 'Charlie'], ['name' => 'Dave']]]
-                    ]
+                        ['name' => 'Backend', 'members' => [['name' => 'Charlie'], ['name' => 'Dave']]],
+                    ],
                 ],
                 'design' => [
                     'teams' => [
                         ['name' => 'UI', 'members' => [['name' => 'Eve'], ['name' => 'Frank']]],
-                        ['name' => 'UX', 'members' => [['name' => 'Grace'], ['name' => 'Henry']]]
-                    ]
-                ]
-            ]
+                        ['name' => 'UX', 'members' => [['name' => 'Grace'], ['name' => 'Henry']]],
+                    ],
+                ],
+            ],
         ];
 
-        $request = new Request();
+        $request = new Request;
 
         // Verify request method is POST
         $this->assertEquals('POST', $request->method());
@@ -472,8 +471,8 @@ final class RequestTest extends TestCase
 
     public function testRouteIsReturnsTrueForExactMatch()
     {
-        $request = new \Lightpack\Http\Request();
-        $route = new \Lightpack\Routing\Route();
+        $request = new \Lightpack\Http\Request;
+        $route = new \Lightpack\Routing\Route;
         $route->name('dashboard');
         $request->setRoute($route);
         $this->assertTrue($request->matchesRoute('dashboard'));
@@ -481,8 +480,8 @@ final class RequestTest extends TestCase
 
     public function testRouteIsReturnsTrueForWildcardMatch()
     {
-        $request = new \Lightpack\Http\Request();
-        $route = new \Lightpack\Routing\Route();
+        $request = new \Lightpack\Http\Request;
+        $route = new \Lightpack\Routing\Route;
         $route->name('admin.dashboard');
         $request->setRoute($route);
         $this->assertTrue($request->matchesRoute('admin.*'));
@@ -490,8 +489,8 @@ final class RequestTest extends TestCase
 
     public function testRouteIsReturnsTrueForArrayOfPatterns()
     {
-        $request = new \Lightpack\Http\Request();
-        $route = new \Lightpack\Routing\Route();
+        $request = new \Lightpack\Http\Request;
+        $route = new \Lightpack\Routing\Route;
         $route->name('user.profile');
         $request->setRoute($route);
         $this->assertTrue($request->matchesRoute(['foo', 'user.*']));
@@ -499,8 +498,8 @@ final class RequestTest extends TestCase
 
     public function testRouteIsReturnsFalseForNoMatch()
     {
-        $request = new \Lightpack\Http\Request();
-        $route = new \Lightpack\Routing\Route();
+        $request = new \Lightpack\Http\Request;
+        $route = new \Lightpack\Routing\Route;
         $route->name('user.profile');
         $request->setRoute($route);
         $this->assertFalse($request->matchesRoute('admin.*'));
@@ -508,8 +507,8 @@ final class RequestTest extends TestCase
 
     public function testRouteIsReturnsFalseIfRouteHasNoName()
     {
-        $request = new \Lightpack\Http\Request();
-        $route = new \Lightpack\Routing\Route();
+        $request = new \Lightpack\Http\Request;
+        $route = new \Lightpack\Routing\Route;
         // Do not set a name
         $request->setRoute($route);
         $this->assertFalse($request->matchesRoute('no-name'));

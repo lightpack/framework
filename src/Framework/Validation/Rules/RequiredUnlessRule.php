@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Lightpack\Validation\Rules;
 
 use Lightpack\Utils\Arr;
-use Lightpack\Validation\Traits\ValidationMessageTrait;
 use Lightpack\Validation\Traits\FileUploadValidationTrait;
+use Lightpack\Validation\Traits\ValidationMessageTrait;
 
 class RequiredUnlessRule
 {

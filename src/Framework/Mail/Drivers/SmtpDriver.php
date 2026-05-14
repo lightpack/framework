@@ -21,12 +21,12 @@ class SmtpDriver implements DriverInterface
     {
         // Configure SMTP
         $this->mailer->isSMTP();
-        $this->mailer->SMTPAuth     = true;
-        $this->mailer->Host         = get_env('MAIL_HOST');
-        $this->mailer->Port         = get_env('MAIL_PORT');
-        $this->mailer->Username     = get_env('MAIL_USERNAME');
-        $this->mailer->Password     = get_env('MAIL_PASSWORD');
-        $this->mailer->SMTPSecure   = get_env('MAIL_ENCRYPTION');
+        $this->mailer->SMTPAuth = true;
+        $this->mailer->Host = get_env('MAIL_HOST');
+        $this->mailer->Port = get_env('MAIL_PORT');
+        $this->mailer->Username = get_env('MAIL_USERNAME');
+        $this->mailer->Password = get_env('MAIL_PASSWORD');
+        $this->mailer->SMTPSecure = get_env('MAIL_ENCRYPTION');
 
         // Set default from
         $this->mailer->setFrom(
@@ -35,7 +35,7 @@ class SmtpDriver implements DriverInterface
         );
 
         $this->mailer->isHTML(true);
-        
+
         // Set UTF-8 encoding explicitly to prevent garbage characters
         $this->mailer->CharSet = PHPMailer::CHARSET_UTF8;
         $this->mailer->Encoding = 'base64'; // Best for UTF-8 content
@@ -52,9 +52,9 @@ class SmtpDriver implements DriverInterface
             $this->mailer->clearAttachments();
 
             // Set from
-            if (!empty($data['from'])) {
+            if (! empty($data['from'])) {
                 $this->mailer->setFrom(
-                    $data['from']['email'], 
+                    $data['from']['email'],
                     $data['from']['name'] ?? ''
                 );
             }
@@ -65,21 +65,21 @@ class SmtpDriver implements DriverInterface
             }
 
             // Set CC
-            if (!empty($data['cc'])) {
+            if (! empty($data['cc'])) {
                 foreach ($data['cc'] as $cc) {
                     $this->mailer->addCC($cc['email'], $cc['name'] ?? '');
                 }
             }
 
             // Set BCC
-            if (!empty($data['bcc'])) {
+            if (! empty($data['bcc'])) {
                 foreach ($data['bcc'] as $bcc) {
                     $this->mailer->addBCC($bcc['email'], $bcc['name'] ?? '');
                 }
             }
 
             // Set Reply-To
-            if (!empty($data['reply_to'])) {
+            if (! empty($data['reply_to'])) {
                 foreach ($data['reply_to'] as $replyTo) {
                     $this->mailer->addReplyTo($replyTo['email'], $replyTo['name'] ?? '');
                 }
@@ -88,13 +88,13 @@ class SmtpDriver implements DriverInterface
             // Set subject and body
             $this->mailer->Subject = $data['subject'];
             $this->mailer->Body = $data['html_body'];
-            
-            if (!empty($data['text_body'])) {
+
+            if (! empty($data['text_body'])) {
                 $this->mailer->AltBody = $data['text_body'];
             }
 
             // Set attachments
-            if (!empty($data['attachments'])) {
+            if (! empty($data['attachments'])) {
                 foreach ($data['attachments'] as $attachment) {
                     $this->mailer->addAttachment($attachment['path'], $attachment['filename'] ?? '');
                 }

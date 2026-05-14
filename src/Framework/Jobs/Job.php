@@ -12,7 +12,7 @@ class Job
     protected $queue = 'default';
 
     /**
-     * Delay dispatching the job by the specified interval. By default, 
+     * Delay dispatching the job by the specified interval. By default,
      * the job will be dispatched immediately.
      *
      * @var string 'strtotime' compatible string.
@@ -30,9 +30,9 @@ class Job
     protected $attempts = 1;
 
     /**
-     * Retry after specified interval when the job fails. By default, 
+     * Retry after specified interval when the job fails. By default,
      * the job will be retried immediately.
-     * 
+     *
      * @var string 'strtotime' compatible string.
      */
     protected $retryAfter = 'now';
@@ -87,6 +87,7 @@ class Job
     public function delay(string $delay): self
     {
         $this->delay = $delay;
+
         return $this;
     }
 
@@ -99,7 +100,7 @@ class Job
     public function dispatch(array $payload = [])
     {
         $this->setPayload($payload);
-        
+
         $jobEngine = Connection::getJobEngine();
 
         $jobEngine->addJob(
@@ -112,7 +113,7 @@ class Job
 
     /**
      * Dispatch the job immediately without queuing.
-     * 
+     *
      * This will call the executing job class run() method.
      */
     public function dispatchSync(array $payload)
@@ -137,14 +138,14 @@ class Job
 
     /**
      * Configure rate limiting for this job.
-     * 
+     *
      * Return an array with 'limit' and 'seconds' keys, or null to disable.
-     * 
+     *
      * Examples:
      *   return ['limit' => 10, 'seconds' => 1];     // 10 per second
      *   return ['limit' => 100, 'seconds' => 60];   // 100 per minute
      *   return null;                                 // No rate limiting
-     * 
+     *
      * @return array|null ['limit' => int, 'seconds' => int, 'key' => string (optional)]
      */
     public function rateLimit(): ?array
@@ -154,22 +155,22 @@ class Job
 
     /**
      * Fail the job permanently without retrying.
-     * 
+     *
      * Use this for business logic failures where retrying won't help:
      * - Invalid data that won't change
      * - Insufficient balance/credits
      * - Resource not found (deleted user, etc.)
      * - Permission denied
-     * 
+     *
      * The job will be marked as failed immediately without consuming retry attempts.
-     * 
+     *
      * Example:
      * ```php
      * if ($response['status'] === 'insufficient_balance') {
      *     $this->failPermanently('SMS Provider: Insufficient balance');
      * }
      * ```
-     * 
+     *
      * @param string $reason The reason for permanent failure
      * @return never
      * @throws \Lightpack\Jobs\Exceptions\PermanentJobFailureException

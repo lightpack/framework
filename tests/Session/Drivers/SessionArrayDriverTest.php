@@ -1,7 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Session\Drivers\ArrayDriver;
+use PHPUnit\Framework\TestCase;
 
 class SessionArrayDriverTest extends TestCase
 {
@@ -9,7 +9,7 @@ class SessionArrayDriverTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->driver = new ArrayDriver();
+        $this->driver = new ArrayDriver;
     }
 
     public function testSetStoresValue()
@@ -28,7 +28,7 @@ class SessionArrayDriverTest extends TestCase
 
         $this->driver->set($key, $value);
         $result = $this->driver->get($key);
-        
+
         $this->assertEquals($value, $result);
     }
 
@@ -47,7 +47,7 @@ class SessionArrayDriverTest extends TestCase
         $this->driver->set('key2', 'value2');
 
         $result = $this->driver->get();
-        
+
         $this->assertArrayHasKey('key1', $result);
         $this->assertArrayHasKey('key2', $result);
         $this->assertEquals('value1', $result['key1']);
@@ -74,7 +74,7 @@ class SessionArrayDriverTest extends TestCase
         $this->driver->set('key2', 'value2');
 
         $this->driver->destroy();
-        
+
         $this->assertEmpty($this->driver->get());
     }
 

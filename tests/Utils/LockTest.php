@@ -26,7 +26,7 @@ class LockTest extends TestCase
             return new Cache(new FileDriver($this->cacheDir));
         });
 
-        $this->lock = new Lock();
+        $this->lock = new Lock;
     }
 
     protected function tearDown(): void

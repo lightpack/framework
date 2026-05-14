@@ -13,7 +13,7 @@ final class DateTimeQueryTest extends TestCase
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
-        
+
         // Create test table with datetime columns
         $sql = "
             DROP TABLE IF EXISTS events;
@@ -27,7 +27,7 @@ final class DateTimeQueryTest extends TestCase
             );
         ";
         $this->db->query($sql);
-        
+
         // Insert test data
         $this->db->query("INSERT INTO events (name, event_date, event_datetime, event_time, created_at) VALUES 
             ('Event 2023', '2023-06-15', '2023-06-15 10:30:00', '10:30:00', '2023-06-15 10:30:00'),
@@ -36,9 +36,9 @@ final class DateTimeQueryTest extends TestCase
             ('Event 2024 Dec', '2024-12-25', '2024-12-25 18:45:00', '18:45:00', '2024-12-25 18:45:00'),
             ('Event 2025', '2025-03-05', '2025-03-05 16:20:00', '16:20:00', '2025-03-05 16:20:00')
         ");
-        
+
         $this->query = new Query('events', $this->db);
-        
+
         // Configure container
         $container = Container::getInstance();
         $container->register('db', function () {
@@ -59,7 +59,7 @@ final class DateTimeQueryTest extends TestCase
         $this->query->whereDate('event_date', '2024-01-10');
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals(['2024-01-10'], $this->query->bindings);
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(1, $results);
@@ -74,7 +74,7 @@ final class DateTimeQueryTest extends TestCase
         $this->query->whereDate('event_date', '>=', '2024-12-01');
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals(['2024-12-01'], $this->query->bindings);
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(2, $results); // Dec 2024 and Mar 2025
@@ -97,7 +97,7 @@ final class DateTimeQueryTest extends TestCase
         $this->query->whereYear('created_at', 2024);
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals([2024], $this->query->bindings);
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(3, $results); // Jan, Feb, Dec 2024
@@ -110,7 +110,7 @@ final class DateTimeQueryTest extends TestCase
         $sql = "SELECT * FROM `events` WHERE YEAR(`created_at`) > ?";
         $this->query->whereYear('created_at', '>', 2023);
         $this->assertEquals($sql, $this->query->toSql());
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(4, $results); // All 2024 and 2025 events
@@ -124,7 +124,7 @@ final class DateTimeQueryTest extends TestCase
         $this->query->whereMonth('created_at', 12);
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals([12], $this->query->bindings);
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(1, $results);
@@ -147,38 +147,38 @@ final class DateTimeQueryTest extends TestCase
         $this->query->whereMonth('created_at', 'dec');
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals([12], $this->query->bindings);
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(1, $results);
         $this->assertEquals('Event 2024 Dec', $results[0]->name);
         $this->query->resetQuery();
-        
+
         // Test with full month name
         $this->query->whereMonth('created_at', 'december');
         $results = $this->query->all();
         $this->assertCount(1, $results);
         $this->assertEquals('Event 2024 Dec', $results[0]->name);
         $this->query->resetQuery();
-        
+
         // Test with different month names
         $this->query->whereMonth('created_at', 'jan');
         $results = $this->query->all();
         $this->assertCount(1, $results);
         $this->assertEquals('Event 2024 Jan', $results[0]->name);
         $this->query->resetQuery();
-        
+
         // Test case insensitivity
         $this->query->whereMonth('created_at', 'JAN');
         $results = $this->query->all();
         $this->assertCount(1, $results);
         $this->query->resetQuery();
-        
+
         $this->query->whereMonth('created_at', 'January');
         $results = $this->query->all();
         $this->assertCount(1, $results);
         $this->query->resetQuery();
-        
+
         // Test all month names
         $monthTests = [
             'feb' => 2, 'february' => 2,
@@ -192,7 +192,7 @@ final class DateTimeQueryTest extends TestCase
             'oct' => 10, 'october' => 10,
             'nov' => 11, 'november' => 11,
         ];
-        
+
         foreach ($monthTests as $monthName => $monthNumber) {
             $this->query->whereMonth('created_at', $monthName);
             $this->assertEquals([$monthNumber], $this->query->bindings);
@@ -207,7 +207,7 @@ final class DateTimeQueryTest extends TestCase
         $this->query->whereDay('created_at', 25);
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals([25], $this->query->bindings);
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(1, $results);
@@ -230,7 +230,7 @@ final class DateTimeQueryTest extends TestCase
         $this->query->whereTime('event_time', '14:00:00');
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals(['14:00:00'], $this->query->bindings);
-        
+
         // Execute and verify
         $results = $this->query->all();
         $this->assertCount(1, $results);
@@ -306,7 +306,7 @@ final class DateTimeQueryTest extends TestCase
     {
         // Test OR conditions with dates
         $results = $this->query
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereYear('created_at', 2023)
                   ->orWhereYear('created_at', 2025);
             })
@@ -320,13 +320,13 @@ final class DateTimeQueryTest extends TestCase
         // Test with current date
         $today = date('Y-m-d');
         $currentYear = date('Y');
-        
+
         $sql = "SELECT * FROM `events` WHERE DATE(`event_date`) = ?";
         $this->query->whereDate('event_date', $today);
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals([$today], $this->query->bindings);
         $this->query->resetQuery();
-        
+
         // Test current year
         $sql = "SELECT * FROM `events` WHERE YEAR(`created_at`) = ?";
         $this->query->whereYear('created_at', $currentYear);
@@ -343,7 +343,7 @@ final class DateTimeQueryTest extends TestCase
             ->orderBy('event_date', 'ASC')
             ->limit(2)
             ->all();
-        
+
         $this->assertCount(2, $results);
         $this->assertEquals('Event 2024 Jan', $results[0]->name);
         $this->assertEquals('Event 2024 Feb', $results[1]->name);

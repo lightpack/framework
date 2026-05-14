@@ -12,7 +12,7 @@ class ArgsTest extends TestCase
     public function testEmptyArguments()
     {
         $args = new Args([]);
-        
+
         $this->assertNull($args->first());
         $this->assertEmpty($args->positional());
         $this->assertEmpty($args->options());
@@ -22,7 +22,7 @@ class ArgsTest extends TestCase
     public function testSinglePositionalArgument()
     {
         $args = new Args(['User']);
-        
+
         $this->assertEquals('User', $args->first());
         $this->assertEquals(['User'], $args->positional());
         $this->assertEmpty($args->options());
@@ -31,7 +31,7 @@ class ArgsTest extends TestCase
     public function testMultiplePositionalArguments()
     {
         $args = new Args(['User', 'Admin/Role', 'Product']);
-        
+
         $this->assertEquals('User', $args->first());
         $this->assertEquals(['User', 'Admin/Role', 'Product'], $args->positional());
         $this->assertEmpty($args->options());
@@ -44,7 +44,7 @@ class ArgsTest extends TestCase
     public function testOptionWithValue()
     {
         $args = new Args(['--table=users']);
-        
+
         $this->assertEquals('users', $args->get('table'));
         $this->assertNull($args->first());
     }
@@ -52,7 +52,7 @@ class ArgsTest extends TestCase
     public function testMultipleOptionsWithValues()
     {
         $args = new Args(['--table=users', '--key=id', '--connection=mysql']);
-        
+
         $this->assertEquals('users', $args->get('table'));
         $this->assertEquals('id', $args->get('key'));
         $this->assertEquals('mysql', $args->get('connection'));
@@ -61,7 +61,7 @@ class ArgsTest extends TestCase
     public function testFlagWithoutValue()
     {
         $args = new Args(['--force', '--help']);
-        
+
         $this->assertTrue($args->has('force'));
         $this->assertTrue($args->has('help'));
         $this->assertTrue($args->get('force'));
@@ -71,7 +71,7 @@ class ArgsTest extends TestCase
     public function testMixedPositionalAndOptions()
     {
         $args = new Args(['User', '--table=users', 'Admin', '--force']);
-        
+
         $this->assertEquals('User', $args->first());
         $this->assertEquals(['User', 'Admin'], $args->positional());
         $this->assertEquals('users', $args->get('table'));
@@ -85,7 +85,7 @@ class ArgsTest extends TestCase
     public function testGetWithDefaultValue()
     {
         $args = new Args(['--table=users']);
-        
+
         $this->assertEquals('users', $args->get('table', 'default'));
         $this->assertEquals('id', $args->get('key', 'id'));
         $this->assertEquals('default', $args->get('missing', 'default'));
@@ -94,7 +94,7 @@ class ArgsTest extends TestCase
     public function testGetWithNullDefault()
     {
         $args = new Args([]);
-        
+
         $this->assertNull($args->get('table'));
         $this->assertNull($args->get('key', null));
     }
@@ -106,7 +106,7 @@ class ArgsTest extends TestCase
     public function testOptionWithEmptyValue()
     {
         $args = new Args(['--table=']);
-        
+
         // Empty string is a valid value
         $this->assertEquals('', $args->get('table'));
         $this->assertNotNull($args->get('table'));
@@ -118,9 +118,9 @@ class ArgsTest extends TestCase
             '--path=/var/www/html',
             '--url=https://example.com',
             '--name=John Doe',
-            '--email=user@example.com'
+            '--email=user@example.com',
         ]);
-        
+
         $this->assertEquals('/var/www/html', $args->get('path'));
         $this->assertEquals('https://example.com', $args->get('url'));
         $this->assertEquals('John Doe', $args->get('name'));
@@ -131,7 +131,7 @@ class ArgsTest extends TestCase
     {
         // Value contains '=' character
         $args = new Args(['--query=SELECT * FROM users WHERE id=1']);
-        
+
         // Should capture everything after first '='
         $this->assertEquals('SELECT * FROM users WHERE id=1', $args->get('query'));
     }
@@ -139,7 +139,7 @@ class ArgsTest extends TestCase
     public function testOptionWithMultipleEqualsSigns()
     {
         $args = new Args(['--config=key=value=extra']);
-        
+
         $this->assertEquals('key=value=extra', $args->get('config'));
     }
 
@@ -147,7 +147,7 @@ class ArgsTest extends TestCase
     {
         // Single dash should be treated as positional
         $args = new Args(['-', 'User']);
-        
+
         $this->assertEquals('-', $args->first());
         $this->assertEquals(['-', 'User'], $args->positional());
     }
@@ -157,7 +157,7 @@ class ArgsTest extends TestCase
         // Single-dash options (like -v) are treated as positional
         // This is intentional - we only support --long-options
         $args = new Args(['-v', '-f']);
-        
+
         $this->assertEquals('-v', $args->first());
         $this->assertEquals(['-v', '-f'], $args->positional());
         $this->assertFalse($args->has('v'));
@@ -167,7 +167,7 @@ class ArgsTest extends TestCase
     public function testOptionNameWithHyphens()
     {
         $args = new Args(['--dry-run', '--no-cache=true']);
-        
+
         $this->assertTrue($args->has('dry-run'));
         $this->assertEquals('true', $args->get('no-cache'));
     }
@@ -175,7 +175,7 @@ class ArgsTest extends TestCase
     public function testNumericPositionalArguments()
     {
         $args = new Args(['123', '456', '789']);
-        
+
         $this->assertEquals('123', $args->first());
         $this->assertEquals(['123', '456', '789'], $args->positional());
     }
@@ -183,7 +183,7 @@ class ArgsTest extends TestCase
     public function testNumericOptionValues()
     {
         $args = new Args(['--port=8080', '--timeout=30']);
-        
+
         // Values are returned as strings (command should cast if needed)
         $this->assertIsString($args->get('port'));
         $this->assertEquals('8080', $args->get('port'));
@@ -193,7 +193,7 @@ class ArgsTest extends TestCase
     public function testBooleanStringOptionValues()
     {
         $args = new Args(['--debug=true', '--verbose=false']);
-        
+
         // String 'true'/'false' are returned as strings, not booleans
         $this->assertIsString($args->get('debug'));
         $this->assertEquals('true', $args->get('debug'));
@@ -207,7 +207,7 @@ class ArgsTest extends TestCase
     public function testOptionWithWhitespaceValue()
     {
         $args = new Args(['--message=Hello World', '--spaces=   ']);
-        
+
         $this->assertEquals('Hello World', $args->get('message'));
         $this->assertEquals('   ', $args->get('spaces'));
     }
@@ -215,7 +215,7 @@ class ArgsTest extends TestCase
     public function testPositionalWithWhitespace()
     {
         $args = new Args(['Hello World', 'Foo Bar']);
-        
+
         $this->assertEquals('Hello World', $args->first());
         $this->assertEquals(['Hello World', 'Foo Bar'], $args->positional());
     }
@@ -228,14 +228,14 @@ class ArgsTest extends TestCase
     {
         // Last value should win
         $args = new Args(['--table=users', '--table=posts']);
-        
+
         $this->assertEquals('posts', $args->get('table'));
     }
 
     public function testDuplicateFlagRemainsTrue()
     {
         $args = new Args(['--force', '--force']);
-        
+
         $this->assertTrue($args->has('force'));
     }
 
@@ -243,7 +243,7 @@ class ArgsTest extends TestCase
     {
         // Option value should override flag
         $args = new Args(['--debug', '--debug=verbose']);
-        
+
         $this->assertEquals('verbose', $args->get('debug'));
         $this->assertNotTrue($args->get('debug')); // No longer boolean true
     }
@@ -255,7 +255,7 @@ class ArgsTest extends TestCase
     public function testPositionalOrderPreserved()
     {
         $args = new Args(['Third', 'First', 'Second']);
-        
+
         $this->assertEquals('Third', $args->first());
         $this->assertEquals(['Third', 'First', 'Second'], $args->positional());
     }
@@ -263,7 +263,7 @@ class ArgsTest extends TestCase
     public function testMixedArgumentsPositionalOrderPreserved()
     {
         $args = new Args(['First', '--opt=val', 'Second', '--flag', 'Third']);
-        
+
         $this->assertEquals(['First', 'Second', 'Third'], $args->positional());
     }
 
@@ -275,7 +275,7 @@ class ArgsTest extends TestCase
     {
         $original = ['User', '--table=users', '--force'];
         $args = new Args($original);
-        
+
         $this->assertEquals($original, $args->all());
     }
 
@@ -283,7 +283,7 @@ class ArgsTest extends TestCase
     {
         $original = ['--a=1', '--b=2', 'pos'];
         $args = new Args($original);
-        
+
         $this->assertSame($original, $args->all());
     }
 
@@ -294,7 +294,7 @@ class ArgsTest extends TestCase
     public function testHasReturnsFalseForMissingFlag()
     {
         $args = new Args(['--force']);
-        
+
         $this->assertTrue($args->has('force'));
         $this->assertFalse($args->has('help'));
         $this->assertFalse($args->has('missing'));
@@ -303,10 +303,10 @@ class ArgsTest extends TestCase
     public function testHasReturnsFalseForOptionWithValue()
     {
         $args = new Args(['--table=users']);
-        
+
         // has() checks for boolean flags, not options with values
         $this->assertFalse($args->has('table'));
-        
+
         // But get() still works
         $this->assertEquals('users', $args->get('table'));
     }
@@ -319,7 +319,7 @@ class ArgsTest extends TestCase
     {
         // php console create:model User --table=users --key=id
         $args = new Args(['User', '--table=users', '--key=id']);
-        
+
         $this->assertEquals('User', $args->first());
         $this->assertEquals('users', $args->get('table'));
         $this->assertEquals('id', $args->get('key'));
@@ -329,7 +329,7 @@ class ArgsTest extends TestCase
     {
         // php console migrate:up --force
         $args = new Args(['--force']);
-        
+
         $this->assertTrue($args->has('force'));
         $this->assertNull($args->first());
     }
@@ -340,9 +340,9 @@ class ArgsTest extends TestCase
         $args = new Args([
             '--path=app,config',
             '--ext=php,json',
-            '--run=vendor/bin/phpunit'
+            '--run=vendor/bin/phpunit',
         ]);
-        
+
         $this->assertEquals('app,config', $args->get('path'));
         $this->assertEquals('php,json', $args->get('ext'));
         $this->assertEquals('vendor/bin/phpunit', $args->get('run'));
@@ -354,9 +354,9 @@ class ArgsTest extends TestCase
         $args = new Args([
             '--queue=emails,notifications',
             '--sleep=5',
-            '--cooldown=60'
+            '--cooldown=60',
         ]);
-        
+
         $this->assertEquals('emails,notifications', $args->get('queue'));
         $this->assertEquals('5', $args->get('sleep'));
         $this->assertEquals('60', $args->get('cooldown'));
@@ -366,7 +366,7 @@ class ArgsTest extends TestCase
     {
         // php console app:serve 8080
         $args = new Args(['8080']);
-        
+
         $this->assertEquals('8080', $args->first());
         $this->assertEquals('8000', $args->get('port', '8000'));
     }
@@ -379,7 +379,7 @@ class ArgsTest extends TestCase
     {
         // Edge case: --=value (no option name)
         $args = new Args(['--=value']);
-        
+
         // Regex requires at least one char for option name
         // [^=]+ means "one or more non-= chars"
         // So --=value doesn't match and falls through to positional
@@ -390,7 +390,7 @@ class ArgsTest extends TestCase
     public function testTripleDashPrefix()
     {
         $args = new Args(['---option']);
-        
+
         // ---option matches ^--(.+)$ regex with capture group = '-option'
         // This is actually valid behavior - it becomes a flag named '-option'
         // If we want to reject this, we'd need more complex validation
@@ -402,7 +402,7 @@ class ArgsTest extends TestCase
     {
         // This would come as separate array elements from shell
         $args = new Args(['--table', '=', 'users']);
-        
+
         // --table is a valid flag (no = attached)
         // = and users are positional arguments
         $this->assertTrue($args->has('table'));
@@ -417,7 +417,7 @@ class ArgsTest extends TestCase
     public function testUnicodeInOptionValues()
     {
         $args = new Args(['--name=José', '--city=São Paulo', '--emoji=🚀']);
-        
+
         $this->assertEquals('José', $args->get('name'));
         $this->assertEquals('São Paulo', $args->get('city'));
         $this->assertEquals('🚀', $args->get('emoji'));
@@ -426,7 +426,7 @@ class ArgsTest extends TestCase
     public function testUnicodeInPositionalArguments()
     {
         $args = new Args(['Müller', '北京', '🎉']);
-        
+
         $this->assertEquals('Müller', $args->first());
         $this->assertContains('北京', $args->positional());
         $this->assertContains('🎉', $args->positional());
@@ -439,7 +439,7 @@ class ArgsTest extends TestCase
     public function testGetReturnsNullNotFalse()
     {
         $args = new Args([]);
-        
+
         $this->assertNull($args->get('missing'));
         $this->assertNotFalse($args->get('missing'));
     }
@@ -447,7 +447,7 @@ class ArgsTest extends TestCase
     public function testHasReturnsBoolean()
     {
         $args = new Args(['--force']);
-        
+
         $this->assertIsBool($args->has('force'));
         $this->assertIsBool($args->has('missing'));
     }
@@ -456,7 +456,7 @@ class ArgsTest extends TestCase
     {
         $args1 = new Args(['User']);
         $args2 = new Args([]);
-        
+
         $this->assertIsString($args1->first());
         $this->assertNull($args2->first());
     }
@@ -465,7 +465,7 @@ class ArgsTest extends TestCase
     {
         $args1 = new Args(['User']);
         $args2 = new Args([]);
-        
+
         $this->assertIsArray($args1->positional());
         $this->assertIsArray($args2->positional());
     }
@@ -474,7 +474,7 @@ class ArgsTest extends TestCase
     {
         $args1 = new Args(['--force']);
         $args2 = new Args([]);
-        
+
         $this->assertIsArray($args1->options());
         $this->assertIsArray($args2->options());
     }
@@ -483,7 +483,7 @@ class ArgsTest extends TestCase
     {
         $args1 = new Args(['User']);
         $args2 = new Args([]);
-        
+
         $this->assertIsArray($args1->all());
         $this->assertIsArray($args2->all());
     }

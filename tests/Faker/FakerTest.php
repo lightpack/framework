@@ -11,7 +11,7 @@ class FakerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->faker = new Faker();
+        $this->faker = new Faker;
     }
 
     public function testFirstName()
@@ -256,7 +256,7 @@ class FakerTest extends TestCase
         $datetime = $this->faker->datetime();
         $this->assertIsString($datetime);
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $datetime, 'Datetime should match Y-m-d H:i:s format');
-        
+
         // Test custom format
         $customDatetime = $this->faker->datetime('d/m/Y H:i');
         $this->assertMatchesRegularExpression('/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/', $customDatetime);
@@ -298,13 +298,13 @@ class FakerTest extends TestCase
 
     public function testSeedRepeatability()
     {
-        $faker1 = new Faker();
+        $faker1 = new Faker;
         $faker1->seed(1234);
         $name1 = $faker1->name();
         $email1 = $faker1->email();
         $number1 = $faker1->number(1, 100);
 
-        $faker2 = new Faker();
+        $faker2 = new Faker;
         $faker2->seed(1234);
         $name2 = $faker2->name();
         $email2 = $faker2->email();
@@ -317,7 +317,7 @@ class FakerTest extends TestCase
 
     public function testArrayOfName()
     {
-        $faker = new Faker();
+        $faker = new Faker;
         $faker->seed(2024);
         $names = $faker->arrayOf('name', 5);
         $this->assertIsArray($names);
@@ -330,7 +330,7 @@ class FakerTest extends TestCase
 
     public function testArrayOfNumber()
     {
-        $faker = new Faker();
+        $faker = new Faker;
         $faker->seed(2024);
         $numbers = $faker->arrayOf('number', 3, 10, 20);
         $this->assertIsArray($numbers);
@@ -344,11 +344,11 @@ class FakerTest extends TestCase
 
     public function testArrayOfDeterminism()
     {
-        $faker1 = new Faker();
+        $faker1 = new Faker;
         $faker1->seed(555);
         $arr1 = $faker1->arrayOf('email', 4);
 
-        $faker2 = new Faker();
+        $faker2 = new Faker;
         $faker2->seed(555);
         $arr2 = $faker2->arrayOf('email', 4);
 
@@ -357,7 +357,7 @@ class FakerTest extends TestCase
 
     public function testArrayOfThrowsOnInvalidMethod()
     {
-        $faker = new Faker();
+        $faker = new Faker;
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/Method \'notAMethod\' does not exist/');
         $faker->arrayOf('notAMethod', 3);
@@ -365,7 +365,7 @@ class FakerTest extends TestCase
 
     public function testUniqueEmailGeneration()
     {
-        $faker = new Faker();
+        $faker = new Faker;
         $uniqueFaker = $faker->unique();
         $emails = [];
         for ($i = 0; $i < 200; $i++) {
@@ -378,7 +378,7 @@ class FakerTest extends TestCase
 
     public function testUniqueThrowsWhenExhausted()
     {
-        $faker = new Faker();
+        $faker = new Faker;
         $faker->setLocaleData([
             'firstNames' => ['A'],
             'lastNames' => ['B'],

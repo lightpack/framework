@@ -11,9 +11,10 @@ class RunMigrationDown extends Command
 {
     public function run()
     {
-        if (!file_exists(DIR_ROOT . '/.env')) {
+        if (! file_exists(DIR_ROOT . '/.env')) {
             $this->output->error("Running migrations require ./.env which is missing.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -22,6 +23,7 @@ class RunMigrationDown extends Command
         if ('mysql' !== $driver) {
             $this->output->error("Migrations are supported only for MySQL/MariaDB.");
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -31,7 +33,7 @@ class RunMigrationDown extends Command
         $confirm = $this->promptConfirmation($steps, $force);
 
         if ($confirm) {
-            if('all' === $steps) {
+            if ('all' === $steps) {
                 $migrations = $migrator->rollbackAll(DIR_ROOT . '/database/migrations');
             } else {
                 $migrations = $migrator->rollback(DIR_ROOT . '/database/migrations', $steps);
@@ -49,7 +51,7 @@ class RunMigrationDown extends Command
                 $this->output->newline();
             }
         }
-        
+
         return self::SUCCESS;
     }
 
@@ -58,12 +60,12 @@ class RunMigrationDown extends Command
         switch (Env::get('DB_DRIVER')) {
             case 'mysql':
                 return new Mysql([
-                    'host'      => Env::get('DB_HOST'),
-                    'port'      => Env::get('DB_PORT'),
-                    'username'  => Env::get('DB_USER'),
-                    'password'  => Env::get('DB_PSWD'),
-                    'database'  => Env::get('DB_NAME'),
-                    'options'   => [],
+                    'host' => Env::get('DB_HOST'),
+                    'port' => Env::get('DB_PORT'),
+                    'username' => Env::get('DB_USER'),
+                    'password' => Env::get('DB_PSWD'),
+                    'database' => Env::get('DB_NAME'),
+                    'options' => [],
                 ]);
             default:
                 $this->output->error("Invalid database driver found in ./.env");
@@ -77,19 +79,19 @@ class RunMigrationDown extends Command
         if ($this->args->has('all')) {
             return 'all';
         }
-        
+
         $steps = $this->args->get('steps');
-        
+
         if ($steps) {
             return (int) $steps;
         }
-        
+
         // Check first positional argument
         $firstArg = $this->args->argument(0);
         if ($firstArg && is_numeric($firstArg)) {
             return (int) $firstArg;
         }
-        
+
         return null;
     }
 
@@ -103,7 +105,7 @@ class RunMigrationDown extends Command
 
         if ('all' === $steps) {
             return $this->prompt->confirm("Are you sure you want to rollback all the migrations?", false);
-        } else if (null === $steps || 1 === $steps) {
+        } elseif (null === $steps || 1 === $steps) {
             return $this->prompt->confirm("Are you sure you want to rollback last batch of migrations?", false);
         } else {
             return $this->prompt->confirm("Are you sure you want to rollback last {$steps} batch of migrations?", false);

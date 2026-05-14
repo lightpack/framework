@@ -2,13 +2,12 @@
 
 namespace Lightpack\Debug;
 
+use ErrorException;
+use Exception;
+use Lightpack\Logger\Logger;
+use ParseError;
 use Throwable;
 use TypeError;
-use Exception;
-use ParseError;
-use ErrorException;
-use Lightpack\Logger\Logger;
-use Lightpack\Debug\ExceptionRenderer;
 
 class Handler
 {

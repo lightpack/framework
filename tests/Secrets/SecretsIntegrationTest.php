@@ -1,7 +1,5 @@
 <?php
 
-use Lightpack\Config\Config;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Schema\Schema;
@@ -11,6 +9,7 @@ use Lightpack\Logger\Logger;
 use Lightpack\Secrets\Secrets;
 use Lightpack\Secrets\SecretsTrait;
 use Lightpack\Utils\Crypto;
+use PHPUnit\Framework\TestCase;
 
 class SecretsIntegrationTest extends TestCase
 {
@@ -25,11 +24,12 @@ class SecretsIntegrationTest extends TestCase
         $this->db = new \Lightpack\Database\Adapters\Mysql($config);
 
         $this->container = Container::getInstance();
-        $this->container->register('db', fn() => $this->db);
-        $this->container->register('logger', fn() => new Logger(new NullLogger));
-        $this->container->register('config', fn() => $config);
+        $this->container->register('db', fn () => $this->db);
+        $this->container->register('logger', fn () => new Logger(new NullLogger));
+        $this->container->register('config', fn () => $config);
         $this->container->register('secrets', function () {
             $crypto = new Crypto(str_repeat('a', 32));
+
             return new Secrets(
                 $this->container->get('db'),
                 $crypto

@@ -2,7 +2,7 @@
 
 namespace Lightpack\Utils;
 
-class Csv 
+class Csv
 {
     private string $delimiter = ',';
     private string $enclosure = '"';
@@ -21,15 +21,15 @@ class Csv
 
     /**
      * Read CSV with generators for memory efficiency.
-     * 
+     *
      * @param string $file CSV file path
      * @param bool $hasHeader Use first row as header
      * @return \Generator Row by row data
      * @throws \RuntimeException If file cannot be opened
      */
-    public function read(string $file, bool $hasHeader = true): \Generator 
+    public function read(string $file, bool $hasHeader = true): \Generator
     {
-        if (!is_readable($file)) {
+        if (! is_readable($file)) {
             throw new \RuntimeException("Cannot read file: {$file}");
         }
 
@@ -62,7 +62,7 @@ class Csv
 
         while ($row = fgetcsv($handle, 0, $this->delimiter, $this->enclosure, $this->escape)) {
             $rowNum++;
-            
+
             if ($this->limit !== null && $count >= $this->limit) {
                 break;
             }
@@ -78,7 +78,7 @@ class Csv
             if ($this->validator) {
                 try {
                     $result = ($this->validator)($row);
-                    
+
                     // Convert result to array of errors
                     $errors = [];
                     if (is_string($result)) {
@@ -124,21 +124,21 @@ class Csv
 
     /**
      * Write data to CSV, accepting any iterable.
-     * 
+     *
      * @param string $file Output file path
      * @param iterable $data Data to write
      * @param array $headers Optional column headers
      * @return bool Success
      * @throws \RuntimeException If file cannot be opened for writing
      */
-    public function write(string $file, iterable $data, array $headers = []): bool 
+    public function write(string $file, iterable $data, array $headers = []): bool
     {
         $dir = dirname($file);
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
 
-        if (!is_writable($dir)) {
+        if (! is_writable($dir)) {
             throw new \RuntimeException("Cannot write to directory: {$dir}");
         }
 
@@ -197,49 +197,53 @@ class Csv
 
     /**
      * Map column names or transform values.
-     * 
+     *
      * @param array $mappings Column mappings ['old' => 'new'] or ['column' => callable]
      * @return self
      */
-    public function map(array $mappings): self 
+    public function map(array $mappings): self
     {
         $this->mappings = $mappings;
+
         return $this;
     }
 
     /**
      * Exclude specified columns.
-     * 
+     *
      * @param array $columns Columns to exclude
      * @return self
      */
-    public function exclude(array $columns): self 
+    public function exclude(array $columns): self
     {
         $this->excludes = $columns;
+
         return $this;
     }
 
     /**
      * Set column type casting.
-     * 
+     *
      * @param array $types Column type hints (int, float, bool, date)
      * @return self
      */
-    public function casts(array $types): self 
+    public function casts(array $types): self
     {
         $this->casts = $types;
+
         return $this;
     }
 
     /**
      * Set CSV delimiter.
-     * 
+     *
      * @param string $delimiter Delimiter character
      * @return self
      */
-    public function setDelimiter(string $delimiter): self 
+    public function setDelimiter(string $delimiter): self
     {
         $this->delimiter = $delimiter;
+
         return $this;
     }
 
@@ -252,6 +256,7 @@ class Csv
             throw new \InvalidArgumentException('Limit must be a positive number');
         }
         $this->limit = $count;
+
         return $this;
     }
 
@@ -264,6 +269,7 @@ class Csv
             throw new \InvalidArgumentException('Maximum rows must be a positive number');
         }
         $this->maxAllowed = $count;
+
         return $this;
     }
 
@@ -272,13 +278,14 @@ class Csv
      */
     public function validate(callable $validator, string $onInvalid = 'skip'): self
     {
-        if (!in_array($onInvalid, ['skip', 'collect', 'fail'])) {
+        if (! in_array($onInvalid, ['skip', 'collect', 'fail'])) {
             throw new \InvalidArgumentException(
                 "Invalid onInvalid value. Must be 'skip', 'collect', or 'fail'"
             );
         }
         $this->validator = $validator;
         $this->onInvalid = $onInvalid;
+
         return $this;
     }
 
@@ -290,10 +297,10 @@ class Csv
         return $this->errors;
     }
 
-    private function applyCasts(array $row, bool $reverse = false): array 
+    private function applyCasts(array $row, bool $reverse = false): array
     {
         foreach ($this->casts as $column => $type) {
-            if (!isset($row[$column])) {
+            if (! isset($row[$column])) {
                 continue;
             }
 
@@ -316,10 +323,11 @@ class Csv
                 };
             }
         }
+
         return $row;
     }
 
-    private function applyMappings(array $row, bool $reverse = false): array 
+    private function applyMappings(array $row, bool $reverse = false): array
     {
         $result = [];
         if ($reverse) {
@@ -349,18 +357,20 @@ class Csv
                 }
             }
         }
+
         return $result;
     }
 
-    private function applyExcludes(array $row): array 
+    private function applyExcludes(array $row): array
     {
         return array_diff_key($row, array_flip($this->excludes));
     }
 
-    private function transformHeaders(array $headers): array 
+    private function transformHeaders(array $headers): array
     {
         $reverseMappings = array_flip($this->mappings);
-        return array_map(function($header) use ($reverseMappings) {
+
+        return array_map(function ($header) use ($reverseMappings) {
             return $reverseMappings[$header] ?? $header;
         }, $headers);
     }

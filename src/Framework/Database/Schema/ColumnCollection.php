@@ -32,26 +32,26 @@ class ColumnCollection
         foreach ($this->columns as $column) {
             $columns[$column->getName()] = $column->compileColumn();
 
-            if($index = $column->compileIndex()) {
+            if ($index = $column->compileIndex()) {
                 $indexes[] = $index;
             }
         }
 
-        if(in_array($this->context, ['create', 'add'])) {
+        if (in_array($this->context, ['create', 'add'])) {
             $elements = array_merge($columns, $indexes);
         } else {
             $elements = $columns;
         }
 
 
-        if($this->context === 'add') {
-            foreach($elements as $key => $value) {
+        if ($this->context === 'add') {
+            foreach ($elements as $key => $value) {
                 $elements[$key] = "ADD {$value}";
             }
         }
 
-        if($this->context === 'change') {
-            foreach($elements as $key => $value) {
+        if ($this->context === 'change') {
+            foreach ($elements as $key => $value) {
                 $elements[$key] = "CHANGE {$key} {$value}";
             }
         }

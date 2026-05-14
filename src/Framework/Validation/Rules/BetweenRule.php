@@ -31,11 +31,12 @@ class BetweenRule
             }
         }
 
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return false;
         }
 
         $value = (float) $value;
+
         return $value >= $this->min && $value <= $this->max;
     }
 }

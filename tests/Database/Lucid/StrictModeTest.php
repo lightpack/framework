@@ -4,9 +4,9 @@ require_once 'Owner.php';
 require_once 'Option.php';
 require_once 'Product.php';
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\Adapters\Mysql;
+use PHPUnit\Framework\TestCase;
 
 class StrictModeTest extends TestCase
 {
@@ -119,7 +119,7 @@ class StrictModeTest extends TestCase
 
         // Should work fine with eager loading
         $strictProduct = $strictProduct->query()->with('owner')->where('id', '=', $product->id)->one();
-        
+
         $this->assertNotNull($strictProduct->owner);
         $this->assertEquals('John', $strictProduct->owner->name);
     }
@@ -129,7 +129,7 @@ class StrictModeTest extends TestCase
         // Create test data
         $this->db->table('products')->insert(['name' => 'Test Product 1', 'color' => '#000']);
         $this->db->table('products')->insert(['name' => 'Test Product 2', 'color' => '#000']);
-        foreach($this->db->table('products')->all() as $product) {
+        foreach ($this->db->table('products')->all() as $product) {
             $this->db->table('owners')->insert(['product_id' => $product->id, 'name' => 'Owner ' . $product->id]);
         }
 
@@ -150,7 +150,7 @@ class StrictModeTest extends TestCase
 
         // Should work after explicitly loading the relation
         $products->load('owner');
-        foreach($products as $product) {
+        foreach ($products as $product) {
             $this->assertNotNull($product->owner);
             $this->assertEquals('Owner ' . $product->id, $product->owner->name);
         }

@@ -13,21 +13,22 @@ class LogDriver implements DriverInterface
         $data['timestamp'] = time();
 
         // Filter out empty values for cleaner logs
-        $data = array_filter($data, function($value) {
+        $data = array_filter($data, function ($value) {
             if (is_array($value)) {
-                return !empty($value);
+                return ! empty($value);
             }
             if (is_string($value)) {
                 return $value !== '';
             }
+
             return $value !== null;
         });
 
         $logFile = DIR_STORAGE . '/logs/mails.json';
-        
+
         // Ensure logs directory exists
         $logsDir = dirname($logFile);
-        if (!is_dir($logsDir)) {
+        if (! is_dir($logsDir)) {
             mkdir($logsDir, 0755, true);
         }
 

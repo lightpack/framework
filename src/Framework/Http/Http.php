@@ -4,7 +4,7 @@ namespace Lightpack\Http;
 
 /**
  * A lightweight HTTP client for making API requests.
- * 
+ *
  * Features:
  * - Fluent interface for HTTP methods (get, post, put, patch, delete)
  * - Support for JSON and form-urlencoded data
@@ -57,6 +57,7 @@ class Http
     public function headers(array $headers): self
     {
         $this->headers = array_merge($this->headers, $headers);
+
         return $this;
     }
 
@@ -79,7 +80,7 @@ class Http
 
     /**
      * Get the HTTP status code of the response.
-     * 
+     *
      * Returns:
      * - 2xx for successful requests
      * - 4xx for client errors (like 404 Not Found)
@@ -93,17 +94,17 @@ class Http
 
     /**
      * Get connection/transport level error message if any.
-     * 
+     *
      * Examples of transport errors:
      * - Could not resolve host (DNS failure)
      * - Connection refused
      * - Connection timed out
      * - SSL certificate verification failed
      * - No route to host
-     * 
+     *
      * Note: These are low-level errors that occur before getting an HTTP response.
      * For HTTP-level errors (404, 500 etc), check the status() code instead.
-     * 
+     *
      * @return string|null Error message or null if connection was successful
      */
     public function error(): ?string
@@ -127,6 +128,7 @@ class Http
     public function form(): self
     {
         $this->headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
         return $this;
     }
 
@@ -173,15 +175,15 @@ class Http
 
     /**
      * Check if the request failed.
-     * 
+     *
      * A request can fail in two ways:
      * 1. Transport failure: Connection/DNS/SSL errors (status = 0)
      * 2. HTTP failure: Server returned 4xx or 5xx status
      */
-    public function failed(): bool 
+    public function failed(): bool
     {
         // Transport error = no HTTP response at all
-        if (!empty($this->error)) {
+        if (! empty($this->error)) {
             return true;
         }
 
@@ -192,9 +194,9 @@ class Http
     private function request(string $method, string $url, array $data = []): self
     {
         $ch = curl_init();
-        
+
         // Build URL with query parameters for GET requests
-        if ($method === 'GET' && !empty($data)) {
+        if ($method === 'GET' && ! empty($data)) {
             $url .= '?' . http_build_query($data);
         }
 
@@ -207,7 +209,7 @@ class Http
         $headers = [];
         if ($method !== 'GET') {
             // Default to JSON unless form-encoded is requested
-            if (!isset($this->headers['Content-Type'])) {
+            if (! isset($this->headers['Content-Type'])) {
                 $this->headers['Content-Type'] = 'application/json';
             }
         }
@@ -216,12 +218,12 @@ class Http
             $headers[] = "$key: $value";
         }
 
-        if (!empty($headers)) {
+        if (! empty($headers)) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
 
         // Set request body for non-GET requests
-        if ($method !== 'GET' && !empty($data)) {
+        if ($method !== 'GET' && ! empty($data)) {
             $body = $this->headers['Content-Type'] === 'application/x-www-form-urlencoded'
                 ? http_build_query($data)
                 : json_encode($data);
@@ -229,7 +231,7 @@ class Http
         }
 
         // Set files for upload
-        if (!empty($this->files)) {
+        if (! empty($this->files)) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->files);
         }
 
@@ -263,6 +265,7 @@ class Http
     {
         $this->options[CURLOPT_TIMEOUT] = $seconds;
         $this->options[CURLOPT_CONNECTTIMEOUT] = $seconds;
+
         return $this;
     }
 
@@ -273,12 +276,13 @@ class Http
     {
         $this->options[CURLOPT_SSL_VERIFYPEER] = false;
         $this->options[CURLOPT_SSL_VERIFYHOST] = 0;
+
         return $this;
     }
 
     /**
      * Set authentication bearer token.
-     * 
+     *
      * Example:
      *   $client->token('xyz')->get('https://api.example.com');
      */
@@ -289,10 +293,10 @@ class Http
 
     /**
      * Make a streaming HTTP request with chunk callback.
-     * 
+     *
      * Unlike regular HTTP methods, this streams the response in real-time
      * by calling the provided callback for each chunk of data received.
-     * 
+     *
      * @param string $method HTTP method (GET, POST, PUT, DELETE, etc.)
      * @param string $url The endpoint URL
      * @param array|null $data Request body data (will be JSON encoded for POST/PUT/PATCH)
@@ -304,61 +308,63 @@ class Http
     {
         $ch = curl_init();
         $method = strtoupper($method);
-        
+
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, false); // Don't buffer response
         curl_setopt($ch, CURLOPT_HEADER, false);
-        
+
         // Prepare headers
         $headers = [];
-        if ($data !== null && !isset($this->headers['Content-Type'])) {
+        if ($data !== null && ! isset($this->headers['Content-Type'])) {
             $this->headers['Content-Type'] = 'application/json';
         }
-        
+
         foreach ($this->headers as $key => $value) {
             $headers[] = "$key: $value";
         }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        
+
         // Set request body for methods that support it
         if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'])) {
             $body = json_encode($data);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         }
-        
+
         // Set custom options (timeout, etc.)
         foreach ($this->options as $option => $value) {
             curl_setopt($ch, $option, $value);
         }
-        
+
         // Set write callback for streaming
-        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch, $chunk) use ($onChunk) {
+        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $chunk) use ($onChunk) {
             $onChunk($chunk);
+
             return strlen($chunk); // Must return bytes processed
         });
-        
+
         // Execute streaming request
         $success = curl_exec($ch);
         $this->error = curl_error($ch);
         $this->statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
+
         curl_close($ch);
-        
+
         // Check for errors
-        if (!$success || $this->statusCode >= 400) {
+        if (! $success || $this->statusCode >= 400) {
             $errorMsg = $this->error ?: 'HTTP error ' . $this->statusCode;
+
             throw new \Exception('Streaming request failed: ' . $errorMsg);
         }
-        
+
         $this->resetState();
-        
+
         return $this;
     }
 
     /**
      * Set custom cURL options for the request.
-     * 
+     *
      * @param array $options Array of CURLOPT_* options
      */
     public function options(array $options): self
@@ -366,12 +372,13 @@ class Http
         foreach ($options as $option => $value) {
             $this->options[$option] = $value;
         }
+
         return $this;
     }
 
     /**
      * Download a file from URL and save it to disk.
-     * 
+     *
      * @param string $url URL to download from
      * @param string $savePath Path where to save the file
      * @return bool True if download was successful
@@ -379,33 +386,33 @@ class Http
     public function download(string $url, string $savePath): bool
     {
         $fp = fopen($savePath, 'w+');
-        
+
         if ($fp === false) {
             throw new \RuntimeException(
                 sprintf('Failed to open file for writing: %s', $savePath)
             );
         }
-        
+
         $this->options[CURLOPT_URL] = $url;
         $this->options[CURLOPT_FILE] = $fp;
         $this->options[CURLOPT_FOLLOWLOCATION] = true;
-        
+
         $ch = curl_init();
         curl_setopt_array($ch, $this->options);
-        
+
         $success = curl_exec($ch);
         $this->error = curl_error($ch);
         $this->statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
+
         curl_close($ch);
         fclose($fp);
-        
-        if (!$success) {
+
+        if (! $success) {
             @unlink($savePath);
         }
-        
+
         $this->resetState();
-        
+
         return $success;
     }
 
@@ -418,7 +425,7 @@ class Http
 
     /**
      * Get all response headers.
-     * 
+     *
      * @return array Associative array of header name => value
      */
     public function responseHeaders(): array
@@ -429,19 +436,20 @@ class Http
     /**
      * Get a specific response header value.
      * Header names are case-insensitive.
-     * 
+     *
      * @param string $name Header name
      * @return string|null Header value or null if not found
      */
     public function responseHeader(string $name): ?string
     {
         $name = strtolower($name);
+
         return $this->responseHeaders[$name] ?? null;
     }
 
     /**
      * Parse raw header string into associative array.
-     * 
+     *
      * @param string $headerString Raw header string from cURL
      * @return array Parsed headers (lowercase keys)
      */

@@ -8,7 +8,8 @@ class ArrayDriver implements DriverInterface
 {
     protected $store = [];
 
-    public function start() {
+    public function start()
+    {
         // ...
     }
 

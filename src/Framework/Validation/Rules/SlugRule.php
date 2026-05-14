@@ -10,7 +10,6 @@ class SlugRule
 {
     use ValidationMessageTrait;
 
-    
     public function __construct()
     {
         $this->message = 'Must be a valid URL slug';

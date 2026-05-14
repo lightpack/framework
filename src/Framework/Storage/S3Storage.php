@@ -2,9 +2,9 @@
 
 namespace Lightpack\Storage;
 
-use Aws\S3\S3Client;
-use Aws\S3\Exception\S3Exception;
 use Aws\CloudFront\UrlSigner;
+use Aws\S3\Exception\S3Exception;
+use Aws\S3\S3Client;
 use Lightpack\Container\Container;
 use Lightpack\Exceptions\FileUploadException;
 
@@ -82,7 +82,7 @@ class S3Storage implements StorageInterface
     {
         $path = $this->getFullPath($path);
 
-        if (!$this->exists($path)) {
+        if (! $this->exists($path)) {
             return false;
         }
 
@@ -120,7 +120,7 @@ class S3Storage implements StorageInterface
         $source = $this->getFullPath($source);
         $destination = $this->getFullPath($destination);
 
-        if (!$this->exists($source)) {
+        if (! $this->exists($source)) {
             return false;
         }
 
@@ -152,7 +152,7 @@ class S3Storage implements StorageInterface
 
     /**
      * Store an uploaded file
-     * 
+     *
      * @throws FileUploadException on failure
      */
     public function store(string $source, string $destination): void
@@ -162,7 +162,7 @@ class S3Storage implements StorageInterface
         try {
             // Read the uploaded file
             $contents = file_get_contents($source);
-            
+
             if ($contents === false) {
                 throw new FileUploadException('Could not read the uploaded file.');
             }
@@ -175,7 +175,7 @@ class S3Storage implements StorageInterface
                 // 'ACL' => $isPublic ? 'public-read' : 'private',
             ]);
 
-            if (!$result) {
+            if (! $result) {
                 throw new FileUploadException('Could not upload the file to S3.');
             }
         } catch (S3Exception $e) {
@@ -191,33 +191,34 @@ class S3Storage implements StorageInterface
     public function url(string $path, int $expiration = 3600): string
     {
         $path = $this->getFullPath($path);
-        
+
         // Check if CloudFront is configured and if this is a public file
         $config = Container::getInstance()->get('config');
         $config = $config->get('storage.s3.cloudfront') ?? [];
         $cloudfrontDomain = $config['domain'] ?? null;
         $isPublicFile = strpos($path, 'uploads/public/') === 0;
-        
+
         // Use CloudFront for public files if configured
         if ($cloudfrontDomain && $isPublicFile) {
             return 'https://' . $cloudfrontDomain . '/' . $path;
         }
-        
+
         // Use CloudFront signed URLs for private files if configured and key is available
         $cloudfrontKeyPairId = $config['key_pair_id'] ?? null;
         $cloudfrontPrivateKey = $config['private_key'] ?? null;
-        
-        if ($cloudfrontDomain && $cloudfrontKeyPairId && $cloudfrontPrivateKey && !$isPublicFile) {
+
+        if ($cloudfrontDomain && $cloudfrontKeyPairId && $cloudfrontPrivateKey && ! $isPublicFile) {
             // Use the dedicated UrlSigner class for better performance and cleaner API
             if (class_exists(UrlSigner::class)) {
                 $signer = new UrlSigner($cloudfrontKeyPairId, $cloudfrontPrivateKey);
+
                 return $signer->getSignedUrl(
                     'https://' . $cloudfrontDomain . '/' . $path,
                     time() + $expiration
                 );
             }
         }
-        
+
         // Fallback to S3 presigned URL
         $command = $this->client->getCommand('GetObject', [
             'Bucket' => $this->bucket,
@@ -235,7 +236,7 @@ class S3Storage implements StorageInterface
     protected function getFullPath(string $path): string
     {
         $path = $this->normalizePath($path);
-        
+
         if (empty($this->basePath)) {
             return $path;
         }
@@ -250,18 +251,18 @@ class S3Storage implements StorageInterface
     {
         return trim($path, '/');
     }
-    
+
     /**
      * Get the underlying S3Client instance
-     * 
+     *
      * This provides access to S3-specific functionality not covered by the Storage interface.
-     * 
+     *
      * Example:
      * ```php
      * // When you need S3-specific functionality
      * if ($storage instanceof S3Storage) {
      *     $s3Client = $storage->getClient();
-     *     
+     *
      *     // Now use any S3Client method
      *     $presignedPost = $s3Client->createPresignedPost([
      *         'Bucket' => 'your-bucket',
@@ -269,17 +270,17 @@ class S3Storage implements StorageInterface
      *     ]);
      * }
      * ```
-     * 
+     *
      * @return S3Client The AWS S3 client instance
      */
     public function getClient(): S3Client
     {
         return $this->client;
     }
-    
+
     /**
      * Get the S3 bucket name
-     * 
+     *
      * @return string The bucket name
      */
     public function getBucket(): string
@@ -294,26 +295,26 @@ class S3Storage implements StorageInterface
     {
         try {
             // Ensure directory ends with a trailing slash if not empty
-            if (!empty($directory) && substr($directory, -1) !== '/') {
+            if (! empty($directory) && substr($directory, -1) !== '/') {
                 $directory .= '/';
             }
-            
+
             $directory = $this->getFullPath($directory);
-            
+
             $params = [
                 'Bucket' => $this->bucket,
                 'Prefix' => $directory,
             ];
-            
+
             // Add delimiter for non-recursive listing (only current directory)
-            if (!$recursive) {
+            if (! $recursive) {
                 $params['Delimiter'] = '/';
             }
-            
+
             $result = $this->client->listObjects($params);
-            
+
             $files = [];
-            
+
             // Get the objects (files)
             if (isset($result['Contents'])) {
                 foreach ($result['Contents'] as $object) {
@@ -323,10 +324,11 @@ class S3Storage implements StorageInterface
                     }
                 }
             }
-            
+
             return $files;
         } catch (S3Exception $e) {
             logger()->error($e->getMessage());
+
             return [];
         }
     }

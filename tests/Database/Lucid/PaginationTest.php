@@ -17,7 +17,7 @@ final class PaginationTest extends TestCase
     private $db;
 
     private $productsCollection;
-    
+
     public function setUp(): void
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
@@ -29,12 +29,12 @@ final class PaginationTest extends TestCase
 
         // Configure container
         $container = Container::getInstance();
-        
+
         $container->register('db', function () {
             return $this->db;
         });
         $container->register('request', function () {
-            return new Request();
+            return new Request;
         });
 
         // Set Request URI

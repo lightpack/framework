@@ -3,7 +3,6 @@
 namespace Lightpack\Jobs;
 
 use Throwable;
-use Lightpack\Jobs\Job;
 
 abstract class BaseEngine
 {
@@ -11,10 +10,10 @@ abstract class BaseEngine
      * Add a job in the queue.
      *
      * @param string $jobHandler    Job classname.
-     * @param array $payload        Job payload data.  
+     * @param array $payload        Job payload data.
      * @param string $delay         Delay the job with 'strtotime' compatible value.
      * @param string $queue         Queue name.
-     * 
+     *
      * @return void
      */
     abstract public function addJob(string $jobHandler, array $payload, string $delay, string $queue): void;

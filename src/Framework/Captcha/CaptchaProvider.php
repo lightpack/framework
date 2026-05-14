@@ -2,10 +2,8 @@
 
 namespace Lightpack\Captcha;
 
-use Lightpack\Support\ProviderInterface;
 use Lightpack\Container\Container;
-use Lightpack\Captcha\CaptchaInterface;
-use Lightpack\Captcha\CaptchaManager;
+use Lightpack\Support\ProviderInterface;
 
 class CaptchaProvider implements ProviderInterface
 {

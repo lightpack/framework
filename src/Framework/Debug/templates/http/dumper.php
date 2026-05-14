@@ -16,11 +16,11 @@
     <div class="container">
         <?php foreach ($args as $arg) : ?>
             <div class="code-preview">
-                <?php if($dump_function === 'print_r'):?>
+                <?php if ($dump_function === 'print_r'):?>
                     <pre><code><?= $dump_function($arg, 1) ?></code></pre>
                 <?php endif ?>
 
-                <?php if($dump_function === 'var_dump'):?>
+                <?php if ($dump_function === 'var_dump'):?>
                     <pre><code><?= $dump_function($arg) ?></code></pre>
                 <?php endif ?>
             </div>

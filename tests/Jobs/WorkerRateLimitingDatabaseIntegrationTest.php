@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Lightpack\Tests\Jobs;
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Jobs\Worker;
-use Lightpack\Jobs\Job;
-use Lightpack\Jobs\Engines\DatabaseEngine;
 use Lightpack\Container\Container;
+use Lightpack\Jobs\Engines\DatabaseEngine;
+use Lightpack\Jobs\Job;
+use Lightpack\Jobs\Worker;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Integration test for Worker rate limiting functionality with DatabaseEngine.
@@ -29,7 +29,7 @@ final class WorkerRateLimitingDatabaseIntegrationTest extends TestCase
         self::$executionLog = [];
 
         // Bootstrap database
-        if (!isset($_ENV['MYSQL_HOST'])) {
+        if (! isset($_ENV['MYSQL_HOST'])) {
             $this->markTestSkipped('Database configuration not available');
         }
 
@@ -52,7 +52,7 @@ final class WorkerRateLimitingDatabaseIntegrationTest extends TestCase
 
         // Register cache service for rate limiting
         $cacheDir = sys_get_temp_dir() . '/lightpack_cache';
-        if (!is_dir($cacheDir)) {
+        if (! is_dir($cacheDir)) {
             mkdir($cacheDir, 0777, true);
         }
 
@@ -83,15 +83,15 @@ final class WorkerRateLimitingDatabaseIntegrationTest extends TestCase
 
         // Configure Connection to use DatabaseEngine BEFORE creating any engines
         putenv('JOB_ENGINE=database');
-        
+
         // Force reset Connection's static engine so it picks up the new env var
         $reflection = new \ReflectionClass(\Lightpack\Jobs\Connection::class);
         $property = $reflection->getProperty('engine');
         $property->setAccessible(true);
         $property->setValue(null, null);
-        
+
         // Create engine
-        $this->engine = new DatabaseEngine();
+        $this->engine = new DatabaseEngine;
 
         // Setup cache for rate limiting (using file cache for testing)
         putenv('CACHE_DRIVER=file');

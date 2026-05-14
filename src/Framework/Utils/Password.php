@@ -11,7 +11,7 @@ class Password
 
     /**
      * Returns hashed string for supplied password.
-     * 
+     *
      * @param $password User supplied password string.
      */
     public function hash(string $password): string
@@ -20,9 +20,9 @@ class Password
     }
 
     /**
-     * Verifies if user supplied password matches hashed 
+     * Verifies if user supplied password matches hashed
      * password value.
-     * 
+     *
      * @param $password Plain text password.
      * @param $hash Hashed password.
      */
@@ -33,7 +33,7 @@ class Password
 
     /**
      * Generates a random password string of specified length.
-     * 
+     *
      * @param $length Length of password string.
      */
     public function generate(int $length = 8): string
@@ -59,15 +59,15 @@ class Password
     }
 
     /**
-     * Checks if supplied password is strong enough. It uses the following 
+     * Checks if supplied password is strong enough. It uses the following
      * rules to check if password is strong:
-     * 
+     *
      * 1. Password should be at least 8 characters long.
      * 2. Password should contain at least one uppercase letter.
      * 3. Password should contain at least one lowercase letter.
      * 4. Password should contain at least one number.
      * 5. Password should contain at least one special character.
-     * 
+     *
      * @param $password Plain text password.
      * @return string One of the following values: 'weak', 'medium', 'strong'.
      */

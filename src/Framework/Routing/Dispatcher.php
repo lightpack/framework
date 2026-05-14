@@ -2,10 +2,9 @@
 
 namespace Lightpack\Routing;
 
-use Lightpack\Http\Request;
-use Lightpack\Routing\Router;
 use Lightpack\Container\Container;
 use Lightpack\Exceptions\ValidationException;
+use Lightpack\Http\Request;
 
 class Dispatcher
 {
@@ -37,13 +36,13 @@ class Dispatcher
         $action = $this->route->getAction();
         $params = $this->route->getParams();
 
-        if (!\class_exists($controller)) {
+        if (! \class_exists($controller)) {
             throw new \Lightpack\Exceptions\ControllerNotFoundException(
                 sprintf("Controller Not Found Exception: %s", $controller)
             );
         }
 
-        if (!\method_exists($controller, $action)) {
+        if (! \method_exists($controller, $action)) {
             throw new \Lightpack\Exceptions\ActionNotFoundException(
                 sprintf("Action Not Found Exception: %s@%s", $controller, $action)
             );
@@ -58,7 +57,7 @@ class Dispatcher
 
     private function throwExceptionIfRouteNotFound()
     {
-        if (!$this->router->hasRoute()) {
+        if (! $this->router->hasRoute()) {
             throw new \Lightpack\Exceptions\RouteNotFoundException(
                 sprintf(
                     "No route registered for request: %s %s",

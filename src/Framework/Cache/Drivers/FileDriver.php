@@ -22,24 +22,25 @@ class FileDriver implements DriverInterface
     {
         $file = $this->getFilename($key);
 
-		if(!file_exists($file)) {
+        if (! file_exists($file)) {
             return null;
         }
-        
+
         $contents = unserialize(file_get_contents($file));
 
-        if($contents['ttl'] > time()) {
+        if ($contents['ttl'] > time()) {
             return $contents['value'];
         }
 
-        $this->delete($key); 
+        $this->delete($key);
+
         return null;
     }
 
     public function set(string $key, $value, int $lifetime, bool $preserveTtl = false)
     {
         $file = $this->getFilename($key);
-        
+
         if ($preserveTtl && file_exists($file)) {
             // Keep existing TTL
             $current = unserialize(file_get_contents($file));
@@ -53,28 +54,28 @@ class FileDriver implements DriverInterface
             'value' => $value,
         ]);
 
-		file_put_contents($file, $value, LOCK_EX);
+        file_put_contents($file, $value, LOCK_EX);
     }
 
     public function delete($key)
     {
         $file = $this->getFilename($key);
 
-        if(file_exists($file)) {
+        if (file_exists($file)) {
             unlink($file);
         }
     }
 
     public function flush()
     {
-		array_map('unlink', glob($this->path . '/*'));
+        array_map('unlink', glob($this->path . '/*'));
     }
 
     private function setPath(string $path)
     {
         $this->path = rtrim($path, '/');
 
-        if (!file_exists($this->path)) {
+        if (! file_exists($this->path)) {
             mkdir($this->path, 0775, true);
         }
     }

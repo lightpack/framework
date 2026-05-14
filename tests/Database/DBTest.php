@@ -10,7 +10,7 @@ final class DBTest extends TestCase
     public function setUp(): void
     {
         $config = require __DIR__ . '/tmp/mysql.config.php';
-        $this->db = new \Lightpack\Database\Adapters\Mysql($config);   
+        $this->db = new \Lightpack\Database\Adapters\Mysql($config);
         $sql = file_get_contents(__DIR__ . '/tmp/db.sql');
         $stmt = $this->db->query($sql);
         $stmt->closeCursor();
@@ -172,7 +172,7 @@ final class DBTest extends TestCase
         // Verify all records exist
         $products = $this->db->query('SELECT name FROM products WHERE name IN (?, ?, ?)', ['Outer1', 'Inner1', 'Inner2'])
             ->fetchAll(\PDO::FETCH_COLUMN);
-        
+
         $this->assertContains('Outer1', $products, 'Outer transaction record should exist');
         $this->assertContains('Inner1', $products, 'First nested transaction record should exist');
         $this->assertContains('Inner2', $products, 'Second nested transaction record should exist');
@@ -200,7 +200,7 @@ final class DBTest extends TestCase
         // Verify no records were inserted
         $products = $this->db->query('SELECT name FROM products WHERE name IN (?, ?)', ['Outer1', 'Inner1'])
             ->fetchAll(\PDO::FETCH_COLUMN);
-        
+
         $this->assertEmpty($products, 'No records should exist after outer transaction rollback');
     }
 
@@ -227,29 +227,30 @@ final class DBTest extends TestCase
     public function testClosureBasedTransaction()
     {
         // Test successful transaction with return value
-        $result = $this->db->transaction(function() {
+        $result = $this->db->transaction(function () {
             $this->db->query("INSERT INTO users (name) VALUES ('test')");
+
             return 'success';
         });
         $this->assertEquals('success', $result);
-        
+
         // Verify data was committed
         $user = $this->db->query("SELECT * FROM users WHERE name = 'test'")->fetch();
         $this->assertNotNull($user);
 
         // Test nested transactions using closure
-        $result = $this->db->transaction(function() {
+        $result = $this->db->transaction(function () {
             $this->db->query("INSERT INTO users (name) VALUES ('outer')");
-            
+
             // Inner transaction - should just increment counter
-            $this->db->transaction(function() {
+            $this->db->transaction(function () {
                 $this->db->query("INSERT INTO users (name) VALUES ('inner')");
             });
-            
+
             return 'nested';
         });
         $this->assertEquals('nested', $result);
-        
+
         // Verify both outer and inner were committed
         $count = $this->db->query("SELECT COUNT(*) as count FROM users WHERE name IN ('outer', 'inner')")->fetch();
         $this->assertEquals(2, $count['count']);

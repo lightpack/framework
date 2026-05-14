@@ -14,7 +14,7 @@ class SyncEngine extends BaseEngine
         $job->setPayload($payload);
 
         app()->call($job, 'run');
-    }  
+    }
 
     public function fetchNextJob(?string $queue = null)
     {

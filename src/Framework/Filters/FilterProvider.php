@@ -2,10 +2,8 @@
 
 namespace Lightpack\Filters;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Http\Response;
 use Lightpack\Container\Container;
-use Lightpack\Filters\Filter;
+use Lightpack\Support\ProviderInterface;
 
 class FilterProvider implements ProviderInterface
 {

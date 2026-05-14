@@ -3,13 +3,13 @@
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
 use Lightpack\Database\Lucid\Model;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use Lightpack\Logger\Drivers\NullLogger;
 use Lightpack\Logger\Logger;
 use Lightpack\Taxonomies\Taxonomy;
 use Lightpack\Taxonomies\TaxonomyTrait;
+use PHPUnit\Framework\TestCase;
 
 class TaxonomiesIntegrationTest extends TestCase
 {
@@ -27,7 +27,7 @@ class TaxonomiesIntegrationTest extends TestCase
         $container->register('db', function () {
             return $this->db;
         });
-        $container->register('logger', fn() => new Logger(new NullLogger));
+        $container->register('logger', fn () => new Logger(new NullLogger));
 
         // Create tables
         $this->schema = new Schema($this->db);
@@ -99,8 +99,6 @@ class TaxonomiesIntegrationTest extends TestCase
             ['taxonomy_id' => 3, 'morph_id' => 103, 'morph_type' => 'posts'],
         ]);
     }
-
-
 
     protected function seedTaxonomyTree()
     {
@@ -519,8 +517,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $grandchild = new Taxonomy(3);
         $trail = $grandchild->breadcrumbs();
         $this->assertCount(3, $trail);
-        $this->assertEquals([1, 2, 3], array_map(fn($node) => $node->id, $trail));
-        $this->assertEquals(['Root', 'Child', 'Grandchild'], array_map(fn($node) => $node->name, $trail));
+        $this->assertEquals([1, 2, 3], array_map(fn ($node) => $node->id, $trail));
+        $this->assertEquals(['Root', 'Child', 'Grandchild'], array_map(fn ($node) => $node->name, $trail));
     }
 
     public function testFullSlugAndBreadcrumbsEdgeCases()
@@ -534,7 +532,7 @@ class TaxonomiesIntegrationTest extends TestCase
         ]);
         $root = new Taxonomy(1);
         $this->assertEquals('root', $root->fullSlug());
-        $this->assertEquals([1], array_map(fn($n) => $n->id, $root->breadcrumbs()));
+        $this->assertEquals([1], array_map(fn ($n) => $n->id, $root->breadcrumbs()));
 
         // Node with missing slug
         $this->db->table('taxonomies')->insert([
@@ -543,8 +541,8 @@ class TaxonomiesIntegrationTest extends TestCase
         $noslug = new Taxonomy(2);
         $this->assertEquals('root', $noslug->fullSlug()); // Only root slug appears
         $trail = $noslug->breadcrumbs();
-        $this->assertEquals([1, 2], array_map(fn($n) => $n->id, $trail));
-        $this->assertEquals(['Root', 'NoSlug'], array_map(fn($n) => $n->name, $trail));
+        $this->assertEquals([1, 2], array_map(fn ($n) => $n->id, $trail));
+        $this->assertEquals(['Root', 'NoSlug'], array_map(fn ($n) => $n->name, $trail));
 
         // Deep chain with some missing slugs
         $this->db->table('taxonomies')->insert([
@@ -553,7 +551,7 @@ class TaxonomiesIntegrationTest extends TestCase
         ]);
         $leaf = new Taxonomy(4);
         $this->assertEquals('root/leaf', $leaf->fullSlug());
-        $this->assertEquals([1, 2, 3, 4], array_map(fn($n) => $n->id, $leaf->breadcrumbs()));
+        $this->assertEquals([1, 2, 3, 4], array_map(fn ($n) => $n->id, $leaf->breadcrumbs()));
     }
 
     public function testBulkMove()
@@ -580,11 +578,11 @@ class TaxonomiesIntegrationTest extends TestCase
     public function testFilterPostsByMultipleTaxonomiesReturnsNoDuplicates()
     {
         $this->seedTaxonomiesData();
-        
+
         // Post 101 has both taxonomies 1 and 2
         // Without deduplication, it would appear twice in results (once per taxonomy)
         $posts = $this->getPostModelInstance()::filters(['taxonomies' => [1,2]])->all();
-        
+
         // Count how many times post 101 appears in the result set
         $post101Count = 0;
         foreach ($posts as $post) {
@@ -592,10 +590,10 @@ class TaxonomiesIntegrationTest extends TestCase
                 $post101Count++;
             }
         }
-        
+
         // Should appear exactly once, not twice
         $this->assertEquals(1, $post101Count, 'Post 101 should appear exactly once, not duplicated');
-        
+
         // Total should be 2 unique posts (101 and 102), not more due to duplicates
         $this->assertCount(2, $posts, 'Should return 2 unique posts, not duplicates');
     }

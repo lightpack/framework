@@ -2,11 +2,11 @@
 
 namespace Lightpack\Tests\Mfa;
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\Mfa\Drivers\TotpDriver;
 use Lightpack\Auth\Models\AuthUser;
 use Lightpack\Container\Container;
+use Lightpack\Mfa\Drivers\TotpDriver;
 use Lightpack\Mfa\TotpSetupHelper;
+use PHPUnit\Framework\TestCase;
 
 class TotpMfaTest extends TestCase
 {
@@ -17,18 +17,20 @@ class TotpMfaTest extends TestCase
 
     protected function setUp(): void
     {
-        Container::getInstance()->register('config', function() {
+        Container::getInstance()->register('config', function () {
             return new class {
-                public function get($key, $default = null) {
+                public function get($key, $default = null)
+                {
                     if ($key === 'app.name') {
                         return 'Test App';
                     }
+
                     return $default;
                 }
             };
         });
 
-        $this->factor = new TotpDriver();
+        $this->factor = new TotpDriver;
         $this->user = $this->getMockBuilder(AuthUser::class)
             ->onlyMethods(['save'])
             ->getMock();

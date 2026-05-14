@@ -1,8 +1,8 @@
 <?php
 
 use Lightpack\Container\Container;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Lucid\Model;
+use PHPUnit\Framework\TestCase;
 
 class ManualPkModel extends Model
 {
@@ -37,8 +37,13 @@ class NonAutoIncrementModelTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -51,7 +56,7 @@ class NonAutoIncrementModelTest extends TestCase
 
     public function testInsertFailsWithoutManualPrimaryKey()
     {
-        $model = new ManualPkModel();
+        $model = new ManualPkModel;
         $model->name = 'Test Name';
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Insert failed: This model does not use an auto-incrementing primary key. You must assign a primary key value before saving.');
@@ -60,7 +65,7 @@ class NonAutoIncrementModelTest extends TestCase
 
     public function testInsertSucceedsWithManualPrimaryKey()
     {
-        $model = new ManualPkModel();
+        $model = new ManualPkModel;
         $model->code = 'ABC123';
         $model->name = 'Test Name';
         $model->insert();
@@ -73,7 +78,7 @@ class NonAutoIncrementModelTest extends TestCase
     public function testUpdateWithManualPrimaryKey()
     {
         // Insert first
-        $model = new ManualPkModel();
+        $model = new ManualPkModel;
         $model->code = 'XYZ789';
         $model->name = 'Initial';
         $model->insert();
@@ -88,7 +93,7 @@ class NonAutoIncrementModelTest extends TestCase
 
     public function testUpdateReturnsZeroForNonExistentRecord()
     {
-        $model = new ManualPkModel();
+        $model = new ManualPkModel;
         $model->code = 'DOESNOTEXIST';
         $model->name = 'Nothing';
         $model->update();

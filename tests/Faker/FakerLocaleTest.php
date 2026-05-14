@@ -1,4 +1,5 @@
 <?php
+
 use Lightpack\Faker\Faker;
 use PHPUnit\Framework\TestCase;
 

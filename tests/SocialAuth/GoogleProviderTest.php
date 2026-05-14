@@ -1,8 +1,8 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-use Lightpack\SocialAuth\Providers\GoogleProvider;
 use Lightpack\Config\Config;
+use Lightpack\SocialAuth\Providers\GoogleProvider;
+use PHPUnit\Framework\TestCase;
 
 class GoogleProviderTest extends TestCase
 {
@@ -23,7 +23,7 @@ class GoogleProviderTest extends TestCase
             'client_id' => 'test-client-id',
             'client_secret' => 'test-client-secret',
             'redirect_uri' => 'http://localhost/callback',
-            'scopes' => ['email']
+            'scopes' => ['email'],
         ]);
         $provider = new GoogleProvider($mockConfig);
         $url = $provider->stateless()->getAuthUrl();
@@ -38,13 +38,12 @@ class GoogleProviderTest extends TestCase
             'client_id' => 'web-client-id',
             'client_secret' => 'web-client-secret',
             'redirect_uri' => 'http://localhost/web-callback',
-            'scopes' => ['profile']
+            'scopes' => ['profile'],
         ]);
         $provider = new GoogleProvider($mockConfig);
         $url = $provider->getAuthUrl();
         $this->assertStringContainsString('client_id=web-client-id', $url);
-        // In web flow, state is not set by provider logic, so do not assert its presence
-        $this->assertStringContainsString('&state&', $url);
+        $this->assertStringContainsString('state=', $url);
     }
 
     public function test_get_user_throws_on_invalid_token()
@@ -54,16 +53,9 @@ class GoogleProviderTest extends TestCase
             'client_id' => 'id',
             'client_secret' => 'secret',
             'redirect_uri' => 'http://localhost/callback',
-            'scopes' => ['email']
+            'scopes' => ['email'],
         ]);
         $provider = new GoogleProvider($mockConfig);
-        // Patch the GoogleClient to simulate failure
-        $reflection = new \ReflectionClass($provider);
-        $clientProp = $reflection->getProperty('client');
-        $clientProp->setAccessible(true);
-        $mockClient = $this->createMock(\Google_Client::class);
-        $mockClient->method('fetchAccessTokenWithAuthCode')->willReturn([]);
-        $clientProp->setValue($provider, $mockClient);
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Failed to get access token from Google');
         $provider->getUser('bad-code');

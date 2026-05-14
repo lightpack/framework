@@ -22,7 +22,7 @@ class SocialAccountModel extends Model
 
     public function scopeProvider($query, $provider)
     {
-        if (!empty($provider)) {
+        if (! empty($provider)) {
             $query->where('provider', '=', $provider);
         }
     }

@@ -10,7 +10,7 @@ class LengthRule
 {
     use ValidationMessageTrait;
 
-    public function __construct(private readonly int $length) 
+    public function __construct(private readonly int $length)
     {
         $this->message = "Length must be exactly {$length} characters";
     }
@@ -20,6 +20,7 @@ class LengthRule
         if ($value === null) {
             return false;
         }
+
         return mb_strlen((string) $value) === $this->length;
     }
 }

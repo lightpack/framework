@@ -1,10 +1,10 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\AI\Providers\Mistral;
-use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
+use Lightpack\Http\Http;
+use PHPUnit\Framework\TestCase;
 
 class MistralIntegrationTest extends TestCase
 {
@@ -14,13 +14,13 @@ class MistralIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->apiKey = getenv('MISTRAL_API_KEY');
-        
-        if (!$this->apiKey) {
+
+        if (! $this->apiKey) {
             $this->markTestSkipped('MISTRAL_API_KEY environment variable not set');
         }
 
         $config = $this->createMock(Config::class);
-        $config->method('get')->willReturnCallback(function($key, $default = null) {
+        $config->method('get')->willReturnCallback(function ($key, $default = null) {
             $map = [
                 'ai.providers.mistral.key' => $this->apiKey,
                 'ai.providers.mistral.model' => 'mistral-small-latest',
@@ -30,11 +30,12 @@ class MistralIntegrationTest extends TestCase
                 'ai.max_tokens' => 100,
                 'ai.cache_ttl' => 3600,
             ];
+
             return $map[$key] ?? $default;
         });
 
         $this->mistral = new Mistral(
-            new Http(),
+            new Http,
             $this->createMock(Cache::class),
             $config
         );
@@ -55,7 +56,7 @@ class MistralIntegrationTest extends TestCase
     public function testAskMethod()
     {
         $answer = $this->mistral->ask('What is 2+2? Answer with just the number.');
-        
+
         $this->assertIsString($answer);
         $this->assertNotEmpty($answer);
     }

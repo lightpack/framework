@@ -3,10 +3,10 @@
 require_once 'Task.php';
 require_once 'Manager.php';
 
-use \Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\Model;
 
 class Project extends Model
-{   
+{
     protected $table = 'projects';
     protected $transformer = \ProjectTransformer::class;
 

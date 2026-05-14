@@ -37,7 +37,7 @@ class AttributeHandler
     public function __construct()
     {
         $this->data = new \stdClass;
-        $this->castHandler = new CastHandler();
+        $this->castHandler = new CastHandler;
     }
 
     /**
@@ -45,17 +45,17 @@ class AttributeHandler
      */
     public function get(string $key, $default = null)
     {
-        if (!isset($this->data->{$key})) {
+        if (! isset($this->data->{$key})) {
             return $default;
         }
 
         $value = $this->data->{$key};
-        
+
         // Return null as is
         if ($value === null) {
             return null;
         }
-        
+
         if ($castType = $this->getCastType($key)) {
             return $this->castHandler->cast($value, $castType);
         }
@@ -73,7 +73,7 @@ class AttributeHandler
         }
 
         // Track modification only if value actually changes
-        if (!isset($this->data->{$key}) || $this->data->{$key} !== $value) {
+        if (! isset($this->data->{$key}) || $this->data->{$key} !== $value) {
             $this->dirty[$key] = true;
         }
 
@@ -136,6 +136,7 @@ class AttributeHandler
     public function toArray(): array
     {
         $data = (array) $this->data;
+
         return array_diff_key($data, array_flip($this->hidden));
     }
 
@@ -148,15 +149,15 @@ class AttributeHandler
     {
         $data = (array) $this->data;
         $result = [];
-        
+
         foreach ($data as $key => $value) {
             // Skip eager-loaded relations (Model or Collection objects)
             if ($value instanceof Model || $value instanceof Collection) {
                 continue;
             }
-            
+
             $castType = $this->getCastType($key);
-            
+
             // Handle DateTime objects that might not have been uncast
             if ($value instanceof \DateTimeInterface) {
                 if ($castType) {
@@ -165,16 +166,15 @@ class AttributeHandler
                     // Default to datetime format if no cast specified
                     $result[$key] = $value->format('Y-m-d H:i:s');
                 }
-            } 
+            }
             // Handle arrays that need to be uncast to JSON
             elseif (is_array($value) && $castType === 'array') {
                 $result[$key] = $this->castHandler->uncast($value, $castType);
-            } 
-            else {
+            } else {
                 $result[$key] = $value;
             }
         }
-        
+
         return $result;
     }
 
@@ -216,7 +216,7 @@ class AttributeHandler
      */
     public function updateTimestamps(bool $updating = true): void
     {
-        if (!$this->timestamps) {
+        if (! $this->timestamps) {
             return;
         }
 
@@ -224,6 +224,7 @@ class AttributeHandler
 
         if ($updating) {
             $this->set('updated_at', $now);
+
             return;
         }
 
@@ -244,7 +245,7 @@ class AttributeHandler
     public function isDirty(?string $key = null): bool
     {
         if ($key === null) {
-            return !empty($this->dirty);
+            return ! empty($this->dirty);
         }
 
         return isset($this->dirty[$key]);

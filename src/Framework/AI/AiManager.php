@@ -2,14 +2,14 @@
 
 namespace Lightpack\AI;
 
-use Lightpack\Support\BaseManager;
-use Lightpack\Container\Container;
-use Lightpack\AI\Providers\Groq;
-use Lightpack\AI\Providers\OpenAI;
-use Lightpack\AI\Providers\Mistral;
 use Lightpack\AI\Providers\Anthropic;
 use Lightpack\AI\Providers\Gemini;
+use Lightpack\AI\Providers\Groq;
+use Lightpack\AI\Providers\Mistral;
+use Lightpack\AI\Providers\OpenAI;
+use Lightpack\Container\Container;
 use Lightpack\Http\Http;
+use Lightpack\Support\BaseManager;
 
 class AiManager extends BaseManager
 {
@@ -19,7 +19,7 @@ class AiManager extends BaseManager
         $this->registerBuiltInDrivers();
         $this->setDefaultFromConfig();
     }
-    
+
     /**
      * Register built-in AI drivers
      */
@@ -32,7 +32,7 @@ class AiManager extends BaseManager
                 $container->get('config')
             );
         });
-        
+
         $this->register('anthropic', function ($container) {
             return new Anthropic(
                 new Http,
@@ -40,7 +40,7 @@ class AiManager extends BaseManager
                 $container->get('config')
             );
         });
-        
+
         $this->register('mistral', function ($container) {
             return new Mistral(
                 new Http,
@@ -48,7 +48,7 @@ class AiManager extends BaseManager
                 $container->get('config')
             );
         });
-        
+
         $this->register('groq', function ($container) {
             return new Groq(
                 new Http,
@@ -56,7 +56,7 @@ class AiManager extends BaseManager
                 $container->get('config')
             );
         });
-        
+
         $this->register('gemini', function ($container) {
             return new Gemini(
                 new Http,
@@ -65,7 +65,7 @@ class AiManager extends BaseManager
             );
         });
     }
-    
+
     /**
      * Set default driver from config
      */
@@ -74,16 +74,17 @@ class AiManager extends BaseManager
         $default = $this->container->get('config')->get('ai.driver', 'openai');
         $this->setDefaultDriver($default);
     }
-    
+
     /**
      * Get AI driver instance
      */
     public function driver(?string $name = null): AI
     {
         $name = $name ?? $this->defaultDriver;
+
         return $this->resolve($name);
     }
-    
+
     protected function getErrorMessage(string $name): string
     {
         return "AI driver not found: {$name}";

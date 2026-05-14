@@ -16,11 +16,11 @@ class Dumper
 
     private function dump($dumpFunction, $args)
     {
-        if (!get_env('APP_DEBUG', true)) {
+        if (! get_env('APP_DEBUG', true)) {
             return;
         }
 
-        if('cli' === PHP_SAPI) {
+        if ('cli' === PHP_SAPI) {
             $this->dumpCli($dumpFunction, $args);
         } else {
             $this->dumpHtml($dumpFunction, $args);

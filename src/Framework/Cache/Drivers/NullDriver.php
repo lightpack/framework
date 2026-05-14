@@ -6,7 +6,7 @@ use Lightpack\Cache\DriverInterface;
 
 class NullDriver implements DriverInterface
 {
-     public function has(string $key): bool
+    public function has(string $key): bool
     {
         return false;
     }

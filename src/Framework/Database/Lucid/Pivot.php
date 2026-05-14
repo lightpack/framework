@@ -17,7 +17,7 @@ class Pivot extends Builder
      * @param string $pivot Name of the pivot table.
      * @param string $foreignKey Foreign key of the base model.
      * @param string $associateKey Associate key of the relating model.
-     * 
+     *
      */
     public function __construct(Model $model, Model $baseModel, string $pivotTable, string $foreignKey, string $associateKey)
     {
@@ -30,7 +30,7 @@ class Pivot extends Builder
     }
 
     /**
-     * This method will sync records in the pivot table. It will delete 
+     * This method will sync records in the pivot table. It will delete
      * records that are not in the array and insert new records.
      */
     /**
@@ -82,7 +82,7 @@ class Pivot extends Builder
 
     /**
      * This method will add new records in the pivot table.
-     * 
+     *
      * @param array $ids One or more ids to add.
      */
     /**
@@ -92,7 +92,7 @@ class Pivot extends Builder
      */
     public function attach($ids, array $attributes = [])
     {
-        if (!is_array($ids)) {
+        if (! is_array($ids)) {
             $ids = [$ids];
         }
 
@@ -112,7 +112,7 @@ class Pivot extends Builder
 
     /**
      * This method will remove records in the pivot table.
-     * 
+     *
      * @param mixed $ids One or more ids to remove.
      */
     /**
@@ -122,7 +122,7 @@ class Pivot extends Builder
      */
     public function detach($ids, array $attributes = [])
     {
-        if (!is_array($ids)) {
+        if (! is_array($ids)) {
             $ids = [$ids];
         }
 

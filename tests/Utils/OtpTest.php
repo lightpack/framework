@@ -1,7 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Utils\Otp;
+use PHPUnit\Framework\TestCase;
 
 class OtpTest extends TestCase
 {

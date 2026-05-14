@@ -10,7 +10,7 @@ class CastHandler
 {
     /**
      * Cast value to specified type.
-     * 
+     *
      * Supported types:
      * - int: Cast to integer
      * - float: Cast to float
@@ -30,7 +30,8 @@ class CastHandler
 
         // Check if it's a custom cast class
         if ($this->isCustomCast($type)) {
-            $caster = new $type();
+            $caster = new $type;
+
             return $caster->get($value);
         }
 
@@ -54,7 +55,8 @@ class CastHandler
     {
         // Check if it's a custom cast class
         if ($this->isCustomCast($type)) {
-            $caster = new $type();
+            $caster = new $type;
+
             return $caster->set($value);
         }
 
@@ -140,12 +142,12 @@ class CastHandler
             if (str_starts_with($value, '@')) {
                 return (int) substr($value, 1);
             }
-            
+
             // If the string is numeric, treat it as a Unix timestamp
             if (is_numeric($value)) {
                 return (int) $value;
             }
-            
+
             // Otherwise try to parse it as a date string
             $timestamp = strtotime($value);
             if ($timestamp !== false) {
@@ -165,7 +167,7 @@ class CastHandler
      */
     protected function uncastFromArray(mixed $value): string
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             throw new InvalidArgumentException('Value must be an array');
         }
 

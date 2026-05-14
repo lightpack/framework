@@ -2,10 +2,8 @@
 
 namespace Lightpack\Pdf;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Pdf\Pdf;
 use Lightpack\Container\Container;
-use Lightpack\Pdf\PdfManager;
+use Lightpack\Support\ProviderInterface;
 
 class PdfProvider implements ProviderInterface
 {

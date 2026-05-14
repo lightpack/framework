@@ -14,9 +14,10 @@ trait MfaTrait
      */
     public function getMfaFactor()
     {
-        $mfa = app('mfa');
+        $manager = app('mfa.manager');
         $factor = $this->mfa_method ?? config('mfa.default', 'null');
-        return $mfa->getFactor($factor);
+
+        return $manager->driver($factor);
     }
 
     /**
@@ -38,6 +39,7 @@ trait MfaTrait
     public function validateMfa($input)
     {
         $factor = $this->getMfaFactor();
+
         return $factor ? $factor->validate($this, $input) : false;
     }
 }

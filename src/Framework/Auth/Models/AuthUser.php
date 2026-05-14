@@ -4,7 +4,6 @@ namespace Lightpack\Auth\Models;
 
 use Lightpack\Auth\IdentityInterface;
 use Lightpack\Database\Lucid\Model;
-use Lightpack\Auth\Models\AccessToken;
 
 class AuthUser extends Model implements IdentityInterface
 {
@@ -86,9 +85,10 @@ class AuthUser extends Model implements IdentityInterface
 
     public function deleteTokens(?string $token = '')
     {
-        if (!$token) {
+        if (! $token) {
             // Delete all tokens for the current user only
             AccessToken::query()->where('user_id', $this->id)->delete();
+
             return;
         }
 
@@ -135,6 +135,6 @@ class AuthUser extends Model implements IdentityInterface
 
     public function tokenCannot(string $ability): bool
     {
-        return !$this->tokenCan($ability);
+        return ! $this->tokenCan($ability);
     }
 }

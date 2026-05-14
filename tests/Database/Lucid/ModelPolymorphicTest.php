@@ -29,8 +29,13 @@ class ModelPolymorphicTest extends TestCase
         });
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -99,7 +104,7 @@ class ModelPolymorphicTest extends TestCase
                 'body' => 'Video comment',
                 'morph_id' => $videoId,
                 'morph_type' => 'videos',
-            ]
+            ],
         ]);
 
         // Use loadMorphs to batch-load parents for all comments
@@ -323,7 +328,7 @@ class ModelPolymorphicTest extends TestCase
         $this->db->table('polymorphic_comments')->insert([
             'body' => 'Third post comment',
             'morph_id' => $postId,
-            'morph_type' => 'posts'
+            'morph_type' => 'posts',
         ]);
         $count = $post->comments()->count();
         $this->assertEquals(3, $count);
@@ -493,7 +498,7 @@ class ModelPolymorphicTest extends TestCase
         // Verify tags were attached
         $tags = $post->tags;
         $this->assertCount(2, $tags);
-        
+
         // Verify pivot records exist
         $pivotRecords = $this->db->table('tag_morphs')
             ->where('morph_id', $postId)

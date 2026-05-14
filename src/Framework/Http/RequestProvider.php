@@ -2,16 +2,15 @@
 
 namespace Lightpack\Http;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Http\Request;
 use Lightpack\Container\Container;
+use Lightpack\Support\ProviderInterface;
 
 class RequestProvider implements ProviderInterface
 {
     public function register(Container $container)
     {
         $container->register('request', function ($container) {
-            return new Request();
+            return new Request;
         });
 
         $container->alias(Request::class, 'request');

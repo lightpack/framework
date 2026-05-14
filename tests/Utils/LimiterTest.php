@@ -26,7 +26,7 @@ class LimiterTest extends TestCase
             return new Cache(new FileDriver($this->cacheDir));
         });
 
-        $this->limiter = new Limiter();
+        $this->limiter = new Limiter;
     }
 
     protected function tearDown(): void
@@ -58,7 +58,7 @@ class LimiterTest extends TestCase
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
         $this->assertTrue($this->limiter->attempt('test-key', 3, 1));
-        
+
         // Fourth attempt should fail
         $this->assertFalse($this->limiter->attempt('test-key', 3, 1));
         $this->assertEquals(3, $this->limiter->getHits('test-key'));
@@ -112,7 +112,7 @@ class LimiterTest extends TestCase
         // Make 2 attempts out of 5
         $this->limiter->attempt('test-key', 5, 60);
         $this->limiter->attempt('test-key', 5, 60);
-        
+
         $remaining = $this->limiter->getRemaining('test-key', 5);
         $this->assertEquals(3, $remaining);
     }
@@ -123,7 +123,7 @@ class LimiterTest extends TestCase
         $this->limiter->attempt('test-key', 3, 60);
         $this->limiter->attempt('test-key', 3, 60);
         $this->limiter->attempt('test-key', 3, 60);
-        
+
         $remaining = $this->limiter->getRemaining('test-key', 3);
         $this->assertEquals(0, $remaining);
     }
@@ -133,7 +133,7 @@ class LimiterTest extends TestCase
         // Edge case: if somehow hits exceed max
         $this->limiter->attempt('test-key', 2, 60);
         $this->limiter->attempt('test-key', 2, 60);
-        
+
         // Should return 0, not negative
         $remaining = $this->limiter->getRemaining('test-key', 2);
         $this->assertEquals(0, $remaining);
@@ -150,7 +150,7 @@ class LimiterTest extends TestCase
         $this->limiter->attempt('test-key', 5, 60);
         $this->limiter->attempt('test-key', 5, 60);
         $this->limiter->attempt('test-key', 5, 60);
-        
+
         $hits = $this->limiter->getHits('test-key');
         $this->assertEquals(3, $hits);
     }
@@ -161,7 +161,7 @@ class LimiterTest extends TestCase
         $this->assertTrue($this->limiter->attempt('user:1', 3, 60));
         $this->assertTrue($this->limiter->attempt('user:2', 3, 60));
         $this->assertTrue($this->limiter->attempt('user:1', 3, 60));
-        
+
         $this->assertEquals(2, $this->limiter->getHits('user:1'));
         $this->assertEquals(1, $this->limiter->getHits('user:2'));
         $this->assertEquals(1, $this->limiter->getRemaining('user:1', 3));
@@ -172,12 +172,12 @@ class LimiterTest extends TestCase
     {
         // Test with higher limits
         $max = 100;
-        
+
         // Make 50 attempts
         for ($i = 0; $i < 50; $i++) {
             $this->assertTrue($this->limiter->attempt('high-volume', $max, 60));
         }
-        
+
         $this->assertEquals(50, $this->limiter->getHits('high-volume'));
         $this->assertEquals(50, $this->limiter->getRemaining('high-volume', $max));
     }
@@ -194,7 +194,7 @@ class LimiterTest extends TestCase
         // Edge case: max = 1 (single attempt allowed)
         $this->assertTrue($this->limiter->attempt('one-limit', 1, 60));
         $this->assertFalse($this->limiter->attempt('one-limit', 1, 60));
-        
+
         $this->assertEquals(1, $this->limiter->getHits('one-limit'));
         $this->assertEquals(0, $this->limiter->getRemaining('one-limit', 1));
     }
@@ -202,23 +202,23 @@ class LimiterTest extends TestCase
     public function testRemainingDecreasesWithEachAttempt()
     {
         $max = 5;
-        
+
         // Check remaining before any attempts
         $this->assertEquals(5, $this->limiter->getRemaining('countdown', $max));
-        
+
         // Make attempts and verify remaining decreases
         $this->limiter->attempt('countdown', $max, 60);
         $this->assertEquals(4, $this->limiter->getRemaining('countdown', $max));
-        
+
         $this->limiter->attempt('countdown', $max, 60);
         $this->assertEquals(3, $this->limiter->getRemaining('countdown', $max));
-        
+
         $this->limiter->attempt('countdown', $max, 60);
         $this->assertEquals(2, $this->limiter->getRemaining('countdown', $max));
-        
+
         $this->limiter->attempt('countdown', $max, 60);
         $this->assertEquals(1, $this->limiter->getRemaining('countdown', $max));
-        
+
         $this->limiter->attempt('countdown', $max, 60);
         $this->assertEquals(0, $this->limiter->getRemaining('countdown', $max));
     }
@@ -227,11 +227,11 @@ class LimiterTest extends TestCase
     {
         // Ensure keys are properly prefixed to avoid collisions
         $this->limiter->attempt('test', 5, 60);
-        
+
         // The actual cache key should be prefixed
         $hits = $this->limiter->getHits('test');
         $this->assertEquals(1, $hits);
-        
+
         // Direct cache access without prefix should return null
         $container = Container::getInstance();
         $cache = $container->get('cache');

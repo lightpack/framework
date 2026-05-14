@@ -21,9 +21,10 @@ final class RouteRegistryTest extends TestCase
 
     private function getRouteRegistry()
     {
-        $request = new Request();
+        $request = new Request;
         $container = Container::getInstance();
         $container->instance('request', $request);
+
         return new RouteRegistry($container);
     }
 
@@ -150,7 +151,7 @@ final class RouteRegistryTest extends TestCase
 
     public function testRouteMatchesGroupedUrls()
     {
-        $request = new Request();
+        $request = new Request;
         $routeRegistry = $this->getRouteRegistry();
 
         $routeRegistry->group(
@@ -182,7 +183,7 @@ final class RouteRegistryTest extends TestCase
 
     public function testRouteShouldResetScopeToDefault()
     {
-        $request = new Request();
+        $request = new Request;
         $request->setMethod(self::HTTP_GET);
         $container = Container::getInstance();
         $container->instance('request', $request);
@@ -203,7 +204,7 @@ final class RouteRegistryTest extends TestCase
 
     public function testRouteShouldMatchNestedGroupUrls()
     {
-        $request = new Request();
+        $request = new Request;
         $request->setMethod(self::HTTP_GET);
         $container = Container::getInstance();
         $container->instance('request', $request);
@@ -260,8 +261,8 @@ final class RouteRegistryTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $_SERVER['HTTP_HOST'] = 'tenant1.example.com';
-        
-        $request = new Request();
+
+        $request = new Request;
         $container = Container::getInstance();
         $container->instance('request', $request);
         $routeRegistry = new RouteRegistry($container);
@@ -293,13 +294,13 @@ final class RouteRegistryTest extends TestCase
     public function testRouteMatchesMultipleWildcardSubdomains()
     {
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
-        
+
         $subdomains = ['tenant1', 'tenant2', 'admin', 'api'];
-        
+
         foreach ($subdomains as $subdomain) {
             $_SERVER['HTTP_HOST'] = $subdomain . '.example.com';
-            
-            $request = new Request();
+
+            $request = new Request;
             $container = Container::getInstance();
             $container->instance('request', $request);
             $routeRegistry = new RouteRegistry($container);
@@ -327,8 +328,8 @@ final class RouteRegistryTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $_SERVER['HTTP_HOST'] = 'tenant1.example.com';
-        
-        $request = new Request();
+
+        $request = new Request;
         $container = Container::getInstance();
         $container->instance('request', $request);
         $routeRegistry = new RouteRegistry($container);
@@ -345,7 +346,7 @@ final class RouteRegistryTest extends TestCase
         );
 
         $params = $route->getParams();
-        
+
         $this->assertEquals(
             'tenant1',
             $params['subdomain'] ?? null,
@@ -363,8 +364,8 @@ final class RouteRegistryTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $_SERVER['HTTP_HOST'] = 'wrongdomain.com';
-        
-        $request = new Request();
+
+        $request = new Request;
         $container = Container::getInstance();
         $container->instance('request', $request);
         $routeRegistry = new RouteRegistry($container);
@@ -385,8 +386,8 @@ final class RouteRegistryTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $_SERVER['HTTP_HOST'] = 'admin.example.com';
-        
-        $request = new Request();
+
+        $request = new Request;
         $container = Container::getInstance();
         $container->instance('request', $request);
         $routeRegistry = new RouteRegistry($container);
@@ -419,8 +420,8 @@ final class RouteRegistryTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = self::HTTP_GET;
         $_SERVER['HTTP_HOST'] = 'tenant1.example.com';
-        
-        $request = new Request();
+
+        $request = new Request;
         $container = Container::getInstance();
         $container->instance('request', $request);
         $routeRegistry = new RouteRegistry($container);
@@ -439,7 +440,7 @@ final class RouteRegistryTest extends TestCase
         );
 
         $params = $route->getParams();
-        
+
         $this->assertEquals(
             'tenant1',
             $params['subdomain'] ?? null,
@@ -456,9 +457,9 @@ final class RouteRegistryTest extends TestCase
     public function testRouteRegistryUrlMethod()
     {
         $container = Container::getInstance();
-        $container->instance('request', new Request());
-        $container->instance('url', new Url());
-        
+        $container->instance('request', new Request);
+        $container->instance('url', new Url);
+
         $routeRegistry = new RouteRegistry($container);
         $routeRegistry->get('/foo', 'DummyController')->name('foo');
         $routeRegistry->get('/foo/:num', 'DummyController')->name('foo.num');
@@ -467,19 +468,19 @@ final class RouteRegistryTest extends TestCase
 
         // Test basic route
         $this->assertEquals('/foo', $routeRegistry->url('foo'));
-        
+
         // Test route with required parameter
         $this->assertEquals('/foo/23', $routeRegistry->url('foo.num', ['num' => 23]));
-        
+
         // Test route with optional parameter (not provided)
         $this->assertEquals('/foo/23/bar', $routeRegistry->url('foo.num.bar', ['num' => 23]));
-        
+
         // Test route with optional parameter (provided)
         $this->assertEquals('/foo/23/bar/baz', $routeRegistry->url('foo.num.bar', ['num' => 23, 'slug' => 'baz']));
-        
+
         // Test route with query parameters
         $this->assertEquals('/foo/23/bar/baz?p=1&r=2', $routeRegistry->url('foo.num.bar', ['num' => 23, 'slug' => 'baz', 'p' => 1, 'r' => 2]));
-        
+
         // Test route with optional parameter as null and query params
         $this->assertEquals('/foo/23/bar?p=1&r=2', $routeRegistry->url('foo.num.bar', ['num' => 23, 'slug' => null, 'p' => 1, 'r' => 2]));
     }
@@ -487,7 +488,7 @@ final class RouteRegistryTest extends TestCase
     public function testRouteRegistryUrlMethodThrowsExceptionForNonexistentRoute()
     {
         $container = Container::getInstance();
-        $container->instance('request', new Request());
+        $container->instance('request', new Request);
         $routeRegistry = new RouteRegistry($container);
         $routeRegistry->bootRouteNames();
 
@@ -499,7 +500,7 @@ final class RouteRegistryTest extends TestCase
     public function testRouteRegistryUrlMethodThrowsExceptionForMissingRequiredParams()
     {
         $container = Container::getInstance();
-        $container->instance('request', new Request());
+        $container->instance('request', new Request);
         $routeRegistry = new RouteRegistry($container);
         $routeRegistry->get('/users/:id', 'UserController')->name('users.show');
         $routeRegistry->bootRouteNames();
@@ -512,9 +513,9 @@ final class RouteRegistryTest extends TestCase
     public function testRouteRegistrySignMethod()
     {
         $container = Container::getInstance();
-        $container->instance('request', new Request());
-        $container->instance('url', new Url());
-        
+        $container->instance('request', new Request);
+        $container->instance('url', new Url);
+
         // Set up the Crypto class mock
         $cryptoMock = $this->getMockBuilder(Crypto::class)
             ->disableOriginalConstructor()
@@ -522,9 +523,9 @@ final class RouteRegistryTest extends TestCase
         $cryptoMock->expects($this->once())
             ->method('hash')
             ->willReturn('encryptedSignature');
-        
+
         $container->instance('crypto', $cryptoMock);
-        
+
         $routeRegistry = new RouteRegistry($container);
         $routeRegistry->get('/users', 'DummyController')->name('users');
         $routeRegistry->bootRouteNames();

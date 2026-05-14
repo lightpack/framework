@@ -2,11 +2,10 @@
 
 namespace Lightpack\Pdf;
 
-use Lightpack\Http\Response;
-use Lightpack\View\Template;
 use Lightpack\Container\Container;
+use Lightpack\Http\Response;
 use Lightpack\Pdf\Driver\DriverInterface;
-use Lightpack\Storage\StorageInterface;
+use Lightpack\View\Template;
 
 /**
  * Lightpack PDF Service
@@ -36,7 +35,8 @@ class Pdf
         protected DriverInterface $driver,
         protected Template $template,
         protected array $options = []
-    ) {}
+    ) {
+    }
 
     /**
      * Set multiple metadata fields (title, author, subject, keywords) for the PDF document.
@@ -48,6 +48,7 @@ class Pdf
     {
         $this->meta = $meta;
         $this->driver->setMeta($meta);
+
         return $this;
     }
 
@@ -59,6 +60,7 @@ class Pdf
     public function addPage(): self
     {
         $this->driver->addPage();
+
         return $this;
     }
 
@@ -72,6 +74,7 @@ class Pdf
     {
         $this->html .= $html;
         $this->driver->loadHtml($this->html);
+
         return $this;
     }
 
@@ -85,6 +88,7 @@ class Pdf
     public function template(string $view, array $data = []): self
     {
         $html = $this->template->include($view, $data);
+
         return $this->html($html);
     }
 
@@ -144,7 +148,7 @@ class Pdf
         /** @var Storage */
         $storage = Container::getInstance()->get('storage');
         $content = $this->render();
-        
+
         return $storage->write($path, $content);
     }
 

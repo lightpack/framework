@@ -13,9 +13,9 @@ class DailyFileLogger implements LoggerInterface
     {
         $this->basePath = rtrim($basePath, '/');
         $this->daysToKeep = $daysToKeep;
-        
+
         // Create directory if it doesn't exist
-        if (!is_dir($this->basePath)) {
+        if (! is_dir($this->basePath)) {
             mkdir($this->basePath, 0755, true);
         }
     }
@@ -34,20 +34,20 @@ class DailyFileLogger implements LoggerInterface
         $logEntry = str_repeat('-', 80) . PHP_EOL;
         $logEntry .= "[$timestamp] $level: $message" . PHP_EOL;
 
-        if (!empty($context)) {
+        if (! empty($context)) {
             if (isset($context['stack_trace'])) {
                 $trace = $context['stack_trace'];
                 unset($context['stack_trace']);
                 $logEntry .= "File: {$trace['file']}:{$trace['line']}" . PHP_EOL;
                 $logEntry .= "Stack Trace:" . PHP_EOL . $trace['trace'] . PHP_EOL;
             }
-            
-            if (!empty($context)) {
+
+            if (! empty($context)) {
                 $logEntry .= "Context:" . PHP_EOL;
                 $logEntry .= json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
             }
         }
-        
+
         return $logEntry;
     }
 
@@ -55,12 +55,12 @@ class DailyFileLogger implements LoggerInterface
     {
         $cutoffDate = date('Y-m-d', strtotime("-{$this->daysToKeep} days"));
         $pattern = $this->basePath . '/lightpack-*.log';
-        
+
         foreach (glob($pattern) as $file) {
             // Extract date from filename using regex
             if (preg_match('/lightpack-(\d{4}-\d{2}-\d{2})\.log$/', basename($file), $matches)) {
                 $fileDate = $matches[1];
-                
+
                 // Delete if older than cutoff date
                 if ($fileDate < $cutoffDate) {
                     @unlink($file);

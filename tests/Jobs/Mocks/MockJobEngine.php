@@ -27,24 +27,25 @@ class MockJobEngine extends BaseEngine
         if (empty($this->jobs)) {
             return null;
         }
-        
+
         foreach ($this->jobs as $index => $job) {
             if ($queue === null || $job['queue'] === $queue) {
                 // Skip jobs that have a delay set (other than 'now')
                 if ($job['delay'] !== 'now') {
                     continue;
                 }
-                
+
                 // Increment attempts when fetching (like real engines)
                 $job['attempts']++;
-                
+
                 unset($this->jobs[$index]);
                 $this->jobs = array_values($this->jobs);
                 $this->processedJobs[] = $job;
+
                 return (object) $job;
             }
         }
-        
+
         return null;
     }
 
@@ -94,12 +95,14 @@ class MockJobEngine extends BaseEngine
                     $this->jobs[] = (array) $failedJob['job'];
                     unset($this->failedJobs[$index]);
                     $this->failedJobs = array_values($this->failedJobs);
+
                     return 1;
                 }
             }
+
             return 0;
         }
-        
+
         // Retry all failed jobs (optionally filtered by queue)
         $count = 0;
         foreach ($this->failedJobs as $index => $failedJob) {
@@ -107,12 +110,13 @@ class MockJobEngine extends BaseEngine
             if ($queue !== null && $failedJob['job']->queue !== $queue) {
                 continue;
             }
-            
+
             $this->jobs[] = (array) $failedJob['job'];
             unset($this->failedJobs[$index]);
             $count++;
         }
         $this->failedJobs = array_values($this->failedJobs);
+
         return $count;
     }
 }

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Lightpack\Container\Container;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Database\Lucid\Model;
+use PHPUnit\Framework\TestCase;
 
 class TestFilterUser extends Model
 {
@@ -53,8 +53,13 @@ class ModelFilterTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
     }
@@ -80,7 +85,7 @@ class ModelFilterTest extends TestCase
     {
         $query = TestFilterUser::filters([
             'status' => 'active',
-            'type' => 'admin'
+            'type' => 'admin',
         ]);
 
         $this->assertEquals(
@@ -93,7 +98,7 @@ class ModelFilterTest extends TestCase
     public function testArrayValueFilter()
     {
         $query = TestFilterUser::filters([
-            'tags' => 'php,mysql,redis'
+            'tags' => 'php,mysql,redis',
         ]);
 
         $this->assertEquals(
@@ -106,7 +111,7 @@ class ModelFilterTest extends TestCase
     public function testInvalidFilterIsIgnored()
     {
         $query = TestFilterUser::filters([
-            'nonexistent' => 'value'
+            'nonexistent' => 'value',
         ]);
 
         $this->assertEquals(

@@ -16,45 +16,9 @@ if [[ "$1" == "--verbose" ]] || [[ "$1" == "-v" ]]; then
     VERBOSE=true
 fi
 
-SUITES=(
-    "AI"
-    "Audit"
-    "Auth"
-    "Cable"
-    "Cache"
-    "Captcha"
-    "Config"
-    "Console"
-    "Container"
-    "Database"
-    "Event"
-    "Factory"
-    "Faker"
-    "File"
-    "Filters"
-    # "Http"  # Excluded - integration tests requiring external network
-    "Jobs"
-    "Logger"
-    "Mfa"
-    "Mail"
-    "Pdf"
-    "Rbac"
-    "Redis"
-    "Routing"
-    "Schedule"
-    "Secrets"
-    "Session"
-    "Settings"
-    "SocialAuth"
-    "Storage"
-    "Tags"
-    "Taxonomies"
-    "Uploads"
-    "Utils"
-    "Validation"
-    "View"
-    "Webhook"
-)
+# Auto-discover suites from phpunit.xml.dist (excluding "Integration" which
+# requires external API keys)
+SUITES=($(sed -n 's/.*<testsuite name="\([^"]*\)".*/\1/p' phpunit.xml.dist | grep -vE '^Integration$' | sort -u))
 
 echo "========================================="
 echo "Running Lightpack Test Suites"

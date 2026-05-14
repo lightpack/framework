@@ -13,7 +13,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new Validator();
+        $this->validator = new Validator;
     }
 
     // RequiredWith Tests
@@ -31,7 +31,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'country_code' => '+1',
-            'phone' => ''
+            'phone' => '',
         ]);
         $this->assertTrue($this->validator->validate()->fails());
         $this->assertStringContainsString('required when', $this->validator->getError('phone'));
@@ -43,7 +43,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'country_code' => '+1',
-            'phone' => '1234567890'
+            'phone' => '1234567890',
         ]);
         $this->assertTrue($this->validator->validate()->passes());
     }
@@ -51,27 +51,27 @@ class ConditionalRequiredRulesTest extends TestCase
     public function testRequiredWithMultipleFields(): void
     {
         // No fields present - passes
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('address')->requiredWith(['city', 'state']);
         $validator->setInput(['address' => '']);
         $this->assertTrue($validator->validate()->passes());
 
         // One field present - fails
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('address')->requiredWith(['city', 'state']);
         $validator->setInput([
             'city' => 'New York',
-            'address' => ''
+            'address' => '',
         ]);
         $this->assertTrue($validator->validate()->fails());
 
         // Both present - passes
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('address')->requiredWith(['city', 'state']);
         $validator->setInput([
             'city' => 'New York',
             'state' => 'NY',
-            'address' => '123 Main St'
+            'address' => '123 Main St',
         ]);
         $this->assertTrue($validator->validate()->passes());
     }
@@ -82,7 +82,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'promo_code' => 'SAVE10',
-            'discount' => 0
+            'discount' => 0,
         ]);
         $this->assertTrue($this->validator->validate()->passes());
     }
@@ -94,7 +94,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'same_as_shipping' => true,
-            'billing_address' => ''
+            'billing_address' => '',
         ]);
         $this->assertTrue($this->validator->validate()->passes());
     }
@@ -119,22 +119,22 @@ class ConditionalRequiredRulesTest extends TestCase
     public function testRequiredWithoutMultipleFields(): void
     {
         // At least one field present - passes
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->requiredWithout(['phone', 'fax']);
         $validator->setInput([
             'phone' => '1234567890',
-            'email' => ''
+            'email' => '',
         ]);
         $this->assertTrue($validator->validate()->passes());
 
         // No fields present - fails
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->requiredWithout(['phone', 'fax']);
         $validator->setInput(['email' => '']);
         $this->assertTrue($validator->validate()->fails());
 
         // No fields present but email provided - passes
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('email')->requiredWithout(['phone', 'fax']);
         $validator->setInput(['email' => 'test@example.com']);
         $this->assertTrue($validator->validate()->passes());
@@ -147,7 +147,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'same_as_billing' => true,
-            'shipping_address' => ''
+            'shipping_address' => '',
         ]);
         $this->assertTrue($this->validator->validate()->passes());
     }
@@ -158,7 +158,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'same_as_billing' => false,
-            'shipping_address' => ''
+            'shipping_address' => '',
         ]);
         $this->assertTrue($this->validator->validate()->fails());
         $this->assertStringContainsString('required unless', $this->validator->getError('shipping_address'));
@@ -170,7 +170,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'same_as_billing' => false,
-            'shipping_address' => '456 Oak Ave'
+            'shipping_address' => '456 Oak Ave',
         ]);
         $this->assertTrue($this->validator->validate()->passes());
     }
@@ -178,39 +178,39 @@ class ConditionalRequiredRulesTest extends TestCase
     public function testRequiredUnlessWithStringValue(): void
     {
         // Status is approved - not required
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('reason')->requiredUnless('status', 'approved');
         $validator->setInput([
             'status' => 'approved',
-            'reason' => ''
+            'reason' => '',
         ]);
         $this->assertTrue($validator->validate()->passes());
 
         // Status is not approved - required
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('reason')->requiredUnless('status', 'approved');
         $validator->setInput([
             'status' => 'rejected',
-            'reason' => ''
+            'reason' => '',
         ]);
         $this->assertTrue($validator->validate()->fails());
     }
 
     public function testRequiredUnlessWithNumericValue(): void
     {
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('notes')->requiredUnless('priority', 1);
         $validator->setInput([
             'priority' => 1,
-            'notes' => ''
+            'notes' => '',
         ]);
         $this->assertTrue($validator->validate()->passes());
 
-        $validator = new Validator();
+        $validator = new Validator;
         $validator->field('notes')->requiredUnless('priority', 1);
         $validator->setInput([
             'priority' => 2,
-            'notes' => ''
+            'notes' => '',
         ]);
         $this->assertTrue($validator->validate()->fails());
     }
@@ -227,8 +227,8 @@ class ConditionalRequiredRulesTest extends TestCase
                 'type' => '',
                 'tmp_name' => '',
                 'error' => UPLOAD_ERR_NO_FILE,
-                'size' => 0
-            ]
+                'size' => 0,
+            ],
         ]);
         $this->assertTrue($this->validator->validate()->fails());
     }
@@ -245,14 +245,14 @@ class ConditionalRequiredRulesTest extends TestCase
         // Country code present, phone invalid
         $this->validator->setInput([
             'country_code' => '+1',
-            'phone' => '123'
+            'phone' => '123',
         ]);
         $this->assertTrue($this->validator->validate()->fails());
 
         // Country code present, phone valid
         $this->validator->setInput([
             'country_code' => '+1',
-            'phone' => '1234567890'
+            'phone' => '1234567890',
         ]);
         $this->assertTrue($this->validator->validate()->passes());
     }
@@ -266,7 +266,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         $this->validator->setInput([
             'country_code' => '+1',
-            'phone' => ''
+            'phone' => '',
         ]);
         $this->assertTrue($this->validator->validate()->fails());
         $this->assertEquals(
@@ -285,7 +285,7 @@ class ConditionalRequiredRulesTest extends TestCase
 
         // No email or phone - both fail
         $this->validator->setInput([
-            'status' => 'approved'
+            'status' => 'approved',
         ]);
         $this->assertTrue($this->validator->validate()->fails());
         $errors = $this->validator->getErrors();
@@ -300,16 +300,16 @@ class ConditionalRequiredRulesTest extends TestCase
         $this->validator->setInput([
             'company' => [
                 'name' => 'Acme Corp',
-                'tax_id' => ''
-            ]
+                'tax_id' => '',
+            ],
         ]);
         $this->assertTrue($this->validator->validate()->fails());
 
         $this->validator->setInput([
             'company' => [
                 'name' => 'Acme Corp',
-                'tax_id' => '12-3456789'
-            ]
+                'tax_id' => '12-3456789',
+            ],
         ]);
         $this->assertTrue($this->validator->validate()->passes());
     }

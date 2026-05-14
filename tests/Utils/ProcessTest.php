@@ -1,7 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\Utils\Process;
+use PHPUnit\Framework\TestCase;
 
 class ProcessTest extends TestCase
 {
@@ -10,7 +10,7 @@ class ProcessTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->process = new Process();
+        $this->process = new Process;
         $this->tmpDir = rtrim(sys_get_temp_dir(), '/');
     }
 
@@ -59,7 +59,7 @@ class ProcessTest extends TestCase
     {
         $nonExistentDir = $this->tmpDir . '/definitely_does_not_exist_' . uniqid();
         $this->process->execute('ls ' . escapeshellarg($nonExistentDir));
-        
+
         $this->assertEmpty(trim($this->process->getOutput()));
         $this->assertNotEmpty($this->process->getError());
         $this->assertNotEquals(0, $this->process->getExitCode());
@@ -93,13 +93,14 @@ class ProcessTest extends TestCase
                 ->execute('sleep 3');
         } catch (RuntimeException $e) {
             $this->assertStringContainsString('timed out', $e->getMessage());
-            
+
             // Try running another command to verify process is in clean state
             $this->process->execute('echo "test"');
             $this->assertStringContainsString('test', $this->process->getOutput());
+
             return;
         }
-        
+
         $this->fail('Process should have timed out');
     }
 
@@ -107,7 +108,7 @@ class ProcessTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Timeout must be greater than 0 seconds');
-        
+
         $this->process->setTimeout(0);
     }
 
@@ -115,7 +116,7 @@ class ProcessTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Command string cannot be empty');
-        
+
         $this->process->execute('');
     }
 
@@ -123,7 +124,7 @@ class ProcessTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Command array cannot be empty');
-        
+
         $this->process->execute([]);
     }
 
@@ -136,10 +137,10 @@ class ProcessTest extends TestCase
     public function testLongRunningCommandOutput(): void
     {
         $this->process->execute('for i in $(seq 1 5); do echo $i; sleep 0.1; done');
-        
+
         $output = trim($this->process->getOutput());
         $lines = explode("\n", $output);
-        
+
         $this->assertCount(5, $lines);
         $this->assertEquals('1', $lines[0]);
         $this->assertEquals('5', $lines[4]);
@@ -151,7 +152,7 @@ class ProcessTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Command argument cannot be empty');
-        
+
         $this->process->execute(['ls', '']);
     }
 
@@ -165,14 +166,14 @@ class ProcessTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid working directory');
-        
+
         $this->process->setDirectory($this->tmpDir . '/non_existing_dir_' . uniqid());
     }
 
     public function testExecuteWithCallback(): void
     {
         $lines = [];
-        $callback = function(string $line, string $type) use (&$lines) {
+        $callback = function (string $line, string $type) use (&$lines) {
             $lines[] = [$type, trim($line)];
         };
 
@@ -190,7 +191,7 @@ class ProcessTest extends TestCase
     public function testExecuteWithCallbackError(): void
     {
         $errors = [];
-        $callback = function(string $line, string $type) use (&$errors) {
+        $callback = function (string $line, string $type) use (&$errors) {
             if ($type === 'stderr') {
                 $errors[] = trim($line);
             }

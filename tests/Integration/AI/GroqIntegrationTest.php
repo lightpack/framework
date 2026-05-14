@@ -1,10 +1,10 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Lightpack\AI\Providers\Groq;
-use Lightpack\Http\Http;
 use Lightpack\Cache\Cache;
 use Lightpack\Config\Config;
+use Lightpack\Http\Http;
+use PHPUnit\Framework\TestCase;
 
 class GroqIntegrationTest extends TestCase
 {
@@ -14,13 +14,13 @@ class GroqIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->apiKey = getenv('GROQ_API_KEY');
-        
-        if (!$this->apiKey) {
+
+        if (! $this->apiKey) {
             $this->markTestSkipped('GROQ_API_KEY environment variable not set');
         }
 
         $config = $this->createMock(Config::class);
-        $config->method('get')->willReturnCallback(function($key, $default = null) {
+        $config->method('get')->willReturnCallback(function ($key, $default = null) {
             $map = [
                 'ai.providers.groq.key' => $this->apiKey,
                 'ai.providers.groq.model' => 'llama-3.1-8b-instant',
@@ -30,11 +30,12 @@ class GroqIntegrationTest extends TestCase
                 'ai.max_tokens' => 100,
                 'ai.cache_ttl' => 3600,
             ];
+
             return $map[$key] ?? $default;
         });
 
         $this->groq = new Groq(
-            new Http(),
+            new Http,
             $this->createMock(Cache::class),
             $config
         );
@@ -55,7 +56,7 @@ class GroqIntegrationTest extends TestCase
     public function testAskMethod()
     {
         $answer = $this->groq->ask('What is 2+2? Answer with just the number.');
-        
+
         $this->assertIsString($answer);
         $this->assertNotEmpty($answer);
     }
@@ -130,13 +131,13 @@ class GroqIntegrationTest extends TestCase
     {
         // Groq is known for fast inference
         $start = microtime(true);
-        
+
         $result = $this->groq->generate([
             'prompt' => 'Say hello',
         ]);
-        
+
         $duration = microtime(true) - $start;
-        
+
         $this->assertIsArray($result);
         $this->assertNotEmpty($result['text']);
         // Groq should typically respond in under 5 seconds

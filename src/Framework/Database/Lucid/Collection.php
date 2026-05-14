@@ -3,12 +3,12 @@
 namespace Lightpack\Database\Lucid;
 
 use ArrayAccess;
+use ArrayIterator;
 use Closure;
 use Countable;
-use Traversable;
-use ArrayIterator;
-use JsonSerializable;
 use IteratorAggregate;
+use JsonSerializable;
+use Traversable;
 
 class Collection implements IteratorAggregate, Countable, JsonSerializable, ArrayAccess
 {
@@ -45,6 +45,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         foreach ($this->items as $item) {
             $keys[] = $item->{$item->getPrimaryKey()};
         }
+
         return $keys;
     }
 
@@ -58,6 +59,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
                 return $item;
             }
         }
+
         return $default;
     }
 
@@ -75,6 +77,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
             foreach ($conditions as $column => $value) {
                 if ($item->{$column} != $value) {
                     $match = false;
+
                     break;
                 }
             }
@@ -120,6 +123,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
                 return true;
             }
         }
+
         return false;
     }
 
@@ -135,6 +139,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
                 $result[$item->$property] = $item;
             }
         }
+
         return $result;
     }
 
@@ -181,6 +186,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     public function map(Closure $callback): Collection
     {
         $items = array_map($callback, $this->items);
+
         return new static($items);
     }
 
@@ -231,12 +237,12 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function exclude(array|string|int $keys): self
     {
-        if (!is_array($keys)) {
+        if (! is_array($keys)) {
             $keys = [$keys];
         }
 
         $items = array_filter($this->items, function ($item) use ($keys) {
-            return !in_array($item->{$item->getPrimaryKey()}, $keys);
+            return ! in_array($item->{$item->getPrimaryKey()}, $keys);
         });
 
         return new static(array_values($items));
@@ -261,7 +267,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     public function offsetSet($offset, $value): void
     {
-        if (!$value instanceof Model) {
+        if (! $value instanceof Model) {
             throw new \InvalidArgumentException('Collection items must be instances of Model');
         }
 
@@ -293,7 +299,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
     /**
      * Transform the collection using the model's transformer
-     * 
+     *
      * @param array $options Transformation options:
      *                      - fields: Field selection for models and relations
      *                      - includes: Relations to include
@@ -309,6 +315,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         foreach ($this->items as $item) {
             $result[] = $item->transform($options);
         }
+
         return $result;
     }
 
@@ -325,13 +332,13 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         $parentsByType = [];
         foreach ($this->items as $model) {
             // Only process models with both morph_type and morph_id attributes
-            if (!$model->hasAttribute('morph_type') || !$model->hasAttribute('morph_id')) {
+            if (! $model->hasAttribute('morph_type') || ! $model->hasAttribute('morph_id')) {
                 continue;
             }
 
             $type = $model->morph_type;
             $id = $model->morph_id;
-            if (!isset($parentsByType[$type])) {
+            if (! isset($parentsByType[$type])) {
                 $parentsByType[$type] = [];
             }
             $parentsByType[$type][] = $id;
@@ -351,7 +358,7 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
 
         // 5. Attach parent to each model as 'parent'
         foreach ($this->items as $model) {
-            if (!$model->hasAttribute('morph_type') || !$model->hasAttribute('morph_id')) {
+            if (! $model->hasAttribute('morph_type') || ! $model->hasAttribute('morph_id')) {
                 continue;
             }
 

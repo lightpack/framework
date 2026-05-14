@@ -11,7 +11,7 @@ class JsTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->js = new Js();
+        $this->js = new Js;
     }
 
     public function test_toJs_converts_scalar_values()
@@ -33,7 +33,7 @@ class JsTest extends TestCase
     {
         $data = ['html' => '<p>Hello "world" & \'quotes\'</p>'];
         $result = $this->js->encode($data);
-        
+
         $this->assertStringContainsString('\\u003C', $result); // <
         $this->assertStringContainsString('\\u003E', $result); // >
         $this->assertStringContainsString('\\u0026', $result); // &

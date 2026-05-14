@@ -20,7 +20,7 @@
     </head>
     <body>
         <div class="container">
-            <?php if($error_template_not_found): ?>
+            <?php if ($error_template_not_found): ?>
                 <?php require __DIR__ . '/500.php' ?>
             <?php else: ?>
                 <?php require __DIR__ . '/' . $status_code . '.php' ?>

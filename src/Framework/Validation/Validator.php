@@ -7,18 +7,18 @@ namespace Lightpack\Validation;
 use Lightpack\Container\Container;
 use Lightpack\Utils\Arr;
 use Lightpack\Validation\Rules\AfterRule;
-use Lightpack\Validation\Rules\AlphaRule;
 use Lightpack\Validation\Rules\AlphaNumRule;
+use Lightpack\Validation\Rules\AlphaRule;
 use Lightpack\Validation\Rules\ArrayRule;
 use Lightpack\Validation\Rules\BeforeRule;
 use Lightpack\Validation\Rules\BetweenRule;
 use Lightpack\Validation\Rules\BoolRule;
 use Lightpack\Validation\Rules\CustomRule;
-use Lightpack\Validation\Rules\DbUniqueRule;
-use Lightpack\Validation\Rules\ExistsRule;
 use Lightpack\Validation\Rules\DateRule;
+use Lightpack\Validation\Rules\DbUniqueRule;
 use Lightpack\Validation\Rules\DifferentRule;
 use Lightpack\Validation\Rules\EmailRule;
+use Lightpack\Validation\Rules\ExistsRule;
 use Lightpack\Validation\Rules\File\FileExtensionRule;
 use Lightpack\Validation\Rules\File\FileRule;
 use Lightpack\Validation\Rules\File\FileSizeRule;
@@ -39,11 +39,11 @@ use Lightpack\Validation\Rules\MinRule;
 use Lightpack\Validation\Rules\NotInRule;
 use Lightpack\Validation\Rules\NumericRule;
 use Lightpack\Validation\Rules\RegexRule;
-use Lightpack\Validation\Rules\RequiredRule;
 use Lightpack\Validation\Rules\RequiredIfRule;
-use Lightpack\Validation\Rules\RequiredWithRule;
-use Lightpack\Validation\Rules\RequiredWithoutRule;
+use Lightpack\Validation\Rules\RequiredRule;
 use Lightpack\Validation\Rules\RequiredUnlessRule;
+use Lightpack\Validation\Rules\RequiredWithoutRule;
+use Lightpack\Validation\Rules\RequiredWithRule;
 use Lightpack\Validation\Rules\SameRule;
 use Lightpack\Validation\Rules\SlugRule;
 use Lightpack\Validation\Rules\StringRule;
@@ -69,14 +69,14 @@ class Validator
         $this->arr = new Arr;
     }
 
-    public function field(string $field): self 
+    public function field(string $field): self
     {
         $this->currentField = $field;
 
-        if (!isset($this->rules[$field])) {
+        if (! isset($this->rules[$field])) {
             $this->rules[$field] = [];
         }
-        
+
         return $this;
     }
 
@@ -85,6 +85,7 @@ class Validator
         $this->data = $input;
         $this->errors = [];
         $this->valid = true;
+
         return $this;
     }
 
@@ -95,7 +96,7 @@ class Validator
 
     public function fails(): bool
     {
-        return !$this->valid;
+        return ! $this->valid;
     }
 
     public function getError(string $field): ?string
@@ -111,36 +112,42 @@ class Validator
     public function required(): self
     {
         $this->rules[$this->currentField][] = new RequiredRule;
+
         return $this;
     }
 
     public function requiredIf(string $field, mixed $value): self
     {
         $this->rules[$this->currentField][] = new RequiredIfRule($field, $value, $this->arr);
+
         return $this;
     }
 
     public function requiredWith(string|array $fields): self
     {
         $this->rules[$this->currentField][] = new RequiredWithRule($fields, $this->arr);
+
         return $this;
     }
 
     public function requiredWithout(string|array $fields): self
     {
         $this->rules[$this->currentField][] = new RequiredWithoutRule($fields, $this->arr);
+
         return $this;
     }
 
     public function requiredUnless(string $field, mixed $value): self
     {
         $this->rules[$this->currentField][] = new RequiredUnlessRule($field, $value, $this->arr);
+
         return $this;
     }
 
     public function email(): self
     {
         $this->rules[$this->currentField][] = new EmailRule;
+
         return $this;
     }
 
@@ -148,6 +155,7 @@ class Validator
     {
         $type = $this->fieldTypes[$this->currentField] ?? null;
         $this->rules[$this->currentField][] = new MinRule($length, $type);
+
         return $this;
     }
 
@@ -155,12 +163,14 @@ class Validator
     {
         $type = $this->fieldTypes[$this->currentField] ?? null;
         $this->rules[$this->currentField][] = new MaxRule($length, $type);
+
         return $this;
     }
 
     public function length(int $length): self
     {
         $this->rules[$this->currentField][] = new LengthRule($length);
+
         return $this;
     }
 
@@ -168,6 +178,7 @@ class Validator
     {
         $this->rules[$this->currentField][] = new NumericRule;
         $this->fieldTypes[$this->currentField] = 'numeric';
+
         return $this;
     }
 
@@ -175,42 +186,49 @@ class Validator
     {
         $this->rules[$this->currentField][] = new StringRule;
         $this->fieldTypes[$this->currentField] = 'string';
+
         return $this;
     }
 
     public function alpha(): self
     {
         $this->rules[$this->currentField][] = new AlphaRule;
+
         return $this;
     }
 
     public function alphaNum(): self
     {
         $this->rules[$this->currentField][] = new AlphaNumRule;
+
         return $this;
     }
 
     public function slug(): self
     {
         $this->rules[$this->currentField][] = new SlugRule;
+
         return $this;
     }
 
     public function date(?string $format = null): self
     {
         $this->rules[$this->currentField][] = new DateRule($format);
+
         return $this;
     }
 
     public function url(): self
     {
         $this->rules[$this->currentField][] = new UrlRule;
+
         return $this;
     }
 
     public function ip(?string $version = null): self
     {
         $this->rules[$this->currentField][] = new IpRule($version);
+
         return $this;
     }
 
@@ -218,6 +236,7 @@ class Validator
     {
         $this->rules[$this->currentField][] = new IntRule;
         $this->fieldTypes[$this->currentField] = 'int';
+
         return $this;
     }
 
@@ -225,42 +244,49 @@ class Validator
     {
         $this->rules[$this->currentField][] = new FloatRule;
         $this->fieldTypes[$this->currentField] = 'float';
+
         return $this;
     }
 
     public function bool(): self
     {
         $this->rules[$this->currentField][] = new BoolRule;
+
         return $this;
     }
 
     public function array(?int $min = null, ?int $max = null): self
     {
         $this->rules[$this->currentField][] = new ArrayRule($min, $max);
+
         return $this;
     }
 
     public function before(string $date, ?string $format = null): self
     {
         $this->rules[$this->currentField][] = new BeforeRule($date, $format);
+
         return $this;
     }
 
     public function after(string $date, ?string $format = null): self
     {
         $this->rules[$this->currentField][] = new AfterRule($date, $format);
+
         return $this;
     }
 
     public function between(int|float $min, int|float $max): self
     {
         $this->rules[$this->currentField][] = new BetweenRule($min, $max);
+
         return $this;
     }
 
     public function unique(): self
     {
         $this->rules[$this->currentField][] = new UniqueRule;
+
         return $this;
     }
 
@@ -272,13 +298,14 @@ class Validator
     ): self {
         // If no columns specified, use current field
         $columns = $columns ?? $this->currentField;
-        
+
         $this->rules[$this->currentField][] = new DbUniqueRule(
             $table,
             $columns,
             $ignoreId,
             $idColumn
         );
+
         return $this;
     }
 
@@ -289,12 +316,13 @@ class Validator
     ): self {
         // If no columns specified, use current field
         $columns = $columns ?? $this->currentField;
-        
+
         $this->rules[$this->currentField][] = new ExistsRule(
             $table,
             $columns,
             $where
         );
+
         return $this;
     }
 
@@ -302,6 +330,7 @@ class Validator
     {
         $rule = new SameRule($field, $this->arr);
         $this->rules[$this->currentField][] = $rule;
+
         return $this;
     }
 
@@ -309,42 +338,47 @@ class Validator
     {
         $rule = new DifferentRule($field, $this->arr);
         $this->rules[$this->currentField][] = $rule;
+
         return $this;
     }
 
     public function in(array $values): self
     {
         $this->rules[$this->currentField][] = new InRule($values);
-        
+
         return $this;
     }
 
     public function notIn(array $values): self
     {
         $this->rules[$this->currentField][] = new NotInRule($values);
+
         return $this;
     }
 
     public function regex(string $pattern): self
     {
         $this->rules[$this->currentField][] = new RegexRule($pattern);
+
         return $this;
     }
 
     public function custom(callable $callback, string $message = 'Validation failed'): self
     {
         $this->rules[$this->currentField][] = new CustomRule($callback, $message);
+
         return $this;
     }
 
     public function message(string $message): self
     {
-        if (!empty($this->rules[$this->currentField])) {
+        if (! empty($this->rules[$this->currentField])) {
             $lastRule = $this->rules[$this->currentField][count($this->rules[$this->currentField]) - 1];
             if (method_exists($lastRule, 'setMessage')) {
                 $lastRule->setMessage($message);
             }
         }
+
         return $this;
     }
 
@@ -357,6 +391,7 @@ class Validator
     {
         if (isset($this->customRules[$name])) {
             $this->rules[$this->currentField][] = $this->customRules[$name];
+
             return $this;
         }
 
@@ -368,61 +403,71 @@ class Validator
      */
     public function file(): self
     {
-        $this->rules[$this->currentField][] = new FileRule();
+        $this->rules[$this->currentField][] = new FileRule;
+
         return $this;
     }
 
     public function fileSize(string $size): self
     {
         $this->rules[$this->currentField][] = new FileSizeRule($size);
+
         return $this;
     }
 
     public function fileType(array|string $types): self
     {
         $this->rules[$this->currentField][] = new FileTypeRule($types);
+
         return $this;
     }
 
     public function fileExtension(array|string $extensions): self
     {
         $this->rules[$this->currentField][] = new FileExtensionRule($extensions);
+
         return $this;
     }
 
     public function image(array $constraints = []): self
     {
         $this->rules[$this->currentField][] = new ImageRule($constraints);
+
         return $this;
     }
 
     public function multipleFiles(?int $min = null, ?int $max = null): self
     {
         $this->rules[$this->currentField][] = new MultipleFileRule($min, $max);
+
         return $this;
     }
 
-    public function hasUppercase(): self 
+    public function hasUppercase(): self
     {
-        $this->rules[$this->currentField][] = new HasUppercaseRule();
+        $this->rules[$this->currentField][] = new HasUppercaseRule;
+
         return $this;
     }
 
-    public function hasLowercase(): self 
+    public function hasLowercase(): self
     {
-        $this->rules[$this->currentField][] = new HasLowercaseRule();
+        $this->rules[$this->currentField][] = new HasLowercaseRule;
+
         return $this;
     }
 
-    public function hasNumber(): self 
+    public function hasNumber(): self
     {
-        $this->rules[$this->currentField][] = new HasNumberRule();
+        $this->rules[$this->currentField][] = new HasNumberRule;
+
         return $this;
     }
 
-    public function hasSymbol(): self 
+    public function hasSymbol(): self
     {
-        $this->rules[$this->currentField][] = new HasSymbolRule();
+        $this->rules[$this->currentField][] = new HasSymbolRule;
+
         return $this;
     }
 
@@ -430,19 +475,20 @@ class Validator
     {
         foreach ($this->rules as $field => $rules) {
             $value = $this->arr->get($field, $this->data);
-            
+
             if (str_contains($field, '*')) {
                 $this->validateWildcard($field, $value, $rules);
+
                 continue;
             }
 
             $this->validateField($field, $value, $rules);
         }
-        
+
         // Reset rules after validation
         $this->rules = [];
         $this->currentField = '';
-        
+
         return $this;
     }
 
@@ -456,11 +502,11 @@ class Validator
         $this->setInput($input);
         $this->validate();
 
-        if($request->isAjax() || $request->expectsJson()) {
+        if ($request->isAjax() || $request->expectsJson()) {
             return $this;
         }
 
-        if($this->fails()) {
+        if ($this->fails()) {
             $session = $container->get('session');
 
             $session->flash('_old_input', $request->input());
@@ -475,7 +521,7 @@ class Validator
         $isOptional = true;
 
         foreach ($rules as $index => $rule) {
-            if ($rule instanceof RequiredRule 
+            if ($rule instanceof RequiredRule
                 || $rule instanceof RequiredIfRule
                 || $rule instanceof RequiredWithRule
                 || $rule instanceof RequiredWithoutRule
@@ -495,9 +541,10 @@ class Validator
                 return;
             }
 
-            if (!$rule($value, $this->data)) {
+            if (! $rule($value, $this->data)) {
                 $this->errors[$field] = $rule->getMessage();
                 $this->valid = false;
+
                 break;
             }
         }
@@ -508,37 +555,39 @@ class Validator
         // Split the field path by the first wildcard
         $parts = explode('.', $field);
         $wildcardIndex = array_search('*', $parts);
-        
+
         if ($wildcardIndex === false) {
             // No wildcard found, validate normally
             $this->validateField($field, $value, $rules);
+
             return;
         }
-        
+
         // Get the path up to the wildcard
         $pathBeforeWildcard = implode('.', array_slice($parts, 0, $wildcardIndex));
         $pathAfterWildcard = implode('.', array_slice($parts, $wildcardIndex + 1));
-        
+
         // Get the array at the wildcard position
-        $arrayData = $pathBeforeWildcard 
+        $arrayData = $pathBeforeWildcard
             ? $this->arr->get($pathBeforeWildcard, $this->data)
             : $this->data;
-        
-        if (!is_array($arrayData)) {
+
+        if (! is_array($arrayData)) {
             $this->errors[$field] = 'Field must be an array';
             $this->valid = false;
+
             return;
         }
-        
+
         // Iterate through each item in the array
         foreach ($arrayData as $key => $item) {
-            $currentPath = $pathBeforeWildcard 
+            $currentPath = $pathBeforeWildcard
                 ? $pathBeforeWildcard . '.' . $key
                 : (string) $key;
-            
+
             if ($pathAfterWildcard) {
                 $newField = $currentPath . '.' . $pathAfterWildcard;
-                
+
                 // If there are more wildcards, recurse
                 if (str_contains($pathAfterWildcard, '*')) {
                     $this->validateWildcard($newField, $item, $rules);

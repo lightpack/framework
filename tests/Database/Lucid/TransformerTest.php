@@ -10,12 +10,12 @@ require_once 'TaskTransformer.php';
 require_once 'CommentTransformer.php';
 require_once 'ProjectTransformer.php';
 
-use Project;
-use Product;
-use PHPUnit\Framework\TestCase;
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
 use Lightpack\Http\Request;
+use PHPUnit\Framework\TestCase;
+use Product;
+use Project;
 
 class TransformerTest extends TestCase
 {
@@ -41,14 +41,19 @@ class TransformerTest extends TestCase
 
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []) {}
-                public function critical($message, $context = []) {}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
 
         // required for pagination transformer test
         $container->register('request', function () {
-            return new Request();
+            return new Request;
         });
 
         $_SERVER['REQUEST_URI'] = '';
@@ -68,7 +73,7 @@ class TransformerTest extends TestCase
     public function testBasicTransform()
     {
         $project = new Project(1);
-        $transformer = new \ProjectTransformer();
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer->transform($project);
 
@@ -81,7 +86,7 @@ class TransformerTest extends TestCase
     public function testTransformWithFieldFiltering()
     {
         $project = new Project(1);
-        $transformer = new \ProjectTransformer();
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer
             ->fields(['self' => ['name']])
@@ -95,7 +100,7 @@ class TransformerTest extends TestCase
     public function testTransformWithRelations()
     {
         $project = new Project(1);
-        $transformer = new \ProjectTransformer();
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer
             ->includes('tasks')
@@ -112,22 +117,22 @@ class TransformerTest extends TestCase
                 [
                     'id' => 1,
                     'name' => 'Task 1',
-                ]
-            ]
+                ],
+            ],
         ], $result);
     }
 
     public function testTransformWithNestedRelations()
     {
         $project = new Project(1);
-        $transformer = new \ProjectTransformer();
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer
             ->includes('tasks.comments')
             ->fields([
                 'self' => ['name'],
                 'tasks' => ['name'],
-                'tasks.comments' => ['content']
+                'tasks.comments' => ['content'],
             ])
             ->transform($project);
 
@@ -138,25 +143,25 @@ class TransformerTest extends TestCase
                     'name' => 'Task 1',
                     'comments' => [
                         [
-                            'content' => 'Comment 1'
-                        ]
-                    ]
-                ]
-            ]
+                            'content' => 'Comment 1',
+                        ],
+                    ],
+                ],
+            ],
         ], $result);
     }
 
     public function testTransformWithMultipleNestedPaths()
     {
         $project = new Project(2);
-        $transformer = new \ProjectTransformer();
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer
             ->includes(['tasks', 'tasks.comments'])
             ->fields([
                 'self' => ['id', 'name'],
                 'tasks' => ['name'],
-                'tasks.comments' => ['content']
+                'tasks.comments' => ['content'],
             ])
             ->transform($project);
 
@@ -168,18 +173,18 @@ class TransformerTest extends TestCase
                     'name' => 'Task 2',
                     'comments' => [
                         [
-                            'content' => 'Comment 2'
+                            'content' => 'Comment 2',
                         ],
                         [
-                            'content' => 'Comment 3'
-                        ]
-                    ]
+                            'content' => 'Comment 3',
+                        ],
+                    ],
                 ],
                 [
                     'name' => 'Task 3',
-                    'comments' => []
-                ]
-            ]
+                    'comments' => [],
+                ],
+            ],
         ], $result);
     }
 
@@ -187,13 +192,13 @@ class TransformerTest extends TestCase
     {
         $project = Project::query()->one(1);
         $project = new Project(1);
-        $transformer = new \ProjectTransformer();
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer
             ->includes(['tasks', 'nonexistent'])
             ->fields([
                 'self' => ['name'],
-                'tasks' => ['name']
+                'tasks' => ['name'],
             ])
             ->transform($project);
 
@@ -201,44 +206,44 @@ class TransformerTest extends TestCase
             'name' => 'Project 1',
             'tasks' => [
                 [
-                    'name' => 'Task 1'
-                ]
-            ]
+                    'name' => 'Task 1',
+                ],
+            ],
         ], $result);
     }
 
     public function testTransformWithNullRelation()
     {
-        $project = new Project();
+        $project = new Project;
         $project->id = 999;
         $project->name = 'New Project';
-        
-        $transformer = new \ProjectTransformer();
+
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer
             ->includes(['tasks'])
             ->fields([
                 'self' => ['name'],
-                'tasks' => ['name']
+                'tasks' => ['name'],
             ])
             ->transform($project);
 
         $this->assertSame([
             'name' => 'New Project',
-            'tasks' => []
+            'tasks' => [],
         ], $result);
     }
 
     public function testTransformCollection()
     {
         $projects = Project::query()->all();  // Get all projects
-        $transformer = new \ProjectTransformer();
+        $transformer = new \ProjectTransformer;
 
         $result = $transformer
             ->includes(['tasks'])
             ->fields([
                 'self' => ['name'],
-                'tasks' => ['name']
+                'tasks' => ['name'],
             ])
             ->transform($projects);
 
@@ -247,25 +252,25 @@ class TransformerTest extends TestCase
                 'name' => 'Project 1',
                 'tasks' => [
                     [
-                        'name' => 'Task 1'
-                    ]
-                ]
+                        'name' => 'Task 1',
+                    ],
+                ],
             ],
             [
                 'name' => 'Project 2',
                 'tasks' => [
                     [
-                        'name' => 'Task 2'
+                        'name' => 'Task 2',
                     ],
                     [
-                        'name' => 'Task 3'
-                    ]
-                ]
+                        'name' => 'Task 3',
+                    ],
+                ],
             ],
             [
                 'name' => 'Project 3',
-                'tasks' => []
-            ]
+                'tasks' => [],
+            ],
         ], $result);
     }
 
@@ -289,11 +294,11 @@ class TransformerTest extends TestCase
                     'name' => 'Task 1',
                     'comments' => [
                         [
-                            'content' => 'Comment 1'
-                        ]
-                    ]
-                ]
-            ]
+                            'content' => 'Comment 1',
+                        ],
+                    ],
+                ],
+            ],
         ], $result);
     }
 
@@ -301,7 +306,7 @@ class TransformerTest extends TestCase
     {
         $projects = new Collection([
             new Project(1),
-            new Project(2)
+            new Project(2),
         ]);
 
         $result = $projects->transform([
@@ -309,7 +314,7 @@ class TransformerTest extends TestCase
             'fields' => [
                 'self' => ['name'],
                 'tasks' => ['name'],
-            ], 
+            ],
         ]);
 
         $this->assertSame([
@@ -317,21 +322,21 @@ class TransformerTest extends TestCase
                 'name' => 'Project 1',
                 'tasks' => [
                     [
-                        'name' => 'Task 1'
-                    ]
-                ]
+                        'name' => 'Task 1',
+                    ],
+                ],
             ],
             [
                 'name' => 'Project 2',
                 'tasks' => [
                     [
-                        'name' => 'Task 2'
+                        'name' => 'Task 2',
                     ],
                     [
-                        'name' => 'Task 3'
-                    ]
-                ]
-            ]
+                        'name' => 'Task 3',
+                    ],
+                ],
+            ],
         ], $result);
     }
 
@@ -340,12 +345,12 @@ class TransformerTest extends TestCase
         // Create a collection with first page items
         $collection = new Collection([
             new Project(1),
-            new Project(2)
+            new Project(2),
         ]);
 
         // Create pagination with 2 items per page (3 total items = 2 pages)
         $pagination = new \Lightpack\Database\Lucid\Pagination(
-            $collection, 
+            $collection,
             3,  // total records
             2,  // per page
             1   // current page
@@ -356,7 +361,7 @@ class TransformerTest extends TestCase
             'fields' => [
                 'self' => ['name'],
                 'tasks' => ['name'],
-            ], 
+            ],
         ]);
 
         $this->assertSame([
@@ -365,43 +370,43 @@ class TransformerTest extends TestCase
                     'name' => 'Project 1',
                     'tasks' => [
                         [
-                            'name' => 'Task 1'
-                        ]
-                    ]
+                            'name' => 'Task 1',
+                        ],
+                    ],
                 ],
                 [
                     'name' => 'Project 2',
                     'tasks' => [
                         [
-                            'name' => 'Task 2'
+                            'name' => 'Task 2',
                         ],
                         [
-                            'name' => 'Task 3'
-                        ]
-                    ]
-                ]
+                            'name' => 'Task 3',
+                        ],
+                    ],
+                ],
             ],
             'meta' => [
                 'current_page' => 1,
                 'per_page' => 2,
                 'total' => 3,
-                'total_pages' => 2
+                'total_pages' => 2,
             ],
             'links' => [
                 'first' => '?page=1',
                 'last' => '?page=2',
                 'prev' => null,  // null because we're on first page
-                'next' => '?page=2'
-            ]
+                'next' => '?page=2',
+            ],
         ], $result);
 
         // Test second page pagination
         $collection = new Collection([
-            new Project(3)
+            new Project(3),
         ]);
 
         $pagination = new \Lightpack\Database\Lucid\Pagination(
-            $collection, 
+            $collection,
             3,  // total records
             2,  // per page
             2   // current page (second page)
@@ -409,28 +414,28 @@ class TransformerTest extends TestCase
 
         $result = $pagination->transform([
             'fields' => [
-                'self' => ['name']
-            ]
+                'self' => ['name'],
+            ],
         ]);
 
         $this->assertSame([
             'data' => [
                 [
-                    'name' => 'Project 3'
-                ]
+                    'name' => 'Project 3',
+                ],
             ],
             'meta' => [
                 'current_page' => 2,
                 'per_page' => 2,
                 'total' => 3,
-                'total_pages' => 2
+                'total_pages' => 2,
             ],
             'links' => [
                 'first' => '?page=1',
                 'last' => '?page=2',
                 'prev' => '?page=1',
-                'next' => null  // null because we're on last page
-            ]
+                'next' => null,  // null because we're on last page
+            ],
         ], $result);
     }
 
@@ -447,11 +452,11 @@ class TransformerTest extends TestCase
         $this->assertArrayHasKey('comments', $result);
         $this->assertCount(2, $result['tasks']);
         $this->assertCount(2, $result['comments']);
-        
+
         // Verify tasks are loaded directly
         $this->assertEquals('Task 2', $result['tasks'][0]['name']);
         $this->assertEquals('Task 3', $result['tasks'][1]['name']);
-        
+
         // Verify comments are loaded through hasManyThrough
         $this->assertEquals('Comment 2', $result['comments'][0]['content']);
         $this->assertEquals('Comment 3', $result['comments'][1]['content']);
@@ -463,7 +468,7 @@ class TransformerTest extends TestCase
 
         $this->assertArrayHasKey('tasks', $result);
         $this->assertCount(2, $result['tasks']);
-        
+
         // Verify comments are nested under tasks
         $this->assertArrayHasKey('comments', $result['tasks'][0]);
         $this->assertCount(2, $result['tasks'][0]['comments']);
@@ -473,7 +478,7 @@ class TransformerTest extends TestCase
     public function testProductTransformers()
     {
         $product = new Product(1);
-        
+
         // Test API transformer
         $result = $product->transform(['context' => 'api']);
         $this->assertArrayHasKey('name', $result);
@@ -492,9 +497,9 @@ class TransformerTest extends TestCase
     public function testProductTransformerInvalidContext()
     {
         $product = new Product(1);
-        
+
         $this->expectException(\RuntimeException::class);
-        
+
         try {
             $product->transform(['context' => 'admin']);
         } catch (\RuntimeException $e) {
@@ -503,6 +508,7 @@ class TransformerTest extends TestCase
             $this->assertStringContainsString("Available contexts:", $message);
             $this->assertStringContainsString("api", $message);
             $this->assertStringContainsString("view", $message);
+
             throw $e;
         }
     }

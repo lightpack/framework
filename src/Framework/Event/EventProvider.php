@@ -2,9 +2,8 @@
 
 namespace Lightpack\Event;
 
-use Lightpack\Support\ProviderInterface;
-use Lightpack\Event\Event;
 use Lightpack\Container\Container;
+use Lightpack\Support\ProviderInterface;
 
 class EventProvider implements ProviderInterface
 {
