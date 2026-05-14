@@ -44,7 +44,7 @@ class TestCase extends BaseTestCase
         }
 
         // ensure user identity is cleared
-        if($this->container->get('config')->has('auth')) {
+        if ($this->container->get('config')->has('auth')) {
             auth()->logout();
         }
 
