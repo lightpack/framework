@@ -231,7 +231,7 @@ final class WorkerRateLimitingDatabaseIntegrationTest extends TestCase
 }
 
 /**
- * Test job with rate limiting (2 per second)
+ * Test job with rate limiting (2 per minute)
  */
 class TestRateLimitedJob extends Job
 {
@@ -241,7 +241,7 @@ class TestRateLimitedJob extends Job
     {
         return [
             'limit' => 2,
-            'seconds' => 1,
+            'minutes' => 1,
             'jitter' => 0.2,
         ];
     }
@@ -285,14 +285,14 @@ class TestLowAttemptsRateLimitedJob extends Job
     {
         return [
             'limit' => 1,
-            'seconds' => 1,
+            'minutes' => 1,
             'jitter' => 0,
         ];
     }
 
     public function run()
     {
-        WorkerRateLimitingIntegrationTest::logExecution($this->payload['id']);
+        WorkerRateLimitingDatabaseIntegrationTest::logExecution($this->payload['id']);
     }
 }
 

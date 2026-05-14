@@ -101,6 +101,16 @@ class Secrets
 
                     continue;
                 }
+
+                // Validate decrypted data is valid JSON (since set() always json_encodes).
+                // Some OpenSSL versions return garbage instead of false on wrong keys.
+                json_decode($decrypted);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $fail++;
+
+                    continue;
+                }
+
                 $reencrypted = $newCrypto->encrypt($decrypted);
                 $updated = $this->db->table('secrets')->where('id', $secret->id)->update(['value' => $reencrypted]);
                 if ($updated) {

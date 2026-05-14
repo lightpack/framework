@@ -233,7 +233,7 @@ class TestRedisRateLimitedJob extends Job
     {
         return [
             'limit' => 2,
-            'seconds' => 1,
+            'minutes' => 1,
             'jitter' => 0,
         ];
     }
@@ -279,7 +279,7 @@ class TestRedisFailingRateLimitedJob extends Job
     {
         return [
             'limit' => 10,  // High limit so rate limiting doesn't interfere
-            'seconds' => 1,
+            'minutes' => 1,
             'jitter' => 0,
         ];
     }
