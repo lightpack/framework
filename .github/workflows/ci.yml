@@ -49,6 +49,7 @@ jobs:
       - name: Start MySQL
         run: |
           sudo systemctl start mysql
+          mysql -u root -proot -e "SET GLOBAL max_connections = 500;"
           mysql -u root -proot -e "CREATE DATABASE IF NOT EXISTS test_lightpack;"
 
       - name: Run PHPUnit
@@ -59,6 +60,8 @@ jobs:
           MYSQL_USER: root
           MYSQL_PASSWORD: root
           MYSQL_DB: test_lightpack
+          RESEND_API_KEY: test_dummy_key
+          MAIL_DRIVER: log
 
   code-style:
     name: PHP-CS-Fixer

@@ -248,8 +248,12 @@ class Process
             return;
         }
 
-        $this->exitCode = proc_close($this->resource);
+        $exitCode = proc_close($this->resource);
         $this->resource = null;
+
+        if ($this->exitCode === null) {
+            $this->exitCode = $exitCode;
+        }
     }
 
     private function cleanup(): void
