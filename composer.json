@@ -45,7 +45,7 @@
         "robthree/twofactorauth": "^1.8",
         "bacon/bacon-qr-code": "^3.0",
         "aws/aws-sdk-php": "^3.342",
-        "resend/resend-php": "^0.22.0"
+        "resend/resend-php": "^0.22.0 || ^1.0.0"
     },
     "suggest": {
         "phpmailer/phpmailer": "Required for Mailer integration (^6.9.2)",
