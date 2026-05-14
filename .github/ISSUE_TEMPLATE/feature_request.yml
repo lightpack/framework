@@ -1,49 +1,18 @@
 name: Feature Request
-description: Suggest an idea for Lightpack Framework
+description: Got an idea?
 title: "[Feature]: "
-labels: ["enhancement", "triage"]
+labels: ["enhancement"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for suggesting a new feature. Please describe your idea clearly so we can evaluate it.
-
   - type: textarea
-    id: problem
+    id: what
     attributes:
-      label: Problem / Motivation
-      description: What problem are you trying to solve? Is your feature request related to an existing issue?
-      placeholder: A clear description of the problem or gap...
+      label: What do you want?
+      placeholder: Describe the feature. Keep it short.
     validations:
       required: true
 
   - type: textarea
-    id: solution
+    id: why
     attributes:
-      label: Proposed Solution
-      description: Describe the solution you'd like to see. Be as specific as possible.
-      placeholder: Describe how you'd like this to work...
-    validations:
-      required: true
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives Considered
-      description: Describe any alternative solutions or features you've considered.
-      placeholder: What else did you think about?
-
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional Context
-      description: Add any other context, screenshots, or code examples about the feature request here.
-
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](../CODE_OF_CONDUCT.md).
-      options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
+      label: Why?
+      placeholder: What problem does this solve?
