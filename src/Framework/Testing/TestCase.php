@@ -44,7 +44,9 @@ class TestCase extends BaseTestCase
         }
 
         // ensure user identity is cleared
-        auth()->logout();
+        if($this->container->get('config')->has('auth')) {
+            auth()->logout();
+        }
 
         parent::tearDown();
     }
