@@ -41,7 +41,7 @@
         "friendsofphp/php-cs-fixer": "^3.40",
         "phpmailer/phpmailer": "^6.9.2",
         "dompdf/dompdf": "^2.0",
-        "twilio/sdk": "^7.0",
+        "twilio/sdk": "^7.0 || ^8.0",
         "robthree/twofactorauth": "^1.8",
         "bacon/bacon-qr-code": "^3.0",
         "aws/aws-sdk-php": "^3.342",
