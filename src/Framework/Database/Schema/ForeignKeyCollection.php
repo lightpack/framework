@@ -14,12 +14,13 @@ class ForeignKeyCollection
         $this->keys[] = $key;
     }
 
-    public function compile()
+    public function compile(string $context = 'create')
     {
         $constraints = [];
 
         foreach ($this->keys as $key) {
-            $constraints[] = $key->compile();
+            $prefix = $context === 'alter' ? 'ADD ' : '';
+            $constraints[] = $prefix . $key->compile();
         }
 
         return implode(', ', $constraints);

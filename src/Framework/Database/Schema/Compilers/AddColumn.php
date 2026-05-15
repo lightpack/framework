@@ -12,14 +12,17 @@ class AddColumn
 
         $columns->context('add');
 
-        $sql = "ALTER TABLE {$table->getName()} ";
-        $sql .= $columns->compile();
+        $parts = [];
 
-        if ($constraints = $table->foreignKeys()->compile()) {
-            $sql .= ', ' . $constraints;
+        if ($columnSql = $columns->compile()) {
+            $parts[] = $columnSql;
         }
 
-        $sql .= ";";
+        if ($constraints = $table->foreignKeys()->compile('alter')) {
+            $parts[] = $constraints;
+        }
+
+        $sql = "ALTER TABLE {$table->getName()} " . implode(', ', $parts) . ";";
 
         return $sql;
     }
