@@ -1,5 +1,6 @@
 <?php
 
+use Lightpack\Container\Container;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +13,9 @@ final class SchemaTest extends TestCase
     /** @var \Lightpack\Database\Schema\Schema */
     private $schema;
 
+    /** @var \Lightpack\Database\DB */
+    private $db;
+
     public function setUp(): void
     {
         $config = require __DIR__ . '/../tmp/mysql.config.php';
@@ -19,6 +23,25 @@ final class SchemaTest extends TestCase
         $this->connection = new \Lightpack\Database\Adapters\Mysql($config);
 
         $this->schema = new Schema($this->connection);
+
+        // Configure container
+        $container = Container::getInstance();
+
+        $container->register('db', function () {
+            return $this->db;
+        });
+
+        $container->register('logger', function () {
+            return new class {
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
+            };
+        });
     }
 
     public function tearDown(): void
@@ -618,5 +641,60 @@ final class SchemaTest extends TestCase
         // Assert type
         $column = $this->schema->inspectColumn('products', 'status');
         $this->assertEquals("enum('active','inactive','deleted')", $column['Type']);
+    }
+
+    public function testSchemaCanAddForeignKeyOnlyToExistingTable()
+    {
+        // Create categories table
+        $this->schema->createTable('categories', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+        });
+
+        // Create products table with category_id column but NO foreign key
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->column('category_id')->type('bigint')->attribute('unsigned');
+        });
+
+        // Assert no FK yet
+        $this->assertEmpty($this->schema->inspectForeignKeys('products'));
+
+        // Add foreign key only (no new column) to the existing table
+        $this->schema->alterTable('products')->add(function (Table $table) {
+            $table->foreignKey('category_id')->references('id')->on('categories');
+        });
+
+        // Assert foreign key was added
+        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_1');
+        $this->assertEquals('products_ibfk_1', $foreignKey['CONSTRAINT_NAME']);
+    }
+
+    public function testSchemaCanAddColumnAndForeignKeyToExistingTable()
+    {
+        // Create categories table
+        $this->schema->createTable('categories', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+        });
+
+        // Create products table WITHOUT category_id column
+        $this->schema->createTable('products', function (Table $table) {
+            $table->id();
+            $table->varchar('title', 125);
+        });
+
+        // Add column and foreign key together to the existing table
+        $this->schema->alterTable('products')->add(function (Table $table) {
+            $table->column('category_id')->type('bigint')->attribute('unsigned');
+            $table->foreignKey('category_id')->references('id')->on('categories');
+        });
+
+        // Assert column was added
+        $this->assertContains('category_id', $this->schema->inspectColumns('products'));
+
+        // Assert foreign key was added
+        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_1');
+        $this->assertEquals('products_ibfk_1', $foreignKey['CONSTRAINT_NAME']);
     }
 }
