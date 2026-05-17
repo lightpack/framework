@@ -11,22 +11,22 @@ class Output
 
     public function info(string $text)
     {
-        echo (new Color)->format("<BLUE>{$text}</BLUE>");
+        echo (new Color)->format("<BLUE>{$text}</BLUE>") . "\n";
     }
 
     public function success(string $text)
     {
-        echo (new Color)->format("<GREEN>{$text}</GREEN>");
+        echo (new Color)->format("<GREEN>{$text}</GREEN>") . "\n";
     }
 
     public function error(string $text)
     {
-        echo (new Color)->format("<RED>{$text}</RED>");
+        echo (new Color)->format("<RED>{$text}</RED>") . "\n";
     }
 
     public function warning(string $text)
     {
-        echo (new Color)->format("<YELLOW>{$text}</YELLOW>");
+        echo (new Color)->format("<YELLOW>{$text}</YELLOW>") . "\n";
     }
 
     public function infoLabel(?string $text = null)

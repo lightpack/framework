@@ -15,18 +15,15 @@ class Seeder
 
         // fputs(STDOUT, "\nRunning seeders...\n\n");
         $output = new Output;
-        $output->newline();
         $output->info('Running seeders...');
-        $output->newline(2);
+        $output->newline();
 
         foreach ($seeder as $class) {
             Container::getInstance()->call($class, 'seed');
-            $output->success("✓");
-            $output->line(" {$class}");
+            $output->success("✓ {$class}");
         }
 
         $output->newline();
-        $output->success('[DONE]:');
-        $output->line(" Total seeders executed: " . count($seeder));
+        $output->success('[DONE]: Total seeders executed: ' . count($seeder));
     }
 }

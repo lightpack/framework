@@ -49,7 +49,6 @@ class CreateMigration extends Command
         if (file_exists($filepath) && ! $force) {
             $this->output->newline();
             $this->output->error("Migration already exists: {$filepath}");
-            $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
 
@@ -59,7 +58,6 @@ class CreateMigration extends Command
         file_put_contents($filepath, $template);
         $this->output->newline();
         $this->output->success("✓ Migration created in {$filepath}");
-        $this->output->newline();
 
         return self::SUCCESS;
     }
@@ -71,7 +69,6 @@ class CreateMigration extends Command
     {
         $this->output->newline();
         $this->output->error($error);
-        $this->output->newline();
 
         if ($tip) {
             $this->output->newline();
@@ -127,7 +124,6 @@ class CreateMigration extends Command
             $output->newline();
             $output->errorLabel();
             $output->error("Unknown support schema: \"{$support}\".");
-            $output->newline();
             $output->infoLabel();
             $output->info("Supported values are: " . implode(', ', array_keys($schemas)) . ".");
 
@@ -142,7 +138,6 @@ class CreateMigration extends Command
             $output->newline();
             $output->errorLabel();
             $output->error("Please provide a migration file name.");
-            $output->newline();
             $output->infoLabel(' Tip ');
             $output->info("You can use --support=<schema> for a predefined migration.");
             $output->info("Supported: " . implode(', ', array_keys($schemas)) . ".");
@@ -152,7 +147,6 @@ class CreateMigration extends Command
         if (! preg_match('/^[\w_]+$/', $migration)) {
             $output->newline();
             $output->errorLabel();
-            $output->newline();
             $output->error("Migration file name can only contain alphanumeric characters and underscores.");
 
             return null;

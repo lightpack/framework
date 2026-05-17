@@ -15,7 +15,6 @@ class CreateController extends Command
 
         if (null === $className) {
             $this->output->error("Please provide a controller class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -38,7 +37,6 @@ class CreateController extends Command
 
         if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid controller class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -49,7 +47,6 @@ class CreateController extends Command
         if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Controller already exists: .{$displayPath}/{$className}.php");
-            $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
 
@@ -65,7 +62,6 @@ class CreateController extends Command
 
         file_put_contents($filePath, $template);
         $this->output->success("✓ Controller created: .{$displayPath}/{$className}.php");
-        $this->output->newline();
 
         return self::SUCCESS;
     }

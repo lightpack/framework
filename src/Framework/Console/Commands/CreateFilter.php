@@ -14,14 +14,12 @@ class CreateFilter extends Command
 
         if (null === $className) {
             $this->output->error("Please provide a filter class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
 
         if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid filter class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -32,7 +30,6 @@ class CreateFilter extends Command
         if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Filter already exists: {$directory}/{$className}.php");
-            $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
 
@@ -44,7 +41,6 @@ class CreateFilter extends Command
 
         file_put_contents($filePath, $template);
         $this->output->success("✓ Filter created: {$directory}/{$className}.php");
-        $this->output->newline();
 
         return self::SUCCESS;
     }

@@ -71,7 +71,6 @@ class CreateConfig extends Command
         file_put_contents($targetPath, $template);
         $this->output->newline();
         $this->output->success("✓ Config created at {$targetPath}");
-        $this->output->newline();
 
         return self::SUCCESS;
     }
@@ -80,7 +79,6 @@ class CreateConfig extends Command
     {
         $this->output->newline();
         $this->output->error($error);
-        $this->output->newline();
 
         if ($tip) {
             $this->output->newline();

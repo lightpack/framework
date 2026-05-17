@@ -18,7 +18,7 @@ class OutputTest extends TestCase
 
     public function testErrorMethod()
     {
-        $expected = "\033[0;31mHello\033[0m";
+        $expected = "\033[0;31mHello\033[0m\n";
 
         ob_start();
         (new Output)->error('Hello');
@@ -29,7 +29,7 @@ class OutputTest extends TestCase
 
     public function testSuccessMethod()
     {
-        $expected = "\033[0;32mHello\033[0m";
+        $expected = "\033[0;32mHello\033[0m\n";
 
         ob_start();
         (new Output)->success('Hello');
@@ -40,7 +40,7 @@ class OutputTest extends TestCase
 
     public function testWarningMethod()
     {
-        $expected = "\033[0;33mHello\033[0m";
+        $expected = "\033[0;33mHello\033[0m\n";
 
         ob_start();
         (new Output)->warning('Hello');
@@ -51,7 +51,7 @@ class OutputTest extends TestCase
 
     public function testInfoMethod()
     {
-        $expected = "\033[0;34mHello\033[0m";
+        $expected = "\033[0;34mHello\033[0m\n";
 
         ob_start();
         (new Output)->info('Hello');

@@ -15,7 +15,6 @@ class CreateRequest extends Command
 
         if (null === $className) {
             $this->output->error("Please provide a form request class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -41,7 +40,6 @@ class CreateRequest extends Command
 
         if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid form request class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -52,7 +50,6 @@ class CreateRequest extends Command
         if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Request already exists: .{$displayPath}/{$className}.php");
-            $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
 
@@ -68,7 +65,6 @@ class CreateRequest extends Command
 
         file_put_contents($filePath, $template);
         $this->output->success("✓ Request created: .{$displayPath}/{$className}.php");
-        $this->output->newline();
 
         return self::SUCCESS;
     }

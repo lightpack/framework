@@ -20,7 +20,6 @@ class UnlinkStorage extends Command
         unlink($link);
 
         $this->output->success("✓ Unlinked storage");
-        $this->output->newline();
 
         return self::SUCCESS;
     }
