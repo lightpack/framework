@@ -71,8 +71,8 @@ class OutputTest extends TestCase
 
         $this->assertEquals($expected, $actual);
 
-        // Test 1
-        $expected = "\033[41mERROR\033[0m";
+        // Test 2
+        $expected = "\033[41m ERROR \033[0m";
 
         ob_start();
         (new Output)->errorLabel('ERROR');
@@ -93,7 +93,7 @@ class OutputTest extends TestCase
         $this->assertEquals($expected, $actual);
 
         // Test 2
-        $expected = "\033[42mSUCCESS\033[0m";
+        $expected = "\033[42m SUCCESS \033[0m";
 
         ob_start();
         (new Output)->successLabel('SUCCESS');
@@ -114,7 +114,7 @@ class OutputTest extends TestCase
         $this->assertEquals($expected, $actual);
 
         // Test 2
-        $expected = "\033[43mWARNING\033[0m";
+        $expected = "\033[43m WARNING \033[0m";
 
         ob_start();
         (new Output)->warningLabel('WARNING');
@@ -135,7 +135,7 @@ class OutputTest extends TestCase
         $this->assertEquals($expected, $actual);
 
         // Test 2
-        $expected = "\033[44mINFO\033[0m";
+        $expected = "\033[44m INFO \033[0m";
 
         ob_start();
         (new Output)->infoLabel('INFO');

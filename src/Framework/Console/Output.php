@@ -31,28 +31,28 @@ class Output
 
     public function infoLabel(?string $text = null)
     {
-        $text = $text ?? ' INFO ';
+        $text = $text ? " {$text} " : ' INFO ';
 
         echo (new Color)->format("<BG_BLUE>{$text}</BG_BLUE>");
     }
 
     public function successLabel(?string $text = null)
     {
-        $text = $text ?? ' SUCCESS ';
+        $text = $text ? " {$text} " : ' SUCCESS ';
 
         echo (new Color)->format("<BG_GREEN>{$text}</BG_GREEN>");
     }
 
     public function errorLabel(?string $text = null)
     {
-        $text = $text ?? ' ERROR ';
+        $text = $text ? " {$text} " : ' ERROR ';
 
         echo (new Color)->format("<BG_RED>{$text}</BG_RED>");
     }
 
     public function warningLabel(?string $text = null)
     {
-        $text = $text ?? ' WARNING ';
+        $text = $text ? " {$text} " : ' WARNING ';
 
         echo (new Color)->format("<BG_YELLOW>{$text}</BG_YELLOW>");
     }
