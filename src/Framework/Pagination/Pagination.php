@@ -189,6 +189,16 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         return $this->items;
     }
 
+    public function isEmpty(): bool
+    {
+        return empty($this->items);
+    }
+
+    public function isNotEmpty(): bool
+    {
+        return !empty($this->items);
+    }
+
     public function hasNextPage()
     {
         return $this->currentPage < $this->lastPage;
