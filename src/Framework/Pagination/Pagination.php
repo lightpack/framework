@@ -208,7 +208,7 @@ class Pagination implements Countable, ArrayAccess, IteratorAggregate, JsonSeria
 
     public function isNotEmpty(): bool
     {
-        return !is_null($this->items) && $this->count() > 0;
+        return ! is_null($this->items) && $this->count() > 0;
     }
 
     public function hasNextPage()
