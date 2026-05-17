@@ -3,10 +3,13 @@
 namespace Lightpack\Pagination;
 
 use ArrayAccess;
+use ArrayIterator;
 use Countable;
+use IteratorAggregate;
 use JsonSerializable;
+use Traversable;
 
-class Pagination implements Countable, ArrayAccess, JsonSerializable
+class Pagination implements Countable, ArrayAccess, IteratorAggregate, JsonSerializable
 {
     protected $items;
     protected $total;
@@ -20,10 +23,19 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     {
         $this->total = $total;
         $this->perPage = $perPage;
-        $this->lastPage = ceil($this->total / $this->perPage);
+        $this->lastPage = (int) ceil($this->total / $this->perPage);
         $this->path = app('request')->fullpath();
         $this->setCurrentPage($currentPage);
         $this->items = $items;
+    }
+
+    public function getIterator(): Traversable
+    {
+        if (is_array($this->items)) {
+            return new ArrayIterator($this->items);
+        }
+
+        return $this->items->getIterator();
     }
 
     public function count(): int
@@ -107,7 +119,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         if ($next) {
             $query = $this->getQuery($next);
 
-            return "<a href=\"{$this->path}?{$query}\">Next</a>";
+            return '<a href="' . $this->buildUrl($query) . '">Next</a>';
         }
     }
 
@@ -118,7 +130,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         if ($prev) {
             $query = $this->getQuery($prev);
 
-            return "<a href=\"{$this->path}?{$query}\">Prev</a>";
+            return '<a href="' . $this->buildUrl($query) . '">Prev</a>';
         }
     }
 
@@ -129,7 +141,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         if ($next) {
             $query = $this->getQuery($next);
 
-            return $this->path . '?' . $query;
+            return $this->buildUrl($query);
         }
     }
 
@@ -140,7 +152,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         if ($prev) {
             $query = $this->getQuery($prev);
 
-            return $this->path . '?' . $query;
+            return $this->buildUrl($query);
         }
     }
 
@@ -174,7 +186,7 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
     {
         $query = $this->getQuery($page);
 
-        return $this->path . '?' . $query;
+        return $this->buildUrl($query);
     }
 
     public function only(array $params = [])
@@ -191,12 +203,12 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
 
     public function isEmpty(): bool
     {
-        return empty($this->items);
+        return is_null($this->items) || $this->count() === 0;
     }
 
     public function isNotEmpty(): bool
     {
-        return !empty($this->items);
+        return !is_null($this->items) && $this->count() > 0;
     }
 
     public function hasNextPage()
@@ -250,12 +262,19 @@ class Pagination implements Countable, ArrayAccess, JsonSerializable
         if ($allowedParams) {
             $params = \array_filter($_GET, function ($key) use ($allowedParams) {
                 return \in_array($key, $allowedParams);
-            });
+            }, ARRAY_FILTER_USE_KEY);
         }
 
         $params = array_merge($params, ['page' => $page]);
 
         return http_build_query($params);
+    }
+
+    protected function buildUrl(string $query): string
+    {
+        $separator = strpos($this->path, '?') === false ? '?' : '&';
+
+        return $this->path . $separator . $query;
     }
 
     protected function setCurrentPage($currentPage = null)

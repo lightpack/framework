@@ -2,11 +2,10 @@
 
 namespace Lightpack\Database\Lucid;
 
-use IteratorAggregate;
 use Lightpack\Pagination\Pagination as BasePagination;
 use Traversable;
 
-class Pagination extends BasePagination implements IteratorAggregate
+class Pagination extends BasePagination
 {
     protected array $fields = [];
     protected array $includes = [];
@@ -70,10 +69,10 @@ class Pagination extends BasePagination implements IteratorAggregate
                 'total_pages' => $totalPages,
             ],
             'links' => [
-                'first' => '?page=1',
-                'last' => '?page=' . $totalPages,
-                'prev' => $this->currentPage > 1 ? '?page=' . ($this->currentPage - 1) : null,
-                'next' => $this->currentPage < $totalPages ? '?page=' . ($this->currentPage + 1) : null,
+                'first' => $this->url(1),
+                'last' => $this->url($totalPages),
+                'prev' => $this->currentPage > 1 ? $this->url($this->currentPage - 1) : null,
+                'next' => $this->currentPage < $totalPages ? $this->url($this->currentPage + 1) : null,
             ],
         ];
 

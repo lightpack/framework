@@ -728,7 +728,8 @@ final class QueryTest extends TestCase
         $this->assertCount(2, $products);
 
         foreach ($products as $product) {
-            $this->assertIsArray($product);
+            $this->assertIsObject($product);
+            $this->assertObjectHasProperty('id', $product);
         }
 
         $this->query->resetQuery();

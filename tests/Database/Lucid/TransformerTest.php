@@ -393,10 +393,10 @@ class TransformerTest extends TestCase
                 'total_pages' => 2,
             ],
             'links' => [
-                'first' => '?page=1',
-                'last' => '?page=2',
+                'first' => '/?page=1',
+                'last' => '/?page=2',
                 'prev' => null,  // null because we're on first page
-                'next' => '?page=2',
+                'next' => '/?page=2',
             ],
         ], $result);
 
@@ -431,9 +431,9 @@ class TransformerTest extends TestCase
                 'total_pages' => 2,
             ],
             'links' => [
-                'first' => '?page=1',
-                'last' => '?page=2',
-                'prev' => '?page=1',
+                'first' => '/?page=1',
+                'last' => '/?page=2',
+                'prev' => '/?page=1',
                 'next' => null,  // null because we're on last page
             ],
         ], $result);
