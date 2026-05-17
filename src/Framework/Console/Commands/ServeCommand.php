@@ -40,6 +40,7 @@ class ServeCommand extends Command
     {
         $this->output->errorLabel();
         $this->output->error(" {$message}");
+
         return self::FAILURE;
     }
 
@@ -98,7 +99,7 @@ ART;
 
     private function tryBind(string $host, int $port): array
     {
-        set_error_handler(fn() => true);
+        set_error_handler(fn () => true);
         $socket = stream_socket_server("tcp://{$host}:{$port}", $errno, $errstr);
         restore_error_handler();
 
@@ -107,6 +108,7 @@ ART;
         }
 
         fclose($socket);
+
         return [true, null];
     }
 }
