@@ -49,6 +49,8 @@ class TestCase extends BaseTestCase
         }
 
         parent::tearDown();
+
+        Container::getInstance()->reset();
     }
 
     public function request(string $method, string $route, array $params = []): Response
