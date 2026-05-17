@@ -49,6 +49,14 @@ final class ResponseTest extends TestCase
         $this->assertEquals('text/xml', $this->response->getType());
     }
 
+    public function testSetTypeSetsContentTypeHeader()
+    {
+        $this->response->setType('application/json');
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+        $this->assertEquals('application/json', $this->response->getHeader('Content-Type'));
+        $this->assertEquals('application/json', $this->response->getHeaders()['Content-Type']);
+    }
+
     public function testResponseSetHeaderMethod()
     {
         $this->assertSame($this->response,  $this->response->setHeader('Content-Type', 'text/html'));
@@ -106,6 +114,8 @@ final class ResponseTest extends TestCase
         $data = ['message' => 'hello'];
         $this->response->json($data);
         $this->assertEquals('application/json', $this->response->getType());
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+        $this->assertEquals('application/json', $this->response->getHeader('Content-Type'));
         $this->assertEquals(json_encode($data), $this->response->getBody());
     }
 
@@ -114,6 +124,8 @@ final class ResponseTest extends TestCase
         $data = 'xml-string';
         $this->response->xml($data);
         $this->assertEquals('text/xml', $this->response->getType());
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+        $this->assertEquals('text/xml', $this->response->getHeader('Content-Type'));
         $this->assertEquals($data, $this->response->getBody());
     }
 
@@ -122,6 +134,8 @@ final class ResponseTest extends TestCase
         $data = 'text-string';
         $this->response->text($data);
         $this->assertEquals('text/plain', $this->response->getType());
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+        $this->assertEquals('text/plain', $this->response->getHeader('Content-Type'));
         $this->assertEquals($data, $this->response->getBody());
     }
 
