@@ -52,12 +52,29 @@ class ServeCommand extends Command
 
     private function printServerInfo(string $host, int $port): void
     {
+        $this->printBanner();
         $this->output->newline();
         $this->output->successLabel('SERVER');
         $this->output->success(" http://{$host}:{$port}");
         $this->output->newline();
         $this->output->line('Press Ctrl+C to stop the server.');
         $this->output->newline();
+    }
+
+    private function printBanner(): void
+    {
+        $art = <<<'ART'
+ _     _       _     _   ____   _    ____ _  __
+| |   (_) __ _| |__ | |_|  _ \ / \  / ___| |/ /
+| |   | |/ _` | '_ \| __| |_) / _ \| |   | ' / 
+| |___| | (_| | | | | |_|  __/ ___ \ |___| . \ 
+|_____|_|\__, |_| |_|\__|_| /_/   \_\____|_|\_\
+         |___/
+ART;
+
+        foreach (explode("\n", $art) as $line) {
+            $this->output->info($line);
+        }
     }
 
     private function findAvailablePort(string $host, int $startPort): array
