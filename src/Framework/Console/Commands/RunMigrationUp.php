@@ -54,6 +54,7 @@ class RunMigrationUp extends Command
 
             foreach ($migrations as $migration) {
                 $this->output->success("✓ {$migration}");
+                $this->output->newline();
             }
 
             $this->output->newline();

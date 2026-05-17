@@ -47,6 +47,7 @@ class RunMigrationDown extends Command
                 $this->output->line("Rolled back migrations:");
                 foreach ($migrations as $migration) {
                     $this->output->success("✓ {$migration}");
+                    $this->output->newline();
                 }
                 $this->output->newline();
             }
