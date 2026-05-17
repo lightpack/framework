@@ -10,11 +10,86 @@ class ServeCommand extends Command
     {
         chdir(DIR_ROOT);
 
-        $port = $this->args->get('port', '8000');
-        $hostUrl = '127.0.0.1:' . $port;
+        $host = '127.0.0.1';
+        $requestedPort = (int) $this->args->get('port', 8000);
 
-        passthru('"' . PHP_BINARY . '"' . ' -S ' . "'$hostUrl'" . ' -t public');
+        $this->output->newline();
+
+        if ($requestedPort < 1 || $requestedPort > 65535) {
+            return $this->abort("Port must be between 1 and 65535.");
+        }
+
+        [$port, $error] = $this->findAvailablePort($host, $requestedPort);
+
+        if ($port === null) {
+            return $this->abort($error);
+        }
+
+        if ($port !== $requestedPort) {
+            $this->alert("Port {$requestedPort} is in use. Using port {$port} instead.");
+        }
+
+        $this->printServerInfo($host, $port);
+
+        passthru('"' . PHP_BINARY . '"' . ' -S ' . "'{$host}:{$port}'" . ' -t public');
 
         return self::SUCCESS;
+    }
+
+    private function abort(string $message): int
+    {
+        $this->output->errorLabel();
+        $this->output->error(" {$message}");
+        return self::FAILURE;
+    }
+
+    private function alert(string $message): void
+    {
+        $this->output->warningLabel();
+        $this->output->warning(" {$message}");
+        $this->output->newline();
+    }
+
+    private function printServerInfo(string $host, int $port): void
+    {
+        $this->output->newline();
+        $this->output->successLabel('SERVER');
+        $this->output->success(" http://{$host}:{$port}");
+        $this->output->newline();
+        $this->output->line('Press Ctrl+C to stop the server.');
+        $this->output->newline();
+    }
+
+    private function findAvailablePort(string $host, int $startPort): array
+    {
+        $maxPort = min($startPort + 100, 65535);
+
+        for ($port = $startPort; $port <= $maxPort; $port++) {
+            [$canBind, $errstr] = $this->tryBind($host, $port);
+
+            if ($canBind) {
+                return [$port, null];
+            }
+
+            if (stripos($errstr, 'permission') !== false) {
+                return [null, "Permission denied on port {$port}."];
+            }
+        }
+
+        return [null, "No available port found between {$startPort} and {$maxPort}."];
+    }
+
+    private function tryBind(string $host, int $port): array
+    {
+        set_error_handler(fn() => true);
+        $socket = stream_socket_server("tcp://{$host}:{$port}", $errno, $errstr);
+        restore_error_handler();
+
+        if ($socket === false) {
+            return [false, $errstr];
+        }
+
+        fclose($socket);
+        return [true, null];
     }
 }
