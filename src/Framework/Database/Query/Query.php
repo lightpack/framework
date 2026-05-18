@@ -1218,6 +1218,37 @@ class Query
         return $result->max;
     }
 
+    public function sumBy(string $groupColumn, string $aggregateColumn)
+    {
+        return $this->aggregateBy('SUM', $groupColumn, $aggregateColumn, 'sum');
+    }
+
+    public function avgBy(string $groupColumn, string $aggregateColumn)
+    {
+        return $this->aggregateBy('AVG', $groupColumn, $aggregateColumn, 'avg');
+    }
+
+    public function minBy(string $groupColumn, string $aggregateColumn)
+    {
+        return $this->aggregateBy('MIN', $groupColumn, $aggregateColumn, 'min');
+    }
+
+    public function maxBy(string $groupColumn, string $aggregateColumn)
+    {
+        return $this->aggregateBy('MAX', $groupColumn, $aggregateColumn, 'max');
+    }
+
+    protected function aggregateBy(string $sqlFn, string $groupColumn, string $aggregateColumn, string $resultKey)
+    {
+        $this->columns = [$groupColumn, "{$sqlFn}(`{$aggregateColumn}`) AS {$resultKey}"];
+        $this->groupBy($groupColumn);
+
+        $query = $this->getCompiledSelect();
+        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
+
+        return $result;
+    }
+
     public function __get(string $key)
     {
         if ($key === 'bindings') {

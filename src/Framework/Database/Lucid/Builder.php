@@ -117,6 +117,7 @@ class Builder extends Query
         $models = new Collection($models);
         $this->relationLoader->loadRelations($models);
         $this->relationLoader->loadRelationCounts($models);
+        $this->relationLoader->loadRelationAggregates($models);
 
         return $models;
     }
@@ -132,6 +133,7 @@ class Builder extends Query
         $collection = new Collection($model);
         $this->relationLoader->loadRelations($collection);
         $this->relationLoader->loadRelationCounts($collection);
+        $this->relationLoader->loadRelationAggregates($collection);
 
         return $model;
     }
@@ -150,6 +152,50 @@ class Builder extends Query
         $relations = func_get_args();
         $includes = is_array($relations[0]) ? $relations[0] : $relations;
         $this->relationLoader->setCountIncludes($includes);
+
+        return $this;
+    }
+
+    public function withSum(): self
+    {
+        $args = func_get_args();
+        $relation = $args[0];
+        $column = $args[1] ?? null;
+        $includes = is_array($relation) ? $relation : [$relation];
+        $this->relationLoader->setSumIncludes($includes, $column);
+
+        return $this;
+    }
+
+    public function withAvg(): self
+    {
+        $args = func_get_args();
+        $relation = $args[0];
+        $column = $args[1] ?? null;
+        $includes = is_array($relation) ? $relation : [$relation];
+        $this->relationLoader->setAvgIncludes($includes, $column);
+
+        return $this;
+    }
+
+    public function withMin(): self
+    {
+        $args = func_get_args();
+        $relation = $args[0];
+        $column = $args[1] ?? null;
+        $includes = is_array($relation) ? $relation : [$relation];
+        $this->relationLoader->setMinIncludes($includes, $column);
+
+        return $this;
+    }
+
+    public function withMax(): self
+    {
+        $args = func_get_args();
+        $relation = $args[0];
+        $column = $args[1] ?? null;
+        $includes = is_array($relation) ? $relation : [$relation];
+        $this->relationLoader->setMaxIncludes($includes, $column);
 
         return $this;
     }
@@ -227,5 +273,13 @@ class Builder extends Query
     public function eagerLoadRelationsCount(Collection $models): void
     {
         $this->relationLoader->loadRelationCounts($models);
+    }
+
+    /**
+     * Eager load relation aggregates for a collection.
+     */
+    public function eagerLoadRelationsAggregate(Collection $models): void
+    {
+        $this->relationLoader->loadRelationAggregates($models);
     }
 }

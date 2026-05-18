@@ -612,6 +612,34 @@ class Model implements JsonSerializable
         $items->loadCount(...$relations);
     }
 
+    public function loadSum()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadSum(...$relations);
+    }
+
+    public function loadAvg()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadAvg(...$relations);
+    }
+
+    public function loadMin()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadMin(...$relations);
+    }
+
+    public function loadMax()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadMax(...$relations);
+    }
+
     public function toArray()
     {
         $data = $this->attributes->toArray();

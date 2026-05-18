@@ -19,6 +19,26 @@ class RelationLoader
      */
     protected $countIncludes = [];
 
+    /**
+     * @var array Relations to sum
+     */
+    protected $sumIncludes = [];
+
+    /**
+     * @var array Relations to avg
+     */
+    protected $avgIncludes = [];
+
+    /**
+     * @var array Relations to min
+     */
+    protected $minIncludes = [];
+
+    /**
+     * @var array Relations to max
+     */
+    protected $maxIncludes = [];
+
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -38,6 +58,56 @@ class RelationLoader
     public function setCountIncludes(array $includes): void
     {
         $this->countIncludes = $includes;
+    }
+
+    /**
+     * Set relations to sum
+     */
+    public function setSumIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('sum', $includes, $column);
+    }
+
+    /**
+     * Set relations to avg
+     */
+    public function setAvgIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('avg', $includes, $column);
+    }
+
+    /**
+     * Set relations to min
+     */
+    public function setMinIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('min', $includes, $column);
+    }
+
+    /**
+     * Set relations to max
+     */
+    public function setMaxIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('max', $includes, $column);
+    }
+
+    /**
+     * Store aggregate includes for a given type
+     */
+    protected function setAggregateIncludes(string $type, array $includes, ?string $column): void
+    {
+        $property = $type . 'Includes';
+
+        foreach ($includes as $key => $value) {
+            $relation = is_callable($value) ? $key : $value;
+            $constraint = is_callable($value) ? $value : null;
+            $this->{$property}[$relation . ':' . $column] = [
+                'relation' => $relation,
+                'column' => $column,
+                'constraint' => $constraint,
+            ];
+        }
     }
 
     /**
@@ -147,6 +217,85 @@ class RelationLoader
 
                 if (! $model->hasAttribute($include . '_count')) {
                     $model->{$include . '_count'} = 0;
+                }
+            }
+        }
+    }
+
+    /**
+     * Load relation aggregates for a collection of models
+     */
+    public function loadRelationAggregates(Collection $models): void
+    {
+        if ($models->isEmpty()) {
+            return;
+        }
+
+        foreach (['sum', 'avg', 'min', 'max'] as $type) {
+            $property = $type . 'Includes';
+            foreach ($this->{$property} as $config) {
+                $this->loadRelationAggregate($models, $type, $config['relation'], $config['column'], $config['constraint']);
+            }
+        }
+    }
+
+    /**
+     * Load a single aggregate for a relation
+     */
+    protected function loadRelationAggregate(Collection $models, string $type, string $include, ?string $column, ?callable $constraint = null): void
+    {
+        $this->model->setEagerLoading(true);
+        $query = $this->model->{$include}();
+
+        if ($this->model->getRelationType() === 'hasMany') {
+            if ($constraint) {
+                $constraint($query);
+            }
+
+            $relatingKey = $this->model->getRelatingKey();
+            $ids = $models->ids();
+
+            switch ($type) {
+                case 'sum':
+                    $results = $query->whereIn($relatingKey, $ids)->sumBy($relatingKey, $column);
+                    $attrSuffix = '_sum_' . $column;
+                    $resultKey = 'sum';
+                    $defaultValue = 0;
+                    break;
+                case 'avg':
+                    $results = $query->whereIn($relatingKey, $ids)->avgBy($relatingKey, $column);
+                    $attrSuffix = '_avg_' . $column;
+                    $resultKey = 'avg';
+                    $defaultValue = null;
+                    break;
+                case 'min':
+                    $results = $query->whereIn($relatingKey, $ids)->minBy($relatingKey, $column);
+                    $attrSuffix = '_min_' . $column;
+                    $resultKey = 'min';
+                    $defaultValue = null;
+                    break;
+                case 'max':
+                    $results = $query->whereIn($relatingKey, $ids)->maxBy($relatingKey, $column);
+                    $attrSuffix = '_max_' . $column;
+                    $resultKey = 'max';
+                    $defaultValue = null;
+                    break;
+            }
+
+            $this->model->setEagerLoading(false);
+
+            foreach ($models as $model) {
+                $found = false;
+                foreach ($results as $result) {
+                    if ($result->{$relatingKey} === $model->{$model->getPrimaryKey()}) {
+                        $model->{$include . $attrSuffix} = $result->{$resultKey};
+                        $found = true;
+                        break;
+                    }
+                }
+
+                if (! $found) {
+                    $model->{$include . $attrSuffix} = $defaultValue;
                 }
             }
         }
