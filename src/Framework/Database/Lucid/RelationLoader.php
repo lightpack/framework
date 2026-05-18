@@ -190,6 +190,8 @@ class RelationLoader
         $pivotKeyName = $this->getPivotKeyName($this->model->getRelationType());
 
         if (! $ids) {
+            $this->setRelationResults($models, new Collection([]), $relation);
+            $this->model->setEagerLoading(false);
             return;
         }
 

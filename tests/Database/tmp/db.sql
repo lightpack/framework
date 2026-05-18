@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `options` (
 DROP TABLE IF EXISTS `owners`;
 CREATE TABLE IF NOT EXISTS `owners` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `product_id` int NOT NULL,
+  `product_id` int NULL DEFAULT NULL,
   `name` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

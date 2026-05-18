@@ -133,13 +133,18 @@ class Model implements JsonSerializable
 
         // Check if relation is allowed to be lazy loaded
         if ($this->strictMode && ! in_array($key, $this->allowedLazyRelations)) {
-            throw new \RuntimeException(
-                sprintf(
-                    "Strict Mode: Relation '%s' on %s must be eager loaded.",
-                    $key,
-                    get_class($this)
-                )
-            );
+            if (! in_array($key, $this->loadedRelations)) {
+                throw new \RuntimeException(
+                    sprintf(
+                        "Strict Mode: Relation '%s' on %s must be eager loaded.",
+                        $key,
+                        get_class($this)
+                    )
+                );
+            }
+
+            // Relation was eagerly loaded but FK was null; return null
+            return null;
         }
 
         // Check relation cache
