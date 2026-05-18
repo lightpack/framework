@@ -30,6 +30,7 @@ class Builder extends Query
 
     public function all()
     {
+        $this->injectWithCountSubqueriesForOrdering();
         $results = parent::all();
 
         return $this->hydrate($results);
@@ -37,6 +38,7 @@ class Builder extends Query
 
     public function one()
     {
+        $this->injectWithCountSubqueriesForOrdering();
         $result = parent::one();
 
         if ($result) {
@@ -147,6 +149,11 @@ class Builder extends Query
         return $this;
     }
 
+    /**
+     * Eager load relation counts. Without orderBy the efficient GROUP BY path runs
+     * after hydration. With orderBy('relation_count') a correlated COUNT(*) subquery
+     * is injected into SELECT instead, and the GROUP BY path is skipped for that relation.
+     */
     public function withCount(): self
     {
         $relations = func_get_args();
@@ -281,5 +288,75 @@ class Builder extends Query
     public function eagerLoadRelationsAggregate(Collection $models): void
     {
         $this->relationLoader->loadRelationAggregates($models);
+    }
+
+    // withCount() normally fires a separate GROUP BY query after the main query runs.
+    // But applying withCount() + orderBy() on a relation requires a correlated subquery
+    // to support sorting. So just before execution of all() and one(), we inject a correlated 
+    // COUNT(*) subquery into SELECT for any _count column that appears in ORDER BY. Relations
+    // not used with orderBy() will still be computed using the cheaper GROUP BY path.
+    private function injectWithCountSubqueriesForOrdering(): void
+    {
+        foreach ($this->components['order'] ?? [] as $order) {
+            $column = $order['column'];
+            if (str_ends_with($column, '_count')) {
+                $relation = substr($column, 0, -6);
+                if ($this->relationLoader->hasCountInclude($relation)) {
+                    $constraint = $this->relationLoader->getCountConstraint($relation);
+                    $this->injectCountSubquery($relation, $constraint);
+                }
+            }
+        }
+    }
+
+    private function injectCountSubquery(string $relation, ?callable $constraint = null): void
+    {
+        $this->model->setEagerLoading(true);
+        $query = $this->model->{$relation}();
+        $relationType = $this->model->getRelationType();
+
+        if (!in_array($relationType, ['hasMany', 'hasManyThrough'])) {
+            $this->model->setEagerLoading(false);
+            return;
+        }
+
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+        $relatingKey = $this->model->getRelatingKey();
+
+        // Clone so existing WHERE constraints (e.g. morph_type on polymorphic) are kept.
+        $subQuery = clone $query;
+        $subQuery->columns = ['COUNT(*)'];
+        $subQuery->select_raw = [];
+
+        if ($constraint) {
+            $constraint($subQuery);
+        }
+
+        if ($relationType === 'hasManyThrough') {
+            $joins = $subQuery->join ?? [];
+            $throughTable = $joins[0]['table'] ?? $subQuery->table;
+            $subQuery->whereRaw("{$throughTable}.{$relatingKey} = {$parentTable}.{$primaryKey}");
+        } else {
+            $subQuery->whereRaw("{$subQuery->table}.{$relatingKey} = {$parentTable}.{$primaryKey}");
+        }
+
+        $sql = $subQuery->toSql();
+        $bindings = $subQuery->bindings;
+
+        $this->components['select_raw'][] = "({$sql}) AS {$relation}_count";
+        if ($bindings) {
+            // Prepend — SELECT is compiled before WHERE, so subquery bindings come first.
+            $this->bindings = array_merge($bindings, $this->bindings);
+        }
+
+        if (empty($this->components['columns'])) {
+            // MySQL rejects a bare subquery in SELECT without at least one named column.
+            $this->select('*');
+        }
+
+        // Drop from RelationLoader so the GROUP BY path is not also run for this relation.
+        $this->relationLoader->removeCountInclude($relation);
+        $this->model->setEagerLoading(false);
     }
 }

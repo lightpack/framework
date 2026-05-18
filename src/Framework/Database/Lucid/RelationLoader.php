@@ -60,6 +60,29 @@ class RelationLoader
         $this->countIncludes = $includes;
     }
 
+    public function hasCountInclude(string $relation): bool
+    {
+        return in_array($relation, $this->countIncludes) || isset($this->countIncludes[$relation]);
+    }
+
+    public function removeCountInclude(string $relation): void
+    {
+        $key = array_search($relation, $this->countIncludes);
+        if ($key !== false) {
+            unset($this->countIncludes[$key]);
+        }
+        unset($this->countIncludes[$relation]);
+    }
+
+    public function getCountConstraint(string $relation): ?callable
+    {
+        if (isset($this->countIncludes[$relation]) && is_callable($this->countIncludes[$relation])) {
+            return $this->countIncludes[$relation];
+        }
+
+        return null;
+    }
+
     /**
      * Set relations to sum
      */

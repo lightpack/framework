@@ -1188,6 +1188,157 @@ final class ModelTest extends TestCase
         $this->assertEquals(2, $projects[1]->comments_count);
     }
 
+    public function testOrderByWithCountForHasManyRelation()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+            ['name' => 'Project C'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+            ['name' => 'Task 4', 'project_id' => 3],
+            ['name' => 'Task 5', 'project_id' => 3],
+            ['name' => 'Task 6', 'project_id' => 3],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->withCount('tasks')
+            ->orderBy('tasks_count', 'desc')
+            ->all();
+
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals('Project C', $projects[0]->name);
+        $this->assertEquals(3, $projects[0]->tasks_count);
+        $this->assertEquals('Project B', $projects[1]->name);
+        $this->assertEquals(2, $projects[1]->tasks_count);
+        $this->assertEquals('Project A', $projects[2]->name);
+        $this->assertEquals(1, $projects[2]->tasks_count);
+    }
+
+    public function testOrderByWithCountForHasManyThroughRelation()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+            ['name' => 'Project C'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 3],
+        ]);
+        $this->db->table('comments')->insert([
+            ['content' => 'Comment 1', 'task_id' => 1],
+            ['content' => 'Comment 2', 'task_id' => 2],
+            ['content' => 'Comment 3', 'task_id' => 2],
+            ['content' => 'Comment 4', 'task_id' => 3],
+            ['content' => 'Comment 5', 'task_id' => 3],
+            ['content' => 'Comment 6', 'task_id' => 3],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->withCount('comments')
+            ->orderBy('comments_count', 'desc')
+            ->all();
+
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals('Project C', $projects[0]->name);
+        $this->assertEquals(3, $projects[0]->comments_count);
+        $this->assertEquals('Project B', $projects[1]->name);
+        $this->assertEquals(2, $projects[1]->comments_count);
+        $this->assertEquals('Project A', $projects[2]->name);
+        $this->assertEquals(1, $projects[2]->comments_count);
+    }
+
+    public function testOrderByWithCountRespectsLimit()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+            ['name' => 'Project C'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+            ['name' => 'Task 4', 'project_id' => 3],
+            ['name' => 'Task 5', 'project_id' => 3],
+            ['name' => 'Task 6', 'project_id' => 3],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->withCount('tasks')
+            ->orderBy('tasks_count', 'desc')
+            ->limit(2)
+            ->all();
+
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals('Project C', $projects[0]->name);
+        $this->assertEquals(3, $projects[0]->tasks_count);
+        $this->assertEquals('Project B', $projects[1]->name);
+        $this->assertEquals(2, $projects[1]->tasks_count);
+    }
+
+    public function testWithCountWithConstraintStillSetsCountCorrectly()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->withCount(['tasks' => function ($q) {
+                $q->where('hours', '>', 4);
+            }])
+            ->all();
+
+        $this->assertEquals(1, $projects[0]->tasks_count);
+        $this->assertEquals(1, $projects[1]->tasks_count);
+    }
+
+    public function testOrderByWithConstrainedWithCount()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+            ['name' => 'Project C'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 2],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 6],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 8],
+            ['name' => 'Task 4', 'project_id' => 3, 'hours' => 5],
+            ['name' => 'Task 5', 'project_id' => 3, 'hours' => 7],
+            ['name' => 'Task 6', 'project_id' => 3, 'hours' => 9],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->withCount(['tasks' => fn($q) => $q->where('hours', '>', 4)])
+            ->orderBy('tasks_count', 'desc')
+            ->all();
+
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals('Project C', $projects[0]->name);
+        $this->assertEquals(3, $projects[0]->tasks_count);
+        $this->assertEquals('Project B', $projects[1]->name);
+        $this->assertEquals(2, $projects[1]->tasks_count);
+        $this->assertEquals('Project A', $projects[2]->name);
+        $this->assertEquals(0, $projects[2]->tasks_count);
+    }
+
     public function testThrowsExceptionWhenEagerLoadingNonExistingRelation()
     {
         $projectModel = $this->db->model(Project::class);
