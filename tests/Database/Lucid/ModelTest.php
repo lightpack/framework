@@ -1175,7 +1175,7 @@ final class ModelTest extends TestCase
 
         // fetch all projects with all its comments
         $projectModel = $this->db->model(Project::class);
-        $projects = $projectModel::query()->with('comments')->all();
+        $projects = $projectModel::query()->with('comments')->withCount('comments')->all();
 
         // Assertions
         $this->assertNotEmpty($projects);
@@ -1184,6 +1184,8 @@ final class ModelTest extends TestCase
         $this->assertNotEmpty($projects[0]->comments);
         $this->assertEquals(1, $projects[0]->comments->count());
         $this->assertEquals('Comment 1', $projects[0]->comments[0]->content);
+        $this->assertEquals(1, $projects[0]->comments_count);
+        $this->assertEquals(2, $projects[1]->comments_count);
     }
 
     public function testThrowsExceptionWhenEagerLoadingNonExistingRelation()
