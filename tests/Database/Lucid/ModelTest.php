@@ -494,6 +494,127 @@ final class ModelTest extends TestCase
         $this->assertEquals(2, $project->tasks_count);
     }
 
+    public function testLoadSumMethod()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->loadSum('tasks', 'hours');
+
+        $this->assertEquals(10, $project->tasks_sum_hours);
+    }
+
+    public function testLoadAvgMethod()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->loadAvg('tasks', 'hours');
+
+        $this->assertEquals(5, $project->tasks_avg_hours);
+    }
+
+    public function testLoadMinMethod()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->loadMin('tasks', 'hours');
+
+        $this->assertEquals(3, $project->tasks_min_hours);
+    }
+
+    public function testLoadMaxMethod()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->loadMax('tasks', 'hours');
+
+        $this->assertEquals(7, $project->tasks_max_hours);
+    }
+
+    public function testLoadSumMethodWithConstraint()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $project = $this->db->model(Project::class);
+        $project->find(2);
+        $project->loadSum(['tasks' => function ($q) {
+            $q->where('name', 'LIKE', '%Task%');
+        }], 'hours');
+
+        $this->assertEquals(10, $project->tasks_sum_hours);
+    }
+
+    public function testCollectionLoadSumMethod()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projects = Project::query()->all();
+        $projects->loadSum('tasks', 'hours');
+
+        $this->assertEquals(5, $projects[0]->tasks_sum_hours);
+        $this->assertEquals(10, $projects[1]->tasks_sum_hours);
+    }
+
     public function testLastInsertId()
     {
         $product = new Product;
@@ -849,6 +970,185 @@ final class ModelTest extends TestCase
         $this->assertEquals(1, $projects[0]->tasks->count());
         $this->assertEquals('Task 3', $projects[1]->tasks[1]->name);
         $this->assertEquals(2, $projects[1]->tasks_count);
+    }
+
+    public function testWithSumMethodForEagerLoading()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $project2 = $projectModel::query()->withSum('tasks', 'hours')->where('id', '=', 2)->one();
+        $project3 = $projectModel::query()->withSum('tasks', 'hours')->where('id', '=', 3)->one();
+
+        $this->assertEquals(10, $project2->tasks_sum_hours);
+        $this->assertEquals(0, $project3->tasks_sum_hours);
+    }
+
+    public function testWithAvgMethodForEagerLoading()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $project2 = $projectModel::query()->withAvg('tasks', 'hours')->where('id', '=', 2)->one();
+        $project3 = $projectModel::query()->withAvg('tasks', 'hours')->where('id', '=', 3)->one();
+
+        $this->assertEquals(5, $project2->tasks_avg_hours);
+        $this->assertNull($project3->tasks_avg_hours);
+    }
+
+    public function testWithMinMethodForEagerLoading()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $project2 = $projectModel::query()->withMin('tasks', 'hours')->where('id', '=', 2)->one();
+        $project3 = $projectModel::query()->withMin('tasks', 'hours')->where('id', '=', 3)->one();
+
+        $this->assertEquals(3, $project2->tasks_min_hours);
+        $this->assertNull($project3->tasks_min_hours);
+    }
+
+    public function testWithMaxMethodForEagerLoading()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+            ['name' => 'Project 3'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $project2 = $projectModel::query()->withMax('tasks', 'hours')->where('id', '=', 2)->one();
+        $project3 = $projectModel::query()->withMax('tasks', 'hours')->where('id', '=', 3)->one();
+
+        $this->assertEquals(7, $project2->tasks_max_hours);
+        $this->assertNull($project3->tasks_max_hours);
+    }
+
+    public function testWithSumMethodForEagerLoadingAll()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->withSum('tasks', 'hours')->all();
+
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals(5, $projects[0]->tasks_sum_hours);
+        $this->assertEquals(10, $projects[1]->tasks_sum_hours);
+    }
+
+    public function testWithAndWithSumMethodBoth()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->with('tasks')->withSum('tasks', 'hours')->all();
+
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals('Project 2', $projects[1]->name);
+        $this->assertNotEmpty($projects[1]->tasks);
+        $this->assertEquals(1, $projects[0]->tasks->count());
+        $this->assertEquals('Task 3', $projects[1]->tasks[1]->name);
+        $this->assertEquals(10, $projects[1]->tasks_sum_hours);
+    }
+
+    public function testWithSumMethodWithConstraint()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+            ['name' => 'Project 2'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 2, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 2, 'hours' => 7],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()->withSum(['tasks' => function ($q) {
+            $q->where('name', '=', 'Task 2');
+        }], 'hours')->all();
+
+        $this->assertNotEmpty($projects);
+        $this->assertEquals(0, $projects[0]->tasks_sum_hours);
+        $this->assertEquals(3, $projects[1]->tasks_sum_hours);
+    }
+
+    public function testWithMixedAggregates()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project 1'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5, 'cost' => 100],
+            ['name' => 'Task 2', 'project_id' => 1, 'hours' => 3, 'cost' => 200],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->withSum('tasks', 'hours')
+            ->withSum('tasks', 'cost')
+            ->withAvg('tasks', 'hours')
+            ->withAvg('tasks', 'cost')
+            ->withMin('tasks', 'hours')
+            ->withMax('tasks', 'cost')
+            ->all();
+
+        $this->assertEquals(8, $projects[0]->tasks_sum_hours);
+        $this->assertEquals(300, $projects[0]->tasks_sum_cost);
+        $this->assertEquals(4, $projects[0]->tasks_avg_hours);
+        $this->assertEquals(150, $projects[0]->tasks_avg_cost);
+        $this->assertEquals(3, $projects[0]->tasks_min_hours);
+        $this->assertEquals(200, $projects[0]->tasks_max_cost);
     }
 
     public function testWithAndWithCountMethodForHasManyThroughRelations()

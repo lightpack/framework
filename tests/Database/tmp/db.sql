@@ -88,6 +88,8 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
   `project_id` int NOT NULL,
+  `hours` int NOT NULL DEFAULT 0,
+  `cost` int NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
