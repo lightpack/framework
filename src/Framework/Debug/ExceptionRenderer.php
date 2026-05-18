@@ -233,8 +233,8 @@ class ExceptionRenderer
         $data['type'] = $errorType;
         $data['code'] = $statusCode;
         $data['message'] = $exc->getMessage();
-        $data['file'] = $exc->getFile();
-        $data['line'] = $exc->getLine();
+        $data['file'] = $relevantTrace['file'];
+        $data['line'] = $relevantTrace['line'];
         $data['trace'] = $this->getTrace($exc);
         $data['format'] = $this->getResponseFormat();
         $data['environment'] = $this->environment;
