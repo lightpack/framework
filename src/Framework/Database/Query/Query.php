@@ -1171,15 +1171,12 @@ class Query
         return $result->total;
     }
 
-    public function countBy(string $column)
+    public function countBy(string $column): static
     {
-        $this->columns = [$column, 'COUNT(*) AS num'];
+        $this->columns = [$column, 'COUNT(*) AS count'];
         $this->groupBy($column);
 
-        $query = $this->getCompiledSelect();
-        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
-
-        return $result;
+        return $this;
     }
 
     public function sum(string $column)
@@ -1218,24 +1215,24 @@ class Query
         return $result->max;
     }
 
-    public function sumBy(string $groupColumn, string $aggregateColumn)
+    public function sumBy(string $groupColumn, string $aggregateColumn): static
     {
-        return $this->aggregateBy('SUM', $groupColumn, $aggregateColumn, 'sum');
+        return $this->aggregateBy('SUM', $groupColumn, $aggregateColumn);
     }
 
-    public function avgBy(string $groupColumn, string $aggregateColumn)
+    public function avgBy(string $groupColumn, string $aggregateColumn): static
     {
-        return $this->aggregateBy('AVG', $groupColumn, $aggregateColumn, 'avg');
+        return $this->aggregateBy('AVG', $groupColumn, $aggregateColumn);
     }
 
-    public function minBy(string $groupColumn, string $aggregateColumn)
+    public function minBy(string $groupColumn, string $aggregateColumn): static
     {
-        return $this->aggregateBy('MIN', $groupColumn, $aggregateColumn, 'min');
+        return $this->aggregateBy('MIN', $groupColumn, $aggregateColumn);
     }
 
-    public function maxBy(string $groupColumn, string $aggregateColumn)
+    public function maxBy(string $groupColumn, string $aggregateColumn): static
     {
-        return $this->aggregateBy('MAX', $groupColumn, $aggregateColumn, 'max');
+        return $this->aggregateBy('MAX', $groupColumn, $aggregateColumn);
     }
 
     /**
@@ -1292,15 +1289,13 @@ class Query
         return $this;
     }
 
-    protected function aggregateBy(string $sqlFn, string $groupColumn, string $aggregateColumn, string $resultKey)
+    protected function aggregateBy(string $sqlFn, string $groupColumn, string $aggregateColumn): static
     {
-        $this->columns = [$groupColumn, "{$sqlFn}(`{$aggregateColumn}`) AS {$resultKey}"];
+        $alias = strtolower($sqlFn) . '_' . $aggregateColumn;
+        $this->columns = [$groupColumn, "{$sqlFn}(`{$aggregateColumn}`) AS {$alias}"];
         $this->groupBy($groupColumn);
 
-        $query = $this->getCompiledSelect();
-        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
-
-        return $result;
+        return $this;
     }
 
     public function __get(string $key)

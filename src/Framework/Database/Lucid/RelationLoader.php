@@ -230,13 +230,13 @@ class RelationLoader
                 $constraint($query);
             }
 
-            $counts = $query->whereIn($this->model->getRelatingKey(), $models->ids())->countBy($this->model->getRelatingKey());
+            $counts = $query->whereIn($this->model->getRelatingKey(), $models->ids())->countBy($this->model->getRelatingKey())->all();
             $this->model->setEagerLoading(false);
 
             foreach ($models as $model) {
                 foreach ($counts as $count) {
                     if ($count->{$this->model->getRelatingKey()} === $model->{$model->getPrimaryKey()}) {
-                        $model->{$include . '_count'} = $count->num;
+                        $model->{$include . '_count'} = $count->count;
                     }
                 }
 
@@ -282,27 +282,27 @@ class RelationLoader
 
             switch ($type) {
                 case 'sum':
-                    $results = $query->whereIn($relatingKey, $ids)->sumBy($relatingKey, $column);
+                    $results = $query->whereIn($relatingKey, $ids)->sumBy($relatingKey, $column)->all();
                     $attrSuffix = '_sum_' . $column;
-                    $resultKey = 'sum';
+                    $resultKey = 'sum_' . $column;
                     $defaultValue = 0;
                     break;
                 case 'avg':
-                    $results = $query->whereIn($relatingKey, $ids)->avgBy($relatingKey, $column);
+                    $results = $query->whereIn($relatingKey, $ids)->avgBy($relatingKey, $column)->all();
                     $attrSuffix = '_avg_' . $column;
-                    $resultKey = 'avg';
+                    $resultKey = 'avg_' . $column;
                     $defaultValue = null;
                     break;
                 case 'min':
-                    $results = $query->whereIn($relatingKey, $ids)->minBy($relatingKey, $column);
+                    $results = $query->whereIn($relatingKey, $ids)->minBy($relatingKey, $column)->all();
                     $attrSuffix = '_min_' . $column;
-                    $resultKey = 'min';
+                    $resultKey = 'min_' . $column;
                     $defaultValue = null;
                     break;
                 case 'max':
-                    $results = $query->whereIn($relatingKey, $ids)->maxBy($relatingKey, $column);
+                    $results = $query->whereIn($relatingKey, $ids)->maxBy($relatingKey, $column)->all();
                     $attrSuffix = '_max_' . $column;
-                    $resultKey = 'max';
+                    $resultKey = 'max_' . $column;
                     $defaultValue = null;
                     break;
             }

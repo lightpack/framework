@@ -747,9 +747,64 @@ final class QueryTest extends TestCase
 
     public function testGroupByCount()
     {
-        // Test 1
-        $sql = 'SELECT `color`, COUNT(*) AS num FROM `products` GROUP BY `color`';
+        // Test 1: SQL generation
+        $sql = 'SELECT `color`, COUNT(*) AS count FROM `products` GROUP BY `color`';
         $this->query->countBy('color');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2: Chaining with having and orderBy
+        $sql = 'SELECT `color`, COUNT(*) AS count FROM `products` GROUP BY `color` HAVING `count` > ? ORDER BY `count` DESC LIMIT 5';
+        $this->query->countBy('color')->having('count', '>', 2)->orderBy('count', 'DESC')->limit(5);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([2], $this->query->bindings);
+        $this->query->resetQuery();
+    }
+
+    public function testSumByMethod()
+    {
+        // Test 1: SQL generation
+        $sql = 'SELECT `color`, SUM(`price`) AS sum_price FROM `products` GROUP BY `color`';
+        $this->query->sumBy('color', 'price');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2: Chaining with having and orderBy
+        $sql = 'SELECT `color`, SUM(`price`) AS sum_price FROM `products` GROUP BY `color` HAVING `sum_price` > ? ORDER BY `sum_price` DESC LIMIT 3';
+        $this->query->sumBy('color', 'price')->having('sum_price', '>', 100)->orderBy('sum_price', 'DESC')->limit(3);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([100], $this->query->bindings);
+        $this->query->resetQuery();
+    }
+
+    public function testAvgByMethod()
+    {
+        // Test 1: SQL generation
+        $sql = 'SELECT `color`, AVG(`price`) AS avg_price FROM `products` GROUP BY `color`';
+        $this->query->avgBy('color', 'price');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2: Chaining
+        $sql = 'SELECT `color`, AVG(`price`) AS avg_price FROM `products` GROUP BY `color` HAVING `avg_price` > ?';
+        $this->query->avgBy('color', 'price')->having('avg_price', '>', 50);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([50], $this->query->bindings);
+        $this->query->resetQuery();
+    }
+
+    public function testMinByMethod()
+    {
+        $sql = 'SELECT `color`, MIN(`price`) AS min_price FROM `products` GROUP BY `color`';
+        $this->query->minBy('color', 'price');
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testMaxByMethod()
+    {
+        $sql = 'SELECT `color`, MAX(`price`) AS max_price FROM `products` GROUP BY `color`';
+        $this->query->maxBy('color', 'price');
         $this->assertEquals($sql, $this->query->toSql());
         $this->query->resetQuery();
     }
