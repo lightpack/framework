@@ -32,6 +32,12 @@ final class QueryTest extends TestCase
         $container->register('db', function () {
             return $this->db;
         });
+        $container->register('logger', function () {
+            return new class {
+                public function error($message, $context = []){}
+                public function critical($message, $context = []){}
+            };
+        });
         $container->register('request', function () {
             return new Request;
         });
@@ -1277,6 +1283,176 @@ final class QueryTest extends TestCase
         $this->query->where('color', '#000')->where('price', '>', 100)->desc('price')->limit(10);
         $this->assertEquals($sql, $this->query->toSql());
         $this->assertEquals(['#000', 100], $this->query->bindings);
+        $this->query->resetQuery();
+    }
+
+    public function testAggregateMethodProducesCorrectSql()
+    {
+        // Test 1: Shorthand format
+        $sql = 'SELECT `color`, COUNT(*) AS count, SUM(`price`) AS sum_price FROM `products` GROUP BY `color`';
+        $this->query->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2: Explicit array format with custom alias
+        $sql = 'SELECT `color`, SUM(`price`) AS total_price, AVG(`price`) AS avg_price FROM `products` GROUP BY `color`';
+        $this->query->aggregate('color', [
+            'total_price' => ['sum', 'price'],
+            'avg_price' => ['avg', 'price'],
+        ]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 2b: Explicit array format with COUNT(*)
+        $sql = 'SELECT `color`, COUNT(*) AS total FROM `products` GROUP BY `color`';
+        $this->query->aggregate('color', [
+            'total' => ['count', '*'],
+        ]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 3: Mixed shorthand and explicit format
+        $sql = 'SELECT `color`, COUNT(*) AS count, SUM(`price`) AS total_price, AVG(`price`) AS avg_price FROM `products` GROUP BY `color`';
+        $this->query->aggregate('color', [
+            'count' => '*',
+            'total_price' => ['sum', 'price'],
+            'avg' => 'price',
+        ]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test 4: With WHERE clause
+        $sql = 'SELECT `color`, COUNT(*) AS count, SUM(`price`) AS sum_price FROM `products` WHERE `price` > ? GROUP BY `color`';
+        $this->query->where('price', '>', 50)->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([50], $this->query->bindings);
+        $this->query->resetQuery();
+    }
+
+    public function testAggregateMethodChainsWithHavingOrderByAndLimit()
+    {
+        // Test having() on aggregate alias
+        $sql = 'SELECT `color`, SUM(`price`) AS sum_price FROM `products` GROUP BY `color` HAVING `sum_price` > ?';
+        $this->query->aggregate('color', [
+            'sum' => 'price',
+        ])->having('sum_price', '>', 100);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([100], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test orderBy() + limit()
+        $sql = 'SELECT `color`, COUNT(*) AS count, SUM(`price`) AS sum_price FROM `products` GROUP BY `color` ORDER BY `sum_price` DESC LIMIT 5';
+        $this->query->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ])->orderBy('sum_price', 'DESC')->limit(5);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+
+        // Test having() + orderBy() + limit() together
+        $sql = 'SELECT `color`, COUNT(*) AS count, SUM(`price`) AS sum_price FROM `products` GROUP BY `color` HAVING `count` > ? ORDER BY `sum_price` DESC LIMIT 3 OFFSET 2';
+        $this->query->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ])->having('count', '>', 1)->orderBy('sum_price', 'DESC')->limit(3)->offset(2);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->assertEquals([1], $this->query->bindings);
+        $this->query->resetQuery();
+
+        // Test ->one() works with aggregate (one() adds LIMIT 1 internally)
+        $sql = 'SELECT `color`, COUNT(*) AS count, SUM(`price`) AS sum_price FROM `products` GROUP BY `color`';
+        $this->query->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ]);
+        $this->assertEquals($sql, $this->query->toSql());
+        $this->query->resetQuery();
+    }
+
+    public function testAggregateMethodOneReturnsSingleGroupedRow()
+    {
+        // Clear and insert known data
+        $this->query->delete();
+        $this->query->insert([
+            ['name' => 'Widget A', 'color' => 'red', 'price' => 50.00],
+            ['name' => 'Widget B', 'color' => 'red', 'price' => 75.00],
+            ['name' => 'Widget C', 'color' => 'blue', 'price' => 125.00],
+        ]);
+
+        // Get first grouped row (order depends on DB, just verify it's a single row with correct keys)
+        $row = $this->query->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ])->one();
+
+        $this->assertInstanceOf(\stdClass::class, $row);
+        $this->assertObjectHasProperty('color', $row);
+        $this->assertObjectHasProperty('count', $row);
+        $this->assertObjectHasProperty('sum_price', $row);
+        $this->assertIsInt($row->count);
+        $this->assertIsNumeric($row->sum_price);
+
+        $this->query->resetQuery();
+
+        // Test with orderBy to reliably get a specific group
+        $row = $this->query->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ])->orderBy('sum_price', 'DESC')->one();
+
+        // Highest sum should be red group (50 + 75 = 125)
+        $this->assertEquals('red', $row->color);
+        $this->assertEquals(2, $row->count);
+        $this->assertEquals(125.00, $row->sum_price);
+
+        $this->query->resetQuery();
+    }
+
+    public function testAggregateMethodReturnsCorrectData()
+    {
+        // Insert more test data for meaningful grouping
+        $this->query->insert([
+            ['name' => 'Widget A', 'color' => 'red', 'price' => 50.00],
+            ['name' => 'Widget B', 'color' => 'red', 'price' => 75.00],
+            ['name' => 'Widget C', 'color' => 'blue', 'price' => 125.00],
+        ]);
+
+        // Test shorthand format
+        $result = $this->query->aggregate('color', [
+            'count' => '*',
+            'sum' => 'price',
+        ])->all();
+
+        $this->assertCount(4, $result); // #09F, #CCC, red, blue
+
+        // Find red group
+        $red = array_values(array_filter($result, fn($r) => $r->color === 'red'))[0];
+        $this->assertEquals(2, $red->count);
+        $this->assertEquals(125.00, $red->sum_price);
+
+        // Find blue group
+        $blue = array_values(array_filter($result, fn($r) => $r->color === 'blue'))[0];
+        $this->assertEquals(1, $blue->count);
+        $this->assertEquals(125.00, $blue->sum_price);
+
+        $this->query->resetQuery();
+
+        // Test explicit format with custom alias
+        $result = $this->query->aggregate('color', [
+            'total' => ['sum', 'price'],
+            'avg_price' => ['avg', 'price'],
+        ])->all();
+
+        $red = array_values(array_filter($result, fn($r) => $r->color === 'red'))[0];
+        $this->assertEquals(125.00, $red->total);
+        $this->assertEquals(62.50, $red->avg_price);
+
         $this->query->resetQuery();
     }
 }

@@ -1238,6 +1238,60 @@ class Query
         return $this->aggregateBy('MAX', $groupColumn, $aggregateColumn, 'max');
     }
 
+    /**
+     * Perform multiple aggregate functions grouped by a single column in one query.
+     *
+     * Supports two value formats per aggregate:
+     *   - Shorthand:  'count' => '*'    (key is the SQL function, value is the column)
+     *   - Explicit:   'total_price' => ['sum', 'price']  (key is the alias, value is [function, column])
+     *
+     * Example:
+     *   $query->aggregate('color', [
+     *       'count' => '*',
+     *       'sum' => 'price',
+     *       'total_cost' => ['sum', 'cost'],
+     *       'avg' => 'price',
+     *   ])->having('sum_price', '>', 100)->all();
+     *
+     * Generates:
+     *   SELECT `color`, COUNT(*) AS count, SUM(`price`) AS sum_price, SUM(`cost`) AS total_cost, AVG(`price`) AS avg_price
+     *   FROM `products` GROUP BY `color` HAVING `sum_price` > ?
+     *
+     * @param string $groupColumn Column to group by.
+     * @param array $aggregates Map of alias => column string or [function, column] array.
+     * @return static
+     */
+    public function aggregate(string $groupColumn, array $aggregates): static
+    {
+        $columns = [$groupColumn];
+
+        foreach ($aggregates as $alias => $config) {
+            if (is_array($config)) {
+                $function = strtoupper($config[0]);
+                $column = $config[1];
+                if ($column === '*') {
+                    $columns[] = "{$function}(*) AS {$alias}";
+                } else {
+                    $columns[] = "{$function}(`{$column}`) AS {$alias}";
+                }
+            } else {
+                $function = strtoupper($alias);
+                $column = $config;
+                $alias = $column === '*' ? strtolower($function) : strtolower($function) . '_' . $column;
+                if ($column === '*') {
+                    $columns[] = "{$function}(*) AS {$alias}";
+                } else {
+                    $columns[] = "{$function}(`{$column}`) AS {$alias}";
+                }
+            }
+        }
+
+        $this->columns = $columns;
+        $this->groupBy($groupColumn);
+
+        return $this;
+    }
+
     protected function aggregateBy(string $sqlFn, string $groupColumn, string $aggregateColumn, string $resultKey)
     {
         $this->columns = [$groupColumn, "{$sqlFn}(`{$aggregateColumn}`) AS {$resultKey}"];
@@ -1383,6 +1437,7 @@ class Query
         $this->components['where'] = [];
         $this->components['join'] = [];
         $this->components['group'] = [];
+        $this->components['having'] = [];
         $this->components['order'] = [];
         $this->components['lock'] = [];
         $this->components['limit'] = null;
