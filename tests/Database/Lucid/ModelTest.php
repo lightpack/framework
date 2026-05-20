@@ -2360,7 +2360,7 @@ final class ModelTest extends TestCase
     public function testQueryChunkMethodOnModel()
     {
         // Make sure we have no records
-        (new Product)->query()->delete();
+        (new Product)->query()->whereRaw('1=1')->delete();
 
         foreach (range(1, 25) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC'];
@@ -2390,7 +2390,7 @@ final class ModelTest extends TestCase
     public function testAggregateMethodsOnModel()
     {
         // Make sure we have no records
-        Product::query()->delete();
+        Product::query()->whereRaw('1=1')->delete();
 
         foreach (range(1, 10) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC', 'price' => 100];

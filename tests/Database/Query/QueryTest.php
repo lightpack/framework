@@ -439,6 +439,18 @@ final class QueryTest extends TestCase
         $this->assertEquals($productsCountBeforeDelete, $productsCountAfterDelete);
     }
 
+    public function testUpdateWithoutWhereThrowsException()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->query->update(['color' => '#FFF']);
+    }
+
+    public function testDeleteWithoutWhereThrowsException()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->query->delete();
+    }
+
     public function testWhereLogicalGroupingOfParameters()
     {
         // Test 1
@@ -866,7 +878,7 @@ final class QueryTest extends TestCase
     public function testQueryChunkMethod()
     {
         // Make sure we have no records
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
 
         foreach (range(1, 25) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC'];
@@ -896,7 +908,7 @@ final class QueryTest extends TestCase
     public function testQueryChunkWithEmptyTable()
     {
         // Make sure we have no records
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
 
         // Process chunk query on empty table
         $callbackExecuted = false;
@@ -912,7 +924,7 @@ final class QueryTest extends TestCase
     public function testQueryChunkWithNonStandardChunkSize()
     {
         // Make sure we have no records
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
 
         // Insert 10 records
         foreach (range(1, 10) as $item) {
@@ -939,7 +951,7 @@ final class QueryTest extends TestCase
     public function testQueryChunkWithOrderBy()
     {
         // Make sure we have no records
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
 
         // Insert records with different names
         foreach (range(1, 5) as $item) {
@@ -967,7 +979,7 @@ final class QueryTest extends TestCase
     public function testQueryChunkWithZeroChunkSize()
     {
         // Make sure we have no records
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
 
         // Insert a few records
         foreach (range(1, 5) as $item) {
@@ -986,7 +998,7 @@ final class QueryTest extends TestCase
     public function testQueryChunkWithExactlyOneChunkSize()
     {
         // Make sure we have no records
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
 
         // Insert exactly 5 records
         foreach (range(1, 5) as $item) {
@@ -1010,7 +1022,7 @@ final class QueryTest extends TestCase
     public function testQueryChunkWithWhereCondition()
     {
         // Make sure we have no records
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
 
         // Insert records with different colors
         foreach (range(1, 10) as $item) {
@@ -1438,7 +1450,7 @@ final class QueryTest extends TestCase
     public function testAggregateMethodOneReturnsSingleGroupedRow()
     {
         // Clear and insert known data
-        $this->query->delete();
+        $this->query->whereRaw('1=1')->delete();
         $this->query->insert([
             ['name' => 'Widget A', 'color' => 'red', 'price' => 50.00],
             ['name' => 'Widget B', 'color' => 'red', 'price' => 75.00],
