@@ -18,7 +18,7 @@ class OutputTest extends TestCase
 
     public function testErrorMethod()
     {
-        $expected = "\033[0;31mHello\033[0m";
+        $expected = "\033[0;31mHello\033[0m\n";
 
         ob_start();
         (new Output)->error('Hello');
@@ -29,7 +29,7 @@ class OutputTest extends TestCase
 
     public function testSuccessMethod()
     {
-        $expected = "\033[0;32mHello\033[0m";
+        $expected = "\033[0;32mHello\033[0m\n";
 
         ob_start();
         (new Output)->success('Hello');
@@ -40,7 +40,7 @@ class OutputTest extends TestCase
 
     public function testWarningMethod()
     {
-        $expected = "\033[0;33mHello\033[0m";
+        $expected = "\033[0;33mHello\033[0m\n";
 
         ob_start();
         (new Output)->warning('Hello');
@@ -51,7 +51,7 @@ class OutputTest extends TestCase
 
     public function testInfoMethod()
     {
-        $expected = "\033[0;34mHello\033[0m";
+        $expected = "\033[0;34mHello\033[0m\n";
 
         ob_start();
         (new Output)->info('Hello');
@@ -71,8 +71,8 @@ class OutputTest extends TestCase
 
         $this->assertEquals($expected, $actual);
 
-        // Test 1
-        $expected = "\033[41mERROR\033[0m";
+        // Test 2
+        $expected = "\033[41m ERROR \033[0m";
 
         ob_start();
         (new Output)->errorLabel('ERROR');
@@ -93,7 +93,7 @@ class OutputTest extends TestCase
         $this->assertEquals($expected, $actual);
 
         // Test 2
-        $expected = "\033[42mSUCCESS\033[0m";
+        $expected = "\033[42m SUCCESS \033[0m";
 
         ob_start();
         (new Output)->successLabel('SUCCESS');
@@ -114,7 +114,7 @@ class OutputTest extends TestCase
         $this->assertEquals($expected, $actual);
 
         // Test 2
-        $expected = "\033[43mWARNING\033[0m";
+        $expected = "\033[43m WARNING \033[0m";
 
         ob_start();
         (new Output)->warningLabel('WARNING');
@@ -135,7 +135,7 @@ class OutputTest extends TestCase
         $this->assertEquals($expected, $actual);
 
         // Test 2
-        $expected = "\033[44mINFO\033[0m";
+        $expected = "\033[44m INFO \033[0m";
 
         ob_start();
         (new Output)->infoLabel('INFO');

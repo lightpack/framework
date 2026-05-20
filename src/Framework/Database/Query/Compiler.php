@@ -168,12 +168,26 @@ class Compiler
         $columns = $this->query->columns ?? [];
 
         $allColumns = [];
-        // Add all select_raw expressions as-is
+        $named = [];
+
+        // MySQL requires bare * to appear before any expressions or subqueries
+        // in the SELECT list. Single pass: hoist * to front, buffer named columns
+        // to be appended after select_raw expressions.
+        foreach ($columns as $column) {
+            if ($column === '*') {
+                $allColumns[] = '*';
+            } else {
+                $named[] = $column;
+            }
+        }
+
+        // select_raw expressions (e.g. correlated subqueries) go after *
         foreach ($raws as $raw) {
             $allColumns[] = $raw;
         }
-        // Add normal columns, with wrapping/aggregate handling
-        foreach ($columns as $column) {
+
+        // Named columns last, with wrapping/aggregate handling
+        foreach ($named as $column) {
             if (strpos($column, 'COUNT') !== false || strpos($column, 'SUM') !== false || strpos($column, 'AVG') !== false || strpos($column, 'MIN') !== false || strpos($column, 'MAX') !== false) {
                 $allColumns[] = $column;
             } else {

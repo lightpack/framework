@@ -32,7 +32,6 @@ class Env
                 $value = match (strtolower($value)) {
                     'true', '(true)' => true,
                     'false', '(false)' => false,
-                    'null', '(null)' => null,
                     default => $value
                 };
 

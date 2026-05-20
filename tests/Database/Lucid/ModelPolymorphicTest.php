@@ -253,6 +253,38 @@ class ModelPolymorphicTest extends TestCase
         $this->assertEquals(1, $videos[0]->comments_count);
     }
 
+    public function testPolymorphicWithCountOrderBy()
+    {
+        $this->db->table('posts')->insert([
+            ['title' => 'Post with few comments'],
+            ['title' => 'Post with many comments'],
+        ]);
+        $postIds = [1, 2];
+
+        $this->db->table('videos')->insert(['title' => 'A Video']);
+        $videoId = $this->db->lastInsertId();
+
+        $this->db->table('polymorphic_comments')->insert([
+            ['body' => 'Post 1 comment', 'morph_id' => $postIds[0], 'morph_type' => 'posts'],
+            ['body' => 'Post 2 comment 1', 'morph_id' => $postIds[1], 'morph_type' => 'posts'],
+            ['body' => 'Post 2 comment 2', 'morph_id' => $postIds[1], 'morph_type' => 'posts'],
+            ['body' => 'Post 2 comment 3', 'morph_id' => $postIds[1], 'morph_type' => 'posts'],
+            ['body' => 'Video comment', 'morph_id' => $videoId, 'morph_type' => 'videos'],
+        ]);
+
+        // Ordering must respect morph_type=posts; video comment must NOT be counted
+        $posts = $this->db->model(PostModel::class)::query()
+            ->withCount('comments')
+            ->orderBy('comments_count', 'desc')
+            ->all();
+
+        $this->assertEquals(2, $posts->count());
+        $this->assertEquals('Post with many comments', $posts[0]->title);
+        $this->assertEquals(3, $posts[0]->comments_count);
+        $this->assertEquals('Post with few comments', $posts[1]->title);
+        $this->assertEquals(1, $posts[1]->comments_count);
+    }
+
     public function testPolymorphicRelationQueryChaining()
     {
         $this->db->table('posts')->insert(['title' => 'A Post']);

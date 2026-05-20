@@ -22,13 +22,11 @@ class LinkStorage extends Command
 
         if ($success) {
             $this->output->success('✓ Created symlink from "public/uploads" to "storage/uploads/public"');
-            $this->output->newline();
 
             return self::SUCCESS;
         }
 
         $this->output->error("Could not create symlink");
-        $this->output->newline();
 
         return self::FAILURE;
     }

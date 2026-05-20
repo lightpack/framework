@@ -13,11 +13,23 @@ class ProcessJobs extends Command
         $sleep = $this->args->get('sleep') ?? 5;
         $cooldown = $this->args->get('cooldown') ?? 0;
 
-        $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
+        $this->printBanner($queues, $sleep, $cooldown);
 
+        $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
         $worker->run();
 
         return self::SUCCESS;
+    }
+
+    private function printBanner(array $queues, int $sleep, int $cooldown): void
+    {
+        $this->output->newline();
+        $this->output->line(' Engine:   ' . get_env('JOB_ENGINE', 'sync'));
+        $this->output->line(' Queues:   ' . implode(', ', $queues));
+        $this->output->newline();
+        $this->output->infoLabel('WORKER');
+        $this->output->info(' Worker started');
+        $this->output->newline();
     }
 
     private function parseQueueArgument()

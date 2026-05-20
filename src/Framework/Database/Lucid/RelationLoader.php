@@ -19,6 +19,26 @@ class RelationLoader
      */
     protected $countIncludes = [];
 
+    /**
+     * @var array Relations to sum
+     */
+    protected $sumIncludes = [];
+
+    /**
+     * @var array Relations to avg
+     */
+    protected $avgIncludes = [];
+
+    /**
+     * @var array Relations to min
+     */
+    protected $minIncludes = [];
+
+    /**
+     * @var array Relations to max
+     */
+    protected $maxIncludes = [];
+
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -38,6 +58,79 @@ class RelationLoader
     public function setCountIncludes(array $includes): void
     {
         $this->countIncludes = $includes;
+    }
+
+    public function hasCountInclude(string $relation): bool
+    {
+        return in_array($relation, $this->countIncludes) || isset($this->countIncludes[$relation]);
+    }
+
+    public function removeCountInclude(string $relation): void
+    {
+        $key = array_search($relation, $this->countIncludes);
+        if ($key !== false) {
+            unset($this->countIncludes[$key]);
+        }
+        unset($this->countIncludes[$relation]);
+    }
+
+    public function getCountConstraint(string $relation): ?callable
+    {
+        if (isset($this->countIncludes[$relation]) && is_callable($this->countIncludes[$relation])) {
+            return $this->countIncludes[$relation];
+        }
+
+        return null;
+    }
+
+    /**
+     * Set relations to sum
+     */
+    public function setSumIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('sum', $includes, $column);
+    }
+
+    /**
+     * Set relations to avg
+     */
+    public function setAvgIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('avg', $includes, $column);
+    }
+
+    /**
+     * Set relations to min
+     */
+    public function setMinIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('min', $includes, $column);
+    }
+
+    /**
+     * Set relations to max
+     */
+    public function setMaxIncludes(array $includes, ?string $column = null): void
+    {
+        $this->setAggregateIncludes('max', $includes, $column);
+    }
+
+    /**
+     * Store aggregate includes for a given type
+     */
+    protected function setAggregateIncludes(string $type, array $includes, ?string $column): void
+    {
+        $property = $type . 'Includes';
+
+        foreach ($includes as $key => $value) {
+            $relation = is_callable($value) ? $key : $value;
+            $constraint = is_callable($value) ? $value : null;
+            $this->{$property}[$relation . ':' . $column] = [
+                'relation' => $relation,
+                'column' => $column,
+                'constraint' => $constraint,
+            ];
+        }
     }
 
     /**
@@ -97,6 +190,9 @@ class RelationLoader
         $pivotKeyName = $this->getPivotKeyName($this->model->getRelationType());
 
         if (! $ids) {
+            $this->setRelationResults($models, new Collection([]), $relation);
+            $this->model->setEagerLoading(false);
+
             return;
         }
 
@@ -104,11 +200,68 @@ class RelationLoader
             $constraint($query);
         }
 
-        $children = $query->whereIn($pivotKeyName ?? $this->model->getRelatingKey(), $ids)->all();
+        $relatingKey = $pivotKeyName ?? $this->model->getRelatingKey();
+
+        // If a limit is set on the relation query, use a window function to enforce
+        // per-parent limiting. Otherwise the WHERE IN approach is more efficient.
+        if ($query->limit && in_array($this->model->getRelationType(), ['hasMany', 'hasManyThrough'])) {
+            $children = $this->loadLimitedRelation($query, $ids, $relatingKey);
+            $this->model->setEagerLoading(false);
+            $this->setRelationResults($models, $children, $relation);
+            $this->loadNestedRelations($models, $include, $relation);
+
+            return;
+        }
+
+        $children = $query->whereIn($relatingKey, $ids)->all();
         $this->model->setEagerLoading(false);
 
         $this->setRelationResults($models, $children, $relation);
         $this->loadNestedRelations($models, $include, $relation);
+    }
+
+    /**
+     * Load a relation with per-parent limiting using ROW_NUMBER() window function.
+     *
+     * This is used when a constraint sets ->limit(N) on a hasMany/hasManyThrough relation.
+     * A single query with a window function enforces N records per parent.
+     */
+    protected function loadLimitedRelation($query, array $ids, string $relatingKey): Collection
+    {
+        $limit = $query->limit;
+
+        // Build ORDER BY clause for the window function
+        $orderSql = '';
+        if ($query->order) {
+            $parts = [];
+            foreach ($query->order as $order) {
+                $parts[] = '`' . $order['column'] . '` ' . $order['sort'];
+            }
+            $orderSql = 'ORDER BY ' . implode(', ', $parts);
+        }
+
+        // Clone the query, strip limit/offset, add the WHERE IN for parent IDs
+        $innerQuery = clone $query;
+        $innerQuery->limit = null;
+        $innerQuery->offset = null;
+        $innerQuery->whereIn($relatingKey, $ids);
+
+        $innerSql = $innerQuery->toSql();
+        $bindings = $innerQuery->bindings;
+
+        // Wrap with ROW_NUMBER() partitioned by the relating key
+        $sql = "SELECT * FROM (
+            SELECT *, ROW_NUMBER() OVER (PARTITION BY `{$relatingKey}` {$orderSql}) AS __lp_rn
+            FROM ({$innerSql}) AS __lp_inner
+        ) AS __lp_ranked WHERE __lp_rn <= {$limit}";
+
+        $results = $this->model->getConnection()->query($sql, $bindings)->fetchAll(\PDO::FETCH_OBJ);
+
+        foreach ($results as $result) {
+            unset($result->__lp_rn);
+        }
+
+        return new Collection($results);
     }
 
     /**
@@ -130,23 +283,107 @@ class RelationLoader
         $this->model->setEagerLoading(true);
         $query = $this->model->{$include}();
 
-        if ($this->model->getRelationType() === 'hasMany') {
+        if (in_array($this->model->getRelationType(), ['hasMany', 'hasManyThrough'])) {
             if ($constraint) {
                 $constraint($query);
             }
 
-            $counts = $query->whereIn($this->model->getRelatingKey(), $models->ids())->countBy($this->model->getRelatingKey());
+            $counts = $query->whereIn($this->model->getRelatingKey(), $models->ids())->countBy($this->model->getRelatingKey())->all();
             $this->model->setEagerLoading(false);
 
             foreach ($models as $model) {
                 foreach ($counts as $count) {
                     if ($count->{$this->model->getRelatingKey()} === $model->{$model->getPrimaryKey()}) {
-                        $model->{$include . '_count'} = $count->num;
+                        $model->{$include . '_count'} = $count->count;
                     }
                 }
 
                 if (! $model->hasAttribute($include . '_count')) {
                     $model->{$include . '_count'} = 0;
+                }
+            }
+        }
+    }
+
+    /**
+     * Load relation aggregates for a collection of models
+     */
+    public function loadRelationAggregates(Collection $models): void
+    {
+        if ($models->isEmpty()) {
+            return;
+        }
+
+        foreach (['sum', 'avg', 'min', 'max'] as $type) {
+            $property = $type . 'Includes';
+            foreach ($this->{$property} as $config) {
+                $this->loadRelationAggregate($models, $type, $config['relation'], $config['column'], $config['constraint']);
+            }
+        }
+    }
+
+    /**
+     * Load a single aggregate for a relation
+     */
+    protected function loadRelationAggregate(Collection $models, string $type, string $include, ?string $column, ?callable $constraint = null): void
+    {
+        $this->model->setEagerLoading(true);
+        $query = $this->model->{$include}();
+
+        if ($this->model->getRelationType() === 'hasMany') {
+            if ($constraint) {
+                $constraint($query);
+            }
+
+            $relatingKey = $this->model->getRelatingKey();
+            $ids = $models->ids();
+
+            switch ($type) {
+                case 'sum':
+                    $results = $query->whereIn($relatingKey, $ids)->sumBy($relatingKey, $column)->all();
+                    $attrSuffix = '_sum_' . $column;
+                    $resultKey = 'sum_' . $column;
+                    $defaultValue = 0;
+
+                    break;
+                case 'avg':
+                    $results = $query->whereIn($relatingKey, $ids)->avgBy($relatingKey, $column)->all();
+                    $attrSuffix = '_avg_' . $column;
+                    $resultKey = 'avg_' . $column;
+                    $defaultValue = null;
+
+                    break;
+                case 'min':
+                    $results = $query->whereIn($relatingKey, $ids)->minBy($relatingKey, $column)->all();
+                    $attrSuffix = '_min_' . $column;
+                    $resultKey = 'min_' . $column;
+                    $defaultValue = null;
+
+                    break;
+                case 'max':
+                    $results = $query->whereIn($relatingKey, $ids)->maxBy($relatingKey, $column)->all();
+                    $attrSuffix = '_max_' . $column;
+                    $resultKey = 'max_' . $column;
+                    $defaultValue = null;
+
+                    break;
+            }
+
+            $this->model->setEagerLoading(false);
+
+            foreach ($models as $model) {
+                $found = false;
+                foreach ($results as $result) {
+                    if ($result->{$relatingKey} === $model->{$model->getPrimaryKey()}) {
+                        $model->{$include . $attrSuffix} = $result->{$resultKey};
+                        $found = true;
+
+                        break;
+                    }
+                }
+
+                if (! $found) {
+                    $model->{$include . $attrSuffix} = $defaultValue;
                 }
             }
         }

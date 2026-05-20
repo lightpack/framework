@@ -133,13 +133,18 @@ class Model implements JsonSerializable
 
         // Check if relation is allowed to be lazy loaded
         if ($this->strictMode && ! in_array($key, $this->allowedLazyRelations)) {
-            throw new \RuntimeException(
-                sprintf(
-                    "Strict Mode: Relation '%s' on %s must be eager loaded.",
-                    $key,
-                    get_class($this)
-                )
-            );
+            if (! in_array($key, $this->loadedRelations)) {
+                throw new \RuntimeException(
+                    sprintf(
+                        "Strict Mode: Relation '%s' on %s must be eager loaded.",
+                        $key,
+                        get_class($this)
+                    )
+                );
+            }
+
+            // Relation was eagerly loaded but FK was null; return null
+            return null;
         }
 
         // Check relation cache
@@ -610,6 +615,34 @@ class Model implements JsonSerializable
         $relations = func_get_args();
         $items = new Collection($this);
         $items->loadCount(...$relations);
+    }
+
+    public function loadSum()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadSum(...$relations);
+    }
+
+    public function loadAvg()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadAvg(...$relations);
+    }
+
+    public function loadMin()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadMin(...$relations);
+    }
+
+    public function loadMax()
+    {
+        $relations = func_get_args();
+        $items = new Collection($this);
+        $items->loadMax(...$relations);
     }
 
     public function toArray()

@@ -15,7 +15,6 @@ class GenerateAppKey extends Command
 
         if (! $file->exists($filepath)) {
             $this->output->error("No env file found.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -29,7 +28,6 @@ class GenerateAppKey extends Command
         (new File)->write($filepath, $modifiedContents);
 
         $this->output->success("✓ Generated APP_KEY: {$newKey}.");
-        $this->output->newline();
 
         return self::SUCCESS;
     }

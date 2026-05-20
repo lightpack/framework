@@ -206,6 +206,7 @@ class Response
     public function setType(string $type): self
     {
         $this->type = $type;
+        $this->headers['Content-Type'] = $type;
 
         return $this;
     }
@@ -456,8 +457,10 @@ class Response
      */
     private function sendHeaders(): void
     {
+        $contentType = $this->headers['Content-Type'] ?? $this->type;
+
         header(sprintf("HTTP/1.1 %s %s", $this->status, $this->message));
-        header(sprintf("Content-Type: %s; charset=UTF-8", $this->type));
+        header(sprintf("Content-Type: %s; charset=UTF-8", $contentType));
 
         foreach ($this->headers as $name => $value) {
             header(sprintf("%s: %s", $name, $value), true, $this->status);

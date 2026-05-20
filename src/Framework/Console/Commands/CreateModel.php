@@ -18,7 +18,6 @@ class CreateModel extends Command
 
         if (! $className) {
             $this->output->error("Please provide a model class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -35,7 +34,6 @@ class CreateModel extends Command
         if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Model already exists at app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
-            $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
 
@@ -52,7 +50,6 @@ class CreateModel extends Command
 
         $modelType = $isTenant ? 'Tenant model' : 'Model';
         $this->output->success("✓ {$modelType} created: app/Models" . ($subdir ? "/$subdir" : '') . "/{$baseName}.php");
-        $this->output->newline();
 
         return self::SUCCESS;
     }

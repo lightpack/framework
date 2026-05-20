@@ -48,7 +48,6 @@ EOT;
     public function testSpecialValues()
     {
         $env = <<<EOT
-NULL_VAL=null
 TRUE_VAL=true
 FALSE_VAL=false
 QUOTED="hello world"
@@ -57,7 +56,6 @@ EOT;
         file_put_contents($this->envFile, $env);
         Env::load($this->envFile);
 
-        $this->assertNull(Env::get('NULL_VAL'));
         $this->assertTrue(Env::get('TRUE_VAL'));
         $this->assertFalse(Env::get('FALSE_VAL'));
         $this->assertEquals('hello world', Env::get('QUOTED'));

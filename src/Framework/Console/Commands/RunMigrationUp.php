@@ -13,14 +13,12 @@ class RunMigrationUp extends Command
     {
         if (! file_exists(DIR_ROOT . '/.env')) {
             $this->output->error("Running migrations require ./.env which is missing.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
 
         if ('mysql' !== Env::get('DB_DRIVER')) {
             $this->output->error("Migrations are supported only for MySQL/MariaDB.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -32,7 +30,6 @@ class RunMigrationUp extends Command
         if (false === $confirm) {
             $this->output->newline();
             $this->output->success("✓ Migration cancelled.");
-            $this->output->newline();
 
             return self::SUCCESS;
         }
@@ -48,7 +45,6 @@ class RunMigrationUp extends Command
 
         if (empty($migrations)) {
             $this->output->success("✓ Migrations already up-to-date.");
-            $this->output->newline();
         } else {
             $this->output->line("Migrations:");
 
@@ -76,7 +72,6 @@ class RunMigrationUp extends Command
                 ]);
             default:
                 $this->output->error("Invalid database driver found in ./.env");
-                $this->output->newline();
                 exit(1);
         }
     }
@@ -150,7 +145,6 @@ class RunMigrationUp extends Command
         if (! $this->prompt->confirm("Would you like to create it?", false)) {
             $this->output->newline();
             $this->output->success("✓ Operation cancelled. No database was created.");
-            $this->output->newline();
             exit(0);
         }
 
@@ -158,7 +152,6 @@ class RunMigrationUp extends Command
 
         $this->output->newline();
         $this->output->success("✓ Database '{$database}' created successfully.");
-        $this->output->newline();
     }
 
     /**
@@ -185,7 +178,6 @@ class RunMigrationUp extends Command
         } catch (\Exception $e) {
             $this->output->newline();
             $this->output->error("✗ Failed to create database: " . $e->getMessage());
-            $this->output->newline();
             exit(1);
         }
     }

@@ -64,7 +64,15 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     }
 
     /**
-     * Get first item matching the conditions
+     * Get the last item in the collection.
+     */
+    public function last(): ?Model
+    {
+        return empty($this->items) ? null : end($this->items);
+    }
+
+    /**
+     * Get first item, or first matching conditions.
      */
     public function first(array $conditions = []): ?Model
     {
@@ -225,6 +233,66 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
         return $this;
     }
 
+    public function loadSum(): self
+    {
+        $relations = func_get_args();
+
+        if (empty($relations) || empty($this->items)) {
+            return $this;
+        }
+
+        $model = get_class(reset($this->items));
+        $items = new Collection($this->items);
+        $model::query()->withSum(...$relations)->eagerLoadRelationsAggregate($items);
+
+        return $this;
+    }
+
+    public function loadAvg(): self
+    {
+        $relations = func_get_args();
+
+        if (empty($relations) || empty($this->items)) {
+            return $this;
+        }
+
+        $model = get_class(reset($this->items));
+        $items = new Collection($this->items);
+        $model::query()->withAvg(...$relations)->eagerLoadRelationsAggregate($items);
+
+        return $this;
+    }
+
+    public function loadMin(): self
+    {
+        $relations = func_get_args();
+
+        if (empty($relations) || empty($this->items)) {
+            return $this;
+        }
+
+        $model = get_class(reset($this->items));
+        $items = new Collection($this->items);
+        $model::query()->withMin(...$relations)->eagerLoadRelationsAggregate($items);
+
+        return $this;
+    }
+
+    public function loadMax(): self
+    {
+        $relations = func_get_args();
+
+        if (empty($relations) || empty($this->items)) {
+            return $this;
+        }
+
+        $model = get_class(reset($this->items));
+        $items = new Collection($this->items);
+        $model::query()->withMax(...$relations)->eagerLoadRelationsAggregate($items);
+
+        return $this;
+    }
+
     public function isEmpty(): bool
     {
         return empty($this->items);
@@ -233,6 +301,30 @@ class Collection implements IteratorAggregate, Countable, JsonSerializable, Arra
     public function isNotEmpty(): bool
     {
         return $this->isEmpty() === false;
+    }
+
+    /**
+     * Sort the collection by a column.
+     */
+    public function sort(string $column, string $direction = 'asc'): self
+    {
+        $items = $this->items;
+        $desc = strtolower($direction) === 'desc';
+
+        usort($items, function ($a, $b) use ($column, $desc) {
+            $valA = $a->$column ?? null;
+            $valB = $b->$column ?? null;
+
+            if ($valA === $valB) {
+                return 0;
+            }
+
+            $result = $valA < $valB ? -1 : 1;
+
+            return $desc ? -$result : $result;
+        });
+
+        return new static(array_values($items));
     }
 
     public function exclude(array|string|int $keys): self

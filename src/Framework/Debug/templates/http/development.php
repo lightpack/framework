@@ -25,7 +25,7 @@
         </div>
 
         <div class="file-path">
-            <span class="file-label">File:</span> <?= $file ?>
+            <span class="file-label">File:</span> <?= $file ?>:<?= $line ?>
         </div>
 
         <?php if ($code_preview) : ?>

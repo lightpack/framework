@@ -18,7 +18,6 @@ class SeedCommand extends Command
 
         if (! class_exists($fullyQualifiedClass)) {
             $this->output->error("✖ Seeder class '{$fullyQualifiedClass}' not found");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -29,11 +28,9 @@ class SeedCommand extends Command
             (new $fullyQualifiedClass)->seed();
             $this->output->newline();
             $this->output->success("✔ Seeded: {$className}");
-            $this->output->newline();
         } else {
             $this->output->newline();
             $this->output->success("✔ Database seeding cancelled");
-            $this->output->newline();
         }
 
         return self::SUCCESS;

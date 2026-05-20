@@ -228,4 +228,107 @@ class Arr
 
         return $result;
     }
+
+    /**
+     * Flatten a nested array into a flat dot-notation array.
+     *
+     * Example:
+     * ```php
+     * $data = ['db' => ['host' => 'localhost', 'port' => 3306]];
+     *
+     * $flat = (new Arr)->flatten($data);
+     * // ['db.host' => 'localhost', 'db.port' => 3306]
+     * ```
+     *
+     * @param array  $data   The nested array to flatten
+     * @param string $prefix Internal prefix used during recursion
+     * @return array Flat associative array with dot-notation keys
+     */
+    public function flatten(array $data, string $prefix = ''): array
+    {
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            $fullKey = $prefix !== '' ? $prefix . '.' . $key : (string) $key;
+
+            if (is_array($value) && ! empty($value)) {
+                $result = array_merge($result, $this->flatten($value, $fullKey));
+            } else {
+                $result[$fullKey] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Group an array of associative arrays by the value of a given key.
+     *
+     * Example:
+     * ```php
+     * $orders = [
+     *     ['status' => 'pending',  'id' => 1],
+     *     ['status' => 'shipped',  'id' => 2],
+     *     ['status' => 'pending',  'id' => 3],
+     * ];
+     *
+     * $grouped = (new Arr)->groupBy('status', $orders);
+     * // ['pending' => [...], 'shipped' => [...]]
+     * ```
+     *
+     * @param string $key   The key to group by
+     * @param array  $items Array of associative arrays
+     * @return array Associative array keyed by the grouped values
+     */
+    public function groupBy(string $key, array $items): array
+    {
+        $result = [];
+
+        foreach ($items as $item) {
+            $groupKey = is_array($item)
+                ? $this->get($key, $item)
+                : ($item->$key ?? null);
+
+            $result[$groupKey][] = $item;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Sort an array of associative arrays or objects by a key.
+     * Supports dot-notation for sorting by nested keys.
+     *
+     * Example:
+     * ```php
+     * $users = [
+     *     ['name' => 'Charlie', 'address' => ['city' => 'Paris']],
+     *     ['name' => 'Alice',   'address' => ['city' => 'London']],
+     *     ['name' => 'Bob',     'address' => ['city' => 'Berlin']],
+     * ];
+     *
+     * $sorted = (new Arr)->sort('name', $users);
+     * $sorted = (new Arr)->sort('address.city', $users, 'desc');
+     * ```
+     *
+     * @param string $key       The key to sort by (supports dot notation)
+     * @param array  $items     Array of associative arrays or objects
+     * @param string $direction Sort direction: 'asc' (default) or 'desc'
+     * @return array New sorted array
+     */
+    public function sort(string $key, array $items, string $direction = 'asc'): array
+    {
+        $desc = strtolower($direction) === 'desc';
+
+        usort($items, function ($a, $b) use ($key, $desc) {
+            $valA = is_array($a) ? $this->get($key, $a) : ($a->$key ?? null);
+            $valB = is_array($b) ? $this->get($key, $b) : ($b->$key ?? null);
+
+            $result = $valA <=> $valB;
+
+            return $desc ? -$result : $result;
+        });
+
+        return $items;
+    }
 }

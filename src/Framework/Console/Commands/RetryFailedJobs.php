@@ -35,7 +35,6 @@ class RetryFailedJobs extends Command
         } else {
             $this->output->success("✓ {$count} job(s) queued for retry.");
         }
-        $this->output->newline();
 
         return self::SUCCESS;
     }

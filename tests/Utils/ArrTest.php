@@ -423,4 +423,199 @@ class ArrTest extends TestCase
 
         $this->assertEquals($expected, $arr->transpose($data));
     }
+
+    public function testFlatten()
+    {
+        $arr = new Arr;
+
+        // Basic two-level nesting
+        $data = ['db' => ['host' => 'localhost', 'port' => 3306]];
+        $this->assertEquals(['db.host' => 'localhost', 'db.port' => 3306], $arr->flatten($data));
+
+        // Three-level deep chain
+        $data = ['a' => ['b' => ['c' => 'deep']]];
+        $this->assertEquals(['a.b.c' => 'deep'], $arr->flatten($data));
+
+        // Mix of flat and nested sibling keys
+        $data = ['name' => 'John', 'address' => ['city' => 'London', 'zip' => 'EC1A']];
+        $this->assertEquals(
+            ['name' => 'John', 'address.city' => 'London', 'address.zip' => 'EC1A'],
+            $arr->flatten($data)
+        );
+
+        // Multiple sibling branches at same depth
+        $data = [
+            'db' => ['host' => 'localhost', 'port' => 3306],
+            'mail' => ['host' => 'smtp.test', 'port' => 587],
+        ];
+        $this->assertEquals(
+            ['db.host' => 'localhost', 'db.port' => 3306, 'mail.host' => 'smtp.test', 'mail.port' => 587],
+            $arr->flatten($data)
+        );
+
+        // Numeric-indexed nested arrays are flattened with numeric dot keys
+        $data = ['tags' => ['php', 'mysql']];
+        $this->assertEquals(['tags.0' => 'php', 'tags.1' => 'mysql'], $arr->flatten($data));
+
+        // Falsy scalar leaves are preserved (null, false, 0, '')
+        $data = ['flag' => false, 'count' => 0, 'label' => null, 'text' => ''];
+        $this->assertEquals(['flag' => false, 'count' => 0, 'label' => null, 'text' => ''], $arr->flatten($data));
+
+        // Empty nested array is treated as a leaf (not recursed into)
+        $data = ['empty' => [], 'name' => 'test'];
+        $this->assertEquals(['empty' => [], 'name' => 'test'], $arr->flatten($data));
+
+        // Empty input
+        $this->assertEquals([], $arr->flatten([]));
+
+        // Result is round-trippable: get() on flattened key returns the original value
+        $data = ['config' => ['db' => ['host' => 'localhost']]];
+        $flat = $arr->flatten($data);
+        $this->assertEquals('localhost', $arr->get('config.db.host', $data));
+        $this->assertArrayHasKey('config.db.host', $flat);
+        $this->assertEquals('localhost', $flat['config.db.host']);
+    }
+
+    public function testGroupBy()
+    {
+        $arr = new Arr;
+
+        // Basic grouping preserves item order within each group
+        $orders = [
+            ['id' => 1, 'status' => 'pending'],
+            ['id' => 2, 'status' => 'shipped'],
+            ['id' => 3, 'status' => 'pending'],
+            ['id' => 4, 'status' => 'shipped'],
+        ];
+        $grouped = $arr->groupBy('status', $orders);
+        $this->assertCount(2, $grouped['pending']);
+        $this->assertCount(2, $grouped['shipped']);
+        $this->assertEquals(1, $grouped['pending'][0]['id']);
+        $this->assertEquals(3, $grouped['pending'][1]['id']);
+        $this->assertEquals(2, $grouped['shipped'][0]['id']);
+        $this->assertEquals(4, $grouped['shipped'][1]['id']);
+
+        // All items in the same group
+        $items = [['id' => 1, 'type' => 'A'], ['id' => 2, 'type' => 'A']];
+        $grouped = $arr->groupBy('type', $items);
+        $this->assertCount(1, $grouped);
+        $this->assertCount(2, $grouped['A']);
+
+        // Each item in its own group
+        $items = [['id' => 1, 'type' => 'A'], ['id' => 2, 'type' => 'B'], ['id' => 3, 'type' => 'C']];
+        $grouped = $arr->groupBy('type', $items);
+        $this->assertCount(3, $grouped);
+
+        // Dot-notation key groups by a nested value
+        $items = [
+            ['id' => 1, 'meta' => ['region' => 'EU']],
+            ['id' => 2, 'meta' => ['region' => 'US']],
+            ['id' => 3, 'meta' => ['region' => 'EU']],
+        ];
+        $grouped = $arr->groupBy('meta.region', $items);
+        $this->assertArrayHasKey('EU', $grouped);
+        $this->assertArrayHasKey('US', $grouped);
+        $this->assertCount(2, $grouped['EU']);
+        $this->assertEquals(1, $grouped['EU'][0]['id']);
+        $this->assertEquals(3, $grouped['EU'][1]['id']);
+
+        // Missing key is grouped under null
+        $items = [['id' => 1, 'category' => null], ['id' => 2, 'category' => 'A']];
+        $grouped = $arr->groupBy('category', $items);
+        $this->assertTrue(array_key_exists(null, $grouped));
+        $this->assertArrayHasKey('A', $grouped);
+
+        // Empty array
+        $this->assertEquals([], $arr->groupBy('status', []));
+
+        // Works with objects (direct property, not dot-notation)
+        $obj1 = (object) ['type' => 'x'];
+        $obj2 = (object) ['type' => 'y'];
+        $obj3 = (object) ['type' => 'x'];
+        $grouped = $arr->groupBy('type', [$obj1, $obj2, $obj3]);
+        $this->assertCount(2, $grouped['x']);
+        $this->assertCount(1, $grouped['y']);
+    }
+
+    public function testSort()
+    {
+        $arr = new Arr;
+
+        $items = [
+            ['name' => 'Charlie', 'price' => 30],
+            ['name' => 'Alice',   'price' => 10],
+            ['name' => 'Bob',     'price' => 20],
+        ];
+
+        // Ascending by simple string key
+        $sorted = $arr->sort('name', $items);
+        $this->assertEquals(['Alice', 'Bob', 'Charlie'], array_column($sorted, 'name'));
+
+        // Descending by simple numeric key
+        $sorted = $arr->sort('price', $items, 'desc');
+        $this->assertEquals([30, 20, 10], array_column($sorted, 'price'));
+
+        // Two-level dot-notation key ascending
+        $users = [
+            ['name' => 'Charlie', 'address' => ['city' => 'Paris']],
+            ['name' => 'Alice',   'address' => ['city' => 'London']],
+            ['name' => 'Bob',     'address' => ['city' => 'Berlin']],
+        ];
+        $sorted = $arr->sort('address.city', $users);
+        $this->assertEquals(
+            ['Berlin', 'London', 'Paris'],
+            array_column(array_column($sorted, 'address'), 'city')
+        );
+
+        // Two-level dot-notation key descending
+        $sorted = $arr->sort('address.city', $users, 'desc');
+        $this->assertEquals(
+            ['Paris', 'London', 'Berlin'],
+            array_column(array_column($sorted, 'address'), 'city')
+        );
+
+        // Three-level dot-notation key
+        $records = [
+            ['id' => 1, 'meta' => ['geo' => ['country' => 'US']]],
+            ['id' => 2, 'meta' => ['geo' => ['country' => 'AU']]],
+            ['id' => 3, 'meta' => ['geo' => ['country' => 'GB']]],
+        ];
+        $sorted = $arr->sort('meta.geo.country', $records);
+        $this->assertEquals([2, 3, 1], array_column($sorted, 'id'));
+
+        // Missing key on some items sorts nulls to the front (null <=> value = -1)
+        $items = [
+            ['id' => 1, 'score' => 50],
+            ['id' => 2],                // no 'score'
+            ['id' => 3, 'score' => 10],
+        ];
+        $sorted = $arr->sort('score', $items);
+        $this->assertNull($arr->get('score', $sorted[0])); // null sorts first
+        $this->assertEquals(10, $sorted[1]['score']);
+        $this->assertEquals(50, $sorted[2]['score']);
+
+        // Equal values preserve relative order (stable)
+        $items = [
+            ['id' => 1, 'score' => 5],
+            ['id' => 2, 'score' => 5],
+            ['id' => 3, 'score' => 5],
+        ];
+        $sorted = $arr->sort('score', $items);
+        $this->assertEquals([1, 2, 3], array_column($sorted, 'id'));
+
+        // Does not mutate the original
+        $items = [['name' => 'B'], ['name' => 'A']];
+        $arr->sort('name', $items);
+        $this->assertEquals('B', $items[0]['name']);
+
+        // Empty array
+        $this->assertEquals([], $arr->sort('name', []));
+
+        // Works with objects
+        $a = (object) ['score' => 3];
+        $b = (object) ['score' => 1];
+        $c = (object) ['score' => 2];
+        $sorted = $arr->sort('score', [$a, $b, $c]);
+        $this->assertEquals([1, 2, 3], array_map(fn ($o) => $o->score, $sorted));
+    }
 }

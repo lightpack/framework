@@ -14,14 +14,12 @@ class CreateProvider extends Command
 
         if (null === $className) {
             $this->output->error("Please provide a class name for service provider.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
 
         if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid service provider class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -34,7 +32,6 @@ class CreateProvider extends Command
         if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Provider already exists: {$directory}/{$className}.php");
-            $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
 
@@ -50,7 +47,6 @@ class CreateProvider extends Command
 
         file_put_contents($filePath, $template);
         $this->output->success("✓ Provider created: {$directory}/{$className}.php");
-        $this->output->newline();
 
         return self::SUCCESS;
     }

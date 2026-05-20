@@ -13,7 +13,6 @@ class RunMigrationDown extends Command
     {
         if (! file_exists(DIR_ROOT . '/.env')) {
             $this->output->error("Running migrations require ./.env which is missing.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -22,7 +21,6 @@ class RunMigrationDown extends Command
 
         if ('mysql' !== $driver) {
             $this->output->error("Migrations are supported only for MySQL/MariaDB.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -69,7 +67,6 @@ class RunMigrationDown extends Command
                 ]);
             default:
                 $this->output->error("Invalid database driver found in ./.env");
-                $this->output->newline();
                 exit(1);
         }
     }

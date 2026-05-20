@@ -1171,15 +1171,12 @@ class Query
         return $result->total;
     }
 
-    public function countBy(string $column)
+    public function countBy(string $column): static
     {
-        $this->columns = [$column, 'COUNT(*) AS num'];
+        $this->columns = [$column, 'COUNT(*) AS count'];
         $this->groupBy($column);
 
-        $query = $this->getCompiledSelect();
-        $result = $this->connection->query($query, $this->bindings)->fetchAll(\PDO::FETCH_OBJ);
-
-        return $result;
+        return $this;
     }
 
     public function sum(string $column)
@@ -1216,6 +1213,89 @@ class Query
         $result = $this->connection->query($query, $this->bindings)->fetch(\PDO::FETCH_OBJ);
 
         return $result->max;
+    }
+
+    public function sumBy(string $groupColumn, string $aggregateColumn): static
+    {
+        return $this->aggregateBy('SUM', $groupColumn, $aggregateColumn);
+    }
+
+    public function avgBy(string $groupColumn, string $aggregateColumn): static
+    {
+        return $this->aggregateBy('AVG', $groupColumn, $aggregateColumn);
+    }
+
+    public function minBy(string $groupColumn, string $aggregateColumn): static
+    {
+        return $this->aggregateBy('MIN', $groupColumn, $aggregateColumn);
+    }
+
+    public function maxBy(string $groupColumn, string $aggregateColumn): static
+    {
+        return $this->aggregateBy('MAX', $groupColumn, $aggregateColumn);
+    }
+
+    /**
+     * Perform multiple aggregate functions grouped by a single column in one query.
+     *
+     * Supports two value formats per aggregate:
+     *   - Shorthand:  'count' => '*'    (key is the SQL function, value is the column)
+     *   - Explicit:   'total_price' => ['sum', 'price']  (key is the alias, value is [function, column])
+     *
+     * Example:
+     *   $query->aggregate('color', [
+     *       'count' => '*',
+     *       'sum' => 'price',
+     *       'total_cost' => ['sum', 'cost'],
+     *       'avg' => 'price',
+     *   ])->having('sum_price', '>', 100)->all();
+     *
+     * Generates:
+     *   SELECT `color`, COUNT(*) AS count, SUM(`price`) AS sum_price, SUM(`cost`) AS total_cost, AVG(`price`) AS avg_price
+     *   FROM `products` GROUP BY `color` HAVING `sum_price` > ?
+     *
+     * @param string $groupColumn Column to group by.
+     * @param array $aggregates Map of alias => column string or [function, column] array.
+     * @return static
+     */
+    public function aggregate(string $groupColumn, array $aggregates): static
+    {
+        $columns = [$groupColumn];
+
+        foreach ($aggregates as $alias => $config) {
+            if (is_array($config)) {
+                $function = strtoupper($config[0]);
+                $column = $config[1];
+                if ($column === '*') {
+                    $columns[] = "{$function}(*) AS {$alias}";
+                } else {
+                    $columns[] = "{$function}(`{$column}`) AS {$alias}";
+                }
+            } else {
+                $function = strtoupper($alias);
+                $column = $config;
+                $alias = $column === '*' ? strtolower($function) : strtolower($function) . '_' . $column;
+                if ($column === '*') {
+                    $columns[] = "{$function}(*) AS {$alias}";
+                } else {
+                    $columns[] = "{$function}(`{$column}`) AS {$alias}";
+                }
+            }
+        }
+
+        $this->columns = $columns;
+        $this->groupBy($groupColumn);
+
+        return $this;
+    }
+
+    protected function aggregateBy(string $sqlFn, string $groupColumn, string $aggregateColumn): static
+    {
+        $alias = strtolower($sqlFn) . '_' . $aggregateColumn;
+        $this->columns = [$groupColumn, "{$sqlFn}(`{$aggregateColumn}`) AS {$alias}"];
+        $this->groupBy($groupColumn);
+
+        return $this;
     }
 
     public function __get(string $key)
@@ -1352,6 +1432,7 @@ class Query
         $this->components['where'] = [];
         $this->components['join'] = [];
         $this->components['group'] = [];
+        $this->components['having'] = [];
         $this->components['order'] = [];
         $this->components['lock'] = [];
         $this->components['limit'] = null;

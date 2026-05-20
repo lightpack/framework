@@ -14,14 +14,12 @@ class CreateEvent extends Command
 
         if (null === $className) {
             $this->output->error("Please provide an event listener class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
 
         if (! preg_match('/^[\w]+$/', $className)) {
             $this->output->error("Invalid event listener class name.");
-            $this->output->newline();
 
             return self::FAILURE;
         }
@@ -32,7 +30,6 @@ class CreateEvent extends Command
         if (file_exists($filePath) && ! $force) {
             $this->output->newline();
             $this->output->error("Event already exists: {$directory}/{$className}.php");
-            $this->output->newline();
             $this->output->line("Use --force to overwrite.");
             $this->output->newline();
 
@@ -44,7 +41,6 @@ class CreateEvent extends Command
 
         file_put_contents($filePath, $template);
         $this->output->success("✓ Event created: {$directory}/{$className}.php");
-        $this->output->newline();
 
         return self::SUCCESS;
     }
