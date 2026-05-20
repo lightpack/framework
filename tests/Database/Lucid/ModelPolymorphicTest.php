@@ -676,4 +676,81 @@ class ModelPolymorphicTest extends TestCase
         $this->assertCount(1, $videos);
         $this->assertInstanceOf(VideoModel::class, $videos[0]);
     }
+
+    public function testWithCountOnMorphedByManyRelation()
+    {
+        $this->db->table('posts')->insert(['title' => 'Post A']);
+        $postId1 = $this->db->lastInsertId();
+        $this->db->table('posts')->insert(['title' => 'Post B']);
+        $postId2 = $this->db->lastInsertId();
+
+        $this->db->table('videos')->insert(['title' => 'Video A']);
+        $videoId = $this->db->lastInsertId();
+
+        $this->db->table('tags')->insert(['name' => 'PHP', 'slug' => 'php']);
+        $tagId1 = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Laravel', 'slug' => 'laravel']);
+        $tagId2 = $this->db->lastInsertId();
+
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagId1, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId1, 'morph_id' => $postId2, 'morph_type' => 'posts'],
+            ['tag_id' => $tagId1, 'morph_id' => $videoId, 'morph_type' => 'videos'],
+            ['tag_id' => $tagId2, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+        ]);
+
+        $tags = TagModel::query()->withCount('posts', 'videos')->all();
+
+        foreach ($tags as $tag) {
+            if ($tag->name === 'PHP') {
+                $this->assertEquals(2, $tag->posts_count);
+                $this->assertEquals(1, $tag->videos_count);
+            } elseif ($tag->name === 'Laravel') {
+                $this->assertEquals(1, $tag->posts_count);
+                $this->assertEquals(0, $tag->videos_count);
+            }
+        }
+    }
+
+    public function testWithCountDefaultsToZeroOnMorphedByManyWhenNoRelated()
+    {
+        $this->db->table('tags')->insert(['name' => 'Unused', 'slug' => 'unused']);
+
+        $tags = TagModel::query()->withCount('posts', 'videos')->all();
+
+        $this->assertEquals(0, $tags[0]->posts_count);
+        $this->assertEquals(0, $tags[0]->videos_count);
+    }
+
+    public function testWithCountAndOrderByOnMorphedByManyUsesCorrelatedSubquery()
+    {
+        $this->db->table('posts')->insert(['title' => 'Post A']);
+        $postId1 = $this->db->lastInsertId();
+        $this->db->table('posts')->insert(['title' => 'Post B']);
+        $postId2 = $this->db->lastInsertId();
+        $this->db->table('posts')->insert(['title' => 'Post C']);
+        $postId3 = $this->db->lastInsertId();
+
+        $this->db->table('tags')->insert(['name' => 'Popular', 'slug' => 'popular']);
+        $tagIdA = $this->db->lastInsertId();
+        $this->db->table('tags')->insert(['name' => 'Niche', 'slug' => 'niche']);
+        $tagIdB = $this->db->lastInsertId();
+
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => $tagIdA, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+            ['tag_id' => $tagIdA, 'morph_id' => $postId2, 'morph_type' => 'posts'],
+            ['tag_id' => $tagIdA, 'morph_id' => $postId3, 'morph_type' => 'posts'],
+            ['tag_id' => $tagIdB, 'morph_id' => $postId1, 'morph_type' => 'posts'],
+        ]);
+
+        $tags = TagModel::query()
+            ->withCount('posts')
+            ->orderBy('posts_count', 'desc')
+            ->all();
+
+        $this->assertEquals('Popular', $tags[0]->name);
+        $this->assertEquals(3, $tags[0]->posts_count);
+        $this->assertEquals('Niche', $tags[1]->name);
+        $this->assertEquals(1, $tags[1]->posts_count);
+    }
 }

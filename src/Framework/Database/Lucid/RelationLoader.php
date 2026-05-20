@@ -391,7 +391,7 @@ class RelationLoader
                     $results = $query->whereIn($relatingKey, $ids)->sumBy($relatingKey, $column)->all();
                     $attrSuffix = '_sum_' . $column;
                     $resultKey = 'sum_' . $column;
-                    $defaultValue = 0;
+                    $defaultValue = null;
 
                     break;
                 case 'avg':
