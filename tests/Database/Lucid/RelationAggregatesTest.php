@@ -18,7 +18,7 @@ class RelationAggregatesTest extends TestCase
         $this->db->query($sql)->closeCursor();
 
         $container = Container::getInstance();
-        $container->register('db', fn() => $this->db);
+        $container->register('db', fn () => $this->db);
     }
 
     protected function tearDown(): void

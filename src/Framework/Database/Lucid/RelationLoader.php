@@ -318,6 +318,7 @@ class RelationLoader
                 foreach ($counts as $count) {
                     if ($count->{$relatingKey} === $model->{$model->getPrimaryKey()}) {
                         $model->{$include . '_count'} = (int) $count->count;
+
                         break;
                     }
                 }
@@ -350,6 +351,7 @@ class RelationLoader
             foreach ($counts as $count) {
                 if ($count->{$groupKey} == $model->{$model->getPrimaryKey()}) {
                     $model->{$include . '_count'} = (int) $count->count;
+
                     break;
                 }
             }
@@ -372,6 +374,7 @@ class RelationLoader
             foreach ($counts as $count) {
                 if ($count->{$foreignKey} == $model->{$model->getPrimaryKey()}) {
                     $model->{$include . '_count'} = (int) $count->count;
+
                     break;
                 }
             }
