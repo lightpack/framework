@@ -1,6 +1,7 @@
 <?php
 
 require_once 'Project.php';
+require_once 'User.php';
 
 use Lightpack\Container\Container;
 use PHPUnit\Framework\TestCase;
@@ -113,6 +114,78 @@ class RelationAggregatesTest extends TestCase
         $projects = Project::query()->withSum('tasks', 'cost')->all();
 
         $this->assertNull($projects[0]->tasks_sum_cost);
+    }
+
+    // ── withCount on pivot (many-to-many) ──────────────────────────────────
+
+    public function testWithCountOnPivotRelation()
+    {
+        $this->db->table('users')->insert(['name' => 'Alice', 'active' => 1]);
+        $u1 = $this->db->lastInsertId();
+        $this->db->table('users')->insert(['name' => 'Bob', 'active' => 1]);
+        $u2 = $this->db->lastInsertId();
+
+        $this->db->table('roles')->insert(['name' => 'Admin']);
+        $r1 = $this->db->lastInsertId();
+        $this->db->table('roles')->insert(['name' => 'Editor']);
+        $r2 = $this->db->lastInsertId();
+
+        $this->db->table('role_user')->insert([
+            ['user_id' => $u1, 'role_id' => $r1],
+            ['user_id' => $u1, 'role_id' => $r2],
+            ['user_id' => $u2, 'role_id' => $r1],
+        ]);
+
+        $users = User::query()->withCount('roles')->all();
+
+        foreach ($users as $user) {
+            if ($user->name === 'Alice') {
+                $this->assertEquals(2, $user->roles_count);
+            } elseif ($user->name === 'Bob') {
+                $this->assertEquals(1, $user->roles_count);
+            }
+        }
+    }
+
+    public function testWithCountDefaultsToZeroOnPivotWhenNoRelated()
+    {
+        $this->db->table('users')->insert(['name' => 'Ghost', 'active' => 1]);
+
+        $users = User::query()->withCount('roles')->all();
+
+        $this->assertEquals(0, $users[0]->roles_count);
+    }
+
+    public function testWithCountAndOrderByOnPivotRelation()
+    {
+        $this->db->table('users')->insert(['name' => 'Few', 'active' => 1]);
+        $u1 = $this->db->lastInsertId();
+        $this->db->table('users')->insert(['name' => 'Many', 'active' => 1]);
+        $u2 = $this->db->lastInsertId();
+
+        $this->db->table('roles')->insert(['name' => 'Admin']);
+        $r1 = $this->db->lastInsertId();
+        $this->db->table('roles')->insert(['name' => 'Editor']);
+        $r2 = $this->db->lastInsertId();
+        $this->db->table('roles')->insert(['name' => 'Viewer']);
+        $r3 = $this->db->lastInsertId();
+
+        $this->db->table('role_user')->insert([
+            ['user_id' => $u1, 'role_id' => $r1],
+            ['user_id' => $u2, 'role_id' => $r1],
+            ['user_id' => $u2, 'role_id' => $r2],
+            ['user_id' => $u2, 'role_id' => $r3],
+        ]);
+
+        $users = User::query()
+            ->withCount('roles')
+            ->orderBy('roles_count', 'desc')
+            ->all();
+
+        $this->assertEquals('Many', $users[0]->name);
+        $this->assertEquals(3, $users[0]->roles_count);
+        $this->assertEquals('Few', $users[1]->name);
+        $this->assertEquals(1, $users[1]->roles_count);
     }
 
     // ── withSum + orderBy (correlated subquery path) ──────────────────────

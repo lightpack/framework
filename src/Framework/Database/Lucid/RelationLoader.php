@@ -323,29 +323,54 @@ class RelationLoader
                 }
             }
         } elseif ($relationType === 'morphedByMany' && $query instanceof PolymorphicPivot) {
-            $this->loadMorphedByManyCount($models, $query, $include);
+            $this->loadPolymorphicPivotCount($models, $query, $include, $query->getAssociateKey());
+        } elseif ($relationType === 'morphToMany' && $query instanceof PolymorphicPivot) {
+            $this->loadPolymorphicPivotCount($models, $query, $include, 'morph_id');
+        } elseif ($relationType === 'pivot' && $query instanceof Pivot) {
+            $this->loadPivotCount($models, $query, $include);
         }
 
         $this->model->setEagerLoading(false);
     }
 
-    private function loadMorphedByManyCount(Collection $models, PolymorphicPivot $query, string $include): void
+    private function loadPolymorphicPivotCount(Collection $models, PolymorphicPivot $query, string $include, string $groupKey): void
     {
-        $associateKey = $query->getAssociateKey();
         $morphType = $query->getMorphType();
         $pivotTable = $query->getPivotTableName();
 
         $pivotQuery = new \Lightpack\Database\Query\Query($pivotTable, $query->getConnection());
         $counts = $pivotQuery
             ->where('morph_type', '=', $morphType)
-            ->whereIn($associateKey, $models->ids())
-            ->countBy($associateKey)
+            ->whereIn($groupKey, $models->ids())
+            ->countBy($groupKey)
             ->all();
 
         foreach ($models as $model) {
             $model->{$include . '_count'} = 0;
             foreach ($counts as $count) {
-                if ($count->{$associateKey} == $model->{$model->getPrimaryKey()}) {
+                if ($count->{$groupKey} == $model->{$model->getPrimaryKey()}) {
+                    $model->{$include . '_count'} = (int) $count->count;
+                    break;
+                }
+            }
+        }
+    }
+
+    private function loadPivotCount(Collection $models, Pivot $query, string $include): void
+    {
+        $foreignKey = $this->model->getRelatingKey();
+        $pivotTable = $query->getPivotTableName();
+
+        $pivotQuery = new \Lightpack\Database\Query\Query($pivotTable, $query->getConnection());
+        $counts = $pivotQuery
+            ->whereIn($foreignKey, $models->ids())
+            ->countBy($foreignKey)
+            ->all();
+
+        foreach ($models as $model) {
+            $model->{$include . '_count'} = 0;
+            foreach ($counts as $count) {
+                if ($count->{$foreignKey} == $model->{$model->getPrimaryKey()}) {
                     $model->{$include . '_count'} = (int) $count->count;
                     break;
                 }

@@ -349,7 +349,21 @@ class Builder extends Query
         $relationType = $this->model->getRelationType();
 
         if ($relationType === 'morphedByMany' && $query instanceof PolymorphicPivot) {
-            $this->injectMorphedByManyCountSubquery($query, $relation);
+            $this->injectPolymorphicPivotCountSubquery($query, $relation, $query->getAssociateKey());
+            $this->model->setEagerLoading(false);
+
+            return;
+        }
+
+        if ($relationType === 'morphToMany' && $query instanceof PolymorphicPivot) {
+            $this->injectPolymorphicPivotCountSubquery($query, $relation, 'morph_id');
+            $this->model->setEagerLoading(false);
+
+            return;
+        }
+
+        if ($relationType === 'pivot' && $query instanceof Pivot) {
+            $this->injectPivotCountSubquery($query, $relation);
             $this->model->setEagerLoading(false);
 
             return;
@@ -416,15 +430,27 @@ class Builder extends Query
         return $subQuery->toSql();
     }
 
-    private function injectMorphedByManyCountSubquery(PolymorphicPivot $query, string $relation): void
+    private function injectPolymorphicPivotCountSubquery(PolymorphicPivot $query, string $relation, string $parentKey): void
     {
         $pivotTable = $query->getPivotTableName();
-        $associateKey = $query->getAssociateKey();
         $morphType = $query->getMorphType();
         $parentTable = $this->model->getTableName();
         $primaryKey = $this->model->getPrimaryKey();
 
-        $sql = "SELECT COUNT(*) FROM `{$pivotTable}` WHERE `morph_type` = '{$morphType}' AND `{$associateKey}` = `{$parentTable}`.`{$primaryKey}`";
+        $sql = "SELECT COUNT(*) FROM `{$pivotTable}` WHERE `morph_type` = '{$morphType}' AND `{$parentKey}` = `{$parentTable}`.`{$primaryKey}`";
+
+        $this->applySubqueryAlias($sql, "{$relation}_count");
+        $this->relationLoader->removeCountInclude($relation);
+    }
+
+    private function injectPivotCountSubquery(Pivot $query, string $relation): void
+    {
+        $pivotTable = $query->getPivotTableName();
+        $foreignKey = $this->model->getRelatingKey();
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+
+        $sql = "SELECT COUNT(*) FROM `{$pivotTable}` WHERE `{$foreignKey}` = `{$parentTable}`.`{$primaryKey}`";
 
         $this->applySubqueryAlias($sql, "{$relation}_count");
         $this->relationLoader->removeCountInclude($relation);
