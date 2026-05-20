@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.4] - 2026-05-20
+
+### Fixes & Refactors
+
+- **Schema / Foreign Keys**: Auto-generated constraint names (`fk_{table}_{column}`) for predictable `dropForeign()` calls. Override via `->name('custom_name')`.
+- **Query Builder**: `update()` and `delete()` now require an explicit `WHERE` clause for safeguard. Prevents accidental full-table mutations.
+
 ## [0.9.3] - 2026-05-20
 
 ### Features
