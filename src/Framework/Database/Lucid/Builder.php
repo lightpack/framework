@@ -254,9 +254,13 @@ class Builder extends Query
 
     protected function buildExistsQuery(string $relatingTable, ?callable $constraint): self
     {
-        $subQuery = function ($q) use ($relatingTable, $constraint) {
-            $q->from($this->model->{$relatingTable}()->table)
-                ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $this->model->getRelatingKey());
+        $relatingKey = $this->model->getRelatingKey();
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+
+        $subQuery = function ($q) use ($relatingTable, $relatingKey, $parentTable, $primaryKey, $constraint) {
+            $q->from($relatingTable)
+                ->whereRaw("{$parentTable}.{$primaryKey} = {$relatingTable}.{$relatingKey}");
 
             if ($constraint) {
                 $constraint($q);

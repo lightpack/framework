@@ -1907,6 +1907,19 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 1', $projects[0]->name);
     }
 
+    public function testWhereHasWorksWhenRelationMethodNameDiffersFromTable()
+    {
+        $this->db->table('products')->insert(['name' => 'Widget', 'color' => '#FFF']);
+        $productId = $this->db->lastInsertId();
+        $this->db->table('owners')->insert(['product_id' => $productId, 'name' => 'Alice']);
+
+        $products = Product::query()->whereHas('owner', function ($q) {
+            $q->where('name', '=', 'Alice');
+        })->all();
+
+        $this->assertNotEmpty($products);
+    }
+
     public function testEagerLoadingWithArrayOfRelations()
     {
         // bulk insert projects
