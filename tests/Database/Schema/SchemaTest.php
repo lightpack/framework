@@ -151,7 +151,7 @@ final class SchemaTest extends TestCase
 
         // Query created foreign key name
         $result = $this->connection->query("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = 'products' AND COLUMN_NAME = 'category_id'")->fetch();
-        $this->assertEquals('products_ibfk_1', $result['CONSTRAINT_NAME']);
+        $this->assertEquals('fk_products_category_id', $result['CONSTRAINT_NAME']);
     }
 
     public function testSchemaCanDropForeignKey()
@@ -173,7 +173,7 @@ final class SchemaTest extends TestCase
         });
 
         // Drop the foreign key
-        $this->schema->alterTable('products')->dropForeign('products_ibfk_1', 'products_ibfk_2');
+        $this->schema->alterTable('products')->dropForeign('fk_products_category_id', 'fk_products_child_id');
 
         // Assert that the foreign key is dropped
         $result = $this->connection->query("SHOW CREATE TABLE products")->fetch();
@@ -534,7 +534,7 @@ final class SchemaTest extends TestCase
 
         // Assert that the foreign keys are created
         $this->assertCount(1, $foreignKeys);
-        $this->assertContains('products_ibfk_1', $foreignKeys[0]);
+        $this->assertContains('fk_products_category_id', $foreignKeys[0]);
     }
 
     public function testSchemaInspectForeignKey()
@@ -553,13 +553,13 @@ final class SchemaTest extends TestCase
         });
 
         // Query foreign key
-        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_1');
+        $foreignKey = $this->schema->inspectForeignKey('products', 'fk_products_category_id');
 
         // Assert that the foreign key is created
-        $this->assertEquals('products_ibfk_1', $foreignKey['CONSTRAINT_NAME']);
+        $this->assertEquals('fk_products_category_id', $foreignKey['CONSTRAINT_NAME']);
 
         // test for null
-        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_2');
+        $foreignKey = $this->schema->inspectForeignKey('products', 'fk_products_child_id');
         $this->assertNull($foreignKey);
     }
 
@@ -666,8 +666,8 @@ final class SchemaTest extends TestCase
         });
 
         // Assert foreign key was added
-        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_1');
-        $this->assertEquals('products_ibfk_1', $foreignKey['CONSTRAINT_NAME']);
+        $foreignKey = $this->schema->inspectForeignKey('products', 'fk_products_category_id');
+        $this->assertEquals('fk_products_category_id', $foreignKey['CONSTRAINT_NAME']);
     }
 
     public function testSchemaCanAddColumnAndForeignKeyToExistingTable()
@@ -694,7 +694,7 @@ final class SchemaTest extends TestCase
         $this->assertContains('category_id', $this->schema->inspectColumns('products'));
 
         // Assert foreign key was added
-        $foreignKey = $this->schema->inspectForeignKey('products', 'products_ibfk_1');
-        $this->assertEquals('products_ibfk_1', $foreignKey['CONSTRAINT_NAME']);
+        $foreignKey = $this->schema->inspectForeignKey('products', 'fk_products_category_id');
+        $this->assertEquals('fk_products_category_id', $foreignKey['CONSTRAINT_NAME']);
     }
 }

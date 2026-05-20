@@ -31,6 +31,11 @@ class PolymorphicPivot extends Pivot
         $this->morphType = $morphType;
     }
 
+    public function getMorphType(): string
+    {
+        return $this->morphType;
+    }
+
     /**
      * Get a Query instance for the pivot table with morph type filter applied.
      */

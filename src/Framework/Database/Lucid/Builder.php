@@ -30,7 +30,7 @@ class Builder extends Query
 
     public function all()
     {
-        $this->injectWithCountSubqueriesForOrdering();
+        $this->injectSubqueriesForOrdering();
         $results = parent::all();
 
         return $this->hydrate($results);
@@ -38,7 +38,7 @@ class Builder extends Query
 
     public function one()
     {
-        $this->injectWithCountSubqueriesForOrdering();
+        $this->injectSubqueriesForOrdering();
         $result = parent::one();
 
         if ($result) {
@@ -213,7 +213,9 @@ class Builder extends Query
             throw new \Exception("Relation {$relation} does not exist.");
         }
 
+        $this->model->setEagerLoading(true);
         $relatingTable = $this->model->{$relation}()->table;
+        $this->model->setEagerLoading(false);
 
         // Count query
         if (! is_null($operator) && ! is_null($count)) {
@@ -227,6 +229,24 @@ class Builder extends Query
     public function whereHas(string $relation, callable $constraint, ?string $operator = null, ?string $count = null): self
     {
         return $this->has($relation, $operator, $count, $constraint);
+    }
+
+    public function doesntHave(string $relation, ?callable $constraint = null): self
+    {
+        if (! method_exists($this->model, $relation)) {
+            throw new \Exception("Relation {$relation} does not exist.");
+        }
+
+        $this->model->setEagerLoading(true);
+        $relatingTable = $this->model->{$relation}()->table;
+        $this->model->setEagerLoading(false);
+
+        return $this->buildNotExistsQuery($relatingTable, $constraint);
+    }
+
+    public function whereDoesntHave(string $relation, callable $constraint): self
+    {
+        return $this->doesntHave($relation, $constraint);
     }
 
     protected function buildCountQuery(string $relatingTable, string $operator, string $count, ?callable $constraint): self
@@ -254,9 +274,13 @@ class Builder extends Query
 
     protected function buildExistsQuery(string $relatingTable, ?callable $constraint): self
     {
-        $subQuery = function ($q) use ($relatingTable, $constraint) {
-            $q->from($this->model->{$relatingTable}()->table)
-                ->whereRaw($this->model->getTableName() . '.' . $this->model->getPrimaryKey() . ' = ' . $relatingTable . '.' . $this->model->getRelatingKey());
+        $relatingKey = $this->model->getRelatingKey();
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+
+        $subQuery = function ($q) use ($relatingTable, $relatingKey, $parentTable, $primaryKey, $constraint) {
+            $q->from($relatingTable)
+                ->whereRaw("{$parentTable}.{$primaryKey} = {$relatingTable}.{$relatingKey}");
 
             if ($constraint) {
                 $constraint($q);
@@ -264,6 +288,24 @@ class Builder extends Query
         };
 
         return $this->whereExists($subQuery);
+    }
+
+    protected function buildNotExistsQuery(string $relatingTable, ?callable $constraint): self
+    {
+        $relatingKey = $this->model->getRelatingKey();
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+
+        $subQuery = function ($q) use ($relatingTable, $relatingKey, $parentTable, $primaryKey, $constraint) {
+            $q->from($relatingTable)
+                ->whereRaw("{$parentTable}.{$primaryKey} = {$relatingTable}.{$relatingKey}");
+
+            if ($constraint) {
+                $constraint($q);
+            }
+        };
+
+        return $this->whereNotExists($subQuery);
     }
 
     /**
@@ -290,22 +332,55 @@ class Builder extends Query
         $this->relationLoader->loadRelationAggregates($models);
     }
 
-    // withCount() normally fires a separate GROUP BY query after the main query runs.
-    // But applying withCount() + orderBy() on a relation requires a correlated subquery
-    // to support sorting. So just before execution of all() and one(), we inject a correlated
-    // COUNT(*) subquery into SELECT for any _count column that appears in ORDER BY. Relations
-    // not used with orderBy() will still be computed using the cheaper GROUP BY path.
-    private function injectWithCountSubqueriesForOrdering(): void
+    // Relation aggregates (withCount/withSum/etc.) normally fire separate GROUP BY queries
+    // after the main query. But using them with orderBy() requires a correlated subquery in
+    // SELECT so MySQL can sort by that column. Just before all()/one() we inject correlated
+    // subqueries for any aggregate column that appears in ORDER BY. Relations NOT used with
+    // orderBy() still use the cheaper GROUP BY path.
+    private function injectSubqueriesForOrdering(): void
     {
         foreach ($this->components['order'] ?? [] as $order) {
-            $column = $order['column'];
-            if (str_ends_with($column, '_count')) {
-                $relation = substr($column, 0, -6);
-                if ($this->relationLoader->hasCountInclude($relation)) {
-                    $constraint = $this->relationLoader->getCountConstraint($relation);
-                    $this->injectCountSubquery($relation, $constraint);
-                }
+            $this->tryInjectCountSubquery($order['column']);
+            $this->tryInjectAggregateSubquery($order['column']);
+        }
+    }
+
+    private function tryInjectCountSubquery(string $column): void
+    {
+        if (! str_ends_with($column, '_count')) {
+            return;
+        }
+
+        $relation = substr($column, 0, -6);
+
+        if (! $this->relationLoader->hasCountInclude($relation)) {
+            return;
+        }
+
+        $constraint = $this->relationLoader->getCountConstraint($relation);
+        $this->injectCountSubquery($relation, $constraint);
+    }
+
+    private function tryInjectAggregateSubquery(string $column): void
+    {
+        foreach (['sum', 'avg', 'min', 'max'] as $type) {
+            $marker = '_' . $type . '_';
+
+            if (! str_contains($column, $marker)) {
+                continue;
             }
+
+            [$relation, $aggColumn] = explode($marker, $column, 2);
+
+            if (! $this->relationLoader->hasAggregateInclude($type, $relation, $aggColumn)) {
+                return;
+            }
+
+            $config = $this->relationLoader->getAggregateConfig($type, $relation, $aggColumn);
+            $this->injectAggregateSubquery($relation, $type, $aggColumn, $config['constraint'] ?? null);
+            $this->relationLoader->removeAggregateInclude($type, $relation, $aggColumn);
+
+            return;
         }
     }
 
@@ -315,19 +390,66 @@ class Builder extends Query
         $query = $this->model->{$relation}();
         $relationType = $this->model->getRelationType();
 
-        if (! in_array($relationType, ['hasMany', 'hasManyThrough'])) {
+        if ($relationType === 'morphedByMany' && $query instanceof PolymorphicPivot) {
+            $this->injectPolymorphicPivotCountSubquery($query, $relation, $query->getAssociateKey());
             $this->model->setEagerLoading(false);
 
             return;
+        }
+
+        if ($relationType === 'morphToMany' && $query instanceof PolymorphicPivot) {
+            $this->injectPolymorphicPivotCountSubquery($query, $relation, 'morph_id');
+            $this->model->setEagerLoading(false);
+
+            return;
+        }
+
+        if ($relationType === 'pivot' && $query instanceof Pivot) {
+            $this->injectPivotCountSubquery($query, $relation);
+            $this->model->setEagerLoading(false);
+
+            return;
+        }
+
+        $sql = $this->buildHasManySubquery($query, $relationType, 'COUNT(*)', $constraint);
+        $this->model->setEagerLoading(false);
+
+        if ($sql === null) {
+            return;
+        }
+
+        $this->applySubqueryAlias($sql, "{$relation}_count");
+        $this->relationLoader->removeCountInclude($relation);
+    }
+
+    private function injectAggregateSubquery(string $relation, string $type, string $column, ?callable $constraint = null): void
+    {
+        $this->model->setEagerLoading(true);
+        $query = $this->model->{$relation}();
+        $relationType = $this->model->getRelationType();
+
+        $sql = $this->buildHasManySubquery($query, $relationType, strtoupper($type) . "(`{$column}`)", $constraint);
+        $this->model->setEagerLoading(false);
+
+        if ($sql === null) {
+            return;
+        }
+
+        $this->applySubqueryAlias($sql, "{$relation}_{$type}_{$column}");
+    }
+
+    private function buildHasManySubquery(object $query, string $relationType, string $expression, ?callable $constraint): ?string
+    {
+        if (! in_array($relationType, ['hasMany', 'hasManyThrough'])) {
+            return null;
         }
 
         $parentTable = $this->model->getTableName();
         $primaryKey = $this->model->getPrimaryKey();
         $relatingKey = $this->model->getRelatingKey();
 
-        // Clone so existing WHERE constraints (e.g. morph_type on polymorphic) are kept.
         $subQuery = clone $query;
-        $subQuery->columns = ['COUNT(*)'];
+        $subQuery->columns = [$expression];
         $subQuery->select_raw = [];
 
         if ($constraint) {
@@ -342,22 +464,47 @@ class Builder extends Query
             $subQuery->whereRaw("{$subQuery->table}.{$relatingKey} = {$parentTable}.{$primaryKey}");
         }
 
-        $sql = $subQuery->toSql();
-        $bindings = $subQuery->bindings;
-
-        $this->components['select_raw'][] = "({$sql}) AS {$relation}_count";
-        if ($bindings) {
+        if ($subQuery->bindings) {
             // Prepend — SELECT is compiled before WHERE, so subquery bindings come first.
-            $this->bindings = array_merge($bindings, $this->bindings);
+            $this->bindings = array_merge($subQuery->bindings, $this->bindings);
         }
+
+        return $subQuery->toSql();
+    }
+
+    private function injectPolymorphicPivotCountSubquery(PolymorphicPivot $query, string $relation, string $parentKey): void
+    {
+        $pivotTable = $query->getPivotTableName();
+        $morphType = $query->getMorphType();
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+
+        $sql = "SELECT COUNT(*) FROM `{$pivotTable}` WHERE `morph_type` = '{$morphType}' AND `{$parentKey}` = `{$parentTable}`.`{$primaryKey}`";
+
+        $this->applySubqueryAlias($sql, "{$relation}_count");
+        $this->relationLoader->removeCountInclude($relation);
+    }
+
+    private function injectPivotCountSubquery(Pivot $query, string $relation): void
+    {
+        $pivotTable = $query->getPivotTableName();
+        $foreignKey = $this->model->getRelatingKey();
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+
+        $sql = "SELECT COUNT(*) FROM `{$pivotTable}` WHERE `{$foreignKey}` = `{$parentTable}`.`{$primaryKey}`";
+
+        $this->applySubqueryAlias($sql, "{$relation}_count");
+        $this->relationLoader->removeCountInclude($relation);
+    }
+
+    private function applySubqueryAlias(string $sql, string $alias): void
+    {
+        $this->components['select_raw'][] = "({$sql}) AS {$alias}";
 
         if (empty($this->components['columns'])) {
             // MySQL rejects a bare subquery in SELECT without at least one named column.
             $this->select('*');
         }
-
-        // Drop from RelationLoader so the GROUP BY path is not also run for this relation.
-        $this->relationLoader->removeCountInclude($relation);
-        $this->model->setEagerLoading(false);
     }
 }

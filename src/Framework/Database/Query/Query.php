@@ -125,6 +125,10 @@ class Query
      */
     public function update(array $data): int
     {
+        if (empty($this->components['where'])) {
+            throw new \RuntimeException('Update requires a where clause. Use whereRaw(\'1=1\') to update all rows explicitly.');
+        }
+
         $compiler = new Compiler($this);
         $this->bindings = array_merge(array_values($data), $this->bindings);
         $query = $compiler->compileUpdate(array_keys($data));
@@ -142,6 +146,10 @@ class Query
      */
     public function delete(): int
     {
+        if (empty($this->components['where'])) {
+            throw new \RuntimeException('Delete requires a where clause. Use whereRaw(\'1=1\') to delete all rows explicitly.');
+        }
+
         $compiler = new Compiler($this);
         $query = $compiler->compileDelete();
         $stmt = $this->connection->query($query, $this->bindings);
@@ -1027,6 +1035,7 @@ class Query
         $query = new Query;
         $callback($query);
         $this->components['where'][] = ['type' => 'where_not_exists', 'sub_query' => $query->toSql()];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
 
         return $this;
     }

@@ -49,7 +49,7 @@ final class TableTest extends TestCase
 
         $sql = (new CreateTable)->compile($table);
 
-        $expected = 'CREATE TABLE IF NOT EXISTS products (`id` INT AUTO_INCREMENT NOT NULL, `category_id` INT NOT NULL, `title` VARCHAR(55) NOT NULL, `description` VARCHAR(55) NULL, PRIMARY KEY (`id`), FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
+        $expected = 'CREATE TABLE IF NOT EXISTS products (`id` INT AUTO_INCREMENT NOT NULL, `category_id` INT NOT NULL, `title` VARCHAR(55) NOT NULL, `description` VARCHAR(55) NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_products_category_id` FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;';
 
         $this->assertEquals($expected, $sql);
     }

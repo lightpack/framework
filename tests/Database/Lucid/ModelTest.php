@@ -1907,6 +1907,50 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 1', $projects[0]->name);
     }
 
+    public function testDoesntHave()
+    {
+        $this->db->table('projects')->insert(['name' => 'With Tasks']);
+        $p1 = $this->db->lastInsertId();
+        $this->db->table('projects')->insert(['name' => 'Without Tasks']);
+        $this->db->table('tasks')->insert(['name' => 'Task A', 'project_id' => $p1]);
+
+        $projects = Project::query()->doesntHave('tasks')->all();
+
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals('Without Tasks', $projects[0]->name);
+    }
+
+    public function testWhereDoesntHave()
+    {
+        $this->db->table('projects')->insert(['name' => 'Heavy Tasks']);
+        $p1 = $this->db->lastInsertId();
+        $this->db->table('projects')->insert(['name' => 'Light Tasks']);
+        $p2 = $this->db->lastInsertId();
+        $this->db->table('tasks')->insert(['name' => 'Big', 'project_id' => $p1, 'hours' => 100]);
+        $this->db->table('tasks')->insert(['name' => 'Small', 'project_id' => $p2, 'hours' => 1]);
+
+        // Projects that have no tasks with more than 50 hours
+        $projects = Project::query()->whereDoesntHave('tasks', function ($q) {
+            $q->where('hours', '>', 50);
+        })->all();
+
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals('Light Tasks', $projects[0]->name);
+    }
+
+    public function testWhereHasWorksWhenRelationMethodNameDiffersFromTable()
+    {
+        $this->db->table('products')->insert(['name' => 'Widget', 'color' => '#FFF']);
+        $productId = $this->db->lastInsertId();
+        $this->db->table('owners')->insert(['product_id' => $productId, 'name' => 'Alice']);
+
+        $products = Product::query()->whereHas('owner', function ($q) {
+            $q->where('name', '=', 'Alice');
+        })->all();
+
+        $this->assertNotEmpty($products);
+    }
+
     public function testEagerLoadingWithArrayOfRelations()
     {
         // bulk insert projects
@@ -2316,7 +2360,7 @@ final class ModelTest extends TestCase
     public function testQueryChunkMethodOnModel()
     {
         // Make sure we have no records
-        (new Product)->query()->delete();
+        (new Product)->query()->whereRaw('1=1')->delete();
 
         foreach (range(1, 25) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC'];
@@ -2346,7 +2390,7 @@ final class ModelTest extends TestCase
     public function testAggregateMethodsOnModel()
     {
         // Make sure we have no records
-        Product::query()->delete();
+        Product::query()->whereRaw('1=1')->delete();
 
         foreach (range(1, 10) as $item) {
             $records[] = ['name' => 'Product name', 'color' => '#CCC', 'price' => 100];

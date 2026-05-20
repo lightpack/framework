@@ -57,7 +57,7 @@ class RelationLoader
      */
     public function setCountIncludes(array $includes): void
     {
-        $this->countIncludes = $includes;
+        $this->countIncludes = array_merge($this->countIncludes, $includes);
     }
 
     public function hasCountInclude(string $relation): bool
@@ -113,6 +113,26 @@ class RelationLoader
     public function setMaxIncludes(array $includes, ?string $column = null): void
     {
         $this->setAggregateIncludes('max', $includes, $column);
+    }
+
+    public function hasAggregateInclude(string $type, string $relation, string $column): bool
+    {
+        $property = $type . 'Includes';
+
+        return isset($this->{$property}[$relation . ':' . $column]);
+    }
+
+    public function getAggregateConfig(string $type, string $relation, string $column): ?array
+    {
+        $property = $type . 'Includes';
+
+        return $this->{$property}[$relation . ':' . $column] ?? null;
+    }
+
+    public function removeAggregateInclude(string $type, string $relation, string $column): void
+    {
+        $property = $type . 'Includes';
+        unset($this->{$property}[$relation . ':' . $column]);
     }
 
     /**
@@ -282,24 +302,80 @@ class RelationLoader
 
         $this->model->setEagerLoading(true);
         $query = $this->model->{$include}();
+        $relationType = $this->model->getRelationType();
 
-        if (in_array($this->model->getRelationType(), ['hasMany', 'hasManyThrough'])) {
+        if (in_array($relationType, ['hasMany', 'hasManyThrough'])) {
             if ($constraint) {
                 $constraint($query);
             }
 
-            $counts = $query->whereIn($this->model->getRelatingKey(), $models->ids())->countBy($this->model->getRelatingKey())->all();
+            $relatingKey = $this->model->getRelatingKey();
+            $counts = $query->whereIn($relatingKey, $models->ids())->countBy($relatingKey)->all();
             $this->model->setEagerLoading(false);
 
             foreach ($models as $model) {
+                $model->{$include . '_count'} = 0;
                 foreach ($counts as $count) {
-                    if ($count->{$this->model->getRelatingKey()} === $model->{$model->getPrimaryKey()}) {
-                        $model->{$include . '_count'} = $count->count;
+                    if ($count->{$relatingKey} === $model->{$model->getPrimaryKey()}) {
+                        $model->{$include . '_count'} = (int) $count->count;
+
+                        break;
                     }
                 }
+            }
+        } elseif ($relationType === 'morphedByMany' && $query instanceof PolymorphicPivot) {
+            $this->loadPolymorphicPivotCount($models, $query, $include, $query->getAssociateKey());
+        } elseif ($relationType === 'morphToMany' && $query instanceof PolymorphicPivot) {
+            $this->loadPolymorphicPivotCount($models, $query, $include, 'morph_id');
+        } elseif ($relationType === 'pivot' && $query instanceof Pivot) {
+            $this->loadPivotCount($models, $query, $include);
+        }
 
-                if (! $model->hasAttribute($include . '_count')) {
-                    $model->{$include . '_count'} = 0;
+        $this->model->setEagerLoading(false);
+    }
+
+    private function loadPolymorphicPivotCount(Collection $models, PolymorphicPivot $query, string $include, string $groupKey): void
+    {
+        $morphType = $query->getMorphType();
+        $pivotTable = $query->getPivotTableName();
+
+        $pivotQuery = new \Lightpack\Database\Query\Query($pivotTable, $query->getConnection());
+        $counts = $pivotQuery
+            ->where('morph_type', '=', $morphType)
+            ->whereIn($groupKey, $models->ids())
+            ->countBy($groupKey)
+            ->all();
+
+        foreach ($models as $model) {
+            $model->{$include . '_count'} = 0;
+            foreach ($counts as $count) {
+                if ($count->{$groupKey} == $model->{$model->getPrimaryKey()}) {
+                    $model->{$include . '_count'} = (int) $count->count;
+
+                    break;
+                }
+            }
+        }
+    }
+
+    private function loadPivotCount(Collection $models, Pivot $query, string $include): void
+    {
+        $foreignKey = $this->model->getRelatingKey();
+        $pivotTable = $query->getPivotTableName();
+
+        $pivotQuery = new \Lightpack\Database\Query\Query($pivotTable, $query->getConnection());
+        $counts = $pivotQuery
+            ->whereIn($foreignKey, $models->ids())
+            ->countBy($foreignKey)
+            ->all();
+
+        foreach ($models as $model) {
+            $model->{$include . '_count'} = 0;
+            foreach ($counts as $count) {
+                if ($count->{$foreignKey} == $model->{$model->getPrimaryKey()}) {
+                    $model->{$include . '_count'} = (int) $count->count;
+
+                    break;
                 }
             }
         }
@@ -343,7 +419,7 @@ class RelationLoader
                     $results = $query->whereIn($relatingKey, $ids)->sumBy($relatingKey, $column)->all();
                     $attrSuffix = '_sum_' . $column;
                     $resultKey = 'sum_' . $column;
-                    $defaultValue = 0;
+                    $defaultValue = null;
 
                     break;
                 case 'avg':

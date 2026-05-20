@@ -407,7 +407,7 @@ class Table
         $parentTable = substr($column, 0, -3);
         $parentTable = (new Str)->tableize($parentTable);
 
-        $foreign = new ForeignKey($column);
+        $foreign = new ForeignKey($column, $this->tableName);
         $foreign->references('id')->on($parentTable);
 
         $this->tableKeys->add($foreign);
