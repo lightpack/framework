@@ -199,11 +199,68 @@ class RelationLoader
             $constraint($query);
         }
 
-        $children = $query->whereIn($pivotKeyName ?? $this->model->getRelatingKey(), $ids)->all();
+        $relatingKey = $pivotKeyName ?? $this->model->getRelatingKey();
+
+        // If a limit is set on the relation query, use a window function to enforce
+        // per-parent limiting. Otherwise the WHERE IN approach is more efficient.
+        if ($query->limit && in_array($this->model->getRelationType(), ['hasMany', 'hasManyThrough'])) {
+            $children = $this->loadLimitedRelation($query, $ids, $relatingKey);
+            $this->model->setEagerLoading(false);
+            $this->setRelationResults($models, $children, $relation);
+            $this->loadNestedRelations($models, $include, $relation);
+
+            return;
+        }
+
+        $children = $query->whereIn($relatingKey, $ids)->all();
         $this->model->setEagerLoading(false);
 
         $this->setRelationResults($models, $children, $relation);
         $this->loadNestedRelations($models, $include, $relation);
+    }
+
+    /**
+     * Load a relation with per-parent limiting using ROW_NUMBER() window function.
+     *
+     * This is used when a constraint sets ->limit(N) on a hasMany/hasManyThrough relation.
+     * A single query with a window function enforces N records per parent.
+     */
+    protected function loadLimitedRelation($query, array $ids, string $relatingKey): Collection
+    {
+        $limit = $query->limit;
+
+        // Build ORDER BY clause for the window function
+        $orderSql = '';
+        if ($query->order) {
+            $parts = [];
+            foreach ($query->order as $order) {
+                $parts[] = '`' . $order['column'] . '` ' . $order['sort'];
+            }
+            $orderSql = 'ORDER BY ' . implode(', ', $parts);
+        }
+
+        // Clone the query, strip limit/offset, add the WHERE IN for parent IDs
+        $innerQuery = clone $query;
+        $innerQuery->limit = null;
+        $innerQuery->offset = null;
+        $innerQuery->whereIn($relatingKey, $ids);
+
+        $innerSql = $innerQuery->toSql();
+        $bindings = $innerQuery->bindings;
+
+        // Wrap with ROW_NUMBER() partitioned by the relating key
+        $sql = "SELECT * FROM (
+            SELECT *, ROW_NUMBER() OVER (PARTITION BY `{$relatingKey}` {$orderSql}) AS __lp_rn
+            FROM ({$innerSql}) AS __lp_inner
+        ) AS __lp_ranked WHERE __lp_rn <= {$limit}";
+
+        $results = $this->model->getConnection()->query($sql, $bindings)->fetchAll(\PDO::FETCH_OBJ);
+
+        foreach ($results as $result) {
+            unset($result->__lp_rn);
+        }
+
+        return new Collection($results);
     }
 
     /**

@@ -1339,6 +1339,128 @@ final class ModelTest extends TestCase
         $this->assertEquals(0, $projects[2]->tasks_count);
     }
 
+    public function testLimitedEagerLoadingForHasManyRelation()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+            ['name' => 'Project C'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 2],
+            ['name' => 'Task 4', 'project_id' => 3],
+            ['name' => 'Task 5', 'project_id' => 3],
+            ['name' => 'Task 6', 'project_id' => 3],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->with(['tasks' => function ($q) {
+                $q->limit(2);
+            }])
+            ->all();
+
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals(1, $projects[0]->tasks->count());
+        $this->assertEquals(2, $projects[1]->tasks->count());
+        $this->assertEquals(2, $projects[2]->tasks->count());
+    }
+
+    public function testLimitedEagerLoadingForHasManyThroughRelation()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+            ['name' => 'Project C'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1],
+            ['name' => 'Task 2', 'project_id' => 2],
+            ['name' => 'Task 3', 'project_id' => 3],
+        ]);
+        $this->db->table('comments')->insert([
+            ['content' => 'Comment 1', 'task_id' => 1],
+            ['content' => 'Comment 2', 'task_id' => 2],
+            ['content' => 'Comment 3', 'task_id' => 2],
+            ['content' => 'Comment 4', 'task_id' => 3],
+            ['content' => 'Comment 5', 'task_id' => 3],
+            ['content' => 'Comment 6', 'task_id' => 3],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->with(['comments' => function ($q) {
+                $q->limit(2);
+            }])
+            ->all();
+
+        $this->assertEquals(3, $projects->count());
+        $this->assertEquals(1, $projects[0]->comments->count());
+        $this->assertEquals(2, $projects[1]->comments->count());
+        $this->assertEquals(2, $projects[2]->comments->count());
+    }
+
+    public function testLimitedEagerLoadingWithOrderBy()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task Z', 'project_id' => 1],
+            ['name' => 'Task A', 'project_id' => 1],
+            ['name' => 'Task M', 'project_id' => 2],
+            ['name' => 'Task B', 'project_id' => 2],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->with(['tasks' => function ($q) {
+                $q->orderBy('name', 'asc')->limit(2);
+            }])
+            ->all();
+
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals(2, $projects[0]->tasks->count());
+        $this->assertEquals('Task A', $projects[0]->tasks[0]->name);
+        $this->assertEquals('Task Z', $projects[0]->tasks[1]->name);
+        $this->assertEquals(2, $projects[1]->tasks->count());
+        $this->assertEquals('Task B', $projects[1]->tasks[0]->name);
+        $this->assertEquals('Task M', $projects[1]->tasks[1]->name);
+    }
+
+    public function testLimitedEagerLoadingWithAdditionalWhere()
+    {
+        $this->db->table('projects')->insert([
+            ['name' => 'Project A'],
+            ['name' => 'Project B'],
+        ]);
+        $this->db->table('tasks')->insert([
+            ['name' => 'Task 1', 'project_id' => 1, 'hours' => 5],
+            ['name' => 'Task 2', 'project_id' => 1, 'hours' => 3],
+            ['name' => 'Task 3', 'project_id' => 1, 'hours' => 8],
+            ['name' => 'Task 4', 'project_id' => 2, 'hours' => 2],
+            ['name' => 'Task 5', 'project_id' => 2, 'hours' => 7],
+            ['name' => 'Task 6', 'project_id' => 2, 'hours' => 1],
+        ]);
+
+        $projectModel = $this->db->model(Project::class);
+        $projects = $projectModel::query()
+            ->with(['tasks' => function ($q) {
+                $q->where('hours', '>', 2)->orderBy('hours', 'desc')->limit(2);
+            }])
+            ->all();
+
+        $this->assertEquals(2, $projects->count());
+        $this->assertEquals(2, $projects[0]->tasks->count());
+        $this->assertEquals('Task 3', $projects[0]->tasks[0]->name);
+        $this->assertEquals('Task 1', $projects[0]->tasks[1]->name);
+        $this->assertEquals(1, $projects[1]->tasks->count());
+        $this->assertEquals('Task 5', $projects[1]->tasks[0]->name);
+    }
+
     public function testThrowsExceptionWhenEagerLoadingNonExistingRelation()
     {
         $projectModel = $this->db->model(Project::class);
