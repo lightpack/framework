@@ -9,16 +9,28 @@ class ForeignKey
     private string $parentColumn = 'id';
     private string $updateAction;
     private string $deleteAction;
+    private ?string $constraintName = null;
 
     public const ACTION_CASCADE = 'CASCADE';
     public const ACTION_RESTRICT = 'RESTRICT';
     public const ACTION_SET_NULL = 'SET NULL';
 
-    public function __construct(?string $foreignKey = null)
+    public function __construct(?string $foreignKey = null, ?string $tableName = null)
     {
         $this->foreignKey = $foreignKey;
         $this->updateAction = self::ACTION_RESTRICT;
         $this->deleteAction = self::ACTION_RESTRICT;
+
+        if ($tableName && $foreignKey) {
+            $this->constraintName = "fk_{$tableName}_{$foreignKey}";
+        }
+    }
+
+    public function name(string $name): self
+    {
+        $this->constraintName = $name;
+
+        return $this;
     }
 
     public function references(string $parentColumn): self
@@ -79,6 +91,12 @@ class ForeignKey
 
     public function compile()
     {
+        $constraint = [];
+
+        if ($this->constraintName) {
+            $constraint[] = "CONSTRAINT " . IdentifierEscaper::escape($this->constraintName);
+        }
+
         $constraint[] = "FOREIGN KEY (" . IdentifierEscaper::escape($this->foreignKey) . ")";
         $constraint[] = "REFERENCES " . IdentifierEscaper::escape($this->parentTable) . "(" . IdentifierEscaper::escape($this->parentColumn) . ")";
 
