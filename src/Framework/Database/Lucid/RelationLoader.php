@@ -192,6 +192,7 @@ class RelationLoader
         if (! $ids) {
             $this->setRelationResults($models, new Collection([]), $relation);
             $this->model->setEagerLoading(false);
+
             return;
         }
 
@@ -343,24 +344,28 @@ class RelationLoader
                     $attrSuffix = '_sum_' . $column;
                     $resultKey = 'sum_' . $column;
                     $defaultValue = 0;
+
                     break;
                 case 'avg':
                     $results = $query->whereIn($relatingKey, $ids)->avgBy($relatingKey, $column)->all();
                     $attrSuffix = '_avg_' . $column;
                     $resultKey = 'avg_' . $column;
                     $defaultValue = null;
+
                     break;
                 case 'min':
                     $results = $query->whereIn($relatingKey, $ids)->minBy($relatingKey, $column)->all();
                     $attrSuffix = '_min_' . $column;
                     $resultKey = 'min_' . $column;
                     $defaultValue = null;
+
                     break;
                 case 'max':
                     $results = $query->whereIn($relatingKey, $ids)->maxBy($relatingKey, $column)->all();
                     $attrSuffix = '_max_' . $column;
                     $resultKey = 'max_' . $column;
                     $defaultValue = null;
+
                     break;
             }
 
@@ -372,6 +377,7 @@ class RelationLoader
                     if ($result->{$relatingKey} === $model->{$model->getPrimaryKey()}) {
                         $model->{$include . $attrSuffix} = $result->{$resultKey};
                         $found = true;
+
                         break;
                     }
                 }

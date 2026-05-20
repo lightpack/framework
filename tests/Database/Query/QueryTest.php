@@ -34,8 +34,13 @@ final class QueryTest extends TestCase
         });
         $container->register('logger', function () {
             return new class {
-                public function error($message, $context = []){}
-                public function critical($message, $context = []){}
+                public function error($message, $context = [])
+                {
+                }
+
+                public function critical($message, $context = [])
+                {
+                }
             };
         });
         $container->register('request', function () {
@@ -1487,12 +1492,12 @@ final class QueryTest extends TestCase
         $this->assertCount(4, $result); // #09F, #CCC, red, blue
 
         // Find red group
-        $red = array_values(array_filter($result, fn($r) => $r->color === 'red'))[0];
+        $red = array_values(array_filter($result, fn ($r) => $r->color === 'red'))[0];
         $this->assertEquals(2, $red->count);
         $this->assertEquals(125.00, $red->sum_price);
 
         // Find blue group
-        $blue = array_values(array_filter($result, fn($r) => $r->color === 'blue'))[0];
+        $blue = array_values(array_filter($result, fn ($r) => $r->color === 'blue'))[0];
         $this->assertEquals(1, $blue->count);
         $this->assertEquals(125.00, $blue->sum_price);
 
@@ -1504,7 +1509,7 @@ final class QueryTest extends TestCase
             'avg_price' => ['avg', 'price'],
         ])->all();
 
-        $red = array_values(array_filter($result, fn($r) => $r->color === 'red'))[0];
+        $red = array_values(array_filter($result, fn ($r) => $r->color === 'red'))[0];
         $this->assertEquals(125.00, $red->total);
         $this->assertEquals(62.50, $red->avg_price);
 

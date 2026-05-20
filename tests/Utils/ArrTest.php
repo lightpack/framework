@@ -445,7 +445,7 @@ class ArrTest extends TestCase
 
         // Multiple sibling branches at same depth
         $data = [
-            'db'   => ['host' => 'localhost', 'port' => 3306],
+            'db' => ['host' => 'localhost', 'port' => 3306],
             'mail' => ['host' => 'smtp.test', 'port' => 587],
         ];
         $this->assertEquals(
@@ -616,6 +616,6 @@ class ArrTest extends TestCase
         $b = (object) ['score' => 1];
         $c = (object) ['score' => 2];
         $sorted = $arr->sort('score', [$a, $b, $c]);
-        $this->assertEquals([1, 2, 3], array_map(fn($o) => $o->score, $sorted));
+        $this->assertEquals([1, 2, 3], array_map(fn ($o) => $o->score, $sorted));
     }
 }

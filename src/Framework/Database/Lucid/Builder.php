@@ -292,7 +292,7 @@ class Builder extends Query
 
     // withCount() normally fires a separate GROUP BY query after the main query runs.
     // But applying withCount() + orderBy() on a relation requires a correlated subquery
-    // to support sorting. So just before execution of all() and one(), we inject a correlated 
+    // to support sorting. So just before execution of all() and one(), we inject a correlated
     // COUNT(*) subquery into SELECT for any _count column that appears in ORDER BY. Relations
     // not used with orderBy() will still be computed using the cheaper GROUP BY path.
     private function injectWithCountSubqueriesForOrdering(): void
@@ -315,8 +315,9 @@ class Builder extends Query
         $query = $this->model->{$relation}();
         $relationType = $this->model->getRelationType();
 
-        if (!in_array($relationType, ['hasMany', 'hasManyThrough'])) {
+        if (! in_array($relationType, ['hasMany', 'hasManyThrough'])) {
             $this->model->setEagerLoading(false);
+
             return;
         }
 

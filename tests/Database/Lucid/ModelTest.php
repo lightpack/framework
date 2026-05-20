@@ -1326,7 +1326,7 @@ final class ModelTest extends TestCase
 
         $projectModel = $this->db->model(Project::class);
         $projects = $projectModel::query()
-            ->withCount(['tasks' => fn($q) => $q->where('hours', '>', 4)])
+            ->withCount(['tasks' => fn ($q) => $q->where('hours', '>', 4)])
             ->orderBy('tasks_count', 'desc')
             ->all();
 

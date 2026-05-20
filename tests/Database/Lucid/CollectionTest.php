@@ -18,10 +18,11 @@ final class CollectionTest extends TestCase
 
     private function make(array $data): CollectionItem
     {
-        $item = new CollectionItem();
+        $item = new CollectionItem;
         foreach ($data as $key => $value) {
             $item->setAttribute($key, $value);
         }
+
         return $item;
     }
 
@@ -188,14 +189,14 @@ final class CollectionTest extends TestCase
             ['id' => 2, 'active' => false],
             ['id' => 3, 'active' => true],
         ]);
-        $filtered = $c->filter(fn($item) => $item->active);
+        $filtered = $c->filter(fn ($item) => $item->active);
         $this->assertEquals([1, 3], $filtered->ids());
     }
 
     public function testFilterReturnsNewInstance()
     {
         $c = $this->collect([['id' => 1], ['id' => 2]]);
-        $filtered = $c->filter(fn($i) => $i->id === 1);
+        $filtered = $c->filter(fn ($i) => $i->id === 1);
         $this->assertNotSame($c, $filtered);
         $this->assertCount(2, $c); // original unchanged
     }
@@ -203,14 +204,14 @@ final class CollectionTest extends TestCase
     public function testMap()
     {
         $c = $this->collect([['id' => 1, 'name' => 'alice'], ['id' => 2, 'name' => 'bob']]);
-        $names = $c->map(fn($i) => strtoupper($i->name));
+        $names = $c->map(fn ($i) => strtoupper($i->name));
         $this->assertEquals(['ALICE', 'BOB'], $names->getItems());
     }
 
     public function testEach()
     {
         $c = $this->collect([['id' => 1, 'visited' => false], ['id' => 2, 'visited' => false]]);
-        $c->each(fn($i) => $i->setAttribute('visited', true));
+        $c->each(fn ($i) => $i->setAttribute('visited', true));
         foreach ($c as $item) {
             $this->assertTrue($item->visited);
         }
@@ -219,7 +220,7 @@ final class CollectionTest extends TestCase
     public function testEachReturnsSelf()
     {
         $c = $this->collect([['id' => 1]]);
-        $this->assertSame($c, $c->each(fn($i) => null));
+        $this->assertSame($c, $c->each(fn ($i) => null));
     }
 
     // -------------------------------------------------------------------------
