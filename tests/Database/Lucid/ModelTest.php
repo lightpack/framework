@@ -1907,6 +1907,37 @@ final class ModelTest extends TestCase
         $this->assertEquals('Project 1', $projects[0]->name);
     }
 
+    public function testDoesntHave()
+    {
+        $this->db->table('projects')->insert(['name' => 'With Tasks']);
+        $p1 = $this->db->lastInsertId();
+        $this->db->table('projects')->insert(['name' => 'Without Tasks']);
+        $this->db->table('tasks')->insert(['name' => 'Task A', 'project_id' => $p1]);
+
+        $projects = Project::query()->doesntHave('tasks')->all();
+
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals('Without Tasks', $projects[0]->name);
+    }
+
+    public function testWhereDoesntHave()
+    {
+        $this->db->table('projects')->insert(['name' => 'Heavy Tasks']);
+        $p1 = $this->db->lastInsertId();
+        $this->db->table('projects')->insert(['name' => 'Light Tasks']);
+        $p2 = $this->db->lastInsertId();
+        $this->db->table('tasks')->insert(['name' => 'Big', 'project_id' => $p1, 'hours' => 100]);
+        $this->db->table('tasks')->insert(['name' => 'Small', 'project_id' => $p2, 'hours' => 1]);
+
+        // Projects that have no tasks with more than 50 hours
+        $projects = Project::query()->whereDoesntHave('tasks', function ($q) {
+            $q->where('hours', '>', 50);
+        })->all();
+
+        $this->assertEquals(1, $projects->count());
+        $this->assertEquals('Light Tasks', $projects[0]->name);
+    }
+
     public function testWhereHasWorksWhenRelationMethodNameDiffersFromTable()
     {
         $this->db->table('products')->insert(['name' => 'Widget', 'color' => '#FFF']);

@@ -1027,6 +1027,7 @@ class Query
         $query = new Query;
         $callback($query);
         $this->components['where'][] = ['type' => 'where_not_exists', 'sub_query' => $query->toSql()];
+        $this->bindings = array_merge($this->bindings, $query->bindings);
 
         return $this;
     }

@@ -213,7 +213,9 @@ class Builder extends Query
             throw new \Exception("Relation {$relation} does not exist.");
         }
 
+        $this->model->setEagerLoading(true);
         $relatingTable = $this->model->{$relation}()->table;
+        $this->model->setEagerLoading(false);
 
         // Count query
         if (! is_null($operator) && ! is_null($count)) {
@@ -227,6 +229,24 @@ class Builder extends Query
     public function whereHas(string $relation, callable $constraint, ?string $operator = null, ?string $count = null): self
     {
         return $this->has($relation, $operator, $count, $constraint);
+    }
+
+    public function doesntHave(string $relation, ?callable $constraint = null): self
+    {
+        if (! method_exists($this->model, $relation)) {
+            throw new \Exception("Relation {$relation} does not exist.");
+        }
+
+        $this->model->setEagerLoading(true);
+        $relatingTable = $this->model->{$relation}()->table;
+        $this->model->setEagerLoading(false);
+
+        return $this->buildNotExistsQuery($relatingTable, $constraint);
+    }
+
+    public function whereDoesntHave(string $relation, callable $constraint): self
+    {
+        return $this->doesntHave($relation, $constraint);
     }
 
     protected function buildCountQuery(string $relatingTable, string $operator, string $count, ?callable $constraint): self
@@ -268,6 +288,24 @@ class Builder extends Query
         };
 
         return $this->whereExists($subQuery);
+    }
+
+    protected function buildNotExistsQuery(string $relatingTable, ?callable $constraint): self
+    {
+        $relatingKey = $this->model->getRelatingKey();
+        $parentTable = $this->model->getTableName();
+        $primaryKey = $this->model->getPrimaryKey();
+
+        $subQuery = function ($q) use ($relatingTable, $relatingKey, $parentTable, $primaryKey, $constraint) {
+            $q->from($relatingTable)
+                ->whereRaw("{$parentTable}.{$primaryKey} = {$relatingTable}.{$relatingKey}");
+
+            if ($constraint) {
+                $constraint($q);
+            }
+        };
+
+        return $this->whereNotExists($subQuery);
     }
 
     /**
