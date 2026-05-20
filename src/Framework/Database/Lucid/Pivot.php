@@ -29,6 +29,16 @@ class Pivot extends Builder
         parent::__construct($model);
     }
 
+    public function getAssociateKey(): string
+    {
+        return $this->associateKey;
+    }
+
+    public function getPivotTableName(): string
+    {
+        return $this->pivotTable;
+    }
+
     /**
      * This method will sync records in the pivot table. It will delete
      * records that are not in the array and insert new records.
