@@ -510,6 +510,43 @@ final class RouteRegistryTest extends TestCase
         $routeRegistry->url('users.show');
     }
 
+    public function testRouteCanStoreModelBindings()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $route = $routeRegistry->get('/notes/:id', 'NoteController', 'show');
+
+        $route->bind('id', 'Note');
+
+        $this->assertEquals([
+            'id' => ['model' => 'Note', 'resolver' => null],
+        ], $route->getBindings());
+    }
+
+    public function testRouteCanStoreModelBindingsWithCustomResolver()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $route = $routeRegistry->get('/notes/:slug', 'NoteController', 'show');
+        $resolver = fn($slug) => new stdClass();
+
+        $route->bind('slug', 'Note', $resolver);
+
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['slug']['model']);
+        $this->assertSame($resolver, $bindings['slug']['resolver']);
+    }
+
+    public function testRouteCanStoreMultipleBindings()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $route = $routeRegistry->get('/notes/:note/comments/:comment', 'CommentController', 'show');
+
+        $route->bind('note', 'Note')->bind('comment', 'Comment');
+
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['note']['model']);
+        $this->assertEquals('Comment', $bindings['comment']['model']);
+    }
+
     public function testRouteRegistrySignMethod()
     {
         $container = Container::getInstance();

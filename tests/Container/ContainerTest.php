@@ -224,4 +224,41 @@ final class ContainerTest extends TestCase
         $this->expectException(ServiceNotFoundException::class);
         $this->container->alias(Service::class, 'service');
     }
+
+    public function testContainerCallUsesPreResolvedObjectFromArgsForNonScalarParameter()
+    {
+        $this->container->bind(InterfaceFoo::class, FooA::class);
+        $preResolved = new FooA();
+
+        $result = $this->container->call(ControllerWithTypedParam::class, 'action', [
+            'foo' => $preResolved,
+            'bar' => 'Bar',
+        ]);
+
+        $this->assertSame($preResolved, $result['foo']);
+        $this->assertEquals('Bar', $result['bar']);
+    }
+
+    public function testContainerCallFallsBackToContainerResolutionWhenPreResolvedObjectNotProvided()
+    {
+        $this->container->bind(InterfaceFoo::class, FooA::class);
+
+        $result = $this->container->call(ControllerWithTypedParam::class, 'action', [
+            'bar' => 'Bar',
+        ]);
+
+        $this->assertInstanceOf(FooA::class, $result['foo']);
+        $this->assertEquals('Bar', $result['bar']);
+    }
+}
+
+class ControllerWithTypedParam
+{
+    public function action(InterfaceFoo $foo, $bar)
+    {
+        return [
+            'foo' => $foo,
+            'bar' => $bar,
+        ];
+    }
 }

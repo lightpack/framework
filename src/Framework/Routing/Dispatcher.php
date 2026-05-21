@@ -34,7 +34,7 @@ class Dispatcher
     {
         $controller = $this->route->getController();
         $action = $this->route->getAction();
-        $params = $this->route->getParams();
+        $params = $this->resolveBindings($this->route->getParams());
 
         if (! \class_exists($controller)) {
             throw new \Lightpack\Exceptions\ControllerNotFoundException(
@@ -53,6 +53,26 @@ class Dispatcher
         } catch (ValidationException $e) {
             return $this->container->get('redirect');
         }
+    }
+
+    private function resolveBindings(array $params): array
+    {
+        foreach ($this->route->getBindings() as $param => $binding) {
+            if (! isset($params[$param])) {
+                continue;
+            }
+
+            $value = $params[$param];
+            $model = $binding['model'];
+
+            if ($binding['resolver'] !== null) {
+                $params[$param] = ($binding['resolver'])($value);
+            } else {
+                $params[$param] = new $model($value);
+            }
+        }
+
+        return $params;
     }
 
     private function throwExceptionIfRouteNotFound()
