@@ -28,6 +28,7 @@ class RouteRegistry
         'prefix' => '',
         'filter' => [],
         'host' => '',
+        'bind' => [],
     ];
 
     private $names = [];
@@ -119,6 +120,12 @@ class RouteRegistry
         // Inherit host if not set
         if (! isset($options['host']) && isset($oldOptions['host'])) {
             $options['host'] = $oldOptions['host'];
+        }
+        // Merge bindings (associative, later overrides earlier)
+        if (isset($options['bind']) && isset($oldOptions['bind'])) {
+            $options['bind'] = array_merge($oldOptions['bind'], $options['bind']);
+        } elseif (isset($oldOptions['bind'])) {
+            $options['bind'] = $oldOptions['bind'];
         }
         // Merge all options
         $merged = $oldOptions;
@@ -217,6 +224,10 @@ class RouteRegistry
 
         $route = new Route;
         $route->setController($controller)->setAction($action)->filter($this->options['filter'])->setUri($uri)->setVerb($method);
+
+        foreach ($this->options['bind'] ?? [] as $param => $binding) {
+            $route->bind($param, $binding['model'], $binding['resolver'] ?? null);
+        }
 
         if ($this->options['host'] ?? false) {
             $uri = $this->options['host'] . '/' . trim($uri, '/');

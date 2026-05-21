@@ -144,6 +144,19 @@ final class DispatcherTest extends TestCase
 
         $this->assertEquals('5:10', $dispatcher->dispatch());
     }
+
+    public function testGroupLevelBindingsResolveAtDispatchTime()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/posts/7';
+
+        $this->container->get('route')->group(['bind' => ['id' => ['model' => MockBindable::class, 'resolver' => null]]], function ($route) {
+            $route->get('/posts/:id', 'BindableController', 'show');
+        });
+        $this->container->get('router')->parse('/posts/7');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+
+        $this->assertEquals(7, $dispatcher->dispatch());
+    }
 }
 
 class MockController
