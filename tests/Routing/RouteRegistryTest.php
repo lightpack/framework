@@ -609,6 +609,50 @@ final class RouteRegistryTest extends TestCase
         $this->assertEquals('Item', $route->getBindings()['id']['model']);
     }
 
+    public function testGroupBindSupportsShortSyntax()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['note' => 'Note']], function ($route) {
+            $route->get('/notes/:note', 'NotesController', 'show');
+        });
+
+        $route = $routeRegistry->matches('/notes/5');
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['note']['model']);
+        $this->assertNull($bindings['note']['resolver']);
+    }
+
+    public function testGroupBindShortSyntaxMergedWithFullSyntax()
+    {
+        $resolver = fn($slug) => null;
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['note' => 'Note']], function ($route) use ($resolver) {
+            $route->group(['bind' => ['post' => ['model' => 'Post', 'resolver' => $resolver]]], function ($route) {
+                $route->get('/notes/:note/posts/:post', 'PostController', 'show');
+            });
+        });
+
+        $route = $routeRegistry->matches('/notes/5/posts/3');
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['note']['model']);
+        $this->assertNull($bindings['note']['resolver']);
+        $this->assertEquals('Post', $bindings['post']['model']);
+        $this->assertSame($resolver, $bindings['post']['resolver']);
+    }
+
+    public function testGroupBindShortSyntaxCanBeOverridden()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['note' => 'Note']], function ($route) {
+            $route->group(['bind' => ['note' => 'Comment']], function ($route) {
+                $route->get('/comments/:note', 'CommentController', 'show');
+            });
+        });
+
+        $route = $routeRegistry->matches('/comments/5');
+        $this->assertEquals('Comment', $route->getBindings()['note']['model']);
+    }
+
     public function testRouteRegistrySignMethod()
     {
         $container = Container::getInstance();

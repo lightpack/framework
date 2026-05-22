@@ -226,6 +226,7 @@ class RouteRegistry
         $route->setController($controller)->setAction($action)->filter($this->options['filter'])->setUri($uri)->setVerb($method);
 
         foreach ($this->options['bind'] ?? [] as $param => $binding) {
+            $binding = \is_string($binding) ? ['model' => $binding, 'resolver' => null] : $binding;
             $route->bind($param, $binding['model'], $binding['resolver'] ?? null);
         }
 
