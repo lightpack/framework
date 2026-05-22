@@ -180,12 +180,19 @@ class Container
         return $this->instance($id, $instance);
     }
 
-    protected function resolveParameters(array $parameters): array
+    protected function resolveParameters(array $parameters, array $args = []): array
     {
         $parameters = $this->filterNonScalarParameters($parameters);
 
-        return array_map(function ($parameter) {
-            return $this->resolve($parameter->getType()->getName());
+        return array_map(function ($parameter) use ($args) {
+            $type = $parameter->getType()->getName();
+            $name = $parameter->getName();
+
+            if (isset($args[$name]) && is_object($args[$name]) && is_a($args[$name], $type)) {
+                return $args[$name];
+            }
+
+            return $this->resolve($type);
         }, $parameters);
     }
 
@@ -272,7 +279,7 @@ class Container
         $nonScalarParameters = $this->filterNonScalarParameters($parameters);
 
         // Resolve method parameters
-        $dependencies = $this->resolveParameters($nonScalarParameters);
+        $dependencies = $this->resolveParameters($nonScalarParameters, $args);
 
         // Prepare method's scalar arguments
         $arguments = [];

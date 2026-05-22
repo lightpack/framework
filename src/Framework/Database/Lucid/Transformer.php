@@ -2,14 +2,22 @@
 
 namespace Lightpack\Database\Lucid;
 
+/**
+ * Subclasses must implement data() with their specific model type:
+ *
+ *     protected function data(Post $post): array
+ *
+ * @method array data()
+ */
 abstract class Transformer
 {
     protected array $includes = [];
     protected array $fields = [];
     protected ?string $currentRelation = null;
 
-    abstract protected function data(Model $model): array;
-
+    /**
+     * Transform a single model or collection into an array representation.
+     */
     public function transform(Model|Collection $model): array
     {
         if (is_null($model)) {
@@ -23,6 +31,10 @@ abstract class Transformer
             }
 
             return $result;
+        }
+
+        if (! method_exists($this, 'data')) {
+            throw new \RuntimeException(static::class . ' must implement data()');
         }
 
         $data = $this->data($model);

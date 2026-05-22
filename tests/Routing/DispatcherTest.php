@@ -95,6 +95,68 @@ final class DispatcherTest extends TestCase
         $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
         $this->assertEquals('hello', $dispatcher->dispatch());
     }
+
+    public function testBindingResolvesModelByIdViaConstructor()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/items/42';
+
+        $this->container->get('route')->get('/items/:id', 'BindableController', 'show')
+            ->bind('id', MockBindable::class);
+        $this->container->get('router')->parse('/items/42');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+
+        $this->assertEquals(42, $dispatcher->dispatch());
+    }
+
+    public function testBindingResolvesModelViaCustomCallback()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/items/test-slug';
+
+        $this->container->get('route')->get('/items/:id', 'BindableController', 'show')
+            ->bind('id', MockBindable::class, fn ($id) => new MockBindable(999));
+        $this->container->get('router')->parse('/items/test-slug');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+
+        $this->assertEquals(999, $dispatcher->dispatch());
+    }
+
+    public function testBindingSkippedWhenRouteParamDoesNotExist()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/items/42';
+
+        $this->container->get('route')->get('/items/:id', 'IdController', 'show')
+            ->bind('nonexistent', MockBindable::class);
+        $this->container->get('router')->parse('/items/42');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+
+        $this->assertEquals('42', $dispatcher->dispatch());
+    }
+
+    public function testMultipleBindingsResolveIndependently()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/notes/5/comments/10';
+
+        $this->container->get('route')->get('/notes/:note/comments/:comment', 'MultiBindController', 'show')
+            ->bind('note', MockBindable::class)
+            ->bind('comment', MockBindable::class);
+        $this->container->get('router')->parse('/notes/5/comments/10');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+
+        $this->assertEquals('5:10', $dispatcher->dispatch());
+    }
+
+    public function testGroupLevelBindingsResolveAtDispatchTime()
+    {
+        $_SERVER['REQUEST_URI'] = '/lightpack/posts/7';
+
+        $this->container->get('route')->group(['bind' => ['id' => ['model' => MockBindable::class, 'resolver' => null]]], function ($route) {
+            $route->get('/posts/:id', 'BindableController', 'show');
+        });
+        $this->container->get('router')->parse('/posts/7');
+        $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
+
+        $this->assertEquals(7, $dispatcher->dispatch());
+    }
 }
 
 class MockController
@@ -107,5 +169,39 @@ class MockController
     public function foo($bar, $baz = null)
     {
         return $bar . $baz;
+    }
+}
+
+class MockBindable
+{
+    public $id;
+
+    public function __construct($id)
+    {
+        $this->id = $id;
+    }
+}
+
+class BindableController
+{
+    public function show(MockBindable $id)
+    {
+        return $id->id;
+    }
+}
+
+class IdController
+{
+    public function show($id)
+    {
+        return $id;
+    }
+}
+
+class MultiBindController
+{
+    public function show(MockBindable $note, MockBindable $comment)
+    {
+        return $note->id . ':' . $comment->id;
     }
 }

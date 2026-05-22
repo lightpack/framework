@@ -510,6 +510,149 @@ final class RouteRegistryTest extends TestCase
         $routeRegistry->url('users.show');
     }
 
+    public function testRouteCanStoreModelBindings()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $route = $routeRegistry->get('/notes/:id', 'NoteController', 'show');
+
+        $route->bind('id', 'Note');
+
+        $this->assertEquals([
+            'id' => ['model' => 'Note', 'resolver' => null],
+        ], $route->getBindings());
+    }
+
+    public function testRouteCanStoreModelBindingsWithCustomResolver()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $route = $routeRegistry->get('/notes/:slug', 'NoteController', 'show');
+        $resolver = fn ($slug) => new stdClass;
+
+        $route->bind('slug', 'Note', $resolver);
+
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['slug']['model']);
+        $this->assertSame($resolver, $bindings['slug']['resolver']);
+    }
+
+    public function testRouteCanStoreMultipleBindings()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $route = $routeRegistry->get('/notes/:note/comments/:comment', 'CommentController', 'show');
+
+        $route->bind('note', 'Note')->bind('comment', 'Comment');
+
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['note']['model']);
+        $this->assertEquals('Comment', $bindings['comment']['model']);
+    }
+
+    public function testGroupLevelBindingsAppliedToRoutes()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['id' => ['model' => 'Note', 'resolver' => null]]], function ($route) {
+            $route->get('/notes/:id', 'NoteController', 'show');
+        });
+
+        $route = $routeRegistry->matches('/notes/5');
+        $this->assertEquals(['id' => ['model' => 'Note', 'resolver' => null]], $route->getBindings());
+    }
+
+    public function testGroupLevelBindingsDoNotLeakOutsideGroup()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['id' => ['model' => 'Note', 'resolver' => null]]], function ($route) {
+            $route->get('/notes/:id', 'NoteController', 'show');
+        });
+        $routeRegistry->get('/users/:id', 'UserController', 'show');
+
+        $route = $routeRegistry->matches('/users/5');
+        $this->assertEquals([], $route->getBindings());
+    }
+
+    public function testNestedGroupBindingsMerge()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['note' => ['model' => 'Note', 'resolver' => null]]], function ($route) {
+            $route->group(['bind' => ['comment' => ['model' => 'Comment', 'resolver' => null]]], function ($route) {
+                $route->get('/notes/:note/comments/:comment', 'CommentController', 'show');
+            });
+        });
+
+        $route = $routeRegistry->matches('/notes/1/comments/2');
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['note']['model']);
+        $this->assertEquals('Comment', $bindings['comment']['model']);
+    }
+
+    public function testChildGroupBindingOverridesParentForSameParam()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['id' => ['model' => 'Note', 'resolver' => null]]], function ($route) {
+            $route->group(['bind' => ['id' => ['model' => 'Comment', 'resolver' => null]]], function ($route) {
+                $route->get('/comments/:id', 'CommentController', 'show');
+            });
+        });
+
+        $route = $routeRegistry->matches('/comments/5');
+        $this->assertEquals('Comment', $route->getBindings()['id']['model']);
+    }
+
+    public function testRouteLevelBindOverridesGroupLevelBind()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['id' => ['model' => 'Note', 'resolver' => null]]], function ($route) {
+            $route->get('/items/:id', 'ItemController', 'show')->bind('id', 'Item');
+        });
+
+        $route = $routeRegistry->matches('/items/5');
+        $this->assertEquals('Item', $route->getBindings()['id']['model']);
+    }
+
+    public function testGroupBindSupportsShortSyntax()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['note' => 'Note']], function ($route) {
+            $route->get('/notes/:note', 'NotesController', 'show');
+        });
+
+        $route = $routeRegistry->matches('/notes/5');
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['note']['model']);
+        $this->assertNull($bindings['note']['resolver']);
+    }
+
+    public function testGroupBindShortSyntaxMergedWithFullSyntax()
+    {
+        $resolver = fn ($slug) => null;
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['note' => 'Note']], function ($route) use ($resolver) {
+            $route->group(['bind' => ['post' => ['model' => 'Post', 'resolver' => $resolver]]], function ($route) {
+                $route->get('/notes/:note/posts/:post', 'PostController', 'show');
+            });
+        });
+
+        $route = $routeRegistry->matches('/notes/5/posts/3');
+        $bindings = $route->getBindings();
+        $this->assertEquals('Note', $bindings['note']['model']);
+        $this->assertNull($bindings['note']['resolver']);
+        $this->assertEquals('Post', $bindings['post']['model']);
+        $this->assertSame($resolver, $bindings['post']['resolver']);
+    }
+
+    public function testGroupBindShortSyntaxCanBeOverridden()
+    {
+        $routeRegistry = $this->getRouteRegistry();
+        $routeRegistry->group(['bind' => ['note' => 'Note']], function ($route) {
+            $route->group(['bind' => ['note' => 'Comment']], function ($route) {
+                $route->get('/comments/:note', 'CommentController', 'show');
+            });
+        });
+
+        $route = $routeRegistry->matches('/comments/5');
+        $this->assertEquals('Comment', $route->getBindings()['note']['model']);
+    }
+
     public function testRouteRegistrySignMethod()
     {
         $container = Container::getInstance();

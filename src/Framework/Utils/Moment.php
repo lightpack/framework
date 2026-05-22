@@ -122,11 +122,11 @@ class Moment
         return $this->create('last day of last month')->format($format ?? $this->format);
     }
 
-    public function diff(string $datetime1, string $datetime2): \DateInterval
+    public function diff(DateTime|string $datetime1, DateTime|string $datetime2): \DateInterval
     {
         try {
-            $date1 = $this->create($datetime1);
-            $date2 = $this->create($datetime2);
+            $date1 = $this->resolve($datetime1);
+            $date2 = $this->resolve($datetime2);
 
             return $date1->diff($date2, true);
         } catch (\Exception $e) {
@@ -134,9 +134,68 @@ class Moment
         }
     }
 
-    public function daysBetween(string $datetime1, string $datetime2): int
+    public function daysBetween(DateTime|string $datetime1, DateTime|string $datetime2): int
     {
         return $this->diff($datetime1, $datetime2)->days;
+    }
+
+    public function humanDiff(DateTime|string $from, DateTime|string $to = 'now'): string
+    {
+        $date1 = $this->resolve($from);
+        $date2 = $this->resolve($to);
+        $isPast = $date1->getTimestamp() <= $date2->getTimestamp();
+        $seconds = abs($date2->getTimestamp() - $date1->getTimestamp());
+
+        if ($seconds <= 60) {
+            return $isPast ? 'just now' : 'in a moment';
+        }
+
+        $minutes = round($seconds / 60);
+        if ($minutes == 1) {
+            return $isPast ? 'a minute ago' : 'in a minute';
+        }
+        if ($minutes <= 60) {
+            return $isPast ? "{$minutes} minutes ago" : "in {$minutes} minutes";
+        }
+
+        $hours = round($seconds / 3600);
+        if ($hours == 1) {
+            return $isPast ? 'an hour ago' : 'in an hour';
+        }
+        if ($hours < 24) {
+            return $isPast ? "{$hours} hours ago" : "in {$hours} hours";
+        }
+
+        $days = round($seconds / 86400);
+        if ($days == 1) {
+            return $isPast ? 'yesterday' : 'tomorrow';
+        }
+        if ($days < 7) {
+            return $isPast ? "{$days} days ago" : "in {$days} days";
+        }
+
+        $weeks = round($seconds / 604800);
+        if ($weeks == 1) {
+            return $isPast ? 'a week ago' : 'in a week';
+        }
+        if ($weeks <= 4.3) {
+            return $isPast ? "{$weeks} weeks ago" : "in {$weeks} weeks";
+        }
+
+        $months = round($seconds / 2629743.83);
+        if ($months == 1) {
+            return $isPast ? 'a month ago' : 'in a month';
+        }
+        if ($months <= 12) {
+            return $isPast ? "{$months} months ago" : "in {$months} months";
+        }
+
+        $years = round($seconds / 31556926);
+        if ($years == 1) {
+            return $isPast ? 'a year ago' : 'in a year';
+        }
+
+        return $isPast ? "{$years} years ago" : "in {$years} years";
     }
 
     public function now(?string $format = null): string
@@ -155,11 +214,11 @@ class Moment
         }
     }
 
-    public function fromNow(string $datetime = 'now'): ?string
+    public function fromNow(DateTime|string $datetime = 'now'): string
     {
         try {
             $current = $this->create('now');
-            $target = $this->create($datetime);
+            $target = $this->resolve($datetime);
 
             $seconds = $current->getTimestamp() - $target->getTimestamp();
 
@@ -179,7 +238,7 @@ class Moment
             if ($hours == 1) {
                 return 'an hour ago';
             }
-            if ($hours <= 24) {
+            if ($hours < 24) {
                 return "{$hours} hours ago";
             }
 
@@ -187,7 +246,7 @@ class Moment
             if ($days == 1) {
                 return 'yesterday';
             }
-            if ($days <= 7) {
+            if ($days < 7) {
                 return "{$days} days ago";
             }
 
@@ -216,5 +275,62 @@ class Moment
         } catch (\Exception $e) {
             throw new InvalidArgumentException("Invalid datetime format: {$datetime}");
         }
+    }
+
+    public function isToday(DateTime|string $datetime = 'now'): bool
+    {
+        $date = $this->resolve($datetime);
+        $today = $this->create('today');
+
+        return $date->format('Y-m-d') === $today->format('Y-m-d');
+    }
+
+    public function isPast(DateTime|string $datetime = 'now'): bool
+    {
+        return $this->resolve($datetime)->getTimestamp() < $this->create('now')->getTimestamp();
+    }
+
+    public function isFuture(DateTime|string $datetime = 'now'): bool
+    {
+        return $this->resolve($datetime)->getTimestamp() > $this->create('now')->getTimestamp();
+    }
+
+    public function startOfDay(DateTime|string $datetime = 'now', ?string $format = null): string
+    {
+        $date = $this->resolve($datetime);
+        $date->setTime(0, 0, 0);
+
+        return $date->format($format ?? $this->format);
+    }
+
+    public function endOfDay(DateTime|string $datetime = 'now', ?string $format = null): string
+    {
+        $date = $this->resolve($datetime);
+        $date->setTime(23, 59, 59);
+
+        return $date->format($format ?? $this->format);
+    }
+
+    public function age(DateTime|string $birthdate): int
+    {
+        $birth = $this->resolve($birthdate);
+        $now = $this->create('now');
+
+        return $birth->diff($now)->y;
+    }
+
+    /**
+     * Resolve a DateTime or string into a DateTime object in Moment's timezone.
+     */
+    private function resolve(DateTime|string $datetime): DateTime
+    {
+        if ($datetime instanceof DateTime) {
+            $clone = clone $datetime;
+            $clone->setTimezone($this->timezone);
+
+            return $clone;
+        }
+
+        return $this->create($datetime);
     }
 }

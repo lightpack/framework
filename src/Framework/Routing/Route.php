@@ -13,6 +13,7 @@ class Route
     private string $name;
     private array $pattern = [];
     private string $host = '';
+    private array $bindings = [];
 
     /**
      * @var string HTTP method
@@ -78,6 +79,29 @@ class Route
     public function getFilters(): array
     {
         return $this->filters;
+    }
+
+    /**
+     * Bind a route parameter to a model class or custom resolver.
+     *
+     * @param string $param The route parameter name.
+     * @param string $model The model class to resolve to.
+     * @param \Closure|null $resolver Optional callback to resolve the model.
+     * @return Route
+     */
+    public function bind(string $param, string $model, ?\Closure $resolver = null): self
+    {
+        $this->bindings[$param] = ['model' => $model, 'resolver' => $resolver];
+
+        return $this;
+    }
+
+    /**
+     * @return array Array of route model bindings.
+     */
+    public function getBindings(): array
+    {
+        return $this->bindings;
     }
 
     /**
