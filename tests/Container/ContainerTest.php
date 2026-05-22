@@ -228,7 +228,7 @@ final class ContainerTest extends TestCase
     public function testContainerCallUsesPreResolvedObjectFromArgsForNonScalarParameter()
     {
         $this->container->bind(InterfaceFoo::class, FooA::class);
-        $preResolved = new FooA();
+        $preResolved = new FooA;
 
         $result = $this->container->call(ControllerWithTypedParam::class, 'action', [
             'foo' => $preResolved,

@@ -113,7 +113,7 @@ final class DispatcherTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/lightpack/items/test-slug';
 
         $this->container->get('route')->get('/items/:id', 'BindableController', 'show')
-            ->bind('id', MockBindable::class, fn($id) => new MockBindable(999));
+            ->bind('id', MockBindable::class, fn ($id) => new MockBindable(999));
         $this->container->get('router')->parse('/items/test-slug');
         $dispatcher = new \Lightpack\Routing\Dispatcher($this->container);
 

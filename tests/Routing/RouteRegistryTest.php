@@ -526,7 +526,7 @@ final class RouteRegistryTest extends TestCase
     {
         $routeRegistry = $this->getRouteRegistry();
         $route = $routeRegistry->get('/notes/:slug', 'NoteController', 'show');
-        $resolver = fn($slug) => new stdClass();
+        $resolver = fn ($slug) => new stdClass;
 
         $route->bind('slug', 'Note', $resolver);
 
@@ -624,7 +624,7 @@ final class RouteRegistryTest extends TestCase
 
     public function testGroupBindShortSyntaxMergedWithFullSyntax()
     {
-        $resolver = fn($slug) => null;
+        $resolver = fn ($slug) => null;
         $routeRegistry = $this->getRouteRegistry();
         $routeRegistry->group(['bind' => ['note' => 'Note']], function ($route) use ($resolver) {
             $route->group(['bind' => ['post' => ['model' => 'Post', 'resolver' => $resolver]]], function ($route) {
