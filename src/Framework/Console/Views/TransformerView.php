@@ -11,12 +11,11 @@ class TransformerView
 
 namespace __NAMESPACE__;
 
-use Lightpack\Database\Lucid\Model;
 use Lightpack\Database\Lucid\Transformer;
 
 class __TRANSFORMER_NAME__ extends Transformer
 {
-    protected function data(Model \$model): array
+    protected function data(\$model): array
     {
         return [
             // ...
