@@ -4,11 +4,11 @@ use Lightpack\Database\Lucid\Transformer;
 
 class ProductApiTransformer extends Transformer
 {
-    protected function data($model): array
+    protected function data(Product $product): array
     {
         return [
-            'name' => $model->name,
-            'price' => $model->price,
+            'name' => $product->name,
+            'price' => $product->price,
         ];
     }
 }

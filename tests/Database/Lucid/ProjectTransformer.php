@@ -4,11 +4,11 @@ use Lightpack\Database\Lucid\Transformer;
 
 class ProjectTransformer extends Transformer
 {
-    protected function data($model): array
+    protected function data(Project $project): array
     {
         return [
-            'id' => $model->id,
-            'name' => $model->name,
+            'id' => $project->id,
+            'name' => $project->name,
         ];
     }
 

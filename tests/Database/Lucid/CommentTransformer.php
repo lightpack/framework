@@ -4,11 +4,11 @@ use Lightpack\Database\Lucid\Transformer;
 
 class CommentTransformer extends Transformer
 {
-    protected function data($model): array
+    protected function data(Comment $comment): array
     {
         return [
-            'id' => $model->id,
-            'content' => $model->content,
+            'id' => $comment->id,
+            'content' => $comment->content,
         ];
     }
 }

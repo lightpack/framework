@@ -4,13 +4,13 @@ use Lightpack\Database\Lucid\Transformer;
 
 class ProductViewTransformer extends Transformer
 {
-    protected function data($model): array
+    protected function data(Product $product): array
     {
         return [
-            'id' => $model->id,
-            'name' => $model->name,
-            'price' => $model->price,
-            'color' => $model->color,
+            'id' => $product->id,
+            'name' => $product->name,
+            'price' => $product->price,
+            'color' => $product->color,
         ];
     }
 }

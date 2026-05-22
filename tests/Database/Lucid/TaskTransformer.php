@@ -4,11 +4,11 @@ use Lightpack\Database\Lucid\Transformer;
 
 class TaskTransformer extends Transformer
 {
-    protected function data($model): array
+    protected function data(Task $task): array
     {
         return [
-            'id' => $model->id,
-            'name' => $model->name,
+            'id' => $task->id,
+            'name' => $task->name,
         ];
     }
 
