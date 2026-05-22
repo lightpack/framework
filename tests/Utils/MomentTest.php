@@ -257,4 +257,116 @@ final class MomentTest extends TestCase
         $datetime = date('Y-m-d H:i:s', strtotime('-2 year'));
         $this->assertEquals('2 years ago', $this->moment->fromNow($datetime));
     }
+
+    public function testFromNowWithDateTimeObject()
+    {
+        $date = new DateTime('-2 minute', new DateTimeZone('UTC'));
+        $this->assertEquals('2 minutes ago', $this->moment->fromNow($date));
+    }
+
+    public function testDiffWithDateTimeObjects()
+    {
+        $date1 = new DateTime('2021-07-23 14:25:45', new DateTimeZone('UTC'));
+        $date2 = new DateTime('2019-03-14 08:23:12', new DateTimeZone('UTC'));
+
+        $diff = $this->moment->diff($date1, $date2);
+
+        $this->assertEquals(2, $diff->y);
+        $this->assertEquals(4, $diff->m);
+        $this->assertEquals(9, $diff->d);
+    }
+
+    public function testDaysBetweenWithDateTimeObjects()
+    {
+        $date1 = new DateTime('2019-03-14 08:23:12', new DateTimeZone('UTC'));
+        $date2 = new DateTime('2019-03-15 08:23:12', new DateTimeZone('UTC'));
+
+        $this->assertEquals(1, $this->moment->daysBetween($date1, $date2));
+    }
+
+    public function testHumanDiffPast()
+    {
+        $this->assertEquals('just now', $this->moment->humanDiff('now'));
+        $this->assertEquals('a minute ago', $this->moment->humanDiff('-61 seconds'));
+        $this->assertEquals('2 minutes ago', $this->moment->humanDiff('-2 minute'));
+        $this->assertEquals('an hour ago', $this->moment->humanDiff('-61 minutes'));
+        $this->assertEquals('yesterday', $this->moment->humanDiff('-1 day'));
+        $this->assertEquals('a week ago', $this->moment->humanDiff('-1 week'));
+        $this->assertEquals('a month ago', $this->moment->humanDiff('-35 day'));
+        $this->assertEquals('a year ago', $this->moment->humanDiff('-13 months'));
+    }
+
+    public function testHumanDiffFuture()
+    {
+        $this->assertEquals('in a minute', $this->moment->humanDiff('+61 seconds'));
+        $this->assertEquals('in 2 minutes', $this->moment->humanDiff('+2 minute'));
+        $this->assertEquals('in an hour', $this->moment->humanDiff('+61 minutes'));
+        $this->assertEquals('tomorrow', $this->moment->humanDiff('+1 day'));
+        $this->assertEquals('in a week', $this->moment->humanDiff('+1 week'));
+        $this->assertEquals('in a month', $this->moment->humanDiff('+35 day'));
+        $this->assertEquals('in a year', $this->moment->humanDiff('+13 months'));
+    }
+
+    public function testHumanDiffWithDateTimeObjects()
+    {
+        $from = new DateTime('-2 minute', new DateTimeZone('UTC'));
+        $to = new DateTime('now', new DateTimeZone('UTC'));
+
+        $this->assertEquals('2 minutes ago', $this->moment->humanDiff($from, $to));
+    }
+
+    public function testIsToday()
+    {
+        $this->assertTrue($this->moment->isToday());
+        $this->assertTrue($this->moment->isToday('now'));
+        $this->assertFalse($this->moment->isToday('yesterday'));
+        $this->assertFalse($this->moment->isToday('tomorrow'));
+    }
+
+    public function testIsPast()
+    {
+        $this->assertTrue($this->moment->isPast('yesterday'));
+        $this->assertFalse($this->moment->isPast('tomorrow'));
+    }
+
+    public function testIsFuture()
+    {
+        $this->assertTrue($this->moment->isFuture('tomorrow'));
+        $this->assertFalse($this->moment->isFuture('yesterday'));
+    }
+
+    public function testStartOfDay()
+    {
+        $this->assertEquals(
+            '2019-03-14 00:00:00',
+            $this->moment->startOfDay('2019-03-14 08:23:12')
+        );
+    }
+
+    public function testEndOfDay()
+    {
+        $this->assertEquals(
+            '2019-03-14 23:59:59',
+            $this->moment->endOfDay('2019-03-14 08:23:12')
+        );
+    }
+
+    public function testAge()
+    {
+        $birthdate = date('Y-m-d', strtotime('-25 year'));
+        $this->assertEquals(25, $this->moment->age($birthdate));
+    }
+
+    public function testTimezoneNormalizationWithDateTimeObjects()
+    {
+        // Create a DateTime in IST (UTC+5:30)
+        $istDate = new DateTime('-2 minute', new DateTimeZone('Asia/Kolkata'));
+
+        // Create moment in UTC
+        $utcMoment = new Moment('UTC');
+
+        // fromNow should correctly handle the timezone conversion
+        $result = $utcMoment->fromNow($istDate);
+        $this->assertEquals('2 minutes ago', $result);
+    }
 }
