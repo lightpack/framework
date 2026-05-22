@@ -4,7 +4,7 @@
 
 ### Features
 
-- **Route Model Binding**: Automatic dependency injection for route parameters (`/notes/:note` → `Note $note`). Group-level binding with inheritance and override support.
+- **Route Model Binding**: Automatic dependency injection for route parameters. Group-level binding with inheritance and override support.
 - **Moment**: Added methods for date comparison and boundary calculations and improved datetime handling.
 
 ## [0.9.4] - 2026-05-20
