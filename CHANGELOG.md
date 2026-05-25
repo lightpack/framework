@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.6] - 2026-05-25
+
+### Features
+
+- **Process::spawn()**: Added support to spawn child processes. Streams output directly to the terminal (no buffering). Supports custom working directory, environment variables, and signal-safe termination.
+- **WatchesEnvTrait**: Monitors `.env` file changes and gracefully restarts the child process. Used by `ServeCommand` and `ProcessJobs`.
+
 ## [0.9.5] - 2026-05-22
 
 ### Features
