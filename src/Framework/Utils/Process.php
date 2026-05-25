@@ -49,6 +49,37 @@ class Process
         $this->executeProcess($command, $callback);
     }
 
+    /**
+     * Spawn a long-running process that inherits the parent's STDIN/STDOUT/STDERR.
+     *
+     * Unlike execute(), output is not captured — it streams directly to the terminal.
+     * Returns a ChildProcess handle for monitoring and lifecycle management.
+     *
+     * @param string|array $command The command to spawn
+     * @param array|null   $env     Environment variables; null inherits the parent environment
+     */
+    public function spawn(string|array $command, ?array $env = null): ChildProcess
+    {
+        $this->validateCommand($command);
+
+        $escapedCommand = $this->escapeCommand($command);
+        $pipes = [];
+
+        $resource = proc_open(
+            $escapedCommand,
+            [STDIN, STDOUT, STDERR],
+            $pipes,
+            $this->getDirectory(),
+            $env
+        );
+
+        if (! is_resource($resource)) {
+            throw new RuntimeException('Failed to spawn the process');
+        }
+
+        return new ChildProcess($resource);
+    }
+
     public function getOutput(): string
     {
         return $this->output;

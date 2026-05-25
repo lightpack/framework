@@ -3,9 +3,12 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Console\WatchesEnvTrait;
 
 class ServeCommand extends Command
 {
+    use WatchesEnvTrait;
+
     public function run()
     {
         chdir(DIR_ROOT);
@@ -31,7 +34,7 @@ class ServeCommand extends Command
 
         $this->printServerInfo($host, $port);
 
-        passthru('"' . PHP_BINARY . '"' . ' -S ' . "'{$host}:{$port}'" . ' -t public');
+        $this->runWatched([PHP_BINARY, '-S', "{$host}:{$port}", '-t', 'public']);
 
         return self::SUCCESS;
     }

@@ -3,22 +3,41 @@
 namespace Lightpack\Console\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Console\WatchesEnvTrait;
 use Lightpack\Jobs\Worker;
 
 class ProcessJobs extends Command
 {
+    use WatchesEnvTrait;
+
     public function run()
     {
         $queues = $this->parseQueueArgument() ?? ['default'];
-        $sleep = $this->args->get('sleep') ?? 5;
-        $cooldown = $this->args->get('cooldown') ?? 0;
+        $sleep = (int) ($this->args->get('sleep') ?? 5);
+        $cooldown = (int) ($this->args->get('cooldown') ?? 0);
 
-        $this->printBanner($queues, $sleep, $cooldown);
+        if ($this->args->has('no-watch')) {
+            $this->printBanner($queues, $sleep, $cooldown);
+            $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
+            $worker->run();
 
-        $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
-        $worker->run();
+            return self::SUCCESS;
+        }
+
+        $this->runWatched($this->buildWorkerCommand());
 
         return self::SUCCESS;
+    }
+
+    private function buildWorkerCommand(): array
+    {
+        $command = [PHP_BINARY, DIR_ROOT . DIRECTORY_SEPARATOR . 'console', 'jobs:run', '--no-watch'];
+
+        foreach ($this->args->options() as $key => $value) {
+            $command[] = $value === true ? "--{$key}" : "--{$key}={$value}";
+        }
+
+        return $command;
     }
 
     private function printBanner(array $queues, int $sleep, int $cooldown): void
