@@ -2,52 +2,29 @@
 
 namespace Lightpack\Console;
 
+use Lightpack\Utils\Process;
+
 trait WatchesEnvTrait
 {
     private function runWatched(array $command): void
     {
         $envFile = DIR_ROOT . DIRECTORY_SEPARATOR . '.env';
         $lastMtime = $this->getEnvMtime($envFile);
-
-        if (function_exists('pcntl_async_signals')) {
-            pcntl_async_signals(true);
-        }
+        $process = new Process;
 
         while (true) {
-            $pipes = [];
-            $process = proc_open(
-                $command,
-                [STDIN, STDOUT, STDERR],
-                $pipes,
-                null,
-                $this->buildEnv($envFile)
-            );
+            $child = $process->spawn($command, $this->buildEnv($envFile));
+            $restarting = false;
 
-            if ($process === false) {
-                break;
-            }
-
-            if (function_exists('pcntl_signal')) {
-                pcntl_signal(SIGINT, function () use ($process) {
-                    proc_terminate($process);
-                    proc_close($process);
-                    exit(0);
-                });
-            }
-
-            while (true) {
-                if (!proc_get_status($process)['running']) {
-                    proc_close($process);
-                    return;
-                }
-
+            while ($child->isRunning()) {
                 clearstatcache(true, $envFile);
                 $currentMtime = $this->getEnvMtime($envFile);
 
                 if ($currentMtime !== $lastMtime) {
                     $lastMtime = $currentMtime;
-                    proc_terminate($process);
-                    proc_close($process);
+                    $restarting = true;
+                    $child->terminate();
+                    $child->wait();
                     $this->output->newline();
                     $this->output->warningLabel();
                     $this->output->warning(' .env changed — restarting...');
@@ -57,6 +34,10 @@ trait WatchesEnvTrait
                 }
 
                 usleep(500000);
+            }
+
+            if (! $restarting) {
+                return;
             }
         }
     }
