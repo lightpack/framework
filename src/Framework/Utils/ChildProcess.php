@@ -15,6 +15,9 @@ use RuntimeException;
  *   1. pcntl_signal (SIGINT/SIGTERM) — graceful Ctrl+C on Unix/macOS
  *   2. register_shutdown_function   — fallback for crashes and fatal exits
  *   3. __destruct                   — safety net when the instance is GC'd
+ *
+ * This class is not meant to be instantiated directly — It is used internally
+ * by Process::spawn() to manage long-running processes with inherited stdio.
  */
 class ChildProcess
 {
