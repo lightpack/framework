@@ -2,14 +2,14 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\Jobs\Worker;
 use Lightpack\Console\Command;
 use Lightpack\Console\WatchesEnvTrait;
+use Lightpack\Jobs\Worker;
 
 class ProcessJobs extends Command
 {
     use WatchesEnvTrait;
-    
+
     public function run()
     {
         $queues = $this->parseQueueArgument() ?? ['default'];
@@ -20,6 +20,7 @@ class ProcessJobs extends Command
             $this->printBanner($queues, $sleep, $cooldown);
             $worker = new Worker(['sleep' => $sleep, 'queues' => $queues, 'cooldown' => $cooldown]);
             $worker->run();
+
             return self::SUCCESS;
         }
 

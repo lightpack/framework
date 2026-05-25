@@ -30,6 +30,7 @@ trait WatchesEnvTrait
                     $this->output->warning(' .env changed — restarting...');
                     $this->output->newline();
                     sleep(1);
+
                     break;
                 }
 
@@ -46,13 +47,13 @@ trait WatchesEnvTrait
     {
         $env = getenv();
 
-        if (!file_exists($file)) {
+        if (! file_exists($file)) {
             return $env;
         }
 
         foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
             $line = trim($line);
-            if (str_starts_with($line, '#') || !str_contains($line, '=')) {
+            if (str_starts_with($line, '#') || ! str_contains($line, '=')) {
                 continue;
             }
             [$key, $value] = explode('=', $line, 2);

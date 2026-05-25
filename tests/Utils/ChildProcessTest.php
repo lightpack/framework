@@ -251,7 +251,7 @@ class ChildProcessTest extends TestCase
 
     public function testSpawnWithMissingEnvironmentVariableExitsNonZero(): void
     {
-        $env = array_filter(getenv(), fn($key) => $key !== 'LIGHTPACK_TEST_VAR', ARRAY_FILTER_USE_KEY);
+        $env = array_filter(getenv(), fn ($key) => $key !== 'LIGHTPACK_TEST_VAR', ARRAY_FILTER_USE_KEY);
 
         $child = $this->process->spawn(
             ['/bin/sh', '-c', 'test "$LIGHTPACK_TEST_VAR" = "hello"'],

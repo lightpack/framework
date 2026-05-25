@@ -8,7 +8,7 @@ use Lightpack\Console\WatchesEnvTrait;
 class ServeCommand extends Command
 {
     use WatchesEnvTrait;
-    
+
     public function run()
     {
         chdir(DIR_ROOT);
