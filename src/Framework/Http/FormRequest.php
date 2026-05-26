@@ -16,8 +16,9 @@ abstract class FormRequest extends Request
     /**
      * @internal This method is for internal use only.
      */
-    public function __boot(Container $container, Validator $validator, Redirect $redirect, Session $session)
+    public function __boot(Validator $validator, Redirect $redirect, Session $session)
     {
+        $container = Container::getInstance();
         $this->validator = $validator;
 
         $container->call($this, 'rules');
@@ -36,7 +37,7 @@ abstract class FormRequest extends Request
 
             $container->call($this, 'beforeSend');
 
-            return;
+            throw new ValidationException;
         }
 
         $container->call($this, 'beforeRedirect');
@@ -45,16 +46,27 @@ abstract class FormRequest extends Request
         throw new ValidationException;
     }
 
+    /**
+     * Manipulate request input data before validation
+     */
     protected function data()
     {
         // ...
     }
 
+    /**
+     * Hook called before sending a JSON validation error response.
+     * This is useful in API contexts where you want to modify the error response.
+     */
     protected function beforeSend()
     {
         // ...
     }
 
+    /**
+     * Hook called before redirecting back on validation failure.
+     * This is useful in web contexts where you want to modify the redirect response.
+     */
     protected function beforeRedirect()
     {
         // ...
