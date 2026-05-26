@@ -29,7 +29,7 @@ abstract class FormRequest extends Request
         }
 
         if ($this->isAjax() || $this->expectsJson()) {
-            $container->get('redirect')->setStatus(422)->setMessage('Unprocessable Entity')->json([
+            $response = $container->get('response')->setStatus(422)->setMessage('Unprocessable Entity')->json([
                     'success' => false,
                     'message' => 'Request validation failed',
                     'errors' => $validator->getErrors(),
@@ -37,7 +37,9 @@ abstract class FormRequest extends Request
 
             $container->call($this, 'beforeSend');
 
-            throw new ValidationException;
+            $e = new ValidationException;
+            $e->setResponse($response);
+            throw $e;
         }
 
         $container->call($this, 'beforeRedirect');

@@ -51,7 +51,7 @@ class Dispatcher
         try {
             return $this->container->call($controller, $action, $params);
         } catch (ValidationException $e) {
-            return $this->container->get('redirect');
+            return $e->getResponse() ?? $this->container->get('redirect');
         }
     }
 

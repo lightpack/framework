@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.8] - 2026-05-26
+
+### Fixes & Refactors
+
+- **ValidationException**: Added `setResponse()` / `getResponse()` to carry a prepared `Response` through the exception boundary.
+- **FormRequest / API Validation**: JSON validation failure path now builds a `Response` via the `response()` service (instead of `redirect()`) and carries it through `ValidationException`.
+- **Dispatcher**: Returns the `Response` carried by `ValidationException` when present, falling back to `redirect()` for web contexts.
+
 ## [0.9.7] - 2026-05-26
 
 ### Fixes & Refactors
