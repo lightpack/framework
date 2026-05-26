@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.7] - 2026-05-26
+
+### Fixes & Refactors
+
+- **FormRequest / Container**: Fixed container self-resolution bug in `__boot()` by using `Container::getInstance()` instead of DI-injected `Container`, preventing "Service `redirect` is not registered" errors during API validation.
+- **FormRequest / API Validation**: Fixed JSON validation failure path to throw `ValidationException` instead of returning, ensuring API endpoints correctly return `422 Unprocessable Entity`.
+- **FormRequest**: Improved PHPDoc for `data()`, `beforeSend()`, and `beforeRedirect()` hooks.
+
 ## [0.9.6] - 2026-05-25
 
 ### Features
