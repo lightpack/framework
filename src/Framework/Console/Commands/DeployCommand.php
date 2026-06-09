@@ -87,6 +87,17 @@ return [
             'key' => '~/.ssh/id_rsa',
             'path' => '/var/www/myapp',
             'branch' => 'main',
+
+            // Optional: override default deploy commands
+            // 'commands' => [
+            //     'cd {path}',
+            //     'git fetch origin {branch}',
+            //     'git reset --hard origin/{branch}',
+            //     'composer install --no-dev --optimize-autoloader',
+            //     'php lightpack migrate:up',
+            //     'php lightpack cache:clear',
+            //     'php lightpack queue:restart',
+            // ],
         ],
         'staging' => [
             'host' => '5.6.7.8',

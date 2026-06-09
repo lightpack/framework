@@ -47,16 +47,22 @@ class Deployer
         $path = $env['path'];
         $branch = $env['branch'] ?? 'main';
 
-        $commands = [
-            "cd {$path}",
-            "git fetch origin {$branch}",
-            "git reset --hard origin/{$branch}",
-            "composer install --no-dev --optimize-autoloader",
-            "php lightpack migrate:up",
-            "php lightpack cache:clear",
+        $commands = $env['commands'] ?? [
+            'cd {path}',
+            'git fetch origin {branch}',
+            'git reset --hard origin/{branch}',
+            'composer install --no-dev --optimize-autoloader',
+            'php lightpack migrate:up',
+            'php lightpack cache:clear',
         ];
 
-        return implode(' && ', $commands);
+        $script = implode(' && ', $commands);
+
+        return str_replace(
+            ['{path}', '{branch}'],
+            [$path, $branch],
+            $script
+        );
     }
 
     private function buildSshCommand(array $env, string $remoteScript): string
