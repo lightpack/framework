@@ -16,6 +16,7 @@ use Lightpack\Console\Commands\CreateProvider;
 use Lightpack\Console\Commands\CreateRequest;
 use Lightpack\Console\Commands\CreateSeeder;
 use Lightpack\Console\Commands\CreateTool;
+use Lightpack\Console\Commands\DeployCommand;
 use Lightpack\Console\Commands\CreateTransformer;
 use Lightpack\Console\Commands\GenerateAppKey;
 use Lightpack\Console\Commands\LinkStorage;
@@ -53,6 +54,7 @@ class Console
         'create:config' => CreateConfig::class,
         'db:seed' => SeedCommand::class,
         'schedule:events' => ScheduleEvents::class,
+        'app:deploy' => DeployCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,
