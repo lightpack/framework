@@ -2,9 +2,11 @@
 
 namespace Lightpack\Deploy;
 
+use Lightpack\Utils\Process;
+
 /**
  * Handles remote deployment via SSH.
- * Executes deploy commands on a remote server using system SSH.
+ * Uses Lightpack\Utils\Process for robust process execution.
  */
 class Deployer
 {
@@ -30,8 +32,9 @@ class Deployer
 
         $remoteScript = $this->buildRemoteScript($env);
         $sshCommand = $this->buildSshCommand($env, $remoteScript);
+        $timeout = $env['timeout'] ?? 300;
 
-        return $this->execute($sshCommand);
+        return $this->execute($sshCommand, $timeout);
     }
 
     /**
@@ -65,19 +68,23 @@ class Deployer
         );
     }
 
-    private function buildSshCommand(array $env, string $remoteScript): string
+    /**
+     * Build SSH command as an array so Process can escape each argument correctly.
+     */
+    private function buildSshCommand(array $env, string $remoteScript): array
     {
         $user = $env['user'];
         $host = $env['host'];
         $key = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
 
-        return sprintf(
-            'ssh -i %s -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 %s@%s %s',
-            escapeshellarg($key),
-            escapeshellarg($user),
-            escapeshellarg($host),
-            escapeshellarg($remoteScript)
-        );
+        return [
+            'ssh',
+            '-i', $key,
+            '-o', 'StrictHostKeyChecking=accept-new',
+            '-o', 'ConnectTimeout=10',
+            "{$user}@{$host}",
+            $remoteScript,
+        ];
     }
 
     private function resolveKeyPath(string $key): string
@@ -91,58 +98,25 @@ class Deployer
     }
 
     /**
-     * Execute a shell command and stream output in real-time.
+     * Execute the SSH command using Process utility.
      *
+     * @param string|array $command
      * @return array{success: bool, exit_code: int, output: string}
      */
-    private function execute(string $command): array
+    private function execute(string|array $command, int $timeout = 300): array
     {
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
-
-        $process = proc_open($command, $descriptors, $pipes, null, null);
-
-        if (!is_resource($process)) {
-            throw new \RuntimeException('Failed to start SSH process. Is ssh installed?');
-        }
-
-        fclose($pipes[0]);
-
+        $process = new Process();
         $output = '';
 
-        // Read stdout and stderr in real-time
-        while (true) {
-            $status = proc_get_status($process);
-
-            $stdout = stream_get_contents($pipes[1]);
-            $stderr = stream_get_contents($pipes[2]);
-
-            if ($stdout !== false && $stdout !== '') {
-                $output .= $stdout;
-                echo $stdout;
+        $process
+            ->setTimeout($timeout)
+            ->execute($command, function (string $line, string $type) use (&$output) {
+                $output .= $line;
+                echo $line;
                 flush();
-            }
+            });
 
-            if ($stderr !== false && $stderr !== '') {
-                $output .= $stderr;
-                echo $stderr;
-                flush();
-            }
-
-            if (!$status['running']) {
-                break;
-            }
-
-            usleep(100000); // 100ms
-        }
-
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        $exitCode = proc_close($process);
+        $exitCode = $process->getExitCode() ?? -1;
 
         return [
             'success' => $exitCode === 0,
