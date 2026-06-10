@@ -38,6 +38,26 @@ class Deployer
     }
 
     /**
+     * Rollback to a previous commit on the specified environment.
+     *
+     * @return array{success: bool, exit_code: int, output: string}
+     */
+    public function rollback(string $environment, int $steps = 1): array
+    {
+        $env = $this->config['environments'][$environment] ?? null;
+
+        if ($env === null) {
+            throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
+        }
+
+        $remoteScript = $this->buildRollbackScript($env, $steps);
+        $sshCommand = $this->buildSshCommand($env, $remoteScript);
+        $timeout = $env['timeout'] ?? 300;
+
+        return $this->execute($sshCommand, $timeout);
+    }
+
+    /**
      * Get configured environment names.
      */
     public function getEnvironments(): array
@@ -66,6 +86,25 @@ class Deployer
             [$path, $branch],
             $script
         );
+    }
+
+    private function buildRollbackScript(array $env, int $steps): string
+    {
+        $path = $env['path'];
+
+        $commands = [
+            "cd {$path}",
+            'echo "Recent commits:"',
+            'git log --oneline -5',
+            "git reset --hard HEAD~{$steps}",
+            'composer install --no-dev --optimize-autoloader',
+            'php lightpack cache:clear',
+            'echo ""',
+            'echo "Rolled back. Current commit:"',
+            'git log --oneline -1',
+        ];
+
+        return implode(' && ', $commands);
     }
 
     /**
