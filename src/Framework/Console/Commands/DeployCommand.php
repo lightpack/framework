@@ -53,6 +53,32 @@ class DeployCommand extends Command
 
         $deployer = new Deployer($config);
 
+        // Sync .env file before deploying code
+        $localEnvFile = DIR_ROOT . '/.env.' . $env;
+        if (file_exists($localEnvFile)) {
+            $this->output->line("Syncing .env.{$env} ...");
+            try {
+                $envResult = $deployer->syncEnv($env, $localEnvFile);
+                if (!$envResult['success']) {
+                    $this->output->error("Failed to sync .env.{$env} (exit code: {$envResult['exit_code']}).");
+                    $this->output->newline();
+                    return self::FAILURE;
+                }
+                $this->output->success("Synced .env.{$env}.");
+                $this->output->newline();
+            } catch (\RuntimeException $e) {
+                $this->output->error($e->getMessage());
+                $this->output->newline();
+                return self::FAILURE;
+            }
+        } else {
+            $this->output->warning("No .env.{$env} found locally. Skipping env sync.");
+            $this->output->newline();
+        }
+
+        $this->output->line("Deploying code ...");
+        $this->output->newline();
+
         try {
             $result = $deployer->deploy($env);
         } catch (\RuntimeException $e) {
@@ -87,6 +113,7 @@ return [
             'key' => '~/.ssh/id_rsa',
             'path' => '/var/www/myapp',
             'branch' => 'main',
+            'timeout' => 300,
 
             // Optional: override default deploy commands
             // 'commands' => [
@@ -105,10 +132,16 @@ return [
             'key' => '~/.ssh/id_rsa_staging',
             'path' => '/var/www/staging',
             'branch' => 'develop',
+            'timeout' => 300,
         ],
     ],
 ];
 PHP;
+
+        $this->output->line('Env files:');
+        $this->output->line('  .env.production  -> copied to server as .env');
+        $this->output->line('  .env.staging    -> copied to server as .env');
+        $this->output->newline();
 
         echo $example . PHP_EOL;
     }

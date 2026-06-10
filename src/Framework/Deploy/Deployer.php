@@ -58,6 +58,25 @@ class Deployer
     }
 
     /**
+     * Copy a local .env file to the remote server.
+     *
+     * @return array{success: bool, exit_code: int, output: string}
+     */
+    public function syncEnv(string $environment, string $localEnvPath): array
+    {
+        $env = $this->config['environments'][$environment] ?? null;
+
+        if ($env === null) {
+            throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
+        }
+
+        $scpCommand = $this->buildScpCommand($env, $localEnvPath);
+        $timeout = $env['timeout'] ?? 60;
+
+        return $this->execute($scpCommand, $timeout);
+    }
+
+    /**
      * Get configured environment names.
      */
     public function getEnvironments(): array
@@ -121,6 +140,25 @@ class Deployer
             '-o', 'ConnectTimeout=10',
             "{$user}@{$host}",
             $remoteScript,
+        ];
+    }
+
+    /**
+     * Build SCP command as an array to copy local .env file to remote server.
+     */
+    private function buildScpCommand(array $env, string $localPath): array
+    {
+        $user = $env['user'];
+        $host = $env['host'];
+        $key = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
+        $remotePath = $env['path'] . '/.env';
+
+        return [
+            'scp',
+            '-i', $key,
+            '-o', 'StrictHostKeyChecking=accept-new',
+            $localPath,
+            "{$user}@{$host}:{$remotePath}",
         ];
     }
 
