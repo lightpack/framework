@@ -75,8 +75,7 @@ class Deployer
             'git fetch origin {branch}',
             'git reset --hard origin/{branch}',
             'composer install --no-dev --optimize-autoloader',
-            'php lightpack migrate:up',
-            'php lightpack cache:clear',
+            'php lightpack migrate:up --force',
         ];
 
         $script = implode(' && ', $commands);
@@ -98,7 +97,6 @@ class Deployer
             'git log --oneline -5',
             "git reset --hard HEAD~{$steps}",
             'composer install --no-dev --optimize-autoloader',
-            'php lightpack cache:clear',
             'echo ""',
             'echo "Rolled back. Current commit:"',
             'git log --oneline -1',

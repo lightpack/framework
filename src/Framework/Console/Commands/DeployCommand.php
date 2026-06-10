@@ -94,7 +94,7 @@ return [
             //     'git fetch origin {branch}',
             //     'git reset --hard origin/{branch}',
             //     'composer install --no-dev --optimize-autoloader',
-            //     'php lightpack migrate:up',
+            //     'php lightpack migrate:up --force',
             //     'php lightpack cache:clear',
             //     'php lightpack queue:restart',
             // ],
