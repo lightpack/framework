@@ -40,6 +40,12 @@ class DbRestoreCommand extends Command
             return self::FAILURE;
         }
 
+        // Prevent path traversal in file names
+        if (strpbrk($file, '/\\..') !== false) {
+            $this->output->error('Invalid file name. Path traversal is not allowed.');
+            return self::FAILURE;
+        }
+
         $localPath = DIR_ROOT . '/storage/backups/' . $file;
 
         if (!file_exists($localPath)) {
