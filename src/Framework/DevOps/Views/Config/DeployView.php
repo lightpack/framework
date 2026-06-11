@@ -48,7 +48,7 @@ return [
             // The deploy user does not exist until after provisioning completes.
             'provision_user' => 'root',      // Initial SSH user (root/ubuntu/kubuntu)
 
-            'php_version' => '8.3',          // PHP version to install
+            'php_version' => '8.3',          // PHP version to install: 8.1, 8.2, 8.3, 8.4
             'timezone'    => 'UTC',          // Server timezone
             'database'    => 'mysql',        // mysql | none
             'web_server'  => 'nginx',        // nginx only for now
