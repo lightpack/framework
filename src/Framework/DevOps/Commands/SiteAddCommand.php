@@ -3,7 +3,6 @@
 namespace Lightpack\DevOps\Commands;
 
 use Lightpack\Console\Command;
-use Lightpack\DevOps\Deployer;
 
 /**
  * Add an Nginx virtual host for a domain.
@@ -122,14 +121,12 @@ NGINX;
 
         return <<<BASH
 domain="{$domain}"
-config_path="/etc/nginx/sites-available/\${domain}.conf"
-enabled_path="/etc/nginx/sites-enabled/\${domain}.conf"
 
-cat << 'NGINX_EOF' | sudo tee "\$config_path" >/dev/null
+cat << 'NGINX_EOF' | sudo lp-nginx-write "\${domain}.conf"
 {$configContent}
 NGINX_EOF
 
-sudo ln -sf "\$config_path" "\$enabled_path"
+sudo lp-nginx-enable "\${domain}.conf"
 sudo systemctl reload nginx
 
 echo "Site \$domain added and enabled."

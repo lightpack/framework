@@ -80,8 +80,7 @@ SSL;
 domain="{$domain}"
 
 # Disable and remove site config
-sudo rm -f "/etc/nginx/sites-enabled/\${domain}.conf"
-sudo rm -f "/etc/nginx/sites-available/\${domain}.conf"
+sudo lp-nginx-disable "\${domain}.conf"
 {$sslCleanup}
 
 # Reload Nginx

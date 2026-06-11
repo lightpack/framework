@@ -176,14 +176,14 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status nginx
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status php${PHP_VERSION}-fpm
 
-# Nginx site management (scoped to sites-available/sites-enabled only)
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/*
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/ln -sf /etc/nginx/sites-available/* /etc/nginx/sites-enabled/*
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-available/*
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-enabled/*
+# Nginx site management via wrapper scripts (Ubuntu 24.04: no path wildcards in sudoers)
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-write
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-enable
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-disable
 
-# SSL certificate management (scoped to certonly and renew only)
+# SSL certificate management
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot certonly *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot --nginx *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot renew
 EOF
 
@@ -195,6 +195,41 @@ visudo -c >/dev/null || {
 }
 
 log_info "Sudo privileges configured (service reloads, nginx sites, certbot)"
+
+# Create nginx site management wrapper scripts
+# (Ubuntu 24.04 sudo rejects wildcards in path arguments inside sudoers)
+cat > /usr/local/sbin/lp-nginx-write <<'WSCRIPT'
+#!/bin/bash
+site="${1:-}"
+if [ -z "$site" ] || [[ "$site" == */* ]] || [[ "$site" == *..* ]]; then
+    echo "Usage: lp-nginx-write <site-name>" >&2; exit 1
+fi
+cat > "/etc/nginx/sites-available/${site}"
+WSCRIPT
+
+cat > /usr/local/sbin/lp-nginx-enable <<'WSCRIPT'
+#!/bin/bash
+site="${1:-}"
+if [ -z "$site" ] || [[ "$site" == */* ]] || [[ "$site" == *..* ]]; then
+    echo "Usage: lp-nginx-enable <site-name>" >&2; exit 1
+fi
+ln -sf "/etc/nginx/sites-available/${site}" "/etc/nginx/sites-enabled/${site}"
+WSCRIPT
+
+cat > /usr/local/sbin/lp-nginx-disable <<'WSCRIPT'
+#!/bin/bash
+site="${1:-}"
+if [ -z "$site" ] || [[ "$site" == */* ]] || [[ "$site" == *..* ]]; then
+    echo "Usage: lp-nginx-disable <site-name>" >&2; exit 1
+fi
+rm -f "/etc/nginx/sites-enabled/${site}" "/etc/nginx/sites-available/${site}"
+WSCRIPT
+
+chmod 0750 /usr/local/sbin/lp-nginx-write \
+           /usr/local/sbin/lp-nginx-enable \
+           /usr/local/sbin/lp-nginx-disable
+
+log_info "Nginx management scripts installed to /usr/local/sbin/"
 
 # Setup SSH directory
 mkdir -p "/home/${DEPLOY_USER}/.ssh"
@@ -252,10 +287,24 @@ fi
 # -----------------------------------------------------------------------------
 log_step "Installing PHP ${PHP_VERSION}..."
 
-# Add Ondrej PHP PPA
-apt-add-repository -y ppa:ondrej/php >/dev/null || {
-    log_warn "PPA may already be added or unavailable, continuing..."
-}
+# Resolve PPA codename from Ubuntu major version, not the distro codename string.
+# Cloud providers (e.g. Vultr) sometimes ship Ubuntu images with non-standard
+# codenames (e.g. 'resolute') that Ondrej's PPA does not recognise.
+UBUNTU_MAJOR=$(lsb_release -sr | cut -d. -f1)
+if   [ "$UBUNTU_MAJOR" -ge 24 ]; then PHP_PPA_CODENAME="noble"
+elif [ "$UBUNTU_MAJOR" -ge 22 ]; then PHP_PPA_CODENAME="jammy"
+else                                   PHP_PPA_CODENAME=$(lsb_release -sc)
+fi
+
+log_info "Using PPA codename: ${PHP_PPA_CODENAME} (detected Ubuntu ${UBUNTU_MAJOR}.x)"
+
+# Import Ondrej PPA GPG key (modern signed-by approach)
+curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14AA40EC0831756756D7F66C4F4EA0AAE5267A6C" \
+    | gpg --dearmor -o /usr/share/keyrings/ondrej-php.gpg
+
+# Add repository with explicit codename
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ondrej-php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${PHP_PPA_CODENAME} main" \
+    > /etc/apt/sources.list.d/ondrej-php.list
 
 apt-get update -qq
 
