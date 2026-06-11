@@ -37,10 +37,35 @@ Deployment will pull the latest changes from Git, installs dependencies, runs mi
 
 ### What You Need
 
-- A fresh Ubuntu 22.04 or 24.04 server (DigitalOcean, Hetzner, AWS, any VPS)
-- Root SSH access for the initial provision (password or key)
+- A fresh Ubuntu 22.04 or 24.04 server (DigitalOcean, Vultr, Hetzner, AWS, any VPS)
+- Root or sudo SSH access for the initial provision
 - An SSH key pair on your local machine (`~/.ssh/id_rsa` or `~/.ssh/id_ed25519`)
 - Your Lightpack application code in a Git repository
+
+### One-Time SSH Setup
+
+Before provisioning, your laptop must be able to connect to the server via SSH:
+
+**1. Add your SSH key to the server.** If your provider lets you add a key during server creation (Vultr, DigitalOcean do), skip this. Otherwise:
+
+```bash
+ssh-copy-id root@YOUR_SERVER_IP
+```
+
+**2. Connect once to accept the host key.** On the very first connection, SSH will ask you to verify the server's fingerprint.
+
+```bash
+ssh root@YOUR_SERVER_IP
+```
+
+If you see this prompt, type `yes`:
+
+```
+The authenticity of host '...' can't be established.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+```
+
+After connecting, type `exit`. You will not see this prompt again.
 
 ---
 
@@ -54,9 +79,23 @@ Generate the deployment config:
 php console create:config --support=deploy
 ```
 
-This creates `config/deploy.php`. Open it and set your server IP, SSH key, and app path. The `host` is your server's IP address. The `user` is what will be created during provisioning. The `path` is where your application will live on the server.
+This creates `config/deploy.php`. Open it and set your server IP, SSH key, and app path:
 
-**For cloud providers that disable root SSH** (most do), also set `provision_user` to your initial user (`ubuntu`, `kubuntu`, etc.) before running the provision command.
+```php
+'host'    => 'YOUR_SERVER_IP',
+'user'    => 'deploy',
+'key'     => '~/.ssh/id_rsa',
+'path'    => '/var/www/lightpack',
+'branch'  => 'main',
+```
+
+**Important:** If your provider disables root SSH by default (most do), set the initial SSH user:
+
+```php
+'provision_user' => 'ubuntu',  // or 'kubuntu', 'root', etc.
+```
+
+The deploy user does not exist yet — it is created by the provisioning script.
 
 ### 2. Prepare Your Environment File
 
@@ -71,27 +110,11 @@ DB_USER=lightpack
 DB_PASS=your-db-password
 ```
 
-During deployment, this file is copied to the server as `.env`. Keep it out of Git. 
+During deployment, this file is copied to the server as `.env`. Keep it out of Git.
 
 **It should be listed in your `.gitignore`**.
 
-### 3. Create the Deploy Config
-
-Generate the deployment configuration file:
-
-```bash
-php console create:config --support=deploy
-```
-
-This creates `config/deploy.php`. Open it and fill in your server IP, SSH key path, and app details.
-
-**Important:** If your cloud provider disables root SSH by default (most do), set the `provision_user` to your initial user (`ubuntu`, `kubuntu`, etc.). The deploy user does not exist yet — it is created by the provisioning script.
-
-```php
-'provision_user' => 'kubuntu',  // Initial SSH user before deploy user exists
-```
-
-### 4. Provision the Server
+### 3. Provision the Server
 
 Run:
 
@@ -113,7 +136,7 @@ This will:
 
 When it finishes, your server is ready. Root SSH is disabled. The only way in is via the `deploy` user with your SSH key.
 
-### 5. Add the Deploy Key to GitHub
+### 4. Add the Deploy Key to GitHub
 
 The provisioning script generated an SSH key for the `deploy` user so the server can pull your code from GitHub. You need to add this key to your repository.
 
@@ -125,7 +148,7 @@ ssh-ed25519 AAAAC3NzaC... deploy@production
 
 Copy it. Go to your repository on GitHub: **Settings > Deploy keys > Add deploy key**. Paste the key. Do **not** allow write access.
 
-### 6. Deploy Your Application
+### 5. Deploy Your Application
 
 Run:
 
@@ -144,7 +167,7 @@ This will:
 
 **Your application is now live.**
 
-### 7. Set Up Your Domain
+### 6. Set Up Your Domain
 
 Point your domain's DNS A record to your server's IP address. Then add the Nginx site configuration:
 
@@ -158,7 +181,7 @@ To remove a site later:
 php console server:site:remove production --domain=yourdomain.com
 ```
 
-### 8. Get an SSL Certificate
+### 7. Get an SSL Certificate
 
 ```bash
 php console server:ssl production --domain=yourdomain.com
@@ -167,7 +190,7 @@ php console server:ssl production --domain=yourdomain.com
 Or SSH in and run Certbot manually:
 
 ```bash
-ssh deploy@157.245.107.180
+ssh deploy@YOUR_SERVER_IP
 sudo certbot --nginx -d yourdomain.com
 ```
 
