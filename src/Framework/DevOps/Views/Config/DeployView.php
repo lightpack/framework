@@ -53,6 +53,7 @@ return [
             'timezone'    => 'UTC',          // Server timezone
             'database'    => 'mysql',        // mysql | none
             'web_server'  => 'nginx',        // nginx only for now
+            'ssl_email'   => 'you@example.com', // Email for SSL certificate renewal notices
             'db_name'     => 'lightpack',    // Database name
             'db_user'     => 'lightpack',    // Database user
 

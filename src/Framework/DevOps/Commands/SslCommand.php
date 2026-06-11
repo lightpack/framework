@@ -43,11 +43,11 @@ class SslCommand extends Command
             return self::FAILURE;
         }
 
-        $email = $this->args->get('email');
+        $email = $this->args->get('email') ?? ($envConfig['ssl_email'] ?? null);
         $includeWww = $this->args->has('www');
 
         if (empty($email)) {
-            $this->output->warning('No --email provided. Using --register-unsafely-without-email (not recommended for production).');
+            $this->output->warning('No email configured. Add ssl_email to config/deploy.php or use --email. Running without email (not recommended for production).');
             $this->output->newline();
         }
 
@@ -112,8 +112,6 @@ sudo certbot --nginx \
     --redirect \
     --hsts \
     --staple-ocsp
-
-echo "SSL certificate installed for {$domain}."
 BASH;
     }
 }
