@@ -93,7 +93,7 @@ During deployment, this file is copied to the server as `.env`. Keep it out of G
 Run:
 
 ```bash
-php lightpack server:provision production
+php console server:provision production
 ```
 
 This will:
@@ -127,7 +127,7 @@ Copy it. Go to your repository on GitHub: **Settings > Deploy keys > Add deploy 
 Run:
 
 ```bash
-php lightpack app:deploy production
+php console app:deploy production
 ```
 
 This will:
@@ -146,19 +146,19 @@ This will:
 Point your domain's DNS A record to your server's IP address. Then add the Nginx site configuration:
 
 ```bash
-php lightpack server:site:add production --domain=yourdomain.com
+php console server:site:add production --domain=yourdomain.com
 ```
 
 To remove a site later:
 
 ```bash
-php lightpack server:site:remove production --domain=yourdomain.com
+php console server:site:remove production --domain=yourdomain.com
 ```
 
 ### 7. Get an SSL Certificate
 
 ```bash
-php lightpack server:ssl production --domain=yourdomain.com
+php console server:ssl production --domain=yourdomain.com
 ```
 
 Or SSH in and run Certbot manually:
@@ -223,14 +223,14 @@ If you need to install a new PHP extension or change a system setting, you SSH i
 
 ## The Deployment Flow
 
-When you run `php lightpack app:deploy production`, here is exactly what happens on the server:
+When you run `php console app:deploy production`, here is exactly what happens on the server:
 
 ```
 ssh deploy@server "cd /var/www/myapp && \
   git fetch origin main && \
   git reset --hard origin/main && \
   composer install --no-dev --optimize-autoloader && \
-  php lightpack migrate:up --force"
+  php console migrate:up --force"
 ```
 
 This is a **destructive reset**, not a merge. It discards any local changes and forces the server to match the remote branch exactly. This is intentional. Your server should never have uncommitted changes.
@@ -244,13 +244,13 @@ After the deploy, if you have OPcache enabled, the new code will not be active u
 If a deployment breaks something, you can roll back:
 
 ```bash
-php lightpack app:rollback production
+php console app:rollback production
 ```
 
 This resets the Git history by one commit and reinstalls dependencies. By default it rolls back one commit. To go back further:
 
 ```bash
-php lightpack app:rollback production --steps=3
+php console app:rollback production --steps=3
 ```
 
 **Important:** Rollback only reverts code. It does **not** revert database migrations. If your broken deployment included a migration that changed the schema, you must manually handle the database rollback. This is by design. Database changes should be backward-compatible or run in separate, carefully planned migrations.
@@ -266,25 +266,25 @@ Lightpack includes a built-in queue daemon that runs without Supervisor or any s
 Start the daemon on a remote server:
 
 ```bash
-php lightpack server:queue:start production --queue=default
+php console server:queue:start production --queue=default
 ```
 
 This creates a PID file at `storage/worker.pid` on the server and runs the worker loop in the background. To restart:
 
 ```bash
-php lightpack server:queue:restart production
+php console server:queue:restart production
 ```
 
 To stop:
 
 ```bash
-php lightpack server:queue:stop production
+php console server:queue:stop production
 ```
 
 To check status:
 
 ```bash
-php lightpack server:queue:status production
+php console server:queue:status production
 ```
 
 No root. No sudo. No system services. Just PHP.
@@ -298,13 +298,13 @@ No root. No sudo. No system services. Just PHP.
 Lightpack's scheduler runs events every minute. To set it up on the server:
 
 ```bash
-php lightpack schedule:setup production
+php console schedule:setup production
 ```
 
 This adds a single line to the deploy user's crontab:
 
 ```
-* * * * * cd /var/www/myapp && php lightpack schedule:events >> /dev/null 2>&1
+* * * * * cd /var/www/myapp && php console schedule:events >> /dev/null 2>&1
 ```
 
 No sudo. No system-wide cron. Just the deploy user's own scheduled tasks.
@@ -312,7 +312,7 @@ No sudo. No system-wide cron. Just the deploy user's own scheduled tasks.
 ### Checking Status
 
 ```bash
-php lightpack schedule:status production
+php console schedule:status production
 ```
 
 Shows whether the cron job is installed and when the next events are due.
@@ -320,7 +320,7 @@ Shows whether the cron job is installed and when the next events are due.
 ### Removing the Scheduler
 
 ```bash
-php lightpack schedule:remove production
+php console schedule:remove production
 ```
 
 ---
@@ -340,7 +340,7 @@ When you deploy, your local `.env.production` is automatically copied to the ser
 Download the remote `.env` to your local machine for inspection:
 
 ```bash
-php lightpack env:pull production
+php console env:pull production
 ```
 
 This saves the file to `storage/env/production.env` with `0600` permissions. It does **not** overwrite your local `.env.production`.
@@ -352,7 +352,7 @@ This saves the file to `storage/env/production.env` with `0600` permissions. It 
 ### Backup
 
 ```bash
-php lightpack db:backup production
+php console db:backup production
 ```
 
 Creates a timestamped SQL dump and downloads it to `storage/backups/`.
@@ -360,7 +360,7 @@ Creates a timestamped SQL dump and downloads it to `storage/backups/`.
 ### Restore
 
 ```bash
-php lightpack db:restore production --file=backup-2026-01-15.sql
+php console db:restore production --file=backup-2026-01-15.sql
 ```
 
 Uploads a local backup file to the server and restores it. This is destructive. Use with care.
@@ -372,7 +372,7 @@ Uploads a local backup file to the server and restores it. This is destructive. 
 ### View Logs
 
 ```bash
-php lightpack logs:view production --lines=50
+php console logs:view production --lines=50
 ```
 
 Shows the last 50 lines of the application log.
@@ -380,7 +380,7 @@ Shows the last 50 lines of the application log.
 ### Tail Logs
 
 ```bash
-php lightpack logs:tail production
+php console logs:tail production
 ```
 
 Streams logs in real-time, like `tail -f`.
@@ -473,59 +473,59 @@ Lightpack DevOps is built on a few simple beliefs:
 
 | Command | Description |
 |---|---|
-| `php lightpack server:provision <env>` | Provision a fresh server |
-| `php lightpack app:deploy <env>` | Deploy code to server |
-| `php lightpack app:rollback <env>` | Roll back to previous commit |
+| `php console server:provision <env>` | Provision a fresh server |
+| `php console app:deploy <env>` | Deploy code to server |
+| `php console app:rollback <env>` | Roll back to previous commit |
 
 ### Schedule Commands
 
 | Command | Description |
 |---|---|
-| `php lightpack schedule:setup <env>` | Install cron job |
-| `php lightpack schedule:remove <env>` | Remove cron job |
-| `php lightpack schedule:status <env>` | Check cron status |
-| `php lightpack schedule:events` | Run due scheduled events (on server) |
+| `php console schedule:setup <env>` | Install cron job |
+| `php console schedule:remove <env>` | Remove cron job |
+| `php console schedule:status <env>` | Check cron status |
+| `php console schedule:events` | Run due scheduled events (on server) |
 
 ### Queue Commands
 
 | Command | Description |
 |---|---|
-| `php lightpack jobs:run` | Run worker in foreground |
-| `php lightpack server:queue:start <env>` | Start daemon on server |
-| `php lightpack server:queue:restart <env>` | Restart daemon on server |
-| `php lightpack server:queue:stop <env>` | Stop daemon on server |
-| `php lightpack server:queue:status <env>` | Show daemon status on server |
-| `php lightpack jobs:retry` | Retry failed jobs |
+| `php console jobs:run` | Run worker in foreground |
+| `php console server:queue:start <env>` | Start daemon on server |
+| `php console server:queue:restart <env>` | Restart daemon on server |
+| `php console server:queue:stop <env>` | Stop daemon on server |
+| `php console server:queue:status <env>` | Show daemon status on server |
+| `php console jobs:retry` | Retry failed jobs |
 
 ### Database Commands
 
 | Command | Description |
 |---|---|
-| `php lightpack db:backup <env>` | Backup database |
-| `php lightpack db:restore <env>` | Restore from backup |
-| `php lightpack migrate:up` | Run migrations |
-| `php lightpack migrate:down` | Rollback migrations |
+| `php console db:backup <env>` | Backup database |
+| `php console db:restore <env>` | Restore from backup |
+| `php console migrate:up` | Run migrations |
+| `php console migrate:down` | Rollback migrations |
 
 ### Log Commands
 
 | Command | Description |
 |---|---|
-| `php lightpack logs:view <env>` | View recent logs |
-| `php lightpack logs:tail <env>` | Stream logs live |
+| `php console logs:view <env>` | View recent logs |
+| `php console logs:tail <env>` | Stream logs live |
 
 ### Site Management Commands
 
 | Command | Description |
 |---|---|
-| `php lightpack server:site:add <env>` | Add Nginx virtual host |
-| `php lightpack server:site:remove <env>` | Remove Nginx virtual host |
-| `php lightpack server:ssl <env>` | Obtain and install SSL certificate |
+| `php console server:site:add <env>` | Add Nginx virtual host |
+| `php console server:site:remove <env>` | Remove Nginx virtual host |
+| `php console server:ssl <env>` | Obtain and install SSL certificate |
 
 ### Environment Commands
 
 | Command | Description |
 |---|---|
-| `php lightpack env:pull <env>` | Download remote .env for inspection |
+| `php console env:pull <env>` | Download remote .env for inspection |
 
 ---
 
