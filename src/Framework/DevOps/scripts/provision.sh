@@ -289,8 +289,6 @@ fi
 log_step "Installing PHP ${PHP_VERSION}..."
 
 # Resolve PPA codename from Ubuntu major version, not the distro codename string.
-# Cloud providers (e.g. Vultr) sometimes ship Ubuntu images with non-standard
-# codenames (e.g. 'resolute') that Ondrej's PPA does not recognise.
 UBUNTU_MAJOR=$(lsb_release -sr | cut -d. -f1)
 if   [ "$UBUNTU_MAJOR" -ge 24 ]; then PHP_PPA_CODENAME="noble"
 elif [ "$UBUNTU_MAJOR" -ge 22 ]; then PHP_PPA_CODENAME="jammy"
