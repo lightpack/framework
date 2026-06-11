@@ -41,7 +41,7 @@ class DbRestoreCommand extends Command
         }
 
         // Prevent path traversal in file names
-        if (strpbrk($file, '/\\..') !== false) {
+        if (strpos($file, '..') !== false || strpbrk($file, '/\\') !== false) {
             $this->output->error('Invalid file name. Path traversal is not allowed.');
             return self::FAILURE;
         }
