@@ -289,6 +289,19 @@ php lightpack queue:status
 
 No root. No sudo. No system services. Just PHP.
 
+### Remote Queue Management
+
+You can also manage the queue worker on a remote server without SSHing in manually:
+
+```bash
+php lightpack server:queue:start production     # Start daemon on server
+php lightpack server:queue:stop production        # Stop daemon on server
+php lightpack server:queue:restart production   # Restart daemon on server
+php lightpack server:queue:status production    # Check daemon status on server
+```
+
+These are thin wrappers that SSH into the server and run the local commands above.
+
 ---
 
 ## Scheduled Tasks (Cron)
@@ -335,15 +348,15 @@ When you deploy, your local `.env.production` is automatically copied to the ser
 - You version-control your environment templates locally
 - Each environment (production, staging, dev) has its own file
 
-### Checking the Remote Environment
+### Pulling the Remote Environment
 
-If you need to inspect the current environment on the server, SSH in and view it directly:
+Download the remote `.env` to your local machine for inspection:
 
 ```bash
-ssh deploy@your-server-ip "cat /var/www/myapp/.env"
+php lightpack env:pull production
 ```
 
-Or use `scp` to download it for inspection. It does **not** overwrite your local `.env.production`.
+This saves the file to `storage/env/production.env` with `0600` permissions. It does **not** overwrite your local `.env.production`.
 
 ---
 
@@ -491,10 +504,14 @@ Lightpack DevOps is built on a few simple beliefs:
 | Command | Description |
 |---|---|
 | `php lightpack jobs:run` | Run worker in foreground |
-| `php lightpack queue:daemon` | Start background daemon |
-| `php lightpack queue:restart` | Restart daemon |
-| `php lightpack queue:stop` | Stop daemon |
-| `php lightpack queue:status` | Show daemon status |
+| `php lightpack queue:daemon` | Start background daemon (local) |
+| `php lightpack queue:restart` | Restart daemon (local) |
+| `php lightpack queue:stop` | Stop daemon (local) |
+| `php lightpack queue:status` | Show daemon status (local) |
+| `php lightpack server:queue:start <env>` | Start daemon on remote server |
+| `php lightpack server:queue:stop <env>` | Stop daemon on remote server |
+| `php lightpack server:queue:restart <env>` | Restart daemon on remote server |
+| `php lightpack server:queue:status <env>` | Check daemon status on remote server |
 | `php lightpack jobs:retry` | Retry failed jobs |
 
 ### Database Commands
@@ -520,6 +537,12 @@ Lightpack DevOps is built on a few simple beliefs:
 | `php lightpack server:site:add <env>` | Add Nginx virtual host |
 | `php lightpack server:site:remove <env>` | Remove Nginx virtual host |
 | `php lightpack server:ssl <env>` | Obtain and install SSL certificate |
+
+### Environment Commands
+
+| Command | Description |
+|---|---|
+| `php lightpack env:pull <env>` | Download remote .env for inspection |
 
 ---
 
