@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Deploy;
+namespace Lightpack\DevOps;
 
 use Lightpack\Utils\Process;
 

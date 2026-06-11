@@ -1,6 +1,6 @@
 <?php
 
-namespace Lightpack\Console\Commands;
+namespace Lightpack\DevOps\Commands;
 
 use Lightpack\Console\Command;
 use Lightpack\Deploy\Deployer;
