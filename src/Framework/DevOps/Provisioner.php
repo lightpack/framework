@@ -58,8 +58,10 @@ class Provisioner
             // Step 3: Execute provisioning script
             $sshResult = $this->executeScriptOnServer($host, $provisionUser, $rootKey, $remoteScriptPath);
 
-            // Step 4: Cleanup remote script
-            $this->cleanupRemoteScript($host, $provisionUser, $rootKey, $remoteScriptPath);
+            // Step 4: Cleanup remote script via deploy user (root SSH is disabled after provisioning)
+            $deployUser = $env['user'] ?? 'deploy';
+            $deployKey  = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
+            $this->cleanupRemoteScript($host, $deployUser, $deployKey, $remoteScriptPath);
 
             return $sshResult;
         } finally {

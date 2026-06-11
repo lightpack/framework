@@ -730,8 +730,8 @@ chmod 600 /root/.lightpack-credentials-final
 
 # Also copy to /tmp for retrieval by deploy user
 cp /root/.lightpack-credentials-final /tmp/lightpack-credentials
-chown root:"${DEPLOY_USER}" /tmp/lightpack-credentials
-chmod 640 /tmp/lightpack-credentials
+chown "${DEPLOY_USER}":"${DEPLOY_USER}" /tmp/lightpack-credentials
+chmod 600 /tmp/lightpack-credentials
 
 log_info "Credentials saved to /root/.lightpack-credentials-final"
 
@@ -764,3 +764,6 @@ echo ""
 cat /root/.lightpack-credentials-final
 echo ""
 echo "================================================================================"
+
+# Self-cleanup: remove this script (it contains credentials as env vars at the top)
+rm -f "$0"
