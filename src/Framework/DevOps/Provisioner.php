@@ -37,6 +37,7 @@ class Provisioner
         }
 
         $host = $env['host'];
+        $provisionUser = $env['provision_user'] ?? 'root';
         $rootKey = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
         $provisionOptions = $this->buildProvisionOptions($env);
 
@@ -47,15 +48,15 @@ class Provisioner
         $scriptPath = $this->generateScript($provisionOptions);
         $remoteScriptPath = '/root/lightpack-provision.sh';
 
-        $scpResult = $this->copyScriptToServer($host, $rootKey, $scriptPath, $remoteScriptPath);
+        $scpResult = $this->copyScriptToServer($host, $provisionUser, $rootKey, $scriptPath, $remoteScriptPath);
 
         if (!$scpResult['success']) {
             unlink($scriptPath);
             return $scpResult;
         }
 
-        // Step 3: Execute provisioning script as root
-        $sshResult = $this->executeScriptOnServer($host, $rootKey, $remoteScriptPath, $environment);
+        // Step 3: Execute provisioning script
+        $sshResult = $this->executeScriptOnServer($host, $provisionUser, $rootKey, $remoteScriptPath, $environment);
 
         // Step 4: Cleanup local temp script
         unlink($scriptPath);
@@ -172,7 +173,7 @@ class Provisioner
         exec($keyscanCommand);
     }
 
-    private function copyScriptToServer(string $host, string $key, string $localPath, string $remotePath): array
+    private function copyScriptToServer(string $host, string $user, string $key, string $localPath, string $remotePath): array
     {
         $scpCommand = [
             'scp',
@@ -180,20 +181,20 @@ class Provisioner
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
             $localPath,
-            "root@{$host}:{$remotePath}",
+            "{$user}@{$host}:{$remotePath}",
         ];
 
         return $this->execute($scpCommand, 60);
     }
 
-    private function executeScriptOnServer(string $host, string $key, string $remotePath, string $serverName): array
+    private function executeScriptOnServer(string $host, string $user, string $key, string $remotePath, string $serverName): array
     {
         $sshCommand = [
             'ssh',
             '-i', $key,
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
-            "root@{$host}",
+            "{$user}@{$host}",
             "DEBIAN_FRONTEND=noninteractive bash {$remotePath} 2>&1",
         ];
 

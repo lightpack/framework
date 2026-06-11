@@ -119,6 +119,7 @@ done
 
 apt-get update -qq
 apt-get upgrade -y -qq
+apt-get autoremove -y -qq
 
 # -----------------------------------------------------------------------------
 # 3. Install essential packages
@@ -251,19 +252,31 @@ fi
 log_step "Installing PHP ${PHP_VERSION}..."
 
 # Add Ondrej PHP PPA
-apt-add-repository -y ppa:ondrej/php >/dev/null 2>&1 || {
+apt-add-repository -y ppa:ondrej/php >/dev/null || {
     log_warn "PPA may already be added or unavailable, continuing..."
 }
 
 apt-get update -qq
 
-PHP_PACKAGES="php${PHP_VERSION}-fpm php${PHP_VERSION}-cli php${PHP_VERSION}-common
-    php${PHP_VERSION}-mysql php${PHP_VERSION}-pgsql php${PHP_VERSION}-xml
-    php${PHP_VERSION}-mbstring php${PHP_VERSION}-curl php${PHP_VERSION}-zip
-    php${PHP_VERSION}-gd php${PHP_VERSION}-intl php${PHP_VERSION}-bcmath
-    php${PHP_VERSION}-opcache php${PHP_VERSION}-redis php${PHP_VERSION}-sqlite3"
+PHP_PACKAGES=(
+    "php${PHP_VERSION}-fpm"
+    "php${PHP_VERSION}-cli"
+    "php${PHP_VERSION}-common"
+    "php${PHP_VERSION}-mysql"
+    "php${PHP_VERSION}-pgsql"
+    "php${PHP_VERSION}-xml"
+    "php${PHP_VERSION}-mbstring"
+    "php${PHP_VERSION}-curl"
+    "php${PHP_VERSION}-zip"
+    "php${PHP_VERSION}-gd"
+    "php${PHP_VERSION}-intl"
+    "php${PHP_VERSION}-bcmath"
+    "php${PHP_VERSION}-opcache"
+    "php${PHP_VERSION}-redis"
+    "php${PHP_VERSION}-sqlite3"
+)
 
-apt-get install -y -qq $PHP_PACKAGES
+apt-get install -y -qq "${PHP_PACKAGES[@]}"
 
 # Verify PHP installed
 current_php=$(php -v 2>/dev/null | head -n 1 | grep -oP 'PHP \K[0-9]+\.[0-9]+')
@@ -422,7 +435,7 @@ if [ "$DB_TYPE" = "mysql" ]; then
     # Secure MySQL
     if mysql -u root -e "SELECT 1" &>/dev/null; then
         mysql -u root <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DROP DATABASE IF EXISTS test;
@@ -467,7 +480,16 @@ fi
 log_step "Installing Composer..."
 
 if [ ! -f /usr/local/bin/composer ]; then
+    EXPECTED_SIGNATURE=$(curl -s https://composer.github.io/installer.sig)
     php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
+    ACTUAL_SIGNATURE=$(php -r "echo hash_file('sha384', '/tmp/composer-setup.php');")
+
+    if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
+        log_error "Composer installer signature mismatch - possible tampering"
+        rm -f /tmp/composer-setup.php
+        exit 1
+    fi
+
     php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
     rm -f /tmp/composer-setup.php
     log_info "Composer installed"
@@ -640,8 +662,9 @@ EOF
 chmod 600 /root/.lightpack-credentials-final
 
 # Also copy to /tmp for retrieval by deploy user
-sudo -u root cp /root/.lightpack-credentials-final /tmp/lightpack-credentials
-chmod 644 /tmp/lightpack-credentials
+cp /root/.lightpack-credentials-final /tmp/lightpack-credentials
+chown root:"${DEPLOY_USER}" /tmp/lightpack-credentials
+chmod 640 /tmp/lightpack-credentials
 
 log_info "Credentials saved to /root/.lightpack-credentials-final"
 
@@ -655,9 +678,9 @@ services=("nginx" "php${PHP_VERSION}-fpm" "fail2ban")
 
 for service in "${services[@]}"; do
     if systemctl is-active --quiet "$service"; then
-        log_info "  \u2713 $service is running"
+        log_info "  [OK] $service is running"
     else
-        log_error "  \u2717 $service is NOT running"
+        log_error "  [FAIL] $service is NOT running"
     fi
 done
 

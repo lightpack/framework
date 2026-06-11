@@ -228,6 +228,10 @@ return [
             'branch'  => 'main',
             'timeout' => 300,
 
+            // Initial SSH user for provisioning. On cloud images this is
+            // often 'ubuntu' or 'kubuntu' — the deploy user does not exist yet.
+            // 'provision_user' => 'root',
+
             // Provisioning options (optional):
             // 'php_version' => '8.3',
             // 'timezone'    => 'UTC',
@@ -238,6 +242,11 @@ return [
 ];
 PHP;
 
+        $this->output->newline();
+        $this->output->line('You can also generate this file automatically:');
+        $this->output->newline();
+        $this->output->line('  php console create:config --support=deploy');
+        $this->output->newline();
         echo $example . PHP_EOL;
     }
 
