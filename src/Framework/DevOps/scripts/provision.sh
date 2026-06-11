@@ -141,7 +141,8 @@ apt-get install -y -qq \
     certbot \
     python3-certbot-nginx \
     acl \
-    bc
+    bc \
+    supervisor
 
 # -----------------------------------------------------------------------------
 # 4. Create deploy user
@@ -186,6 +187,15 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-disable
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot certonly *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot --nginx *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot renew
+
+# Supervisor queue management
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisor-write
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl reread
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl update
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl start lightpack-worker\:*
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl stop lightpack-worker\:*
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl restart lightpack-worker\:*
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl status lightpack-worker\:*
 EOF
 
 chmod 0440 "$SUDOERS_FILE"
@@ -226,9 +236,15 @@ fi
 rm -f "/etc/nginx/sites-enabled/${site}" "/etc/nginx/sites-available/${site}"
 WSCRIPT
 
+cat > /usr/local/sbin/lp-supervisor-write <<'WSCRIPT'
+#!/bin/bash
+cat > /etc/supervisor/conf.d/lightpack-queue.conf
+WSCRIPT
+
 chmod 0750 /usr/local/sbin/lp-nginx-write \
            /usr/local/sbin/lp-nginx-enable \
-           /usr/local/sbin/lp-nginx-disable
+           /usr/local/sbin/lp-nginx-disable \
+           /usr/local/sbin/lp-supervisor-write
 
 log_info "Nginx management scripts installed to /usr/local/sbin/"
 
@@ -601,6 +617,11 @@ EOF
 systemctl restart fail2ban
 systemctl enable fail2ban
 
+# Enable and start supervisor (queue worker process manager)
+systemctl enable supervisor
+systemctl start supervisor
+log_info "Supervisor enabled and started"
+
 # -----------------------------------------------------------------------------
 # 14. Automatic security updates
 # -----------------------------------------------------------------------------
@@ -739,7 +760,7 @@ log_info "Credentials saved to /root/.lightpack-credentials-final"
 # -----------------------------------------------------------------------------
 log_step "Running final checks..."
 
-services=("nginx" "php${PHP_VERSION}-fpm" "fail2ban")
+services=("nginx" "php${PHP_VERSION}-fpm" "fail2ban" "supervisor")
 [ "$DB_TYPE" = "mysql" ] && services+=("mysql")
 
 for service in "${services[@]}"; do

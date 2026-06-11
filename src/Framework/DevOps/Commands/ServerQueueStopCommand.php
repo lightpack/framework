@@ -30,13 +30,10 @@ class ServerQueueStopCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['path'];
-
         $this->output->info("Stopping queue worker on {$env} ...");
         $this->output->newline();
 
-        $remoteScript = "cd {$appPath} && php console queue:stop";
-        $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
+        $sshCommand = $this->buildSshCommand($envConfig, 'sudo supervisorctl stop lightpack-worker:*');
 
         $result = $this->executeRemote($sshCommand, 30);
 

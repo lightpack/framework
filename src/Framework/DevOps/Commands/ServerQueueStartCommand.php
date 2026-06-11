@@ -5,13 +5,10 @@ namespace Lightpack\DevOps\Commands;
 use Lightpack\Console\Command;
 
 /**
- * Start the queue worker daemon on a remote server.
- *
- * SSHs into the server and runs queue:daemon on the remote machine.
+ * Start the supervised queue worker on a remote server.
  *
  * Usage:
  *   php console server:queue:start production
- *   php console server:queue:start --queue=mail
  */
 class ServerQueueStartCommand extends Command
 {
@@ -33,15 +30,10 @@ class ServerQueueStartCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['path'];
-        $queue = $this->args->get('queue') ?? 'default';
-
         $this->output->info("Starting queue worker on {$env} ...");
         $this->output->newline();
 
-        $remoteScript = "cd {$appPath} && php console queue:daemon --queue={$queue}";
-        $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
-
+        $sshCommand = $this->buildSshCommand($envConfig, 'sudo supervisorctl start lightpack-worker:*');
         $result = $this->executeRemote($sshCommand, 30);
 
         $this->output->newline();

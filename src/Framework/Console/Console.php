@@ -33,11 +33,8 @@ use Lightpack\DevOps\Commands\ProvisionCommand;
 use Lightpack\DevOps\Commands\RollbackCommand;
 use Lightpack\DevOps\Commands\LogsTailCommand;
 use Lightpack\DevOps\Commands\LogsViewCommand;
-use Lightpack\DevOps\Commands\QueueDaemonCommand;
-use Lightpack\DevOps\Commands\QueueRestartCommand;
-use Lightpack\DevOps\Commands\QueueStatusCommand;
-use Lightpack\DevOps\Commands\QueueStopCommand;
 use Lightpack\DevOps\Commands\ServerQueueRestartCommand;
+use Lightpack\DevOps\Commands\ServerQueueSetupCommand;
 use Lightpack\DevOps\Commands\ServerQueueStartCommand;
 use Lightpack\DevOps\Commands\ServerQueueStatusCommand;
 use Lightpack\DevOps\Commands\ServerQueueStopCommand;
@@ -84,10 +81,7 @@ class Console
         'server:ssl' => SslCommand::class,
         'logs:view' => LogsViewCommand::class,
         'logs:tail' => LogsTailCommand::class,
-        'queue:daemon' => QueueDaemonCommand::class,
-        'queue:restart' => QueueRestartCommand::class,
-        'queue:stop' => QueueStopCommand::class,
-        'queue:status' => QueueStatusCommand::class,
+        'server:queue:setup' => ServerQueueSetupCommand::class,
         'server:queue:start' => ServerQueueStartCommand::class,
         'server:queue:stop' => ServerQueueStopCommand::class,
         'server:queue:restart' => ServerQueueRestartCommand::class,

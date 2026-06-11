@@ -30,13 +30,10 @@ class ServerQueueStatusCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['path'];
-
         $this->output->info("Checking queue worker on {$env} ...");
         $this->output->newline();
 
-        $remoteScript = "cd {$appPath} && php console queue:status";
-        $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
+        $sshCommand = $this->buildSshCommand($envConfig, 'sudo supervisorctl status lightpack-worker:*');
 
         $result = $this->executeRemote($sshCommand, 30);
 

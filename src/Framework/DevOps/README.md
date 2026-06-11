@@ -107,7 +107,7 @@ APP_URL=https://yourdomain.com
 DB_HOST=127.0.0.1
 DB_NAME=lightpack
 DB_USER=lightpack
-DB_PASS=your-db-password
+DB_PSWD=your-db-password
 ```
 
 During deployment, this file is copied to the server as `.env`. Keep it out of Git.
@@ -234,14 +234,22 @@ deploy ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
 deploy ALL=(ALL) NOPASSWD: /bin/systemctl reload php8.3-fpm
 deploy ALL=(ALL) NOPASSWD: /bin/systemctl status nginx
 deploy ALL=(ALL) NOPASSWD: /bin/systemctl status php8.3-fpm
-deploy ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/*
-deploy ALL=(ALL) NOPASSWD: /bin/ln -sf /etc/nginx/sites-available/* /etc/nginx/sites-enabled/*
-deploy ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-available/*
-deploy ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-enabled/*
-deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot *
+deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-write
+deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-enable
+deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-disable
+deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot certonly *
+deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot --nginx *
+deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot renew
+deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisor-write
+deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl reread
+deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl update
+deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl start lightpack-worker:*
+deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl stop lightpack-worker:*
+deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl restart lightpack-worker:*
+deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl status lightpack-worker:*
 ```
 
-This is a **whitelist**, not a blanket grant. The `deploy` user can run exactly these commands without a password. Nothing else. Not `apt-get`, not `systemctl restart`, not `bash`. Just service reloads, nginx site management, and certbot.
+This is a **whitelist**, not a blanket grant. The `deploy` user can run exactly these commands without a password. Nothing else. Not `apt-get`, not `systemctl restart`, not `bash`. Just service reloads, nginx site management, certbot, and supervisor queue management.
 
 If you need to install a new PHP extension or change a system setting, you SSH in as yourself with sudo, or you provision a new server. The deploy user does not need this power, so it does not have it.
 
@@ -286,35 +294,44 @@ php console app:rollback production --steps=3
 
 ## Queue Workers
 
-### The Built-in Daemon (No Root Required)
+Lightpack uses [Supervisor](http://supervisord.org/) to manage queue workers in production. Supervisor is installed automatically during provisioning. It keeps your workers running, restarts them if they crash, and handles multiple parallel workers cleanly.
 
-Lightpack includes a built-in queue daemon that runs without Supervisor or any system-level service manager. It is a PHP process that forks a worker and manages its lifecycle on the server.
+### Setup (Once)
 
-Start the daemon on a remote server:
+After provisioning, register the worker with Supervisor:
 
 ```bash
-php console server:queue:start production --queue=default
+php console server:queue:setup production
 ```
 
-This creates a PID file at `storage/worker.pid` on the server and runs the worker loop in the background. To restart:
+With options:
 
 ```bash
-php console server:queue:restart production
+php console server:queue:setup production --queue=emails,default --workers=4 --cooldown=3600
 ```
 
-To stop:
+- **`--queue`**: comma-separated queue names to process (default: `default`)
+- **`--workers`**: number of parallel worker processes (default: `1`)
+- **`--cooldown`**: total runtime in seconds before workers restart cleanly (default: `3600`). This prevents memory leaks and ensures new code is picked up after deploys.
+
+### Managing Workers
 
 ```bash
+php console server:queue:start production
 php console server:queue:stop production
-```
-
-To check status:
-
-```bash
+php console server:queue:restart production
 php console server:queue:status production
 ```
 
-No root. No sudo. No system services. Just PHP.
+### Local Development
+
+For local development, run the worker directly in your terminal:
+
+```bash
+php console jobs:run
+```
+
+This runs in the foreground. Press `Ctrl+C` to stop.
 
 ---
 
@@ -517,12 +534,13 @@ Lightpack DevOps is built on a few simple beliefs:
 
 | Command | Description |
 |---|---|
-| `php console jobs:run` | Run worker in foreground |
-| `php console server:queue:start <env>` | Start daemon on server |
-| `php console server:queue:restart <env>` | Restart daemon on server |
-| `php console server:queue:stop <env>` | Stop daemon on server |
-| `php console server:queue:status <env>` | Show daemon status on server |
+| `php console jobs:run` | Run worker locally (development) |
 | `php console jobs:retry` | Retry failed jobs |
+| `php console server:queue:setup <env>` | Install worker under Supervisor (once) |
+| `php console server:queue:start <env>` | Start worker on server |
+| `php console server:queue:stop <env>` | Stop worker on server |
+| `php console server:queue:restart <env>` | Restart worker on server |
+| `php console server:queue:status <env>` | Show worker status on server |
 
 ### Database Commands
 
@@ -553,6 +571,12 @@ Lightpack DevOps is built on a few simple beliefs:
 | Command | Description |
 |---|---|
 | `php console server:env:pull <env>` | Download remote .env for inspection |
+
+### Server Commands
+
+| Command | Description |
+|---|---|
+| `php console server:run <env> --cmd="..."` | Run any command on the server |
 
 ---
 

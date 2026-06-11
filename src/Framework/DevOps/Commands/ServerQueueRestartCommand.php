@@ -5,11 +5,10 @@ namespace Lightpack\DevOps\Commands;
 use Lightpack\Console\Command;
 
 /**
- * Restart the queue worker daemon on a remote server.
+ * Restart the supervised queue worker on a remote server.
  *
  * Usage:
  *   php console server:queue:restart production
- *   php console server:queue:restart --queue=mail
  */
 class ServerQueueRestartCommand extends Command
 {
@@ -31,14 +30,10 @@ class ServerQueueRestartCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['path'];
-        $queue = $this->args->get('queue') ?? 'default';
-
         $this->output->info("Restarting queue worker on {$env} ...");
         $this->output->newline();
 
-        $remoteScript = "cd {$appPath} && php console queue:restart --queue={$queue}";
-        $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
+        $sshCommand = $this->buildSshCommand($envConfig, 'sudo supervisorctl restart lightpack-worker:*');
 
         $result = $this->executeRemote($sshCommand, 30);
 

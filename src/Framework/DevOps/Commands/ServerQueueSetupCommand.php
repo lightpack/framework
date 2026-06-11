@@ -1,0 +1,92 @@
+<?php
+
+namespace Lightpack\DevOps\Commands;
+
+use Lightpack\Console\Command;
+
+/**
+ * Install the queue worker as a supervised process on a remote server.
+ *
+ * Creates a supervisor config for the Lightpack queue worker and registers it.
+ * Run this once after provisioning. Then use server:queue:start/stop/restart.
+ *
+ * Usage:
+ *   php console server:queue:setup production
+ *   php console server:queue:setup production --queue=emails,default
+ *   php console server:queue:setup production --workers=4 --cooldown=3600
+ */
+class ServerQueueSetupCommand extends Command
+{
+    use HasDeployConfig;
+
+    public function run()
+    {
+        $config = $this->loadConfig();
+
+        if ($config === null) {
+            return self::FAILURE;
+        }
+
+        $env = $this->resolveEnvironment($config);
+        $envConfig = $this->getEnvConfig($config, $env);
+
+        if ($envConfig === null) {
+            $this->printEnvironmentError($config, $env);
+            return self::FAILURE;
+        }
+
+        $appPath = $envConfig['path'];
+        $phpVersion = $envConfig['php_version'] ?? '8.3';
+        $user = $envConfig['user'];
+        $queue = $this->args->get('queue') ?? 'default';
+        $workers = (int) ($this->args->get('workers') ?? 1);
+        $cooldown = (int) ($this->args->get('cooldown') ?? 3600);
+
+        $this->output->info("Installing queue worker on {$env} ...");
+        $this->output->newline();
+
+        $supervisorConfig = $this->buildSupervisorConfig($appPath, $phpVersion, $user, $queue, $workers, $cooldown);
+
+        $remoteScript = <<<BASH
+set -e
+
+printf '%s' {$supervisorConfig} | sudo lp-supervisor-write
+sudo supervisorctl reread
+sudo supervisorctl update
+
+echo "Queue worker registered with supervisor."
+BASH;
+
+        $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
+        $result = $this->executeRemote($sshCommand, 30);
+
+        $this->output->newline();
+
+        if ($result['success']) {
+            $this->output->success("Queue worker installed. Run: php console server:queue:start {$env}");
+            return self::SUCCESS;
+        }
+
+        $this->output->error("Setup failed (exit code: {$result['exit_code']}).");
+        return self::FAILURE;
+    }
+
+    private function buildSupervisorConfig(string $appPath, string $phpVersion, string $user, string $queue, int $workers, int $cooldown): string
+    {
+        $config = "[program:lightpack-worker]\n"
+            . "process_name=%(program_name)s_%(process_num)02d\n"
+            . "command=/usr/bin/php{$phpVersion} {$appPath}/console jobs:run --queue={$queue} --cooldown={$cooldown}\n"
+            . "directory={$appPath}\n"
+            . "user={$user}\n"
+            . "numprocs={$workers}\n"
+            . "autostart=false\n"
+            . "autorestart=true\n"
+            . "stopasgroup=true\n"
+            . "killasgroup=true\n"
+            . "stopwaitsecs=60\n"
+            . "redirect_stderr=true\n"
+            . "stdout_logfile=/var/log/supervisor/lightpack-worker.log\n";
+
+        return escapeshellarg($config);
+    }
+}
