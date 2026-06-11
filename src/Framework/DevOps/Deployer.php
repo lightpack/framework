@@ -95,6 +95,7 @@ class Deployer
             'git reset --hard origin/{branch}',
             'composer install --no-dev --optimize-autoloader',
             'php console migrate:up --force',
+            'sudo systemctl reload php-fpm',
         ];
 
         $script = implode(' && ', $commands);

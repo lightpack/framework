@@ -230,12 +230,13 @@ ssh deploy@server "cd /var/www/myapp && \
   git fetch origin main && \
   git reset --hard origin/main && \
   composer install --no-dev --optimize-autoloader && \
-  php console migrate:up --force"
+  php console migrate:up --force && \
+  sudo systemctl reload php-fpm"
 ```
 
 This is a **destructive reset**, not a merge. It discards any local changes and forces the server to match the remote branch exactly. This is intentional. Your server should never have uncommitted changes.
 
-After the deploy, if you have OPcache enabled, the new code will not be active until PHP-FPM is reloaded. This is why the deploy user has permission to reload PHP-FPM. You can trigger this manually or include it in a post-deploy hook.
+After the deploy, PHP-FPM is automatically reloaded so new code is active immediately.
 
 ---
 
