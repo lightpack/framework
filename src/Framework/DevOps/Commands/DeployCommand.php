@@ -34,10 +34,6 @@ class DeployCommand extends Command
 
         $this->printDeployHeader($env, $envConfig['host']);
 
-        if (!$this->syncEnv($deployer, $env)) {
-            return self::FAILURE;
-        }
-
         return $this->deployCode($deployer, $env);
     }
 
@@ -84,45 +80,15 @@ class DeployCommand extends Command
         $this->output->newline();
     }
 
-    private function syncEnv(Deployer $deployer, string $env): bool
-    {
-        $localEnvFile = DIR_ROOT . '/.env.' . $env;
-
-        if (!file_exists($localEnvFile)) {
-            $this->output->warning("No .env.{$env} found locally. Skipping env sync.");
-            $this->output->newline();
-            return true;
-        }
-
-        $this->output->line("Syncing .env.{$env} ...");
-
-        try {
-            $envResult = $deployer->syncEnv($env, $localEnvFile);
-        } catch (\RuntimeException $e) {
-            $this->output->error($e->getMessage());
-            $this->output->newline();
-            return false;
-        }
-
-        if (!$envResult['success']) {
-            $this->output->error("Failed to sync .env.{$env} (exit code: {$envResult['exit_code']}).");
-            $this->output->newline();
-            return false;
-        }
-
-        $this->output->success("Synced .env.{$env}.");
-        $this->output->newline();
-
-        return true;
-    }
-
     private function deployCode(Deployer $deployer, string $env): int
     {
         $this->output->line("Deploying code ...");
         $this->output->newline();
 
+        $localEnvPath = DIR_ROOT . '/.env.' . $env;
+
         try {
-            $result = $deployer->deploy($env);
+            $result = $deployer->deploy($env, file_exists($localEnvPath) ? $localEnvPath : null);
         } catch (\RuntimeException $e) {
             $this->output->error($e->getMessage());
             $this->output->newline();

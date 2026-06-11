@@ -20,9 +20,13 @@ class Deployer
     /**
      * Deploy to the specified environment.
      *
+     * Sequence: mkdir → git+composer → SCP .env → migrate+reload
+     * The .env is copied after composer (which doesn't need it) but before
+     * migrate:up (which needs DB credentials from .env).
+     *
      * @return array{success: bool, exit_code: int, output: string}
      */
-    public function deploy(string $environment): array
+    public function deploy(string $environment, ?string $localEnvPath = null): array
     {
         $env = $this->config['environments'][$environment] ?? null;
 
@@ -30,11 +34,29 @@ class Deployer
             throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
         }
 
-        $remoteScript = $this->buildRemoteScript($env);
-        $sshCommand = $this->buildSshCommand($env, $remoteScript);
         $timeout = $env['timeout'] ?? 300;
 
-        return $this->execute($sshCommand, $timeout);
+        // Step 1: Ensure app directory exists
+        $this->execute($this->buildSshCommand($env, 'mkdir -p ' . escapeshellarg($env['path'])), 30);
+
+        // Step 2: Pull code + install dependencies
+        $codeResult = $this->execute($this->buildSshCommand($env, $this->buildCodeScript($env)), $timeout);
+
+        if (!$codeResult['success']) {
+            return $codeResult;
+        }
+
+        // Step 3: Copy .env (after composer, before migrate)
+        if ($localEnvPath !== null && file_exists($localEnvPath)) {
+            $scpResult = $this->execute($this->buildScpCommand($env, $localEnvPath), 60);
+
+            if (!$scpResult['success']) {
+                return $scpResult;
+            }
+        }
+
+        // Step 4: Run migrations + reload services
+        return $this->execute($this->buildSshCommand($env, $this->buildActivateScript($env)), $timeout);
     }
 
     /**
@@ -84,26 +106,42 @@ class Deployer
         return array_keys($this->config['environments'] ?? []);
     }
 
-    private function buildRemoteScript(array $env): string
+    private function buildCodeScript(array $env): string
     {
         $path = $env['path'];
         $branch = $env['branch'] ?? 'main';
+        $repo = $env['repo'] ?? null;
 
-        $commands = $env['commands'] ?? [
-            'cd {path}',
-            'git fetch origin {branch}',
-            'git reset --hard origin/{branch}',
-            'composer install --no-dev --optimize-autoloader',
-            'php console migrate:up --force',
-            'sudo systemctl reload php-fpm',
+        $cloneOrFetch = $repo
+            ? "if [ -d {path}/.git ]; then git -C {path} fetch origin {branch} && git -C {path} reset --hard origin/{branch}; else git -C {path} init -b {branch} && git -C {path} remote add origin {$repo} && git -C {path} fetch origin {branch} && git -C {path} reset --hard origin/{branch}; fi"
+            : 'git -C {path} fetch origin {branch} && git -C {path} reset --hard origin/{branch}';
+
+        $commands = [
+            $cloneOrFetch,
+            'composer -d {path} install --no-dev --optimize-autoloader',
         ];
-
-        $script = implode(' && ', $commands);
 
         return str_replace(
             ['{path}', '{branch}'],
             [$path, $branch],
-            $script
+            implode(' && ', $commands)
+        );
+    }
+
+    private function buildActivateScript(array $env): string
+    {
+        $path = $env['path'];
+        $phpVersion = $env['php_version'] ?? '8.3';
+
+        $commands = [
+            'php {path}/console migrate:up --force',
+            "sudo systemctl reload php{$phpVersion}-fpm",
+        ];
+
+        return str_replace(
+            '{path}',
+            $path,
+            implode(' && ', $commands)
         );
     }
 

@@ -35,10 +35,11 @@ return [
             // -----------------------------------------------------------------
             // SSH Connection
             // -----------------------------------------------------------------
-            'host'    => '1.2.3.4',          // Server IP or hostname
-            'user'    => 'deploy',           // User that will be CREATED by provision
-            'key'     => '~/.ssh/id_rsa',    // Your local SSH private key
-            'timeout' => 300,                  // Seconds for deploy commands
+            'host'    => '1.2.3.4',                        // Server IP or hostname
+            'user'    => 'deploy',                       // User that will be CREATED by provision
+            'key'     => '~/.ssh/id_rsa',               // Your local SSH private key
+            'repo'    => 'git@github.com:you/app.git',  // Git repo (for first deploy clone)
+            'timeout' => 300,                            // Seconds for deploy commands
 
             // -----------------------------------------------------------------
             // Provisioning (used ONLY by server:provision)
