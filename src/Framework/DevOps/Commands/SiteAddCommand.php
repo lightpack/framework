@@ -59,7 +59,11 @@ class SiteAddCommand extends Command
 
         if ($result['success']) {
             $this->output->success("Site {$domain} configured.");
-            $this->output->line("Next: php console server:ssl {$env} --domain={$domain}");
+
+            if (!filter_var($domain, FILTER_VALIDATE_IP)) {
+                $this->output->line("Next: php console server:ssl {$env} --domain={$domain}");
+            }
+
             return self::SUCCESS;
         }
 
