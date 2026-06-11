@@ -112,8 +112,17 @@ trait HasDeployConfig
     private function validateDomain(string $domain): bool
     {
         // Reject path traversal and shell metacharacters
-        if (strpbrk($domain, '/\\..$`;&|<>"\'') !== false) {
+        if (strpos($domain, '..') !== false) {
             return false;
+        }
+
+        if (strpbrk($domain, '/\\$`;&|<>"\'') !== false) {
+            return false;
+        }
+
+        // Valid IPv4 address
+        if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return true;
         }
 
         // Valid domain: letters, digits, hyphens, dots
