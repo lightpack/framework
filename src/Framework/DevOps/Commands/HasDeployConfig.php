@@ -71,6 +71,7 @@ trait HasDeployConfig
 
         return [
             'ssh',
+            '-n',
             '-i', $key,
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
