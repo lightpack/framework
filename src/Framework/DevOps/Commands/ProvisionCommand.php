@@ -14,8 +14,6 @@ use Lightpack\DevOps\Provisioner;
  *
  * Usage:
  *   php console server:provision              Provision default environment
- *   php console server:provision staging    Provision specific environment
- *   php console server:provision --php=8.4  Override PHP version
  */
 class ProvisionCommand extends Command
 {
