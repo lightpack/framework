@@ -48,20 +48,24 @@ class Provisioner
         $scriptPath = $this->generateScript($provisionOptions);
         $remoteScriptPath = '/root/lightpack-provision.sh';
 
-        $scpResult = $this->copyScriptToServer($host, $provisionUser, $rootKey, $scriptPath, $remoteScriptPath);
+        try {
+            $scpResult = $this->copyScriptToServer($host, $provisionUser, $rootKey, $scriptPath, $remoteScriptPath);
 
-        if (!$scpResult['success']) {
-            unlink($scriptPath);
-            return $scpResult;
+            if (!$scpResult['success']) {
+                return $scpResult;
+            }
+
+            // Step 3: Execute provisioning script
+            $sshResult = $this->executeScriptOnServer($host, $provisionUser, $rootKey, $remoteScriptPath);
+
+            // Step 4: Cleanup remote script
+            $this->cleanupRemoteScript($host, $provisionUser, $rootKey, $remoteScriptPath);
+
+            return $sshResult;
+        } finally {
+            // Step 5: Always cleanup local temp script
+            @unlink($scriptPath);
         }
-
-        // Step 3: Execute provisioning script
-        $sshResult = $this->executeScriptOnServer($host, $provisionUser, $rootKey, $remoteScriptPath, $environment);
-
-        // Step 4: Cleanup local temp script
-        unlink($scriptPath);
-
-        return $sshResult;
     }
 
     /**
@@ -135,8 +139,8 @@ class Provisioner
         // Prepend environment variable exports so the script picks them up
         $exports = "#!/bin/bash\n\n";
         foreach ($options as $key => $value) {
-            $escaped = str_replace('"', '\\"', $value);
-            $exports .= "export {$key}=\"{$escaped}\"\n";
+            $escaped = str_replace("'", "'\\''" , $value);
+            $exports .= "export {$key}='{$escaped}'\n";
         }
         $exports .= "\n";
 
@@ -166,11 +170,25 @@ class Provisioner
 
     private function addToKnownHosts(string $host): void
     {
-        $keyscanCommand = sprintf(
-            'ssh-keyscan -H %s >> ~/.ssh/known_hosts 2>/dev/null',
-            escapeshellarg($host)
-        );
-        exec($keyscanCommand);
+        $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
+        $sshDir = $home . '/.ssh';
+
+        if (!is_dir($sshDir)) {
+            mkdir($sshDir, 0700, true);
+        }
+
+        $process = new Process();
+        $keyscanOutput = '';
+
+        $process
+            ->setTimeout(10)
+            ->execute(['ssh-keyscan', '-H', $host], function (string $line) use (&$keyscanOutput) {
+                $keyscanOutput .= $line;
+            });
+
+        if ($keyscanOutput !== '') {
+            file_put_contents($sshDir . '/known_hosts', $keyscanOutput, FILE_APPEND | LOCK_EX);
+        }
     }
 
     private function copyScriptToServer(string $host, string $user, string $key, string $localPath, string $remotePath): array
@@ -187,7 +205,7 @@ class Provisioner
         return $this->execute($scpCommand, 60);
     }
 
-    private function executeScriptOnServer(string $host, string $user, string $key, string $remotePath, string $serverName): array
+    private function executeScriptOnServer(string $host, string $user, string $key, string $remotePath): array
     {
         $sshCommand = [
             'ssh',
@@ -210,6 +228,18 @@ class Provisioner
         }
 
         return $key;
+    }
+
+    private function cleanupRemoteScript(string $host, string $user, string $key, string $remotePath): void
+    {
+        $this->execute([
+            'ssh',
+            '-i', $key,
+            '-o', 'StrictHostKeyChecking=accept-new',
+            '-o', 'ConnectTimeout=10',
+            "{$user}@{$host}",
+            "rm -f {$remotePath}",
+        ], 10);
     }
 
     /**

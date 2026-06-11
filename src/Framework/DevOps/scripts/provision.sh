@@ -182,8 +182,9 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/ln -sf /etc/nginx/sites-available/* /etc
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-available/*
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-enabled/*
 
-# SSL certificate management
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot *
+# SSL certificate management (scoped to certonly and renew only)
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot certonly *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot renew
 EOF
 
 chmod 0440 "$SUDOERS_FILE"
@@ -324,6 +325,18 @@ realpath_cache_size = 4096K
 realpath_cache_ttl = 600
 EOF
 
+# Calculate FPM pool size based on available RAM (60% of RAM / 128MB per worker)
+TOTAL_RAM_MB=$(free -m | awk '/^Mem:/ {print $2}')
+FPM_MAX_CHILDREN=$(( (TOTAL_RAM_MB * 60 / 100) / 128 ))
+[ "$FPM_MAX_CHILDREN" -lt 5 ] && FPM_MAX_CHILDREN=5
+[ "$FPM_MAX_CHILDREN" -gt 50 ] && FPM_MAX_CHILDREN=50
+FPM_START=$(( FPM_MAX_CHILDREN / 4 ))
+[ "$FPM_START" -lt 2 ] && FPM_START=2
+FPM_MIN_SPARE=$(( FPM_MAX_CHILDREN / 5 ))
+[ "$FPM_MIN_SPARE" -lt 2 ] && FPM_MIN_SPARE=2
+FPM_MAX_SPARE=$(( FPM_MAX_CHILDREN / 2 ))
+[ "$FPM_MAX_SPARE" -lt 4 ] && FPM_MAX_SPARE=4
+
 # FPM pool config
 cat > "$PHP_FPM_CONF" <<EOF
 [www]
@@ -335,10 +348,10 @@ listen.group = www-data
 listen.mode = 0660
 
 pm = dynamic
-pm.max_children = 50
-pm.start_servers = 10
-pm.min_spare_servers = 5
-pm.max_spare_servers = 20
+pm.max_children = ${FPM_MAX_CHILDREN}
+pm.start_servers = ${FPM_START}
+pm.min_spare_servers = ${FPM_MIN_SPARE}
+pm.max_spare_servers = ${FPM_MAX_SPARE}
 pm.max_requests = 500
 pm.process_idle_timeout = 10s
 
@@ -455,13 +468,18 @@ EOF
         log_warn "MySQL root already has a password set, skipping security setup"
     fi
 
+    # Calculate MySQL InnoDB buffer pool: 25% of total RAM
+    MYSQL_BUFFER_MB=$(( TOTAL_RAM_MB / 4 ))
+    [ "$MYSQL_BUFFER_MB" -lt 128 ] && MYSQL_BUFFER_MB=128
+    [ "$MYSQL_BUFFER_MB" -gt 2048 ] && MYSQL_BUFFER_MB=2048
+
     # MySQL optimizations for typical VPS
     cat > /etc/mysql/mysql.conf.d/99-lightpack.cnf <<EOF
 [mysqld]
 max_connections = 100
 wait_timeout = 600
 max_allowed_packet = 64M
-innodb_buffer_pool_size = 384M
+innodb_buffer_pool_size = ${MYSQL_BUFFER_MB}M
 innodb_log_file_size = 64M
 innodb_file_per_table = 1
 character-set-server = utf8mb4
