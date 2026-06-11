@@ -56,14 +56,10 @@ class Provisioner
             }
 
             // Step 3: Execute provisioning script
-            $sshResult = $this->executeScriptOnServer($host, $provisionUser, $rootKey, $remoteScriptPath);
-
-            // Step 4: Cleanup remote script via deploy user (root SSH is disabled after provisioning)
-            $deployUser = $env['user'] ?? 'deploy';
-            $deployKey  = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
-            $this->cleanupRemoteScript($host, $deployUser, $deployKey, $remoteScriptPath);
-
-            return $sshResult;
+            // Note: provision.sh self-deletes at its end via `rm -f "$0"`.
+            // PHP cannot clean it up because root SSH is disabled after provisioning
+            // and the deploy user has no access to /root/.
+            return $this->executeScriptOnServer($host, $provisionUser, $rootKey, $remoteScriptPath);
         } finally {
             // Step 5: Always cleanup local temp script
             @unlink($scriptPath);
