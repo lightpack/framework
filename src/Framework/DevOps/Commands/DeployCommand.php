@@ -3,7 +3,7 @@
 namespace Lightpack\DevOps\Commands;
 
 use Lightpack\Console\Command;
-use Lightpack\Deploy\Deployer;
+use Lightpack\DevOps\Deployer;
 
 /**
  * Deploy the application to a remote server via SSH.

@@ -29,6 +29,7 @@ use Lightpack\Console\Commands\ServeCommand;
 use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\WatchCommand;
 use Lightpack\DevOps\Commands\DeployCommand;
+use Lightpack\DevOps\Commands\ProvisionCommand;
 use Lightpack\DevOps\Commands\RollbackCommand;
 
 class Console
@@ -57,6 +58,7 @@ class Console
         'schedule:events' => ScheduleEvents::class,
         'app:deploy' => DeployCommand::class,
         'app:rollback' => RollbackCommand::class,
+        'server:provision' => ProvisionCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,

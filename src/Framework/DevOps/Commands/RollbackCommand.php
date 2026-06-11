@@ -3,7 +3,7 @@
 namespace Lightpack\DevOps\Commands;
 
 use Lightpack\Console\Command;
-use Lightpack\Deploy\Deployer;
+use Lightpack\DevOps\Deployer;
 
 /**
  * Rollback the application to a previous commit on a remote server.
