@@ -143,7 +143,17 @@ This will:
 
 ### 6. Set Up Your Domain
 
-Point your domain's DNS A record to your server's IP address. Then configure Nginx for your domain. You can do this manually by SSHing into the server and editing `/etc/nginx/sites-available/`, or you can use the `server:nginx:setup` command if available.
+Point your domain's DNS A record to your server's IP address. Then add the Nginx site configuration:
+
+```bash
+php lightpack server:site:add production --domain=yourdomain.com
+```
+
+To remove a site later:
+
+```bash
+php lightpack server:site:remove production --domain=yourdomain.com
+```
 
 ### 7. Get an SSL Certificate
 
@@ -173,6 +183,8 @@ During provisioning, a user named `deploy` is created. This user is the only acc
 - Run Composer
 - Run PHP scripts (migrations, seeders, queue workers)
 - Reload Nginx and PHP-FPM (for zero-downtime deployments)
+- Add and remove Nginx site configurations
+- Run Certbot to obtain SSL certificates
 - Manage its own cron jobs
 - Read application logs
 
@@ -196,9 +208,14 @@ deploy ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
 deploy ALL=(ALL) NOPASSWD: /bin/systemctl reload php8.3-fpm
 deploy ALL=(ALL) NOPASSWD: /bin/systemctl status nginx
 deploy ALL=(ALL) NOPASSWD: /bin/systemctl status php8.3-fpm
+deploy ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/*
+deploy ALL=(ALL) NOPASSWD: /bin/ln -sf /etc/nginx/sites-available/* /etc/nginx/sites-enabled/*
+deploy ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-available/*
+deploy ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-enabled/*
+deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot *
 ```
 
-This is a **whitelist**, not a blanket grant. The `deploy` user can run exactly these four commands without a password. Nothing else. Not `apt-get`, not `systemctl restart`, not `bash`. Just these four reload and status commands.
+This is a **whitelist**, not a blanket grant. The `deploy` user can run exactly these commands without a password. Nothing else. Not `apt-get`, not `systemctl restart`, not `bash`. Just service reloads, nginx site management, and certbot.
 
 If you need to install a new PHP extension or change a system setting, you SSH in as yourself with sudo, or you provision a new server. The deploy user does not need this power, so it does not have it.
 
@@ -272,17 +289,6 @@ php lightpack queue:status
 
 No root. No sudo. No system services. Just PHP.
 
-### Using Supervisor (Optional)
-
-If you prefer Supervisor, you can install and configure it manually or use the optional server command:
-
-```bash
-php lightpack server:worker:supervisor-install production
-php lightpack server:worker:supervisor-restart production
-```
-
-These commands require sudo because Supervisor is a system service.
-
 ---
 
 ## Scheduled Tasks (Cron)
@@ -329,15 +335,15 @@ When you deploy, your local `.env.production` is automatically copied to the ser
 - You version-control your environment templates locally
 - Each environment (production, staging, dev) has its own file
 
-### Pulling Remote Environment
+### Checking the Remote Environment
 
-If you need to inspect the current environment on the server:
+If you need to inspect the current environment on the server, SSH in and view it directly:
 
 ```bash
-php lightpack env:pull production
+ssh deploy@your-server-ip "cat /var/www/myapp/.env"
 ```
 
-This downloads the remote `.env` to your local machine for inspection. It does **not** overwrite your local `.env.production`.
+Or use `scp` to download it for inspection. It does **not** overwrite your local `.env.production`.
 
 ---
 
@@ -391,7 +397,7 @@ After provisioning, verify these are in place:
 - [ ] Only ports 22, 80, and 443 are open
 - [ ] Fail2Ban is running (`systemctl status fail2ban`)
 - [ ] Automatic security updates are enabled
-- [ ] Deploy user sudo is restricted to service reloads only
+- [ ] Deploy user sudo is restricted to service reloads, nginx sites, and certbot
 - [ ] `.env` is not in Git
 - [ ] `.env.*` files are in `.gitignore`
 - [ ] GitHub deploy key does not have write access
@@ -507,12 +513,13 @@ Lightpack DevOps is built on a few simple beliefs:
 | `php lightpack logs:view <env>` | View recent logs |
 | `php lightpack logs:tail <env>` | Stream logs live |
 
-### Environment Commands
+### Site Management Commands
 
 | Command | Description |
 |---|---|
-| `php lightpack env:sync <env>` | Sync local env to server |
-| `php lightpack env:pull <env>` | Pull remote env to local |
+| `php lightpack server:site:add <env>` | Add Nginx virtual host |
+| `php lightpack server:site:remove <env>` | Remove Nginx virtual host |
+| `php lightpack server:ssl <env>` | Obtain and install SSL certificate |
 
 ---
 

@@ -31,6 +31,20 @@ use Lightpack\Console\Commands\WatchCommand;
 use Lightpack\DevOps\Commands\DeployCommand;
 use Lightpack\DevOps\Commands\ProvisionCommand;
 use Lightpack\DevOps\Commands\RollbackCommand;
+use Lightpack\DevOps\Commands\LogsTailCommand;
+use Lightpack\DevOps\Commands\LogsViewCommand;
+use Lightpack\DevOps\Commands\QueueDaemonCommand;
+use Lightpack\DevOps\Commands\QueueRestartCommand;
+use Lightpack\DevOps\Commands\QueueStatusCommand;
+use Lightpack\DevOps\Commands\QueueStopCommand;
+use Lightpack\DevOps\Commands\ScheduleRemoveCommand;
+use Lightpack\DevOps\Commands\ScheduleSetupCommand;
+use Lightpack\DevOps\Commands\DbBackupCommand;
+use Lightpack\DevOps\Commands\DbRestoreCommand;
+use Lightpack\DevOps\Commands\ScheduleStatusCommand;
+use Lightpack\DevOps\Commands\SiteAddCommand;
+use Lightpack\DevOps\Commands\SiteRemoveCommand;
+use Lightpack\DevOps\Commands\SslCommand;
 
 class Console
 {
@@ -59,6 +73,20 @@ class Console
         'app:deploy' => DeployCommand::class,
         'app:rollback' => RollbackCommand::class,
         'server:provision' => ProvisionCommand::class,
+        'server:site:add' => SiteAddCommand::class,
+        'server:site:remove' => SiteRemoveCommand::class,
+        'server:ssl' => SslCommand::class,
+        'logs:view' => LogsViewCommand::class,
+        'logs:tail' => LogsTailCommand::class,
+        'queue:daemon' => QueueDaemonCommand::class,
+        'queue:restart' => QueueRestartCommand::class,
+        'queue:stop' => QueueStopCommand::class,
+        'queue:status' => QueueStatusCommand::class,
+        'schedule:setup' => ScheduleSetupCommand::class,
+        'schedule:remove' => ScheduleRemoveCommand::class,
+        'schedule:status' => ScheduleStatusCommand::class,
+        'db:backup' => DbBackupCommand::class,
+        'db:restore' => DbRestoreCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,

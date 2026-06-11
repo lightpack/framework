@@ -174,6 +174,15 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/systemctl reload php${PHP_VERSION}-fpm
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status nginx
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status php${PHP_VERSION}-fpm
+
+# Nginx site management (scoped to sites-available/sites-enabled only)
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/nginx/sites-available/*
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/ln -sf /etc/nginx/sites-available/* /etc/nginx/sites-enabled/*
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-available/*
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /bin/rm -f /etc/nginx/sites-enabled/*
+
+# SSL certificate management
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot *
 EOF
 
 chmod 0440 "$SUDOERS_FILE"
@@ -183,7 +192,7 @@ visudo -c >/dev/null || {
     exit 1
 }
 
-log_info "Sudo privileges configured (restricted to service reloads only)"
+log_info "Sudo privileges configured (service reloads, nginx sites, certbot)"
 
 # Setup SSH directory
 mkdir -p "/home/${DEPLOY_USER}/.ssh"
