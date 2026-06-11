@@ -9,8 +9,8 @@ use Lightpack\DevOps\Deployer;
  * Deploy the application to a remote server via SSH.
  *
  * Usage:
- *   php lightpack app:deploy              Deploy to default environment
- *   php lightpack app:deploy --env=staging  Deploy to specific environment
+ *   php console app:deploy              Deploy to default environment
+ *   php console app:deploy --env=staging  Deploy to specific environment
  */
 class DeployCommand extends Command
 {
@@ -163,7 +163,7 @@ return [
             //     'git fetch origin {branch}',
             //     'git reset --hard origin/{branch}',
             //     'composer install --no-dev --optimize-autoloader',
-            //     'php lightpack migrate:up --force',
+            //     'php console migrate:up --force',
             // ],
         ],
         'staging' => [

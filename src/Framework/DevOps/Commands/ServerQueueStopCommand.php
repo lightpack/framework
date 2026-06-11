@@ -8,7 +8,7 @@ use Lightpack\Console\Command;
  * Stop the queue worker daemon on a remote server.
  *
  * Usage:
- *   php lightpack server:queue:stop production
+ *   php console server:queue:stop production
  */
 class ServerQueueStopCommand extends Command
 {

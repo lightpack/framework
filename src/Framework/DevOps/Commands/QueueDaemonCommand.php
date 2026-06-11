@@ -12,9 +12,9 @@ use Lightpack\DevOps\QueueManager;
  * to storage/worker.pid. No root or Supervisor required.
  *
  * Usage:
- *   php lightpack queue:daemon              Start with default queue
- *   php lightpack queue:daemon --queue=mail Start processing 'mail' queue
- *   php lightpack queue:daemon --sleep=3  Check for jobs every 3 seconds
+ *   php console queue:daemon              Start with default queue
+ *   php console queue:daemon --queue=mail Start processing 'mail' queue
+ *   php console queue:daemon --sleep=3  Check for jobs every 3 seconds
  */
 class QueueDaemonCommand extends Command
 {
@@ -37,9 +37,9 @@ class QueueDaemonCommand extends Command
             $this->output->success($result['message']);
             $this->output->newline();
             $this->output->line('Manage with:');
-            $this->output->line('  php lightpack queue:status  Check status');
-            $this->output->line('  php lightpack queue:restart   Restart worker');
-            $this->output->line('  php lightpack queue:stop      Stop worker');
+            $this->output->line('  php console queue:status  Check status');
+            $this->output->line('  php console queue:restart   Restart worker');
+            $this->output->line('  php console queue:stop      Stop worker');
             return self::SUCCESS;
         }
 

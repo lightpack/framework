@@ -8,8 +8,8 @@ use Lightpack\Console\Command;
  * Restart the queue worker daemon on a remote server.
  *
  * Usage:
- *   php lightpack server:queue:restart production
- *   php lightpack server:queue:restart --queue=mail
+ *   php console server:queue:restart production
+ *   php console server:queue:restart --queue=mail
  */
 class ServerQueueRestartCommand extends Command
 {

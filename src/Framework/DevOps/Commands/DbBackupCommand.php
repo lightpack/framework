@@ -12,8 +12,8 @@ use Lightpack\Utils\Process;
  * runs mysqldump, and saves the SQL file locally.
  *
  * Usage:
- *   php lightpack db:backup production
- *   php lightpack db:backup --file=mybackup.sql
+ *   php console db:backup production
+ *   php console db:backup --file=mybackup.sql
  */
 class DbBackupCommand extends Command
 {

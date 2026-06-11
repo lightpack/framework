@@ -11,7 +11,7 @@ use Lightpack\Console\Command;
  * WARNING: This is destructive — it will overwrite existing data.
  *
  * Usage:
- *   php lightpack db:restore production --file=backup-2026-01-15.sql
+ *   php console db:restore production --file=backup-2026-01-15.sql
  */
 class DbRestoreCommand extends Command
 {

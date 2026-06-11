@@ -9,8 +9,8 @@ use Lightpack\DevOps\Deployer;
  * Add an Nginx virtual host for a domain.
  *
  * Usage:
- *   php lightpack server:site:add production --domain=example.com
- *   php lightpack server:site:add --domain=example.com --www   # include www alias
+ *   php console server:site:add production --domain=example.com
+ *   php console server:site:add --domain=example.com --www   # include www alias
  */
 class SiteAddCommand extends Command
 {
@@ -60,7 +60,7 @@ class SiteAddCommand extends Command
 
         if ($result['success']) {
             $this->output->success("Site {$domain} configured.");
-            $this->output->line("Next: php lightpack server:ssl {$env} --domain={$domain}");
+            $this->output->line("Next: php console server:ssl {$env} --domain={$domain}");
             return self::SUCCESS;
         }
 

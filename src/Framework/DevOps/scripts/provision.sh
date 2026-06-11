@@ -624,7 +624,7 @@ cat >> /root/.lightpack-credentials-final <<EOF
 
 NEXT STEPS:
   1. Add the GitHub deploy key above to your repository
-  2. Deploy your app: php lightpack app:deploy ${SERVER_NAME}
+  2. Deploy your app: php console app:deploy ${SERVER_NAME}
   3. Delete this file: rm /root/.lightpack-credentials-final
 
 SECURITY NOTES:

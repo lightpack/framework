@@ -9,7 +9,7 @@ use Lightpack\DevOps\QueueManager;
  * Check the status of the background queue worker daemon.
  *
  * Usage:
- *   php lightpack queue:status
+ *   php console queue:status
  */
 class QueueStatusCommand extends Command
 {
@@ -30,7 +30,7 @@ class QueueStatusCommand extends Command
         } else {
             $this->output->warning('Queue worker is not running.');
             $this->output->newline();
-            $this->output->line('Start it with: php lightpack queue:daemon');
+            $this->output->line('Start it with: php console queue:daemon');
         }
 
         return self::SUCCESS;

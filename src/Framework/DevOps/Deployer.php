@@ -94,7 +94,7 @@ class Deployer
             'git fetch origin {branch}',
             'git reset --hard origin/{branch}',
             'composer install --no-dev --optimize-autoloader',
-            'php lightpack migrate:up --force',
+            'php console migrate:up --force',
         ];
 
         $script = implode(' && ', $commands);

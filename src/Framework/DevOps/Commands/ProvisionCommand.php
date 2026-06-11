@@ -13,9 +13,9 @@ use Lightpack\DevOps\Provisioner;
  * with the deploy user for daily deployments.
  *
  * Usage:
- *   php lightpack server:provision              Provision default environment
- *   php lightpack server:provision staging    Provision specific environment
- *   php lightpack server:provision --php=8.4  Override PHP version
+ *   php console server:provision              Provision default environment
+ *   php console server:provision staging    Provision specific environment
+ *   php console server:provision --php=8.4  Override PHP version
  */
 class ProvisionCommand extends Command
 {
@@ -202,7 +202,7 @@ class ProvisionCommand extends Command
         $this->output->newline();
         $this->output->line("  1. Review credentials: deploy/credentials/{$env}.txt");
         $this->output->line('  2. Add the GitHub deploy key to your repository');
-        $this->output->line("  3. Deploy your app:  php lightpack app:deploy {$env}");
+        $this->output->line("  3. Deploy your app:  php console app:deploy {$env}");
         $this->output->newline();
         $this->output->info('Security notes:');
         $this->output->line('  - Root SSH login is now DISABLED');

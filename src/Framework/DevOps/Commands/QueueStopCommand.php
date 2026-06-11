@@ -12,7 +12,7 @@ use Lightpack\DevOps\QueueManager;
  * does not exit within 5 seconds.
  *
  * Usage:
- *   php lightpack queue:stop
+ *   php console queue:stop
  */
 class QueueStopCommand extends Command
 {

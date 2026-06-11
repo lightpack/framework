@@ -8,7 +8,7 @@ use Lightpack\Console\Command;
  * Check the queue worker daemon status on a remote server.
  *
  * Usage:
- *   php lightpack server:queue:status production
+ *   php console server:queue:status production
  */
 class ServerQueueStatusCommand extends Command
 {

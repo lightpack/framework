@@ -8,8 +8,8 @@ use Lightpack\Console\Command;
  * Stream application logs in real-time from a remote server.
  *
  * Usage:
- *   php lightpack logs:tail production          Tail default log file
- *   php lightpack logs:tail --file=error.log    Tail a specific log file
+ *   php console logs:tail production          Tail default log file
+ *   php console logs:tail --file=error.log    Tail a specific log file
  */
 class LogsTailCommand extends Command
 {

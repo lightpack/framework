@@ -10,8 +10,8 @@ use Lightpack\Console\Command;
  * SSHs into the server and runs queue:daemon on the remote machine.
  *
  * Usage:
- *   php lightpack server:queue:start production
- *   php lightpack server:queue:start --queue=mail
+ *   php console server:queue:start production
+ *   php console server:queue:start --queue=mail
  */
 class ServerQueueStartCommand extends Command
 {

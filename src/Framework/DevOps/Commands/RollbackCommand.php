@@ -9,9 +9,9 @@ use Lightpack\DevOps\Deployer;
  * Rollback the application to a previous commit on a remote server.
  *
  * Usage:
- *   php lightpack deploy:rollback              Rollback default env by 1 commit
- *   php lightpack deploy:rollback --env=staging Rollback staging by 1 commit
- *   php lightpack deploy:rollback --steps=2    Rollback by 2 commits
+ *   php console deploy:rollback              Rollback default env by 1 commit
+ *   php console deploy:rollback --env=staging Rollback staging by 1 commit
+ *   php console deploy:rollback --steps=2    Rollback by 2 commits
  */
 class RollbackCommand extends Command
 {

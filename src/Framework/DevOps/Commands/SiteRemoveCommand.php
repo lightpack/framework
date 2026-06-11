@@ -8,8 +8,8 @@ use Lightpack\Console\Command;
  * Remove an Nginx virtual host and optionally its SSL certificate.
  *
  * Usage:
- *   php lightpack server:site:remove production --domain=example.com
- *   php lightpack server:site:remove --domain=example.com --keep-ssl
+ *   php console server:site:remove production --domain=example.com
+ *   php console server:site:remove --domain=example.com --keep-ssl
  */
 class SiteRemoveCommand extends Command
 {

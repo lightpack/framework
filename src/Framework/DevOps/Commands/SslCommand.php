@@ -8,8 +8,8 @@ use Lightpack\Console\Command;
  * Obtain and install an SSL certificate via Certbot.
  *
  * Usage:
- *   php lightpack server:ssl production --domain=example.com
- *   php lightpack server:ssl --domain=example.com --email=admin@example.com --www
+ *   php console server:ssl production --domain=example.com
+ *   php console server:ssl --domain=example.com --email=admin@example.com --www
  */
 class SslCommand extends Command
 {
@@ -99,7 +99,7 @@ set -e
 # Ensure Nginx site config exists before running certbot
 if [ ! -f "/etc/nginx/sites-available/{$domain}.conf" ]; then
     echo "ERROR: Nginx site config not found for {$domain}"
-    echo "Run: php lightpack server:site:add {$env} --domain={$domain}"
+    echo "Run: php console server:site:add {$env} --domain={$domain}"
     exit 1
 fi
 

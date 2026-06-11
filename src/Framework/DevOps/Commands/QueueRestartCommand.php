@@ -11,8 +11,8 @@ use Lightpack\DevOps\QueueManager;
  * Stops the current worker (if running) and starts a new one.
  *
  * Usage:
- *   php lightpack queue:restart              Restart with default queue
- *   php lightpack queue:restart --queue=mail Restart with 'mail' queue
+ *   php console queue:restart              Restart with default queue
+ *   php console queue:restart --queue=mail Restart with 'mail' queue
  */
 class QueueRestartCommand extends Command
 {
