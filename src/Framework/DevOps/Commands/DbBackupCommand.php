@@ -96,7 +96,7 @@ fi
 DB_HOST=$(grep '^DB_HOST=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
 DB_NAME=$(grep '^DB_NAME=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
 DB_USER=$(grep '^DB_USER=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-DB_PASS=$(grep '^DB_PASS=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+DB_PASS=$(grep '^DB_PSWD=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
 
 if [ -z "\$DB_NAME" ] || [ -z "\$DB_USER" ]; then
     echo "ERROR: DB_NAME or DB_USER not found in .env" >&2
@@ -106,7 +106,7 @@ fi
 # Use MYSQL_PWD env var (safer than -p on command line)
 export MYSQL_PWD="\$DB_PASS"
 
-mysqldump -h"\$DB_HOST" -u"\$DB_USER" --single-transaction --routines "\$DB_NAME" 2>/dev/null
+mysqldump -h"\$DB_HOST" -u"\$DB_USER" --single-transaction --routines "\$DB_NAME"
 
 # Clear password from env
 unset MYSQL_PWD
