@@ -74,8 +74,9 @@ LSB_RELEASE=$(lsb_release -s -c)
 SUPPORTED_CODENAMES="jammy noble"  # 22.04, 24.04
 
 if ! echo "$SUPPORTED_CODENAMES" | grep -qw "$LSB_RELEASE"; then
-    log_warn "Untested Ubuntu version: $LSB_RELEASE"
-    log_warn "Only jammy (22.04) and noble (24.04) are fully supported"
+    log_error "Unsupported Ubuntu version: $LSB_RELEASE"
+    log_error "Only jammy (22.04) and noble (24.04) are supported. Aborting."
+    exit 1
 fi
 
 # -----------------------------------------------------------------------------
