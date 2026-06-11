@@ -50,10 +50,6 @@ class ServerRunCommand extends Command
 
         $this->output->newline();
 
-        if (!empty($result['output'])) {
-            $this->output->line($result['output']);
-        }
-
         if ($result['success']) {
             return self::SUCCESS;
         }
