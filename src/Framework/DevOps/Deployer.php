@@ -134,6 +134,7 @@ class Deployer
         $phpVersion = $env['php_version'] ?? '8.3';
 
         $commands = [
+            'find {path}/storage -type d -exec chmod 2775 {} \; && find {path}/storage -type d -exec chgrp www-data {} \;',
             'php {path}/console migrate:up --force',
             "sudo systemctl reload php{$phpVersion}-fpm",
         ];
