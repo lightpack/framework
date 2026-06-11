@@ -261,46 +261,33 @@ php lightpack app:rollback production --steps=3
 
 ### The Built-in Daemon (No Root Required)
 
-Lightpack includes a built-in queue daemon that runs without Supervisor or any system-level service manager. It is a PHP process that forks a worker and manages its lifecycle.
+Lightpack includes a built-in queue daemon that runs without Supervisor or any system-level service manager. It is a PHP process that forks a worker and manages its lifecycle on the server.
 
-Start the daemon:
+Start the daemon on a remote server:
 
 ```bash
-php lightpack queue:daemon --queue=default
+php lightpack server:queue:start production --queue=default
 ```
 
-This creates a PID file at `storage/worker.pid` and runs the worker loop in the background. To restart:
+This creates a PID file at `storage/worker.pid` on the server and runs the worker loop in the background. To restart:
 
 ```bash
-php lightpack queue:restart
+php lightpack server:queue:restart production
 ```
 
 To stop:
 
 ```bash
-php lightpack queue:stop
+php lightpack server:queue:stop production
 ```
 
 To check status:
 
 ```bash
-php lightpack queue:status
+php lightpack server:queue:status production
 ```
 
 No root. No sudo. No system services. Just PHP.
-
-### Remote Queue Management
-
-You can also manage the queue worker on a remote server without SSHing in manually:
-
-```bash
-php lightpack server:queue:start production     # Start daemon on server
-php lightpack server:queue:stop production        # Stop daemon on server
-php lightpack server:queue:restart production   # Restart daemon on server
-php lightpack server:queue:status production    # Check daemon status on server
-```
-
-These are thin wrappers that SSH into the server and run the local commands above.
 
 ---
 
@@ -504,14 +491,10 @@ Lightpack DevOps is built on a few simple beliefs:
 | Command | Description |
 |---|---|
 | `php lightpack jobs:run` | Run worker in foreground |
-| `php lightpack queue:daemon` | Start background daemon (local) |
-| `php lightpack queue:restart` | Restart daemon (local) |
-| `php lightpack queue:stop` | Stop daemon (local) |
-| `php lightpack queue:status` | Show daemon status (local) |
-| `php lightpack server:queue:start <env>` | Start daemon on remote server |
-| `php lightpack server:queue:stop <env>` | Stop daemon on remote server |
-| `php lightpack server:queue:restart <env>` | Restart daemon on remote server |
-| `php lightpack server:queue:status <env>` | Check daemon status on remote server |
+| `php lightpack server:queue:start <env>` | Start daemon on server |
+| `php lightpack server:queue:restart <env>` | Restart daemon on server |
+| `php lightpack server:queue:stop <env>` | Stop daemon on server |
+| `php lightpack server:queue:status <env>` | Show daemon status on server |
 | `php lightpack jobs:retry` | Retry failed jobs |
 
 ### Database Commands

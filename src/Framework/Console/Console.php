@@ -33,20 +33,16 @@ use Lightpack\DevOps\Commands\ProvisionCommand;
 use Lightpack\DevOps\Commands\RollbackCommand;
 use Lightpack\DevOps\Commands\LogsTailCommand;
 use Lightpack\DevOps\Commands\LogsViewCommand;
-use Lightpack\DevOps\Commands\QueueDaemonCommand;
-use Lightpack\DevOps\Commands\QueueRestartCommand;
-use Lightpack\DevOps\Commands\QueueStatusCommand;
-use Lightpack\DevOps\Commands\QueueStopCommand;
+use Lightpack\DevOps\Commands\ServerQueueRestartCommand;
+use Lightpack\DevOps\Commands\ServerQueueStartCommand;
+use Lightpack\DevOps\Commands\ServerQueueStatusCommand;
+use Lightpack\DevOps\Commands\ServerQueueStopCommand;
 use Lightpack\DevOps\Commands\ScheduleRemoveCommand;
 use Lightpack\DevOps\Commands\ScheduleSetupCommand;
 use Lightpack\DevOps\Commands\DbBackupCommand;
 use Lightpack\DevOps\Commands\DbRestoreCommand;
 use Lightpack\DevOps\Commands\EnvPullCommand;
 use Lightpack\DevOps\Commands\ScheduleStatusCommand;
-use Lightpack\DevOps\Commands\ServerQueueRestartCommand;
-use Lightpack\DevOps\Commands\ServerQueueStartCommand;
-use Lightpack\DevOps\Commands\ServerQueueStatusCommand;
-use Lightpack\DevOps\Commands\ServerQueueStopCommand;
 use Lightpack\DevOps\Commands\SiteAddCommand;
 use Lightpack\DevOps\Commands\SiteRemoveCommand;
 use Lightpack\DevOps\Commands\SslCommand;
@@ -83,20 +79,16 @@ class Console
         'server:ssl' => SslCommand::class,
         'logs:view' => LogsViewCommand::class,
         'logs:tail' => LogsTailCommand::class,
-        'queue:daemon' => QueueDaemonCommand::class,
-        'queue:restart' => QueueRestartCommand::class,
-        'queue:stop' => QueueStopCommand::class,
-        'queue:status' => QueueStatusCommand::class,
+        'server:queue:start' => ServerQueueStartCommand::class,
+        'server:queue:stop' => ServerQueueStopCommand::class,
+        'server:queue:restart' => ServerQueueRestartCommand::class,
+        'server:queue:status' => ServerQueueStatusCommand::class,
         'schedule:setup' => ScheduleSetupCommand::class,
         'schedule:remove' => ScheduleRemoveCommand::class,
         'schedule:status' => ScheduleStatusCommand::class,
         'db:backup' => DbBackupCommand::class,
         'db:restore' => DbRestoreCommand::class,
         'env:pull' => EnvPullCommand::class,
-        'server:queue:start' => ServerQueueStartCommand::class,
-        'server:queue:stop' => ServerQueueStopCommand::class,
-        'server:queue:restart' => ServerQueueRestartCommand::class,
-        'server:queue:status' => ServerQueueStatusCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,
