@@ -96,7 +96,7 @@ class Console
         'schedule:status' => ScheduleStatusCommand::class,
         'db:backup' => DbBackupCommand::class,
         'db:restore' => DbRestoreCommand::class,
-        'env:pull' => EnvPullCommand::class,
+        'server:env:pull' => EnvPullCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,

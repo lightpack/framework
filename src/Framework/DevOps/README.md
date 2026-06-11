@@ -340,7 +340,7 @@ When you deploy, your local `.env.production` is automatically copied to the ser
 Download the remote `.env` to your local machine for inspection:
 
 ```bash
-php console env:pull production
+php console server:env:pull production
 ```
 
 This saves the file to `storage/env/production.env` with `0600` permissions. It does **not** overwrite your local `.env.production`.
@@ -525,7 +525,7 @@ Lightpack DevOps is built on a few simple beliefs:
 
 | Command | Description |
 |---|---|
-| `php console env:pull <env>` | Download remote .env for inspection |
+| `php console server:env:pull <env>` | Download remote .env for inspection |
 
 ---
 

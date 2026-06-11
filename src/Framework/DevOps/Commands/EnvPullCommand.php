@@ -12,8 +12,8 @@ use Lightpack\Utils\Process;
  * The file is created with 0600 permissions to protect secrets.
  *
  * Usage:
- *   php console env:pull production
- *   php console env:pull --output=production-backup.env
+ *   php console server:env:pull production
+ *   php console server:env:pull --output=production-backup.env
  */
 class EnvPullCommand extends Command
 {
