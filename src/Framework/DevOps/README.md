@@ -196,6 +196,25 @@ sudo certbot --nginx -d yourdomain.com
 
 Your site is now served over HTTPS.
 
+### 8. Managing Multiple Domains
+
+You can add as many domains as you want to the **same application**:
+
+```bash
+php console server:site:add production --domain=example.com
+php console server:site:add production --domain=www.example.com
+php console server:site:add production --domain=api.example.com
+```
+
+**Important:** `server:site:add` registers a domain with Nginx. It does **not** automatically happen when you point DNS to the server. Every domain must be explicitly added.
+
+**All domains above serve the same app** from the same codebase. This is ideal for:
+- Primary domain + `www` alias
+- Subdomains (`api.`, `admin.`, `app.`)
+- Multiple top-level domains for the same product (`.com`, `.net`)
+
+**If you need separate applications on the same server** (shared hosting style), that is a different workflow not covered by `server:site:add`. You would need to deploy each app to its own directory and configure Nginx manually.
+
 ---
 
 ## Understanding the Deploy User
@@ -562,7 +581,7 @@ Lightpack DevOps is built on a few simple beliefs:
 
 | Command | Description |
 |---|---|
-| `php console server:site:add <env>` | Add Nginx virtual host |
+| `php console server:site:add <env> --domain=example.com` | Add Nginx virtual host for a domain |
 | `php console server:site:remove <env>` | Remove Nginx virtual host |
 | `php console server:ssl <env>` | Obtain and install SSL certificate |
 
