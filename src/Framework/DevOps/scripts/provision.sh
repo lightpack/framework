@@ -314,8 +314,11 @@ fi
 log_info "Using PPA codename: ${PHP_PPA_CODENAME} (detected Ubuntu ${UBUNTU_MAJOR}.x)"
 
 # Import Ondrej PPA GPG key (modern signed-by approach)
-curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14AA40EC0831756756D7F66C4F4EA0AAE5267A6C" \
-    | gpg --dearmor -o /usr/share/keyrings/ondrej-php.gpg
+# Skip if already imported — idempotent for re-runs
+if [ ! -f /usr/share/keyrings/ondrej-php.gpg ]; then
+    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14AA40EC0831756756D7F66C4F4EA0AAE5267A6C" \
+        | gpg --batch --yes --dearmor -o /usr/share/keyrings/ondrej-php.gpg
+fi
 
 # Add repository with explicit codename
 echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ondrej-php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu ${PHP_PPA_CODENAME} main" \
