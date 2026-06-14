@@ -636,6 +636,7 @@ Lightpack DevOps is built on a few simple beliefs:
 |---|---|
 | `php console server:run <env> --cmd="..."` | Run any command on the server |
 | `php console server:key:show <env>` | Display the deploy user's public SSH key |
+| `php console server:config <env> --upload=100M` | Update PHP/Nginx runtime settings |
 
 ---
 

@@ -27,6 +27,7 @@ class DeployView
  *   - env:pull          (download remote .env)
  *   - server:key:show   (display deploy SSH key for Git repo access)
  *   - server:queue:*    (queue daemon management)
+ *   - server:config     (update PHP/Nginx runtime settings)
  *   - server:run        (run arbitrary commands on remote server)
  *
  * Copy this file to config/deploy.php and update the values for your server.
