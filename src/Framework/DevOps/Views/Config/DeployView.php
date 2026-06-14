@@ -17,12 +17,16 @@ class DeployView
  *   - app:deploy        (daily code deployments, uses deploy user)
  *   - app:rollback      (revert to previous commit)
  *   - server:site:add   (nginx virtual host management)
+ *   - server:site:remove (remove nginx virtual host)
  *   - server:ssl        (SSL certificate installation)
  *   - logs:view|tail    (remote log access)
  *   - db:backup|restore (database operations)
  *   - schedule:setup    (cron job installation)
+ *   - schedule:remove   (remove cron job)
+ *   - schedule:status   (check cron job status)
  *   - env:pull          (download remote .env)
  *   - server:queue:*    (queue daemon management)
+ *   - server:run        (run arbitrary commands on remote server)
  *
  * Copy this file to config/deploy.php and update the values for your server.
  */
