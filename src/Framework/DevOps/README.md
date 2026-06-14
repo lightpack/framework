@@ -85,8 +85,19 @@ This creates `config/deploy.php`. Open it and set your server IP, SSH key, and a
 'host'    => 'YOUR_SERVER_IP',
 'user'    => 'deploy',
 'key'     => '~/.ssh/id_rsa',
+'repo'    => 'git@github.com:you/app.git',
 'path'    => '/var/www/lightpack',
 'branch'  => 'main',
+'git_host' => 'github.com',  // for SSH key scanning during provisioning
+```
+
+**Optional post-deploy hooks** (run after migrations, before PHP-FPM reload):
+
+```php
+'hooks' => [
+    'php console cache:clear',
+    'php console storage:link',
+],
 ```
 
 **Important:** If your provider disables root SSH by default (most do), set the initial SSH user:
@@ -140,13 +151,19 @@ When it finishes, your server is ready. Root SSH is disabled. The only way in is
 
 The provisioning script generated an SSH key for the `deploy` user so the server can pull your code from GitHub. You need to add this key to your repository.
 
+**Option 1 — From the credentials file:**
 Open `deploy/credentials/production.txt` and find the line that looks like this:
 
 ```
 ssh-ed25519 AAAAC3NzaC... deploy@production
 ```
 
-Copy it. Go to your repository on GitHub: **Settings > Deploy keys > Add deploy key**. Paste the key. Do **not** allow write access.
+**Option 2 — From the server directly:**
+```bash
+php console server:key:show production
+```
+
+Either way, copy the key. Go to your repository on GitHub: **Settings > Deploy keys > Add deploy key**. Paste the key. Do **not** allow write access.
 
 ### 5. Deploy Your Application
 
@@ -308,6 +325,28 @@ php console app:rollback production --steps=3
 ```
 
 **Important:** Rollback only reverts code. It does **not** revert database migrations. If your broken deployment included a migration that changed the schema, you must manually handle the database rollback. This is by design. Database changes should be backward-compatible or run in separate, carefully planned migrations.
+
+---
+
+## Changing the Repository URL
+
+If you move your code to a different Git repository, update `repo` in `config/deploy.php` and redeploy. The deploy script will automatically update the remote URL on the server.
+
+**However, the deploy key does not transfer.** GitHub deploy keys are tied to one repository. You must move the key manually:
+
+1. Get the server's public key:
+   ```bash
+   php console server:key:show production
+   ```
+
+2. On GitHub, **remove** the key from the **old** repository (Settings → Deploy keys).
+
+3. Add the same key to the **new** repository (Settings → Deploy keys → Add deploy key).
+
+4. Deploy:
+   ```bash
+   php console app:deploy production
+   ```
 
 ---
 
@@ -596,6 +635,7 @@ Lightpack DevOps is built on a few simple beliefs:
 | Command | Description |
 |---|---|
 | `php console server:run <env> --cmd="..."` | Run any command on the server |
+| `php console server:key:show <env>` | Display the deploy user's public SSH key |
 
 ---
 

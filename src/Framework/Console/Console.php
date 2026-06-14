@@ -46,6 +46,7 @@ use Lightpack\DevOps\Commands\EnvPullCommand;
 use Lightpack\DevOps\Commands\ScheduleStatusCommand;
 use Lightpack\DevOps\Commands\SiteAddCommand;
 use Lightpack\DevOps\Commands\SiteRemoveCommand;
+use Lightpack\DevOps\Commands\ServerKeyShowCommand;
 use Lightpack\DevOps\Commands\ServerRunCommand;
 use Lightpack\DevOps\Commands\SslCommand;
 
@@ -92,6 +93,7 @@ class Console
         'db:backup' => DbBackupCommand::class,
         'db:restore' => DbRestoreCommand::class,
         'server:env:pull' => EnvPullCommand::class,
+        'server:key:show' => ServerKeyShowCommand::class,
         'server:run' => ServerRunCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,

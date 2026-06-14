@@ -25,6 +25,7 @@ class DeployView
  *   - schedule:remove   (remove cron job)
  *   - schedule:status   (check cron job status)
  *   - env:pull          (download remote .env)
+ *   - server:key:show   (display deploy SSH key for Git repo access)
  *   - server:queue:*    (queue daemon management)
  *   - server:run        (run arbitrary commands on remote server)
  *
@@ -43,6 +44,12 @@ return [
             'user'    => 'deploy',                        // Deploy user (created by server:provision)
             'key'     => '~/.ssh/id_rsa',                 // Your local SSH private key
             'repo'    => 'git@github.com:you/app.git',    // Git repo (SSH clone URL)
+            //                                       ^
+            // NOTE: If you change 'repo' after provisioning, copy the deploy
+            // key from the server (server:key:show) and add it to the new repo's
+            // deploy keys on GitHub/GitLab. The old repo key does NOT transfer.
+            // GitHub requires removing the key from the OLD repo FIRST because
+            // deploy keys are unique by fingerprint across your account.
             'timeout' => 300,                             // SSH command timeout in seconds
 
             // -----------------------------------------------------------------

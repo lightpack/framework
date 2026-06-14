@@ -115,18 +115,18 @@ class Deployer
         $repo    = $env['repo'] ?? null;
 
         if ($repo !== null) {
-            $repoSafe = escapeshellarg($repo);
-            $fetch    = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
-            $init     = "git -C {$path} init && git -C {$path} remote add origin {$repoSafe}"
-                . " && git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
-            $cloneOrFetch = "if [ -d {$rawPath}/.git ]; then {$fetch}; else {$init}; fi";
+            $repoSafe    = escapeshellarg($repo);
+            $ensureRepo  = "test -d {$rawPath}/.git || git -C {$path} init";
+            $syncRemote  = "git -C {$path} remote set-url origin {$repoSafe} 2>/dev/null || git -C {$path} remote add origin {$repoSafe}";
+            $pullCode    = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
+            $gitSteps    = "{$ensureRepo} && {$syncRemote} && {$pullCode}";
         } else {
-            $cloneOrFetch = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
+            $gitSteps = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
         }
 
         $composer = "composer -d {$path} install --no-dev --optimize-autoloader";
 
-        return "{$cloneOrFetch} && {$composer}";
+        return "{$gitSteps} && {$composer}";
     }
 
     private function buildActivateScript(array $env): string
