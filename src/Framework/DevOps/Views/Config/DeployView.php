@@ -35,33 +35,41 @@ return [
             // -----------------------------------------------------------------
             // SSH Connection
             // -----------------------------------------------------------------
-            'host'    => '1.2.3.4',                        // Server IP or hostname
-            'user'    => 'deploy',                       // User that will be CREATED by provision
-            'key'     => '~/.ssh/id_rsa',               // Your local SSH private key
-            'repo'    => 'git@github.com:you/app.git',  // Git repo (for first deploy clone)
-            'timeout' => 300,                            // Seconds for deploy commands
+            'host'    => '1.2.3.4',                       // Server IP or hostname
+            'user'    => 'deploy',                        // Deploy user (created by server:provision)
+            'key'     => '~/.ssh/id_rsa',                 // Your local SSH private key
+            'repo'    => 'git@github.com:you/app.git',    // Git repo (SSH clone URL)
+            'timeout' => 300,                             // SSH command timeout in seconds
 
             // -----------------------------------------------------------------
             // Provisioning (used ONLY by server:provision)
             // -----------------------------------------------------------------
-            // The initial SSH user for provisioning. On cloud images this is
-            // often 'ubuntu', 'kubuntu', or 'root' — NOT the deploy user above.
+            // The initial SSH user for provisioning. On most cloud images this is
+            // 'ubuntu', 'root', or similar — NOT the deploy user above.
             // The deploy user does not exist until after provisioning completes.
-            'provision_user' => 'root',      // Initial SSH user (root/ubuntu/kubuntu)
+            'provision_user' => 'root',         // Initial SSH user for provisioning
 
-            'php_version' => '8.3',          // PHP version to install: 8.1, 8.2, 8.3, 8.4
-            'timezone'    => 'UTC',          // Server timezone
-            'database'    => 'mysql',        // mysql | none
-            'web_server'  => 'nginx',        // nginx only for now
+            'php_version' => '8.3',             // PHP version: 8.1, 8.2, 8.3, 8.4
+            'timezone'    => 'UTC',             // Server timezone
+            'database'    => 'mysql',           // mysql | none
+            'web_server'  => 'nginx',           // nginx only
+            'git_host'    => 'github.com',      // Git host for SSH key scanning (github.com, gitlab.com, etc.)
             'ssl_email'   => 'you@example.com', // Email for SSL certificate renewal notices
-            'db_name'     => 'lightpack',    // Database name
-            'db_user'     => 'lightpack',    // Database user
+            'db_name'     => 'lightpack',       // MySQL database name
+            'db_user'     => 'lightpack',       // MySQL database user
 
             // -----------------------------------------------------------------
             // Application
             // -----------------------------------------------------------------
-            'path'    => '/var/www/lightpack', // App path on the server
-            'branch'  => 'main',             // Git branch to deploy
+            'path'    => '/var/www/lightpack',  // App directory on the server
+            'branch'  => 'main',                // Git branch to deploy
+
+            // Post-deploy hooks: run after migrations, before PHP-FPM reload (optional)
+            // Each hook runs as: cd /app/path && <hook command>
+            // 'hooks' => [
+            //     'php console cache:clear',
+            //     'php console storage:link',
+            // ],
         ],
 
         // 'staging' => [

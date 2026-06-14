@@ -9,51 +9,33 @@ use Lightpack\DevOps\Deployer;
  * Rollback the application to a previous commit on a remote server.
  *
  * Usage:
- *   php console deploy:rollback              Rollback default env by 1 commit
- *   php console deploy:rollback --env=staging Rollback staging by 1 commit
- *   php console deploy:rollback --steps=2    Rollback by 2 commits
+ *   php console app:rollback              Rollback default environment by 1 commit
+ *   php console app:rollback production   Rollback a specific environment
+ *   php console app:rollback staging --steps=2
  */
 class RollbackCommand extends Command
 {
+    use HasDeployConfig;
+
     public function run()
     {
-        $configPath = DIR_ROOT . '/config/deploy.php';
+        $config = $this->loadConfig();
 
-        if (!file_exists($configPath)) {
-            $this->output->error('Deploy config not found.');
-            $this->output->newline();
-            $this->output->line('Create config/deploy.php with your server settings.');
-            $this->output->newline();
+        if ($config === null) {
             return self::FAILURE;
         }
 
-        $config = require $configPath;
-        $defaultEnv = $config['default'] ?? 'production';
-        $env = $this->args->get('env', $defaultEnv);
-        $steps = (int) $this->args->get('steps', 1);
+        $env = $this->resolveEnvironment($config);
+        $envConfig = $this->getEnvConfig($config, $env);
 
-        if ($steps < 1) {
-            $this->output->error('Rollback steps must be at least 1.');
+        if ($envConfig === null) {
+            $this->printEnvironmentError($config, $env);
             return self::FAILURE;
         }
 
-        if (!isset($config['environments'][$env])) {
-            $this->output->error("Environment '{$env}' not found in config/deploy.php.");
-            $this->output->newline();
-            $this->output->line('Available environments:');
+        $steps = max(1, (int) $this->args->get('steps', 1));
 
-            $deployer = new Deployer($config);
-            foreach ($deployer->getEnvironments() as $name) {
-                $this->output->line("  - {$name}");
-            }
-
-            $this->output->newline();
-            return self::FAILURE;
-        }
-
-        $envConfig = $config['environments'][$env];
-
-        $this->output->warning("Rolling back {$env} ({$envConfig['host']}) by {$steps} commit(s)...");
+        $this->output->warning("Rolling back {$env} ({$envConfig['host']}) by {$steps} commit(s) ...");
         $this->output->newline();
 
         $deployer = new Deployer($config);
@@ -71,7 +53,7 @@ class RollbackCommand extends Command
         if ($result['success']) {
             $this->output->success("Rolled back {$env} successfully.");
             $this->output->newline();
-            $this->output->warning('Note: Check migrations manually if the rollback involves database changes.');
+            $this->output->warning('Note: Rollback does not revert database migrations. Handle those manually if needed.');
             return self::SUCCESS;
         }
 

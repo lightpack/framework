@@ -14,9 +14,13 @@ use Lightpack\DevOps\Provisioner;
  *
  * Usage:
  *   php console server:provision              Provision default environment
+ *   php console server:provision production   Provision a specific environment
  */
+
 class ProvisionCommand extends Command
 {
+    use HasDeployConfig;
+
     public function run()
     {
         $config = $this->loadConfig();
@@ -96,14 +100,6 @@ class ProvisionCommand extends Command
         return require $configPath;
     }
 
-    private function resolveEnvironment(array $config): string
-    {
-        $argument = $this->args->argument(0);
-        $defaultEnv = $config['default'] ?? 'production';
-
-        return $argument ?: $defaultEnv;
-    }
-
     private function applyOverrides(array &$envConfig): void
     {
         $overrides = [
@@ -180,20 +176,6 @@ class ProvisionCommand extends Command
         }
     }
 
-    private function printEnvironmentError(array $config, string $env): void
-    {
-        $this->output->error("Environment '{$env}' not found in config/deploy.php.");
-        $this->output->newline();
-        $this->output->line('Available environments:');
-
-        $provisioner = new Provisioner($config);
-        foreach ($provisioner->getEnvironments() as $name) {
-            $this->output->line("  - {$name}");
-        }
-
-        $this->output->newline();
-    }
-
     private function printNextSteps(string $env, array $envConfig): void
     {
         $this->output->info('Next steps:');
@@ -248,13 +230,4 @@ PHP;
         echo $example . PHP_EOL;
     }
 
-    private function resolveKeyPath(string $key): string
-    {
-        if (strpos($key, '~') === 0) {
-            $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
-            return str_replace('~', $home, $key);
-        }
-
-        return $key;
-    }
 }

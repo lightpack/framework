@@ -151,7 +151,7 @@ class QueueManager
     /**
      * Get the current status of the worker.
      *
-     * @return array{running: bool, pid: ?int, uptime?: int}
+     * @return array{running: bool, pid: ?int}
      */
     public function status(): array
     {
@@ -172,12 +172,9 @@ class QueueManager
             ];
         }
 
-        $uptime = $this->getProcessUptime($pid);
-
         return [
             'running' => true,
             'pid' => $pid,
-            'uptime' => $uptime,
         ];
     }
 
@@ -247,29 +244,4 @@ class QueueManager
         return posix_kill($pid, 0);
     }
 
-    private function getProcessUptime(int $pid): int
-    {
-        try {
-            $stat = @file_get_contents("/proc/{$pid}/stat");
-            if ($stat === false) {
-                return 0;
-            }
-
-            // Extract start time (field 22) from /proc/PID/stat
-            $parts = explode(' ', $stat);
-            if (count($parts) < 22) {
-                return 0;
-            }
-
-            $startTimeJiffies = (int) $parts[21];
-            $hz = (int) shell_exec('getconf CLK_TCK') ?: 100;
-            $bootTime = (int) explode(' ', (string) file_get_contents('/proc/stat'))[1] ?? 0;
-
-            // This is a rough estimate - proper uptime calculation requires boot time
-            // For simplicity, we return 0 if we can't calculate it precisely
-            return 0;
-        } catch (\Throwable $e) {
-            return 0;
-        }
-    }
 }

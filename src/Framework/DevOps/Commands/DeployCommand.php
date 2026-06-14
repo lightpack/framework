@@ -10,10 +10,13 @@ use Lightpack\DevOps\Deployer;
  *
  * Usage:
  *   php console app:deploy              Deploy to default environment
- *   php console app:deploy --env=staging  Deploy to specific environment
+ *   php console app:deploy production   Deploy to a specific environment
+ *   php console app:deploy staging      Deploy to staging environment
  */
 class DeployCommand extends Command
 {
+    use HasDeployConfig;
+
     public function run()
     {
         $config = $this->loadConfig();
@@ -32,7 +35,8 @@ class DeployCommand extends Command
         $envConfig = $config['environments'][$env];
         $deployer = new Deployer($config);
 
-        $this->printDeployHeader($env, $envConfig['host']);
+        $this->output->info("Deploying to {$env} ({$envConfig['host']}) ...");
+        $this->output->newline();
 
         return $this->deployCode($deployer, $env);
     }
@@ -54,35 +58,9 @@ class DeployCommand extends Command
         return require $configPath;
     }
 
-    private function resolveEnvironment(array $config): string
-    {
-        $defaultEnv = $config['default'] ?? 'production';
-        return $this->args->get('env', $defaultEnv);
-    }
-
-    private function printEnvironmentError(array $config, string $env): void
-    {
-        $this->output->error("Environment '{$env}' not found in config/deploy.php.");
-        $this->output->newline();
-        $this->output->line('Available environments:');
-
-        $deployer = new Deployer($config);
-        foreach ($deployer->getEnvironments() as $name) {
-            $this->output->line("  - {$name}");
-        }
-
-        $this->output->newline();
-    }
-
-    private function printDeployHeader(string $env, string $host): void
-    {
-        $this->output->info("Deploying to {$env} ({$host}) ...");
-        $this->output->newline();
-    }
-
     private function deployCode(Deployer $deployer, string $env): int
     {
-        $this->output->line("Deploying code ...");
+        $this->output->line('Deploying code ...');
         $this->output->newline();
 
         $localEnvPath = DIR_ROOT . '/.env.' . $env;
@@ -116,29 +94,25 @@ return [
 
     'environments' => [
         'production' => [
-            'host' => '1.2.3.4',
-            'user' => 'deploy',
-            'key' => '~/.ssh/id_rsa',
-            'path' => '/var/www/myapp',
-            'branch' => 'main',
+            'host'    => '1.2.3.4',
+            'user'    => 'deploy',
+            'key'     => '~/.ssh/id_rsa',
+            'path'    => '/var/www/myapp',
+            'branch'  => 'main',
             'timeout' => 300,
 
-            // Optional: override default deploy commands
-            // 'commands' => [
-            //     'cd {path}',
-            //     'git fetch origin {branch}',
-            //     'git reset --hard origin/{branch}',
-            //     'composer install --no-dev --optimize-autoloader',
-            //     'php console migrate:up --force',
+            // Post-deploy hooks: run after migrations, before FPM reload (optional)
+            // 'hooks' => [
+            //     'php console cache:clear',
+            //     'php console storage:link',
             // ],
         ],
         'staging' => [
-            'host' => '5.6.7.8',
-            'user' => 'deploy',
-            'key' => '~/.ssh/id_rsa_staging',
-            'path' => '/var/www/staging',
+            'host'   => '5.6.7.8',
+            'user'   => 'deploy',
+            'key'    => '~/.ssh/id_rsa',
+            'path'   => '/var/www/staging',
             'branch' => 'develop',
-            'timeout' => 300,
         ],
     ],
 ];
@@ -148,7 +122,7 @@ PHP;
         $this->output->newline();
         $this->output->line('Env files:');
         $this->output->line('  .env.production  -> copied to server as .env');
-        $this->output->line('  .env.staging    -> copied to server as .env');
+        $this->output->line('  .env.staging     -> copied to server as .env');
         $this->output->newline();
     }
 }

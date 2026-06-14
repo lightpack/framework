@@ -29,6 +29,7 @@ PHP_VERSION="${PHP_VERSION:-8.3}"
 TIMEZONE="${TIMEZONE:-UTC}"
 DB_TYPE="${DB_TYPE:-mysql}"          # mysql | none
 WEB_SERVER="${WEB_SERVER:-nginx}"    # nginx (caddy coming soon)
+GIT_HOST="${GIT_HOST:-github.com}"  # git hosting provider for ssh-keyscan
 
 MYSQL_DB="${MYSQL_DB:-lightpack}"
 MYSQL_USER="${MYSQL_USER:-lightpack}"
@@ -266,7 +267,7 @@ usermod -aG www-data "$DEPLOY_USER"
 # Generate SSH key for GitHub deployments
 if [ ! -f "/home/${DEPLOY_USER}/.ssh/id_ed25519" ]; then
     su - "$DEPLOY_USER" -c "ssh-keygen -t ed25519 -C 'deploy@${SERVER_NAME}' -f ~/.ssh/id_ed25519 -N ''"
-    su - "$DEPLOY_USER" -c "ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null"
+    su - "$DEPLOY_USER" -c "ssh-keyscan ${GIT_HOST} >> ~/.ssh/known_hosts 2>/dev/null"
     log_info "SSH key generated for GitHub access"
 fi
 

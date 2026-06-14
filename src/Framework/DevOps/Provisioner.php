@@ -163,6 +163,7 @@ class Provisioner
             'WEB_SERVER'  => $env['web_server'] ?? 'nginx',
             'MYSQL_DB'    => $env['db_name'] ?? 'lightpack',
             'MYSQL_USER'  => $env['db_user'] ?? 'lightpack',
+            'GIT_HOST'    => $env['git_host'] ?? 'github.com',
         ];
     }
 
@@ -226,18 +227,6 @@ class Provisioner
         }
 
         return $key;
-    }
-
-    private function cleanupRemoteScript(string $host, string $user, string $key, string $remotePath): void
-    {
-        $this->execute([
-            'ssh',
-            '-i', $key,
-            '-o', 'StrictHostKeyChecking=accept-new',
-            '-o', 'ConnectTimeout=10',
-            "{$user}@{$host}",
-            "rm -f {$remotePath}",
-        ], 10);
     }
 
     /**

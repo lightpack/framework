@@ -8,7 +8,7 @@ use Lightpack\Console\Command;
  * Run an arbitrary command on the remote server from the app directory.
  *
  * Usage:
- *   php console server:run production --cmd="php console some:commqnd"
+ *   php console server:run production --cmd="php console some:command"
  */
 class ServerRunCommand extends Command
 {

@@ -108,56 +108,63 @@ class Deployer
 
     private function buildCodeScript(array $env): string
     {
-        $path = $env['path'];
-        $branch = $env['branch'] ?? 'main';
-        $repo = $env['repo'] ?? null;
+        $rawPath = $env['path'];
+        $path    = escapeshellarg($rawPath);
+        $branch  = escapeshellarg($env['branch'] ?? 'main');
+        $ref     = escapeshellarg('origin/' . ($env['branch'] ?? 'main'));
+        $repo    = $env['repo'] ?? null;
 
-        $cloneOrFetch = $repo
-            ? "if [ -d {path}/.git ]; then git -C {path} fetch origin {branch} && git -C {path} reset --hard origin/{branch}; else git -C {path} init -b {branch} && git -C {path} remote add origin {$repo} && git -C {path} fetch origin {branch} && git -C {path} reset --hard origin/{branch}; fi"
-            : 'git -C {path} fetch origin {branch} && git -C {path} reset --hard origin/{branch}';
+        if ($repo !== null) {
+            $repoSafe = escapeshellarg($repo);
+            $fetch    = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
+            $init     = "git -C {$path} init && git -C {$path} remote add origin {$repoSafe}"
+                . " && git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
+            $cloneOrFetch = "if [ -d {$rawPath}/.git ]; then {$fetch}; else {$init}; fi";
+        } else {
+            $cloneOrFetch = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
+        }
 
-        $commands = [
-            $cloneOrFetch,
-            'composer -d {path} install --no-dev --optimize-autoloader',
-        ];
+        $composer = "composer -d {$path} install --no-dev --optimize-autoloader";
 
-        return str_replace(
-            ['{path}', '{branch}'],
-            [$path, $branch],
-            implode(' && ', $commands)
-        );
+        return "{$cloneOrFetch} && {$composer}";
     }
 
     private function buildActivateScript(array $env): string
     {
-        $path = $env['path'];
+        $rawPath    = $env['path'];
         $phpVersion = $env['php_version'] ?? '8.3';
+        $hooks      = $env['hooks'] ?? [];
+
+        $storagePath = escapeshellarg($rawPath . '/storage');
+        $consolePath = escapeshellarg($rawPath . '/console');
+        $appPath     = escapeshellarg($rawPath);
 
         $commands = [
-            'find {path}/storage -type d -exec chmod 2775 {} \; && find {path}/storage -type d -exec chgrp www-data {} \;',
-            'php {path}/console migrate:up --force',
-            "sudo systemctl reload php{$phpVersion}-fpm",
+            "find {$storagePath} -type d -exec chmod 2775 {} \\; && find {$storagePath} -type d -exec chgrp www-data {} \\;",
+            "php {$consolePath} migrate:up --force",
         ];
 
-        return str_replace(
-            '{path}',
-            $path,
-            implode(' && ', $commands)
-        );
+        foreach ($hooks as $hook) {
+            $commands[] = "cd {$appPath} && {$hook}";
+        }
+
+        $commands[] = "sudo systemctl reload php{$phpVersion}-fpm";
+
+        return implode(' && ', $commands);
     }
 
     private function buildRollbackScript(array $env, int $steps): string
     {
-        $path = $env['path'];
+        $path = escapeshellarg($env['path']);
 
         $commands = [
             "cd {$path}",
-            'echo "Recent commits:"',
+            "echo 'Recent commits:'",
             'git log --oneline -5',
             "git reset --hard HEAD~{$steps}",
-            'composer install --no-dev --optimize-autoloader',
-            'echo ""',
-            'echo "Rolled back. Current commit:"',
+            "composer -d {$path} install --no-dev --optimize-autoloader",
+            "echo ''",
+            "echo 'Rolled back. Current commit:'",
             'git log --oneline -1',
         ];
 

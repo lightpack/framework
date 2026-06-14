@@ -93,10 +93,17 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-DB_HOST=$(grep '^DB_HOST=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-DB_NAME=$(grep '^DB_NAME=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-DB_USER=$(grep '^DB_USER=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-DB_PASS=$(grep '^DB_PSWD=' .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+read_env() {
+    local key="$1"
+    grep -E "^\${key}[[:space:]]*=" .env 2>/dev/null \
+        | head -1 \
+        | sed -E "s/^\${key}[[:space:]]*=[[:space:]]*//; s/^[\"']//; s/[\"'][[:space:]]*(#.*)?$//; s/[[:space:]]*(#.*)?$//"
+}
+
+DB_HOST=$(read_env DB_HOST)
+DB_NAME=$(read_env DB_NAME)
+DB_USER=$(read_env DB_USER)
+DB_PASS=$(read_env DB_PSWD)
 
 if [ -z "\$DB_NAME" ] || [ -z "\$DB_USER" ]; then
     echo "ERROR: DB_NAME or DB_USER not found in .env" >&2
