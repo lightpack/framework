@@ -256,7 +256,7 @@ During provisioning, a user named `deploy` is created. This user is the only acc
 - Modify system configuration files
 - Create or delete other users
 - Read root-only files like `/etc/shadow`
-- Stop or start services (only reload)
+- Stop or start system services (only reload for nginx and php-fpm)
 - Access other users' files
 
 This is by design. The deploy user is powerful enough to run your application but not powerful enough to destroy your server.
@@ -276,14 +276,13 @@ deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-nginx-disable
 deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot certonly *
 deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot --nginx *
 deploy ALL=(ALL) NOPASSWD: /usr/bin/certbot renew
-deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisor-write
+deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisor-write *
+deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisorctl * *
 deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl reread
 deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl update
-deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl start lightpack-worker:*
-deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl stop lightpack-worker:*
-deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl restart lightpack-worker:*
-deploy ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl status lightpack-worker:*
 ```
+
+Queue worker control goes through `lp-supervisorctl`, a wrapper script that validates the program name matches the `lightpack-{name}:*` pattern before calling supervisorctl. This prevents the deploy user from controlling arbitrary supervisor programs.
 
 This is a **whitelist**, not a blanket grant. The `deploy` user can run exactly these commands without a password. Nothing else. Not `apt-get`, not `systemctl restart`, not `bash`. Just service reloads, nginx site management, certbot, and supervisor queue management.
 
@@ -356,7 +355,7 @@ Lightpack uses [Supervisor](http://supervisord.org/) to manage queue workers in 
 
 ### Setup (Once)
 
-After provisioning, register the worker with Supervisor:
+After provisioning, register a worker with Supervisor:
 
 ```bash
 php console server:queue:setup production
@@ -368,18 +367,54 @@ With options:
 php console server:queue:setup production --queue=emails,default --workers=4 --cooldown=3600
 ```
 
+- **`--name`**: worker group name used to identify it in Supervisor (default: `worker`)
 - **`--queue`**: comma-separated queue names to process (default: `default`)
 - **`--workers`**: number of parallel worker processes (default: `1`)
-- **`--cooldown`**: total runtime in seconds before workers restart cleanly (default: `3600`). This prevents memory leaks and ensures new code is picked up after deploys.
+- **`--cooldown`**: total runtime in seconds before a worker exits voluntarily and Supervisor restarts it (default: `3600`). This prevents memory leaks in long-running PHP processes.
+- **`--stop-wait`**: seconds Supervisor waits after sending SIGTERM before force-killing the process (default: `60`). Increase this for queues that run long jobs.
+
+### Multiple Worker Groups
+
+You can create independent worker groups with different configurations. Each gets its own Supervisor program, process count, and log file:
+
+```bash
+php console server:queue:setup production --name=default  --queue=default  --workers=4 --cooldown=3600
+php console server:queue:setup production --name=emails   --queue=emails   --workers=2 --cooldown=0
+php console server:queue:setup production --name=reports  --queue=reports  --workers=1 --stop-wait=300
+```
+
+This creates three independent Supervisor programs: `lightpack-default`, `lightpack-emails`, `lightpack-reports`. Each can be controlled independently.
 
 ### Managing Workers
 
 ```bash
-php console server:queue:start production
-php console server:queue:stop production
+php console server:queue:start   production
+php console server:queue:stop    production
 php console server:queue:restart production
-php console server:queue:status production
+php console server:queue:status  production
 ```
+
+For named workers, pass `--name`:
+
+```bash
+php console server:queue:restart production --name=emails
+php console server:queue:status  production --name=reports
+```
+
+Omitting `--name` targets the default `worker` group.
+
+### Restarting Workers on Deploy
+
+If your workers load application classes that change between deploys, add a restart hook to `config/deploy.php`:
+
+```php
+'hooks' => [
+    'php console cache:clear',
+    'sudo lp-supervisorctl restart lightpack-worker:*',
+],
+```
+
+Hooks run as the deploy user after migrations and before PHP-FPM reload, so the worker restarts with fresh code already on disk.
 
 ### Local Development
 
@@ -594,11 +629,11 @@ Lightpack DevOps is built on a few simple beliefs:
 |---|---|
 | `php console jobs:run` | Run worker locally (development) |
 | `php console jobs:retry` | Retry failed jobs |
-| `php console server:queue:setup <env>` | Install worker under Supervisor (once) |
-| `php console server:queue:start <env>` | Start worker on server |
-| `php console server:queue:stop <env>` | Stop worker on server |
-| `php console server:queue:restart <env>` | Restart worker on server |
-| `php console server:queue:status <env>` | Show worker status on server |
+| `php console server:queue:setup <env> [--name=worker] [--queue=default] [--workers=1] [--cooldown=3600] [--stop-wait=60]` | Install worker under Supervisor (once) |
+| `php console server:queue:start <env> [--name=worker]` | Start worker on server |
+| `php console server:queue:stop <env> [--name=worker]` | Stop worker on server |
+| `php console server:queue:restart <env> [--name=worker]` | Restart worker on server |
+| `php console server:queue:status <env> [--name=worker]` | Show worker status on server |
 
 ### Database Commands
 

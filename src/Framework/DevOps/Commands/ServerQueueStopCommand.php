@@ -9,6 +9,7 @@ use Lightpack\Console\Command;
  *
  * Usage:
  *   php console server:queue:stop production
+ *   php console server:queue:stop production --name=emails
  */
 class ServerQueueStopCommand extends Command
 {
@@ -30,21 +31,23 @@ class ServerQueueStopCommand extends Command
             return self::FAILURE;
         }
 
-        $this->output->info("Stopping queue worker on {$env} ...");
+        $name = $this->args->get('name') ?? 'worker';
+
+        $this->output->info("Stopping queue worker [{$name}] on {$env} ...");
         $this->output->newline();
 
-        $sshCommand = $this->buildSshCommand($envConfig, 'sudo supervisorctl stop lightpack-worker:*');
+        $sshCommand = $this->buildSshCommand($envConfig, "sudo lp-supervisorctl stop lightpack-{$name}:*");
 
         $result = $this->executeRemote($sshCommand, 30);
 
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("Queue worker stopped on {$env}.");
+            $this->output->success("Queue worker [{$name}] stopped on {$env}.");
             return self::SUCCESS;
         }
 
-        $this->output->error("Failed to stop queue worker (exit code: {$result['exit_code']}).");
+        $this->output->error("Failed to stop queue worker [{$name}] (exit code: {$result['exit_code']}).");
         return self::FAILURE;
     }
 }

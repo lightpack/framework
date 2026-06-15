@@ -190,13 +190,10 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot --nginx *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/certbot renew
 
 # Supervisor queue management
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisor-write
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisor-write *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisorctl * *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl reread
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl update
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl start lightpack-worker\:*
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl stop lightpack-worker\:*
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl restart lightpack-worker\:*
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl status lightpack-worker\:*
 EOF
 
 chmod 0440 "$SUDOERS_FILE"
@@ -239,13 +236,32 @@ WSCRIPT
 
 cat > /usr/local/sbin/lp-supervisor-write <<'WSCRIPT'
 #!/bin/bash
-cat > /etc/supervisor/conf.d/lightpack-queue.conf
+name="${1:-worker}"
+if ! [[ "$name" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo "Invalid name: only alphanumeric, hyphens, and underscores allowed" >&2; exit 1
+fi
+cat > "/etc/supervisor/conf.d/lightpack-${name}.conf"
+WSCRIPT
+
+cat > /usr/local/sbin/lp-supervisorctl <<'WSCRIPT'
+#!/bin/bash
+action="${1:-}"
+program="${2:-}"
+case "$action" in
+    start|stop|restart|status) ;;
+    *) echo "Invalid action: $action" >&2; exit 1 ;;
+esac
+if ! [[ "$program" =~ ^lightpack-[a-zA-Z0-9_-]+:\*$ ]]; then
+    echo "Invalid program: must match lightpack-{name}:*" >&2; exit 1
+fi
+exec /usr/bin/supervisorctl "$action" "$program"
 WSCRIPT
 
 chmod 0750 /usr/local/sbin/lp-nginx-write \
            /usr/local/sbin/lp-nginx-enable \
            /usr/local/sbin/lp-nginx-disable \
-           /usr/local/sbin/lp-supervisor-write
+           /usr/local/sbin/lp-supervisor-write \
+           /usr/local/sbin/lp-supervisorctl
 
 log_info "Nginx management scripts installed to /usr/local/sbin/"
 
