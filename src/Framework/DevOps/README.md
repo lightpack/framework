@@ -201,7 +201,7 @@ php console server:site:remove production --domain=yourdomain.com
 ### 7. Get an SSL Certificate
 
 ```bash
-php console server:ssl production --domain=yourdomain.com
+php console server:site:ssl production --domain=yourdomain.com
 ```
 
 Or SSH in and run Certbot manually:
@@ -400,7 +400,7 @@ This runs in the foreground. Press `Ctrl+C` to stop.
 Lightpack's scheduler runs events every minute. To set it up on the server:
 
 ```bash
-php console schedule:setup production
+php console server:schedule:setup production
 ```
 
 This adds a single line to the deploy user's crontab:
@@ -414,7 +414,7 @@ No sudo. No system-wide cron. Just the deploy user's own scheduled tasks.
 ### Checking Status
 
 ```bash
-php console schedule:status production
+php console server:schedule:status production
 ```
 
 Shows whether the cron job is installed and when the next events are due.
@@ -422,7 +422,7 @@ Shows whether the cron job is installed and when the next events are due.
 ### Removing the Scheduler
 
 ```bash
-php console schedule:remove production
+php console server:schedule:remove production
 ```
 
 ---
@@ -474,7 +474,7 @@ Uploads a local backup file to the server and restores it. This is destructive. 
 ### View Logs
 
 ```bash
-php console logs:view production --lines=50
+php console server:logs:view production --lines=50
 ```
 
 Shows the last 50 lines of the application log.
@@ -482,7 +482,7 @@ Shows the last 50 lines of the application log.
 ### Tail Logs
 
 ```bash
-php console logs:tail production
+php console server:logs:tail production
 ```
 
 Streams logs in real-time, like `tail -f`.
@@ -583,9 +583,9 @@ Lightpack DevOps is built on a few simple beliefs:
 
 | Command | Description |
 |---|---|
-| `php console schedule:setup <env>` | Install cron job |
-| `php console schedule:remove <env>` | Remove cron job |
-| `php console schedule:status <env>` | Check cron status |
+| `php console server:schedule:setup <env>` | Install cron job |
+| `php console server:schedule:remove <env>` | Remove cron job |
+| `php console server:schedule:status <env>` | Check cron status |
 | `php console schedule:events` | Run due scheduled events (on server) |
 
 ### Queue Commands
@@ -613,8 +613,8 @@ Lightpack DevOps is built on a few simple beliefs:
 
 | Command | Description |
 |---|---|
-| `php console logs:view <env>` | View recent logs |
-| `php console logs:tail <env>` | Stream logs live |
+| `php console server:logs:view <env>` | View recent logs |
+| `php console server:logs:tail <env>` | Stream logs live |
 
 ### Site Management Commands
 
@@ -622,7 +622,7 @@ Lightpack DevOps is built on a few simple beliefs:
 |---|---|
 | `php console server:site:add <env> --domain=example.com` | Add Nginx virtual host for a domain |
 | `php console server:site:remove <env>` | Remove Nginx virtual host |
-| `php console server:ssl <env>` | Obtain and install SSL certificate |
+| `php console server:site:ssl <env>` | Obtain and install SSL certificate |
 
 ### Environment Commands
 

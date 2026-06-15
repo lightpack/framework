@@ -8,8 +8,8 @@ use Lightpack\Console\Command;
  * Obtain and install an SSL certificate via Certbot.
  *
  * Usage:
- *   php console server:ssl production --domain=example.com
- *   php console server:ssl --domain=example.com --email=admin@example.com --www
+ *   php console server:site:ssl production --domain=example.com
+ *   php console server:site:ssl --domain=example.com --email=admin@example.com --www
  */
 class SslCommand extends Command
 {

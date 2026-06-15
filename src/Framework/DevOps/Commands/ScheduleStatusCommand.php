@@ -8,7 +8,7 @@ use Lightpack\Console\Command;
  * Check if the Lightpack scheduler cron job is installed on a remote server.
  *
  * Usage:
- *   php console schedule:status production
+ *   php console server:schedule:status production
  */
 class ScheduleStatusCommand extends Command
 {
@@ -66,7 +66,7 @@ BASH;
         } else {
             $this->output->warning('Scheduler is not installed.');
             $this->output->newline();
-            $this->output->line('Install with: php console schedule:setup ' . $env);
+            $this->output->line('Install with: php console server:schedule:setup ' . $env);
         }
 
         return self::SUCCESS;

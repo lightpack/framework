@@ -11,7 +11,7 @@ use Lightpack\Console\Command;
  * schedule:events every minute. No sudo required.
  *
  * Usage:
- *   php console schedule:setup production
+ *   php console server:schedule:setup production
  */
 class ScheduleSetupCommand extends Command
 {

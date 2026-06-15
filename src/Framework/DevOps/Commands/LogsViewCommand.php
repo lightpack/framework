@@ -8,9 +8,9 @@ use Lightpack\Console\Command;
  * View the last N lines of application logs on a remote server.
  *
  * Usage:
- *   php console logs:view production        View last 50 lines
- *   php console logs:view --lines=100       View last 100 lines
- *   php console logs:view --file=error.log  View a specific log file
+ *   php console server:logs:view production        View last 50 lines
+ *   php console server:logs:view --lines=100       View last 100 lines
+ *   php console server:logs:view --file=error.log  View a specific log file
  */
 class LogsViewCommand extends Command
 {

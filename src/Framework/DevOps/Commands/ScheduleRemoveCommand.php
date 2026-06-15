@@ -11,7 +11,7 @@ use Lightpack\Console\Command;
  * No sudo required.
  *
  * Usage:
- *   php console schedule:remove production
+ *   php console server:schedule:remove production
  */
 class ScheduleRemoveCommand extends Command
 {
