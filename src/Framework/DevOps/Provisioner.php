@@ -2,8 +2,6 @@
 
 namespace Lightpack\DevOps;
 
-use Lightpack\Utils\Process;
-
 /**
  * Handles remote server provisioning via SSH as root.
  *
@@ -16,6 +14,8 @@ use Lightpack\Utils\Process;
  */
 class Provisioner
 {
+    use RunsProcess;
+
     private array $config;
 
     public function __construct(array $config)
@@ -169,24 +169,17 @@ class Provisioner
 
     private function addToKnownHosts(string $host): void
     {
-        $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
+        $home   = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
         $sshDir = $home . '/.ssh';
 
         if (!is_dir($sshDir)) {
             mkdir($sshDir, 0700, true);
         }
 
-        $process = new Process();
-        $keyscanOutput = '';
+        $result = $this->execute(['ssh-keyscan', '-H', $host], 10);
 
-        $process
-            ->setTimeout(10)
-            ->execute(['ssh-keyscan', '-H', $host], function (string $line) use (&$keyscanOutput) {
-                $keyscanOutput .= $line;
-            });
-
-        if ($keyscanOutput !== '') {
-            file_put_contents($sshDir . '/known_hosts', $keyscanOutput, FILE_APPEND | LOCK_EX);
+        if ($result['output'] !== '') {
+            file_put_contents($sshDir . '/known_hosts', $result['output'], FILE_APPEND | LOCK_EX);
         }
     }
 
@@ -219,41 +212,4 @@ class Provisioner
         return $this->execute($sshCommand, 1200);
     }
 
-    private function resolveKeyPath(string $key): string
-    {
-        if (strpos($key, '~') === 0) {
-            $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
-            return str_replace('~', $home, $key);
-        }
-
-        return $key;
-    }
-
-    /**
-     * Execute command using Process utility.
-     *
-     * @param string|array $command
-     * @return array{success: bool, exit_code: int, output: string}
-     */
-    private function execute(string|array $command, int $timeout = 300): array
-    {
-        $process = new Process();
-        $output = '';
-
-        $process
-            ->setTimeout($timeout)
-            ->execute($command, function (string $line, string $type) use (&$output) {
-                $output .= $line;
-                echo $line;
-                flush();
-            });
-
-        $exitCode = $process->getExitCode() ?? -1;
-
-        return [
-            'success' => $exitCode === 0,
-            'exit_code' => $exitCode,
-            'output' => $output,
-        ];
-    }
 }

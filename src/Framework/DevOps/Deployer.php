@@ -2,14 +2,13 @@
 
 namespace Lightpack\DevOps;
 
-use Lightpack\Utils\Process;
-
 /**
  * Handles remote deployment via SSH.
- * Uses Lightpack\Utils\Process for robust process execution.
  */
 class Deployer
 {
+    use RunsProcess;
+
     private array $config;
 
     public function __construct(array $config)
@@ -178,10 +177,11 @@ class Deployer
     {
         $user = $env['user'];
         $host = $env['host'];
-        $key = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
+        $key  = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
 
         return [
             'ssh',
+            '-n',
             '-i', $key,
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
@@ -197,7 +197,7 @@ class Deployer
     {
         $user = $env['user'];
         $host = $env['host'];
-        $key = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
+        $key        = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
         $remotePath = $env['path'] . '/.env';
 
         return [
@@ -209,41 +209,4 @@ class Deployer
         ];
     }
 
-    private function resolveKeyPath(string $key): string
-    {
-        if (strpos($key, '~') === 0) {
-            $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
-            return str_replace('~', $home, $key);
-        }
-
-        return $key;
-    }
-
-    /**
-     * Execute the SSH command using Process utility.
-     *
-     * @param string|array $command
-     * @return array{success: bool, exit_code: int, output: string}
-     */
-    private function execute(string|array $command, int $timeout = 300): array
-    {
-        $process = new Process();
-        $output = '';
-
-        $process
-            ->setTimeout($timeout)
-            ->execute($command, function (string $line, string $type) use (&$output) {
-                $output .= $line;
-                echo $line;
-                flush();
-            });
-
-        $exitCode = $process->getExitCode() ?? -1;
-
-        return [
-            'success' => $exitCode === 0,
-            'exit_code' => $exitCode,
-            'output' => $output,
-        ];
-    }
 }

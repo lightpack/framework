@@ -119,10 +119,6 @@ server {
 }
 NGINX;
 
-        // Escape for bash heredoc - only escape $ characters that are NOT bash variables
-        // We use 'EOF' (quoted) so no variable expansion happens inside the heredoc
-        $escapedConfig = str_replace("\\", "\\\\", $configContent);
-
         return <<<BASH
 domain="{$domain}"
 

@@ -139,10 +139,7 @@ class ProvisionCommand extends Command
             return false;
         }
 
-        $this->output->warning('Do you want to continue? (yes/no)');
-        $this->output->newline();
-
-        $response = trim(fgets(STDIN));
+        $response = $this->prompt->ask('Continue? (yes/no)');
 
         return strtolower($response) === 'yes';
     }

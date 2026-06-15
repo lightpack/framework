@@ -73,19 +73,21 @@ BASH;
 
     private function buildSupervisorConfig(string $appPath, string $phpVersion, string $user, string $queue, int $workers, int $cooldown): string
     {
-        $config = "[program:lightpack-worker]\n"
-            . "process_name=%(program_name)s_%(process_num)02d\n"
-            . "command=/usr/bin/php{$phpVersion} {$appPath}/console jobs:run --queue={$queue} --cooldown={$cooldown}\n"
-            . "directory={$appPath}\n"
-            . "user={$user}\n"
-            . "numprocs={$workers}\n"
-            . "autostart=false\n"
-            . "autorestart=true\n"
-            . "stopasgroup=true\n"
-            . "killasgroup=true\n"
-            . "stopwaitsecs=60\n"
-            . "redirect_stderr=true\n"
-            . "stdout_logfile=/var/log/supervisor/lightpack-worker.log\n";
+        $config = <<<INI
+        [program:lightpack-worker]
+        process_name=%(program_name)s_%(process_num)02d
+        command=/usr/bin/php{$phpVersion} {$appPath}/console jobs:run --queue={$queue} --cooldown={$cooldown}
+        directory={$appPath}
+        user={$user}
+        numprocs={$workers}
+        autostart=false
+        autorestart=true
+        stopasgroup=true
+        killasgroup=true
+        stopwaitsecs=60
+        redirect_stderr=true
+        stdout_logfile=/var/log/supervisor/lightpack-worker.log
+        INI;
 
         return escapeshellarg($config);
     }

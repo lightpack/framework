@@ -63,10 +63,7 @@ class DbRestoreCommand extends Command
         $this->output->line("File:        {$file}");
         $this->output->line("Size:        " . $this->formatBytes(filesize($localPath)));
         $this->output->newline();
-        $this->output->warning('This will DESTROY existing data. Are you sure? (yes/no)');
-        $this->output->newline();
-
-        $response = trim(fgets(STDIN));
+        $response = $this->prompt->ask('This will DESTROY existing data. Are you sure? (yes/no)');
 
         if (strtolower($response) !== 'yes') {
             $this->output->line('Restore cancelled.');
@@ -169,20 +166,4 @@ echo "Database restored successfully."
 BASH;
     }
 
-    private function formatBytes(int $bytes): string
-    {
-        if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
-        }
-
-        if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2) . ' MB';
-        }
-
-        if ($bytes >= 1024) {
-            return number_format($bytes / 1024, 2) . ' KB';
-        }
-
-        return $bytes . ' bytes';
-    }
 }

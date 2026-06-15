@@ -24,7 +24,7 @@ class DeployView
  *   - schedule:setup    (cron job installation)
  *   - schedule:remove   (remove cron job)
  *   - schedule:status   (check cron job status)
- *   - env:pull          (download remote .env)
+ *   - server:env:pull   (download remote .env)
  *   - server:key:show   (display deploy SSH key for Git repo access)
  *   - server:queue:*    (queue daemon management)
  *   - server:config     (update PHP/Nginx runtime settings)

@@ -2,7 +2,6 @@
 
 namespace Lightpack\DevOps\Commands;
 
-use Lightpack\DevOps\Deployer;
 use Lightpack\Utils\Process;
 
 /**
@@ -52,8 +51,7 @@ trait HasDeployConfig
         $this->output->newline();
         $this->output->line('Available environments:');
 
-        $deployer = new Deployer($config);
-        foreach ($deployer->getEnvironments() as $name) {
+        foreach (array_keys($config['environments'] ?? []) as $name) {
             $this->output->line("  - {$name}");
         }
 
@@ -105,6 +103,23 @@ trait HasDeployConfig
             'exit_code' => $exitCode,
             'output' => $output,
         ];
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        if ($bytes >= 1073741824) {
+            return number_format($bytes / 1073741824, 2) . ' GB';
+        }
+
+        if ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2) . ' MB';
+        }
+
+        if ($bytes >= 1024) {
+            return number_format($bytes / 1024, 2) . ' KB';
+        }
+
+        return $bytes . ' bytes';
     }
 
     /**
