@@ -39,7 +39,7 @@ class ServerQueueSetupCommand extends Command
         $appPath = $envConfig['app']['path'];
         $phpVersion = $envConfig['php'] ?? '8.3';
         $user = $envConfig['user'];
-        $name = $this->args->get('name') ?? 'worker';
+        $name = $this->args->get('name') ?? $env;
         $queue = $this->args->get('queue') ?? 'default';
         $workers = (int) ($this->args->get('workers') ?? 1);
         $cooldown = (int) ($this->args->get('cooldown') ?? 3600);

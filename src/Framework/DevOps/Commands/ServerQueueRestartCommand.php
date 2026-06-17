@@ -31,7 +31,7 @@ class ServerQueueRestartCommand extends Command
             return self::FAILURE;
         }
 
-        $name = $this->args->get('name') ?? 'worker';
+        $name = $this->args->get('name') ?? $env;
 
         $this->output->info("Restarting queue worker [{$name}] on {$env} ...");
         $this->output->newline();

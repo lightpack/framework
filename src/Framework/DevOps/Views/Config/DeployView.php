@@ -12,7 +12,7 @@ class DeployView
 /**
  * Lightpack DevOps deployment configuration.
  *
- * IMPORTANT: If you change 'repo' after provisioning, copy the deploy key
+ * IMPORTANT: If you change 'app' => 'repo' after provisioning, copy the deploy key
  * from the server (server:key:show) and add it to the new repo's deploy keys.
  * GitHub requires removing the key from the OLD repo first because deploy
  * keys are unique by fingerprint across your account.

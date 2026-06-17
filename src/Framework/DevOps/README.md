@@ -346,7 +346,7 @@ php console app:rollback production --steps=3
 
 ## Changing the Repository URL
 
-If you move your code to a different Git repository, update `repo` in `config/deploy.php` and redeploy. The deploy script will automatically update the remote URL on the server.
+If you move your code to a different Git repository, update `app.repo` in `config/deploy.php` and redeploy. The deploy script will automatically update the remote URL on the server.
 
 **However, the deploy key does not transfer.** GitHub deploy keys are tied to one repository. You must move the key manually:
 
@@ -384,7 +384,7 @@ With options:
 php console server:queue:setup production --queue=emails,default --workers=4 --cooldown=3600
 ```
 
-- **`--name`**: worker group name used to identify it in Supervisor (default: `worker`)
+- **`--name`**: worker group name used to identify it in Supervisor (default: the environment name, e.g. `production`)
 - **`--queue`**: comma-separated queue names to process (default: `default`)
 - **`--workers`**: number of parallel worker processes (default: `1`)
 - **`--cooldown`**: total runtime in seconds before a worker exits voluntarily and Supervisor restarts it (default: `3600`). This prevents memory leaks in long-running PHP processes.
@@ -418,7 +418,7 @@ php console server:queue:restart production --name=emails
 php console server:queue:status  production --name=reports
 ```
 
-Omitting `--name` targets the default `worker` group.
+Omitting `--name` targets the default group named after the environment (e.g. `lightpack-production`).
 
 ### Restarting Workers on Deploy
 
@@ -429,12 +429,12 @@ If your workers load application classes that change between deploys, add a rest
     // ...
     'hooks' => [
         'php console cache:clear',
-        'sudo lp-supervisorctl restart lightpack-worker:*',
+        'sudo lp-supervisorctl restart lightpack-production:*',
     ],
 ],
 ```
 
-Hooks run as the deploy user after migrations and before PHP-FPM reload, so the worker restarts with fresh code already on disk.
+Replace `production` with your actual environment name. Hooks run as the deploy user after migrations and before PHP-FPM reload, so the worker restarts with fresh code already on disk.
 
 ### Local Development
 

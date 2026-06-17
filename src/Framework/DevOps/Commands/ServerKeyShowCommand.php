@@ -7,7 +7,7 @@ use Lightpack\Console\Command;
 /**
  * Display the deploy user's public SSH key for Git authentication.
  *
- * When you change 'repo' in deploy.php to a new Git host, add this key
+ * When you change 'app' => 'repo' in deploy.php to a new Git host, add this key
  * to the new repository's deploy keys (Settings → Deploy keys).
  *
  * Usage:
@@ -73,7 +73,7 @@ BASH;
             $this->output->info('Add this key to your Git repository:');
             $this->output->line('  GitHub → Settings → Deploy keys → Add deploy key');
             $this->output->newline();
-            $this->output->warning('If you changed "repo" in deploy.php:');
+            $this->output->warning('If you changed "app" => "repo" in deploy.php:');
             $this->output->line('  1. REMOVE the key from the OLD repo first');
             $this->output->line('  2. ADD the key to the NEW repo');
             $this->output->newline();
