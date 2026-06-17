@@ -522,6 +522,29 @@ php console db:restore production --file=backup-2026-01-15.sql
 
 Uploads a local backup file to the server and restores it. This is destructive. Use with care.
 
+### Create Database
+
+```bash
+php console db:create production --db=shopdb
+php console db:create production --db=shopdb --user=shopuser
+```
+
+Creates a new MySQL database and user on an already-provisioned server. This is the command to use when deploying a **second application** to the same server — provisioning only creates the first database automatically.
+
+- `--db` is required. The database name must be alphanumeric/underscore only.
+- `--user` defaults to the database name if omitted.
+- A secure random password is generated for the new user automatically.
+- The MySQL root password is read from `deploy/credentials/<env>.txt` automatically. If not found, you will be prompted.
+
+The new credentials are printed at the end. Add them to your `.env.<env>` file before deploying the second app:
+
+```ini
+DB_HOST=127.0.0.1
+DB_NAME=shopdb
+DB_USER=shopuser
+DB_PSWD=<generated-password>
+```
+
 ---
 
 ## Logs
@@ -661,6 +684,7 @@ Lightpack DevOps is built on a few simple beliefs:
 |---|---|
 | `php console db:backup <env>` | Backup database |
 | `php console db:restore <env>` | Restore from backup |
+| `php console db:create <env> --db=name` | Create new database + user (multi-site) |
 | `php console migrate:up` | Run migrations |
 | `php console migrate:down` | Rollback migrations |
 
