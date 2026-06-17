@@ -33,7 +33,7 @@ class ScheduleRemoveCommand extends Command
             return self::FAILURE;
         }
 
-        $marker = 'lightpack-scheduler';
+        $marker = "lightpack-scheduler-{$env}";
 
         $this->output->info("Removing scheduler from {$env} ...");
         $this->output->newline();

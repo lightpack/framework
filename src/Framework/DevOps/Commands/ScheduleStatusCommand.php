@@ -30,7 +30,7 @@ class ScheduleStatusCommand extends Command
             return self::FAILURE;
         }
 
-        $marker = 'lightpack-scheduler';
+        $marker = "lightpack-scheduler-{$env}";
 
         $this->output->info("Checking scheduler on {$env} ...");
         $this->output->newline();

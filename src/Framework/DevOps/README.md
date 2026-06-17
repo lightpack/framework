@@ -79,34 +79,51 @@ Generate the deployment config:
 php console create:config --support=deploy
 ```
 
-This creates `config/deploy.php`. Open it and set your server IP, SSH key, and app path:
+This creates `config/deploy.php`. Open it and fill in your server details. The config has three sections:
 
 ```php
-'host'    => 'YOUR_SERVER_IP',
-'user'    => 'deploy',
-'key'     => '~/.ssh/id_rsa',
-'repo'    => 'git@github.com:you/app.git',
-'path'    => '/var/www/lightpack',
-'branch'  => 'main',
-'git_host' => 'github.com',  // for SSH key scanning during provisioning
+'production' => [
+    // SSH — used by every command
+    'host'    => 'YOUR_SERVER_IP',
+    'user'    => 'deploy',
+    'key'     => '~/.ssh/id_rsa',
+    'timeout' => 300,
+    'php'     => '8.3',
+
+    // Provision — one-time server setup only
+    'provision' => [
+        'user'     => 'root',       // initial SSH user (ubuntu, root, etc.)
+        'name'     => 'myapp',      // server label
+        'timezone' => 'UTC',
+        'database' => 'mysql',
+        'db_name'  => 'myapp',
+        'db_user'  => 'myapp',
+        'git_host' => 'github.com', // for SSH key scanning
+    ],
+
+    // App — deployment and ongoing maintenance
+    'app' => [
+        'repo'      => 'git@github.com:you/app.git',
+        'branch'    => 'main',
+        'path'      => '/var/www/myapp',
+        'ssl_email' => 'you@example.com',
+    ],
+],
 ```
+
+**`provision.user`** is the initial SSH user your cloud provider gives you (`root`, `ubuntu`, `kubuntu`, etc.). The deploy user does not exist yet — it is created by the provisioning script.
 
 **Optional post-deploy hooks** (run after migrations, before PHP-FPM reload):
 
 ```php
-'hooks' => [
-    'php console cache:clear',
-    'php console storage:link',
+'app' => [
+    // ...
+    'hooks' => [
+        'php console cache:clear',
+        'php console storage:link',
+    ],
 ],
 ```
-
-**Important:** If your provider disables root SSH by default (most do), set the initial SSH user:
-
-```php
-'provision_user' => 'ubuntu',  // or 'kubuntu', 'root', etc.
-```
-
-The deploy user does not exist yet — it is created by the provisioning script.
 
 ### 2. Prepare Your Environment File
 
@@ -230,7 +247,7 @@ php console server:site:add production --domain=api.example.com
 - Subdomains (`api.`, `admin.`, `app.`)
 - Multiple top-level domains for the same product (`.com`, `.net`)
 
-**If you need separate applications on the same server** (shared hosting style), that is a different workflow not covered by `server:site:add`. You would need to deploy each app to its own directory and configure Nginx manually.
+**If you need separate applications on the same server**, add a separate environment entry per app in `config/deploy.php`, each with its own `app.path` and `app.repo`. Then `server:site:add` each domain against its corresponding environment. See the [Multiple Apps on One Server](#multiple-apps-on-one-server) section below.
 
 ---
 
@@ -405,12 +422,15 @@ Omitting `--name` targets the default `worker` group.
 
 ### Restarting Workers on Deploy
 
-If your workers load application classes that change between deploys, add a restart hook to `config/deploy.php`:
+If your workers load application classes that change between deploys, add a restart hook inside the `app` block in `config/deploy.php`:
 
 ```php
-'hooks' => [
-    'php console cache:clear',
-    'sudo lp-supervisorctl restart lightpack-worker:*',
+'app' => [
+    // ...
+    'hooks' => [
+        'php console cache:clear',
+        'sudo lp-supervisorctl restart lightpack-worker:*',
+    ],
 ],
 ```
 
@@ -675,6 +695,59 @@ Lightpack DevOps is built on a few simple beliefs:
 
 ---
 
+## Multiple Apps on One Server
+
+You can deploy multiple separate applications to the same provisioned server. The server is provisioned once. Each application gets its own environment entry in `config/deploy.php` pointing to the same `host` but with its own `app.path` and `app.repo`:
+
+```php
+'environments' => [
+    'blog' => [
+        'host' => '1.2.3.4',  // same server
+        'user' => 'deploy',
+        'key'  => '~/.ssh/id_rsa',
+        'php'  => '8.3',
+        'app'  => [
+            'repo'   => 'git@github.com:you/blog.git',
+            'branch' => 'main',
+            'path'   => '/var/www/blog',
+        ],
+    ],
+    'shop' => [
+        'host' => '1.2.3.4',  // same server
+        'user' => 'deploy',
+        'key'  => '~/.ssh/id_rsa',
+        'php'  => '8.3',
+        'app'  => [
+            'repo'   => 'git@github.com:you/shop.git',
+            'branch' => 'main',
+            'path'   => '/var/www/shop',
+        ],
+    ],
+],
+```
+
+The `provision` block only lives in one entry (whichever you run `server:provision` on). All other commands work independently per environment:
+
+```bash
+php console app:deploy          blog
+php console app:deploy          shop
+php console server:site:add     blog --domain=blog.example.com
+php console server:site:add     shop --domain=shop.example.com
+php console server:site:ssl     blog --domain=blog.example.com
+php console server:site:ssl     shop --domain=shop.example.com
+php console server:schedule:setup blog
+php console server:schedule:setup shop
+```
+
+**Queue workers** across multiple apps on the same server must use unique `--name` values to avoid conflicts:
+
+```bash
+php console server:queue:setup blog --name=blog-worker
+php console server:queue:setup shop --name=shop-worker
+```
+
+---
+
 ## FAQ
 
 **Q: Can I provision a server that already has stuff installed?**
@@ -695,8 +768,22 @@ Yes. Add multiple environments to `config/deploy.php`:
 
 ```php
 'environments' => [
-    'production' => ['host' => '1.2.3.4', ...],
-    'staging'    => ['host' => '5.6.7.8', ...],
+    'production' => [
+        'host' => '1.2.3.4',
+        'user' => 'deploy',
+        'key'  => '~/.ssh/id_rsa',
+        'php'  => '8.3',
+        'provision' => ['user' => 'root', 'name' => 'myapp', ...],
+        'app'       => ['repo' => '...', 'branch' => 'main', 'path' => '/var/www/myapp'],
+    ],
+    'staging' => [
+        'host' => '5.6.7.8',
+        'user' => 'deploy',
+        'key'  => '~/.ssh/id_rsa',
+        'php'  => '8.3',
+        'provision' => ['user' => 'root', 'name' => 'myapp-staging', ...],
+        'app'       => ['repo' => '...', 'branch' => 'develop', 'path' => '/var/www/staging'],
+    ],
 ],
 ```
 
