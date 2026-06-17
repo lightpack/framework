@@ -41,6 +41,7 @@ use Lightpack\DevOps\Commands\ServerQueueStopCommand;
 use Lightpack\DevOps\Commands\ScheduleRemoveCommand;
 use Lightpack\DevOps\Commands\ScheduleSetupCommand;
 use Lightpack\DevOps\Commands\DbBackupCommand;
+use Lightpack\DevOps\Commands\DbCreateCommand;
 use Lightpack\DevOps\Commands\DbRestoreCommand;
 use Lightpack\DevOps\Commands\EnvPullCommand;
 use Lightpack\DevOps\Commands\ScheduleStatusCommand;
@@ -93,6 +94,7 @@ class Console
         'server:schedule:status' => ScheduleStatusCommand::class,
         'db:backup' => DbBackupCommand::class,
         'db:restore' => DbRestoreCommand::class,
+        'db:create' => DbCreateCommand::class,
         'server:env:pull' => EnvPullCommand::class,
         'server:key:show' => ServerKeyShowCommand::class,
         'server:run' => ServerRunCommand::class,
