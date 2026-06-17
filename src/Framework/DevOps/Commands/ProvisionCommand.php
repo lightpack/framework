@@ -51,7 +51,7 @@ class ProvisionCommand extends Command
 
         // Run provisioning
         $this->output->newline();
-        $this->output->info("Provisioning {$env} ({$envConfig['host']}) ...");
+        $this->output->info("Provisioning {$env} ({$envConfig['host']}) ─── this may take 5-15 minutes ...");
         $this->output->newline();
 
         try {
@@ -102,17 +102,19 @@ class ProvisionCommand extends Command
 
     private function applyOverrides(array &$envConfig): void
     {
-        $overrides = [
-            'php_version' => $this->args->get('php'),
-            'timezone'    => $this->args->get('timezone'),
-            'database'    => $this->args->get('db'),
-            'web_server'  => $this->args->get('web'),
-        ];
+        $php = $this->args->get('php');
+        if ($php !== null) {
+            $envConfig['php'] = $php;
+        }
 
-        foreach ($overrides as $key => $value) {
-            if ($value !== null) {
-                $envConfig[$key] = $value;
-            }
+        $timezone = $this->args->get('timezone');
+        if ($timezone !== null) {
+            $envConfig['provision']['timezone'] = $timezone;
+        }
+
+        $database = $this->args->get('db');
+        if ($database !== null) {
+            $envConfig['provision']['database'] = $database;
         }
     }
 
@@ -129,8 +131,8 @@ class ProvisionCommand extends Command
         $this->output->info('Server:');
         $this->output->line("  Environment: {$env}");
         $this->output->line("  Host:        {$envConfig['host']}");
-        $this->output->line("  PHP:         " . ($envConfig['php_version'] ?? '8.3'));
-        $this->output->line("  Database:    " . ($envConfig['database'] ?? 'mysql'));
+        $this->output->line("  PHP:         " . ($envConfig['php'] ?? '8.3'));
+        $this->output->line("  Database:    " . ($envConfig['provision']['database'] ?? 'mysql'));
         $this->output->newline();
 
         if (!file_exists($this->resolveKeyPath($envConfig['key'] ?? '~/.ssh/id_rsa'))) {
@@ -201,19 +203,24 @@ return [
             'host'    => '1.2.3.4',
             'user'    => 'deploy',
             'key'     => '~/.ssh/id_rsa',
-            'path'    => '/var/www/myapp',
-            'branch'  => 'main',
             'timeout' => 300,
+            'php'     => '8.3',
 
-            // Initial SSH user for provisioning. On cloud images this is
-            // often 'ubuntu' or 'kubuntu' — the deploy user does not exist yet.
-            // 'provision_user' => 'root',
+            'provision' => [
+                'user'     => 'root',
+                'name'     => 'myapp',
+                'timezone' => 'UTC',
+                'database' => 'mysql',
+                'db_name'  => 'myapp',
+                'db_user'  => 'myapp',
+                'git_host' => 'github.com',
+            ],
 
-            // Provisioning options (optional):
-            // 'php_version' => '8.3',
-            // 'timezone'    => 'UTC',
-            // 'database'    => 'mysql',   // mysql | none
-            // 'web_server'  => 'nginx',   // nginx only for now
+            'app' => [
+                'repo'   => 'git@github.com:you/app.git',
+                'branch' => 'main',
+                'path'   => '/var/www/myapp',
+            ],
         ],
     ],
 ];

@@ -36,7 +36,7 @@ class Deployer
         $timeout = $env['timeout'] ?? 300;
 
         // Step 1: Ensure app directory exists
-        $this->execute($this->buildSshCommand($env, 'mkdir -p ' . escapeshellarg($env['path'])), 30);
+        $this->execute($this->buildSshCommand($env, 'mkdir -p ' . escapeshellarg($env['app']['path'])), 30);
 
         // Step 2: Pull code + install dependencies
         $codeResult = $this->execute($this->buildSshCommand($env, $this->buildCodeScript($env)), $timeout);
@@ -107,11 +107,12 @@ class Deployer
 
     private function buildCodeScript(array $env): string
     {
-        $rawPath = $env['path'];
+        $app     = $env['app'] ?? [];
+        $rawPath = $app['path'];
         $path    = escapeshellarg($rawPath);
-        $branch  = escapeshellarg($env['branch'] ?? 'main');
-        $ref     = escapeshellarg('origin/' . ($env['branch'] ?? 'main'));
-        $repo    = $env['repo'] ?? null;
+        $branch  = escapeshellarg($app['branch'] ?? 'main');
+        $ref     = escapeshellarg('origin/' . ($app['branch'] ?? 'main'));
+        $repo    = $app['repo'] ?? null;
 
         if ($repo !== null) {
             $repoSafe    = escapeshellarg($repo);
@@ -130,9 +131,10 @@ class Deployer
 
     private function buildActivateScript(array $env): string
     {
-        $rawPath    = $env['path'];
-        $phpVersion = $env['php_version'] ?? '8.3';
-        $hooks      = $env['hooks'] ?? [];
+        $app        = $env['app'] ?? [];
+        $rawPath    = $app['path'];
+        $phpVersion = $env['php'] ?? '8.3';
+        $hooks      = $app['hooks'] ?? [];
 
         $storagePath = escapeshellarg($rawPath . '/storage');
         $consolePath = escapeshellarg($rawPath . '/console');
@@ -154,7 +156,7 @@ class Deployer
 
     private function buildRollbackScript(array $env, int $steps): string
     {
-        $path = escapeshellarg($env['path']);
+        $path = escapeshellarg($env['app']['path']);
 
         $commands = [
             "cd {$path}",
@@ -198,7 +200,7 @@ class Deployer
         $user = $env['user'];
         $host = $env['host'];
         $key        = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
-        $remotePath = $env['path'] . '/.env';
+        $remotePath = $env['app']['path'] . '/.env';
 
         return [
             'scp',

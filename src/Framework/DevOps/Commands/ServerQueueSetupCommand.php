@@ -36,8 +36,8 @@ class ServerQueueSetupCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['path'];
-        $phpVersion = $envConfig['php_version'] ?? '8.3';
+        $appPath = $envConfig['app']['path'];
+        $phpVersion = $envConfig['php'] ?? '8.3';
         $user = $envConfig['user'];
         $name = $this->args->get('name') ?? 'worker';
         $queue = $this->args->get('queue') ?? 'default';

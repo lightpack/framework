@@ -11,7 +11,7 @@ class DeployView
 
 /**
  * Lightpack DevOps deployment configuration.
- * 
+ *
  * IMPORTANT: If you change 'repo' after provisioning, copy the deploy key
  * from the server (server:key:show) and add it to the new repo's deploy keys.
  * GitHub requires removing the key from the OLD repo first because deploy
@@ -23,41 +23,44 @@ return [
 
     'environments' => [
         'production' => [
-            // Server identity
-            'name' => 'lightpack',      // Label (SSH key comment, credentials file)
-            'host' => '1.2.3.4',        // IP address of the server
-
-            // SSH authentication
-            'user' => 'deploy',         // Deploy user (created by provisioning)
-            'key'  => '~/.ssh/id_rsa',  // Your local SSH private key
-
-            // Git repository (SSH clone URL)
-            'repo'    => 'git@github.com:you/app.git',
-            'git_host' => 'github.com', // For SSH key scanning
-            'branch'   => 'main',
-            'timeout'  => 300,           // SSH command timeout (seconds)
 
             // -----------------------------------------------------------------
-            // Provisioning (one-time, requires root SSH)
+            // SSH — used by all commands
             // -----------------------------------------------------------------
-            'provision_user' => 'root',  // Initial SSH user (ubuntu, root, etc.)
-            'php_version'    => '8.3',   // 8.1 | 8.2 | 8.3 | 8.4
-            'timezone'       => 'UTC',
-            'database'       => 'mysql', // mysql | none
-            'db_name'        => 'lightpack',
-            'db_user'        => 'lightpack',
-            'ssl_email'      => 'you@example.com', // Certbot renewal notices
+            'host'    => '1.2.3.4',       // IP address of the server
+            'user'    => 'deploy',         // Deploy user (created by provisioning)
+            'key'     => '~/.ssh/id_rsa',  // Your local SSH private key
+            'timeout' => 300,              // SSH command timeout (seconds)
+            'php'     => '8.3',            // PHP version: 8.1 | 8.2 | 8.3 | 8.4
 
             // -----------------------------------------------------------------
-            // Application paths
+            // Provision — one-time server setup (server:provision only)
             // -----------------------------------------------------------------
-            'path' => '/var/www/lightpack',
+            'provision' => [
+                'user'     => 'root',          // Initial SSH user (ubuntu, root, etc.)
+                'name'     => 'lightpack',     // Server label (SSH key comment)
+                'timezone' => 'UTC',
+                'database' => 'mysql',         // mysql | none
+                'db_name'  => 'lightpack',
+                'db_user'  => 'lightpack',
+                'git_host' => 'github.com',    // For SSH key scanning
+            ],
 
-            // Optional: run after migrations, before PHP-FPM reload
-            // 'hooks' => [
-            //     'php console cache:clear',
-            //     'php console storage:link',
-            // ],
+            // -----------------------------------------------------------------
+            // App — deployment and ongoing maintenance
+            // -----------------------------------------------------------------
+            'app' => [
+                'repo'      => 'git@github.com:you/app.git', // Git SSH clone URL
+                'branch'    => 'main',
+                'path'      => '/var/www/lightpack',
+                'ssl_email' => 'you@example.com', // Certbot renewal notices
+
+                // Optional: run after migrations, before PHP-FPM reload
+                // 'hooks' => [
+                //     'php console cache:clear',
+                //     'php console storage:link',
+                // ],
+            ],
         ],
     ],
 ];

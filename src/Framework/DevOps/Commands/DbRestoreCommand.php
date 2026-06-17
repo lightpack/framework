@@ -53,7 +53,7 @@ class DbRestoreCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['path'];
+        $appPath = $envConfig['app']['path'];
         $remoteTemp = "/tmp/restore-{$file}";
 
         // Security confirmation

@@ -37,7 +37,7 @@ class Provisioner
         }
 
         $host = $env['host'];
-        $provisionUser = $env['provision_user'] ?? 'root';
+        $provisionUser = $env['provision']['user'] ?? 'root';
         $rootKey = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
         $provisionOptions = $this->buildProvisionOptions($env);
 
@@ -154,16 +154,18 @@ class Provisioner
 
     private function buildProvisionOptions(array $env): array
     {
+        $provision = $env['provision'] ?? [];
+
         return [
-            'SERVER_NAME' => $env['name'] ?? 'lightpack',
+            'SERVER_NAME' => $provision['name'] ?? 'lightpack',
             'DEPLOY_USER' => $env['user'] ?? 'deploy',
-            'PHP_VERSION' => $env['php_version'] ?? '8.3',
-            'TIMEZONE'    => $env['timezone'] ?? 'UTC',
-            'DB_TYPE'     => $env['database'] ?? 'mysql',
-            'WEB_SERVER'  => $env['web_server'] ?? 'nginx',
-            'MYSQL_DB'    => $env['db_name'] ?? 'lightpack',
-            'MYSQL_USER'  => $env['db_user'] ?? 'lightpack',
-            'GIT_HOST'    => $env['git_host'] ?? 'github.com',
+            'PHP_VERSION' => $env['php'] ?? '8.3',
+            'TIMEZONE'    => $provision['timezone'] ?? 'UTC',
+            'DB_TYPE'     => $provision['database'] ?? 'mysql',
+            'WEB_SERVER'  => 'nginx',
+            'MYSQL_DB'    => $provision['db_name'] ?? 'lightpack',
+            'MYSQL_USER'  => $provision['db_user'] ?? 'lightpack',
+            'GIT_HOST'    => $provision['git_host'] ?? 'github.com',
         ];
     }
 

@@ -32,7 +32,7 @@ class LogsTailCommand extends Command
         }
 
         $logFile = $this->args->get('file') ?? 'lightpack.log';
-        $logPath = $envConfig['path'] . '/storage/logs/' . $logFile;
+        $logPath = $envConfig['app']['path'] . '/storage/logs/' . $logFile;
 
         $this->output->info("Tailing {$logFile} on {$env} (Ctrl+C to stop) ...");
         $this->output->newline();

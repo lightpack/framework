@@ -37,7 +37,7 @@ class ServerRunCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['path'];
+        $appPath = $envConfig['app']['path'];
         $timeout = $envConfig['timeout'] ?? 120;
 
         $remoteScript = "cd " . escapeshellarg($appPath) . " && {$cmd}";

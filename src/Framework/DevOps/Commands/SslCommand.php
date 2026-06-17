@@ -43,7 +43,7 @@ class SslCommand extends Command
             return self::FAILURE;
         }
 
-        $email = $this->args->get('email') ?? ($envConfig['ssl_email'] ?? null);
+        $email = $this->args->get('email') ?? ($envConfig['app']['ssl_email'] ?? null);
         $includeWww = $this->args->has('www');
 
         if (empty($email)) {

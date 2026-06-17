@@ -35,7 +35,7 @@ class RollbackCommand extends Command
 
         $steps = max(1, (int) $this->args->get('steps', 1));
 
-        $this->output->warning("Rolling back {$env} ({$envConfig['host']}) by {$steps} commit(s) ...");
+        $this->output->warning("Rolling back {$env} ({$envConfig['host']}) by {$steps} commit(s) \u2500\u2500\u2500 this cannot be undone ...");
         $this->output->newline();
 
         $deployer = new Deployer($config);

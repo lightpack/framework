@@ -97,22 +97,43 @@ return [
             'host'    => '1.2.3.4',
             'user'    => 'deploy',
             'key'     => '~/.ssh/id_rsa',
-            'path'    => '/var/www/myapp',
-            'branch'  => 'main',
             'timeout' => 300,
+            'php'     => '8.3',
 
-            // Post-deploy hooks: run after migrations, before FPM reload (optional)
-            // 'hooks' => [
-            //     'php console cache:clear',
-            //     'php console storage:link',
-            // ],
+            'provision' => [
+                'user'     => 'root',
+                'name'     => 'myapp',
+                'timezone' => 'UTC',
+                'database' => 'mysql',
+                'db_name'  => 'myapp',
+                'db_user'  => 'myapp',
+                'git_host' => 'github.com',
+            ],
+
+            'app' => [
+                'repo'   => 'git@github.com:you/app.git',
+                'branch' => 'main',
+                'path'   => '/var/www/myapp',
+
+                // Optional: run after migrations, before FPM reload
+                // 'hooks' => [
+                //     'php console cache:clear',
+                //     'php console storage:link',
+                // ],
+            ],
         ],
         'staging' => [
-            'host'   => '5.6.7.8',
-            'user'   => 'deploy',
-            'key'    => '~/.ssh/id_rsa',
-            'path'   => '/var/www/staging',
-            'branch' => 'develop',
+            'host'    => '5.6.7.8',
+            'user'    => 'deploy',
+            'key'     => '~/.ssh/id_rsa',
+            'timeout' => 300,
+            'php'     => '8.3',
+
+            'app' => [
+                'repo'   => 'git@github.com:you/app.git',
+                'branch' => 'develop',
+                'path'   => '/var/www/staging',
+            ],
         ],
     ],
 ];

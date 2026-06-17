@@ -45,7 +45,7 @@ class ServerConfigCommand extends Command
             return self::FAILURE;
         }
 
-        $phpVersion = $envConfig['php_version'] ?? '8.3';
+        $phpVersion = $envConfig['php'] ?? '8.3';
 
         // Validate formats
         foreach (['upload' => $upload, 'memory' => $memory] as $name => $value) {

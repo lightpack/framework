@@ -44,8 +44,8 @@ class SiteAddCommand extends Command
         }
 
         $includeWww = $this->args->has('www');
-        $appPath = $envConfig['path'];
-        $phpVersion = $envConfig['php_version'] ?? '8.3';
+        $appPath = $envConfig['app']['path'];
+        $phpVersion = $envConfig['php'] ?? '8.3';
 
         $this->output->info("Adding Nginx site for {$domain} ...");
         $this->output->newline();
