@@ -194,6 +194,9 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisor-write *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-supervisorctl * *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl reread
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl update
+
+# MySQL database creation (runs as root via socket auth — no password needed)
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-mysql-create *
 EOF
 
 chmod 0440 "$SUDOERS_FILE"
@@ -257,11 +260,40 @@ fi
 exec /usr/bin/supervisorctl "$action" "$program"
 WSCRIPT
 
+cat > /usr/local/sbin/lp-mysql-create <<'WSCRIPT'
+#!/bin/bash
+# Create a MySQL database and user. Runs as root via sudo (socket auth — no password needed).
+# Usage: lp-mysql-create <dbname> <dbuser> <dbpass>
+dbname="${1:-}"
+dbuser="${2:-}"
+dbpass="${3:-}"
+
+if [ -z "$dbname" ] || [ -z "$dbuser" ] || [ -z "$dbpass" ]; then
+    echo "Usage: lp-mysql-create <dbname> <dbuser> <dbpass>" >&2; exit 1
+fi
+
+if ! [[ "$dbname" =~ ^[a-zA-Z0-9_]+$ ]]; then
+    echo "Invalid database name: only alphanumeric and underscores allowed" >&2; exit 1
+fi
+
+if ! [[ "$dbuser" =~ ^[a-zA-Z0-9_]+$ ]]; then
+    echo "Invalid username: only alphanumeric and underscores allowed" >&2; exit 1
+fi
+
+mysql <<ENDSQL
+CREATE DATABASE IF NOT EXISTS \`${dbname}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '${dbuser}'@'localhost' IDENTIFIED BY '${dbpass}';
+GRANT ALL PRIVILEGES ON \`${dbname}\`.* TO '${dbuser}'@'localhost';
+FLUSH PRIVILEGES;
+ENDSQL
+WSCRIPT
+
 chmod 0750 /usr/local/sbin/lp-nginx-write \
            /usr/local/sbin/lp-nginx-enable \
            /usr/local/sbin/lp-nginx-disable \
            /usr/local/sbin/lp-supervisor-write \
-           /usr/local/sbin/lp-supervisorctl
+           /usr/local/sbin/lp-supervisorctl \
+           /usr/local/sbin/lp-mysql-create
 
 log_info "Nginx management scripts installed to /usr/local/sbin/"
 

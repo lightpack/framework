@@ -10,10 +10,10 @@ use Lightpack\Console\Command;
  * Designed for adding a second (or third) application to an already-provisioned
  * server. Each application should have its own dedicated database and user.
  *
- * The MySQL root password is read automatically from deploy/credentials/<env>.txt
- * if available, otherwise you will be prompted to enter it.
+ * Uses the lp-mysql-create wrapper (installed during provisioning) which runs
+ * MySQL via root socket auth — no root password required.
  *
- * A secure random password is generated for the new database user.
+ * A secure random password is generated for the new database user automatically.
  *
  * Usage:
  *   php console db:create production --db=shopdb
@@ -58,18 +58,12 @@ class DbCreateCommand extends Command
             return self::FAILURE;
         }
 
-        $rootPass = $this->resolveRootPassword($env);
-
-        if ($rootPass === null) {
-            return self::FAILURE;
-        }
-
         $dbPass = bin2hex(random_bytes(12));
 
         $this->output->info("Creating database [{$dbName}] on {$env} ({$envConfig['host']}) ...");
         $this->output->newline();
 
-        $remoteScript = $this->buildCreateScript($dbName, $dbUser, $dbPass, $rootPass);
+        $remoteScript = $this->buildCreateScript($dbName, $dbUser, $dbPass);
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
         $result = $this->executeRemote($sshCommand, 30);
 
@@ -95,60 +89,20 @@ class DbCreateCommand extends Command
     }
 
     /**
-     * Try to read the MySQL root password from the local credentials file.
-     * Falls back to prompting the user.
-     */
-    private function resolveRootPassword(string $env): ?string
-    {
-        $credFile = DIR_ROOT . '/deploy/credentials/' . $env . '.txt';
-
-        if (file_exists($credFile)) {
-            $contents = file_get_contents($credFile);
-
-            if (preg_match('/MYSQL ROOT:.*?Password:\s+(\S+)/s', $contents, $matches)) {
-                $this->output->line("MySQL root password read from deploy/credentials/{$env}.txt");
-                $this->output->newline();
-                return $matches[1];
-            }
-        }
-
-        $this->output->line("Tip: MySQL root password is in deploy/credentials/{$env}.txt under \"MYSQL ROOT\".");
-        $this->output->newline();
-        $rootPass = $this->prompt->ask('MySQL root password');
-
-        if (empty($rootPass)) {
-            $this->output->error('MySQL root password is required.');
-            return null;
-        }
-
-        return $rootPass;
-    }
-
-    /**
-     * Build the remote bash script to create the database and user.
+     * Build the remote bash script.
      *
-     * MYSQL_PWD env var is used instead of -p flag to keep the password
-     * out of the process argument list on the server.
+     * lp-mysql-create is installed by provisioning and runs MySQL via root
+     * socket auth — no password ever needs to leave the local machine.
      */
-    private function buildCreateScript(string $dbName, string $dbUser, string $dbPass, string $rootPass): string
+    private function buildCreateScript(string $dbName, string $dbUser, string $dbPass): string
     {
-        // Escape root password for embedding in a bash single-quoted string
-        $rootPassBash = str_replace("'", "'\\''", $rootPass);
+        $nameArg = escapeshellarg($dbName);
+        $userArg = escapeshellarg($dbUser);
+        $passArg = escapeshellarg($dbPass);
 
         return <<<BASH
 set -e
-
-export MYSQL_PWD='{$rootPassBash}'
-
-mysql -u root << 'ENDSQL'
-CREATE DATABASE IF NOT EXISTS {$dbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS '{$dbUser}'@'localhost' IDENTIFIED BY '{$dbPass}';
-GRANT ALL PRIVILEGES ON {$dbName}.* TO '{$dbUser}'@'localhost';
-FLUSH PRIVILEGES;
-ENDSQL
-
-unset MYSQL_PWD
-
+sudo lp-mysql-create {$nameArg} {$userArg} {$passArg}
 echo "Database [{$dbName}] created, user [{$dbUser}] granted access."
 BASH;
     }
