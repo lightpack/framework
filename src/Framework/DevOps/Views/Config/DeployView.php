@@ -64,7 +64,6 @@ return [
             'php_version' => '8.3',             // PHP version: 8.1, 8.2, 8.3, 8.4
             'timezone'    => 'UTC',             // Server timezone
             'database'    => 'mysql',           // mysql | none
-            'web_server'  => 'nginx',           // nginx only
             'git_host'    => 'github.com',      // Git host for SSH key scanning (github.com, gitlab.com, etc.)
             'ssl_email'   => 'you@example.com', // Email for SSL certificate renewal notices
             'db_name'     => 'lightpack',       // MySQL database name
