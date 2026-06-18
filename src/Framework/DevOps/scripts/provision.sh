@@ -543,6 +543,18 @@ EOF
 rm -f /etc/nginx/sites-enabled/default
 rm -f /etc/nginx/sites-available/default
 
+# Add catch-all: unmatched hostnames get connection closed (444) instead of
+# falling through to the first real vhost.
+cat > /etc/nginx/sites-available/000-catchall.conf <<'EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    return 444;
+}
+EOF
+ln -sf /etc/nginx/sites-available/000-catchall.conf /etc/nginx/sites-enabled/000-catchall.conf
+
 # Create deployment directory
 mkdir -p /var/www
 chown -R "${DEPLOY_USER}:www-data" /var/www
