@@ -94,7 +94,7 @@ server {
     error_page 404 /index.php;
 
     location ~ \.php$ {
-        fastcgi_pass unix:/run/php/php_VER-fpm.sock;
+        fastcgi_pass unix:PHP_FPM_SOCKET;
         fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_hide_header X-Powered-By;
@@ -120,18 +120,19 @@ NGINX;
         return <<<BASH
 set -e
 
-PHP_VER=\$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null)
-if [ -z "\$PHP_VER" ]; then
-    echo "ERROR: Cannot determine PHP version on server" >&2
+# Detect the active PHP-FPM socket (avoids cli/fpm version mismatch)
+PHP_FPM_SOCK=\$(ls /run/php/php*-fpm.sock 2>/dev/null | sort -V | tail -1)
+if [ -z "\$PHP_FPM_SOCK" ]; then
+    echo "ERROR: No PHP-FPM socket found in /run/php/" >&2
     exit 1
 fi
 
-# Patch the socket path with the detected version
+# Patch the socket placeholder with the full detected socket path
 NGINX_CONF=\$(cat << 'NGINX_EOF'
 {$configContent}
 NGINX_EOF
 )
-NGINX_CONF="\${NGINX_CONF/php_VER/\$PHP_VER}"
+NGINX_CONF="\${NGINX_CONF/PHP_FPM_SOCKET/\$PHP_FPM_SOCK}"
 
 echo "\$NGINX_CONF" | sudo lp-nginx-write "{$domain}.conf"
 sudo lp-nginx-enable "{$domain}.conf"
