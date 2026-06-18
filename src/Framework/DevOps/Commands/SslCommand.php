@@ -47,7 +47,12 @@ class SslCommand extends Command
         $includeWww = $this->args->has('www');
 
         if (empty($email)) {
-            $this->output->warning('No --email provided. Running without email (not recommended for production).');
+            $input = trim((string) $this->prompt->ask('  Email for SSL renewal notices (Enter to skip)'));
+            $email = $input !== '' ? $input : null;
+        }
+
+        if (empty($email)) {
+            $this->output->warning('No email provided. Running without email (not recommended — you will miss expiry notices).');
             $this->output->newline();
         }
 
