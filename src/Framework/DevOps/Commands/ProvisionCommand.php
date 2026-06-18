@@ -57,7 +57,7 @@ class ProvisionCommand extends Command
         $provisioner = new Provisioner($config);
 
         $this->output->newline();
-        $this->output->info("Provisioning {$env} ({$envConfig['host']}) — this takes 5-15 minutes ...");
+        $this->output->info("Provisioning {$env} ({$envConfig['host']}) ...");
         $this->output->newline();
 
         try {
