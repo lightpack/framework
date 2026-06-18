@@ -134,6 +134,7 @@ class Deployer
 
         $commands = [
             "find {$storagePath} -type d -exec chmod 2775 {} \\; && find {$storagePath} -type d -exec chgrp www-data {} \\;",
+            "find {$storagePath} -type f -exec chmod 664 {} \\; 2>/dev/null || true",
             "php {$consolePath} migrate:up --force",
         ];
 

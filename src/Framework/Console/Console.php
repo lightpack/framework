@@ -38,6 +38,8 @@ use Lightpack\DevOps\Commands\ServerQueueSetupCommand;
 use Lightpack\DevOps\Commands\ServerQueueStartCommand;
 use Lightpack\DevOps\Commands\ServerQueueStatusCommand;
 use Lightpack\DevOps\Commands\ServerQueueStopCommand;
+use Lightpack\DevOps\Commands\ServerQueueLogsTailCommand;
+use Lightpack\DevOps\Commands\ServerQueueLogsViewCommand;
 use Lightpack\DevOps\Commands\ScheduleRemoveCommand;
 use Lightpack\DevOps\Commands\ScheduleSetupCommand;
 use Lightpack\DevOps\Commands\DbBackupCommand;
@@ -89,6 +91,8 @@ class Console
         'server:queue:stop' => ServerQueueStopCommand::class,
         'server:queue:restart' => ServerQueueRestartCommand::class,
         'server:queue:status' => ServerQueueStatusCommand::class,
+        'server:queue:logs:tail' => ServerQueueLogsTailCommand::class,
+        'server:queue:logs:view' => ServerQueueLogsViewCommand::class,
         'server:schedule:setup' => ScheduleSetupCommand::class,
         'server:schedule:remove' => ScheduleRemoveCommand::class,
         'server:schedule:status' => ScheduleStatusCommand::class,

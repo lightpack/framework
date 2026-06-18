@@ -43,6 +43,15 @@ class LogsTailCommand extends Command
         // Long timeout for tail -f; user stops with Ctrl+C
         $result = $this->executeRemote($sshCommand, 86400);
 
-        return $result['success'] ? self::SUCCESS : self::FAILURE;
+        if (!$result['success']) {
+            $this->output->newline();
+            $this->output->error("Could not tail {$logFile} (exit code: {$result['exit_code']}).");
+            if (trim($result['output'])) {
+                $this->output->line($result['output']);
+            }
+            return self::FAILURE;
+        }
+
+        return self::SUCCESS;
     }
 }

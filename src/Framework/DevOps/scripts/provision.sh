@@ -310,6 +310,18 @@ chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "/home/${DEPLOY_USER}/.ssh"
 # Add deploy user to www-data group for shared file access
 usermod -aG www-data "$DEPLOY_USER"
 
+# Ensure deploy user creates files as 664 (group-writable) so www-data can read
+# and www-data-created files can be written by the queue worker (runs as deploy)
+grep -qF 'umask 002' "/home/${DEPLOY_USER}/.profile" || echo 'umask 002' >> "/home/${DEPLOY_USER}/.profile"
+grep -qF 'umask 002' "/home/${DEPLOY_USER}/.bashrc"  || echo 'umask 002' >> "/home/${DEPLOY_USER}/.bashrc"
+
+# Set default ACLs on /var/www so every new file inherits group-write permission
+# regardless of which process (www-data or deploy/queue worker) creates it
+mkdir -p /var/www
+setfacl -R  -m g:www-data:rwX,g:"${DEPLOY_USER}":rwX /var/www 2>/dev/null || true
+setfacl -dR -m g:www-data:rwX,g:"${DEPLOY_USER}":rwX /var/www 2>/dev/null || true
+log_info "Default ACLs set on /var/www (group-writable for www-data and ${DEPLOY_USER})"
+
 # Generate SSH key for GitHub deployments
 if [ ! -f "/home/${DEPLOY_USER}/.ssh/id_ed25519" ]; then
     su - "$DEPLOY_USER" -c "ssh-keygen -t ed25519 -C 'deploy@${SERVER_NAME}' -f ~/.ssh/id_ed25519 -N ''"
