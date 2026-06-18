@@ -53,7 +53,7 @@ class DbRestoreCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['app']['path'];
+        $appPath = $envConfig['path'];
         $remoteTemp = "/tmp/restore-{$file}";
 
         // Security confirmation
@@ -109,9 +109,8 @@ class DbRestoreCommand extends Command
 
     private function uploadFile(array $envConfig, string $localPath, string $remotePath): array
     {
-        $user = $envConfig['user'];
         $host = $envConfig['host'];
-        $key = $this->resolveKeyPath($envConfig['key'] ?? '~/.ssh/id_rsa');
+        $key  = $this->resolveKeyPath($envConfig['key']);
 
         $scpCommand = [
             'scp',
@@ -119,7 +118,7 @@ class DbRestoreCommand extends Command
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
             $localPath,
-            "{$user}@{$host}:{$remotePath}",
+            "deploy@{$host}:{$remotePath}",
         ];
 
         return $this->executeRemote($scpCommand, 120);

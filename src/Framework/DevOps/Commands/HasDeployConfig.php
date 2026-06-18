@@ -9,6 +9,11 @@ use Lightpack\Utils\Process;
  */
 trait HasDeployConfig
 {
+    /**
+     * Load config/deploy.php and return the ['deploy'] sub-array.
+     *
+     * Returns null and prints an error if the file is missing or malformed.
+     */
     private function loadConfig(): ?array
     {
         $configPath = DIR_ROOT . '/config/deploy.php';
@@ -16,23 +21,35 @@ trait HasDeployConfig
         if (!file_exists($configPath)) {
             $this->output->error('Deploy config not found.');
             $this->output->newline();
-            $this->output->line('Create config/deploy.php with your server settings.');
+            $this->output->line('Run: php console create:config --support=deploy');
             return null;
         }
 
-        return require $configPath;
+        $raw = require $configPath;
+
+        if (!isset($raw['deploy']) || !is_array($raw['deploy'])) {
+            $this->output->error('Invalid config/deploy.php: missing "deploy" key.');
+            $this->output->newline();
+            $this->output->line('Run: php console create:config --support=deploy');
+            return null;
+        }
+
+        return $raw['deploy'];
     }
 
+    /**
+     * Resolve the target environment.
+     *
+     * Defaults to 'production' when no argument is provided.
+     */
     private function resolveEnvironment(array $config): string
     {
-        $argument = $this->args->argument(0);
-        $defaultEnv = $config['default'] ?? 'production';
-        return $argument ?: $defaultEnv;
+        return $this->args->argument(0) ?: 'production';
     }
 
     private function getEnvConfig(array $config, string $env): ?array
     {
-        return $config['environments'][$env] ?? null;
+        return $config[$env] ?? null;
     }
 
     private function resolveKeyPath(string $key): string
@@ -51,7 +68,7 @@ trait HasDeployConfig
         $this->output->newline();
         $this->output->line('Available environments:');
 
-        foreach (array_keys($config['environments'] ?? []) as $name) {
+        foreach (array_keys($config) as $name) {
             $this->output->line("  - {$name}");
         }
 
@@ -60,12 +77,14 @@ trait HasDeployConfig
 
     /**
      * Build an SSH command array for executing a remote script.
+     *
+     * User is always 'deploy' — created by server:provision.
+     * Key must be explicitly set in config/deploy.php.
      */
     private function buildSshCommand(array $envConfig, string $remoteScript): array
     {
-        $user = $envConfig['user'];
         $host = $envConfig['host'];
-        $key = $this->resolveKeyPath($envConfig['key'] ?? '~/.ssh/id_rsa');
+        $key  = $this->resolveKeyPath($envConfig['key']);
 
         return [
             'ssh',
@@ -73,7 +92,7 @@ trait HasDeployConfig
             '-i', $key,
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
-            "{$user}@{$host}",
+            "deploy@{$host}",
             $remoteScript,
         ];
     }
@@ -99,9 +118,9 @@ trait HasDeployConfig
         $exitCode = $process->getExitCode() ?? -1;
 
         return [
-            'success' => $exitCode === 0,
+            'success'   => $exitCode === 0,
             'exit_code' => $exitCode,
-            'output' => $output,
+            'output'    => $output,
         ];
     }
 
@@ -127,7 +146,6 @@ trait HasDeployConfig
      */
     private function validateDomain(string $domain): bool
     {
-        // Reject path traversal and shell metacharacters
         if (strpos($domain, '..') !== false) {
             return false;
         }
@@ -136,12 +154,10 @@ trait HasDeployConfig
             return false;
         }
 
-        // Valid IPv4 address
         if (filter_var($domain, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             return true;
         }
 
-        // Valid domain: letters, digits, hyphens, dots
         return preg_match('/^[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)+$/', $domain) === 1;
     }
 }

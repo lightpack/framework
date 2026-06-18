@@ -43,11 +43,11 @@ class SslCommand extends Command
             return self::FAILURE;
         }
 
-        $email = $this->args->get('email') ?? ($envConfig['app']['ssl_email'] ?? null);
+        $email = $this->args->get('email');
         $includeWww = $this->args->has('www');
 
         if (empty($email)) {
-            $this->output->warning('No email configured. Add ssl_email to config/deploy.php or use --email. Running without email (not recommended for production).');
+            $this->output->warning('No --email provided. Running without email (not recommended for production).');
             $this->output->newline();
         }
 

@@ -7,7 +7,7 @@ use Lightpack\Console\Command;
 /**
  * Display the deploy user's public SSH key for Git authentication.
  *
- * When you change 'app' => 'repo' in deploy.php to a new Git host, add this key
+ * When you change 'repo' in deploy.php to a different Git host, add this key
  * to the new repository's deploy keys (Settings → Deploy keys).
  *
  * Usage:
@@ -33,15 +33,13 @@ class ServerKeyShowCommand extends Command
             return self::FAILURE;
         }
 
-        $deployUser = $envConfig['user'] ?? 'deploy';
-
-        $this->output->info("Fetching public SSH key for {$env} ({$deployUser}) ...");
+        $this->output->info("Fetching public SSH key for {$env} (deploy) ...");
         $this->output->newline();
 
         $remoteScript = <<<BASH
 set -e
 
-for key in /home/{$deployUser}/.ssh/id_ed25519.pub /home/{$deployUser}/.ssh/id_rsa.pub; do
+for key in /home/deploy/.ssh/id_ed25519.pub /home/deploy/.ssh/id_rsa.pub; do
     if [ -f "\$key" ]; then
         cat "\$key"
         exit 0
@@ -73,7 +71,7 @@ BASH;
             $this->output->info('Add this key to your Git repository:');
             $this->output->line('  GitHub → Settings → Deploy keys → Add deploy key');
             $this->output->newline();
-            $this->output->warning('If you changed "app" => "repo" in deploy.php:');
+            $this->output->warning('If you changed "repo" in deploy.php:');
             $this->output->line('  1. REMOVE the key from the OLD repo first');
             $this->output->line('  2. ADD the key to the NEW repo');
             $this->output->newline();

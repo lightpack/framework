@@ -37,8 +37,7 @@ class ServerRunCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['app']['path'];
-        $timeout = $envConfig['timeout'] ?? 120;
+        $appPath = $envConfig['path'];
 
         $remoteScript = "cd " . escapeshellarg($appPath) . " && {$cmd}";
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
@@ -46,7 +45,7 @@ class ServerRunCommand extends Command
         $this->output->info("Running on {$env}: {$cmd}");
         $this->output->newline();
 
-        $result = $this->executeRemote($sshCommand, $timeout);
+        $result = $this->executeRemote($sshCommand, 120);
 
         $this->output->newline();
 

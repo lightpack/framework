@@ -8,15 +8,16 @@ use Lightpack\DevOps\Provisioner;
 /**
  * Provision a fresh Ubuntu server for Lightpack deployment.
  *
- * WARNING: This command requires ROOT SSH access to the server.
- * It is a ONE-TIME operation. After provisioning, use app:deploy
- * with the deploy user for daily deployments.
+ * Reads host and repo from config/deploy.php, then gathers remaining
+ * provisioning parameters interactively with smart defaults.
+ *
+ * This is a ONE-TIME operation. After provisioning, root SSH is disabled
+ * and all future operations use the 'deploy' user.
  *
  * Usage:
- *   php console server:provision              Provision default environment
- *   php console server:provision production   Provision a specific environment
+ *   php console server:provision              Provision default (production) environment
+ *   php console server:provision staging      Provision a specific environment
  */
-
 class ProvisionCommand extends Command
 {
     use HasDeployConfig;
@@ -30,32 +31,37 @@ class ProvisionCommand extends Command
         }
 
         $env = $this->resolveEnvironment($config);
+        $envConfig = $this->getEnvConfig($config, $env);
 
-        if (!isset($config['environments'][$env])) {
+        if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
             return self::FAILURE;
         }
 
-        $envConfig = $config['environments'][$env];
+        $keyPath = $this->resolveKeyPath($envConfig['key']);
 
-        // Show warnings and require confirmation
-        if (!$this->confirmProvision($env, $envConfig)) {
+        if (!file_exists($keyPath)) {
+            $this->output->error("SSH key not found: {$envConfig['key']}");
+            $this->output->line('Set the correct path in config/deploy.php under the "key" entry.');
             return self::FAILURE;
         }
 
-        // Merge CLI overrides into config
-        $this->applyOverrides($envConfig);
-        $config['environments'][$env] = $envConfig;
+        // Gather provisioning parameters interactively
+        $params = $this->gatherParams($env, $envConfig);
+
+        // Show confirmation and require explicit approval
+        if (!$this->confirmProvision($env, $envConfig, $params)) {
+            return self::FAILURE;
+        }
 
         $provisioner = new Provisioner($config);
 
-        // Run provisioning
         $this->output->newline();
-        $this->output->info("Provisioning {$env} ({$envConfig['host']}) ─── this may take 5-15 minutes ...");
+        $this->output->info("Provisioning {$env} ({$envConfig['host']}) — this takes 5-15 minutes ...");
         $this->output->newline();
 
         try {
-            $result = $provisioner->provision($env);
+            $result = $provisioner->provision($env, $params);
         } catch (\RuntimeException $e) {
             $this->output->error($e->getMessage());
             $this->output->newline();
@@ -71,167 +77,95 @@ class ProvisionCommand extends Command
             return self::FAILURE;
         }
 
-        $this->output->success("Server provisioned successfully!");
         $this->output->newline();
-
-        // Fetch and save credentials
-        $this->saveCredentials($provisioner, $env);
-
+        $this->output->success('Server provisioned successfully!');
         $this->output->newline();
-        $this->printNextSteps($env, $envConfig);
+        $this->printNextSteps($env);
 
         return self::SUCCESS;
     }
 
-    private function loadConfig(): ?array
+    /**
+     * Gather provisioning parameters interactively, using smart defaults.
+     *
+     * Supports non-interactive mode via CLI flags:
+     *   --init-user=root --php=8.3 --db-name=myapp --db-user=myapp --timezone=UTC
+     */
+    private function gatherParams(string $env, array $envConfig): array
     {
-        $configPath = DIR_ROOT . '/config/deploy.php';
+        $defaultDbName = preg_replace('/[^a-zA-Z0-9_]/', '_', basename($envConfig['path']));
+        $defaultDbUser = $defaultDbName;
 
-        if (!file_exists($configPath)) {
-            $this->output->error('Deploy config not found.');
+        $initUser   = $this->args->get('init-user');
+        $phpVersion = $this->args->get('php');
+        $dbName     = $this->args->get('db-name');
+        $dbUser     = $this->args->get('db-user');
+        $timezone   = $this->args->get('timezone');
+
+        if ($initUser === null || $phpVersion === null || $dbName === null || $dbUser === null || $timezone === null) {
             $this->output->newline();
-            $this->output->line('Create config/deploy.php with your server settings:');
+            $this->output->info("Provisioning {$env} ({$envConfig['host']})");
             $this->output->newline();
-            $this->printConfigExample();
-            $this->output->newline();
-            return null;
+
+            $initUser   = $initUser   ?? $this->ask('SSH user for root access', 'root');
+            $phpVersion = $phpVersion ?? $this->ask('PHP version to install', '8.3');
+            $dbName     = $dbName     ?? $this->ask('Database name', $defaultDbName);
+            $dbUser     = $dbUser     ?? $this->ask('Database user', $defaultDbUser);
+            $timezone   = $timezone   ?? $this->ask('Server timezone', 'UTC');
         }
 
-        return require $configPath;
+        return [
+            'init_user'   => $initUser,
+            'php_version' => $phpVersion,
+            'db_name'     => $dbName,
+            'db_user'     => $dbUser,
+            'timezone'    => $timezone,
+            'name'        => $env,
+        ];
     }
 
-    private function applyOverrides(array &$envConfig): void
+    /**
+     * Prompt for a value with a default, returning the default on empty input.
+     */
+    private function ask(string $question, string $default): string
     {
-        $php = $this->args->get('php');
-        if ($php !== null) {
-            $envConfig['php'] = $php;
-        }
-
-        $timezone = $this->args->get('timezone');
-        if ($timezone !== null) {
-            $envConfig['provision']['timezone'] = $timezone;
-        }
-
-        $database = $this->args->get('db');
-        if ($database !== null) {
-            $envConfig['provision']['database'] = $database;
-        }
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
     }
 
-    private function confirmProvision(string $env, array $envConfig): bool
+    private function confirmProvision(string $env, array $envConfig, array $params): bool
     {
         $this->output->newline();
-        $this->output->warning('SECURITY WARNING');
+        $this->output->line('─────────────────────────────────────────────');
+        $this->output->line("  Environment:  {$env}");
+        $this->output->line("  Host:         {$envConfig['host']}");
+        $this->output->line("  SSH key:      {$envConfig['key']}");
+        $this->output->line("  Init user:    {$params['init_user']}");
+        $this->output->line("  PHP:          {$params['php_version']}");
+        $this->output->line("  Database:     {$params['db_name']} / user: {$params['db_user']}");
+        $this->output->line("  Timezone:     {$params['timezone']}");
+        $this->output->line('─────────────────────────────────────────────');
         $this->output->newline();
-        $this->output->line('This command requires ROOT SSH access to the server.');
-        $this->output->line('It will install system packages, create users, and modify system settings.');
-        $this->output->line('This is a ONE-TIME operation for fresh servers.');
+        $this->output->warning('Root SSH will be DISABLED after provisioning.');
         $this->output->newline();
 
-        $this->output->info('Server:');
-        $this->output->line("  Environment: {$env}");
-        $this->output->line("  Host:        {$envConfig['host']}");
-        $this->output->line("  PHP:         " . ($envConfig['php'] ?? '8.3'));
-        $this->output->line("  Database:    " . ($envConfig['provision']['database'] ?? 'mysql'));
-        $this->output->newline();
+        $response = trim((string) $this->prompt->ask('Continue? [y/N]'));
 
-        if (!file_exists($this->resolveKeyPath($envConfig['key'] ?? '~/.ssh/id_rsa'))) {
-            $this->output->error('SSH key not found: ' . ($envConfig['key'] ?? '~/.ssh/id_rsa'));
-            $this->output->newline();
-            return false;
-        }
-
-        $response = $this->prompt->ask('Continue? (yes/no)');
-
-        return strtolower($response) === 'yes';
+        return strtolower($response) === 'y';
     }
 
-    private function saveCredentials(Provisioner $provisioner, string $env): void
-    {
-        $this->output->info('Fetching credentials from server...');
-        $this->output->newline();
-
-        $credentialsDir = DIR_ROOT . '/deploy/credentials';
-
-        if (!is_dir($credentialsDir)) {
-            mkdir($credentialsDir, 0700, true);
-        }
-
-        $localPath = $credentialsDir . '/' . $env . '.txt';
-
-        try {
-            $result = $provisioner->fetchCredentials($env, $localPath);
-        } catch (\RuntimeException $e) {
-            $this->output->warning('Could not fetch credentials: ' . $e->getMessage());
-            return;
-        }
-
-        if ($result['success'] && file_exists($localPath)) {
-            chmod($localPath, 0600);
-            $this->output->success("Credentials saved to: deploy/credentials/{$env}.txt");
-        } else {
-            $this->output->warning('Could not save credentials locally.');
-            $this->output->line('They remain on the server at /root/.lightpack-credentials-final');
-        }
-    }
-
-    private function printNextSteps(string $env, array $envConfig): void
+    private function printNextSteps(string $env): void
     {
         $this->output->info('Next steps:');
         $this->output->newline();
-        $this->output->line("  1. Review credentials: deploy/credentials/{$env}.txt");
-        $this->output->line('  2. Add the GitHub deploy key to your repository');
-        $this->output->line("  3. Deploy your app:  php console app:deploy {$env}");
+        $this->output->line('  1. Copy the deploy SSH key shown above and add it to your Git repository');
+        $this->output->line('       GitHub → Settings → Deploy keys → Add deploy key');
+        $this->output->line("  2. Deploy:  php console app:deploy {$env}");
         $this->output->newline();
-        $this->output->info('Security notes:');
-        $this->output->line('  - Root SSH login is now DISABLED');
-        $this->output->line('  - Use the deploy user for all future operations');
-        $this->output->line('  - Deploy user sudo is restricted to service reloads only');
+        $this->output->info('Security:');
+        $this->output->line('  - Root SSH is now DISABLED on the server');
+        $this->output->line('  - All future commands use the deploy user');
+        $this->output->line('  - Deploy sudo is restricted to service reloads only');
         $this->output->newline();
     }
-
-    private function printConfigExample(): void
-    {
-        $example = <<<'PHP'
-<?php
-
-return [
-    'default' => 'production',
-
-    'environments' => [
-        'production' => [
-            'host'    => '1.2.3.4',
-            'user'    => 'deploy',
-            'key'     => '~/.ssh/id_rsa',
-            'timeout' => 300,
-            'php'     => '8.3',
-
-            'provision' => [
-                'user'     => 'root',
-                'name'     => 'myapp',
-                'timezone' => 'UTC',
-                'database' => 'mysql',
-                'db_name'  => 'myapp',
-                'db_user'  => 'myapp',
-                'git_host' => 'github.com',
-            ],
-
-            'app' => [
-                'repo'   => 'git@github.com:you/app.git',
-                'branch' => 'main',
-                'path'   => '/var/www/myapp',
-            ],
-        ],
-    ],
-];
-PHP;
-
-        $this->output->newline();
-        $this->output->line('You can also generate this file automatically:');
-        $this->output->newline();
-        $this->output->line('  php console create:config --support=deploy');
-        $this->output->newline();
-        echo $example . PHP_EOL;
-    }
-
 }

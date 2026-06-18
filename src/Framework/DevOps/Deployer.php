@@ -27,19 +27,17 @@ class Deployer
      */
     public function deploy(string $environment, ?string $localEnvPath = null): array
     {
-        $env = $this->config['environments'][$environment] ?? null;
+        $env = $this->config[$environment] ?? null;
 
         if ($env === null) {
             throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
         }
 
-        $timeout = $env['timeout'] ?? 300;
-
         // Step 1: Ensure app directory exists
-        $this->execute($this->buildSshCommand($env, 'mkdir -p ' . escapeshellarg($env['app']['path'])), 30);
+        $this->execute($this->buildSshCommand($env, 'mkdir -p ' . escapeshellarg($env['path'])), 30);
 
         // Step 2: Pull code + install dependencies
-        $codeResult = $this->execute($this->buildSshCommand($env, $this->buildCodeScript($env)), $timeout);
+        $codeResult = $this->execute($this->buildSshCommand($env, $this->buildCodeScript($env)), 300);
 
         if (!$codeResult['success']) {
             return $codeResult;
@@ -55,7 +53,7 @@ class Deployer
         }
 
         // Step 4: Run migrations + reload services
-        return $this->execute($this->buildSshCommand($env, $this->buildActivateScript($env)), $timeout);
+        return $this->execute($this->buildSshCommand($env, $this->buildActivateScript($env)), 300);
     }
 
     /**
@@ -65,7 +63,7 @@ class Deployer
      */
     public function rollback(string $environment, int $steps = 1): array
     {
-        $env = $this->config['environments'][$environment] ?? null;
+        $env = $this->config[$environment] ?? null;
 
         if ($env === null) {
             throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
@@ -73,9 +71,8 @@ class Deployer
 
         $remoteScript = $this->buildRollbackScript($env, $steps);
         $sshCommand = $this->buildSshCommand($env, $remoteScript);
-        $timeout = $env['timeout'] ?? 300;
 
-        return $this->execute($sshCommand, $timeout);
+        return $this->execute($sshCommand, 300);
     }
 
     /**
@@ -85,16 +82,15 @@ class Deployer
      */
     public function syncEnv(string $environment, string $localEnvPath): array
     {
-        $env = $this->config['environments'][$environment] ?? null;
+        $env = $this->config[$environment] ?? null;
 
         if ($env === null) {
             throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
         }
 
         $scpCommand = $this->buildScpCommand($env, $localEnvPath);
-        $timeout = $env['timeout'] ?? 60;
 
-        return $this->execute($scpCommand, $timeout);
+        return $this->execute($scpCommand, 60);
     }
 
     /**
@@ -102,24 +98,23 @@ class Deployer
      */
     public function getEnvironments(): array
     {
-        return array_keys($this->config['environments'] ?? []);
+        return array_keys($this->config);
     }
 
     private function buildCodeScript(array $env): string
     {
-        $app     = $env['app'] ?? [];
-        $rawPath = $app['path'];
+        $rawPath = $env['path'];
         $path    = escapeshellarg($rawPath);
-        $branch  = escapeshellarg($app['branch'] ?? 'main');
-        $ref     = escapeshellarg('origin/' . ($app['branch'] ?? 'main'));
-        $repo    = $app['repo'] ?? null;
+        $branch  = escapeshellarg($env['branch'] ?? 'main');
+        $ref     = escapeshellarg('origin/' . ($env['branch'] ?? 'main'));
+        $repo    = $env['repo'] ?? null;
 
         if ($repo !== null) {
-            $repoSafe    = escapeshellarg($repo);
-            $ensureRepo  = "test -d {$rawPath}/.git || git -C {$path} init";
-            $syncRemote  = "git -C {$path} remote set-url origin {$repoSafe} 2>/dev/null || git -C {$path} remote add origin {$repoSafe}";
-            $pullCode    = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
-            $gitSteps    = "{$ensureRepo} && {$syncRemote} && {$pullCode}";
+            $repoSafe   = escapeshellarg($repo);
+            $ensureRepo = "test -d {$rawPath}/.git || git -C {$path} init";
+            $syncRemote = "git -C {$path} remote set-url origin {$repoSafe} 2>/dev/null || git -C {$path} remote add origin {$repoSafe}";
+            $pullCode   = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
+            $gitSteps   = "{$ensureRepo} && {$syncRemote} && {$pullCode}";
         } else {
             $gitSteps = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
         }
@@ -131,11 +126,8 @@ class Deployer
 
     private function buildActivateScript(array $env): string
     {
-        $app        = $env['app'] ?? [];
-        $rawPath    = $app['path'];
-        $phpVersion = $env['php'] ?? '8.3';
-        $hooks      = $app['hooks'] ?? [];
-
+        $rawPath     = $env['path'];
+        $hooks       = $env['hooks'] ?? [];
         $storagePath = escapeshellarg($rawPath . '/storage');
         $consolePath = escapeshellarg($rawPath . '/console');
         $appPath     = escapeshellarg($rawPath);
@@ -149,14 +141,15 @@ class Deployer
             $commands[] = "cd {$appPath} && {$hook}";
         }
 
-        $commands[] = "sudo systemctl reload php{$phpVersion}-fpm";
+        // Auto-detect installed PHP version on the server at deploy time.
+        $commands[] = 'PHP_VER=$(php -r \'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;\' 2>/dev/null) && sudo systemctl reload php${PHP_VER}-fpm';
 
         return implode(' && ', $commands);
     }
 
     private function buildRollbackScript(array $env, int $steps): string
     {
-        $path = escapeshellarg($env['app']['path']);
+        $path = escapeshellarg($env['path']);
 
         $commands = [
             "cd {$path}",
@@ -177,9 +170,8 @@ class Deployer
      */
     private function buildSshCommand(array $env, string $remoteScript): array
     {
-        $user = $env['user'];
         $host = $env['host'];
-        $key  = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
+        $key  = $this->resolveKeyPath($env['key']);
 
         return [
             'ssh',
@@ -187,7 +179,7 @@ class Deployer
             '-i', $key,
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
-            "{$user}@{$host}",
+            "deploy@{$host}",
             $remoteScript,
         ];
     }
@@ -197,17 +189,16 @@ class Deployer
      */
     private function buildScpCommand(array $env, string $localPath): array
     {
-        $user = $env['user'];
-        $host = $env['host'];
-        $key        = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
-        $remotePath = $env['app']['path'] . '/.env';
+        $host       = $env['host'];
+        $key        = $this->resolveKeyPath($env['key']);
+        $remotePath = $env['path'] . '/.env';
 
         return [
             'scp',
             '-i', $key,
             '-o', 'StrictHostKeyChecking=accept-new',
             $localPath,
-            "{$user}@{$host}:{$remotePath}",
+            "deploy@{$host}:{$remotePath}",
         ];
     }
 

@@ -36,10 +36,8 @@ class ServerQueueSetupCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['app']['path'];
-        $phpVersion = $envConfig['php'] ?? '8.3';
-        $user = $envConfig['user'];
-        $name = $this->args->get('name') ?? $env;
+        $appPath = $envConfig['path'];
+        $name    = $this->args->get('name') ?? $env;
         $queue = $this->args->get('queue') ?? 'default';
         $workers = (int) ($this->args->get('workers') ?? 1);
         $cooldown = (int) ($this->args->get('cooldown') ?? 3600);
@@ -48,7 +46,7 @@ class ServerQueueSetupCommand extends Command
         $this->output->info("Installing queue worker [{$name}] on {$env} ...");
         $this->output->newline();
 
-        $supervisorConfig = $this->buildSupervisorConfig($name, $appPath, $phpVersion, $user, $queue, $workers, $cooldown, $stopWait);
+        $supervisorConfig = $this->buildSupervisorConfig($name, $appPath, $queue, $workers, $cooldown, $stopWait);
 
         $remoteScript = <<<BASH
 set -e
@@ -74,16 +72,16 @@ BASH;
         return self::FAILURE;
     }
 
-    private function buildSupervisorConfig(string $name, string $appPath, string $phpVersion, string $user, string $queue, int $workers, int $cooldown, int $stopWait): string
+    private function buildSupervisorConfig(string $name, string $appPath, string $queue, int $workers, int $cooldown, int $stopWait): string
     {
         $programName = "lightpack-{$name}";
 
         $config = <<<INI
         [program:{$programName}]
         process_name=%(program_name)s_%(process_num)02d
-        command=/usr/bin/php{$phpVersion} {$appPath}/console jobs:run --queue={$queue} --cooldown={$cooldown}
+        command=/usr/bin/env php {$appPath}/console jobs:run --queue={$queue} --cooldown={$cooldown}
         directory={$appPath}
-        user={$user}
+        user=deploy
         numprocs={$workers}
         autostart=false
         autorestart=true

@@ -45,8 +45,6 @@ class ServerConfigCommand extends Command
             return self::FAILURE;
         }
 
-        $phpVersion = $envConfig['php'] ?? '8.3';
-
         // Validate formats
         foreach (['upload' => $upload, 'memory' => $memory] as $name => $value) {
             if ($value !== null && !preg_match('/^\d+[KMG]$/i', $value)) {
@@ -74,7 +72,7 @@ class ServerConfigCommand extends Command
         }
         $this->output->newline();
 
-        $remoteScript = $this->buildConfigScript($phpVersion, $upload, $memory, $timeout);
+        $remoteScript = $this->buildConfigScript($upload, $memory, $timeout);
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
         $result = $this->executeRemote($sshCommand, 30);
@@ -90,29 +88,27 @@ class ServerConfigCommand extends Command
         return self::FAILURE;
     }
 
-    private function buildConfigScript(string $phpVersion, ?string $upload, ?string $memory, ?string $timeout): string
+    private function buildConfigScript(?string $upload, ?string $memory, ?string $timeout): string
     {
-        $phpIniDir  = "/etc/php/{$phpVersion}/fpm/conf.d";
-        $phpIniFile = "{$phpIniDir}/99-lightpack.ini";
         $nginxConf  = '/etc/nginx/nginx.conf';
 
         $sedCommands = [];
 
         if ($upload !== null) {
             $uploadUpper = strtoupper($upload);
-            $sedCommands[] = "sed -i 's/^upload_max_filesize = .*/upload_max_filesize = {$uploadUpper}/' {$phpIniFile}";
-            $sedCommands[] = "sed -i 's/^post_max_size = .*/post_max_size = {$uploadUpper}/' {$phpIniFile}";
+            $sedCommands[] = "sed -i 's/^upload_max_filesize = .*/upload_max_filesize = {$uploadUpper}/' \${PHP_INI_FILE}";
+            $sedCommands[] = "sed -i 's/^post_max_size = .*/post_max_size = {$uploadUpper}/' \${PHP_INI_FILE}";
             $sedCommands[] = "sed -i 's/client_max_body_size .*/client_max_body_size {$uploadUpper};/' {$nginxConf}";
         }
 
         if ($memory !== null) {
             $memoryUpper = strtoupper($memory);
-            $sedCommands[] = "sed -i 's/^memory_limit = .*/memory_limit = {$memoryUpper}/' {$phpIniFile}";
+            $sedCommands[] = "sed -i 's/^memory_limit = .*/memory_limit = {$memoryUpper}/' \${PHP_INI_FILE}";
         }
 
         if ($timeout !== null) {
-            $sedCommands[] = "sed -i 's/^max_execution_time = .*/max_execution_time = {$timeout}/' {$phpIniFile}";
-            $sedCommands[] = "sed -i 's/^max_input_time = .*/max_input_time = {$timeout}/' {$phpIniFile}";
+            $sedCommands[] = "sed -i 's/^max_execution_time = .*/max_execution_time = {$timeout}/' \${PHP_INI_FILE}";
+            $sedCommands[] = "sed -i 's/^max_input_time = .*/max_input_time = {$timeout}/' \${PHP_INI_FILE}";
         }
 
         $sedBlock = implode("\n", $sedCommands);
@@ -120,13 +116,19 @@ class ServerConfigCommand extends Command
         return <<<BASH
 set -e
 
+PHP_VER=\$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null)
+if [ -z "\$PHP_VER" ]; then
+    echo "ERROR: Cannot determine PHP version on server" >&2
+    exit 1
+fi
+
+PHP_INI_FILE="/etc/php/\${PHP_VER}/fpm/conf.d/99-lightpack.ini"
+
 {$sedBlock}
 
-# Verify PHP syntax
 echo "Reloading PHP-FPM..."
-sudo systemctl reload php{$phpVersion}-fpm
+sudo systemctl reload php\${PHP_VER}-fpm
 
-# Verify Nginx syntax before reload
 if sudo nginx -t 2>/dev/null; then
     echo "Reloading Nginx..."
     sudo systemctl reload nginx

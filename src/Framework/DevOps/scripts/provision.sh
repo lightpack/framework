@@ -90,12 +90,10 @@ if [ -f /root/.lightpack-credentials ]; then
     source /root/.lightpack-credentials
 else
     DEPLOY_PASSWORD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
-    MYSQL_ROOT_PASSWORD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
     MYSQL_PASSWORD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
 
     cat > /root/.lightpack-credentials <<EOF
 DEPLOY_PASSWORD='${DEPLOY_PASSWORD}'
-MYSQL_ROOT_PASSWORD='${MYSQL_ROOT_PASSWORD}'
 MYSQL_PASSWORD='${MYSQL_PASSWORD}'
 EOF
     chmod 600 /root/.lightpack-credentials
@@ -561,10 +559,8 @@ if [ "$DB_TYPE" = "mysql" ]; then
 
     apt-get install -y -qq mysql-server
 
-    # Secure MySQL
-    if mysql -u root -e "SELECT 1" &>/dev/null; then
-        mysql -u root <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+    # Secure MySQL using socket auth (root never gets a password — use sudo mysql)
+    mysql -u root <<EOF
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DROP DATABASE IF EXISTS test;
@@ -572,17 +568,14 @@ DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
 FLUSH PRIVILEGES;
 EOF
 
-        # Create app database and user
-        mysql -u root -p"${MYSQL_ROOT_PASSWORD}" <<EOF
+    # Create app database and user via socket auth
+    mysql -u root <<EOF
 CREATE DATABASE IF NOT EXISTS ${MYSQL_DB} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'localhost';
 FLUSH PRIVILEGES;
 EOF
-        log_info "MySQL configured and secured"
-    else
-        log_warn "MySQL root already has a password set, skipping security setup"
-    fi
+    log_info "MySQL configured and secured (root access via socket auth only)"
 
     # Calculate MySQL InnoDB buffer pool: 25% of total RAM
     MYSQL_BUFFER_MB=$(( TOTAL_RAM_MB / 4 ))
@@ -739,73 +732,7 @@ EOF
 
 sysctl -p /etc/sysctl.d/99-lightpack.conf >/dev/null
 
-# -----------------------------------------------------------------------------
-# 17. Create credentials file (readable by deploy user for retrieval)
-# -----------------------------------------------------------------------------
-log_step "Saving credentials..."
-
-SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')
-
-cat > /root/.lightpack-credentials-final <<EOF
-================================================================================
-LIGHTPACK SERVER CREDENTIALS
-================================================================================
-Server Name: ${SERVER_NAME}
-Server IP:   ${SERVER_IP}
-Date:        $(date)
-
-DEPLOY USER:
-  Username:  ${DEPLOY_USER}
-  Password:  ${DEPLOY_PASSWORD}
-  SSH:       ssh ${DEPLOY_USER}@${SERVER_IP}
-
-GITHUB DEPLOY KEY (add to repo):
-  ${DEPLOY_SSH_KEY}
-
-PHP:         ${current_php}
-Web Server:  ${WEB_SERVER}
-Database:    ${DB_TYPE}
-EOF
-
-if [ "$DB_TYPE" = "mysql" ]; then
-cat >> /root/.lightpack-credentials-final <<EOF
-
-MYSQL ROOT:
-  Username:  root
-  Password:  ${MYSQL_ROOT_PASSWORD}
-
-MYSQL APP DATABASE:
-  Database:  ${MYSQL_DB}
-  Username:  ${MYSQL_USER}
-  Password:  ${MYSQL_PASSWORD}
-EOF
-fi
-
-cat >> /root/.lightpack-credentials-final <<EOF
-
-NEXT STEPS:
-  1. Add the GitHub deploy key above to your repository
-  2. Deploy your app: php console app:deploy ${SERVER_NAME}
-  3. Delete this file: rm /root/.lightpack-credentials-final
-
-SECURITY NOTES:
-  - Root SSH login is DISABLED
-  - Password authentication is DISABLED (keys only)
-  - Firewall (UFW) is ACTIVE
-  - Fail2Ban is protecting SSH
-  - Automatic security updates are ENABLED
-  - Deploy user sudo is RESTRICTED (service reloads only)
-================================================================================
-EOF
-
-chmod 600 /root/.lightpack-credentials-final
-
-# Also copy to /tmp for retrieval by deploy user
-cp /root/.lightpack-credentials-final /tmp/lightpack-credentials
-chown "${DEPLOY_USER}":"${DEPLOY_USER}" /tmp/lightpack-credentials
-chmod 600 /tmp/lightpack-credentials
-
-log_info "Credentials saved to /root/.lightpack-credentials-final"
+# No credentials file is written to disk — displayed once in terminal below.
 
 # -----------------------------------------------------------------------------
 # 18. Final checks
@@ -828,13 +755,31 @@ done
 # -----------------------------------------------------------------------------
 CLEANUP_NEEDED=false
 
+SERVER_IP=$(hostname -I | awk '{print $1}')
+
 echo ""
 echo "================================================================================"
-echo "                    SERVER PROVISIONING COMPLETED"
+echo "  SERVER PROVISIONING COMPLETE"
 echo "================================================================================"
 echo ""
-cat /root/.lightpack-credentials-final
+echo "  Host:        ${SERVER_IP}"
+echo "  Deploy user: ${DEPLOY_USER}"
+echo "  PHP:         ${current_php}"
 echo ""
+echo "  DEPLOY USER PASSWORD (save now — shown once):"
+echo "    ${DEPLOY_PASSWORD}"
+echo ""
+if [ "$DB_TYPE" = "mysql" ]; then
+echo "  DATABASE CREDENTIALS (save now — shown once):"
+echo "    DB_NAME: ${MYSQL_DB}"
+echo "    DB_USER: ${MYSQL_USER}"
+echo "    DB_PSWD: ${MYSQL_PASSWORD}"
+echo ""
+fi
+echo "  DEPLOY SSH PUBLIC KEY (add to your Git repo):"
+echo "    ${DEPLOY_SSH_KEY}"
+echo ""
+echo "  Security: root SSH disabled · UFW active · Fail2Ban active"
 echo "================================================================================"
 
 # Self-cleanup: remove this script (it contains credentials as env vars at the top)

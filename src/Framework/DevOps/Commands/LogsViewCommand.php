@@ -36,7 +36,7 @@ class LogsViewCommand extends Command
         $lines = max(1, min($lines, 1000));
 
         $logFile = $this->args->get('file') ?? 'lightpack.log';
-        $logPath = $envConfig['app']['path'] . '/storage/logs/' . $logFile;
+        $logPath = $envConfig['path'] . '/storage/logs/' . $logFile;
 
         $this->output->info("Last {$lines} lines of {$logFile} on {$env}:");
         $this->output->newline();

@@ -44,13 +44,12 @@ class SiteAddCommand extends Command
         }
 
         $includeWww = $this->args->has('www');
-        $appPath = $envConfig['app']['path'];
-        $phpVersion = $envConfig['php'] ?? '8.3';
+        $appPath    = $envConfig['path'];
 
         $this->output->info("Adding Nginx site for {$domain} ...");
         $this->output->newline();
 
-        $remoteScript = $this->buildSiteScript($domain, $appPath, $phpVersion, $includeWww);
+        $remoteScript = $this->buildSiteScript($domain, $appPath, $includeWww);
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
         $result = $this->executeRemote($sshCommand, 60);
@@ -71,10 +70,9 @@ class SiteAddCommand extends Command
         return self::FAILURE;
     }
 
-    private function buildSiteScript(string $domain, string $appPath, string $phpVersion, bool $includeWww): string
+    private function buildSiteScript(string $domain, string $appPath, bool $includeWww): string
     {
         $serverNames = $includeWww ? "{$domain} www.{$domain}" : $domain;
-        $fpmSocket = "/run/php/php{$phpVersion}-fpm.sock";
 
         $configContent = <<<NGINX
 server {
@@ -96,7 +94,7 @@ server {
     error_page 404 /index.php;
 
     location ~ \.php$ {
-        fastcgi_pass unix:{$fpmSocket};
+        fastcgi_pass unix:/run/php/php_VER-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_hide_header X-Powered-By;
@@ -120,16 +118,26 @@ server {
 NGINX;
 
         return <<<BASH
-domain="{$domain}"
+set -e
 
-cat << 'NGINX_EOF' | sudo lp-nginx-write "\${domain}.conf"
+PHP_VER=\$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null)
+if [ -z "\$PHP_VER" ]; then
+    echo "ERROR: Cannot determine PHP version on server" >&2
+    exit 1
+fi
+
+# Patch the socket path with the detected version
+NGINX_CONF=\$(cat << 'NGINX_EOF'
 {$configContent}
 NGINX_EOF
+)
+NGINX_CONF="\${NGINX_CONF/php_VER/\$PHP_VER}"
 
-sudo lp-nginx-enable "\${domain}.conf"
+echo "\$NGINX_CONF" | sudo lp-nginx-write "{$domain}.conf"
+sudo lp-nginx-enable "{$domain}.conf"
 sudo systemctl reload nginx
 
-echo "Site \$domain added and enabled."
+echo "Site {$domain} added and enabled."
 BASH;
     }
 }

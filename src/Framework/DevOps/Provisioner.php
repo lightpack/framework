@@ -18,6 +18,9 @@ class Provisioner
 
     private array $config;
 
+    /**
+     * @param array $config The ['deploy'] sub-array from config/deploy.php.
+     */
     public function __construct(array $config)
     {
         $this->config = $config;
@@ -26,90 +29,47 @@ class Provisioner
     /**
      * Provision the specified server environment.
      *
+     * @param string $environment  Environment key (e.g. 'production').
+     * @param array  $params       Interactive params: init_user, php_version,
+     *                             db_name, db_user, timezone.
      * @return array{success: bool, exit_code: int, output: string}
      */
-    public function provision(string $environment): array
+    public function provision(string $environment, array $params): array
     {
-        $env = $this->config['environments'][$environment] ?? null;
+        $env = $this->config[$environment] ?? null;
 
         if ($env === null) {
             throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
         }
 
-        $host = $env['host'];
-        $provisionUser = $env['provision']['user'] ?? 'root';
-        $rootKey = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
-        $provisionOptions = $this->buildProvisionOptions($env);
+        $host         = $env['host'];
+        $initUser     = $params['init_user'];
+        $key          = $this->resolveKeyPath($env['key']);
+        $provisionOptions = $this->buildProvisionOptions($env, $params);
 
         // Step 1: Add host to known_hosts to avoid interactive prompt
         $this->addToKnownHosts($host);
 
         // Step 2: Generate and copy provisioning script to server
-        $scriptPath = $this->generateScript($provisionOptions);
+        $scriptPath       = $this->generateScript($provisionOptions);
         $remoteScriptPath = '/root/lightpack-provision.sh';
 
         try {
-            $scpResult = $this->copyScriptToServer($host, $provisionUser, $rootKey, $scriptPath, $remoteScriptPath);
+            $scpResult = $this->copyScriptToServer($host, $initUser, $key, $scriptPath, $remoteScriptPath);
 
             if (!$scpResult['success']) {
                 return $scpResult;
             }
 
-            // Step 3: Execute provisioning script
+            // Step 3: Execute provisioning script.
             // Note: provision.sh self-deletes at its end via `rm -f "$0"`.
             // PHP cannot clean it up because root SSH is disabled after provisioning
             // and the deploy user has no access to /root/.
-            return $this->executeScriptOnServer($host, $provisionUser, $rootKey, $remoteScriptPath);
+            return $this->executeScriptOnServer($host, $initUser, $key, $remoteScriptPath);
         } finally {
-            // Step 5: Always cleanup local temp script
+            // Always cleanup local temp script
             @unlink($scriptPath);
         }
-    }
-
-    /**
-     * Fetch credentials file from the remote server after provisioning.
-     *
-     * @return array{success: bool, output: string}
-     */
-    public function fetchCredentials(string $environment, string $localPath): array
-    {
-        $env = $this->config['environments'][$environment] ?? null;
-
-        if ($env === null) {
-            throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
-        }
-
-        $host = $env['host'];
-        $deployUser = $env['user'] ?? 'deploy';
-        $deployKey = $this->resolveKeyPath($env['key'] ?? '~/.ssh/id_rsa');
-
-        // Credentials are at /tmp/lightpack-credentials (readable by all)
-        // We fetch them as deploy user since root SSH is now disabled
-        $scpCommand = [
-            'scp',
-            '-i', $deployKey,
-            '-o', 'StrictHostKeyChecking=accept-new',
-            '-o', 'ConnectTimeout=10',
-            "{$deployUser}@{$host}:/tmp/lightpack-credentials",
-            $localPath,
-        ];
-
-        $result = $this->execute($scpCommand, 30);
-
-        // Cleanup remote temp file regardless of success
-        $this->execute([
-            'ssh',
-            '-i', $deployKey,
-            '-o', 'StrictHostKeyChecking=accept-new',
-            '-o', 'ConnectTimeout=10',
-            "{$deployUser}@{$host}",
-            'rm -f /tmp/lightpack-credentials',
-        ], 10);
-
-        return [
-            'success' => $result['success'],
-            'output' => $result['output'],
-        ];
     }
 
     /**
@@ -117,11 +77,11 @@ class Provisioner
      */
     public function getEnvironments(): array
     {
-        return array_keys($this->config['environments'] ?? []);
+        return array_keys($this->config);
     }
 
     /**
-     * Generate the provisioning script with substituted configuration values.
+     * Generate the provisioning script with environment variable exports prepended.
      */
     private function generateScript(array $options): string
     {
@@ -131,10 +91,8 @@ class Provisioner
             throw new \RuntimeException('Provisioning script template not found');
         }
 
-        // Create a temporary file with substituted values
         $tmpFile = tempnam(sys_get_temp_dir(), 'lp_provision_');
 
-        // Prepend environment variable exports so the script picks them up
         $exports = "#!/bin/bash\n\n";
         foreach ($options as $key => $value) {
             $escaped = str_replace("'", "'\\''" , $value);
@@ -152,20 +110,28 @@ class Provisioner
         return $tmpFile;
     }
 
-    private function buildProvisionOptions(array $env): array
+    /**
+     * Build the environment variable map passed to provision.sh.
+     *
+     * git_host is derived from the repo URL so it never needs to be in config.
+     */
+    private function buildProvisionOptions(array $env, array $params): array
     {
-        $provision = $env['provision'] ?? [];
+        $gitHost = 'github.com';
+        if (!empty($env['repo']) && preg_match('/^git@([^:]+):/', $env['repo'], $m)) {
+            $gitHost = $m[1];
+        }
 
         return [
-            'SERVER_NAME' => $provision['name'] ?? 'lightpack',
-            'DEPLOY_USER' => $env['user'] ?? 'deploy',
-            'PHP_VERSION' => $env['php'] ?? '8.3',
-            'TIMEZONE'    => $provision['timezone'] ?? 'UTC',
-            'DB_TYPE'     => $provision['database'] ?? 'mysql',
-            'WEB_SERVER'  => 'nginx',
-            'MYSQL_DB'    => $provision['db_name'] ?? 'lightpack',
-            'MYSQL_USER'  => $provision['db_user'] ?? 'lightpack',
-            'GIT_HOST'    => $provision['git_host'] ?? 'github.com',
+            'SERVER_NAME'  => $params['name'] ?? 'lightpack',
+            'DEPLOY_USER'  => 'deploy',
+            'PHP_VERSION'  => $params['php_version'],
+            'TIMEZONE'     => $params['timezone'],
+            'DB_TYPE'      => 'mysql',
+            'WEB_SERVER'   => 'nginx',
+            'MYSQL_DB'     => $params['db_name'],
+            'MYSQL_USER'   => $params['db_user'],
+            'GIT_HOST'     => $gitHost,
         ];
     }
 

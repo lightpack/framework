@@ -33,7 +33,7 @@ class ScheduleSetupCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['app']['path'];
+        $appPath = $envConfig['path'];
         $cronLine = "* * * * * cd {$appPath} && php console schedule:events >> /dev/null 2>&1";
         $marker = "lightpack-scheduler-{$env}";
 

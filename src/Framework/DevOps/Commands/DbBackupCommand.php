@@ -35,7 +35,7 @@ class DbBackupCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['app']['path'];
+        $appPath = $envConfig['path'];
         $timestamp = date('Y-m-d-His');
         $defaultFile = "backup-{$env}-{$timestamp}.sql";
         $localFile = $this->args->get('file') ?? $defaultFile;

@@ -35,7 +35,7 @@ class EnvPullCommand extends Command
             return self::FAILURE;
         }
 
-        $appPath = $envConfig['app']['path'];
+        $appPath = $envConfig['path'];
         $outputName = $this->args->get('output') ?? "{$env}.env";
         $localDir = DIR_ROOT . '/storage/env';
         $localPath = $localDir . '/' . $outputName;
