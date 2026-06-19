@@ -131,7 +131,7 @@ PHP;
             'storage' => \Lightpack\Console\Views\Config\StorageView::class,
             'uploads' => \Lightpack\Console\Views\Config\UploadsView::class,
             'webhooks' => \Lightpack\Console\Views\Config\WebhooksView::class,
-            'deploy' => \Lightpack\DevOps\Views\Config\DeployView::class,
+            'deploy' => \Lightpack\Deploy\Views\Config\DeployView::class,
         ];
     }
 }
