@@ -21,15 +21,15 @@ All from your terminal. No Ansible. No Docker. No Kubernetes.
 
 ## The Big Picture
 
-Once you have spinned up a new Ubuntu server, you can provision it to run your Lightpack application.
+Once you have spun up a new Ubuntu server, you can provision it to run your Lightpack application.
 
 ### Provisioning (One Time)
 
-Provisioning will install PHP, Nginx, MySQL, Composer, and configures everything needed for a secure, performant environment.
+Provisioning installs PHP, Nginx, MySQL, Composer, and configures everything needed for a secure, performant environment.
 
 ### Deployment (Every Day)
 
-Deployment will pull the latest changes from Git, installs dependencies, runs migrations, and other steps that combinedly update your application to the latest version.
+Deployment pulls the latest changes from Git, installs dependencies, runs migrations, and updates your application to the latest version.
 
 ---
 
@@ -156,9 +156,11 @@ This will:
 2. Copy the provisioning script to your server
 3. Install PHP, Nginx, MySQL, Composer, and all required extensions
 4. Create the `deploy` user with restricted privileges
-5. Harden SSH (disable root login, disable password authentication)
-6. Configure the firewall (allow only SSH, HTTP, HTTPS)
-7. Fetch credentials and save them to `deploy/credentials/production.txt`
+5. Add deploy user to the `www-data` group for shared file access
+6. Set up ACLs and umask so both Nginx and deploy can read/write app files
+7. Harden SSH (disable root login, disable password authentication)
+8. Configure the firewall (allow only SSH, HTTP, HTTPS)
+9. Fetch credentials and save them to `deploy/credentials/production.txt`
 
 **This takes 10 to 15 minutes.** Go make some coffee 😅.
 
@@ -322,7 +324,7 @@ ssh deploy@server "cd /var/www/myapp && \
 
 This is a **destructive reset**, not a merge. It discards any local changes and forces the server to match the remote branch exactly. This is intentional. Your server should never have uncommitted changes.
 
-After the deploy, PHP-FPM is automatically reloaded so new code is active immediately.
+The deploy script also fixes storage permissions (group-writable dirs, readable files) so Nginx and the deploy user can both access logs, cache, and uploads. After the deploy, PHP-FPM is automatically reloaded so new code is active immediately.
 
 ---
 
@@ -419,6 +421,25 @@ php console server:queue:status  production --name=reports
 ```
 
 Omitting `--name` targets the default group named after the environment (e.g. `lightpack-production`).
+
+### Viewing Worker Logs
+
+Supervisor writes worker output to `/var/log/supervisor/lightpack-{name}.log`. You can view or tail these logs remotely:
+
+```bash
+# View last 50 lines
+php console server:queue:logs:view production
+
+# View last 200 lines
+php console server:queue:logs:view production --lines=200
+
+# Tail logs in real-time (Ctrl+C to stop)
+php console server:queue:logs:tail production
+
+# For named worker groups
+php console server:queue:logs:view production --name=emails --lines=100
+php console server:queue:logs:tail production --name=emails
+```
 
 ### Restarting Workers on Deploy
 
@@ -634,6 +655,23 @@ ssh deploy@your-server-ip "sudo systemctl reload php8.3-fpm"
 
 This is the only manual sudo command you should ever need during normal operations.
 
+### "Cannot read /var/log/supervisor/lightpack-*.log"
+
+If you see this when running `server:queue:logs:view` or `server:queue:logs:tail`, the deploy user cannot read the Supervisor log files. This is fixed automatically by provisioning (ACLs + group membership), but if you provisioned before this fix or manually set up Supervisor:
+
+```bash
+# On the server, as root or a sudo user:
+usermod -a -G www-data deploy
+setfacl -R -m u:deploy:rX /var/log/supervisor
+setfacl -d -m u:deploy:rX /var/log/supervisor
+```
+
+Or add a passwordless sudo rule for tail:
+
+```bash
+echo 'deploy ALL=(root) NOPASSWD: /usr/bin/tail /var/log/supervisor/lightpack-*.log' | sudo tee /etc/sudoers.d/lightpack-logs
+```
+
 ---
 
 ## Philosophy
@@ -677,6 +715,8 @@ Lightpack Deploy is built on a few simple beliefs:
 | `php console server:queue:stop <env> [--name=worker]` | Stop worker on server |
 | `php console server:queue:restart <env> [--name=worker]` | Restart worker on server |
 | `php console server:queue:status <env> [--name=worker]` | Show worker status on server |
+| `php console server:queue:logs:view <env> [--name=worker] [--lines=50]` | View last N lines of worker logs |
+| `php console server:queue:logs:tail <env> [--name=worker]` | Stream worker logs live |
 
 ### Database Commands
 
@@ -692,7 +732,7 @@ Lightpack Deploy is built on a few simple beliefs:
 
 | Command | Description |
 |---|---|
-| `php console server:logs:view <env>` | View recent logs |
+| `php console server:logs:view <env> [--lines=50] [--file=error.log]` | View recent logs |
 | `php console server:logs:tail <env>` | Stream logs live |
 
 ### Site Management Commands
@@ -700,8 +740,8 @@ Lightpack Deploy is built on a few simple beliefs:
 | Command | Description |
 |---|---|
 | `php console server:site:add <env> --domain=example.com` | Add Nginx virtual host for a domain |
-| `php console server:site:remove <env>` | Remove Nginx virtual host |
-| `php console server:site:ssl <env>` | Obtain and install SSL certificate |
+| `php console server:site:remove <env> --domain=example.com` | Remove Nginx virtual host |
+| `php console server:site:ssl <env> --domain=example.com` | Obtain and install SSL certificate |
 
 ### Environment Commands
 
@@ -715,7 +755,7 @@ Lightpack Deploy is built on a few simple beliefs:
 |---|---|
 | `php console server:run <env> --cmd="..."` | Run any command on the server |
 | `php console server:key:show <env>` | Display the deploy user's public SSH key |
-| `php console server:config <env> --upload=100M` | Update PHP/Nginx runtime settings |
+| `php console server:config <env> [--upload=100M] [--memory=512M] [--timeout=120]` | Update PHP/Nginx runtime settings |
 
 ---
 
