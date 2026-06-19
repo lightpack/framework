@@ -23,46 +23,7 @@ Deploy and manage Lightpack applications on a remote Ubuntu server. Provision on
 php console create:config --support=deploy
 ```
 
-Edit `config/deploy.php`:
-
-```php
-'production' => [
-    'host'    => 'YOUR_SERVER_IP',
-    'user'    => 'deploy',
-    'key'     => '~/.ssh/id_rsa',
-    'timeout' => 300,
-    'php'     => '8.3',
-
-    'provision' => [
-        'user'     => 'root',
-        'name'     => 'myapp',
-        'timezone' => 'UTC',
-        'database' => 'mysql',
-        'db_name'  => 'myapp',
-        'db_user'  => 'myapp',
-        'git_host' => 'github.com',
-    ],
-
-    'app' => [
-        'repo'      => 'git@github.com:you/app.git',
-        'branch'    => 'main',
-        'path'      => '/var/www/myapp',
-        'ssl_email' => 'you@example.com',
-    ],
-],
-```
-
-Optional post-deploy hooks:
-
-```php
-'app' => [
-    // ...
-    'hooks' => [
-        'php console cache:clear',
-        'php console storage:link',
-    ],
-],
-```
+This creates `config/deploy.php` with a sample production environment. Update your environment configuration as needed.
 
 ### 2. Prepare Environment File
 
@@ -77,15 +38,13 @@ DB_USER=lightpack
 DB_PSWD=your-db-password
 ```
 
-Keep it out of Git. Add `.env.*` to your `.gitignore`.
-
 ### 3. Provision the Server
 
 ```bash
 php console server:provision production
 ```
 
-Type `yes` to confirm. Takes 10-15 minutes. When done, root SSH is disabled. Only the `deploy` user can access the server.
+Type `yes` to confirm. Takes 5-15 minutes. When done, root SSH is disabled. Only the `deploy` user can access the server.
 
 ### 4. Add Deploy Key to GitHub
 
@@ -299,11 +258,11 @@ Provision once, then add separate environments in `config/deploy.php`:
 'environments' => [
     'blog' => [
         'host' => '1.2.3.4',
-        'app'  => ['repo' => '...', 'path' => '/var/www/blog'],
+        // ...
     ],
     'shop' => [
         'host' => '1.2.3.4',
-        'app'  => ['repo' => '...', 'path' => '/var/www/shop'],
+        // ...
     ],
 ],
 ```
@@ -321,34 +280,6 @@ Queue workers must use unique `--name` values:
 php console server:queue:setup blog --name=blog-worker
 php console server:queue:setup shop --name=shop-worker
 ```
-
----
-
-## FAQ
-
-**Q: Can I provision a server that already has stuff installed?**
-
-Yes, but carefully. The script is idempotent for most steps, but it will overwrite Nginx and PHP-FPM configs. Back up custom configs first.
-
-**Q: Can I use this with Laravel Forge or Ploi?**
-
-No, this replaces those tools. Use one or the other.
-
-**Q: What about Docker?**
-
-Lightpack runs fine in containers. These commands are for traditional VPS deployments.
-
-**Q: Can I provision multiple servers?**
-
-Yes. Add multiple environments to `config/deploy.php` with different `host` values.
-
-**Q: Does this work on shared hosting?**
-
-No. You need root SSH access and a full VPS.
-
-**Q: What about load balancers?**
-
-This is designed for single-server deployments. For multiple servers, provision each one and use a cloud load balancer or Nginx/HAProxy.
 
 ---
 
