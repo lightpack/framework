@@ -322,7 +322,7 @@ php console server:queue:setup shop --name=shop-worker
 |---|---|
 | `php console db:backup <env>` | Backup database |
 | `php console db:restore <env>` | Restore from backup |
-| `php console db:create <env> --db=name` | Create new database + user |
+| `php console db:create <env> --db=name --user=user` | Create new database + user |
 | `php console migrate:up` | Run migrations |
 | `php console migrate:down` | Rollback migrations |
 
