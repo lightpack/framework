@@ -49,10 +49,8 @@ use Lightpack\Deploy\Commands\EnvPullCommand;
 use Lightpack\Deploy\Commands\ScheduleStatusCommand;
 use Lightpack\Deploy\Commands\SiteAddCommand;
 use Lightpack\Deploy\Commands\SiteRemoveCommand;
-use Lightpack\Deploy\Commands\ServerKeyShowCommand;
 use Lightpack\Deploy\Commands\ServerRunCommand;
 use Lightpack\Deploy\Commands\SslCommand;
-use Lightpack\Deploy\Commands\ServerConfigCommand;
 use Lightpack\Deploy\Commands\ServerQueueListCommand;
 
 class Console
@@ -102,9 +100,7 @@ class Console
         'db:restore' => DbRestoreCommand::class,
         'db:create' => DbCreateCommand::class,
         'server:env:pull' => EnvPullCommand::class,
-        'server:key:show' => ServerKeyShowCommand::class,
         'server:run' => ServerRunCommand::class,
-        'server:config' => ServerConfigCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,
