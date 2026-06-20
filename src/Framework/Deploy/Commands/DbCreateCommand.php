@@ -44,7 +44,7 @@ class DbCreateCommand extends Command
 
         if (empty($dbName)) {
             $this->output->newline();
-            $this->output->info("Creating database on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Creating database on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $dbName = $this->ask('Database name');
@@ -64,7 +64,7 @@ class DbCreateCommand extends Command
 
         $dbPass = bin2hex(random_bytes(12));
 
-        $this->output->info("Creating database [{$dbName}] on {$env} ({$envConfig['host']}) ...");
+        $this->output->info("→ Creating database [{$dbName}] on {$env} ({$envConfig['host']}) ...");
         $this->output->newline();
 
         $remoteScript = $this->buildCreateScript($dbName, $dbUser, $dbPass);
@@ -78,9 +78,9 @@ class DbCreateCommand extends Command
             return self::FAILURE;
         }
 
-        $this->output->success('Database created.');
+        $this->output->success('✓ Database created.');
         $this->output->newline();
-        $this->output->info('Credentials — save these now, they will not be shown again:');
+        $this->output->info('→ Credentials — save these now, they will not be shown again:');
         $this->output->newline();
         $this->output->line("  DB_HOST: 127.0.0.1");
         $this->output->line("  DB_NAME: {$dbName}");
@@ -98,16 +98,6 @@ class DbCreateCommand extends Command
      * lp-mysql-create is installed by provisioning and runs MySQL via root
      * socket auth — no password ever needs to leave the local machine.
      */
-    private function ask(string $question): string
-    {
-        return trim((string) $this->prompt->ask("  {$question}"));
-    }
-
-    private function askWithDefault(string $question, string $default): string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
-        return $input !== '' ? $input : $default;
-    }
 
     private function buildCreateScript(string $dbName, string $dbUser, string $dbPass): string
     {

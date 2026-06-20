@@ -160,4 +160,42 @@ trait HasDeployConfig
 
         return preg_match('/^[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)+$/', $domain) === 1;
     }
+
+    private function ask(string $question): string
+    {
+        $this->output->line("  {$question}");
+        return trim((string) $this->prompt->ask("  › "));
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $this->output->line("  {$question} [{$default}]");
+        $input = trim((string) $this->prompt->ask("  › "));
+        return $input !== '' ? $input : $default;
+    }
+
+    private function askOrNull(string $question, ?string $default = null): ?string
+    {
+        if ($default !== null) {
+            $this->output->line("  {$question} [{$default}]");
+        } else {
+            $this->output->line("  {$question}");
+        }
+        $input = trim((string) $this->prompt->ask("  › "));
+        if ($input === '') {
+            return $default;
+        }
+        return $input;
+    }
+
+    private function confirm(string $question, bool $default = false): bool
+    {
+        $defaultText = $default ? 'Y/n' : 'y/N';
+        $this->output->line("  {$question} [{$defaultText}]");
+        $input = strtolower(trim((string) $this->prompt->ask("  › ")));
+        if ($input === '') {
+            return $default;
+        }
+        return $input === 'y' || $input === 'yes';
+    }
 }

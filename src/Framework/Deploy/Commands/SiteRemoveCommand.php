@@ -36,7 +36,7 @@ class SiteRemoveCommand extends Command
 
         if (empty($domain)) {
             $this->output->newline();
-            $this->output->info("Removing site on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Removing site on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $domain = $this->ask('Domain');
@@ -46,9 +46,7 @@ class SiteRemoveCommand extends Command
                 return self::FAILURE;
             }
 
-            $keepDefault = $keepSsl ? 'Y/n' : 'y/N';
-            $keepInput = trim((string) $this->prompt->ask("  Keep SSL certificate [{$keepDefault}]"));
-            $keepSsl = strtolower($keepInput) === 'y' || ($keepSsl && strtolower($keepInput) !== 'n');
+            $keepSsl = $this->confirm('Keep SSL certificate', $keepSsl);
         }
 
         if (!$this->validateDomain($domain)) {
@@ -56,7 +54,7 @@ class SiteRemoveCommand extends Command
             return self::FAILURE;
         }
 
-        $this->output->warning("Removing site {$domain} ...");
+        $this->output->warning("→ Removing site {$domain} ...");
         $this->output->newline();
 
         $remoteScript = $this->buildRemoveScript($domain, $keepSsl);
@@ -67,7 +65,7 @@ class SiteRemoveCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("Site {$domain} removed.");
+            $this->output->success("✓ Site {$domain} removed.");
             return self::SUCCESS;
         }
 
@@ -78,10 +76,6 @@ class SiteRemoveCommand extends Command
     /**
      * Prompt for a value, returning empty input as-is for validation.
      */
-    private function ask(string $question): string
-    {
-        return trim((string) $this->prompt->ask("  {$question}"));
-    }
 
     private function buildRemoveScript(string $domain, bool $keepSsl): string
     {

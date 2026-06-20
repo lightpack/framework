@@ -37,7 +37,7 @@ class RollbackCommand extends Command
 
         if ($steps === null) {
             $this->output->newline();
-            $this->output->info("Rolling back on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Rolling back on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $steps = $this->askWithDefault('Commits to rollback', '1');
@@ -45,7 +45,7 @@ class RollbackCommand extends Command
 
         $steps = max(1, (int) $steps);
 
-        $this->output->warning("Rolling back {$env} ({$envConfig['host']}) by {$steps} commit(s) \u2500\u2500\u2500 this cannot be undone ...");
+        $this->output->warning("→ Rolling back {$env} ({$envConfig['host']}) by {$steps} commit(s) \u2500\u2500\u2500 this cannot be undone ...");
         $this->output->newline();
 
         $deployer = new Deployer($config);
@@ -61,7 +61,7 @@ class RollbackCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("Rolled back {$env} successfully.");
+            $this->output->success("✓ Rolled back {$env} successfully.");
             $this->output->newline();
             $this->output->warning('Note: Rollback does not revert database migrations. Handle those manually if needed.');
             return self::SUCCESS;
@@ -71,9 +71,4 @@ class RollbackCommand extends Command
         return self::FAILURE;
     }
 
-    private function askWithDefault(string $question, string $default): string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
-        return $input !== '' ? $input : $default;
-    }
 }

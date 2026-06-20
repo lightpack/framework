@@ -37,7 +37,7 @@ class DbRestoreCommand extends Command
 
         if (empty($file)) {
             $this->output->newline();
-            $this->output->info("Restoring database on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Restoring database on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $file = $this->ask('Backup file');
@@ -65,13 +65,14 @@ class DbRestoreCommand extends Command
         $remoteTemp = "/tmp/restore-{$file}";
 
         // Security confirmation
-        $this->output->warning('DATABASE RESTORE');
+        $this->output->warning('→ DATABASE RESTORE');
         $this->output->newline();
         $this->output->line("Environment: {$env}");
         $this->output->line("File:        {$file}");
         $this->output->line("Size:        " . $this->formatBytes(filesize($localPath)));
         $this->output->newline();
-        $response = $this->prompt->ask('This will DESTROY existing data. Are you sure? (yes/no)');
+        $this->output->line("  This will DESTROY existing data. Are you sure? (type 'yes' to confirm)");
+        $response = strtolower(trim((string) $this->prompt->ask("  › ")));
 
         if (strtolower($response) !== 'yes') {
             $this->output->line('Restore cancelled.');
@@ -79,7 +80,7 @@ class DbRestoreCommand extends Command
         }
 
         $this->output->newline();
-        $this->output->info("Uploading backup to {$env} ...");
+        $this->output->info("→ Uploading backup to {$env} ...");
         $this->output->newline();
 
         // Step 1: Upload SQL file via SCP
@@ -91,7 +92,7 @@ class DbRestoreCommand extends Command
         }
 
         // Step 2: Run restore script on server
-        $this->output->info('Restoring database ...');
+        $this->output->info('→ Restoring database ...');
         $this->output->newline();
 
         $remoteScript = $this->buildRestoreScript($appPath, $remoteTemp);
@@ -107,7 +108,7 @@ class DbRestoreCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success('Database restored.');
+            $this->output->success('✓ Database restored.');
             return self::SUCCESS;
         }
 
@@ -115,10 +116,6 @@ class DbRestoreCommand extends Command
         return self::FAILURE;
     }
 
-    private function ask(string $question): string
-    {
-        return trim((string) $this->prompt->ask("  {$question}"));
-    }
 
     private function uploadFile(array $envConfig, string $localPath, string $remotePath): array
     {

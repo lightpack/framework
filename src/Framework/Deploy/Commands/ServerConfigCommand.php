@@ -38,7 +38,7 @@ class ServerConfigCommand extends Command
 
         if ($upload === null && $memory === null && $timeout === null) {
             $this->output->newline();
-            $this->output->info("Updating server configuration on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Updating server configuration on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $upload  = $this->askOrNull('Upload limit (e.g. 100M, 1G)');
@@ -68,7 +68,7 @@ class ServerConfigCommand extends Command
             return self::FAILURE;
         }
 
-        $this->output->info("Updating server configuration for {$env} ...");
+        $this->output->info("→ Updating server configuration for {$env} ...");
         $this->output->newline();
 
         if ($upload) {
@@ -90,7 +90,7 @@ class ServerConfigCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success('Configuration updated and services reloaded.');
+            $this->output->success('✓ Configuration updated and services reloaded.');
             return self::SUCCESS;
         }
 
@@ -98,11 +98,6 @@ class ServerConfigCommand extends Command
         return self::FAILURE;
     }
 
-    private function askOrNull(string $question): ?string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} (Enter to skip)"));
-        return $input !== '' ? $input : null;
-    }
 
     private function buildConfigScript(?string $upload, ?string $memory, ?string $timeout): string
     {

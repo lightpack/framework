@@ -39,7 +39,7 @@ class ServerQueueLogsViewCommand extends Command
 
         if (empty($name)) {
             $this->output->newline();
-            $this->output->info("Viewing queue worker logs on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Viewing queue worker logs on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $name = $this->askWithDefault('Worker name', $env);
@@ -52,7 +52,7 @@ class ServerQueueLogsViewCommand extends Command
         $lines = max(1, min((int) $lines, 1000));
         $logFile = "/var/log/supervisor/lightpack-{$name}.log";
 
-        $this->output->info("Last {$lines} lines of queue worker [{$name}] logs:");
+        $this->output->info("→ Last {$lines} lines of queue worker [{$name}] logs:");
         $this->output->newline();
 
         $remoteScript = <<<BASH
@@ -80,9 +80,4 @@ BASH;
         return self::SUCCESS;
     }
 
-    private function askWithDefault(string $question, string $default): string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
-        return $input !== '' ? $input : $default;
-    }
 }

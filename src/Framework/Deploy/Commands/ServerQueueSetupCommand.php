@@ -45,7 +45,7 @@ class ServerQueueSetupCommand extends Command
 
         if ($name === null || $queue === null || $workers === null || $cooldown === null || $stopWait === null) {
             $this->output->newline();
-            $this->output->info("Installing queue worker on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Installing queue worker on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $name     = $name     ?? $this->askWithDefault('Worker name', $env);
@@ -59,7 +59,7 @@ class ServerQueueSetupCommand extends Command
         $cooldown = (int) $cooldown;
         $stopWait = (int) $stopWait;
 
-        $this->output->info("Installing queue worker [{$name}] ...");
+        $this->output->info("→ Installing queue worker [{$name}] ...");
         $this->output->newline();
 
         $supervisorConfig = $this->buildSupervisorConfig($name, $appPath, $queue, $workers, $cooldown, $stopWait);
@@ -80,7 +80,8 @@ BASH;
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("Queue worker [{$name}] installed. Run: php console server:queue:start {$env} --name={$name}");
+            $this->output->success("✓ Queue worker [{$name}] installed.");
+            $this->output->info("→ Run: php console server:queue:start {$env} --name={$name}");
             return self::SUCCESS;
         }
 
@@ -88,11 +89,6 @@ BASH;
         return self::FAILURE;
     }
 
-    private function askWithDefault(string $question, string $default): string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
-        return $input !== '' ? $input : $default;
-    }
 
     private function buildSupervisorConfig(string $name, string $appPath, string $queue, int $workers, int $cooldown, int $stopWait): string
     {

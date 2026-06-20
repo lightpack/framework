@@ -35,7 +35,7 @@ class LogsTailCommand extends Command
 
         if (empty($logFile)) {
             $this->output->newline();
-            $this->output->info("Tailing logs on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Tailing logs on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $logFile = $this->askWithDefault('Log file', 'lightpack.log');
@@ -43,7 +43,7 @@ class LogsTailCommand extends Command
 
         $logPath = $envConfig['path'] . '/storage/logs/' . $logFile;
 
-        $this->output->info("Tailing {$logFile} (Ctrl+C to stop) ...");
+        $this->output->info("→ Tailing {$logFile} (Ctrl+C to stop) ...");
         $this->output->newline();
 
         $remoteScript = "tail -f {$logPath} 2>&1";
@@ -64,9 +64,4 @@ class LogsTailCommand extends Command
         return self::SUCCESS;
     }
 
-    private function askWithDefault(string $question, string $default): string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
-        return $input !== '' ? $input : $default;
-    }
 }

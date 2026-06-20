@@ -36,7 +36,7 @@ class SiteAddCommand extends Command
 
         if (empty($domain)) {
             $this->output->newline();
-            $this->output->info("Adding site on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Adding site on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $domain = $this->ask('Domain');
@@ -46,9 +46,7 @@ class SiteAddCommand extends Command
                 return self::FAILURE;
             }
 
-            $wwwDefault = $includeWww ? 'Y/n' : 'y/N';
-            $wwwInput = trim((string) $this->prompt->ask("  Include www alias [{$wwwDefault}]"));
-            $includeWww = strtolower($wwwInput) === 'y' || ($includeWww && strtolower($wwwInput) !== 'n');
+            $includeWww = $this->confirm('Include www alias', $includeWww);
         }
 
         if (!$this->validateDomain($domain)) {
@@ -57,7 +55,7 @@ class SiteAddCommand extends Command
         }
         $appPath    = $envConfig['path'];
 
-        $this->output->info("Adding Nginx site for {$domain} ...");
+        $this->output->info("→ Adding Nginx site for {$domain} ...");
         $this->output->newline();
 
         $remoteScript = $this->buildSiteScript($domain, $appPath, $includeWww);
@@ -68,10 +66,10 @@ class SiteAddCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("Site {$domain} configured.");
+            $this->output->success("✓ Site {$domain} configured.");
 
             if (!filter_var($domain, FILTER_VALIDATE_IP)) {
-                $this->output->line("Next: php console server:site:ssl {$env} --domain={$domain}");
+                $this->output->info("→ Next: php console server:site:ssl {$env} --domain={$domain}");
             }
 
             return self::SUCCESS;
@@ -84,10 +82,6 @@ class SiteAddCommand extends Command
     /**
      * Prompt for a value, returning empty input as-is for validation.
      */
-    private function ask(string $question): string
-    {
-        return trim((string) $this->prompt->ask("  {$question}"));
-    }
 
     private function buildSiteScript(string $domain, string $appPath, bool $includeWww): string
     {

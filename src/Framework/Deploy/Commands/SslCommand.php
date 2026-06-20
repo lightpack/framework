@@ -37,7 +37,7 @@ class SslCommand extends Command
 
         if (empty($domain)) {
             $this->output->newline();
-            $this->output->info("Obtaining SSL certificate on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Obtaining SSL certificate on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $domain = $this->ask('Domain');
@@ -47,13 +47,10 @@ class SslCommand extends Command
                 return self::FAILURE;
             }
 
-            $wwwDefault = $includeWww ? 'Y/n' : 'y/N';
-            $wwwInput = trim((string) $this->prompt->ask("  Include www alias [{$wwwDefault}]"));
-            $includeWww = strtolower($wwwInput) === 'y' || ($includeWww && strtolower($wwwInput) !== 'n');
+            $includeWww = $this->confirm('Include www alias', $includeWww);
 
             if (empty($email)) {
-                $input = trim((string) $this->prompt->ask('  Email for SSL renewal notices (Enter to skip)'));
-                $email = $input !== '' ? $input : null;
+                $email = $this->askOrNull('Email for SSL renewal notices');
             }
         }
 
@@ -67,7 +64,7 @@ class SslCommand extends Command
             $this->output->newline();
         }
 
-        $this->output->info("Obtaining SSL certificate for {$domain} ...");
+        $this->output->info("→ Obtaining SSL certificate for {$domain} ...");
         $this->output->newline();
 
         $remoteScript = $this->buildCertbotScript($domain, $email, $includeWww, $env);
@@ -79,7 +76,7 @@ class SslCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("SSL certificate installed for {$domain}.");
+            $this->output->success("✓ SSL certificate installed for {$domain}.");
             $this->output->line("HTTPS should now be active.");
             return self::SUCCESS;
         }
@@ -97,10 +94,6 @@ class SslCommand extends Command
     /**
      * Prompt for a value, returning empty input as-is for validation.
      */
-    private function ask(string $question): string
-    {
-        return trim((string) $this->prompt->ask("  {$question}"));
-    }
 
     private function buildCertbotScript(string $domain, ?string $email, bool $includeWww, string $env): string
     {

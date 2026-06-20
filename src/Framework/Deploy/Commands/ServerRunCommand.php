@@ -34,10 +34,10 @@ class ServerRunCommand extends Command
 
         if (empty($cmd)) {
             $this->output->newline();
-            $this->output->info("Running command on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Running command on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
-            $cmd = trim((string) $this->prompt->ask('  Command'));
+            $cmd = $this->ask('Command');
 
             if (empty($cmd)) {
                 $this->output->error('Command cannot be empty.');
@@ -50,7 +50,7 @@ class ServerRunCommand extends Command
         $remoteScript = "cd " . escapeshellarg($appPath) . " && {$cmd}";
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
-        $this->output->info("Running on {$env}: {$cmd}");
+        $this->output->info("→ Running on {$env}: {$cmd}");
         $this->output->newline();
 
         $result = $this->executeRemote($sshCommand, 120);

@@ -35,13 +35,13 @@ class ServerQueueStartCommand extends Command
 
         if (empty($name)) {
             $this->output->newline();
-            $this->output->info("Starting queue worker on {$env} ({$envConfig['host']})");
+            $this->output->info("→ Starting queue worker on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
             $name = $this->askWithDefault('Worker name', $env);
         }
 
-        $this->output->info("Starting queue worker [{$name}] ...");
+        $this->output->info("→ Starting queue worker [{$name}] ...");
         $this->output->newline();
 
         $sshCommand = $this->buildSshCommand($envConfig, "sudo lp-supervisorctl start lightpack-{$name}:*");
@@ -50,7 +50,7 @@ class ServerQueueStartCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("Queue worker [{$name}] started on {$env}.");
+            $this->output->success("✓ Queue worker [{$name}] started on {$env}.");
             return self::SUCCESS;
         }
 
@@ -58,9 +58,4 @@ class ServerQueueStartCommand extends Command
         return self::FAILURE;
     }
 
-    private function askWithDefault(string $question, string $default): string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
-        return $input !== '' ? $input : $default;
-    }
 }
