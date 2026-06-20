@@ -161,6 +161,7 @@ class Deployer
             "echo ''",
             "echo 'Rolled back. Current commit:'",
             'git log --oneline -1',
+            'PHP_VER=$(php -r \'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;\' 2>/dev/null) && sudo systemctl reload php${PHP_VER}-fpm',
         ];
 
         return implode(' && ', $commands);
