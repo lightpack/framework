@@ -53,6 +53,7 @@ use Lightpack\Deploy\Commands\ServerKeyShowCommand;
 use Lightpack\Deploy\Commands\ServerRunCommand;
 use Lightpack\Deploy\Commands\SslCommand;
 use Lightpack\Deploy\Commands\ServerConfigCommand;
+use Lightpack\Deploy\Commands\ServerQueueListCommand;
 
 class Console
 {
@@ -87,6 +88,7 @@ class Console
         'server:logs:view' => LogsViewCommand::class,
         'server:logs:tail' => LogsTailCommand::class,
         'server:queue:setup' => ServerQueueSetupCommand::class,
+        'server:queue:list' => ServerQueueListCommand::class,
         'server:queue:start' => ServerQueueStartCommand::class,
         'server:queue:stop' => ServerQueueStopCommand::class,
         'server:queue:restart' => ServerQueueRestartCommand::class,
