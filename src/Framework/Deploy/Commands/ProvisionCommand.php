@@ -104,14 +104,14 @@ class ProvisionCommand extends Command
 
         if ($initUser === null || $phpVersion === null || $dbName === null || $dbUser === null || $timezone === null) {
             $this->output->newline();
-            $this->output->info("Provisioning {$env} ({$envConfig['host']})");
+            $this->output->info("→ Provisioning {$env} ({$envConfig['host']})");
             $this->output->newline();
 
-            $initUser   = $initUser   ?? $this->ask('SSH user for root access', 'root');
-            $phpVersion = $phpVersion ?? $this->ask('PHP version to install', '8.3');
-            $dbName     = $dbName     ?? $this->ask('Database name', $defaultDbName);
-            $dbUser     = $dbUser     ?? $this->ask('Database user', $defaultDbUser);
-            $timezone   = $timezone   ?? $this->ask('Server timezone', 'UTC');
+            $initUser   = $initUser   ?? $this->askWithDefault('SSH user for root access', 'root');
+            $phpVersion = $phpVersion ?? $this->askWithDefault('PHP version to install', '8.3');
+            $dbName     = $dbName     ?? $this->askWithDefault('Database name', $defaultDbName);
+            $dbUser     = $dbUser     ?? $this->askWithDefault('Database user', $defaultDbUser);
+            $timezone   = $timezone   ?? $this->askWithDefault('Server timezone', 'UTC');
         }
 
         return [
@@ -124,19 +124,10 @@ class ProvisionCommand extends Command
         ];
     }
 
-    /**
-     * Prompt for a value with a default, returning the default on empty input.
-     */
-    private function ask(string $question, string $default): string
-    {
-        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
-        return $input !== '' ? $input : $default;
-    }
-
     private function confirmProvision(string $env, array $envConfig, array $params): bool
     {
         $this->output->newline();
-        $this->output->line('─────────────────────────────────────────────');
+        $this->output->line('  ─────────────────────────────────────────────');
         $this->output->line("  Environment:  {$env}");
         $this->output->line("  Host:         {$envConfig['host']}");
         $this->output->line("  SSH key:      {$envConfig['key']}");
@@ -144,14 +135,12 @@ class ProvisionCommand extends Command
         $this->output->line("  PHP:          {$params['php_version']}");
         $this->output->line("  Database:     {$params['db_name']} / user: {$params['db_user']}");
         $this->output->line("  Timezone:     {$params['timezone']}");
-        $this->output->line('─────────────────────────────────────────────');
+        $this->output->line('  ─────────────────────────────────────────────');
         $this->output->newline();
         $this->output->warning('Root SSH will be DISABLED after provisioning.');
         $this->output->newline();
 
-        $response = trim((string) $this->prompt->ask('Continue? [y/N]'));
-
-        return strtolower($response) === 'y';
+        return $this->confirm('Continue?', false);
     }
 
     private function printNextSteps(string $env): void
