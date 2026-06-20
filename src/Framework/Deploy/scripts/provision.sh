@@ -423,10 +423,42 @@ PHP_INI_DIR="/etc/php/${PHP_VERSION}/fpm/conf.d"
 
 mkdir -p "$PHP_INI_DIR"
 
+# Calculate proportional settings based on available RAM
+TOTAL_RAM_MB=$(free -m | awk '/^Mem:/ {print $2}')
+
+if [ "$TOTAL_RAM_MB" -lt 1024 ]; then
+    PHP_MEMORY_LIMIT="64M"
+    OPCACHE_MEMORY="64"
+    OPCACHE_STRINGS="4"
+    REALPATH_SIZE="1024K"
+    NGX_WORKER_CONN=512
+    SOMACCONN=128
+    TCP_SYN_BACKLOG=512
+    FILE_MAX=65536
+elif [ "$TOTAL_RAM_MB" -lt 2048 ]; then
+    PHP_MEMORY_LIMIT="128M"
+    OPCACHE_MEMORY="128"
+    OPCACHE_STRINGS="8"
+    REALPATH_SIZE="2048K"
+    NGX_WORKER_CONN=1024
+    SOMACCONN=512
+    TCP_SYN_BACKLOG=2048
+    FILE_MAX=131072
+else
+    PHP_MEMORY_LIMIT="256M"
+    OPCACHE_MEMORY="256"
+    OPCACHE_STRINGS="16"
+    REALPATH_SIZE="4096K"
+    NGX_WORKER_CONN=4096
+    SOMACCONN=65535
+    TCP_SYN_BACKLOG=8192
+    FILE_MAX=2097152
+fi
+
 # PHP optimizations
 cat > "${PHP_INI_DIR}/99-lightpack.ini" <<EOF
 ; Lightpack Production Optimizations
-memory_limit = 256M
+memory_limit = ${PHP_MEMORY_LIMIT}
 max_execution_time = 60
 max_input_time = 60
 post_max_size = 64M
@@ -434,8 +466,8 @@ upload_max_filesize = 64M
 
 ; OPcache
 opcache.enable = 1
-opcache.memory_consumption = 256
-opcache.interned_strings_buffer = 16
+opcache.memory_consumption = ${OPCACHE_MEMORY}
+opcache.interned_strings_buffer = ${OPCACHE_STRINGS}
 opcache.max_accelerated_files = 20000
 opcache.validate_timestamps = 0
 opcache.revalidate_freq = 0
@@ -447,14 +479,15 @@ display_errors = Off
 log_errors = On
 
 ; Performance
-realpath_cache_size = 4096K
+realpath_cache_size = ${REALPATH_SIZE}
 realpath_cache_ttl = 600
 EOF
 
-# Calculate FPM pool size based on available RAM (60% of RAM / 128MB per worker)
-TOTAL_RAM_MB=$(free -m | awk '/^Mem:/ {print $2}')
-FPM_MAX_CHILDREN=$(( (TOTAL_RAM_MB * 60 / 100) / 128 ))
-[ "$FPM_MAX_CHILDREN" -lt 5 ] && FPM_MAX_CHILDREN=5
+# Calculate FPM pool size based on available RAM (60% of RAM / per-worker memory limit)
+# Use the same memory limit we configured above so the math stays consistent
+PHP_MEMORY_LIMIT_MB=$(echo "${PHP_MEMORY_LIMIT}" | sed 's/M//')
+FPM_MAX_CHILDREN=$(( (TOTAL_RAM_MB * 60 / 100) / PHP_MEMORY_LIMIT_MB ))
+[ "$FPM_MAX_CHILDREN" -lt 2 ] && FPM_MAX_CHILDREN=2
 [ "$FPM_MAX_CHILDREN" -gt 50 ] && FPM_MAX_CHILDREN=50
 FPM_START=$(( FPM_MAX_CHILDREN / 4 ))
 [ "$FPM_START" -lt 2 ] && FPM_START=2
@@ -478,7 +511,7 @@ pm.max_children = ${FPM_MAX_CHILDREN}
 pm.start_servers = ${FPM_START}
 pm.min_spare_servers = ${FPM_MIN_SPARE}
 pm.max_spare_servers = ${FPM_MAX_SPARE}
-pm.max_requests = 500
+pm.max_requests = 0
 pm.process_idle_timeout = 10s
 
 php_admin_value[error_log] = /var/log/php${PHP_VERSION}-fpm.log
@@ -499,7 +532,7 @@ apt-get install -y -qq nginx
 # Backup and replace nginx.conf
 cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.original 2>/dev/null || true
 
-cat > /etc/nginx/nginx.conf <<'EOF'
+cat > /etc/nginx/nginx.conf <<EOF
 user www-data;
 worker_processes auto;
 worker_rlimit_nofile 65535;
@@ -508,7 +541,7 @@ pid /run/nginx.pid;
 include /etc/nginx/modules-enabled/*.conf;
 
 events {
-    worker_connections 4096;
+    worker_connections ${NGX_WORKER_CONN};
     use epoll;
     multi_accept on;
 }
@@ -542,8 +575,8 @@ http {
     gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/rss+xml font/truetype font/opentype image/svg+xml;
 
     # Rate limiting
-    limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;
-    limit_req_zone $binary_remote_addr zone=login:10m rate=10r/m;
+    limit_req_zone \$binary_remote_addr zone=api:10m rate=100r/m;
+    limit_req_zone \$binary_remote_addr zone=login:10m rate=10r/m;
 
     # Virtual hosts
     include /etc/nginx/conf.d/*.conf;
@@ -745,12 +778,12 @@ EOF
 
 # Kernel network tuning
 cat > /etc/sysctl.d/99-lightpack.conf <<EOF
-net.core.somaxconn = 65535
-net.ipv4.tcp_max_syn_backlog = 8192
+net.core.somaxconn = ${SOMACCONN}
+net.ipv4.tcp_max_syn_backlog = ${TCP_SYN_BACKLOG}
 net.core.netdev_max_backlog = 5000
 net.ipv4.tcp_fin_timeout = 30
 net.ipv4.tcp_keepalive_time = 300
-fs.file-max = 2097152
+fs.file-max = ${FILE_MAX}
 vm.swappiness = 10
 EOF
 
