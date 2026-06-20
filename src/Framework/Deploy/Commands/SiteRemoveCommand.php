@@ -5,11 +5,10 @@ namespace Lightpack\Deploy\Commands;
 use Lightpack\Console\Command;
 
 /**
- * Remove an Nginx virtual host and optionally its SSL certificate.
+ * Remove an Nginx virtual host and its SSL certificate.
  *
  * Usage:
  *   php console server:site:remove production --domain=example.com
- *   php console server:site:remove --domain=example.com --keep-ssl
  */
 class SiteRemoveCommand extends Command
 {
@@ -32,7 +31,6 @@ class SiteRemoveCommand extends Command
         }
 
         $domain = $this->args->get('domain');
-        $keepSsl = $this->args->has('keep-ssl');
 
         if (empty($domain)) {
             $this->output->newline();
@@ -45,8 +43,6 @@ class SiteRemoveCommand extends Command
                 $this->output->error("Invalid domain name: {$domain}");
                 return self::FAILURE;
             }
-
-            $keepSsl = $this->confirm('Keep SSL certificate', $keepSsl);
         }
 
         if (!$this->validateDomain($domain)) {
@@ -57,7 +53,7 @@ class SiteRemoveCommand extends Command
         $this->output->warning("→ Removing site {$domain} ...");
         $this->output->newline();
 
-        $remoteScript = $this->buildRemoveScript($domain, $keepSsl);
+        $remoteScript = $this->buildRemoveScript($domain);
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
         $result = $this->executeRemote($sshCommand, 60);
@@ -77,24 +73,16 @@ class SiteRemoveCommand extends Command
      * Prompt for a value, returning empty input as-is for validation.
      */
 
-    private function buildRemoveScript(string $domain, bool $keepSsl): string
+    private function buildRemoveScript(string $domain): string
     {
-        $sslCleanup = '';
-
-        if (!$keepSsl) {
-            $sslCleanup = <<<SSL
-
-# Remove SSL certificate if it exists (ignore errors)
-sudo certbot delete --cert-name "{$domain}" --non-interactive 2>/dev/null || true
-SSL;
-        }
-
         return <<<BASH
 domain="{$domain}"
 
 # Disable and remove site config
 sudo lp-nginx-disable "\${domain}.conf"
-{$sslCleanup}
+
+# Remove SSL certificate if it exists (ignore errors)
+sudo certbot delete --cert-name "{$domain}" --non-interactive 2>/dev/null || true
 
 # Reload Nginx
 sudo systemctl reload nginx
