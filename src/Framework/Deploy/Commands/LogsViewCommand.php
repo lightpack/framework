@@ -32,13 +32,22 @@ class LogsViewCommand extends Command
             return self::FAILURE;
         }
 
-        $lines = (int) ($this->args->get('lines') ?? 50);
-        $lines = max(1, min($lines, 1000));
+        $lines   = $this->args->get('lines');
+        $logFile = $this->args->get('file');
 
-        $logFile = $this->args->get('file') ?? 'lightpack.log';
+        if ($lines === null || $logFile === null) {
+            $this->output->newline();
+            $this->output->info("Viewing logs on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $logFile = $logFile ?? $this->askWithDefault('Log file', 'lightpack.log');
+            $lines   = $lines   ?? $this->askWithDefault('Lines to show', '50');
+        }
+
+        $lines = max(1, min((int) $lines, 1000));
         $logPath = $envConfig['path'] . '/storage/logs/' . $logFile;
 
-        $this->output->info("Last {$lines} lines of {$logFile} on {$env}:");
+        $this->output->info("Last {$lines} lines of {$logFile}:");
         $this->output->newline();
 
         $remoteScript = "tail -n {$lines} {$logPath} 2>&1";
@@ -52,5 +61,11 @@ class LogsViewCommand extends Command
         }
 
         return $result['success'] ? self::SUCCESS : self::FAILURE;
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
     }
 }

@@ -33,8 +33,16 @@ class ServerRunCommand extends Command
         $cmd = $this->args->get('cmd');
 
         if (empty($cmd)) {
-            $this->output->error('Command is required. Use --cmd="php console some:command"');
-            return self::FAILURE;
+            $this->output->newline();
+            $this->output->info("Running command on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $cmd = trim((string) $this->prompt->ask('  Command'));
+
+            if (empty($cmd)) {
+                $this->output->error('Command cannot be empty.');
+                return self::FAILURE;
+            }
         }
 
         $appPath = $envConfig['path'];

@@ -33,7 +33,17 @@ class RollbackCommand extends Command
             return self::FAILURE;
         }
 
-        $steps = max(1, (int) $this->args->get('steps', 1));
+        $steps = $this->args->get('steps');
+
+        if ($steps === null) {
+            $this->output->newline();
+            $this->output->info("Rolling back on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $steps = $this->askWithDefault('Commits to rollback', '1');
+        }
+
+        $steps = max(1, (int) $steps);
 
         $this->output->warning("Rolling back {$env} ({$envConfig['host']}) by {$steps} commit(s) \u2500\u2500\u2500 this cannot be undone ...");
         $this->output->newline();
@@ -59,5 +69,11 @@ class RollbackCommand extends Command
 
         $this->output->error("Rollback failed (exit code: {$result['exit_code']}).");
         return self::FAILURE;
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
     }
 }

@@ -37,13 +37,29 @@ class ServerQueueSetupCommand extends Command
         }
 
         $appPath = $envConfig['path'];
-        $name    = $this->args->get('name') ?? $env;
-        $queue = $this->args->get('queue') ?? 'default';
-        $workers = (int) ($this->args->get('workers') ?? 1);
-        $cooldown = (int) ($this->args->get('cooldown') ?? 3600);
-        $stopWait = (int) ($this->args->get('stop-wait') ?? 60);
+        $name     = $this->args->get('name');
+        $queue    = $this->args->get('queue');
+        $workers  = $this->args->get('workers');
+        $cooldown = $this->args->get('cooldown');
+        $stopWait = $this->args->get('stop-wait');
 
-        $this->output->info("Installing queue worker [{$name}] on {$env} ...");
+        if ($name === null || $queue === null || $workers === null || $cooldown === null || $stopWait === null) {
+            $this->output->newline();
+            $this->output->info("Installing queue worker on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $name     = $name     ?? $this->askWithDefault('Worker name', $env);
+            $queue    = $queue    ?? $this->askWithDefault('Queue name', 'default');
+            $workers  = $workers  ?? $this->askWithDefault('Number of workers', '1');
+            $cooldown = $cooldown  ?? $this->askWithDefault('Cooldown (seconds)', '3600');
+            $stopWait = $stopWait  ?? $this->askWithDefault('Stop wait (seconds)', '60');
+        }
+
+        $workers  = (int) $workers;
+        $cooldown = (int) $cooldown;
+        $stopWait = (int) $stopWait;
+
+        $this->output->info("Installing queue worker [{$name}] ...");
         $this->output->newline();
 
         $supervisorConfig = $this->buildSupervisorConfig($name, $appPath, $queue, $workers, $cooldown, $stopWait);
@@ -70,6 +86,12 @@ BASH;
 
         $this->output->error("Setup failed (exit code: {$result['exit_code']}).");
         return self::FAILURE;
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
     }
 
     private function buildSupervisorConfig(string $name, string $appPath, string $queue, int $workers, int $cooldown, int $stopWait): string

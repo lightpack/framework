@@ -31,9 +31,17 @@ class ServerQueueStatusCommand extends Command
             return self::FAILURE;
         }
 
-        $name = $this->args->get('name') ?? $env;
+        $name = $this->args->get('name');
 
-        $this->output->info("Checking queue worker [{$name}] on {$env} ...");
+        if (empty($name)) {
+            $this->output->newline();
+            $this->output->info("Checking queue worker status on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $name = $this->askWithDefault('Worker name', $env);
+        }
+
+        $this->output->info("Checking queue worker [{$name}] ...");
         $this->output->newline();
 
         $sshCommand = $this->buildSshCommand($envConfig, "sudo lp-supervisorctl status lightpack-{$name}:*");
@@ -48,5 +56,11 @@ class ServerQueueStatusCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
     }
 }

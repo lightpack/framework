@@ -33,10 +33,19 @@ class ServerQueueLogsTailCommand extends Command
             return self::FAILURE;
         }
 
-        $name    = $this->args->get('name') ?? $env;
+        $name = $this->args->get('name');
+
+        if (empty($name)) {
+            $this->output->newline();
+            $this->output->info("Tailing queue worker logs on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $name = $this->askWithDefault('Worker name', $env);
+        }
+
         $logFile = "/var/log/supervisor/lightpack-{$name}.log";
 
-        $this->output->info("Tailing queue worker [{$name}] logs on {$env} (Ctrl+C to stop) ...");
+        $this->output->info("Tailing queue worker [{$name}] logs (Ctrl+C to stop) ...");
         $this->output->newline();
 
         $remoteScript = <<<BASH
@@ -62,5 +71,11 @@ BASH;
         }
 
         return self::SUCCESS;
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
     }
 }

@@ -32,18 +32,29 @@ class SiteRemoveCommand extends Command
         }
 
         $domain = $this->args->get('domain');
+        $keepSsl = $this->args->has('keep-ssl');
 
         if (empty($domain)) {
-            $this->output->error('Domain is required. Use --domain=example.com');
-            return self::FAILURE;
+            $this->output->newline();
+            $this->output->info("Removing site on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $domain = $this->ask('Domain');
+
+            if (!$this->validateDomain($domain)) {
+                $this->output->error("Invalid domain name: {$domain}");
+                return self::FAILURE;
+            }
+
+            $keepDefault = $keepSsl ? 'Y/n' : 'y/N';
+            $keepInput = trim((string) $this->prompt->ask("  Keep SSL certificate [{$keepDefault}]"));
+            $keepSsl = strtolower($keepInput) === 'y' || ($keepSsl && strtolower($keepInput) !== 'n');
         }
 
         if (!$this->validateDomain($domain)) {
             $this->output->error("Invalid domain name: {$domain}");
             return self::FAILURE;
         }
-
-        $keepSsl = $this->args->has('keep-ssl');
 
         $this->output->warning("Removing site {$domain} ...");
         $this->output->newline();
@@ -62,6 +73,14 @@ class SiteRemoveCommand extends Command
 
         $this->output->error("Failed to remove site (exit code: {$result['exit_code']}).");
         return self::FAILURE;
+    }
+
+    /**
+     * Prompt for a value, returning empty input as-is for validation.
+     */
+    private function ask(string $question): string
+    {
+        return trim((string) $this->prompt->ask("  {$question}"));
     }
 
     private function buildRemoveScript(string $domain, bool $keepSsl): string

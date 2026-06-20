@@ -37,12 +37,22 @@ class ServerConfigCommand extends Command
         $timeout = $this->args->get('timeout');
 
         if ($upload === null && $memory === null && $timeout === null) {
-            $this->output->error('No options provided. Use at least one of:');
-            $this->output->line('  --upload=100M');
-            $this->output->line('  --memory=512M');
-            $this->output->line('  --timeout=120');
             $this->output->newline();
-            return self::FAILURE;
+            $this->output->info("Updating server configuration on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $upload  = $this->askOrNull('Upload limit (e.g. 100M, 1G)');
+            $memory  = $this->askOrNull('Memory limit (e.g. 512M, 1G)');
+            $timeout = $this->askOrNull('Max execution time (seconds)');
+
+            if ($upload === null && $memory === null && $timeout === null) {
+                $this->output->error('No options provided. Use at least one of:');
+                $this->output->line('  --upload=100M');
+                $this->output->line('  --memory=512M');
+                $this->output->line('  --timeout=120');
+                $this->output->newline();
+                return self::FAILURE;
+            }
         }
 
         // Validate formats
@@ -86,6 +96,12 @@ class ServerConfigCommand extends Command
 
         $this->output->error("Failed to update configuration (exit code: {$result['exit_code']}).");
         return self::FAILURE;
+    }
+
+    private function askOrNull(string $question): ?string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} (Enter to skip)"));
+        return $input !== '' ? $input : null;
     }
 
     private function buildConfigScript(?string $upload, ?string $memory, ?string $timeout): string

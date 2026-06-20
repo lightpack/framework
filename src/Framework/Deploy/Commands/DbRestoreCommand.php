@@ -36,8 +36,16 @@ class DbRestoreCommand extends Command
         $file = $this->args->get('file');
 
         if (empty($file)) {
-            $this->output->error('Backup file is required. Use --file=backup.sql');
-            return self::FAILURE;
+            $this->output->newline();
+            $this->output->info("Restoring database on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $file = $this->ask('Backup file');
+
+            if (empty($file)) {
+                $this->output->error('Backup file cannot be empty.');
+                return self::FAILURE;
+            }
         }
 
         // Prevent path traversal in file names
@@ -105,6 +113,11 @@ class DbRestoreCommand extends Command
 
         $this->output->error("Restore failed (exit code: {$result['exit_code']}).");
         return self::FAILURE;
+    }
+
+    private function ask(string $question): string
+    {
+        return trim((string) $this->prompt->ask("  {$question}"));
     }
 
     private function uploadFile(array $envConfig, string $localPath, string $remotePath): array

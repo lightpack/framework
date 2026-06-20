@@ -32,23 +32,34 @@ class SslCommand extends Command
         }
 
         $domain = $this->args->get('domain');
+        $email = $this->args->get('email');
+        $includeWww = $this->args->has('www');
 
         if (empty($domain)) {
-            $this->output->error('Domain is required. Use --domain=example.com');
-            return self::FAILURE;
+            $this->output->newline();
+            $this->output->info("Obtaining SSL certificate on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $domain = $this->ask('Domain');
+
+            if (!$this->validateDomain($domain)) {
+                $this->output->error("Invalid domain name: {$domain}");
+                return self::FAILURE;
+            }
+
+            $wwwDefault = $includeWww ? 'Y/n' : 'y/N';
+            $wwwInput = trim((string) $this->prompt->ask("  Include www alias [{$wwwDefault}]"));
+            $includeWww = strtolower($wwwInput) === 'y' || ($includeWww && strtolower($wwwInput) !== 'n');
+
+            if (empty($email)) {
+                $input = trim((string) $this->prompt->ask('  Email for SSL renewal notices (Enter to skip)'));
+                $email = $input !== '' ? $input : null;
+            }
         }
 
         if (!$this->validateDomain($domain)) {
             $this->output->error("Invalid domain name: {$domain}");
             return self::FAILURE;
-        }
-
-        $email = $this->args->get('email');
-        $includeWww = $this->args->has('www');
-
-        if (empty($email)) {
-            $input = trim((string) $this->prompt->ask('  Email for SSL renewal notices (Enter to skip)'));
-            $email = $input !== '' ? $input : null;
         }
 
         if (empty($email)) {
@@ -81,6 +92,14 @@ class SslCommand extends Command
         $this->output->line('  - Nginx site config does not exist (run server:site:add first)');
 
         return self::FAILURE;
+    }
+
+    /**
+     * Prompt for a value, returning empty input as-is for validation.
+     */
+    private function ask(string $question): string
+    {
+        return trim((string) $this->prompt->ask("  {$question}"));
     }
 
     private function buildCertbotScript(string $domain, ?string $email, bool $includeWww, string $env): string

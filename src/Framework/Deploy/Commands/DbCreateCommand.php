@@ -40,18 +40,22 @@ class DbCreateCommand extends Command
         }
 
         $dbName = $this->args->get('db');
+        $dbUser = $this->args->get('user');
 
         if (empty($dbName)) {
-            $this->output->error('Database name is required. Use --db=mydbname');
-            return self::FAILURE;
+            $this->output->newline();
+            $this->output->info("Creating database on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $dbName = $this->ask('Database name');
         }
 
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $dbName)) {
+        if (empty($dbName) || !preg_match('/^[a-zA-Z0-9_]+$/', $dbName)) {
             $this->output->error('Database name may only contain letters, numbers, and underscores.');
             return self::FAILURE;
         }
 
-        $dbUser = $this->args->get('user') ?? $dbName;
+        $dbUser = $dbUser ?? $this->askWithDefault('Database user', $dbName);
 
         if (!preg_match('/^[a-zA-Z0-9_]+$/', $dbUser)) {
             $this->output->error('Username may only contain letters, numbers, and underscores.');
@@ -94,6 +98,17 @@ class DbCreateCommand extends Command
      * lp-mysql-create is installed by provisioning and runs MySQL via root
      * socket auth — no password ever needs to leave the local machine.
      */
+    private function ask(string $question): string
+    {
+        return trim((string) $this->prompt->ask("  {$question}"));
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
+    }
+
     private function buildCreateScript(string $dbName, string $dbUser, string $dbPass): string
     {
         $nameArg = escapeshellarg($dbName);

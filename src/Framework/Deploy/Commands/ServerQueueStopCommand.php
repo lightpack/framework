@@ -31,9 +31,17 @@ class ServerQueueStopCommand extends Command
             return self::FAILURE;
         }
 
-        $name = $this->args->get('name') ?? $env;
+        $name = $this->args->get('name');
 
-        $this->output->info("Stopping queue worker [{$name}] on {$env} ...");
+        if (empty($name)) {
+            $this->output->newline();
+            $this->output->info("Stopping queue worker on {$env} ({$envConfig['host']})");
+            $this->output->newline();
+
+            $name = $this->askWithDefault('Worker name', $env);
+        }
+
+        $this->output->info("Stopping queue worker [{$name}] ...");
         $this->output->newline();
 
         $sshCommand = $this->buildSshCommand($envConfig, "sudo lp-supervisorctl stop lightpack-{$name}:*");
@@ -49,5 +57,11 @@ class ServerQueueStopCommand extends Command
 
         $this->output->error("Failed to stop queue worker [{$name}] (exit code: {$result['exit_code']}).");
         return self::FAILURE;
+    }
+
+    private function askWithDefault(string $question, string $default): string
+    {
+        $input = trim((string) $this->prompt->ask("  {$question} [{$default}]"));
+        return $input !== '' ? $input : $default;
     }
 }
