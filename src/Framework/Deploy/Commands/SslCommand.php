@@ -9,7 +9,6 @@ use Lightpack\Console\Command;
  *
  * Usage:
  *   php console server:site:ssl production --domain=example.com
- *   php console server:site:ssl --domain=example.com --email=admin@example.com --www
  */
 class SslCommand extends Command
 {
@@ -33,7 +32,6 @@ class SslCommand extends Command
 
         $domain = $this->args->get('domain');
         $email = $this->args->get('email');
-        $includeWww = $this->args->has('www');
 
         if (empty($domain)) {
             $this->output->newline();
@@ -46,8 +44,6 @@ class SslCommand extends Command
                 $this->output->error("Invalid domain name: {$domain}");
                 return self::FAILURE;
             }
-
-            $includeWww = $this->confirm('Include www alias', $includeWww);
 
             if (empty($email)) {
                 $email = $this->askOrNull('Email for SSL renewal notices');
@@ -67,7 +63,7 @@ class SslCommand extends Command
         $this->output->info("→ Obtaining SSL certificate for {$domain} ...");
         $this->output->newline();
 
-        $remoteScript = $this->buildCertbotScript($domain, $email, $includeWww, $env);
+        $remoteScript = $this->buildCertbotScript($domain, $email, $env);
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
         // Certbot can take a while to validate and obtain certificates
@@ -91,17 +87,9 @@ class SslCommand extends Command
         return self::FAILURE;
     }
 
-    /**
-     * Prompt for a value, returning empty input as-is for validation.
-     */
-
-    private function buildCertbotScript(string $domain, ?string $email, bool $includeWww, string $env): string
+    private function buildCertbotScript(string $domain, ?string $email, string $env): string
     {
-        $domains = [$domain];
-        if ($includeWww) {
-            $domains[] = "www.{$domain}";
-        }
-        $domainFlags = implode(' ', array_map(fn($d) => "-d {$d}", $domains));
+        $domainFlags = "-d {$domain}";
 
         $emailFlag = '';
         if (!empty($email)) {

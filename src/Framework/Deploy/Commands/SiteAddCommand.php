@@ -9,7 +9,6 @@ use Lightpack\Console\Command;
  *
  * Usage:
  *   php console server:site:add production --domain=example.com
- *   php console server:site:add --domain=example.com --www   # include www alias
  */
 class SiteAddCommand extends Command
 {
@@ -32,7 +31,6 @@ class SiteAddCommand extends Command
         }
 
         $domain = $this->args->get('domain');
-        $includeWww = $this->args->has('www');
 
         if (empty($domain)) {
             $this->output->newline();
@@ -45,8 +43,6 @@ class SiteAddCommand extends Command
                 $this->output->error("Invalid domain name: {$domain}");
                 return self::FAILURE;
             }
-
-            $includeWww = $this->confirm('Include www alias', $includeWww);
         }
 
         if (!$this->validateDomain($domain)) {
@@ -58,7 +54,7 @@ class SiteAddCommand extends Command
         $this->output->info("→ Adding Nginx site for {$domain} ...");
         $this->output->newline();
 
-        $remoteScript = $this->buildSiteScript($domain, $appPath, $includeWww);
+        $remoteScript = $this->buildSiteScript($domain, $appPath);
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
         $result = $this->executeRemote($sshCommand, 60);
@@ -83,15 +79,13 @@ class SiteAddCommand extends Command
      * Prompt for a value, returning empty input as-is for validation.
      */
 
-    private function buildSiteScript(string $domain, string $appPath, bool $includeWww): string
+    private function buildSiteScript(string $domain, string $appPath): string
     {
-        $serverNames = $includeWww ? "{$domain} www.{$domain}" : $domain;
-
         $configContent = <<<NGINX
 server {
     listen 80;
     listen [::]:80;
-    server_name {$serverNames};
+    server_name {$domain};
     root {$appPath}/public;
     index index.php;
 
