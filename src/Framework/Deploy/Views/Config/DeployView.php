@@ -18,12 +18,9 @@ return [
         'production' => [
             'host'   => '1.2.3.4',
             'key'    => '~/.ssh/id_rsa',
+            'path'   => '/var/www/lightpack',
             'repo'   => 'git@github.com:you/app.git',
             'branch' => 'main',
-            'path'   => '/var/www/lightpack',
-            'hooks' => [
-                // ...
-            ],
         ],
     ],
 ];
