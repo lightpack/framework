@@ -24,6 +24,10 @@ if (! defined('DIR_STORAGE')) {
     define('DIR_STORAGE', __DIR__ . '/fixtures/storage');
 }
 
+if (! defined('DIR_ROOT')) {
+    define('DIR_ROOT', __DIR__ . '/fixtures');
+}
+
 // Create fixture directories if they don't exist
 $fixtureDirectories = [
     __DIR__ . '/fixtures',
