@@ -104,7 +104,7 @@ set -e
 # Ensure Nginx site config exists before running certbot
 if [ ! -f "/etc/nginx/sites-available/{$domain}.conf" ]; then
     echo "ERROR: Nginx site config not found for {$domain}"
-    echo "Run: php console server:site:add {$env} --domain={$domain}"
+    echo "Run: php console server:site:add {$env}"
     exit 1
 fi
 

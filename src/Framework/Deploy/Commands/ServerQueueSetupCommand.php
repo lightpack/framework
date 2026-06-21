@@ -81,7 +81,7 @@ BASH;
 
         if ($result['success']) {
             $this->output->success("✓ Queue worker [{$name}] installed.");
-            $this->output->info("→ Run: php console server:queue:start {$env} --name={$name}");
+            $this->output->info("→ Run: php console server:queue:start {$env}");
             return self::SUCCESS;
         }
 
