@@ -299,9 +299,14 @@ log_info "Nginx management scripts installed to /usr/local/sbin/"
 mkdir -p "/home/${DEPLOY_USER}/.ssh"
 chmod 700 "/home/${DEPLOY_USER}/.ssh"
 
-# Copy root's authorized_keys to deploy user (if exists)
-if [ -f /root/.ssh/authorized_keys ]; then
+# Copy authorized_keys from provisioning user (e.g. ubuntu on EC2) or root
+if [ -n "${SUDO_USER:-}" ] && [ -f "/home/${SUDO_USER}/.ssh/authorized_keys" ]; then
+    cp "/home/${SUDO_USER}/.ssh/authorized_keys" "/home/${DEPLOY_USER}/.ssh/authorized_keys"
+elif [ -f /root/.ssh/authorized_keys ]; then
     cp /root/.ssh/authorized_keys "/home/${DEPLOY_USER}/.ssh/authorized_keys"
+fi
+
+if [ -f "/home/${DEPLOY_USER}/.ssh/authorized_keys" ]; then
     chmod 600 "/home/${DEPLOY_USER}/.ssh/authorized_keys"
 fi
 

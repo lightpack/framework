@@ -52,7 +52,7 @@ class Provisioner
 
         // Step 2: Generate and copy provisioning script to server
         $scriptPath       = $this->generateScript($provisionOptions);
-        $remoteScriptPath = '/root/lightpack-provision.sh';
+        $remoteScriptPath = '/tmp/lightpack-provision.sh';
 
         try {
             $scpResult = $this->copyScriptToServer($host, $initUser, $key, $scriptPath, $remoteScriptPath);
@@ -61,10 +61,9 @@ class Provisioner
                 return $scpResult;
             }
 
-            // Step 3: Execute provisioning script.
-            // Note: provision.sh self-deletes at its end via `rm -f "$0"`.
-            // PHP cannot clean it up because root SSH is disabled after provisioning
-            // and the deploy user has no access to /root/.
+            // Step 3: Execute provisioning script with sudo.
+            // The script requires root for apt, useradd, etc.
+            // It self-deletes at its end via `rm -f "$0"`.
             return $this->executeScriptOnServer($host, $initUser, $key, $remoteScriptPath);
         } finally {
             // Always cleanup local temp script
@@ -173,7 +172,7 @@ class Provisioner
             '-o', 'StrictHostKeyChecking=accept-new',
             '-o', 'ConnectTimeout=10',
             "{$user}@{$host}",
-            "DEBIAN_FRONTEND=noninteractive bash {$remotePath} 2>&1",
+            "DEBIAN_FRONTEND=noninteractive sudo bash {$remotePath} 2>&1",
         ];
 
         // Provisioning can take 10-15 minutes
