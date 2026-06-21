@@ -7,7 +7,7 @@ namespace Lightpack\Deploy;
  */
 class Deployer
 {
-    use RunsProcess;
+    use RunsProcessTrait;
 
     private array $config;
 

@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Install the queue worker as a supervised process on a remote server.
@@ -18,7 +19,7 @@ use Lightpack\Console\Command;
  */
 class ServerQueueSetupCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

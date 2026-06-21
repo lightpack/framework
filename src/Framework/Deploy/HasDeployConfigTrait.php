@@ -1,13 +1,13 @@
 <?php
 
-namespace Lightpack\Deploy\Commands;
+namespace Lightpack\Deploy;
 
 use Lightpack\Utils\Process;
 
 /**
  * Shared helpers for deploy commands that operate on remote servers.
  */
-trait HasDeployConfig
+trait HasDeployConfigTrait
 {
     /**
      * Load config/deploy.php and return the ['deploy'] sub-array.

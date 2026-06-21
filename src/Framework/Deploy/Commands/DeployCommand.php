@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 use Lightpack\Deploy\Deployer;
 
 /**
@@ -15,7 +16,7 @@ use Lightpack\Deploy\Deployer;
  */
 class DeployCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

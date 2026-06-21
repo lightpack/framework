@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * View the last N lines of queue worker logs from a remote server.
@@ -16,7 +17,7 @@ use Lightpack\Console\Command;
  */
 class ServerQueueLogsViewCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

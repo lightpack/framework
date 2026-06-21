@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Restore a database backup to the remote server.
@@ -15,7 +16,7 @@ use Lightpack\Console\Command;
  */
 class DbRestoreCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

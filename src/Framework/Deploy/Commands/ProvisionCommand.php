@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 use Lightpack\Deploy\Provisioner;
 
 /**
@@ -20,7 +21,7 @@ use Lightpack\Deploy\Provisioner;
  */
 class ProvisionCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

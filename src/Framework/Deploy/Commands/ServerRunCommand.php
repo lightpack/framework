@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Run an arbitrary command on the remote server from the app directory.
@@ -12,7 +13,7 @@ use Lightpack\Console\Command;
  */
 class ServerRunCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Remove an Nginx virtual host and its SSL certificate.
@@ -12,7 +13,7 @@ use Lightpack\Console\Command;
  */
 class SiteRemoveCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

@@ -11,7 +11,7 @@ use Lightpack\Utils\Process;
  * to expand '~' in SSH key paths. Used by Deployer and Provisioner
  * to eliminate duplication between service classes.
  */
-trait RunsProcess
+trait RunsProcessTrait
 {
     private function resolveKeyPath(string $key): string
     {

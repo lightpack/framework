@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Check if the Lightpack scheduler cron job is installed on a remote server.
@@ -12,7 +13,7 @@ use Lightpack\Console\Command;
  */
 class ScheduleStatusCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {

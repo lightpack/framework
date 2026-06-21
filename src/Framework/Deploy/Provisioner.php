@@ -14,7 +14,7 @@ namespace Lightpack\Deploy;
  */
 class Provisioner
 {
-    use RunsProcess;
+    use RunsProcessTrait;
 
     private array $config;
 

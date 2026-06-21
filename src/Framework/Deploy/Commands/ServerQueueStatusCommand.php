@@ -3,6 +3,7 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Check the queue worker daemon status on a remote server.
@@ -13,7 +14,7 @@ use Lightpack\Console\Command;
  */
 class ServerQueueStatusCommand extends Command
 {
-    use HasDeployConfig;
+    use HasDeployConfigTrait;
 
     public function run()
     {
