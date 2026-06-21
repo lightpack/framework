@@ -80,6 +80,14 @@ if ! echo "$SUPPORTED_CODENAMES" | grep -qw "$LSB_RELEASE"; then
     exit 1
 fi
 
+# Validate PHP version
+PHP_SUPPORTED_VERSIONS="8.2 8.3 8.4"
+if ! echo "$PHP_SUPPORTED_VERSIONS" | grep -qw "$PHP_VERSION"; then
+    log_error "Unsupported PHP version: $PHP_VERSION"
+    log_error "Only 8.2, 8.3, and 8.4 are supported. Aborting."
+    exit 1
+fi
+
 # -----------------------------------------------------------------------------
 # 1. Generate passwords (only on first run)
 # -----------------------------------------------------------------------------
