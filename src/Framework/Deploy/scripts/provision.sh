@@ -212,8 +212,6 @@ visudo -c >/dev/null || {
     exit 1
 }
 
-log_info "Sudo privileges configured (service reloads, nginx sites, certbot)"
-
 # Create nginx site management wrapper scripts
 # (Ubuntu 24.04 sudo rejects wildcards in path arguments inside sudoers)
 cat > /usr/local/sbin/lp-nginx-write <<'WSCRIPT'
@@ -301,8 +299,6 @@ chmod 0750 /usr/local/sbin/lp-nginx-write \
            /usr/local/sbin/lp-supervisorctl \
            /usr/local/sbin/lp-mysql-create
 
-log_info "Nginx management scripts installed to /usr/local/sbin/"
-
 # Setup SSH directory
 mkdir -p "/home/${DEPLOY_USER}/.ssh"
 chmod 700 "/home/${DEPLOY_USER}/.ssh"
@@ -333,7 +329,6 @@ grep -qF 'umask 002' "/home/${DEPLOY_USER}/.bashrc"  || echo 'umask 002' >> "/ho
 mkdir -p /var/www
 setfacl -R  -m g:www-data:rwX,g:"${DEPLOY_USER}":rwX /var/www 2>/dev/null || true
 setfacl -dR -m g:www-data:rwX,g:"${DEPLOY_USER}":rwX /var/www 2>/dev/null || true
-log_info "Default ACLs set on /var/www (group-writable for www-data and ${DEPLOY_USER})"
 
 # Generate SSH key for GitHub deployments
 if [ ! -f "/home/${DEPLOY_USER}/.ssh/id_ed25519" ]; then
@@ -689,7 +684,6 @@ if [ ! -f /usr/local/bin/composer ]; then
 
     php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
     rm -f /tmp/composer-setup.php
-    log_info "Composer installed"
 else
     log_warn "Composer already exists"
 fi
@@ -812,13 +806,15 @@ log_step "Running final checks..."
 services=("nginx" "php${PHP_VERSION}-fpm" "fail2ban" "supervisor")
 [ "$DB_TYPE" = "mysql" ] && services+=("mysql")
 
+ok_services=""
 for service in "${services[@]}"; do
     if systemctl is-active --quiet "$service"; then
-        log_info "  [OK] $service is running"
+        ok_services="${ok_services}${ok_services:+, }${service}"
     else
         log_error "  [FAIL] $service is NOT running"
     fi
 done
+[ -n "$ok_services" ] && log_info "Services OK: ${ok_services}"
 
 # -----------------------------------------------------------------------------
 # Done
