@@ -127,20 +127,14 @@ class Deployer
     private function buildActivateScript(array $env): string
     {
         $rawPath     = $env['path'];
-        $hooks       = $env['hooks'] ?? [];
         $storagePath = escapeshellarg($rawPath . '/storage');
         $consolePath = escapeshellarg($rawPath . '/console');
-        $appPath     = escapeshellarg($rawPath);
 
         $commands = [
             "find {$storagePath} -type d -exec chmod 2775 {} \\; && find {$storagePath} -type d -exec chgrp www-data {} \\;",
             "find {$storagePath} -type f -exec chmod 664 {} \\; 2>/dev/null || true",
             "php {$consolePath} migrate:up --force",
         ];
-
-        foreach ($hooks as $hook) {
-            $commands[] = "cd {$appPath} && {$hook}";
-        }
 
         // Auto-detect installed PHP version on the server at deploy time.
         $commands[] = 'PHP_VER=$(php -r \'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;\' 2>/dev/null) && sudo systemctl reload php${PHP_VER}-fpm';

@@ -27,14 +27,13 @@ This creates `config/deploy.php` with a sample production environment.
 
 Each environment supports these options:
 
-| Option | Required | Default | Description |
-|---|---|---|---|
-| `host` | Yes | — | Server IP or hostname |
-| `key` | Yes | — | Local SSH private key path (supports `~`) |
-| `path` | Yes | — | Absolute app path on the server |
-| `repo` | Yes | — | Git repository URL |
-| `branch` | No | `main` | Git branch to deploy |
-| `hooks` | No | `[]` | Commands to run after each deploy (see [Deploy Hooks](#deploy-hooks) below) |
+| Option | Description |
+|---|---|
+| `host` | Server IP |
+| `key` | Local SSH private key path |
+| `path` | App deployment path on the server |
+| `repo` | Git repository URL |
+| `branch` | Git branch to deploy |
 
 ### 2. Prepare Environment File
 
@@ -107,23 +106,6 @@ Go back further with `--steps=3`.
 
 ---
 
-## Deploy Hooks
-
-Hooks run after code pull, composer install, and migrations — but **before** PHP-FPM reloads. If any hook fails, the deploy stops and PHP-FPM is **not** reloaded.
-
-```php
-'hooks' => [
-    'php console cache:clear',
-    'sudo lp-supervisorctl restart lightpack-production:*',
-],
-```
-
-- Runs as `deploy` user in the app directory
-- Hooks execute in order
-- `sudo` works for whitelisted commands (service reloads, supervisor, certbot, Nginx site management)
-
----
-
 ## Queue Workers
 
 ### Setup (Once)
@@ -132,36 +114,47 @@ Hooks run after code pull, composer install, and migrations — but **before** P
 php console server:queue:setup production
 ```
 
-With options:
+This creates a supervised worker group. By default it is named after the environment (`production`). You can give it a custom name:
 
 ```bash
-php console server:queue:setup production --queue=emails,default --workers=4 --cooldown=3600
+php console server:queue:setup production --name=emails --queue=emails --workers=2
 ```
 
-- `--name`: worker group name (default: environment name)
-- `--queue`: comma-separated queue names (default: `default`)
-- `--workers`: parallel processes (default: `1`)
-- `--cooldown`: seconds before voluntary restart to prevent memory leaks (default: `3600`)
-- `--stop-wait`: seconds to wait before force-kill on shutdown (default: `60`)
+**What `--name` means:** It is the label for the worker group in Supervisor, not a queue name. Each `--name` creates a separate group of processes. The `--queue` flag tells those processes which job queues to process.
+
+| Flag | What it does |
+|---|---|
+| `--name` | Supervisor group label (default: environment name) |
+| `--queue` | Comma-separated job queue names to process (default: `default`) |
+| `--workers` | Number of parallel processes (default: `1`) |
+| `--cooldown` | Seconds before voluntary restart to prevent memory leaks (default: `3600`) |
+| `--stop-wait` | Seconds to wait before force-kill on shutdown (default: `60`) |
 
 ### Multiple Worker Groups
 
+You can run multiple worker groups on the same server, each processing different queues:
+
 ```bash
-php console server:queue:setup production --name=default  --queue=default  --workers=4
-php console server:queue:setup production --name=emails   --queue=emails   --workers=2
-php console server:queue:setup production --name=reports  --queue=reports  --workers=1
+php console server:queue:setup production --name=default --queue=default  --workers=4
+php console server:queue:setup production --name=emails --queue=emails   --workers=2
 ```
+
+Each group is independent. `default` runs 4 workers processing the `default` queue. `emails` runs 2 workers processing the `emails` queue.
 
 ### Managing Workers
 
 ```bash
-php console server:queue:start   production
-php console server:queue:stop    production
-php console server:queue:restart production
-php console server:queue:status  production
+php console server:queue:start   production          # start default group
+php console server:queue:stop    production          # stop default group
+php console server:queue:restart production          # restart default group
+php console server:queue:status  production          # check default group
 ```
 
-For named workers: `php console server:queue:restart production --name=emails`
+For a named group:
+
+```bash
+php console server:queue:restart production --name=emails
+```
 
 ### Viewing Worker Logs
 
@@ -171,17 +164,19 @@ php console server:queue:logs:view production --lines=200
 php console server:queue:logs:tail production         # live stream (Ctrl+C to stop)
 ```
 
-### Restart Workers on Deploy
+### Restart Workers After Deploy
 
-Add this hook to your deploy config to restart queue workers after every deployment:
+Queue workers are **not** restarted automatically. After each deploy, run:
 
-```php
-'hooks' => [
-    'sudo lp-supervisorctl restart lightpack-production:*',
-],
+```bash
+php console server:queue:restart production
 ```
 
-See [Deploy Hooks](#deploy-hooks) for the full explanation.
+For named worker groups:
+
+```bash
+php console server:queue:restart production --name=emails
+```
 
 ### Local Development
 

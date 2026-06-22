@@ -141,23 +141,6 @@ final class DeployerTest extends TestCase
         $this->assertStringContainsString('systemctl reload php', $script);
     }
 
-    public function testBuildActivateScriptWithHooks(): void
-    {
-        $deployer = new Deployer($this->config);
-        $method = new \ReflectionMethod($deployer, 'buildActivateScript');
-        $method->setAccessible(true);
-
-        $env = [
-            'path'  => '/var/www/app',
-            'hooks' => ['npm run build', 'php optimize'],
-        ];
-
-        $script = $method->invoke($deployer, $env);
-
-        $this->assertStringContainsString('npm run build', $script);
-        $this->assertStringContainsString('php optimize', $script);
-    }
-
     // ─────────────────────────────────────────────
     // buildRollbackScript (via reflection)
     // ─────────────────────────────────────────────
