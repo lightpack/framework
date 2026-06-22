@@ -81,10 +81,8 @@ Copies your `.env.production` to the server, pulls code, installs dependencies, 
 Point your DNS A record to the server IP, then:
 
 ```bash
-php console server:site:add production --domain=yourdomain.com
+php console server:site:add production
 ```
-
-Omit `--domain` to be prompted interactively.
 
 ### 7. Enable HTTPS
 
@@ -217,9 +215,9 @@ Saved to `storage/env/production.env`.
 ## Database
 
 ```bash
-php console db:backup production                               # download timestamped dump
-php console db:restore production --file=backup-2026-01-15.sql  # upload and restore
-php console db:create production --db=shopdb --user=shopuser   # new DB + user
+php console db:backup production     # download timestamped dump
+php console db:restore production    # upload and restore
+php console db:create production     # new DB + user
 ```
 
 Use `db:create` when deploying a second application to the same server.
@@ -229,8 +227,8 @@ Use `db:create` when deploying a second application to the same server.
 ## Logs
 
 ```bash
-php console server:logs:view production --lines=50   # last N lines
-php console server:logs:tail production               # live stream
+php console server:logs:view production   # last N lines
+php console server:logs:tail production     # live stream
 ```
 
 ---
@@ -357,9 +355,7 @@ php console server:queue:setup shop --name=shop-worker
 |---|---|
 | `php console db:backup <env>` | Backup database |
 | `php console db:restore <env>` | Restore from backup |
-| `php console db:create <env> --db=name --user=user` | Create new database + user |
-| `php console migrate:up` | Run migrations |
-| `php console migrate:down` | Rollback migrations |
+| `php console db:create <env> [--db=] [--user=]` | Create new database + user |
 
 ### Logs
 
@@ -372,9 +368,9 @@ php console server:queue:setup shop --name=shop-worker
 
 | Command | Description |
 |---|---|
-| `php console server:site:add <env> --domain=` | Add Nginx virtual host |
+| `php console server:site:add <env> [--domain=]` | Add Nginx virtual host |
 | `php console server:site:remove <env> --domain=` | Remove Nginx virtual host |
-| `php console server:site:ssl <env> --domain=` | Install SSL certificate |
+| `php console server:site:ssl <env> [--domain=] [--email=]` | Install SSL certificate |
 
 ### Environment
 
