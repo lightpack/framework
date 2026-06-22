@@ -117,8 +117,11 @@ log_step "Updating system packages..."
 export DEBIAN_FRONTEND=noninteractive
 
 # Wait for apt locks (common on fresh cloud VMs)
+# Background apt-get update (unattended-upgrades/cloud-init) holds /var/lib/apt/lists/lock
+# apt-get install holds /var/lib/dpkg/lock-frontend
 for i in {1..30}; do
-    if ! fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
+    if ! fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 && \
+       ! fuser /var/lib/apt/lists/lock >/dev/null 2>&1; then
         break
     fi
     log_warn "Waiting for apt lock (attempt $i/30)..."
@@ -750,6 +753,8 @@ EOF
 
 systemctl enable unattended-upgrades
 systemctl start unattended-upgrades
+
+apt-get clean -qq
 
 # -----------------------------------------------------------------------------
 # 15. SSH hardening
