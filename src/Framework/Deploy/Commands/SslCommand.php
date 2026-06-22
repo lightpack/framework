@@ -34,21 +34,13 @@ class SslCommand extends Command
         $domain = $this->args->get('domain');
         $email = $this->args->get('email');
 
-        if (empty($domain)) {
+        if (empty($domain) || empty($email)) {
             $this->output->newline();
             $this->output->info("→ Obtaining SSL certificate on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
-            $domain = $this->ask('Domain');
-
-            if (!$this->validateDomain($domain)) {
-                $this->output->error("Invalid domain name: {$domain}");
-                return self::FAILURE;
-            }
-
-            if (empty($email)) {
-                $email = $this->askOrNull('Email for SSL renewal notices');
-            }
+            $domain = $domain ?? $this->ask('Domain');
+            $email  = $email  ?? $this->askOrNull('Email for SSL renewal notices');
         }
 
         if (!$this->validateDomain($domain)) {
