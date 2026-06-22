@@ -74,7 +74,7 @@ In your GitHub repo: **Settings > Deploy keys > Add deploy key**. Do **not** all
 php console app:deploy production
 ```
 
-Copies your `.env.production` to the server, pulls code, installs dependencies, runs migrations, and reloads PHP-FPM.
+Copies your `.env.production` to the server, pulls code, installs dependencies, symlinks storage, runs migrations, and reloads PHP-FPM.
 
 ### 6. Add Domain
 
@@ -89,7 +89,7 @@ Omit `--domain` to be prompted interactively.
 ### 7. Enable HTTPS
 
 ```bash
-php console server:site:ssl production --domain=yourdomain.com
+php console server:site:ssl production
 ```
 
 ---
