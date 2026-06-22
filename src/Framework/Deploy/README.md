@@ -23,7 +23,7 @@ Deploy and manage Lightpack applications on a remote Ubuntu server. Provision on
 php console create:config --support=deploy
 ```
 
-This creates `config/deploy.php` with a sample production environment.
+This creates `config/deploy.php` with a sample **production** environment.
 
 Each environment supports these options:
 
@@ -34,6 +34,10 @@ Each environment supports these options:
 | `path` | App deployment path on the server |
 | `repo` | Git repository URL |
 | `branch` | Git branch to deploy |
+
+The key name — `production` in this example — is what you pass to every deploy command as the `<env>` argument. You can define multiple environments (e.g., `staging`, `production`) in the same file.
+
+**Omitting `<env>`:** Every command that takes an environment defaults to `production` if you leave it out.
 
 ### 2. Prepare Environment File
 
@@ -54,7 +58,7 @@ DB_PSWD=your-db-password
 php console server:provision production
 ```
 
-Type `yes` to confirm. Takes 5-15 minutes. When done, root SSH is disabled. Only the `deploy` user can access the server.
+Type `yes` to confirm. When done, root SSH is disabled. Only the `deploy` user can access the server.
 
 ### 4. Add Deploy Key to GitHub
 
@@ -198,7 +202,7 @@ On the server, `php console schedule:events` runs every minute to execute due ta
 
 ---
 
-## Environment Management
+## Remote .env Files
 
 When you deploy, your local `.env.production` is automatically copied to the server as `.env`.
 
@@ -372,7 +376,7 @@ php console server:queue:setup shop --name=shop-worker
 | `php console server:site:remove <env> --domain=` | Remove Nginx virtual host |
 | `php console server:site:ssl <env> [--domain=] [--email=]` | Install SSL certificate |
 
-### Environment
+### .env Files
 
 | Command | Description |
 |---|---|
