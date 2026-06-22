@@ -62,7 +62,8 @@ class DeployCommand extends Command
         if ($result['success']) {
             $this->output->success("✓ Deployment finished");
             $this->output->newline();
-            $this->output->info("→ If you have queue workers, restart them: php console server:queue:restart {$env}");
+            $this->output->line("→ If you have queue workers, you should restart them. Run the command below to see what's running:");
+            $this->output->info("  php console server:queue:list {$env}");
             return self::SUCCESS;
         }
 
