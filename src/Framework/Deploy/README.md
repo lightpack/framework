@@ -13,7 +13,7 @@ Deploy and manage Lightpack applications on a remote Ubuntu server. Provision on
 - An SSH key pair on your local machine (`~/.ssh/id_rsa` or `~/.ssh/id_ed25519`)
 - Your Lightpack application code in a Git repository (optional — the server can use an existing clone)
 
->These tools require a Unix-like environment (macOS, Linux, or WSL2/VM/Docker on Windows).
+> These tools require a Unix-like environment (macOS, Linux, or WSL2/VM/Docker on Windows).
 
 ---
 
