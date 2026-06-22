@@ -60,7 +60,7 @@ class DeployCommand extends Command
         $this->output->newline();
 
         if ($result['success']) {
-            $this->output->success("Deployed successfully to {$env}.");
+            $this->output->success("✓ Deployment finished");
             return self::SUCCESS;
         }
 
