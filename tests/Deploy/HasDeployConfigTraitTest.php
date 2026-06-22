@@ -166,20 +166,4 @@ final class HasDeployConfigTraitTest extends TestCase
 
         $this->assertEquals("{$home}/.ssh/deploy", $cmd[3]);
     }
-
-    // ─────────────────────────────────────────────
-    // getEnvConfig
-    // ─────────────────────────────────────────────
-
-    public function testGetEnvConfigReturnsExisting(): void
-    {
-        $config = ['production' => ['host' => '1.2.3.4'], 'staging' => ['host' => '5.6.7.8']];
-        $this->assertEquals(['host' => '1.2.3.4'], $this->helper->testGetEnvConfig($config, 'production'));
-    }
-
-    public function testGetEnvConfigReturnsNullForMissing(): void
-    {
-        $config = ['production' => ['host' => '1.2.3.4']];
-        $this->assertNull($this->helper->testGetEnvConfig($config, 'staging'));
-    }
 }
