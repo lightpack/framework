@@ -347,6 +347,7 @@ php console server:queue:setup shop --name=shop-worker
 | `php console server:queue:stop <env> [--name]` | Stop worker |
 | `php console server:queue:restart <env> [--name]` | Restart worker |
 | `php console server:queue:status <env> [--name]` | Worker status |
+| `php console server:queue:list <env>` | List all worker groups |
 | `php console server:queue:logs:view <env> [--name] [--lines=50]` | View worker logs |
 | `php console server:queue:logs:tail <env> [--name]` | Stream worker logs |
 
@@ -385,7 +386,7 @@ php console server:queue:setup shop --name=shop-worker
 
 | Command | Description |
 |---|---|
-| `php console server:run <env> --cmd="..."` | Run any command on the server (useful for debugging: `migrate:status`, `cache:clear`, etc.) |
+| `php console server:run <env> --cmd="..."` | Run any command on the server |
 
 ---
 
