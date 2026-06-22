@@ -19,7 +19,7 @@ class Deployer
     /**
      * Deploy to the specified environment.
      *
-     * Sequence: mkdir → git+composer → SCP .env → migrate+reload
+     * Sequence: mkdir → git+composer → SCP .env → link:storage → migrate+reload
      * The .env is copied after composer (which doesn't need it) but before
      * migrate:up (which needs DB credentials from .env).
      *
@@ -131,6 +131,7 @@ class Deployer
         $consolePath = escapeshellarg($rawPath . '/console');
 
         $commands = [
+            "php {$consolePath} link:storage",
             "find {$storagePath} -type d -exec chmod 2775 {} \\; && find {$storagePath} -type d -exec chgrp www-data {} \\;",
             "find {$storagePath} -type f -exec chmod 664 {} \\; 2>/dev/null || true",
             "php {$consolePath} migrate:up --force",
