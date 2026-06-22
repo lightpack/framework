@@ -43,7 +43,7 @@ The key name — `production` in this example — is what you pass to every depl
 
 ### 2. Prepare Environment File
 
-Create `.env.production` in your project root:
+Create `.env.<env>` in your project root (e.g. `.env.production` for the `production` environment):
 
 ```bash
 APP_ENV=production
@@ -64,15 +64,7 @@ Type `yes` to confirm. When done, root SSH is disabled. Only the `deploy` user c
 
 ### 4. Add Deploy Key to GitHub
 
-After provisioning, the deploy user's SSH public key is printed in the terminal. Copy it.
-
-Alternatively, SSH to the server and show it:
-
-```bash
-ssh deploy@your-server-ip "cat ~/.ssh/id_ed25519.pub"
-```
-
-In your GitHub repo: **Settings > Deploy keys > Add deploy key**. Do **not** allow write access.
+After provisioning, the deploy user's SSH public key is printed in the terminal. Copy it in your GitHub repo: **Settings > Deploy keys > Add deploy key**. Do **not** allow write access.
 
 ### 5. Deploy
 
