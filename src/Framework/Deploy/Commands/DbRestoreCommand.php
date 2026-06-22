@@ -31,6 +31,7 @@ class DbRestoreCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -45,6 +46,7 @@ class DbRestoreCommand extends Command
 
             if (empty($file)) {
                 $this->output->error('Backup file cannot be empty.');
+
                 return self::FAILURE;
             }
         }
@@ -52,13 +54,15 @@ class DbRestoreCommand extends Command
         // Prevent path traversal in file names
         if (strpos($file, '..') !== false || strpbrk($file, '/\\') !== false) {
             $this->output->error('Invalid file name. Path traversal is not allowed.');
+
             return self::FAILURE;
         }
 
         $localPath = DIR_ROOT . '/storage/backups/' . $file;
 
-        if (!file_exists($localPath)) {
+        if (! file_exists($localPath)) {
             $this->output->error("Backup file not found: storage/backups/{$file}");
+
             return self::FAILURE;
         }
 
@@ -77,6 +81,7 @@ class DbRestoreCommand extends Command
 
         if (strtolower($response) !== 'yes') {
             $this->output->line('Restore cancelled.');
+
             return self::FAILURE;
         }
 
@@ -87,8 +92,9 @@ class DbRestoreCommand extends Command
         // Step 1: Upload SQL file via SCP
         $scpResult = $this->uploadFile($envConfig, $localPath, $remoteTemp);
 
-        if (!$scpResult['success']) {
+        if (! $scpResult['success']) {
             $this->output->error("Failed to upload backup (exit code: {$scpResult['exit_code']}).");
+
             return self::FAILURE;
         }
 
@@ -110,18 +116,19 @@ class DbRestoreCommand extends Command
 
         if ($result['success']) {
             $this->output->success('✓ Database restored.');
+
             return self::SUCCESS;
         }
 
         $this->output->error("Restore failed (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
-
 
     private function uploadFile(array $envConfig, string $localPath, string $remotePath): array
     {
         $host = $envConfig['host'];
-        $key  = $this->resolveKeyPath($envConfig['key']);
+        $key = $this->resolveKeyPath($envConfig['key']);
 
         $scpCommand = [
             'scp',
@@ -175,5 +182,4 @@ unset MYSQL_PWD
 echo "Database restored successfully."
 BASH;
     }
-
 }

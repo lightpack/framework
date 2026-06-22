@@ -36,14 +36,16 @@ class ProvisionCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
         $keyPath = $this->resolveKeyPath($envConfig['key']);
 
-        if (!file_exists($keyPath)) {
+        if (! file_exists($keyPath)) {
             $this->output->error("SSH key not found: {$envConfig['key']}");
             $this->output->line('Set the correct path in config/deploy.php under the "key" entry.');
+
             return self::FAILURE;
         }
 
@@ -51,7 +53,7 @@ class ProvisionCommand extends Command
         $params = $this->gatherParams($env, $envConfig);
 
         // Show confirmation and require explicit approval
-        if (!$this->confirmProvision($env, $envConfig, $params)) {
+        if (! $this->confirmProvision($env, $envConfig, $params)) {
             return self::FAILURE;
         }
 
@@ -66,15 +68,17 @@ class ProvisionCommand extends Command
         } catch (\RuntimeException $e) {
             $this->output->error($e->getMessage());
             $this->output->newline();
+
             return self::FAILURE;
         }
 
         $this->output->newline();
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->error("Provisioning failed (exit code: {$result['exit_code']}).");
             $this->output->newline();
             $this->output->line('Check the output above for error details.');
+
             return self::FAILURE;
         }
 
@@ -97,31 +101,31 @@ class ProvisionCommand extends Command
         $defaultDbName = preg_replace('/[^a-zA-Z0-9_]/', '_', basename($envConfig['path']));
         $defaultDbUser = $defaultDbName;
 
-        $initUser   = $this->args->get('init-user');
+        $initUser = $this->args->get('init-user');
         $phpVersion = $this->args->get('php');
-        $dbName     = $this->args->get('db-name');
-        $dbUser     = $this->args->get('db-user');
-        $timezone   = $this->args->get('timezone');
+        $dbName = $this->args->get('db-name');
+        $dbUser = $this->args->get('db-user');
+        $timezone = $this->args->get('timezone');
 
         if ($initUser === null || $phpVersion === null || $dbName === null || $dbUser === null || $timezone === null) {
             $this->output->newline();
             $this->output->info("→ Provisioning {$env} ({$envConfig['host']})");
             $this->output->newline();
 
-            $initUser   = $initUser   ?? $this->askWithDefault('SSH user for root access', 'root');
+            $initUser = $initUser ?? $this->askWithDefault('SSH user for root access', 'root');
             $phpVersion = $phpVersion ?? $this->askWithDefault('PHP version to install', '8.3');
-            $dbName     = $dbName     ?? $this->askWithDefault('Database name', $defaultDbName);
-            $dbUser     = $dbUser     ?? $this->askWithDefault('Database user', $defaultDbUser);
-            $timezone   = $timezone   ?? $this->askWithDefault('Server timezone', 'UTC');
+            $dbName = $dbName ?? $this->askWithDefault('Database name', $defaultDbName);
+            $dbUser = $dbUser ?? $this->askWithDefault('Database user', $defaultDbUser);
+            $timezone = $timezone ?? $this->askWithDefault('Server timezone', 'UTC');
         }
 
         return [
-            'init_user'   => $initUser,
+            'init_user' => $initUser,
             'php_version' => $phpVersion,
-            'db_name'     => $dbName,
-            'db_user'     => $dbUser,
-            'timezone'    => $timezone,
-            'name'        => $env,
+            'db_name' => $dbName,
+            'db_user' => $dbUser,
+            'timezone' => $timezone,
+            'name' => $env,
         ];
     }
 

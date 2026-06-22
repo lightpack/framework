@@ -9,7 +9,7 @@ final class SslCommandTest extends TestCase
 {
     public function testBuildCertbotScriptWithEmail(): void
     {
-        $command = new SslCommand();
+        $command = new SslCommand;
         $method = new \ReflectionMethod($command, 'buildCertbotScript');
         $method->setAccessible(true);
 
@@ -28,7 +28,7 @@ final class SslCommandTest extends TestCase
 
     public function testBuildCertbotScriptWithoutEmail(): void
     {
-        $command = new SslCommand();
+        $command = new SslCommand;
         $method = new \ReflectionMethod($command, 'buildCertbotScript');
         $method->setAccessible(true);
 
@@ -40,7 +40,7 @@ final class SslCommandTest extends TestCase
 
     public function testBuildCertbotScriptChecksNginxConfigFirst(): void
     {
-        $command = new SslCommand();
+        $command = new SslCommand;
         $method = new \ReflectionMethod($command, 'buildCertbotScript');
         $method->setAccessible(true);
 
@@ -52,7 +52,7 @@ final class SslCommandTest extends TestCase
 
     public function testBuildCertbotScriptContainsCorrectEnvHint(): void
     {
-        $command = new SslCommand();
+        $command = new SslCommand;
         $method = new \ReflectionMethod($command, 'buildCertbotScript');
         $method->setAccessible(true);
 

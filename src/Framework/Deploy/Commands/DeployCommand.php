@@ -3,8 +3,8 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
-use Lightpack\Deploy\HasDeployConfigTrait;
 use Lightpack\Deploy\Deployer;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Deploy the application to a remote server via SSH.
@@ -28,8 +28,9 @@ class DeployCommand extends Command
 
         $env = $this->resolveEnvironment($config);
 
-        if (!isset($config[$env])) {
+        if (! isset($config[$env])) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -54,6 +55,7 @@ class DeployCommand extends Command
         } catch (\RuntimeException $e) {
             $this->output->error($e->getMessage());
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -64,11 +66,12 @@ class DeployCommand extends Command
             $this->output->newline();
             $this->output->line("→ If you have queue workers, you should restart them. Run the command below to see what's running:");
             $this->output->info("  php console server:queue:list {$env}");
+
             return self::SUCCESS;
         }
 
         $this->output->error("Deploy failed (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
-
 }

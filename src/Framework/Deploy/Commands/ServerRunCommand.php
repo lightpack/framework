@@ -28,6 +28,7 @@ class ServerRunCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -42,6 +43,7 @@ class ServerRunCommand extends Command
 
             if (empty($cmd)) {
                 $this->output->error('Command cannot be empty.');
+
                 return self::FAILURE;
             }
         }
@@ -63,6 +65,7 @@ class ServerRunCommand extends Command
         }
 
         $this->output->error("Command failed (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
 }

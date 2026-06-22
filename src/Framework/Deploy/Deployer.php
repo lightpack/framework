@@ -39,7 +39,7 @@ class Deployer
         // Step 2: Pull code + install dependencies
         $codeResult = $this->execute($this->buildSshCommand($env, $this->buildCodeScript($env)), 300);
 
-        if (!$codeResult['success']) {
+        if (! $codeResult['success']) {
             return $codeResult;
         }
 
@@ -47,7 +47,7 @@ class Deployer
         if ($localEnvPath !== null && file_exists($localEnvPath)) {
             $scpResult = $this->execute($this->buildScpCommand($env, $localEnvPath), 60);
 
-            if (!$scpResult['success']) {
+            if (! $scpResult['success']) {
                 return $scpResult;
             }
         }
@@ -104,17 +104,17 @@ class Deployer
     private function buildCodeScript(array $env): string
     {
         $rawPath = $env['path'];
-        $path    = escapeshellarg($rawPath);
-        $branch  = escapeshellarg($env['branch'] ?? 'main');
-        $ref     = escapeshellarg('origin/' . ($env['branch'] ?? 'main'));
-        $repo    = $env['repo'] ?? null;
+        $path = escapeshellarg($rawPath);
+        $branch = escapeshellarg($env['branch'] ?? 'main');
+        $ref = escapeshellarg('origin/' . ($env['branch'] ?? 'main'));
+        $repo = $env['repo'] ?? null;
 
         if ($repo !== null) {
-            $repoSafe   = escapeshellarg($repo);
+            $repoSafe = escapeshellarg($repo);
             $ensureRepo = "test -d {$rawPath}/.git || git -C {$path} init";
             $syncRemote = "git -C {$path} remote set-url origin {$repoSafe} 2>/dev/null || git -C {$path} remote add origin {$repoSafe}";
-            $pullCode   = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
-            $gitSteps   = "{$ensureRepo} && {$syncRemote} && {$pullCode}";
+            $pullCode = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
+            $gitSteps = "{$ensureRepo} && {$syncRemote} && {$pullCode}";
         } else {
             $gitSteps = "git -C {$path} fetch origin {$branch} && git -C {$path} reset --hard {$ref}";
         }
@@ -126,7 +126,7 @@ class Deployer
 
     private function buildActivateScript(array $env): string
     {
-        $rawPath     = $env['path'];
+        $rawPath = $env['path'];
         $storagePath = escapeshellarg($rawPath . '/storage');
         $consolePath = escapeshellarg($rawPath . '/console');
 
@@ -168,7 +168,7 @@ class Deployer
     private function buildSshCommand(array $env, string $remoteScript): array
     {
         $host = $env['host'];
-        $key  = $this->resolveKeyPath($env['key']);
+        $key = $this->resolveKeyPath($env['key']);
 
         return [
             'ssh',
@@ -186,8 +186,8 @@ class Deployer
      */
     private function buildScpCommand(array $env, string $localPath): array
     {
-        $host       = $env['host'];
-        $key        = $this->resolveKeyPath($env['key']);
+        $host = $env['host'];
+        $key = $this->resolveKeyPath($env['key']);
         $remotePath = $env['path'] . '/.env';
 
         return [
@@ -198,5 +198,4 @@ class Deployer
             "deploy@{$host}:{$remotePath}",
         ];
     }
-
 }

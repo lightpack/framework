@@ -28,6 +28,7 @@ class SslCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -40,11 +41,12 @@ class SslCommand extends Command
             $this->output->newline();
 
             $domain = $domain ?? $this->ask('Domain');
-            $email  = $email  ?? $this->askOrNull('Email for SSL renewal notices');
+            $email = $email ?? $this->askOrNull('Email for SSL renewal notices');
         }
 
-        if (!$this->validateDomain($domain)) {
+        if (! $this->validateDomain($domain)) {
             $this->output->error("Invalid domain name: {$domain}");
+
             return self::FAILURE;
         }
 
@@ -67,6 +69,7 @@ class SslCommand extends Command
         if ($result['success']) {
             $this->output->success("✓ SSL certificate installed for {$domain}.");
             $this->output->line("HTTPS should now be active.");
+
             return self::SUCCESS;
         }
 
@@ -85,7 +88,7 @@ class SslCommand extends Command
         $domainFlags = "-d {$domain}";
 
         $emailFlag = '';
-        if (!empty($email)) {
+        if (! empty($email)) {
             $emailFlag = "--email {$email}";
         } else {
             $emailFlag = '--register-unsafely-without-email';

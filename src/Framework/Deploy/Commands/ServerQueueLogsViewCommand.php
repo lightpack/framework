@@ -32,10 +32,11 @@ class ServerQueueLogsViewCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
-        $name  = $this->args->get('name');
+        $name = $this->args->get('name');
         $lines = $this->args->get('lines');
 
         if (empty($name)) {
@@ -70,15 +71,15 @@ fi
 BASH;
 
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
-        $result     = $this->executeRemote($sshCommand, 30);
+        $result = $this->executeRemote($sshCommand, 30);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->newline();
             $this->output->error("Could not view queue worker [{$name}] logs (exit code: {$result['exit_code']}).");
+
             return self::FAILURE;
         }
 
         return self::SUCCESS;
     }
-
 }

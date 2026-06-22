@@ -28,6 +28,7 @@ class SiteRemoveCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -40,14 +41,16 @@ class SiteRemoveCommand extends Command
 
             $domain = $this->ask('Domain');
 
-            if (!$this->validateDomain($domain)) {
+            if (! $this->validateDomain($domain)) {
                 $this->output->error("Invalid domain name: {$domain}");
+
                 return self::FAILURE;
             }
         }
 
-        if (!$this->validateDomain($domain)) {
+        if (! $this->validateDomain($domain)) {
             $this->output->error("Invalid domain name: {$domain}");
+
             return self::FAILURE;
         }
 
@@ -63,17 +66,18 @@ class SiteRemoveCommand extends Command
 
         if ($result['success']) {
             $this->output->success("✓ Site {$domain} removed.");
+
             return self::SUCCESS;
         }
 
         $this->output->error("Failed to remove site (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
 
     /**
      * Prompt for a value, returning empty input as-is for validation.
      */
-
     private function buildRemoveScript(string $domain): string
     {
         return <<<BASH

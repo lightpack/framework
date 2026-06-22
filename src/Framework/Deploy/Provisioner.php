@@ -42,22 +42,22 @@ class Provisioner
             throw new \RuntimeException("Environment '{$environment}' not found in config/deploy.php");
         }
 
-        $host         = $env['host'];
-        $initUser     = $params['init_user'];
-        $key          = $this->resolveKeyPath($env['key']);
+        $host = $env['host'];
+        $initUser = $params['init_user'];
+        $key = $this->resolveKeyPath($env['key']);
         $provisionOptions = $this->buildProvisionOptions($env, $params);
 
         // Step 1: Add host to known_hosts to avoid interactive prompt
         $this->addToKnownHosts($host);
 
         // Step 2: Generate and copy provisioning script to server
-        $scriptPath       = $this->generateScript($provisionOptions);
+        $scriptPath = $this->generateScript($provisionOptions);
         $remoteScriptPath = '/tmp/lightpack-provision.sh';
 
         try {
             $scpResult = $this->copyScriptToServer($host, $initUser, $key, $scriptPath, $remoteScriptPath);
 
-            if (!$scpResult['success']) {
+            if (! $scpResult['success']) {
                 return $scpResult;
             }
 
@@ -94,7 +94,7 @@ class Provisioner
 
         $exports = "#!/bin/bash\n\n";
         foreach ($options as $key => $value) {
-            $escaped = str_replace("'", "'\\''" , $value);
+            $escaped = str_replace("'", "'\\''", $value);
             $exports .= "export {$key}='{$escaped}'\n";
         }
         $exports .= "\n";
@@ -117,29 +117,29 @@ class Provisioner
     private function buildProvisionOptions(array $env, array $params): array
     {
         $gitHost = 'github.com';
-        if (!empty($env['repo']) && preg_match('/^git@([^:]+):/', $env['repo'], $m)) {
+        if (! empty($env['repo']) && preg_match('/^git@([^:]+):/', $env['repo'], $m)) {
             $gitHost = $m[1];
         }
 
         return [
-            'SERVER_NAME'  => $params['name'] ?? 'lightpack',
-            'DEPLOY_USER'  => 'deploy',
-            'PHP_VERSION'  => $params['php_version'],
-            'TIMEZONE'     => $params['timezone'],
-            'DB_TYPE'      => 'mysql',
-            'WEB_SERVER'   => 'nginx',
-            'MYSQL_DB'     => $params['db_name'],
-            'MYSQL_USER'   => $params['db_user'],
-            'GIT_HOST'     => $gitHost,
+            'SERVER_NAME' => $params['name'] ?? 'lightpack',
+            'DEPLOY_USER' => 'deploy',
+            'PHP_VERSION' => $params['php_version'],
+            'TIMEZONE' => $params['timezone'],
+            'DB_TYPE' => 'mysql',
+            'WEB_SERVER' => 'nginx',
+            'MYSQL_DB' => $params['db_name'],
+            'MYSQL_USER' => $params['db_user'],
+            'GIT_HOST' => $gitHost,
         ];
     }
 
     private function addToKnownHosts(string $host): void
     {
-        $home   = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
+        $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
         $sshDir = $home . '/.ssh';
 
-        if (!is_dir($sshDir)) {
+        if (! is_dir($sshDir)) {
             mkdir($sshDir, 0700, true);
         }
 
@@ -178,5 +178,4 @@ class Provisioner
         // Provisioning can take 10-15 minutes
         return $this->execute($sshCommand, 1200);
     }
-
 }

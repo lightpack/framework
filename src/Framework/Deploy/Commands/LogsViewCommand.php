@@ -30,10 +30,11 @@ class LogsViewCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
-        $lines   = $this->args->get('lines');
+        $lines = $this->args->get('lines');
         $logFile = $this->args->get('file');
 
         if ($lines === null || $logFile === null) {
@@ -42,7 +43,7 @@ class LogsViewCommand extends Command
             $this->output->newline();
 
             $logFile = $logFile ?? $this->askWithDefault('Log file', 'lightpack.log');
-            $lines   = $lines   ?? $this->askWithDefault('Lines to show', '50');
+            $lines = $lines ?? $this->askWithDefault('Lines to show', '50');
         }
 
         $lines = max(1, min((int) $lines, 1000));
@@ -56,12 +57,11 @@ class LogsViewCommand extends Command
 
         $result = $this->executeRemote($sshCommand, 30);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->newline();
             $this->output->error("Could not read logs (exit code: {$result['exit_code']}).");
         }
 
         return $result['success'] ? self::SUCCESS : self::FAILURE;
     }
-
 }

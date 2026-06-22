@@ -31,6 +31,7 @@ class ScheduleSetupCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -64,10 +65,12 @@ BASH;
 
         if ($result['success']) {
             $this->output->success('Scheduler installed.');
+
             return self::SUCCESS;
         }
 
         $this->output->error("Failed to install scheduler (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
 }

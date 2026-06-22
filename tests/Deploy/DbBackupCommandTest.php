@@ -9,7 +9,7 @@ final class DbBackupCommandTest extends TestCase
 {
     public function testBuildDumpScriptReadsEnvAndDumps(): void
     {
-        $command = new DbBackupCommand();
+        $command = new DbBackupCommand;
         $method = new \ReflectionMethod($command, 'buildDumpScript');
         $method->setAccessible(true);
 
@@ -30,7 +30,7 @@ final class DbBackupCommandTest extends TestCase
 
     public function testBuildDumpScriptUsesMysqlPwdEnvVar(): void
     {
-        $command = new DbBackupCommand();
+        $command = new DbBackupCommand;
         $method = new \ReflectionMethod($command, 'buildDumpScript');
         $method->setAccessible(true);
 
@@ -42,7 +42,7 @@ final class DbBackupCommandTest extends TestCase
 
     public function testBuildDumpScriptHandlesMissingEnv(): void
     {
-        $command = new DbBackupCommand();
+        $command = new DbBackupCommand;
         $method = new \ReflectionMethod($command, 'buildDumpScript');
         $method->setAccessible(true);
 

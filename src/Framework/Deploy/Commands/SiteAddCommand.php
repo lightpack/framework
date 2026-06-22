@@ -28,6 +28,7 @@ class SiteAddCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -40,17 +41,19 @@ class SiteAddCommand extends Command
 
             $domain = $this->ask('Domain');
 
-            if (!$this->validateDomain($domain)) {
+            if (! $this->validateDomain($domain)) {
                 $this->output->error("Invalid domain name: {$domain}");
+
                 return self::FAILURE;
             }
         }
 
-        if (!$this->validateDomain($domain)) {
+        if (! $this->validateDomain($domain)) {
             $this->output->error("Invalid domain name: {$domain}");
+
             return self::FAILURE;
         }
-        $appPath    = $envConfig['path'];
+        $appPath = $envConfig['path'];
 
         $this->output->info("→ Adding Nginx site for {$domain} ...");
         $this->output->newline();
@@ -65,7 +68,7 @@ class SiteAddCommand extends Command
         if ($result['success']) {
             $this->output->success("✓ Site {$domain} configured.");
 
-            if (!filter_var($domain, FILTER_VALIDATE_IP)) {
+            if (! filter_var($domain, FILTER_VALIDATE_IP)) {
                 $this->output->info("→ Next: php console server:site:ssl {$env}");
             }
 
@@ -73,13 +76,13 @@ class SiteAddCommand extends Command
         }
 
         $this->output->error("Failed to add site (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
 
     /**
      * Prompt for a value, returning empty input as-is for validation.
      */
-
     private function buildSiteScript(string $domain, string $appPath): string
     {
         $configContent = <<<NGINX

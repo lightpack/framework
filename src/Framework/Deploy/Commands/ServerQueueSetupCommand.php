@@ -34,13 +34,14 @@ class ServerQueueSetupCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
         $appPath = $envConfig['path'];
-        $name     = $this->args->get('name');
-        $queue    = $this->args->get('queue');
-        $workers  = $this->args->get('workers');
+        $name = $this->args->get('name');
+        $queue = $this->args->get('queue');
+        $workers = $this->args->get('workers');
         $cooldown = $this->args->get('cooldown');
         $stopWait = $this->args->get('stop-wait');
 
@@ -49,14 +50,14 @@ class ServerQueueSetupCommand extends Command
             $this->output->info("→ Installing queue worker on {$env} ({$envConfig['host']})");
             $this->output->newline();
 
-            $name     = $name     ?? $this->askWithDefault('Worker name', $env);
-            $queue    = $queue    ?? $this->askWithDefault('Queue name', 'default');
-            $workers  = $workers  ?? $this->askWithDefault('Number of workers', '1');
-            $cooldown = $cooldown  ?? $this->askWithDefault('Cooldown (seconds)', '3600');
-            $stopWait = $stopWait  ?? $this->askWithDefault('Stop wait (seconds)', '60');
+            $name = $name ?? $this->askWithDefault('Worker name', $env);
+            $queue = $queue ?? $this->askWithDefault('Queue name', 'default');
+            $workers = $workers ?? $this->askWithDefault('Number of workers', '1');
+            $cooldown = $cooldown ?? $this->askWithDefault('Cooldown (seconds)', '3600');
+            $stopWait = $stopWait ?? $this->askWithDefault('Stop wait (seconds)', '60');
         }
 
-        $workers  = (int) $workers;
+        $workers = (int) $workers;
         $cooldown = (int) $cooldown;
         $stopWait = (int) $stopWait;
 
@@ -83,13 +84,14 @@ BASH;
         if ($result['success']) {
             $this->output->success("✓ Queue worker [{$name}] installed.");
             $this->output->info("→ Run: php console server:queue:start {$env}");
+
             return self::SUCCESS;
         }
 
         $this->output->error("Setup failed (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
-
 
     private function buildSupervisorConfig(string $name, string $appPath, string $queue, int $workers, int $cooldown, int $stopWait): string
     {

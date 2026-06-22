@@ -9,7 +9,7 @@ final class DbCreateCommandTest extends TestCase
 {
     public function testBuildCreateScriptCallsWrapper(): void
     {
-        $command = new DbCreateCommand();
+        $command = new DbCreateCommand;
         $method = new \ReflectionMethod($command, 'buildCreateScript');
         $method->setAccessible(true);
 
@@ -24,7 +24,7 @@ final class DbCreateCommandTest extends TestCase
 
     public function testBuildCreateScriptEscapesShellArguments(): void
     {
-        $command = new DbCreateCommand();
+        $command = new DbCreateCommand;
         $method = new \ReflectionMethod($command, 'buildCreateScript');
         $method->setAccessible(true);
 
@@ -36,7 +36,7 @@ final class DbCreateCommandTest extends TestCase
 
     public function testBuildCreateScriptOutputsConfirmation(): void
     {
-        $command = new DbCreateCommand();
+        $command = new DbCreateCommand;
         $method = new \ReflectionMethod($command, 'buildCreateScript');
         $method->setAccessible(true);
 

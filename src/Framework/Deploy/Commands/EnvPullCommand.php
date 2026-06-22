@@ -33,6 +33,7 @@ class EnvPullCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -50,7 +51,7 @@ class EnvPullCommand extends Command
         $remoteScript = "cat {$appPath}/.env";
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
-        $process = new Process();
+        $process = new Process;
         $envContent = '';
 
         $process
@@ -66,11 +67,12 @@ class EnvPullCommand extends Command
         if ($exitCode !== 0 || empty($envContent)) {
             $this->output->newline();
             $this->output->error("Failed to pull .env from {$env}.");
+
             return self::FAILURE;
         }
 
         // Ensure directory exists
-        if (!is_dir($localDir)) {
+        if (! is_dir($localDir)) {
             mkdir($localDir, 0750, true);
         }
 
@@ -82,5 +84,4 @@ class EnvPullCommand extends Command
 
         return self::SUCCESS;
     }
-
 }

@@ -14,13 +14,13 @@ final class ProvisionerTest extends TestCase
         $this->config = [
             'production' => [
                 'host' => '1.2.3.4',
-                'key'  => '~/.ssh/id_rsa',
+                'key' => '~/.ssh/id_rsa',
                 'path' => '/var/www/app',
                 'repo' => 'git@github.com:user/repo.git',
             ],
             'staging' => [
                 'host' => '5.6.7.8',
-                'key'  => '/home/user/.ssh/staging',
+                'key' => '/home/user/.ssh/staging',
                 'path' => '/var/www/staging',
             ],
         ];
@@ -52,11 +52,11 @@ final class ProvisionerTest extends TestCase
         $method->setAccessible(true);
 
         $params = [
-            'name'         => 'production',
-            'php_version'  => '8.3',
-            'db_name'      => 'myapp',
-            'db_user'      => 'myapp',
-            'timezone'     => 'UTC',
+            'name' => 'production',
+            'php_version' => '8.3',
+            'db_name' => 'myapp',
+            'db_user' => 'myapp',
+            'timezone' => 'UTC',
         ];
 
         $options = $method->invoke($provisioner, $this->config['production'], $params);
@@ -78,11 +78,11 @@ final class ProvisionerTest extends TestCase
         $method->setAccessible(true);
 
         $params = [
-            'name'         => 'production',
-            'php_version'  => '8.3',
-            'db_name'      => 'myapp',
-            'db_user'      => 'myapp',
-            'timezone'     => 'UTC',
+            'name' => 'production',
+            'php_version' => '8.3',
+            'db_name' => 'myapp',
+            'db_user' => 'myapp',
+            'timezone' => 'UTC',
         ];
 
         $options = $method->invoke($provisioner, $this->config['production'], $params);
@@ -97,11 +97,11 @@ final class ProvisionerTest extends TestCase
 
         $env = ['host' => '1.2.3.4', 'key' => '~/.ssh/key', 'path' => '/var/www/app'];
         $params = [
-            'name'         => 'production',
-            'php_version'  => '8.3',
-            'db_name'      => 'myapp',
-            'db_user'      => 'myapp',
-            'timezone'     => 'UTC',
+            'name' => 'production',
+            'php_version' => '8.3',
+            'db_name' => 'myapp',
+            'db_user' => 'myapp',
+            'timezone' => 'UTC',
         ];
 
         $options = $method->invoke($provisioner, $env, $params);
@@ -116,16 +116,16 @@ final class ProvisionerTest extends TestCase
 
         $env = [
             'host' => '1.2.3.4',
-            'key'  => '~/.ssh/key',
+            'key' => '~/.ssh/key',
             'path' => '/var/www/app',
             'repo' => 'git@gitlab.com:group/project.git',
         ];
         $params = [
-            'name'         => 'production',
-            'php_version'  => '8.3',
-            'db_name'      => 'myapp',
-            'db_user'      => 'myapp',
-            'timezone'     => 'UTC',
+            'name' => 'production',
+            'php_version' => '8.3',
+            'db_name' => 'myapp',
+            'db_user' => 'myapp',
+            'timezone' => 'UTC',
         ];
 
         $options = $method->invoke($provisioner, $env, $params);

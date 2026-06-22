@@ -18,19 +18,21 @@ trait HasDeployConfigTrait
     {
         $configPath = DIR_ROOT . '/config/deploy.php';
 
-        if (!file_exists($configPath)) {
+        if (! file_exists($configPath)) {
             $this->output->error('Deploy config not found.');
             $this->output->newline();
             $this->output->line('Run: php console create:config --support=deploy');
+
             return null;
         }
 
         $raw = require $configPath;
 
-        if (!isset($raw['deploy']) || !is_array($raw['deploy'])) {
+        if (! isset($raw['deploy']) || ! is_array($raw['deploy'])) {
             $this->output->error('Invalid config/deploy.php: missing "deploy" key.');
             $this->output->newline();
             $this->output->line('Run: php console create:config --support=deploy');
+
             return null;
         }
 
@@ -56,6 +58,7 @@ trait HasDeployConfigTrait
     {
         if (strpos($key, '~') === 0) {
             $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
+
             return str_replace('~', $home, $key);
         }
 
@@ -84,7 +87,7 @@ trait HasDeployConfigTrait
     private function buildSshCommand(array $envConfig, string $remoteScript): array
     {
         $host = $envConfig['host'];
-        $key  = $this->resolveKeyPath($envConfig['key']);
+        $key = $this->resolveKeyPath($envConfig['key']);
 
         return [
             'ssh',
@@ -104,7 +107,7 @@ trait HasDeployConfigTrait
      */
     private function executeRemote(array $command, int $timeout = 300): array
     {
-        $process = new Process();
+        $process = new Process;
         $output = '';
 
         $process
@@ -118,9 +121,9 @@ trait HasDeployConfigTrait
         $exitCode = $process->getExitCode() ?? -1;
 
         return [
-            'success'   => $exitCode === 0,
+            'success' => $exitCode === 0,
             'exit_code' => $exitCode,
-            'output'    => $output,
+            'output' => $output,
         ];
     }
 
@@ -164,6 +167,7 @@ trait HasDeployConfigTrait
     private function ask(string $question): string
     {
         $this->output->line("  {$question}");
+
         return trim((string) $this->prompt->ask("  › "));
     }
 
@@ -171,6 +175,7 @@ trait HasDeployConfigTrait
     {
         $this->output->line("  {$question} [{$default}]");
         $input = trim((string) $this->prompt->ask("  › "));
+
         return $input !== '' ? $input : $default;
     }
 
@@ -185,6 +190,7 @@ trait HasDeployConfigTrait
         if ($input === '') {
             return $default;
         }
+
         return $input;
     }
 
@@ -196,6 +202,7 @@ trait HasDeployConfigTrait
         if ($input === '') {
             return $default;
         }
+
         return $input === 'y' || $input === 'yes';
     }
 }

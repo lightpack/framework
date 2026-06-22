@@ -3,8 +3,8 @@
 namespace Lightpack\Deploy\Commands;
 
 use Lightpack\Console\Command;
-use Lightpack\Deploy\HasDeployConfigTrait;
 use Lightpack\Deploy\Deployer;
+use Lightpack\Deploy\HasDeployConfigTrait;
 
 /**
  * Rollback the application to a previous commit on a remote server.
@@ -31,6 +31,7 @@ class RollbackCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -56,6 +57,7 @@ class RollbackCommand extends Command
         } catch (\RuntimeException $e) {
             $this->output->error($e->getMessage());
             $this->output->newline();
+
             return self::FAILURE;
         }
 
@@ -65,11 +67,12 @@ class RollbackCommand extends Command
             $this->output->success("✓ Rolled back {$env} successfully.");
             $this->output->newline();
             $this->output->warning('Note: Rollback does not revert database migrations. Handle those manually if needed.');
+
             return self::SUCCESS;
         }
 
         $this->output->error("Rollback failed (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
-
 }

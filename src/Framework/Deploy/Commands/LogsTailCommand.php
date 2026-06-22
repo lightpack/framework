@@ -29,6 +29,7 @@ class LogsTailCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -53,16 +54,16 @@ class LogsTailCommand extends Command
         // Long timeout for tail -f; user stops with Ctrl+C
         $result = $this->executeRemote($sshCommand, 86400);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->newline();
             $this->output->error("Could not tail {$logFile} (exit code: {$result['exit_code']}).");
             if (trim($result['output'])) {
                 $this->output->line($result['output']);
             }
+
             return self::FAILURE;
         }
 
         return self::SUCCESS;
     }
-
 }

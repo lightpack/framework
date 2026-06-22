@@ -9,7 +9,7 @@ final class SiteRemoveCommandTest extends TestCase
 {
     public function testBuildRemoveScriptDisablesAndRemovesSite(): void
     {
-        $command = new SiteRemoveCommand();
+        $command = new SiteRemoveCommand;
         $method = new \ReflectionMethod($command, 'buildRemoveScript');
         $method->setAccessible(true);
 
@@ -24,7 +24,7 @@ final class SiteRemoveCommandTest extends TestCase
 
     public function testBuildRemoveScriptIgnoresCertbotErrors(): void
     {
-        $command = new SiteRemoveCommand();
+        $command = new SiteRemoveCommand;
         $method = new \ReflectionMethod($command, 'buildRemoveScript');
         $method->setAccessible(true);
 

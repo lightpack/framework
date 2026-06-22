@@ -39,6 +39,7 @@ abstract class FormRequest extends Request
 
             $e = new ValidationException;
             $e->setResponse($response);
+
             throw $e;
         }
 

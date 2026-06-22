@@ -44,7 +44,7 @@ final class HasDeployConfigTraitTest extends TestCase
 
     public function setUp(): void
     {
-        $this->helper = new HasDeployConfigTraitTestDouble();
+        $this->helper = new HasDeployConfigTraitTestDouble;
     }
 
     // ─────────────────────────────────────────────

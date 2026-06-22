@@ -29,6 +29,7 @@ class ServerQueueStatusCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -51,12 +52,12 @@ class ServerQueueStatusCommand extends Command
 
         $this->output->newline();
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->error("Failed to check queue worker [{$name}] status (exit code: {$result['exit_code']}).");
+
             return self::FAILURE;
         }
 
         return self::SUCCESS;
     }
-
 }

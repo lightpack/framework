@@ -33,6 +33,7 @@ class DbBackupCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -44,7 +45,7 @@ class DbBackupCommand extends Command
 
         // Ensure local backup directory exists
         $backupDir = dirname($localPath);
-        if (!is_dir($backupDir)) {
+        if (! is_dir($backupDir)) {
             mkdir($backupDir, 0755, true);
         }
 
@@ -62,12 +63,13 @@ class DbBackupCommand extends Command
         if ($result['success']) {
             $size = $this->formatBytes(filesize($localPath));
             $this->output->success("Backup saved: storage/backups/{$localFile} ({$size})");
+
             return self::SUCCESS;
         }
 
         $this->output->error("Backup failed (exit code: {$result['exit_code']}).");
 
-        if (!empty($result['error'])) {
+        if (! empty($result['error'])) {
             $this->output->newline();
             $this->output->line('Error output:');
             $this->output->line($result['error']);
@@ -128,7 +130,7 @@ BASH;
      */
     private function executeBackup(array $command, string $localPath): array
     {
-        $process = new Process();
+        $process = new Process;
         $errorOutput = '';
         $fileHandle = fopen($localPath, 'w');
 
@@ -152,6 +154,7 @@ BASH;
                 });
         } catch (\Exception $e) {
             fclose($fileHandle);
+
             return [
                 'success' => false,
                 'exit_code' => -1,
@@ -169,5 +172,4 @@ BASH;
             'error' => $errorOutput,
         ];
     }
-
 }

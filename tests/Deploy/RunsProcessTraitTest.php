@@ -24,7 +24,7 @@ final class RunsProcessTraitTest extends TestCase
 
     public function setUp(): void
     {
-        $this->helper = new RunsProcessTraitTestDouble();
+        $this->helper = new RunsProcessTraitTestDouble;
     }
 
     public function testResolveKeyPathExpandsTilde(): void

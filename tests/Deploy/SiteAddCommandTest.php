@@ -9,7 +9,7 @@ final class SiteAddCommandTest extends TestCase
 {
     public function testBuildSiteScriptContainsNginxConfig(): void
     {
-        $command = new SiteAddCommand();
+        $command = new SiteAddCommand;
         $method = new \ReflectionMethod($command, 'buildSiteScript');
         $method->setAccessible(true);
 
@@ -28,7 +28,7 @@ final class SiteAddCommandTest extends TestCase
 
     public function testBuildSiteScriptDetectsPhpFpmSocket(): void
     {
-        $command = new SiteAddCommand();
+        $command = new SiteAddCommand;
         $method = new \ReflectionMethod($command, 'buildSiteScript');
         $method->setAccessible(true);
 
@@ -40,7 +40,7 @@ final class SiteAddCommandTest extends TestCase
 
     public function testBuildSiteScriptUsesWrapperCommands(): void
     {
-        $command = new SiteAddCommand();
+        $command = new SiteAddCommand;
         $method = new \ReflectionMethod($command, 'buildSiteScript');
         $method->setAccessible(true);
 
@@ -53,7 +53,7 @@ final class SiteAddCommandTest extends TestCase
 
     public function testBuildSiteScriptEscapesDomainInBash(): void
     {
-        $command = new SiteAddCommand();
+        $command = new SiteAddCommand;
         $method = new \ReflectionMethod($command, 'buildSiteScript');
         $method->setAccessible(true);
 

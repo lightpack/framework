@@ -9,7 +9,7 @@ final class DbRestoreCommandTest extends TestCase
 {
     public function testBuildRestoreScriptReadsEnvAndImports(): void
     {
-        $command = new DbRestoreCommand();
+        $command = new DbRestoreCommand;
         $method = new \ReflectionMethod($command, 'buildRestoreScript');
         $method->setAccessible(true);
 
@@ -25,7 +25,7 @@ final class DbRestoreCommandTest extends TestCase
 
     public function testBuildRestoreScriptUsesMysqlPwdEnvVar(): void
     {
-        $command = new DbRestoreCommand();
+        $command = new DbRestoreCommand;
         $method = new \ReflectionMethod($command, 'buildRestoreScript');
         $method->setAccessible(true);
 
@@ -37,7 +37,7 @@ final class DbRestoreCommandTest extends TestCase
 
     public function testBuildRestoreScriptHandlesMissingEnv(): void
     {
-        $command = new DbRestoreCommand();
+        $command = new DbRestoreCommand;
         $method = new \ReflectionMethod($command, 'buildRestoreScript');
         $method->setAccessible(true);
 
@@ -49,7 +49,7 @@ final class DbRestoreCommandTest extends TestCase
 
     public function testBuildRestoreScriptOutputsSuccess(): void
     {
-        $command = new DbRestoreCommand();
+        $command = new DbRestoreCommand;
         $method = new \ReflectionMethod($command, 'buildRestoreScript');
         $method->setAccessible(true);
 
@@ -57,5 +57,4 @@ final class DbRestoreCommandTest extends TestCase
 
         $this->assertStringContainsString('Database restored successfully', $script);
     }
-
 }

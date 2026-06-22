@@ -17,6 +17,7 @@ trait RunsProcessTrait
     {
         if (str_starts_with($key, '~')) {
             $home = $_SERVER['HOME'] ?? getenv('HOME') ?? getenv('USERPROFILE') ?? '';
+
             return str_replace('~', $home, $key);
         }
 
@@ -31,7 +32,7 @@ trait RunsProcessTrait
      */
     private function execute(string|array $command, int $timeout = 300): array
     {
-        $process = new Process();
+        $process = new Process;
         $output = '';
 
         $process
@@ -45,9 +46,9 @@ trait RunsProcessTrait
         $exitCode = $process->getExitCode() ?? -1;
 
         return [
-            'success'   => $exitCode === 0,
+            'success' => $exitCode === 0,
             'exit_code' => $exitCode,
-            'output'    => $output,
+            'output' => $output,
         ];
     }
 }

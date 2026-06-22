@@ -29,6 +29,7 @@ class ServerQueueStartCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -52,11 +53,12 @@ class ServerQueueStartCommand extends Command
 
         if ($result['success']) {
             $this->output->success("✓ Queue worker [{$name}] started on {$env}.");
+
             return self::SUCCESS;
         }
 
         $this->output->error("Failed to start queue worker [{$name}] (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
-
 }

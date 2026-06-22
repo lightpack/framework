@@ -31,6 +31,7 @@ class ServerQueueLogsTailCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -63,15 +64,15 @@ fi
 BASH;
 
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
-        $result     = $this->executeRemote($sshCommand, 86400);
+        $result = $this->executeRemote($sshCommand, 86400);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->newline();
             $this->output->error("Could not tail queue worker [{$name}] logs (exit code: {$result['exit_code']}).");
+
             return self::FAILURE;
         }
 
         return self::SUCCESS;
     }
-
 }

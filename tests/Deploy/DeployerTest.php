@@ -13,16 +13,16 @@ final class DeployerTest extends TestCase
     {
         $this->config = [
             'production' => [
-                'host'   => '1.2.3.4',
-                'path'   => '/var/www/app',
-                'repo'   => 'git@github.com:user/repo.git',
+                'host' => '1.2.3.4',
+                'path' => '/var/www/app',
+                'repo' => 'git@github.com:user/repo.git',
                 'branch' => 'main',
-                'key'    => '~/.ssh/id_rsa',
+                'key' => '~/.ssh/id_rsa',
             ],
             'staging' => [
-                'host'   => '5.6.7.8',
-                'path'   => '/var/www/staging',
-                'key'    => '/home/user/.ssh/staging',
+                'host' => '5.6.7.8',
+                'path' => '/var/www/staging',
+                'key' => '/home/user/.ssh/staging',
             ],
         ];
     }
@@ -100,9 +100,9 @@ final class DeployerTest extends TestCase
         $method->setAccessible(true);
 
         $env = [
-            'path'   => '/var/www/my app', // space in path
+            'path' => '/var/www/my app', // space in path
             'branch' => 'feature/test',
-            'repo'   => null,
+            'repo' => null,
         ];
 
         $script = $method->invoke($deployer, $env);

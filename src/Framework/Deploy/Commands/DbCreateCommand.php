@@ -37,6 +37,7 @@ class DbCreateCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -51,15 +52,17 @@ class DbCreateCommand extends Command
             $dbName = $this->ask('Database name');
         }
 
-        if (empty($dbName) || !preg_match('/^[a-zA-Z0-9_]+$/', $dbName)) {
+        if (empty($dbName) || ! preg_match('/^[a-zA-Z0-9_]+$/', $dbName)) {
             $this->output->error('Database name may only contain letters, numbers, and underscores.');
+
             return self::FAILURE;
         }
 
         $dbUser = $dbUser ?? $this->askWithDefault('Database user', $dbName);
 
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $dbUser)) {
+        if (! preg_match('/^[a-zA-Z0-9_]+$/', $dbUser)) {
             $this->output->error('Username may only contain letters, numbers, and underscores.');
+
             return self::FAILURE;
         }
 
@@ -74,8 +77,9 @@ class DbCreateCommand extends Command
 
         $this->output->newline();
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->error("Failed to create database (exit code: {$result['exit_code']}).");
+
             return self::FAILURE;
         }
 
@@ -99,7 +103,6 @@ class DbCreateCommand extends Command
      * lp-mysql-create is installed by provisioning and runs MySQL via root
      * socket auth — no password ever needs to leave the local machine.
      */
-
     private function buildCreateScript(string $dbName, string $dbUser, string $dbPass): string
     {
         $nameArg = escapeshellarg($dbName);

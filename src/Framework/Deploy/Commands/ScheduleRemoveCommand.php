@@ -31,6 +31,7 @@ class ScheduleRemoveCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -62,10 +63,12 @@ BASH;
 
         if ($result['success']) {
             $this->output->success('Scheduler removed.');
+
             return self::SUCCESS;
         }
 
         $this->output->error("Failed to remove scheduler (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
 }

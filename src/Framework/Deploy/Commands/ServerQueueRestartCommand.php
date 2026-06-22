@@ -29,6 +29,7 @@ class ServerQueueRestartCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -53,11 +54,12 @@ class ServerQueueRestartCommand extends Command
 
         if ($result['success']) {
             $this->output->success("✓ Queue worker [{$name}] restarted on {$env}.");
+
             return self::SUCCESS;
         }
 
         $this->output->error("Failed to restart queue worker [{$name}] (exit code: {$result['exit_code']}).");
+
         return self::FAILURE;
     }
-
 }

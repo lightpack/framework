@@ -28,6 +28,7 @@ class ScheduleStatusCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -57,8 +58,9 @@ BASH;
 
         $this->output->newline();
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->output->error("Failed to check status (exit code: {$result['exit_code']}).");
+
             return self::FAILURE;
         }
 

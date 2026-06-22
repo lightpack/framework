@@ -29,6 +29,7 @@ class ServerQueueListCommand extends Command
 
         if ($envConfig === null) {
             $this->printEnvironmentError($config, $env);
+
             return self::FAILURE;
         }
 
@@ -46,7 +47,7 @@ BASH;
 
         $sshCommand = $this->buildSshCommand($envConfig, $remoteScript);
 
-        $process = new Process();
+        $process = new Process;
         $output = '';
         $process->setTimeout(30)->execute($sshCommand, function (string $line) use (&$output) {
             $output .= $line;
@@ -56,6 +57,7 @@ BASH;
 
         if ($process->failed()) {
             $this->output->error("Failed to list queue workers (exit code: {$process->getExitCode()}).");
+
             return self::FAILURE;
         }
 
@@ -63,13 +65,14 @@ BASH;
 
         if (empty($output) || $output === 'No queue workers found.') {
             $this->output->line('No queue workers found.');
+
             return self::SUCCESS;
         }
 
         $workers = [];
         foreach (explode("\n", $output) as $line) {
             $line = trim($line);
-            if (!str_starts_with($line, 'lightpack-')) {
+            if (! str_starts_with($line, 'lightpack-')) {
                 continue;
             }
             $parts = preg_split('/\s+/', $line, 3);
@@ -80,7 +83,7 @@ BASH;
             $name = substr($name, 10); // remove "lightpack-" prefix -> bye
             $status = $parts[1]; // RUNNING, STOPPED, etc.
 
-            if (!isset($workers[$name])) {
+            if (! isset($workers[$name])) {
                 $workers[$name] = ['status' => $status, 'processes' => 0];
             }
             $workers[$name]['processes']++;
@@ -91,6 +94,7 @@ BASH;
 
         if (empty($workers)) {
             $this->output->line('No queue workers found.');
+
             return self::SUCCESS;
         }
 
