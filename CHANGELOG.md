@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0] - 2026-06-22
+
+### Features
+
+- **Deploy Suite**. Lightpack now ships with everything you need to go from a fresh Ubuntu server to a running application right from your local development machine. Provision the server once, then deploy, rollback, and manage your app from the console on your laptop.
+- You get: one-command server setup (nginx, PHP-FPM, MySQL, Redis, firewall, SSL), deployments that pull code, sync secrets, run migrations, and reload services, instant rollbacks to any previous commit, remote database backups and restores, queue workers managed via Supervisor, cron scheduling, and the ability to run arbitrary commands on your server.
+
 ## [0.9.8] - 2026-05-26
 
 ### Fixes & Refactors
