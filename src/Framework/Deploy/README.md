@@ -32,7 +32,7 @@ Each environment supports these options:
 | `host` | Yes | — | Server IP or hostname |
 | `key` | Yes | — | Local SSH private key path (supports `~`) |
 | `path` | Yes | — | Absolute app path on the server |
-| `repo` | No | — | Git repository URL. Omit if the server already has the code cloned |
+| `repo` | Yes | — | Git repository URL |
 | `branch` | No | `main` | Git branch to deploy |
 | `hooks` | No | `[]` | Commands to run after each deploy |
 
