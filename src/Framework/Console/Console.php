@@ -28,6 +28,30 @@ use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ServeCommand;
 use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\WatchCommand;
+use Lightpack\Deploy\Commands\DbBackupCommand;
+use Lightpack\Deploy\Commands\DbCreateCommand;
+use Lightpack\Deploy\Commands\DbRestoreCommand;
+use Lightpack\Deploy\Commands\DeployCommand;
+use Lightpack\Deploy\Commands\EnvPullCommand;
+use Lightpack\Deploy\Commands\LogsTailCommand;
+use Lightpack\Deploy\Commands\LogsViewCommand;
+use Lightpack\Deploy\Commands\ProvisionCommand;
+use Lightpack\Deploy\Commands\RollbackCommand;
+use Lightpack\Deploy\Commands\ScheduleRemoveCommand;
+use Lightpack\Deploy\Commands\ScheduleSetupCommand;
+use Lightpack\Deploy\Commands\ScheduleStatusCommand;
+use Lightpack\Deploy\Commands\ServerQueueListCommand;
+use Lightpack\Deploy\Commands\ServerQueueLogsTailCommand;
+use Lightpack\Deploy\Commands\ServerQueueLogsViewCommand;
+use Lightpack\Deploy\Commands\ServerQueueRestartCommand;
+use Lightpack\Deploy\Commands\ServerQueueSetupCommand;
+use Lightpack\Deploy\Commands\ServerQueueStartCommand;
+use Lightpack\Deploy\Commands\ServerQueueStatusCommand;
+use Lightpack\Deploy\Commands\ServerQueueStopCommand;
+use Lightpack\Deploy\Commands\ServerRunCommand;
+use Lightpack\Deploy\Commands\SiteAddCommand;
+use Lightpack\Deploy\Commands\SiteRemoveCommand;
+use Lightpack\Deploy\Commands\SslCommand;
 
 class Console
 {
@@ -53,6 +77,30 @@ class Console
         'create:config' => CreateConfig::class,
         'db:seed' => SeedCommand::class,
         'schedule:events' => ScheduleEvents::class,
+        'app:deploy' => DeployCommand::class,
+        'app:rollback' => RollbackCommand::class,
+        'server:provision' => ProvisionCommand::class,
+        'server:site:add' => SiteAddCommand::class,
+        'server:site:remove' => SiteRemoveCommand::class,
+        'server:site:ssl' => SslCommand::class,
+        'server:logs:view' => LogsViewCommand::class,
+        'server:logs:tail' => LogsTailCommand::class,
+        'server:queue:setup' => ServerQueueSetupCommand::class,
+        'server:queue:list' => ServerQueueListCommand::class,
+        'server:queue:start' => ServerQueueStartCommand::class,
+        'server:queue:stop' => ServerQueueStopCommand::class,
+        'server:queue:restart' => ServerQueueRestartCommand::class,
+        'server:queue:status' => ServerQueueStatusCommand::class,
+        'server:queue:logs:tail' => ServerQueueLogsTailCommand::class,
+        'server:queue:logs:view' => ServerQueueLogsViewCommand::class,
+        'server:schedule:setup' => ScheduleSetupCommand::class,
+        'server:schedule:remove' => ScheduleRemoveCommand::class,
+        'server:schedule:status' => ScheduleStatusCommand::class,
+        'db:backup' => DbBackupCommand::class,
+        'db:restore' => DbRestoreCommand::class,
+        'db:create' => DbCreateCommand::class,
+        'server:env:pull' => EnvPullCommand::class,
+        'server:run' => ServerRunCommand::class,
         'app:key' => GenerateAppKey::class,
         'app:serve' => ServeCommand::class,
         'watch' => WatchCommand::class,
