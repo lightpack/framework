@@ -34,7 +34,7 @@ Each environment supports these options:
 | `path` | Yes | — | Absolute app path on the server |
 | `repo` | Yes | — | Git repository URL |
 | `branch` | No | `main` | Git branch to deploy |
-| `hooks` | No | `[]` | Commands to run after each deploy |
+| `hooks` | No | `[]` | Commands to run after each deploy (see [Deploy Hooks](#deploy-hooks) below) |
 
 ### 2. Prepare Environment File
 
@@ -107,6 +107,23 @@ Go back further with `--steps=3`.
 
 ---
 
+## Deploy Hooks
+
+Hooks run after code pull, composer install, and migrations — but **before** PHP-FPM reloads. If any hook fails, the deploy stops and PHP-FPM is **not** reloaded.
+
+```php
+'hooks' => [
+    'php console cache:clear',
+    'sudo lp-supervisorctl restart lightpack-production:*',
+],
+```
+
+- Runs as `deploy` user in the app directory
+- Hooks execute in order
+- `sudo` works for whitelisted commands (service reloads, supervisor, certbot, Nginx site management)
+
+---
+
 ## Queue Workers
 
 ### Setup (Once)
@@ -156,21 +173,15 @@ php console server:queue:logs:tail production         # live stream (Ctrl+C to s
 
 ### Restart Workers on Deploy
 
-Add a `hooks` array to your environment config in `config/deploy.php`:
+Add this hook to your deploy config to restart queue workers after every deployment:
 
 ```php
-'production' => [
-    'host'   => '1.2.3.4',
-    'key'    => '~/.ssh/id_rsa',
-    'path'   => '/var/www/lightpack',
-    'repo'   => 'git@github.com:you/app.git',
-    'branch' => 'main',
-    'hooks'  => [
-        'php console cache:clear',
-        'sudo lp-supervisorctl restart lightpack-production:*',
-    ],
+'hooks' => [
+    'sudo lp-supervisorctl restart lightpack-production:*',
 ],
 ```
+
+See [Deploy Hooks](#deploy-hooks) for the full explanation.
 
 ### Local Development
 
