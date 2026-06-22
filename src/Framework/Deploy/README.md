@@ -11,7 +11,7 @@ Deploy and manage Lightpack applications on a remote Ubuntu server. Provision on
 - A fresh Ubuntu 22.04 or 24.04 server (any VPS provider)
 - Root or sudo SSH access for the initial provision
 - An SSH key pair on your local machine (`~/.ssh/id_rsa` or `~/.ssh/id_ed25519`)
-- Your Lightpack application code in a Git repository
+- Your Lightpack application code in a Git repository (optional — the server can use an existing clone)
 
 ---
 
@@ -48,11 +48,15 @@ Type `yes` to confirm. Takes 5-15 minutes. When done, root SSH is disabled. Only
 
 ### 4. Add Deploy Key to GitHub
 
+After provisioning, the deploy user's SSH public key is printed in the terminal. Copy it.
+
+Alternatively, SSH to the server and show it:
+
 ```bash
-php console server:key:show production
+ssh deploy@your-server-ip "cat ~/.ssh/id_ed25519.pub"
 ```
 
-Copy the key. In your GitHub repo: **Settings > Deploy keys > Add deploy key**. Do **not** allow write access.
+In your GitHub repo: **Settings > Deploy keys > Add deploy key**. Do **not** allow write access.
 
 ### 5. Deploy
 
@@ -69,6 +73,8 @@ Point your DNS A record to the server IP, then:
 ```bash
 php console server:site:add production --domain=yourdomain.com
 ```
+
+Omit `--domain` to be prompted interactively.
 
 ### 7. Enable HTTPS
 
@@ -139,12 +145,19 @@ php console server:queue:logs:tail production         # live stream (Ctrl+C to s
 
 ### Restart Workers on Deploy
 
-Add to your deploy config `app.hooks`:
+Add a `hooks` array to your environment config in `config/deploy.php`:
 
 ```php
-'hooks' => [
-    'php console cache:clear',
-    'sudo lp-supervisorctl restart lightpack-production:*',
+'production' => [
+    'host'   => '1.2.3.4',
+    'key'    => '~/.ssh/id_rsa',
+    'path'   => '/var/www/lightpack',
+    'repo'   => 'git@github.com:you/app.git',
+    'branch' => 'main',
+    'hooks'  => [
+        'php console cache:clear',
+        'sudo lp-supervisorctl restart lightpack-production:*',
+    ],
 ],
 ```
 
@@ -255,14 +268,18 @@ Replace `8.3` with your PHP version.
 Provision once, then add separate environments in `config/deploy.php`:
 
 ```php
-'environments' => [
+'deploy' => [
     'blog' => [
         'host' => '1.2.3.4',
-        // ...
+        'path' => '/var/www/blog',
+        'repo' => 'git@github.com:you/blog.git',
+        'branch' => 'main',
     ],
     'shop' => [
         'host' => '1.2.3.4',
-        // ...
+        'path' => '/var/www/shop',
+        'repo' => 'git@github.com:you/shop.git',
+        'branch' => 'main',
     ],
 ],
 ```
@@ -351,9 +368,7 @@ php console server:queue:setup shop --name=shop-worker
 
 | Command | Description |
 |---|---|
-| `php console server:run <env> --cmd="..."` | Run any command on the server |
-| `php console server:key:show <env>` | Show deploy user's SSH public key |
-| `php console server:config <env> [--upload] [--memory] [--timeout]` | Update PHP/Nginx settings |
+| `php console server:run <env> --cmd="..."` | Run any command on the server (useful for debugging: `migrate:status`, `cache:clear`, etc.) |
 
 ---
 
