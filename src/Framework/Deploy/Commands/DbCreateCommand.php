@@ -83,16 +83,24 @@ class DbCreateCommand extends Command
             return self::FAILURE;
         }
 
-        $this->output->success('✓ Database created.');
-        $this->output->newline();
-        $this->output->info('→ Credentials — save these now, they will not be shown again:');
-        $this->output->newline();
-        $this->output->line("  DB_HOST: 127.0.0.1");
-        $this->output->line("  DB_NAME: {$dbName}");
-        $this->output->line("  DB_USER: {$dbUser}");
-        $this->output->line("  DB_PSWD: {$dbPass}");
-        $this->output->newline();
-        $this->output->warning("Add these to your .env.{$env} file before deploying.");
+        $isExistingUser = strpos($result['output'], 'USER_EXISTS:') !== false;
+
+        if ($isExistingUser) {
+            $this->output->warning("→ User '{$dbUser}' already exists — password is unchanged.");
+            $this->output->newline();
+            $this->output->success('✓ Database created, existing user granted access.');
+        } else {
+            $this->output->success('✓ Database created.');
+            $this->output->newline();
+            $this->output->info('→ Credentials — save these now, they will not be shown again:');
+            $this->output->newline();
+            $this->output->line("  DB_HOST: 127.0.0.1");
+            $this->output->line("  DB_NAME: {$dbName}");
+            $this->output->line("  DB_USER: {$dbUser}");
+            $this->output->line("  DB_PSWD: {$dbPass}");
+            $this->output->newline();
+            $this->output->warning("Add these to your .env.{$env} file before deploying.");
+        }
 
         return self::SUCCESS;
     }

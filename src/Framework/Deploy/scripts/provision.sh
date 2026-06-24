@@ -287,12 +287,20 @@ if ! [[ "$dbuser" =~ ^[a-zA-Z0-9_]+$ ]]; then
     echo "Invalid username: only alphanumeric and underscores allowed" >&2; exit 1
 fi
 
+USER_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM mysql.user WHERE user='${dbuser}' AND host='localhost'")
+
 mysql <<ENDSQL
 CREATE DATABASE IF NOT EXISTS \`${dbname}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${dbuser}'@'localhost' IDENTIFIED BY '${dbpass}';
 GRANT ALL PRIVILEGES ON \`${dbname}\`.* TO '${dbuser}'@'localhost';
 FLUSH PRIVILEGES;
 ENDSQL
+
+if [ "$USER_EXISTS" -eq 1 ]; then
+    echo "USER_EXISTS:${dbuser}"
+else
+    echo "USER_CREATED:${dbuser}"
+fi
 WSCRIPT
 
 chmod 0750 /usr/local/sbin/lp-nginx-write \
@@ -661,6 +669,9 @@ innodb_log_file_size = 64M
 innodb_file_per_table = 1
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
+
+; Hide databases the user has no privileges on
+skip-show-database
 EOF
 
     systemctl restart mysql
