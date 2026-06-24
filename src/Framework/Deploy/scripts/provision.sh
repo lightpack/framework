@@ -351,8 +351,13 @@ fi
 
 mysql -e "FLUSH PRIVILEGES;"
 
-if [ "$DB_DROPPED" -eq 1 ]; then echo "DB_DROPPED:${dbname}"; else echo "DB_NOT_FOUND:${dbname}"; fi
-if [ "$USER_DROPPED" -eq 1 ]; then echo "USER_DROPPED:${dbuser}"; else echo "USER_NOT_FOUND:${dbuser}"; fi
+if [ -n "$dbname" ]; then
+    if [ "$DB_DROPPED" -eq 1 ]; then echo "DB_DROPPED:${dbname}"; else echo "DB_NOT_FOUND:${dbname}"; fi
+fi
+
+if [ -n "$dbuser" ]; then
+    if [ "$USER_DROPPED" -eq 1 ]; then echo "USER_DROPPED:${dbuser}"; else echo "USER_NOT_FOUND:${dbuser}"; fi
+fi
 WSCRIPT
 
 chmod 0750 /usr/local/sbin/lp-nginx-write \
