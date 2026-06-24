@@ -77,7 +77,7 @@ class DbAdminCommand extends Command
 
         $this->output->success('✓ phpMyAdmin is ready.');
         $this->output->newline();
-        $this->output->info("→ Tunnel open — http://localhost:{$port}");
+        $this->output->info("→ Tunnel open — http://127.0.0.1:{$port}");
         $this->output->line('  Press Ctrl+C to close');
         $this->output->newline();
 
