@@ -64,7 +64,7 @@ class DbAdminCommand extends Command
         $this->output->newline();
 
         $result = $this->executeRemote(
-            $this->buildSshCommand($envConfig, $this->buildSetupScript($port)),
+            $this->buildSshCommand($envConfig, $this->buildSetupScript($port, $env)),
             120
         );
 
@@ -129,7 +129,7 @@ class DbAdminCommand extends Command
      *                      $PMA_ROOT and $PHP_FPM_SOCK inside the double-quoted
      *                      sed arguments, replacing the ALLCAPS placeholders.
      */
-    private function buildSetupScript(int $port): string
+    private function buildSetupScript(int $port, string $env): string
     {
         return <<<BASH
 set -e
@@ -195,7 +195,7 @@ server {
         fastcgi_pass  unix:__SOCK__;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-        fastcgi_param PHP_VALUE "session.save_path=__DOCROOT__/tmp/sessions\nsession.name=PMASESSION";
+        fastcgi_param PHP_VALUE "session.save_path=__DOCROOT__/tmp/sessions\nsession.name=PMASESSION_{$env}_{$port}";
         include       fastcgi_params;
     }
 

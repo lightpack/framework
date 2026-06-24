@@ -287,6 +287,7 @@ if ! [[ "$dbuser" =~ ^[a-zA-Z0-9_]+$ ]]; then
     echo "Invalid username: only alphanumeric and underscores allowed" >&2; exit 1
 fi
 
+DB_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='${dbname}'")
 USER_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM mysql.user WHERE user='${dbuser}' AND host='localhost'")
 
 mysql <<ENDSQL
@@ -296,11 +297,8 @@ GRANT ALL PRIVILEGES ON \`${dbname}\`.* TO '${dbuser}'@'localhost';
 FLUSH PRIVILEGES;
 ENDSQL
 
-if [ "$USER_EXISTS" -eq 1 ]; then
-    echo "USER_EXISTS:${dbuser}"
-else
-    echo "USER_CREATED:${dbuser}"
-fi
+if [ "$DB_EXISTS" -eq 1 ]; then echo "DB_EXISTS:${dbname}"; else echo "DB_CREATED:${dbname}"; fi
+if [ "$USER_EXISTS" -eq 1 ]; then echo "USER_EXISTS:${dbuser}"; else echo "USER_CREATED:${dbuser}"; fi
 WSCRIPT
 
 chmod 0750 /usr/local/sbin/lp-nginx-write \
