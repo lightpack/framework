@@ -242,12 +242,6 @@ if [ -d /var/www/phpmyadmin ]; then
     rm -rf /var/www/phpmyadmin
     echo "phpMyAdmin removed."
 fi
-
-PHP_FPM_SOCK=$(ls /run/php/php*-fpm.sock 2>/dev/null | sort -V | tail -1)
-if [ -n "$PHP_FPM_SOCK" ]; then
-    PHP_FPM_SERVICE=$(basename "$PHP_FPM_SOCK" .sock)
-    sudo systemctl reload "$PHP_FPM_SERVICE"
-fi
 BASH;
     }
 
