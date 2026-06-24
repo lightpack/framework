@@ -336,7 +336,7 @@ USER_DROPPED=0
 if [ -n "$dbname" ]; then
     DB_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='${dbname}'")
     if [ "$DB_EXISTS" -eq 1 ]; then
-        mysql -e "DROP DATABASE \`${dbname}\`;"
+        mysql -e "SET FOREIGN_KEY_CHECKS = 0; DROP DATABASE \`${dbname}\`; SET FOREIGN_KEY_CHECKS = 1;"
         DB_DROPPED=1
     fi
 fi
