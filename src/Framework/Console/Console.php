@@ -28,7 +28,6 @@ use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ServeCommand;
 use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\WatchCommand;
-use Lightpack\Deploy\Commands\DbAdminCommand;
 use Lightpack\Deploy\Commands\DbBackupCommand;
 use Lightpack\Deploy\Commands\DbCreateCommand;
 use Lightpack\Deploy\Commands\DbDropCommand;
@@ -98,7 +97,6 @@ class Console
         'server:schedule:setup' => ScheduleSetupCommand::class,
         'server:schedule:remove' => ScheduleRemoveCommand::class,
         'server:schedule:status' => ScheduleStatusCommand::class,
-        'db:admin' => DbAdminCommand::class,
         'db:backup' => DbBackupCommand::class,
         'db:restore' => DbRestoreCommand::class,
         'db:create' => DbCreateCommand::class,
