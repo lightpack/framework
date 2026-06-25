@@ -206,6 +206,7 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/bin/supervisorctl update
 
 # MySQL database creation (runs as root via socket auth — no password needed)
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-mysql-create *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /usr/local/sbin/lp-mysql-drop *
 EOF
 
 chmod 0440 "$SUDOERS_FILE"
@@ -287,12 +288,76 @@ if ! [[ "$dbuser" =~ ^[a-zA-Z0-9_]+$ ]]; then
     echo "Invalid username: only alphanumeric and underscores allowed" >&2; exit 1
 fi
 
+DB_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='${dbname}'")
+USER_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM mysql.user WHERE user='${dbuser}' AND host='localhost'")
+
 mysql <<ENDSQL
 CREATE DATABASE IF NOT EXISTS \`${dbname}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${dbuser}'@'localhost' IDENTIFIED BY '${dbpass}';
 GRANT ALL PRIVILEGES ON \`${dbname}\`.* TO '${dbuser}'@'localhost';
 FLUSH PRIVILEGES;
 ENDSQL
+
+if [ "$DB_EXISTS" -eq 1 ]; then echo "DB_EXISTS:${dbname}"; else echo "DB_CREATED:${dbname}"; fi
+if [ "$USER_EXISTS" -eq 1 ]; then echo "USER_EXISTS:${dbuser}"; else echo "USER_CREATED:${dbuser}"; fi
+WSCRIPT
+
+cat > /usr/local/sbin/lp-mysql-drop <<'WSCRIPT'
+#!/bin/bash
+# Drop a MySQL database and/or user. Runs as root via sudo (socket auth).
+# Usage: lp-mysql-drop --db=<dbname> [--user=<dbuser>]
+# At least one of --db or --user must be provided.
+
+dbname=""
+dbuser=""
+
+for arg in "$@"; do
+    case "$arg" in
+        --db=*)   dbname="${arg#--db=}" ;;
+        --user=*) dbuser="${arg#--user=}" ;;
+    esac
+done
+
+if [ -z "$dbname" ] && [ -z "$dbuser" ]; then
+    echo "Usage: lp-mysql-drop --db=<name> [--user=<name>]" >&2; exit 1
+fi
+
+if [ -n "$dbname" ] && ! [[ "$dbname" =~ ^[a-zA-Z0-9_]+$ ]]; then
+    echo "Invalid database name: only alphanumeric and underscores allowed" >&2; exit 1
+fi
+
+if [ -n "$dbuser" ] && ! [[ "$dbuser" =~ ^[a-zA-Z0-9_]+$ ]]; then
+    echo "Invalid username: only alphanumeric and underscores allowed" >&2; exit 1
+fi
+
+DB_DROPPED=0
+USER_DROPPED=0
+
+if [ -n "$dbname" ]; then
+    DB_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name='${dbname}'")
+    if [ "$DB_EXISTS" -eq 1 ]; then
+        mysql -e "SET FOREIGN_KEY_CHECKS = 0; DROP DATABASE \`${dbname}\`; SET FOREIGN_KEY_CHECKS = 1;"
+        DB_DROPPED=1
+    fi
+fi
+
+if [ -n "$dbuser" ]; then
+    USER_EXISTS=$(mysql -BNe "SELECT COUNT(*) FROM mysql.user WHERE user='${dbuser}' AND host='localhost'")
+    if [ "$USER_EXISTS" -eq 1 ]; then
+        mysql -e "DROP USER '${dbuser}'@'localhost';"
+        USER_DROPPED=1
+    fi
+fi
+
+mysql -e "FLUSH PRIVILEGES;"
+
+if [ -n "$dbname" ]; then
+    if [ "$DB_DROPPED" -eq 1 ]; then echo "DB_DROPPED:${dbname}"; else echo "DB_NOT_FOUND:${dbname}"; fi
+fi
+
+if [ -n "$dbuser" ]; then
+    if [ "$USER_DROPPED" -eq 1 ]; then echo "USER_DROPPED:${dbuser}"; else echo "USER_NOT_FOUND:${dbuser}"; fi
+fi
 WSCRIPT
 
 chmod 0750 /usr/local/sbin/lp-nginx-write \
@@ -300,7 +365,8 @@ chmod 0750 /usr/local/sbin/lp-nginx-write \
            /usr/local/sbin/lp-nginx-disable \
            /usr/local/sbin/lp-supervisor-write \
            /usr/local/sbin/lp-supervisorctl \
-           /usr/local/sbin/lp-mysql-create
+           /usr/local/sbin/lp-mysql-create \
+           /usr/local/sbin/lp-mysql-drop
 
 # Setup SSH directory
 mkdir -p "/home/${DEPLOY_USER}/.ssh"
@@ -661,6 +727,9 @@ innodb_log_file_size = 64M
 innodb_file_per_table = 1
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
+
+; Hide databases the user has no privileges on
+skip-show-database
 EOF
 
     systemctl restart mysql

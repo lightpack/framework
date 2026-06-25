@@ -30,6 +30,7 @@ use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\WatchCommand;
 use Lightpack\Deploy\Commands\DbBackupCommand;
 use Lightpack\Deploy\Commands\DbCreateCommand;
+use Lightpack\Deploy\Commands\DbDropCommand;
 use Lightpack\Deploy\Commands\DbRestoreCommand;
 use Lightpack\Deploy\Commands\DeployCommand;
 use Lightpack\Deploy\Commands\EnvPullCommand;
@@ -99,6 +100,7 @@ class Console
         'db:backup' => DbBackupCommand::class,
         'db:restore' => DbRestoreCommand::class,
         'db:create' => DbCreateCommand::class,
+        'db:drop' => DbDropCommand::class,
         'server:env:pull' => EnvPullCommand::class,
         'server:run' => ServerRunCommand::class,
         'app:key' => GenerateAppKey::class,
