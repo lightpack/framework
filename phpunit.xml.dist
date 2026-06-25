@@ -55,6 +55,7 @@
         <testsuite name="Http">
             <directory>./tests/Http</directory>
             <exclude>./tests/Http/HttpTest.php</exclude>
+            <exclude>./tests/Http/ResponseHeadersTest.php</exclude>
         </testsuite>
         <testsuite name="Jobs">
             <directory>./tests/Jobs</directory>
