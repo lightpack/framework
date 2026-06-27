@@ -2,9 +2,9 @@
 
 namespace Lightpack\Console\Commands;
 
-use Lightpack\File\File;
 use Lightpack\Console\Command;
 use Lightpack\Console\Views\FactoryView;
+use Lightpack\File\File;
 
 class CreateFactory extends Command
 {
