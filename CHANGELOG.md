@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.0] - 2026-06-27
+
+### Features
+
+- **Console**: Added `create:factory` command to generate factory classes in `database/factories`. Supports plain `Factory` and `ModelFactory` via `--model` flag.
+
 ## [0.11.0] - 2026-06-25
 
 ### Features
