@@ -7,6 +7,7 @@ use Lightpack\Console\Commands\CreateConfig;
 use Lightpack\Console\Commands\CreateController;
 use Lightpack\Console\Commands\CreateEnv;
 use Lightpack\Console\Commands\CreateEvent;
+use Lightpack\Console\Commands\CreateFactory;
 use Lightpack\Console\Commands\CreateFilter;
 use Lightpack\Console\Commands\CreateJob;
 use Lightpack\Console\Commands\CreateMail;
@@ -68,6 +69,7 @@ class Console
         'create:migration' => CreateMigration::class,
         'create:controller' => CreateController::class,
         'create:transformer' => CreateTransformer::class,
+        'create:factory' => CreateFactory::class,
         'migrate:up' => RunMigrationUp::class,
         'migrate:down' => RunMigrationDown::class,
         'create:request' => CreateRequest::class,
