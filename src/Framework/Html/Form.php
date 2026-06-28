@@ -13,6 +13,14 @@ class Form
     }
 
     /**
+     * Open a form tag with multipart/form-data encoding.
+     */
+    public function openMultipart(string $action = '', string $method = 'POST', array $attrs = [], bool $csrf = true): string
+    {
+        return $this->open($action, $method, array_merge(['enctype' => 'multipart/form-data'], $attrs), $csrf);
+    }
+
+    /**
      * Close a form tag.
      */
     public function close(): string
@@ -173,6 +181,17 @@ class Form
         $html .= '>' . $this->e($text) . '</label>';
 
         return $html;
+    }
+
+    /**
+     * Render a validation error message for a field.
+     * Returns empty string if no error exists.
+     */
+    public function error(string $name): string
+    {
+        $message = \error($this->nameToDot($name));
+
+        return $message !== '' ? $this->e($message) : '';
     }
 
     /**
