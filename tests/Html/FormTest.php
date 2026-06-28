@@ -44,6 +44,11 @@ class FormTest extends TestCase
             'region' => 'de',
             'level' => 'mid',
             'color' => '#ff0000',
+            'password' => 'hunter2',
+            'phone' => '555-0100',
+            'website' => 'https://example.com',
+            'birthdate' => '1990-01-15',
+            'query' => 'search term',
         ]);
         $session->flash('_validation_errors', [
             'name' => 'Name is required.',
@@ -600,6 +605,29 @@ class FormTest extends TestCase
         $this->assertStringNotContainsString('selected', $html);
     }
 
+    public function testSelectNonMultipleWithArrayOldValueSelectsNothing()
+    {
+        // If old data for a non-multiple select is an array (e.g. from a prior multiselect),
+        // it must not cast to "Array" and must not select any option.
+        $driver = new ArrayDriver;
+        $config = $this->createMock(Config::class);
+        $config->method('get')->willReturnCallback(
+            fn (string $key, $default = null) => match ($key) {
+                'session.name' => 'test_session',
+                default => $default,
+            }
+        );
+        $session = new Session($driver, $config);
+        $session->flash('_old_input', ['category' => ['sports', 'tech']]);
+        Container::getInstance()->instance('session', $session);
+        $form = new Form;
+
+        $html = $form->select('category', ['sports' => 'Sports', 'tech' => 'Tech', 'art' => 'Art']);
+
+        $this->assertStringNotContainsString('selected', $html);
+        $this->assertStringNotContainsString('value="Array"', $html);
+    }
+
     public function testSelectResolvesArrayNamesWithOldData()
     {
         $html = $this->form->select('user[role]', ['editor' => 'Editor', 'viewer' => 'Viewer']);
@@ -669,7 +697,8 @@ class FormTest extends TestCase
 
     public function testSelectMultipleMarksMultipleOptions()
     {
-        $html = $this->form->select('interests', ['coding' => 'Coding', 'music' => 'Music', 'art' => 'Art'], ['multiple' => true, 'selected' => ['coding', 'art']]);
+        // Use 'skills' which has no old input data, so the 'selected' attr path is exercised
+        $html = $this->form->select('skills', ['coding' => 'Coding', 'music' => 'Music', 'art' => 'Art'], ['multiple' => true, 'selected' => ['coding', 'art']]);
 
         $this->assertStringContainsString('<option value="coding" selected>Coding</option>', $html);
         $this->assertStringContainsString('<option value="music">Music</option>', $html);
@@ -732,6 +761,17 @@ class FormTest extends TestCase
         $html = $this->form->password('password');
 
         $this->assertStringContainsString('type="password"', $html);
+        $this->assertStringContainsString('name="password"', $html);
+        $this->assertStringNotContainsString('value=', $html);
+    }
+
+    public function testPasswordNeverRepopulatesOldValue()
+    {
+        // old('password') = 'hunter2' from setUp — must never appear in output
+        $html = $this->form->password('password');
+
+        $this->assertStringNotContainsString('value=', $html);
+        $this->assertStringNotContainsString('hunter2', $html);
     }
 
     public function testNumberGeneratesNumberInput()
@@ -747,6 +787,7 @@ class FormTest extends TestCase
         $html = $this->form->tel('phone');
 
         $this->assertStringContainsString('type="tel"', $html);
+        $this->assertStringContainsString('name="phone"', $html);
     }
 
     public function testUrlGeneratesUrlInput()
@@ -754,6 +795,7 @@ class FormTest extends TestCase
         $html = $this->form->url('website');
 
         $this->assertStringContainsString('type="url"', $html);
+        $this->assertStringContainsString('name="website"', $html);
     }
 
     public function testDateGeneratesDateInput()
@@ -761,6 +803,7 @@ class FormTest extends TestCase
         $html = $this->form->date('birthdate');
 
         $this->assertStringContainsString('type="date"', $html);
+        $this->assertStringContainsString('name="birthdate"', $html);
     }
 
     public function testSearchGeneratesSearchInput()
@@ -768,6 +811,7 @@ class FormTest extends TestCase
         $html = $this->form->search('query');
 
         $this->assertStringContainsString('type="search"', $html);
+        $this->assertStringContainsString('name="query"', $html);
     }
 
     public function testColorGeneratesColorInput()
@@ -790,6 +834,38 @@ class FormTest extends TestCase
         $html = $this->form->color('color');
 
         $this->assertStringContainsString('value="#ff0000"', $html);
+    }
+
+    public function testTelUsesOldValue()
+    {
+        $html = $this->form->tel('phone', ['value' => 'override']);
+
+        $this->assertStringContainsString('value="555-0100"', $html);
+        $this->assertStringNotContainsString('value="override"', $html);
+    }
+
+    public function testUrlUsesOldValue()
+    {
+        $html = $this->form->url('website', ['value' => 'override']);
+
+        $this->assertStringContainsString('value="https://example.com"', $html);
+        $this->assertStringNotContainsString('value="override"', $html);
+    }
+
+    public function testDateUsesOldValue()
+    {
+        $html = $this->form->date('birthdate', ['value' => 'override']);
+
+        $this->assertStringContainsString('value="1990-01-15"', $html);
+        $this->assertStringNotContainsString('value="override"', $html);
+    }
+
+    public function testSearchUsesOldValue()
+    {
+        $html = $this->form->search('query', ['value' => 'override']);
+
+        $this->assertStringContainsString('value="search term"', $html);
+        $this->assertStringNotContainsString('value="override"', $html);
     }
 
     // ============================
@@ -858,6 +934,15 @@ class FormTest extends TestCase
         $html = $this->form->checkboxes('newsletter[]', ['yes' => 'Yes', 'no' => 'No']);
 
         $this->assertStringNotContainsString('checked', $html);
+    }
+
+    public function testCheckboxesDoesNotEmitHiddenInputs()
+    {
+        // checkboxes() is a group method — hidden inputs per item corrupt PHP array POST data
+        $html = $this->form->checkboxes('agree[]', ['yes' => 'Yes', 'no' => 'No']);
+
+        $this->assertStringNotContainsString('type="hidden"', $html);
+        $this->assertStringContainsString('type="checkbox"', $html);
     }
 
     public function testRadiosGeneratesMultiple()

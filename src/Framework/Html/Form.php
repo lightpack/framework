@@ -100,16 +100,25 @@ class Form
      */
     public function checkbox(string $name, mixed $value = 1, array $attrs = []): string
     {
+        $hidden = $this->openTag('input', ['type' => 'hidden', 'name' => $name, 'value' => '']);
+
+        return $hidden . $this->checkboxInput($name, $value, $attrs);
+    }
+
+    /**
+     * Render a checkbox input tag only (no hidden, no unchecked sentinel).
+     */
+    protected function checkboxInput(string $name, mixed $value, array $attrs): string
+    {
         $checked = $this->resolveChecked($name, $value, $attrs);
         unset($attrs['checked']);
 
-        $hidden = $this->openTag('input', ['type' => 'hidden', 'name' => $name, 'value' => '']);
         $attrs = array_merge(['type' => 'checkbox', 'name' => $name, 'value' => (string) $value], $attrs);
         if ($checked) {
             $attrs['checked'] = true;
         }
 
-        return $hidden . $this->openTag('input', $attrs);
+        return $this->openTag('input', $attrs);
     }
 
     /**
@@ -180,13 +189,16 @@ class Form
     }
 
     /**
-     * Render a password input.
+     * Render a password input. Never repopulates old values.
      */
     public function password(string $name, array $attrs = []): string
     {
-        $attrs['type'] = 'password';
+        unset($attrs['type'], $attrs['value']);
 
-        return $this->input($name, $attrs);
+        return $this->openTag('input', array_merge([
+            'type' => 'password',
+            'name' => $name,
+        ], $attrs));
     }
 
     /**
@@ -270,12 +282,13 @@ class Form
 
     /**
      * Render a group of checkboxes (bare tags, no wrapper).
+     * Does not emit hidden inputs — use checkbox() for single fields needing unchecked state.
      */
     public function checkboxes(string $name, array $options, array $attrs = []): string
     {
         $html = '';
         foreach ($options as $value => $label) {
-            $html .= $this->checkbox($name, $value, $attrs) . _e((string) $label);
+            $html .= $this->checkboxInput($name, $value, $attrs) . _e((string) $label);
         }
 
         return $html;
@@ -371,8 +384,8 @@ class Form
         $oldValue = old($dotName, "\0", false);
 
         if ($oldValue !== "\0") {
-            if ($multiple && is_array($oldValue)) {
-                return $oldValue;
+            if (is_array($oldValue)) {
+                return $multiple ? $oldValue : null;
             }
 
             return (string) $oldValue;
