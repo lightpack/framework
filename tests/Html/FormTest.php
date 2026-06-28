@@ -590,6 +590,65 @@ class FormTest extends TestCase
         $this->assertStringContainsString('value="Jane"', $html);
     }
 
+    public function testInputWithArrayOldValueRendersEmpty()
+    {
+        // old value is an array for a text field — must not render value="Array"
+        $driver = new ArrayDriver;
+        $config = $this->createMock(Config::class);
+        $config->method('get')->willReturnCallback(
+            fn (string $key, $default = null) => match ($key) {
+                'session.name' => 'test_session',
+                default => $default,
+            }
+        );
+        $session = new Session($driver, $config);
+        $session->flash('_old_input', ['tags' => ['php', 'js']]);
+        Container::getInstance()->instance('session', $session);
+        $form = new Form;
+
+        $html = $form->input('tags');
+
+        $this->assertStringNotContainsString('value="Array"', $html);
+        $this->assertStringContainsString('value=""', $html);
+    }
+
+    public function testTextareaWithArrayOldValueRendersEmpty()
+    {
+        $driver = new ArrayDriver;
+        $config = $this->createMock(Config::class);
+        $config->method('get')->willReturnCallback(
+            fn (string $key, $default = null) => match ($key) {
+                'session.name' => 'test_session',
+                default => $default,
+            }
+        );
+        $session = new Session($driver, $config);
+        $session->flash('_old_input', ['desc' => ['a', 'b']]);
+        Container::getInstance()->instance('session', $session);
+        $form = new Form;
+
+        $html = $form->textarea('desc');
+
+        $this->assertStringNotContainsString('Array', $html);
+        $this->assertStringContainsString('></textarea>', $html);
+    }
+
+    public function testInputNameCannotBeOverriddenByAttrs()
+    {
+        $html = $this->form->input('email', ['name' => 'hack']);
+
+        $this->assertStringContainsString('name="email"', $html);
+        $this->assertStringNotContainsString('name="hack"', $html);
+    }
+
+    public function testSelectNameCannotBeOverriddenByAttrs()
+    {
+        $html = $this->form->select('role', ['a' => 'A'], ['name' => 'hack']);
+
+        $this->assertStringContainsString('name="role"', $html);
+        $this->assertStringNotContainsString('name="hack"', $html);
+    }
+
     public function testCheckboxResolvesArrayNamesWithOldData()
     {
         $html = $this->form->checkbox('user[settings][theme]', 'dark');
@@ -711,6 +770,17 @@ class FormTest extends TestCase
 
         $this->assertStringContainsString('<select name="interests"', $html);
         $this->assertStringContainsString('multiple', $html);
+    }
+
+    public function testSelectWithMultipleFalseDoesNotActAsMultiple()
+    {
+        // ['multiple' => false] must not enable multiple selection or emit the multiple attribute
+        // Use 'skills' which has no old data so the selected attr path is exercised
+        $html = $this->form->select('skills', ['a' => 'A', 'b' => 'B'], ['multiple' => false, 'selected' => 'a']);
+
+        $this->assertStringNotContainsString('multiple', $html);
+        $this->assertStringContainsString('<option value="a" selected>A</option>', $html);
+        $this->assertStringContainsString('<option value="b">B</option>', $html);
     }
 
     public function testSelectMultipleWithEmptyArrayOldValue()

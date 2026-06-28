@@ -39,11 +39,7 @@ class Form
         $value = $this->resolveValue($name, $attrs);
         unset($attrs['value']);
 
-        return $this->openTag('input', array_merge([
-            'type' => $type,
-            'name' => $name,
-            'value' => $value,
-        ], $attrs));
+        return $this->openTag('input', ['type' => $type, 'name' => $name, 'value' => $value] + $attrs);
     }
 
     /**
@@ -54,7 +50,7 @@ class Form
         $value = $this->resolveValue($name, $attrs);
         unset($attrs['value']);
 
-        return $this->tag('textarea', $value, array_merge(['name' => $name], $attrs));
+        return $this->tag('textarea', $value, ['name' => $name] + $attrs);
     }
 
     /**
@@ -62,11 +58,11 @@ class Form
      */
     public function select(string $name, array $options, array $attrs = []): string
     {
-        $isMultiple = isset($attrs['multiple']);
+        $isMultiple = !empty($attrs['multiple']);
         $selectedValue = $this->resolveSelected($name, $attrs, $isMultiple);
         unset($attrs['selected']);
 
-        $html = $this->openTag('select', array_merge(['name' => $name], $attrs));
+        $html = $this->openTag('select', ['name' => $name] + $attrs);
 
         foreach ($options as $val => $label) {
             if (is_array($label)) {
@@ -113,7 +109,7 @@ class Form
         $checked = $this->resolveChecked($name, $value, $attrs);
         unset($attrs['checked']);
 
-        $attrs = array_merge(['type' => 'checkbox', 'name' => $name, 'value' => (string) $value], $attrs);
+        $attrs = ['type' => 'checkbox', 'name' => $name, 'value' => (string) $value] + $attrs;
         if ($checked) {
             $attrs['checked'] = true;
         }
@@ -129,7 +125,7 @@ class Form
         $checked = $this->resolveChecked($name, $value, $attrs);
         unset($attrs['checked']);
 
-        $attrs = array_merge(['type' => 'radio', 'name' => $name, 'value' => (string) $value], $attrs);
+        $attrs = ['type' => 'radio', 'name' => $name, 'value' => (string) $value] + $attrs;
         if ($checked) {
             $attrs['checked'] = true;
         }
@@ -144,10 +140,7 @@ class Form
     {
         unset($attrs['value']);
 
-        return $this->openTag('input', array_merge([
-            'type' => 'file',
-            'name' => $name,
-        ], $attrs));
+        return $this->openTag('input', ['type' => 'file', 'name' => $name] + $attrs);
     }
 
     /**
@@ -157,7 +150,7 @@ class Form
     {
         unset($attrs['value']);
 
-        $merged = array_merge(['type' => 'hidden', 'name' => $name], $attrs);
+        $merged = ['type' => 'hidden', 'name' => $name] + $attrs;
 
         if ($value !== null) {
             $merged['value'] = $value;
@@ -266,10 +259,7 @@ class Form
      */
     public function submit(string $text, array $attrs = []): string
     {
-        return $this->openTag('input', array_merge([
-            'type' => 'submit',
-            'value' => $text,
-        ], $attrs));
+        return $this->openTag('input', ['type' => 'submit', 'value' => $text] + $attrs);
     }
 
     /**
@@ -329,13 +319,13 @@ class Form
     {
         $message = \error($this->nameToDot($name));
 
-        return $message !== '' ? _e($message) : '';
+        return $message ? _e($message) : '';
     }
 
     /**
      * Resolve checked state for checkbox/radio: old() > passed checked attr > false.
      */
-    protected function resolveChecked(string $name, mixed $value, array &$attrs): bool
+    protected function resolveChecked(string $name, mixed $value, array $attrs): bool
     {
         $oldValue = old($this->nameToDot($name), "\0", false);
 
@@ -363,6 +353,10 @@ class Form
         $oldValue = old($dotName, "\0", false);
 
         if ($oldValue !== "\0") {
+            if (is_array($oldValue)) {
+                return '';
+            }
+
             return (string) $oldValue;
         }
 
