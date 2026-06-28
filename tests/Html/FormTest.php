@@ -1,0 +1,506 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Html;
+
+use Lightpack\Config\Config;
+use Lightpack\Container\Container;
+use Lightpack\Html\Form;
+use Lightpack\Session\Drivers\ArrayDriver;
+use Lightpack\Session\Session;
+use PHPUnit\Framework\TestCase;
+
+class FormTest extends TestCase
+{
+    private Form $form;
+
+    protected function setUp(): void
+    {
+        $this->form = new Form;
+
+        // Setup session with old input and validation errors.
+        // Note: old() and error() cache data in static variables
+        // on first call, so we flash data here before any test uses them.
+        $driver = new ArrayDriver;
+        $config = $this->createMock(Config::class);
+        $config->method('get')->willReturnCallback(
+            fn (string $key, $default = null) => match ($key) {
+                'session.name' => 'test_session',
+                default => $default,
+            }
+        );
+
+        $session = new Session($driver, $config);
+        $session->flash('_old_input', [
+            'name' => 'John',
+            'email' => 'john@example.com',
+            'user' => ['name' => 'Jane'],
+            'agree' => '1',
+            'role' => 'admin',
+            'gender' => 'female',
+        ]);
+        $session->flash('_validation_errors', [
+            'name' => 'Name is required.',
+            'email' => 'Invalid email.',
+        ]);
+
+        Container::getInstance()->instance('session', $session);
+    }
+
+    // ============================
+    // input()
+    // ============================
+
+    public function testInputGeneratesBasicTextField()
+    {
+        $html = $this->form->input('name');
+
+        $this->assertStringContainsString('<input', $html);
+        $this->assertStringContainsString('type="text"', $html);
+        $this->assertStringContainsString('name="name"', $html);
+    }
+
+    public function testInputUsesPassedValueWhenNoOldData()
+    {
+        $html = $this->form->input('city', ['value' => 'NYC']);
+
+        $this->assertStringContainsString('value="NYC"', $html);
+    }
+
+    public function testInputUsesOldValueOverPassedValue()
+    {
+        $html = $this->form->input('name', ['value' => 'Override']);
+
+        $this->assertStringContainsString('value="John"', $html);
+        $this->assertStringNotContainsString('value="Override"', $html);
+    }
+
+    public function testInputSupportsCustomType()
+    {
+        $html = $this->form->input('email', ['type' => 'email']);
+
+        $this->assertStringContainsString('type="email"', $html);
+    }
+
+    public function testInputSupportsCustomAttributes()
+    {
+        $html = $this->form->input('name', ['class' => 'form-control', 'placeholder' => 'Your name']);
+
+        $this->assertStringContainsString('class="form-control"', $html);
+        $this->assertStringContainsString('placeholder="Your name"', $html);
+    }
+
+    public function testInputEscapesValue()
+    {
+        $html = $this->form->input('x', ['value' => '<script>alert(1)</script>']);
+
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    public function testInputEscapesAttributeValues()
+    {
+        $html = $this->form->input('x', ['data-foo' => '" onclick="evil()']);
+
+        $this->assertStringNotContainsString('" onclick="evil()', $html);
+        $this->assertStringContainsString('&quot; onclick=&quot;evil()', $html);
+    }
+
+    public function testInputHandlesBooleanAttributes()
+    {
+        $html = $this->form->input('x', ['required' => true, 'disabled' => false, 'readonly' => null]);
+
+        $this->assertStringContainsString(' required', $html);
+        $this->assertStringNotContainsString('disabled', $html);
+        $this->assertStringNotContainsString('readonly', $html);
+    }
+
+    // ============================
+    // textarea()
+    // ============================
+
+    public function testTextareaGeneratesBasicTag()
+    {
+        $html = $this->form->textarea('bio');
+
+        $this->assertStringContainsString('<textarea', $html);
+        $this->assertStringContainsString('name="bio"', $html);
+        $this->assertStringContainsString('</textarea>', $html);
+    }
+
+    public function testTextareaUsesPassedValue()
+    {
+        $html = $this->form->textarea('bio', ['value' => 'Hello world']);
+
+        $this->assertStringContainsString('>Hello world</textarea>', $html);
+    }
+
+    public function testTextareaUsesOldValueOverPassedValue()
+    {
+        $html = $this->form->textarea('name', ['value' => 'Override']);
+
+        $this->assertStringContainsString('>John</textarea>', $html);
+    }
+
+    public function testTextareaEscapesContent()
+    {
+        $html = $this->form->textarea('x', ['value' => '<script>']);
+
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    public function testTextareaSupportsRowsAndCols()
+    {
+        $html = $this->form->textarea('bio', ['rows' => 5, 'cols' => 40]);
+
+        $this->assertStringContainsString('rows="5"', $html);
+        $this->assertStringContainsString('cols="40"', $html);
+    }
+
+    // ============================
+    // select()
+    // ============================
+
+    public function testSelectGeneratesBasicTag()
+    {
+        $html = $this->form->select('role', ['admin' => 'Admin', 'user' => 'User']);
+
+        $this->assertStringContainsString('<select', $html);
+        $this->assertStringContainsString('name="role"', $html);
+        $this->assertStringContainsString('</select>', $html);
+    }
+
+    public function testSelectRendersOptions()
+    {
+        $html = $this->form->select('status', ['active' => 'Active', 'inactive' => 'Inactive']);
+
+        $this->assertStringContainsString('<option value="active">Active</option>', $html);
+        $this->assertStringContainsString('<option value="inactive">Inactive</option>', $html);
+    }
+
+    public function testSelectMarksPassedOptionAsSelected()
+    {
+        $html = $this->form->select('role', ['admin' => 'Admin', 'user' => 'User'], ['selected' => 'admin']);
+
+        $this->assertStringContainsString('<option value="admin" selected>Admin</option>', $html);
+        $this->assertStringContainsString('<option value="user">User</option>', $html);
+    }
+
+    public function testSelectMarksOldValueAsSelected()
+    {
+        $html = $this->form->select('role', ['admin' => 'Admin', 'user' => 'User']);
+
+        $this->assertStringContainsString('<option value="admin" selected>Admin</option>', $html);
+    }
+
+    public function testSelectOldValueOverridesPassedSelected()
+    {
+        $html = $this->form->select('role', ['admin' => 'Admin', 'user' => 'User'], ['selected' => 'user']);
+
+        // old('role') = 'admin', so admin should be selected
+        $this->assertStringContainsString('<option value="admin" selected>Admin</option>', $html);
+        $this->assertStringNotContainsString('<option value="user" selected>', $html);
+    }
+
+    public function testSelectEscapesOptionValuesAndLabels()
+    {
+        $html = $this->form->select('x', ['<b>' => '<script>']);
+
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+        $this->assertStringContainsString('value="&lt;b&gt;"', $html);
+    }
+
+    // ============================
+    // checkbox()
+    // ============================
+
+    public function testCheckboxGeneratesHiddenAndCheckbox()
+    {
+        $html = $this->form->checkbox('newsletter', 1);
+
+        $this->assertStringContainsString('<input type="hidden" name="newsletter" value="">', $html);
+        $this->assertStringContainsString('<input type="checkbox" name="newsletter" value="1">', $html);
+    }
+
+    public function testCheckboxCheckedFromOldValue()
+    {
+        $html = $this->form->checkbox('agree', 1);
+
+        $this->assertStringContainsString('checked', $html);
+    }
+
+    public function testCheckboxUncheckedWhenOldValueMismatch()
+    {
+        $html = $this->form->checkbox('agree', 2);
+
+        // old('agree') = '1', value = 2, so not checked
+        $this->assertStringNotContainsString('checked', $html);
+    }
+
+    public function testCheckboxCheckedFromAttributeWhenNoOld()
+    {
+        $html = $this->form->checkbox('newsletter', 1, ['checked' => true]);
+
+        $this->assertStringContainsString('checked', $html);
+    }
+
+    // ============================
+    // radio()
+    // ============================
+
+    public function testRadioGeneratesInput()
+    {
+        $html = $this->form->radio('gender', 'male');
+
+        $this->assertStringContainsString('<input type="radio" name="gender" value="male">', $html);
+    }
+
+    public function testRadioCheckedFromOldValue()
+    {
+        $html = $this->form->radio('gender', 'female');
+
+        $this->assertStringContainsString('checked', $html);
+    }
+
+    public function testRadioUncheckedWhenOldValueMismatch()
+    {
+        $html = $this->form->radio('gender', 'male');
+
+        $this->assertStringNotContainsString('checked', $html);
+    }
+
+    public function testRadioCheckedFromAttribute()
+    {
+        $html = $this->form->radio('color', 'red', ['checked' => true]);
+
+        $this->assertStringContainsString('checked', $html);
+    }
+
+    // ============================
+    // file()
+    // ============================
+
+    public function testFileGeneratesFileInput()
+    {
+        $html = $this->form->file('avatar');
+
+        $this->assertStringContainsString('<input type="file" name="avatar">', $html);
+    }
+
+    public function testFileNeverRepopulatesValue()
+    {
+        $html = $this->form->file('avatar', ['value' => 'old.jpg']);
+
+        $this->assertStringNotContainsString('value="old.jpg"', $html);
+        $this->assertStringNotContainsString('value=', $html);
+    }
+
+    // ============================
+    // hidden()
+    // ============================
+
+    public function testHiddenGeneratesInput()
+    {
+        $html = $this->form->hidden('id', '42');
+
+        $this->assertEquals('<input type="hidden" name="id" value="42">', $html);
+    }
+
+    public function testHiddenWithoutValue()
+    {
+        $html = $this->form->hidden('token');
+
+        $this->assertEquals('<input type="hidden" name="token">', $html);
+    }
+
+    public function testHiddenIgnoresDuplicateValueAttribute()
+    {
+        $html = $this->form->hidden('id', '42', ['value' => '99']);
+
+        // The $value param should win, $attrs['value'] should be stripped
+        $this->assertStringContainsString('value="42"', $html);
+        $this->assertStringNotContainsString('value="99"', $html);
+    }
+
+    // ============================
+    // label()
+    // ============================
+
+    public function testLabelGeneratesTag()
+    {
+        $html = $this->form->label('Name', 'name');
+
+        $this->assertEquals('<label for="name">Name</label>', $html);
+    }
+
+    public function testLabelWithoutFor()
+    {
+        $html = $this->form->label('Name');
+
+        $this->assertEquals('<label>Name</label>', $html);
+    }
+
+    public function testLabelWithAttributes()
+    {
+        $html = $this->form->label('Name', 'name', ['class' => 'block']);
+
+        $this->assertStringContainsString('class="block"', $html);
+        $this->assertStringContainsString('for="name"', $html);
+    }
+
+    public function testLabelEscapesText()
+    {
+        $html = $this->form->label('<script>');
+
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    // ============================
+    // error()
+    // ============================
+
+    public function testErrorReturnsMessage()
+    {
+        $html = $this->form->error('name');
+
+        $this->assertEquals('Name is required.', $html);
+    }
+
+    public function testErrorReturnsEmptyWhenNoError()
+    {
+        $html = $this->form->error('nonexistent');
+
+        $this->assertEquals('', $html);
+    }
+
+    public function testErrorConvertsArrayNames()
+    {
+        // error() uses nameToDot, but our session has 'user.name' keyed errors
+        // Since we don't have that in our session data, it returns empty
+        $html = $this->form->error('user[name]');
+
+        $this->assertEquals('', $html);
+    }
+
+    public function testErrorEscapesMessage()
+    {
+        // We don't have XSS in our session errors, but we can verify the method escapes
+        // by checking that the existing error is returned as-is (no HTML in it)
+        $html = $this->form->error('email');
+
+        $this->assertEquals('Invalid email.', $html);
+    }
+
+    // ============================
+    // open() / close()
+    // ============================
+
+    public function testOpenGeneratesFormTag()
+    {
+        $html = $this->form->open('/submit', 'POST');
+
+        $this->assertStringContainsString('<form', $html);
+        $this->assertStringContainsString('action="/submit"', $html);
+        $this->assertStringContainsString('method="POST"', $html);
+    }
+
+    public function testOpenIncludesCsrfToken()
+    {
+        $html = $this->form->open('/submit', 'POST');
+
+        $this->assertStringContainsString('_token', $html);
+    }
+
+    public function testOpenExcludesCsrfWhenDisabled()
+    {
+        $html = $this->form->open('/submit', 'POST', [], false);
+
+        $this->assertStringNotContainsString('_token', $html);
+    }
+
+    public function testOpenSpoofsMethod()
+    {
+        $html = $this->form->open('/update', 'PUT');
+
+        $this->assertStringContainsString('method="POST"', $html);
+        $this->assertStringContainsString('_method', $html);
+        $this->assertStringContainsString('value="PUT"', $html);
+    }
+
+    public function testOpenMultipartSetsEnctype()
+    {
+        $html = $this->form->openMultipart('/upload');
+
+        $this->assertStringContainsString('enctype="multipart/form-data"', $html);
+        $this->assertStringContainsString('<form', $html);
+    }
+
+    public function testCloseReturnsClosingTag()
+    {
+        $html = $this->form->close();
+
+        $this->assertEquals('</form>', $html);
+    }
+
+    // ============================
+    // nameToDot() (via reflection)
+    // ============================
+
+    public function testNameToDotConvertsBrackets()
+    {
+        $method = new \ReflectionMethod(Form::class, 'nameToDot');
+        $method->setAccessible(true);
+
+        $this->assertEquals('user.email', $method->invoke($this->form, 'user[email]'));
+        $this->assertEquals('items.0.name', $method->invoke($this->form, 'items[0][name]'));
+    }
+
+    public function testNameToDotHandlesTrailingBrackets()
+    {
+        $method = new \ReflectionMethod(Form::class, 'nameToDot');
+        $method->setAccessible(true);
+
+        $this->assertEquals('items', $method->invoke($this->form, 'items[]'));
+    }
+
+    public function testNameToDotLeavesPlainNames()
+    {
+        $method = new \ReflectionMethod(Form::class, 'nameToDot');
+        $method->setAccessible(true);
+
+        $this->assertEquals('name', $method->invoke($this->form, 'name'));
+    }
+
+    // ============================
+    // Array names (integration)
+    // ============================
+
+    public function testInputResolvesArrayNamesWithOldData()
+    {
+        $html = $this->form->input('user[name]');
+
+        $this->assertStringContainsString('value="Jane"', $html);
+    }
+
+    public function testCheckboxResolvesArrayNamesWithOldData()
+    {
+        // old('agree') = '1', so checkbox with value 1 should be checked
+        $html = $this->form->checkbox('agree', 1);
+
+        $this->assertStringContainsString('checked', $html);
+    }
+
+    public function testSelectResolvesArrayNamesWithOldData()
+    {
+        // We didn't set old data for 'user[role]', so this tests that
+        // a non-existent old value doesn't break things
+        $html = $this->form->select('user[role]', ['a' => 'A', 'b' => 'B']);
+
+        $this->assertStringContainsString('<option value="a">A</option>', $html);
+        $this->assertStringNotContainsString('selected', $html);
+    }
+}

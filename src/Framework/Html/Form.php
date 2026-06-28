@@ -89,10 +89,10 @@ class Form
      */
     public function checkbox(string $name, mixed $value = 1, array $attrs = []): string
     {
-        $oldValue = old($this->nameToDot($name), null, false);
+        $oldValue = old($this->nameToDot($name), "\0", false);
 
         $checked = false;
-        if ($oldValue !== null) {
+        if ($oldValue !== "\0") {
             $checked = (string) $oldValue === (string) $value;
         } elseif (isset($attrs['checked'])) {
             $checked = (bool) $attrs['checked'];
@@ -115,10 +115,10 @@ class Form
      */
     public function radio(string $name, mixed $value, array $attrs = []): string
     {
-        $oldValue = old($this->nameToDot($name), null, false);
+        $oldValue = old($this->nameToDot($name), "\0", false);
 
         $checked = false;
-        if ($oldValue !== null) {
+        if ($oldValue !== "\0") {
             $checked = (string) $oldValue === (string) $value;
         } elseif (isset($attrs['checked'])) {
             $checked = (bool) $attrs['checked'];
@@ -200,9 +200,9 @@ class Form
     protected function resolveValue(string $name, array &$attrs): string
     {
         $dotName = $this->nameToDot($name);
-        $oldValue = old($dotName, null, false);
+        $oldValue = old($dotName, "\0", false);
 
-        if ($oldValue !== null) {
+        if ($oldValue !== "\0") {
             return (string) $oldValue;
         }
 
@@ -221,9 +221,9 @@ class Form
     protected function resolveSelected(string $name, array &$attrs): ?string
     {
         $dotName = $this->nameToDot($name);
-        $oldValue = old($dotName, null, false);
+        $oldValue = old($dotName, "\0", false);
 
-        if ($oldValue !== null) {
+        if ($oldValue !== "\0") {
             return (string) $oldValue;
         }
 
