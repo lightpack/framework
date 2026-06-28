@@ -503,4 +503,193 @@ class FormTest extends TestCase
         $this->assertStringContainsString('<option value="a">A</option>', $html);
         $this->assertStringNotContainsString('selected', $html);
     }
+
+    // ============================
+    // select() optgroups
+    // ============================
+
+    public function testSelectRendersOptgroups()
+    {
+        $html = $this->form->select('region', [
+            'Europe' => ['uk' => 'UK', 'de' => 'Germany'],
+            'Asia' => ['jp' => 'Japan'],
+        ]);
+
+        $this->assertStringContainsString('<optgroup label="Europe">', $html);
+        $this->assertStringContainsString('<option value="uk">UK</option>', $html);
+        $this->assertStringContainsString('<option value="de">Germany</option>', $html);
+        $this->assertStringContainsString('</optgroup>', $html);
+        $this->assertStringContainsString('<optgroup label="Asia">', $html);
+        $this->assertStringContainsString('<option value="jp">Japan</option>', $html);
+    }
+
+    public function testSelectOptgroupMarksSelectedOption()
+    {
+        $html = $this->form->select('region', [
+            'Europe' => ['uk' => 'UK', 'de' => 'Germany'],
+        ], ['selected' => 'de']);
+
+        $this->assertStringContainsString('<option value="de" selected>Germany</option>', $html);
+        $this->assertStringNotContainsString('<option value="uk" selected>', $html);
+    }
+
+    // ============================
+    // select() multiple
+    // ============================
+
+    public function testSelectMultipleMarksMultipleOptions()
+    {
+        $html = $this->form->select('interests', ['coding' => 'Coding', 'music' => 'Music', 'art' => 'Art'], ['multiple' => true, 'selected' => ['coding', 'art']]);
+
+        $this->assertStringContainsString('<option value="coding" selected>Coding</option>', $html);
+        $this->assertStringContainsString('<option value="music">Music</option>', $html);
+        $this->assertStringContainsString('<option value="art" selected>Art</option>', $html);
+    }
+
+    public function testSelectMultipleViaSelectMultipleMethod()
+    {
+        $html = $this->form->selectMultiple('interests', ['a' => 'A', 'b' => 'B']);
+
+        $this->assertStringContainsString('<select name="interests"', $html);
+        $this->assertStringContainsString('multiple', $html);
+    }
+
+    // ============================
+    // Type convenience methods
+    // ============================
+
+    public function testEmailGeneratesEmailInput()
+    {
+        $html = $this->form->email('email');
+
+        $this->assertStringContainsString('type="email"', $html);
+        $this->assertStringContainsString('name="email"', $html);
+    }
+
+    public function testPasswordGeneratesPasswordInput()
+    {
+        $html = $this->form->password('password');
+
+        $this->assertStringContainsString('type="password"', $html);
+    }
+
+    public function testNumberGeneratesNumberInput()
+    {
+        $html = $this->form->number('qty', ['min' => 1]);
+
+        $this->assertStringContainsString('type="number"', $html);
+        $this->assertStringContainsString('min="1"', $html);
+    }
+
+    public function testTelGeneratesTelInput()
+    {
+        $html = $this->form->tel('phone');
+
+        $this->assertStringContainsString('type="tel"', $html);
+    }
+
+    public function testUrlGeneratesUrlInput()
+    {
+        $html = $this->form->url('website');
+
+        $this->assertStringContainsString('type="url"', $html);
+    }
+
+    public function testDateGeneratesDateInput()
+    {
+        $html = $this->form->date('birthdate');
+
+        $this->assertStringContainsString('type="date"', $html);
+    }
+
+    public function testSearchGeneratesSearchInput()
+    {
+        $html = $this->form->search('query');
+
+        $this->assertStringContainsString('type="search"', $html);
+    }
+
+    public function testColorGeneratesColorInput()
+    {
+        $html = $this->form->color('theme');
+
+        $this->assertStringContainsString('type="color"', $html);
+    }
+
+    // ============================
+    // submit() / button()
+    // ============================
+
+    public function testSubmitGeneratesInput()
+    {
+        $html = $this->form->submit('Save');
+
+        $this->assertEquals('<input type="submit" value="Save">', $html);
+    }
+
+    public function testSubmitWithAttributes()
+    {
+        $html = $this->form->submit('Save', ['class' => 'btn', 'disabled' => true]);
+
+        $this->assertStringContainsString('class="btn"', $html);
+        $this->assertStringContainsString('disabled', $html);
+    }
+
+    public function testButtonGeneratesButtonElement()
+    {
+        $html = $this->form->button('Click Me');
+
+        $this->assertEquals('<button>Click Me</button>', $html);
+    }
+
+    public function testButtonWithAttributes()
+    {
+        $html = $this->form->button('Submit', ['type' => 'submit', 'class' => 'btn']);
+
+        $this->assertStringContainsString('<button', $html);
+        $this->assertStringContainsString('type="submit"', $html);
+        $this->assertStringContainsString('class="btn"', $html);
+        $this->assertStringContainsString('>Submit</button>', $html);
+    }
+
+    // ============================
+    // checkboxes() / radios()
+    // ============================
+
+    public function testCheckboxesGeneratesMultiple()
+    {
+        $html = $this->form->checkboxes('interests[]', ['coding' => 'Coding', 'music' => 'Music']);
+
+        $this->assertStringContainsString('name="interests[]"', $html);
+        $this->assertStringContainsString('value="coding"', $html);
+        $this->assertStringContainsString('value="music"', $html);
+        $this->assertStringContainsString('Coding', $html);
+        $this->assertStringContainsString('Music', $html);
+    }
+
+    public function testRadiosGeneratesMultiple()
+    {
+        $html = $this->form->radios('gender', ['male' => 'Male', 'female' => 'Female']);
+
+        $this->assertStringContainsString('name="gender"', $html);
+        $this->assertStringContainsString('value="male"', $html);
+        $this->assertStringContainsString('value="female"', $html);
+        $this->assertStringContainsString('Male', $html);
+        $this->assertStringContainsString('Female', $html);
+    }
+
+    // ============================
+    // datalist()
+    // ============================
+
+    public function testDatalistGeneratesTag()
+    {
+        $html = $this->form->datalist('cities', ['NYC', 'LA', 'Chicago']);
+
+        $this->assertStringContainsString('<datalist id="cities">', $html);
+        $this->assertStringContainsString('<option value="NYC"></option>', $html);
+        $this->assertStringContainsString('<option value="LA"></option>', $html);
+        $this->assertStringContainsString('<option value="Chicago"></option>', $html);
+        $this->assertStringContainsString('</datalist>', $html);
+    }
 }
