@@ -113,7 +113,11 @@ class Form
 
         $checked = false;
         if ($oldValue !== "\0") {
-            $checked = (string) $oldValue === (string) $value;
+            if (is_array($oldValue)) {
+                $checked = in_array((string) $value, $oldValue, true);
+            } else {
+                $checked = (string) $oldValue === (string) $value;
+            }
         } elseif (isset($attrs['checked'])) {
             $checked = (bool) $attrs['checked'];
         }

@@ -35,14 +35,21 @@ class FormTest extends TestCase
         $session->flash('_old_input', [
             'name' => 'John',
             'email' => 'john@example.com',
-            'user' => ['name' => 'Jane'],
+            'user' => ['name' => 'Jane', 'role' => 'editor', 'settings' => ['theme' => 'dark']],
             'agree' => '1',
             'role' => 'admin',
             'gender' => 'female',
+            'newsletter' => '',
+            'interests' => ['coding', 'art'],
+            'region' => 'de',
+            'level' => 'mid',
+            'color' => '#ff0000',
         ]);
         $session->flash('_validation_errors', [
             'name' => 'Name is required.',
             'email' => 'Invalid email.',
+            'user.name' => 'User name is required.',
+            'xss' => '<script>alert(1)</script>',
         ]);
 
         Container::getInstance()->instance('session', $session);
@@ -116,6 +123,15 @@ class FormTest extends TestCase
         $this->assertStringNotContainsString('readonly', $html);
     }
 
+    public function testInputUsesEmptyOldValueOverPassedValue()
+    {
+        // old('newsletter') = '' from setUp, so passed value should be ignored
+        $html = $this->form->input('newsletter', ['value' => 'default']);
+
+        $this->assertStringContainsString('value=""', $html);
+        $this->assertStringNotContainsString('value="default"', $html);
+    }
+
     // ============================
     // textarea()
     // ============================
@@ -157,6 +173,14 @@ class FormTest extends TestCase
 
         $this->assertStringContainsString('rows="5"', $html);
         $this->assertStringContainsString('cols="40"', $html);
+    }
+
+    public function testTextareaUsesEmptyOldValueOverPassedValue()
+    {
+        $html = $this->form->textarea('newsletter', ['value' => 'default']);
+
+        $this->assertStringContainsString('></textarea>', $html);
+        $this->assertStringNotContainsString('>default</textarea>', $html);
     }
 
     // ============================
@@ -213,6 +237,15 @@ class FormTest extends TestCase
         $this->assertStringContainsString('value="&lt;b&gt;"', $html);
     }
 
+    public function testSelectMarksEmptyStringOldValueAsSelected()
+    {
+        // old('newsletter') = ''
+        $html = $this->form->select('newsletter', ['' => 'None', '1' => 'Yes']);
+
+        $this->assertStringContainsString('<option value="" selected>None</option>', $html);
+        $this->assertStringContainsString('<option value="1">Yes</option>', $html);
+    }
+
     // ============================
     // checkbox()
     // ============================
@@ -240,9 +273,26 @@ class FormTest extends TestCase
         $this->assertStringNotContainsString('checked', $html);
     }
 
+    public function testCheckboxUncheckedWhenOldValueIsEmptyString()
+    {
+        $html = $this->form->checkbox('newsletter', 1);
+
+        // old('newsletter') = '', so not checked
+        $this->assertStringNotContainsString('checked', $html);
+    }
+
+    public function testCheckboxIgnoresCheckedAttributeWhenOldDataExists()
+    {
+        // old('agree') = '1', but we pass checked => false
+        $html = $this->form->checkbox('agree', 1, ['checked' => false]);
+
+        // old data wins, should still be checked
+        $this->assertStringContainsString('checked', $html);
+    }
+
     public function testCheckboxCheckedFromAttributeWhenNoOld()
     {
-        $html = $this->form->checkbox('newsletter', 1, ['checked' => true]);
+        $html = $this->form->checkbox('nocheck', 1, ['checked' => true]);
 
         $this->assertStringContainsString('checked', $html);
     }
@@ -274,9 +324,26 @@ class FormTest extends TestCase
 
     public function testRadioCheckedFromAttribute()
     {
-        $html = $this->form->radio('color', 'red', ['checked' => true]);
+        $html = $this->form->radio('theme', 'red', ['checked' => true]);
 
         $this->assertStringContainsString('checked', $html);
+    }
+
+    public function testRadioUncheckedWhenOldValueIsEmptyString()
+    {
+        $html = $this->form->radio('newsletter', 'yes');
+
+        // old('newsletter') = '', so not checked
+        $this->assertStringNotContainsString('checked', $html);
+    }
+
+    public function testRadioIgnoresCheckedAttributeWhenOldDataExists()
+    {
+        // old('gender') = 'female', but we pass checked => true on male
+        $html = $this->form->radio('gender', 'male', ['checked' => true]);
+
+        // old data wins, should NOT be checked
+        $this->assertStringNotContainsString('checked', $html);
     }
 
     // ============================
@@ -379,20 +446,17 @@ class FormTest extends TestCase
 
     public function testErrorConvertsArrayNames()
     {
-        // error() uses nameToDot, but our session has 'user.name' keyed errors
-        // Since we don't have that in our session data, it returns empty
         $html = $this->form->error('user[name]');
 
-        $this->assertEquals('', $html);
+        $this->assertEquals('User name is required.', $html);
     }
 
     public function testErrorEscapesMessage()
     {
-        // We don't have XSS in our session errors, but we can verify the method escapes
-        // by checking that the existing error is returned as-is (no HTML in it)
-        $html = $this->form->error('email');
+        $html = $this->form->error('xss');
 
-        $this->assertEquals('Invalid email.', $html);
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
     }
 
     // ============================
@@ -488,20 +552,25 @@ class FormTest extends TestCase
 
     public function testCheckboxResolvesArrayNamesWithOldData()
     {
-        // old('agree') = '1', so checkbox with value 1 should be checked
-        $html = $this->form->checkbox('agree', 1);
+        $html = $this->form->checkbox('user[settings][theme]', 'dark');
 
         $this->assertStringContainsString('checked', $html);
     }
 
-    public function testSelectResolvesArrayNamesWithOldData()
+    public function testSelectHandlesMissingArrayOldData()
     {
-        // We didn't set old data for 'user[role]', so this tests that
-        // a non-existent old value doesn't break things
-        $html = $this->form->select('user[role]', ['a' => 'A', 'b' => 'B']);
+        $html = $this->form->select('user[missing]', ['a' => 'A', 'b' => 'B']);
 
         $this->assertStringContainsString('<option value="a">A</option>', $html);
         $this->assertStringNotContainsString('selected', $html);
+    }
+
+    public function testSelectResolvesArrayNamesWithOldData()
+    {
+        $html = $this->form->select('user[role]', ['editor' => 'Editor', 'viewer' => 'Viewer']);
+
+        $this->assertStringContainsString('<option value="editor" selected>Editor</option>', $html);
+        $this->assertStringContainsString('<option value="viewer">Viewer</option>', $html);
     }
 
     // ============================
@@ -510,7 +579,7 @@ class FormTest extends TestCase
 
     public function testSelectRendersOptgroups()
     {
-        $html = $this->form->select('region', [
+        $html = $this->form->select('area', [
             'Europe' => ['uk' => 'UK', 'de' => 'Germany'],
             'Asia' => ['jp' => 'Japan'],
         ]);
@@ -533,6 +602,20 @@ class FormTest extends TestCase
         $this->assertStringNotContainsString('<option value="uk" selected>', $html);
     }
 
+    public function testSelectOptgroupMarksSelectedFromOldData()
+    {
+        // old('region') = 'de'
+        $html = $this->form->select('region', [
+            'Europe' => ['uk' => 'UK', 'de' => 'Germany', 'fr' => 'France'],
+            'Asia' => ['jp' => 'Japan'],
+        ]);
+
+        $this->assertStringContainsString('<option value="de" selected>Germany</option>', $html);
+        $this->assertStringNotContainsString('<option value="uk" selected>', $html);
+        $this->assertStringNotContainsString('<option value="fr" selected>', $html);
+        $this->assertStringNotContainsString('<option value="jp" selected>', $html);
+    }
+
     // ============================
     // select() multiple
     // ============================
@@ -552,6 +635,16 @@ class FormTest extends TestCase
 
         $this->assertStringContainsString('<select name="interests"', $html);
         $this->assertStringContainsString('multiple', $html);
+    }
+
+    public function testSelectMultipleMarksOptionsFromOldData()
+    {
+        // old('interests') = ['coding', 'art']
+        $html = $this->form->selectMultiple('interests', ['coding' => 'Coding', 'art' => 'Art', 'music' => 'Music']);
+
+        $this->assertStringContainsString('<option value="coding" selected>Coding</option>', $html);
+        $this->assertStringContainsString('<option value="art" selected>Art</option>', $html);
+        $this->assertStringContainsString('<option value="music">Music</option>', $html);
     }
 
     // ============================
@@ -616,6 +709,21 @@ class FormTest extends TestCase
         $this->assertStringContainsString('type="color"', $html);
     }
 
+    public function testEmailUsesOldValue()
+    {
+        $html = $this->form->email('email', ['value' => 'override@example.com']);
+
+        $this->assertStringContainsString('value="john@example.com"', $html);
+        $this->assertStringNotContainsString('value="override@example.com"', $html);
+    }
+
+    public function testColorUsesOldValue()
+    {
+        $html = $this->form->color('color');
+
+        $this->assertStringContainsString('value="#ff0000"', $html);
+    }
+
     // ============================
     // submit() / button()
     // ============================
@@ -667,6 +775,14 @@ class FormTest extends TestCase
         $this->assertStringContainsString('Music', $html);
     }
 
+    public function testCheckboxesRespectsOldDataSelection()
+    {
+        // old('interests') = ['coding', 'art']
+        $html = $this->form->checkboxes('interests[]', ['coding' => 'Coding', 'art' => 'Art', 'music' => 'Music']);
+
+        $this->assertEquals(2, substr_count($html, 'checked'));
+    }
+
     public function testRadiosGeneratesMultiple()
     {
         $html = $this->form->radios('gender', ['male' => 'Male', 'female' => 'Female']);
@@ -676,6 +792,15 @@ class FormTest extends TestCase
         $this->assertStringContainsString('value="female"', $html);
         $this->assertStringContainsString('Male', $html);
         $this->assertStringContainsString('Female', $html);
+    }
+
+    public function testRadiosRespectsOldDataSelection()
+    {
+        // old('level') = 'mid'
+        $html = $this->form->radios('level', ['junior' => 'Junior', 'mid' => 'Mid', 'senior' => 'Senior']);
+
+        $this->assertEquals(1, substr_count($html, 'checked'));
+        $this->assertStringContainsString('value="mid" checked', $html);
     }
 
     // ============================
@@ -691,5 +816,29 @@ class FormTest extends TestCase
         $this->assertStringContainsString('<option value="LA"></option>', $html);
         $this->assertStringContainsString('<option value="Chicago"></option>', $html);
         $this->assertStringContainsString('</datalist>', $html);
+    }
+
+    public function testDatalistEscapesOptions()
+    {
+        $html = $this->form->datalist('x', ['<script>']);
+
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    public function testSubmitEscapesValue()
+    {
+        $html = $this->form->submit('<script>');
+
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    public function testButtonEscapesText()
+    {
+        $html = $this->form->button('<script>');
+
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
     }
 }
