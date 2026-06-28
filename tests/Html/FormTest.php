@@ -183,6 +183,13 @@ class FormTest extends TestCase
         $this->assertStringNotContainsString('>default</textarea>', $html);
     }
 
+    public function testTextareaResolvesArrayNamesWithOldData()
+    {
+        $html = $this->form->textarea('user[name]');
+
+        $this->assertStringContainsString('>Jane</textarea>', $html);
+    }
+
     // ============================
     // select()
     // ============================
@@ -444,6 +451,26 @@ class FormTest extends TestCase
         $this->assertEquals('', $html);
     }
 
+    public function testErrorReturnsEmptyWhenMessageIsEmptyString()
+    {
+        $driver = new ArrayDriver;
+        $config = $this->createMock(Config::class);
+        $config->method('get')->willReturnCallback(
+            fn (string $key, $default = null) => match ($key) {
+                'session.name' => 'test_session',
+                default => $default,
+            }
+        );
+        $session = new Session($driver, $config);
+        $session->flash('_validation_errors', ['empty' => '']);
+        Container::getInstance()->instance('session', $session);
+        $form = new Form;
+
+        $html = $form->error('empty');
+
+        $this->assertEquals('', $html);
+    }
+
     public function testErrorConvertsArrayNames()
     {
         $html = $this->form->error('user[name]');
@@ -470,6 +497,14 @@ class FormTest extends TestCase
         $this->assertStringContainsString('<form', $html);
         $this->assertStringContainsString('action="/submit"', $html);
         $this->assertStringContainsString('method="POST"', $html);
+    }
+
+    public function testOpenWithCustomAttributes()
+    {
+        $html = $this->form->open('/submit', 'POST', ['class' => 'form', 'id' => 'myform']);
+
+        $this->assertStringContainsString('class="form"', $html);
+        $this->assertStringContainsString('id="myform"', $html);
     }
 
     public function testOpenIncludesCsrfToken()
@@ -592,6 +627,18 @@ class FormTest extends TestCase
         $this->assertStringContainsString('<option value="jp">Japan</option>', $html);
     }
 
+    public function testSelectRendersMixedFlatAndOptgroupOptions()
+    {
+        $html = $this->form->select('mixed', [
+            'all' => 'All',
+            'Regions' => ['uk' => 'UK', 'de' => 'Germany'],
+        ]);
+
+        $this->assertStringContainsString('<option value="all">All</option>', $html);
+        $this->assertStringContainsString('<optgroup label="Regions">', $html);
+        $this->assertStringContainsString('<option value="uk">UK</option>', $html);
+    }
+
     public function testSelectOptgroupMarksSelectedOption()
     {
         $html = $this->form->select('region', [
@@ -635,6 +682,27 @@ class FormTest extends TestCase
 
         $this->assertStringContainsString('<select name="interests"', $html);
         $this->assertStringContainsString('multiple', $html);
+    }
+
+    public function testSelectMultipleWithEmptyArrayOldValue()
+    {
+        // Flash empty array for 'tags', then create a new form instance
+        $driver = new ArrayDriver;
+        $config = $this->createMock(Config::class);
+        $config->method('get')->willReturnCallback(
+            fn (string $key, $default = null) => match ($key) {
+                'session.name' => 'test_session',
+                default => $default,
+            }
+        );
+        $session = new Session($driver, $config);
+        $session->flash('_old_input', ['tags' => []]);
+        Container::getInstance()->instance('session', $session);
+        $form = new Form;
+
+        $html = $form->selectMultiple('tags', ['a' => 'A', 'b' => 'B']);
+
+        $this->assertStringNotContainsString('selected', $html);
     }
 
     public function testSelectMultipleMarksOptionsFromOldData()
@@ -780,7 +848,16 @@ class FormTest extends TestCase
         // old('interests') = ['coding', 'art']
         $html = $this->form->checkboxes('interests[]', ['coding' => 'Coding', 'art' => 'Art', 'music' => 'Music']);
 
-        $this->assertEquals(2, substr_count($html, 'checked'));
+        $this->assertStringContainsString('value="coding" checked', $html);
+        $this->assertStringContainsString('value="art" checked', $html);
+        $this->assertStringNotContainsString('value="music" checked', $html);
+    }
+
+    public function testCheckboxesNoneCheckedWhenOldValueIsEmptyString()
+    {
+        $html = $this->form->checkboxes('newsletter[]', ['yes' => 'Yes', 'no' => 'No']);
+
+        $this->assertStringNotContainsString('checked', $html);
     }
 
     public function testRadiosGeneratesMultiple()
@@ -801,6 +878,15 @@ class FormTest extends TestCase
 
         $this->assertEquals(1, substr_count($html, 'checked'));
         $this->assertStringContainsString('value="mid" checked', $html);
+        $this->assertStringNotContainsString('value="junior" checked', $html);
+        $this->assertStringNotContainsString('value="senior" checked', $html);
+    }
+
+    public function testRadiosNoneCheckedWhenOldValueIsEmptyString()
+    {
+        $html = $this->form->radios('newsletter', ['yes' => 'Yes', 'no' => 'No']);
+
+        $this->assertStringNotContainsString('checked', $html);
     }
 
     // ============================
