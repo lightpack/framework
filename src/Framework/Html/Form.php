@@ -39,12 +39,11 @@ class Form
         $value = $this->resolveValue($name, $attrs);
         unset($attrs['value']);
 
-        $html = '<input type="' . $this->e($type) . '" name="' . $this->e($name) . '"';
-        $html .= ' value="' . $this->e($value) . '"';
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>';
-
-        return $html;
+        return $this->openTag('input', array_merge([
+            'type' => $type,
+            'name' => $name,
+            'value' => $value,
+        ], $attrs));
     }
 
     /**
@@ -55,11 +54,7 @@ class Form
         $value = $this->resolveValue($name, $attrs);
         unset($attrs['value']);
 
-        $html = '<textarea name="' . $this->e($name) . '"';
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>' . $this->e($value) . '</textarea>';
-
-        return $html;
+        return $this->tag('textarea', $value, array_merge(['name' => $name], $attrs));
     }
 
     /**
@@ -71,21 +66,17 @@ class Form
         $selectedValue = $this->resolveSelected($name, $attrs, $isMultiple);
         unset($attrs['selected']);
 
-        $html = '<select name="' . $this->e($name) . '"';
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>';
+        $html = $this->openTag('select', array_merge(['name' => $name], $attrs));
 
         foreach ($options as $val => $label) {
             if (is_array($label)) {
-                $html .= '<optgroup label="' . $this->e((string) $val) . '">';
+                $html .= $this->openTag('optgroup', ['label' => (string) $val]);
                 foreach ($label as $optVal => $optLabel) {
-                    $sel = $this->isSelected((string) $optVal, $selectedValue, $isMultiple);
-                    $html .= '<option value="' . $this->e((string) $optVal) . '"' . ($sel ? ' selected' : '') . '>' . $this->e((string) $optLabel) . '</option>';
+                    $html .= $this->renderOption((string) $optVal, (string) $optLabel, $selectedValue, $isMultiple);
                 }
                 $html .= '</optgroup>';
             } else {
-                $sel = $this->isSelected((string) $val, $selectedValue, $isMultiple);
-                $html .= '<option value="' . $this->e((string) $val) . '"' . ($sel ? ' selected' : '') . '>' . $this->e((string) $label) . '</option>';
+                $html .= $this->renderOption((string) $val, (string) $label, $selectedValue, $isMultiple);
             }
         }
 
@@ -109,29 +100,16 @@ class Form
      */
     public function checkbox(string $name, mixed $value = 1, array $attrs = []): string
     {
-        $oldValue = old($this->nameToDot($name), "\0", false);
-
-        $checked = false;
-        if ($oldValue !== "\0") {
-            if (is_array($oldValue)) {
-                $checked = in_array((string) $value, $oldValue, true);
-            } else {
-                $checked = (string) $oldValue === (string) $value;
-            }
-        } elseif (isset($attrs['checked'])) {
-            $checked = (bool) $attrs['checked'];
-        }
+        $checked = $this->resolveChecked($name, $value, $attrs);
         unset($attrs['checked']);
 
-        $html = '<input type="hidden" name="' . $this->e($name) . '" value="">';
-        $html .= '<input type="checkbox" name="' . $this->e($name) . '" value="' . $this->e((string) $value) . '"';
+        $hidden = $this->openTag('input', ['type' => 'hidden', 'name' => $name, 'value' => '']);
+        $attrs = array_merge(['type' => 'checkbox', 'name' => $name, 'value' => (string) $value], $attrs);
         if ($checked) {
-            $html .= ' checked';
+            $attrs['checked'] = true;
         }
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>';
 
-        return $html;
+        return $hidden . $this->openTag('input', $attrs);
     }
 
     /**
@@ -139,24 +117,15 @@ class Form
      */
     public function radio(string $name, mixed $value, array $attrs = []): string
     {
-        $oldValue = old($this->nameToDot($name), "\0", false);
-
-        $checked = false;
-        if ($oldValue !== "\0") {
-            $checked = (string) $oldValue === (string) $value;
-        } elseif (isset($attrs['checked'])) {
-            $checked = (bool) $attrs['checked'];
-        }
+        $checked = $this->resolveChecked($name, $value, $attrs);
         unset($attrs['checked']);
 
-        $html = '<input type="radio" name="' . $this->e($name) . '" value="' . $this->e((string) $value) . '"';
+        $attrs = array_merge(['type' => 'radio', 'name' => $name, 'value' => (string) $value], $attrs);
         if ($checked) {
-            $html .= ' checked';
+            $attrs['checked'] = true;
         }
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>';
 
-        return $html;
+        return $this->openTag('input', $attrs);
     }
 
     /**
@@ -166,11 +135,10 @@ class Form
     {
         unset($attrs['value']);
 
-        $html = '<input type="file" name="' . $this->e($name) . '"';
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>';
-
-        return $html;
+        return $this->openTag('input', array_merge([
+            'type' => 'file',
+            'name' => $name,
+        ], $attrs));
     }
 
     /**
@@ -180,16 +148,13 @@ class Form
     {
         unset($attrs['value']);
 
-        $html = '<input type="hidden" name="' . $this->e($name) . '"';
+        $merged = array_merge(['type' => 'hidden', 'name' => $name], $attrs);
 
         if ($value !== null) {
-            $html .= ' value="' . $this->e($value) . '"';
+            $merged['value'] = $value;
         }
 
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>';
-
-        return $html;
+        return $this->openTag('input', $merged);
     }
 
     /**
@@ -197,14 +162,11 @@ class Form
      */
     public function label(string $text, string $for = '', array $attrs = []): string
     {
-        $html = '<label';
         if ($for !== '') {
-            $html .= ' for="' . $this->e($for) . '"';
+            $attrs['for'] = $for;
         }
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>' . $this->e($text) . '</label>';
 
-        return $html;
+        return $this->tag('label', $text, $attrs);
     }
 
     /**
@@ -292,11 +254,10 @@ class Form
      */
     public function submit(string $text, array $attrs = []): string
     {
-        $html = '<input type="submit" value="' . $this->e($text) . '"';
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>';
-
-        return $html;
+        return $this->openTag('input', array_merge([
+            'type' => 'submit',
+            'value' => $text,
+        ], $attrs));
     }
 
     /**
@@ -304,11 +265,7 @@ class Form
      */
     public function button(string $text, array $attrs = []): string
     {
-        $html = '<button';
-        $html .= $this->buildAttrs($attrs);
-        $html .= '>' . $this->e($text) . '</button>';
-
-        return $html;
+        return $this->tag('button', $text, $attrs);
     }
 
     /**
@@ -342,9 +299,9 @@ class Form
      */
     public function datalist(string $id, array $options): string
     {
-        $html = '<datalist id="' . $this->e($id) . '">';
+        $html = $this->openTag('datalist', ['id' => $id]);
         foreach ($options as $value) {
-            $html .= '<option value="' . $this->e((string) $value) . '"></option>';
+            $html .= $this->tag('option', '', ['value' => (string) $value]);
         }
         $html .= '</datalist>';
 
@@ -360,6 +317,28 @@ class Form
         $message = \error($this->nameToDot($name));
 
         return $message !== '' ? $this->e($message) : '';
+    }
+
+    /**
+     * Resolve checked state for checkbox/radio: old() > passed checked attr > false.
+     */
+    protected function resolveChecked(string $name, mixed $value, array &$attrs): bool
+    {
+        $oldValue = old($this->nameToDot($name), "\0", false);
+
+        if ($oldValue !== "\0") {
+            if (is_array($oldValue)) {
+                return in_array((string) $value, $oldValue, true);
+            }
+
+            return (string) $oldValue === (string) $value;
+        }
+
+        if (isset($attrs['checked'])) {
+            return (bool) $attrs['checked'];
+        }
+
+        return false;
     }
 
     /**
@@ -429,6 +408,27 @@ class Form
     }
 
     /**
+     * Build an HTML opening tag with attributes (no closing tag).
+     */
+    protected function openTag(string $name, array $attrs = []): string
+    {
+        return '<' . $name . $this->buildAttrs($attrs) . '>';
+    }
+
+    /**
+     * Render a single <option> tag.
+     */
+    protected function renderOption(string $value, string $label, string|array|null $selected, bool $multiple): string
+    {
+        $attrs = ['value' => $value];
+        if ($this->isSelected($value, $selected, $multiple)) {
+            $attrs['selected'] = true;
+        }
+
+        return $this->tag('option', $label, $attrs);
+    }
+
+    /**
      * Convert bracket notation to dot notation for old()/error().
      */
     protected function nameToDot(string $name): string
@@ -459,6 +459,14 @@ class Form
         }
 
         return $html;
+    }
+
+    /**
+     * Build an HTML tag with content and attributes.
+     */
+    protected function tag(string $name, ?string $content = '', array $attrs = []): string
+    {
+        return '<' . $name . $this->buildAttrs($attrs) . '>' . $this->e((string) $content) . '</' . $name . '>';
     }
 
     /**
