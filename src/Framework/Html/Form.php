@@ -58,7 +58,7 @@ class Form
      */
     public function select(string $name, array $options, array $attrs = []): string
     {
-        $isMultiple = !empty($attrs['multiple']);
+        $isMultiple = ! empty($attrs['multiple']);
         $selectedValue = $this->resolveSelected($name, $attrs, $isMultiple);
         unset($attrs['selected']);
 
@@ -363,6 +363,7 @@ class Form
         if (isset($attrs['value'])) {
             $value = (string) $attrs['value'];
             unset($attrs['value']);
+
             return $value;
         }
 
@@ -459,6 +460,7 @@ class Form
 
             if ($val === true) {
                 $html .= ' ' . _e($key);
+
                 continue;
             }
 
@@ -475,5 +477,4 @@ class Form
     {
         return '<' . $name . $this->buildAttrs($attrs) . '>' . _e((string) $content) . '</' . $name . '>';
     }
-
 }
