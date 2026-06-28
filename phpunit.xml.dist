@@ -52,6 +52,9 @@
         <testsuite name="Filters">
             <directory>./tests/Filters</directory>
         </testsuite>
+        <testsuite name="Html">
+            <directory>./tests/Html</directory>
+        </testsuite>
         <testsuite name="Http">
             <directory>./tests/Http</directory>
             <exclude>./tests/Http/HttpTest.php</exclude>
