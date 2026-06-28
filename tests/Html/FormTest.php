@@ -1006,6 +1006,15 @@ class FormTest extends TestCase
         $this->assertStringNotContainsString('checked', $html);
     }
 
+    public function testCheckboxesWrapsEachPairInLabel()
+    {
+        $html = $this->form->checkboxes('agree[]', ['yes' => 'Yes', 'no' => 'No']);
+
+        $this->assertStringContainsString('<label><input type="checkbox"', $html);
+        $this->assertEquals(2, substr_count($html, '<label>'));
+        $this->assertEquals(2, substr_count($html, '</label>'));
+    }
+
     public function testCheckboxesDoesNotEmitHiddenInputs()
     {
         // checkboxes() is a group method — hidden inputs per item corrupt PHP array POST data
@@ -1035,6 +1044,15 @@ class FormTest extends TestCase
         $this->assertStringContainsString('value="mid" checked', $html);
         $this->assertStringNotContainsString('value="junior" checked', $html);
         $this->assertStringNotContainsString('value="senior" checked', $html);
+    }
+
+    public function testRadiosWrapsEachPairInLabel()
+    {
+        $html = $this->form->radios('gender', ['male' => 'Male', 'female' => 'Female']);
+
+        $this->assertStringContainsString('<label><input type="radio"', $html);
+        $this->assertEquals(2, substr_count($html, '<label>'));
+        $this->assertEquals(2, substr_count($html, '</label>'));
     }
 
     public function testRadiosNoneCheckedWhenOldValueIsEmptyString()

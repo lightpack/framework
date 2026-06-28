@@ -278,7 +278,7 @@ class Form
     {
         $html = '';
         foreach ($options as $value => $label) {
-            $html .= $this->checkboxInput($name, $value, $attrs) . _e((string) $label);
+            $html .= '<label>' . $this->checkboxInput($name, $value, $attrs) . _e((string) $label) . '</label>';
         }
 
         return $html;
@@ -291,7 +291,7 @@ class Form
     {
         $html = '';
         foreach ($options as $value => $label) {
-            $html .= $this->radio($name, $value, $attrs) . _e((string) $label);
+            $html .= '<label>' . $this->radio($name, $value, $attrs) . _e((string) $label) . '</label>';
         }
 
         return $html;
