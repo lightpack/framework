@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.13.0] - 2026-06-28
+
+### Features
+
+- **Form**: Added `Lightpack\Html\Form` class to support easy to produce sticky forms, CSRF tokens, spoofed methods, hidden fields, pre-rendered inputs, and show validation errors.
+
 ## [0.12.0] - 2026-06-27
 
 ### Features
