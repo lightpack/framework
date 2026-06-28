@@ -275,7 +275,7 @@ class Form
     {
         $html = '';
         foreach ($options as $value => $label) {
-            $html .= $this->checkbox($name, $value, $attrs) . $this->e((string) $label);
+            $html .= $this->checkbox($name, $value, $attrs) . _e((string) $label);
         }
 
         return $html;
@@ -288,7 +288,7 @@ class Form
     {
         $html = '';
         foreach ($options as $value => $label) {
-            $html .= $this->radio($name, $value, $attrs) . $this->e((string) $label);
+            $html .= $this->radio($name, $value, $attrs) . _e((string) $label);
         }
 
         return $html;
@@ -316,7 +316,7 @@ class Form
     {
         $message = \error($this->nameToDot($name));
 
-        return $message !== '' ? $this->e($message) : '';
+        return $message !== '' ? _e($message) : '';
     }
 
     /**
@@ -451,11 +451,11 @@ class Form
             }
 
             if ($val === true) {
-                $html .= ' ' . $this->e($key);
+                $html .= ' ' . _e($key);
                 continue;
             }
 
-            $html .= ' ' . $this->e((string) $key) . '="' . $this->e((string) $val) . '"';
+            $html .= ' ' . _e((string) $key) . '="' . _e((string) $val) . '"';
         }
 
         return $html;
@@ -466,14 +466,7 @@ class Form
      */
     protected function tag(string $name, ?string $content = '', array $attrs = []): string
     {
-        return '<' . $name . $this->buildAttrs($attrs) . '>' . $this->e((string) $content) . '</' . $name . '>';
+        return '<' . $name . $this->buildAttrs($attrs) . '>' . _e((string) $content) . '</' . $name . '>';
     }
 
-    /**
-     * Escape HTML entities.
-     */
-    protected function e(string $text): string
-    {
-        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    }
 }
