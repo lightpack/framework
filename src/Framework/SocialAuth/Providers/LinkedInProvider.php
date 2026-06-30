@@ -37,6 +37,7 @@ class LinkedInProvider implements SocialAuthInterface
                 'is_api' => true,
                 'state' => bin2hex(random_bytes(16)),
                 'provider' => 'linkedin',
+                'tenant_id' => $params['tenant_id'] ?? null,
             ]));
         }
 

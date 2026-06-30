@@ -4,6 +4,7 @@ namespace Lightpack\Uploads;
 
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\TenantContext;
 use Lightpack\Exceptions\FileUploadException;
 use Lightpack\Http\Request;
 use Lightpack\Http\UploadedFile;
@@ -158,12 +159,14 @@ class UploadHandler
         // Find all uploads for this model and collection
         $modelType = $model->getTableName();
         $modelId = $model->{$model->getPrimaryKey()};
+        $tenantId = $model->tenant_id ?? TenantContext::get() ?? 0;
 
         // Use the query builder to get uploads
         $uploads = UploadModel::query()
             ->where('model_type', $modelType)
             ->where('model_id', $modelId)
             ->where('collection', $collection)
+            ->where('tenant_id', $tenantId)
             ->all();
 
         if ($uploads->isEmpty()) {
@@ -254,6 +257,7 @@ class UploadHandler
         $upload->extension = $meta['extension'];
         $upload->size = $meta['size'];
         $upload->type = $this->getFileType($meta['mime_type']);
+        $upload->tenant_id = $model->tenant_id ?? TenantContext::get() ?? 0;
         $upload->save();
 
         return $upload;

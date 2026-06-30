@@ -3,6 +3,7 @@
 namespace Lightpack\Uploads;
 
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\TenantContext;
 use Lightpack\Database\Query\Query;
 
 trait UploadTrait
@@ -18,6 +19,9 @@ trait UploadTrait
         if ($collection) {
             $query->where('collection', $collection);
         }
+
+        $tenantId = $this->tenant_id ?? TenantContext::get() ?? 0;
+        $query->where('tenant_id', $tenantId);
 
         return $query;
     }

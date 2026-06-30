@@ -20,6 +20,7 @@ return new class extends Migration
     {
         $this->create('uploads', function(Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('model_type');
             $table->column('model_id')->type('bigint')->attribute('unsigned');
             $table->varchar('collection')->default('default');
@@ -32,9 +33,10 @@ return new class extends Migration
             $table->varchar('visibility', 25)->default('public');
             $table->column('meta')->type('json')->nullable();
             $table->timestamps();
-            
+
             $table->index(['model_type', 'model_id']);
             $table->index('collection');
+            $table->index('tenant_id');
         });
     }
 
