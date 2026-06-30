@@ -2,6 +2,8 @@
 
 namespace Lightpack\Taxonomies;
 
+use Lightpack\Database\Lucid\TenantModel;
+
 /**
  * Trait TaxonomyTrait
  * Provides methods to attach, detach, sync, and query taxonomies for any model.
@@ -10,12 +12,28 @@ namespace Lightpack\Taxonomies;
 trait TaxonomyTrait
 {
     /**
+     * Get the taxonomy model class used by this trait.
+     *
+     * When the parent model extends TenantModel, TenantTaxonomy is used
+     * automatically for tenant-scoped taxonomies. Override this method
+     * if you need a custom taxonomy model.
+     */
+    protected function getTaxonomyModel(): string
+    {
+        if ($this instanceof TenantModel) {
+            return TenantTaxonomy::class;
+        }
+
+        return Taxonomy::class;
+    }
+
+    /**
      * Get all taxonomy nodes attached to this model using polymorphic many-to-many relationship.
      * Returns a PolymorphicPivot instance for Taxonomy models.
      */
     public function taxonomies()
     {
-        return $this->morphToMany(Taxonomy::class, 'taxonomy_morphs', 'taxonomy_id');
+        return $this->morphToMany($this->getTaxonomyModel(), 'taxonomy_morphs', 'taxonomy_id');
     }
 
     public function scopeTaxonomies($builder, array $taxonomyIds = [])

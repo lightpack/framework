@@ -18,6 +18,7 @@ return new class extends Migration
     {
         $this->create('taxonomies', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('name', 150);
             $table->varchar('slug', 150);
             $table->varchar('type', 50); // e.g., 'category', 'tag', 'menu'
@@ -26,7 +27,8 @@ return new class extends Migration
             $table->text('meta')->nullable();
             $table->timestamps();
             $table->foreignKey('parent_id')->references('id')->on('taxonomies')->cascadeOnDelete();
-            $table->unique(['type', 'slug']); // Unique slugs per type
+            $table->unique(['tenant_id', 'type', 'slug']); // Unique slugs per type within a tenant
+            $table->index(['tenant_id', 'name']);
             $table->index('parent_id');
         });
 
