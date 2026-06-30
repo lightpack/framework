@@ -20,6 +20,7 @@ return new class extends Migration
     {
         $this->create('audit_logs', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->column('user_id')->type('bigint')->nullable();
             $table->varchar('action', 50);
             $table->varchar('audit_type', 150);
@@ -32,6 +33,7 @@ return new class extends Migration
             $table->varchar('user_agent', 255)->nullable();
             $table->createdAt();
 
+            $table->index('tenant_id');
             $table->index('user_id');
             $table->index('action');
             $table->index(['audit_type', 'audit_id']);
