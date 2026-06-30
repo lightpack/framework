@@ -15,6 +15,7 @@ trait AuditTrait
     {
         $data['audit_type'] = $this->table;
         $data['audit_id'] = $this->id;
+        $data['tenant_id'] = $data['tenant_id'] ?? $this->tenant_id ?? 0;
 
         return Audit::log($data);
     }

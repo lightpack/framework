@@ -4,6 +4,7 @@ use Lightpack\Audit\Audit;
 use Lightpack\Audit\AuditLog;
 use Lightpack\Audit\AuditTrait;
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\TenantModel;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use PHPUnit\Framework\TestCase;
@@ -41,6 +42,7 @@ class AuditIntegrationTest extends TestCase
         $this->schema = new Schema($this->db);
         $this->schema->createTable('audit_logs', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->column('user_id')->type('bigint')->nullable();
             $table->varchar('action', 50);
             $table->varchar('audit_type', 150);
@@ -61,12 +63,20 @@ class AuditIntegrationTest extends TestCase
             $table->varchar('name', 100)->nullable();
             $table->timestamps();
         });
+        // posts schema for tenant model tests
+        $this->schema->createTable('posts', function (Table $table) {
+            $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
+            $table->varchar('title', 150);
+            $table->timestamps();
+        });
     }
 
     protected function tearDown(): void
     {
         $this->schema->dropTable('audit_logs');
         $this->schema->dropTable('users');
+        $this->schema->dropTable('posts');
         $this->db = null;
     }
 
@@ -326,5 +336,68 @@ class AuditIntegrationTest extends TestCase
         // Test auditType scope
         $postLogs = AuditLog::filters(['auditType' => 'Post'])->all();
         $this->assertCount(2, $postLogs);
+    }
+
+    public function testAuditLogTenantIsolation()
+    {
+        // Insert logs for two tenants
+        Audit::log([
+            'user_id' => 1,
+            'action' => 'create',
+            'audit_type' => 'Post',
+            'audit_id' => 1,
+            'tenant_id' => 5,
+        ]);
+        Audit::log([
+            'user_id' => 2,
+            'action' => 'delete',
+            'audit_type' => 'Post',
+            'audit_id' => 2,
+            'tenant_id' => 7,
+        ]);
+
+        // Scope to tenant 5
+        $logs = AuditLog::filters(['tenant' => 5])->all();
+        $this->assertCount(1, $logs);
+        $this->assertEquals(5, $logs[0]->tenant_id);
+
+        // Scope to tenant 7
+        $logs = AuditLog::filters(['tenant' => 7])->all();
+        $this->assertCount(1, $logs);
+        $this->assertEquals(7, $logs[0]->tenant_id);
+    }
+
+    public function testAuditTraitAutoInjectsTenantId()
+    {
+        // Use a real TenantModel to verify hasAttribute/getAttribute works
+        $post = new class extends TenantModel {
+            use AuditTrait;
+            protected $table = 'posts';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+        };
+        $post->setAttribute('id', 101);
+        $post->setAttribute('tenant_id', 42);
+
+        $log = $post->audit([
+            'action' => 'update',
+            'user_id' => 1,
+            'message' => 'Updated by admin',
+        ]);
+
+        $this->assertEquals(42, $log->tenant_id);
+        $this->assertEquals('posts', $log->audit_type);
+        $this->assertEquals(101, $log->audit_id);
+    }
+
+    public function testAuditLogDefaultsToZeroTenantId()
+    {
+        $log = Audit::log([
+            'action' => 'minimal',
+            'audit_type' => 'Test',
+            'audit_id' => 1,
+        ]);
+
+        $this->assertEquals(0, $log->tenant_id);
     }
 }

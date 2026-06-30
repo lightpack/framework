@@ -136,6 +136,8 @@ class RelationHandler
             ->select("$tableName.*", "$pivotTable.$foreignKey")
             ->join($pivotTable, "$tableName.{$modelInstance->getPrimaryKey()}", "$pivotTable.$associateKey");
 
+        $modelInstance->globalScope($pivot);
+
         if ($this->isEagerLoading) {
             return $pivot;
         }
@@ -265,6 +267,8 @@ class RelationHandler
             ->select("$tableName.*", "$pivotTable.morph_id")
             ->join($pivotTable, "$tableName.{$modelInstance->getPrimaryKey()}", "$pivotTable.$associateKey")
             ->where("$pivotTable.morph_type", '=', $morphType);
+
+        $modelInstance->globalScope($pivot);
 
         if ($this->isEagerLoading) {
             return $pivot;

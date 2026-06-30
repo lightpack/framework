@@ -33,7 +33,7 @@ class TenantModel extends Model
         $tenantId = TenantContext::get();
 
         if ($tenantId !== null) {
-            $query->where($this->tenantColumn, $tenantId);
+            $query->where($this->table . '.' . $this->tenantColumn, $tenantId);
         }
     }
 

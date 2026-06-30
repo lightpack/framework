@@ -432,7 +432,7 @@ class Model implements JsonSerializable
         return $builder;
     }
 
-    protected function globalScope(Query $query)
+    public function globalScope(Query $query)
     {
         // ...
     }

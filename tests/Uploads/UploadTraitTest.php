@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Lightpack\Container\Container;
 use Lightpack\Database\DB;
 use Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\TenantContext;
+use Lightpack\Database\Lucid\TenantModel;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use Lightpack\Exceptions\FileUploadException;
@@ -30,6 +32,14 @@ class TestConfig
 
 // Minimal test model for uploads
 class TestModel extends Model
+{
+    use UploadTrait;
+    protected $table = 'test_models';
+    protected $primaryKey = 'id';
+}
+
+// Tenant-aware test model for uploads
+class TenantTestModel extends TenantModel
 {
     use UploadTrait;
     protected $table = 'test_models';
@@ -68,11 +78,13 @@ final class UploadTraitTest extends TestCase
             $table->column('size')->type('bigint');
             $table->varchar('visibility', 25)->default('public');
             $table->column('meta')->type('json')->nullable();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->timestamps();
         });
         $this->schema->createTable('test_models', function (Table $table) {
             $table->id();
             $table->varchar('name', 100)->nullable();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->timestamps();
         });
 
@@ -348,5 +360,68 @@ final class UploadTraitTest extends TestCase
                 }
             }
         }
+    }
+
+    public function test_uploads_are_scoped_by_tenant_id()
+    {
+        // Create two tenant-scoped models
+        $modelA = new TenantTestModel;
+        $modelA->name = 'tenant-a';
+        $modelA->tenant_id = 5;
+        $modelA->save();
+
+        $modelB = new TenantTestModel;
+        $modelB->name = 'tenant-b';
+        $modelB->tenant_id = 7;
+        $modelB->save();
+
+        // Upload file for tenant A
+        $this->setTestFile('file', 'test.txt', 'text/plain');
+        $uploadA = $modelA->attach('file', ['collection' => 'docs']);
+
+        // Upload file for tenant B
+        $this->setTestFile('file', 'test.txt', 'text/plain');
+        $uploadB = $modelB->attach('file', ['collection' => 'docs']);
+
+        // Verify tenant_id was auto-injected
+        $this->assertEquals(5, $uploadA->tenant_id);
+        $this->assertEquals(7, $uploadB->tenant_id);
+
+        // Set tenant context to A and verify only A's uploads are visible
+        TenantContext::set(5);
+        $aUploads = $modelA->uploads('docs')->all();
+        $this->assertCount(1, $aUploads);
+        $this->assertEquals($uploadA->id, $aUploads[0]->id);
+
+        // Switch to tenant B and verify only B's uploads are visible
+        TenantContext::set(7);
+        $bUploads = $modelB->uploads('docs')->all();
+        $this->assertCount(1, $bUploads);
+        $this->assertEquals($uploadB->id, $bUploads[0]->id);
+
+        // Reset context
+        TenantContext::clear();
+    }
+
+    public function test_tenant_scoped_uploads_do_not_leak_across_tenants()
+    {
+        // Create model with tenant_id
+        $model = new TenantTestModel;
+        $model->name = 'tenant-a';
+        $model->tenant_id = 5;
+        $model->save();
+
+        $this->setTestFile('file', 'test.txt', 'text/plain');
+        $upload = $model->attach('file', ['collection' => 'docs']);
+        $this->assertEquals(5, $upload->tenant_id);
+
+        // Model's own tenant_id takes precedence over TenantContext
+        // uploads() always scopes to the model's tenant (5)
+        TenantContext::set(999);
+        $uploads = $model->uploads('docs')->all();
+        $this->assertCount(1, $uploads);
+        $this->assertEquals($upload->id, $uploads[0]->id);
+
+        TenantContext::clear();
     }
 }

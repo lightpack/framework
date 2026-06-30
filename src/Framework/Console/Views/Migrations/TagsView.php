@@ -18,9 +18,12 @@ return new class extends Migration
     {
         $this->create('tags', function (Table $table) {
             $table->id();
-            $table->varchar('name', 150)->unique();
-            $table->varchar('slug', 150)->unique();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
+            $table->varchar('name', 150);
+            $table->varchar('slug', 150);
             $table->timestamps();
+            $table->unique(['tenant_id', 'slug']);
+            $table->index(['tenant_id', 'name']);
         });
 
         $this->create('tag_morphs', function (Table $table) {

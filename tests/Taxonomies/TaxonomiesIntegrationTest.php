@@ -3,12 +3,15 @@
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Collection;
 use Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\TenantContext;
+use Lightpack\Database\Lucid\TenantModel;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use Lightpack\Logger\Drivers\NullLogger;
 use Lightpack\Logger\Logger;
 use Lightpack\Taxonomies\Taxonomy;
 use Lightpack\Taxonomies\TaxonomyTrait;
+use Lightpack\Taxonomies\TenantTaxonomy;
 use PHPUnit\Framework\TestCase;
 
 class TaxonomiesIntegrationTest extends TestCase
@@ -33,11 +36,13 @@ class TaxonomiesIntegrationTest extends TestCase
         $this->schema = new Schema($this->db);
         $this->schema->createTable('posts', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('title');
             $table->timestamps();
         });
         $this->schema->createTable('taxonomies', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('name');
             $table->varchar('slug');
             $table->varchar('type');
@@ -596,5 +601,212 @@ class TaxonomiesIntegrationTest extends TestCase
 
         // Total should be 2 unique posts (101 and 102), not more due to duplicates
         $this->assertCount(2, $posts, 'Should return 2 unique posts, not duplicates');
+    }
+
+    public function testTaxonomyModelHookReturnsCorrectModel()
+    {
+        $this->seedTaxonomiesData();
+        $post = $this->getPostModelInstance();
+        $post->find(101);
+        $pivot = $post->taxonomies();
+        $this->assertInstanceOf(Taxonomy::class, $pivot->getModel());
+    }
+
+    public function testTaxonomyAutoDetectUsesTenantTaxonomyForTenantModel()
+    {
+        $this->seedTaxonomiesData();
+
+        // TenantModel using TaxonomyTrait WITHOUT overriding getTaxonomyModel()
+        $post = new class extends TenantModel {
+            use TaxonomyTrait;
+            protected $table = 'posts';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+        };
+        $post->find(101);
+
+        // Should auto-detect and use TenantTaxonomy
+        $pivot = $post->taxonomies();
+        $this->assertInstanceOf(TenantTaxonomy::class, $pivot->getModel());
+    }
+
+    public function testTaxonomyTenantIsolation()
+    {
+        // Seed taxonomies for two different tenants
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'tenant_id' => 1, 'name' => 'News', 'slug' => 'news', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'tenant_id' => 1, 'name' => 'Featured', 'slug' => 'featured', 'type' => 'category', 'parent_id' => null],
+            ['id' => 3, 'tenant_id' => 2, 'name' => 'Opinion', 'slug' => 'opinion', 'type' => 'category', 'parent_id' => null],
+        ]);
+
+        // Create a tenant-scoped taxonomy model
+        $appTaxonomy = new class extends TenantModel {
+            protected $table = 'taxonomies';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+        };
+
+        // Tenant 1 should see only 2 taxonomies
+        TenantContext::set(1);
+        $taxonomies = $appTaxonomy::query()->all();
+        $this->assertCount(2, $taxonomies);
+        $taxonomyIds = array_column($taxonomies->toArray(), 'id');
+        $this->assertContains(1, $taxonomyIds);
+        $this->assertContains(2, $taxonomyIds);
+        $this->assertNotContains(3, $taxonomyIds);
+
+        // Tenant 2 should see only 1 taxonomy
+        TenantContext::set(2);
+        $taxonomies = $appTaxonomy::query()->all();
+        $this->assertCount(1, $taxonomies);
+        $this->assertEquals(3, $taxonomies->first()->id);
+
+        // No tenant context should see all 3 taxonomies
+        TenantContext::clear();
+        $taxonomies = $appTaxonomy::query()->all();
+        $this->assertCount(3, $taxonomies);
+    }
+
+    public function testTaxonomyFilterWithTenantIsolation()
+    {
+        // Seed tenant-scoped taxonomies
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'tenant_id' => 1, 'name' => 'News', 'slug' => 'news', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'tenant_id' => 1, 'name' => 'Featured', 'slug' => 'featured', 'type' => 'category', 'parent_id' => null],
+            ['id' => 3, 'tenant_id' => 2, 'name' => 'News', 'slug' => 'news', 'type' => 'category', 'parent_id' => null],
+        ]);
+
+        // Seed posts with tenant_id
+        $this->db->table('posts')->insert([
+            ['id' => 101, 'tenant_id' => 1, 'title' => 'Post 1'],
+            ['id' => 102, 'tenant_id' => 2, 'title' => 'Post 2'],
+        ]);
+
+        // Attach taxonomies to posts
+        $this->db->table('taxonomy_morphs')->insert([
+            ['taxonomy_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['taxonomy_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['taxonomy_id' => 3, 'morph_id' => 102, 'morph_type' => 'posts'],
+        ]);
+
+        // Create a tenant-scoped taxonomy model and capture its class name
+        $appTaxonomy = new class extends TenantModel {
+            protected $table = 'taxonomies';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+        };
+        $taxonomyClassName = get_class($appTaxonomy);
+
+        // Create tenant-scoped post model using the taxonomy class name
+        $postModel = new class ($taxonomyClassName) extends TenantModel {
+            use TaxonomyTrait;
+            protected $table = 'posts';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+            protected static $taxonomyClassName;
+
+            public function __construct($taxonomyClassName = null)
+            {
+                if ($taxonomyClassName !== null) {
+                    self::$taxonomyClassName = $taxonomyClassName;
+                }
+                parent::__construct();
+            }
+
+            protected function getTaxonomyModel(): string
+            {
+                return self::$taxonomyClassName;
+            }
+        };
+
+        // Tenant 1 filters by taxonomies: should only see post 101
+        TenantContext::set(1);
+        $posts = $postModel::filters(['taxonomies' => [1, 2]])->all();
+        $this->assertCount(1, $posts);
+        $this->assertEquals(101, $posts->first()->id);
+
+        // Tenant 2 filters by taxonomy 3: should only see post 102
+        TenantContext::set(2);
+        $posts = $postModel::filters(['taxonomies' => [3]])->all();
+        $this->assertCount(1, $posts);
+        $this->assertEquals(102, $posts->first()->id);
+
+        // Reset
+        TenantContext::clear();
+    }
+
+    public function testCrossTenantTaxonomyPivotDataDoesNotLeak()
+    {
+        // Seed tenant-scoped taxonomies
+        $this->db->table('taxonomies')->insert([
+            ['id' => 1, 'tenant_id' => 1, 'name' => 'Tenant1Tax', 'slug' => 't1-tax', 'type' => 'category', 'parent_id' => null],
+            ['id' => 2, 'tenant_id' => 2, 'name' => 'Tenant2Tax', 'slug' => 't2-tax', 'type' => 'category', 'parent_id' => null],
+        ]);
+
+        // Seed posts with tenant_id
+        $this->db->table('posts')->insert([
+            ['id' => 101, 'tenant_id' => 1, 'title' => 'Post 1'],
+        ]);
+
+        // Normal: tenant 1 post linked to tenant 1 taxonomy
+        $this->db->table('taxonomy_morphs')->insert([
+            ['taxonomy_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
+        ]);
+
+        // CORRUPT: manually link tenant 2's taxonomy to tenant 1's post
+        $this->db->table('taxonomy_morphs')->insert([
+            ['taxonomy_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
+        ]);
+
+        // Create tenant-scoped taxonomy model and capture class name
+        $appTaxonomy = new class extends TenantModel {
+            protected $table = 'taxonomies';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+        };
+        $taxonomyClassName = get_class($appTaxonomy);
+
+        // Load post 101 as tenant 1 using tenant-scoped taxonomy model
+        TenantContext::set(1);
+        $post = new class ($taxonomyClassName) extends TenantModel {
+            use TaxonomyTrait;
+            protected $table = 'posts';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+            protected static $taxonomyClassName;
+
+            public function __construct($taxonomyClassName = null)
+            {
+                if ($taxonomyClassName !== null) {
+                    self::$taxonomyClassName = $taxonomyClassName;
+                }
+                parent::__construct();
+            }
+
+            protected function getTaxonomyModel(): string
+            {
+                return self::$taxonomyClassName;
+            }
+        };
+        $post->find(101);
+        $taxonomies = $post->taxonomies;
+
+        // Even though the pivot table has a cross-tenant link,
+        // we should NOT see tenant 2's taxonomy data
+        $taxonomyNames = array_column($taxonomies->toArray(), 'name');
+        $this->assertContains('Tenant1Tax', $taxonomyNames);
+        $this->assertNotContains(
+            'Tenant2Tax',
+            $taxonomyNames,
+            'Cross-tenant taxonomy data leaked through relationship'
+        );
+
+        TenantContext::clear();
     }
 }

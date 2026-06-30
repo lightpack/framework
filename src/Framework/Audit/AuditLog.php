@@ -60,4 +60,12 @@ class AuditLog extends Model
     {
         return $query->where('audit_type', $type);
     }
+
+    /**
+     * Scope for filtering by tenant_id
+     */
+    public function scopeTenant($query, $tenantId)
+    {
+        return $query->where('tenant_id', $tenantId);
+    }
 }

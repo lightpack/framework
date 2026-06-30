@@ -1,6 +1,8 @@
 <?php
 
 use Lightpack\Container\Container;
+use Lightpack\Database\Lucid\TenantContext;
+use Lightpack\Database\Lucid\TenantModel;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use PHPUnit\Framework\TestCase;
@@ -39,24 +41,29 @@ class RbacTraitIntegrationTest extends TestCase
         $this->schema = new Schema($this->db);
         $this->schema->createTable('users', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('name');
             $table->timestamps();
         });
         $this->schema->createTable('roles', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('name');
             $table->timestamps();
         });
         $this->schema->createTable('permissions', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('name');
             $table->timestamps();
         });
         $this->schema->createTable('user_role', function (Table $table) {
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->column('user_id')->type('bigint')->attribute('unsigned');
             $table->column('role_id')->type('bigint')->attribute('unsigned');
         });
         $this->schema->createTable('role_permission', function (Table $table) {
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->column('role_id')->type('bigint')->attribute('unsigned');
             $table->column('permission_id')->type('bigint')->attribute('unsigned');
         });
@@ -390,5 +397,73 @@ class RbacTraitIntegrationTest extends TestCase
         $user->find(99);
         $this->assertFalse($user->can('edit_post'));
         $this->assertFalse($user->can('delete_post'));
+    }
+
+    public function testRbacTraitAutoDetectsTenantRoleForTenantModel()
+    {
+        // Seed data for tenant 5
+        TenantContext::set(5);
+        $this->db->table('roles')->insert([
+            ['id' => 1, 'tenant_id' => 5, 'name' => 'admin'],
+            ['id' => 2, 'tenant_id' => 5, 'name' => 'editor'],
+        ]);
+        $this->db->table('permissions')->insert([
+            ['id' => 10, 'tenant_id' => 5, 'name' => 'edit_post'],
+        ]);
+        $this->db->table('users')->insert(['id' => 99, 'tenant_id' => 5, 'name' => 'Tenant User']);
+        $this->db->table('user_role')->insert(['tenant_id' => 5, 'user_id' => 99, 'role_id' => 1]);
+        $this->db->table('role_permission')->insert(['tenant_id' => 5, 'role_id' => 1, 'permission_id' => 10]);
+
+        $user = new class extends TenantModel {
+            use \Lightpack\Rbac\RbacTrait;
+            protected $table = 'users';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+        };
+        $user->find(99);
+
+        // Should see tenant 5 roles only
+        $this->assertTrue($user->hasRole('admin'));
+        $this->assertTrue($user->can('edit_post'));
+        TenantContext::clear();
+    }
+
+    public function testRbacCrossTenantRoleIsolation()
+    {
+        // Tenant 5: admin role with edit_post
+        $this->db->table('roles')->insert([
+            ['id' => 1, 'tenant_id' => 5, 'name' => 'admin'],
+        ]);
+        $this->db->table('permissions')->insert([
+            ['id' => 10, 'tenant_id' => 5, 'name' => 'edit_post'],
+        ]);
+        $this->db->table('users')->insert(['id' => 99, 'tenant_id' => 5, 'name' => 'User']);
+        $this->db->table('user_role')->insert(['tenant_id' => 5, 'user_id' => 99, 'role_id' => 1]);
+        $this->db->table('role_permission')->insert(['tenant_id' => 5, 'role_id' => 1, 'permission_id' => 10]);
+
+        // Tenant 7: different admin role with delete_post
+        $this->db->table('roles')->insert([
+            ['id' => 2, 'tenant_id' => 7, 'name' => 'admin'],
+        ]);
+        $this->db->table('permissions')->insert([
+            ['id' => 11, 'tenant_id' => 7, 'name' => 'delete_post'],
+        ]);
+        $this->db->table('user_role')->insert(['tenant_id' => 7, 'user_id' => 99, 'role_id' => 2]);
+        $this->db->table('role_permission')->insert(['tenant_id' => 7, 'role_id' => 2, 'permission_id' => 11]);
+
+        // When scoped to tenant 5, user should NOT see tenant 7's admin role
+        TenantContext::set(5);
+        $user = new class extends TenantModel {
+            use \Lightpack\Rbac\RbacTrait;
+            protected $table = 'users';
+            protected $primaryKey = 'id';
+            public $timestamps = true;
+        };
+        $user->find(99);
+
+        $this->assertTrue($user->hasRole('admin')); // tenant 5's admin
+        $this->assertTrue($user->can('edit_post')); // tenant 5's permission
+        $this->assertFalse($user->can('delete_post')); // tenant 7's permission, should not leak
+        TenantContext::clear();
     }
 }

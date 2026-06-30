@@ -2,8 +2,11 @@
 
 namespace Lightpack\Rbac;
 
+use Lightpack\Database\Lucid\TenantModel;
 use Lightpack\Rbac\Models\Permission;
 use Lightpack\Rbac\Models\Role;
+use Lightpack\Rbac\Models\TenantPermission;
+use Lightpack\Rbac\Models\TenantRole;
 
 trait RbacTrait
 {
@@ -12,9 +15,27 @@ trait RbacTrait
      *
      * @return \Lightpack\Database\Lucid\Pivot
      */
+    protected function getRoleModel(): string
+    {
+        if ($this instanceof TenantModel) {
+            return TenantRole::class;
+        }
+
+        return Role::class;
+    }
+
+    protected function getPermissionModel(): string
+    {
+        if ($this instanceof TenantModel) {
+            return TenantPermission::class;
+        }
+
+        return Permission::class;
+    }
+
     public function roles()
     {
-        return $this->pivot(Role::class, 'user_role', 'user_id', 'role_id');
+        return $this->pivot($this->getRoleModel(), 'user_role', 'user_id', 'role_id');
     }
 
     /**
@@ -48,7 +69,9 @@ trait RbacTrait
      */
     public function permissions()
     {
-        return Permission::query()
+        $permissionModel = $this->getPermissionModel();
+
+        return $permissionModel::query()
             ->join('role_permission', 'permissions.id', 'role_permission.permission_id')
             ->whereIn('role_permission.role_id', $this->roles->ids())
             ->select('permissions.*')

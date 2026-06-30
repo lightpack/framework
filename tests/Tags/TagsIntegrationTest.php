@@ -2,12 +2,15 @@
 
 use Lightpack\Container\Container;
 use Lightpack\Database\Lucid\Model;
+use Lightpack\Database\Lucid\TenantContext;
+use Lightpack\Database\Lucid\TenantModel;
 use Lightpack\Database\Schema\Schema;
 use Lightpack\Database\Schema\Table;
 use Lightpack\Logger\Drivers\NullLogger;
 use Lightpack\Logger\Logger;
 use Lightpack\Tags\Tag;
 use Lightpack\Tags\TagsTrait;
+use Lightpack\Tags\TenantTag;
 use PHPUnit\Framework\TestCase;
 
 class TagsIntegrationTest extends TestCase
@@ -32,11 +35,13 @@ class TagsIntegrationTest extends TestCase
         $this->schema = new Schema($this->db);
         $this->schema->createTable('posts', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('title');
             $table->timestamps();
         });
         $this->schema->createTable('tags', function (Table $table) {
             $table->id();
+            $table->column('tenant_id')->type('bigint')->attribute('unsigned')->default(0);
             $table->varchar('name');
             $table->varchar('slug');
             $table->timestamps();
@@ -269,5 +274,211 @@ class TagsIntegrationTest extends TestCase
         $postIds = $posts->column('id');
         $this->assertEquals(2, count($postIds), 'Should have 2 posts');
         $this->assertEquals(2, count(array_unique($postIds)), 'All post IDs should be unique');
+    }
+
+    public function testTagModelHookReturnsCorrectModel()
+    {
+        $this->seedTagsData();
+        $post = $this->getPostModelInstance();
+        $post->find(101);
+        $pivot = $post->tags();
+        $this->assertInstanceOf(Tag::class, $pivot->getModel());
+    }
+
+    public function testTagAutoDetectUsesTenantTagForTenantModel()
+    {
+        $this->seedTagsData();
+
+        // TenantModel using TagsTrait WITHOUT overriding getTagModel()
+        $post = new class extends TenantModel {
+            use TagsTrait;
+            protected $table = 'posts';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            protected $timestamps = true;
+        };
+        $post->find(101);
+
+        // Should auto-detect and use TenantTag
+        $pivot = $post->tags();
+        $this->assertInstanceOf(TenantTag::class, $pivot->getModel());
+    }
+
+    public function testTagTenantIsolation()
+    {
+        // Seed tags for two different tenants
+        $this->db->table('tags')->insert([
+            ['id' => 1, 'tenant_id' => 1, 'name' => 'News', 'slug' => 'news'],
+            ['id' => 2, 'tenant_id' => 1, 'name' => 'Featured', 'slug' => 'featured'],
+            ['id' => 3, 'tenant_id' => 2, 'name' => 'Opinion', 'slug' => 'opinion'],
+        ]);
+
+        // Create a tenant-scoped tag model
+        $appTag = new class extends TenantModel {
+            protected $table = 'tags';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+        };
+
+        // Tenant 1 should see only 2 tags
+        TenantContext::set(1);
+        $tags = $appTag::query()->all();
+        $this->assertCount(2, $tags);
+        $tagIds = array_column($tags->toArray(), 'id');
+        $this->assertContains(1, $tagIds);
+        $this->assertContains(2, $tagIds);
+        $this->assertNotContains(3, $tagIds);
+
+        // Tenant 2 should see only 1 tag
+        TenantContext::set(2);
+        $tags = $appTag::query()->all();
+        $this->assertCount(1, $tags);
+        $this->assertEquals(3, $tags->first()->id);
+
+        // No tenant context should see all 3 tags (null tenant_id scope = no filter)
+        TenantContext::clear();
+        $tags = $appTag::query()->all();
+        $this->assertCount(3, $tags);
+    }
+
+    public function testTagFilterWithTenantIsolation()
+    {
+        // Seed tenant-scoped tags
+        $this->db->table('tags')->insert([
+            ['id' => 1, 'tenant_id' => 1, 'name' => 'News', 'slug' => 'news'],
+            ['id' => 2, 'tenant_id' => 1, 'name' => 'Featured', 'slug' => 'featured'],
+            ['id' => 3, 'tenant_id' => 2, 'name' => 'News', 'slug' => 'news'],
+        ]);
+
+        // Seed posts with tenant_id
+        $this->db->table('posts')->insert([
+            ['id' => 101, 'tenant_id' => 1, 'title' => 'Post 1'],
+            ['id' => 102, 'tenant_id' => 2, 'title' => 'Post 2'],
+        ]);
+
+        // Tag posts: tenant 1 post has tags 1,2; tenant 2 post has tag 3
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['tag_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
+            ['tag_id' => 3, 'morph_id' => 102, 'morph_type' => 'posts'],
+        ]);
+
+        // Create a tenant-scoped tag model and capture its class name
+        $appTag = new class extends TenantModel {
+            protected $table = 'tags';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+        };
+        $tagClassName = get_class($appTag);
+
+        // Create tenant-scoped post model using the tag class name
+        $postModel = new class ($tagClassName) extends TenantModel {
+            use TagsTrait;
+            protected $table = 'posts';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            protected $timestamps = true;
+            protected static $tagClassName;
+
+            public function __construct($tagClassName = null)
+            {
+                if ($tagClassName !== null) {
+                    self::$tagClassName = $tagClassName;
+                }
+                parent::__construct();
+            }
+
+            protected function getTagModel(): string
+            {
+                return self::$tagClassName;
+            }
+        };
+
+        // Tenant 1 filters by tags: should only see post 101
+        TenantContext::set(1);
+        $posts = $postModel::filters(['tags' => [1, 2]])->all();
+        $this->assertCount(1, $posts);
+        $this->assertEquals(101, $posts->first()->id);
+
+        // Tenant 2 filters by tag 3: should only see post 102
+        TenantContext::set(2);
+        $posts = $postModel::filters(['tags' => [3]])->all();
+        $this->assertCount(1, $posts);
+        $this->assertEquals(102, $posts->first()->id);
+
+        // Reset
+        TenantContext::clear();
+    }
+
+    public function testCrossTenantTagPivotDataDoesNotLeak()
+    {
+        // Seed tenant-scoped tags
+        $this->db->table('tags')->insert([
+            ['id' => 1, 'tenant_id' => 1, 'name' => 'Tenant1Tag', 'slug' => 't1-tag'],
+            ['id' => 2, 'tenant_id' => 2, 'name' => 'Tenant2Tag', 'slug' => 't2-tag'],
+        ]);
+
+        // Seed posts with tenant_id
+        $this->db->table('posts')->insert([
+            ['id' => 101, 'tenant_id' => 1, 'title' => 'Post 1'],
+        ]);
+
+        // Normal: tenant 1 post tagged with tenant 1 tag
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => 1, 'morph_id' => 101, 'morph_type' => 'posts'],
+        ]);
+
+        // CORRUPT: manually link tenant 2's tag to tenant 1's post
+        // This simulates a bug or bypass in application logic
+        $this->db->table('tag_morphs')->insert([
+            ['tag_id' => 2, 'morph_id' => 101, 'morph_type' => 'posts'],
+        ]);
+
+        // Create tenant-scoped tag model and capture class name
+        $appTag = new class extends TenantModel {
+            protected $table = 'tags';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            protected $timestamps = true;
+        };
+        $tagClassName = get_class($appTag);
+
+        // Load post 101 as tenant 1 using tenant-scoped tag model
+        TenantContext::set(1);
+        $post = new class ($tagClassName) extends TenantModel {
+            use TagsTrait;
+            protected $table = 'posts';
+            protected $tenantColumn = 'tenant_id';
+            protected $primaryKey = 'id';
+            protected $timestamps = true;
+            protected static $tagClassName;
+
+            public function __construct($tagClassName = null)
+            {
+                if ($tagClassName !== null) {
+                    self::$tagClassName = $tagClassName;
+                }
+                parent::__construct();
+            }
+
+            protected function getTagModel(): string
+            {
+                return self::$tagClassName;
+            }
+        };
+        $post->find(101);
+        $tags = $post->tags;
+
+        // Even though the pivot table has a cross-tenant link,
+        // we should NOT see tenant 2's tag data
+        $tagNames = array_column($tags->toArray(), 'name');
+        $this->assertContains('Tenant1Tag', $tagNames);
+        $this->assertNotContains(
+            'Tenant2Tag',
+            $tagNames,
+            'Cross-tenant tag data leaked through relationship'
+        );
+
+        TenantContext::clear();
     }
 }

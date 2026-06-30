@@ -2,6 +2,7 @@
 
 namespace Lightpack\SocialAuth\Controllers;
 
+use Lightpack\Database\Lucid\TenantContext;
 use Lightpack\SocialAuth\Models\SocialAccountModel;
 use RuntimeException;
 
@@ -12,13 +13,16 @@ class SocialAuthController
         $providerClass = $this->getProvider($provider);
 
         if (request()->expectsJson()) {
-            $authUrl = $providerClass->stateless()->getAuthUrl();
+            $authUrl = $providerClass->stateless()->getAuthUrl([
+                'tenant_id' => TenantContext::get(),
+            ]);
 
             return response()->json(['auth_url' => $authUrl]);
         }
 
         // Web flow - use session
         session()->set('social_auth_provider', $provider);
+        session()->set('social_auth_tenant', TenantContext::get());
         $authUrl = $providerClass->getAuthUrl();
 
         return redirect()->to($authUrl);
@@ -53,6 +57,10 @@ class SocialAuthController
             throw new RuntimeException('Invalid authentication state', 401);
         }
 
+        if (isset($stateData['tenant_id'])) {
+            TenantContext::set($stateData['tenant_id']);
+        }
+
         $user = $this->authenticateUser($provider);
 
         return response()->json([
@@ -69,10 +77,16 @@ class SocialAuthController
             throw new RuntimeException('Invalid authentication state', 401);
         }
 
+        $tenantId = session()->get('social_auth_tenant');
+        if ($tenantId !== null) {
+            TenantContext::set($tenantId);
+        }
+
         $user = $this->authenticateUser($provider);
 
         auth()->loginAs($user);
         session()->delete('social_auth_provider');
+        session()->delete('social_auth_tenant');
 
         return redirect()->route('dashboard');
     }
@@ -116,10 +130,17 @@ class SocialAuthController
 
     protected function findOrCreateUser(string $provider, array $providerUser)
     {
-        $account = SocialAccountModel::query()
+        $tenantId = TenantContext::get();
+
+        $accountQuery = SocialAccountModel::query()
             ->where('provider', $provider)
-            ->where('provider_id', $providerUser['id'])
-            ->one();
+            ->where('provider_id', $providerUser['id']);
+
+        if ($tenantId !== null) {
+            $accountQuery->where('tenant_id', $tenantId);
+        }
+
+        $account = $accountQuery->one();
 
         if ($account) {
             return $account->user;
@@ -138,6 +159,11 @@ class SocialAuthController
             $user->email = $providerUser['email'];
             $user->password = password()->hash(bin2hex(random_bytes(32)));
             $user->email_verified_at = moment()->now();
+
+            if ($tenantId !== null) {
+                $user->tenant_id = $tenantId;
+            }
+
             $user->save();
         }
 
@@ -146,6 +172,7 @@ class SocialAuthController
         $socialAccount->user_id = $user->id;
         $socialAccount->provider = $provider;
         $socialAccount->provider_id = $providerUser['id'];
+        $socialAccount->tenant_id = $tenantId ?? 0;
         $socialAccount->save();
 
         return $user;

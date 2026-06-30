@@ -147,7 +147,7 @@ class Column
         return $this;
     }
 
-    public function default(bool|string $value): self
+    public function default(int|float|bool|string|null $value): self
     {
         $this->columnDefaultValue = $value;
 
