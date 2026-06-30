@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.14.0] - 2026-06-30
+
+### Features
+
+- **Tenancy-aware modules**: Audit, RBAC, SocialAuth, Tags, Taxonomies, and Uploads now support multi-tenant data isolation out of the box.
+- **Tenant-scoped models**: Added `TenantPermission`, `TenantRole`, `TenantSocialAccountModel`, `TenantTag`, and `TenantTaxonomy` for per-tenant records.
+- **Taxonomies**: Extracted `HierarchicalTrait` to share parent/child tree logic across taxonomy implementations.
+- **ORM**: Enhanced `Model`, `RelationHandler`, and `TenantModel` for improved tenancy-aware queries and eager loading.
+- **Migrations**: Updated console migration views for Audits, RBAC, SocialAuth, Tags, Taxonomies, and Uploads to include tenant columns.
+
 ## [0.13.0] - 2026-06-28
 
 ### Features
