@@ -37,7 +37,7 @@ class SetLocaleFilter implements FilterInterface
         }
 
         // 2. Check session
-        $sessionLocale = session('locale');
+        $sessionLocale = session()->get('locale');
         if ($sessionLocale && in_array($sessionLocale, $supported)) {
             lang()->setLocale($sessionLocale);
             return;
