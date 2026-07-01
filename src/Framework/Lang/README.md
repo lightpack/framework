@@ -61,7 +61,7 @@ $route->group(['filter' => ['locale']], function($route) {
 
 Locale detection order:
 1. URL path segment (`/hi/about` → `hi`)
-2. Session (`session('locale')`)
+2. Session (`session()->get('locale')`)
 3. `Accept-Language` header
 4. Configured default (`config('lang.default')`)
 
@@ -111,3 +111,21 @@ src/Framework/Lang/
 ```
 
 The `Lang` class is registered as `'lang'` in the container and exposed via the `lang()` helper.
+
+## Design Constraints
+
+This is **intentionally** a simple system. Before reaching for more, know what it covers and what it doesn't.
+
+### What it does well
+
+- **Simple pluralization** — English-style `one|many` via pipe syntax
+- **Basic locales** — en, es, fr, de, hi, and any language with singular/plural only
+- **Zero dependencies** — no ICU, no gettext, no JSON catalogs
+- **Small surface area** — learn it in 5 minutes
+
+### What it does NOT do
+
+- **Complex plural forms** — Russian, Arabic, Polish have 3-6 plural forms. This requires ICU MessageFormatter. If you need this, extend `choice()` with a library like `symfony/polyfill-intl-messageformatter`.
+- **JSON or database-backed translations** — PHP arrays are fast, cacheable, and IDE-friendly. If you need real-time translation management via an admin panel, you'll need a heavier library.
+
+This module is for teams that want to ship multilingual pages without learning a DSL or adding a dependency.
