@@ -48,7 +48,7 @@ lang('messages.hello');           // 'Hello' (or 'नमस्ते' in hi)
 lang('messages.welcome', ['name' => 'John']);  // 'Welcome, John!'
 
 // Pluralization
-lang()->choice('messages.items', 5, ['count' => 5]);  // '5 items'
+lang()->choice('messages.items', 5);  // '5 items'
 
 // Nested arrays
 lang('forms.signup.title');   // 'Sign Up' — reads app/Lang/en/forms.php → ['signup']['title']
