@@ -2,8 +2,11 @@
 
 namespace Lightpack\Lang;
 
+use Lightpack\Utils\Arr;
+
 class Lang
 {
+    private Arr $arr;
     protected string $locale;
     protected string $fallback;
     protected string $path;
@@ -11,6 +14,7 @@ class Lang
 
     public function __construct(?string $locale = null, ?string $path = null, ?string $fallback = null)
     {
+        $this->arr = new Arr;
         $this->locale = $locale ?? $this->getConfig('lang.default', 'en');
         $this->fallback = $fallback ?? $this->getConfig('lang.fallback', 'en');
         $this->path = $path ?? $this->getConfig('lang.path', DIR_ROOT . '/app/Lang');
@@ -53,12 +57,12 @@ class Lang
         // Load translations for this file and locale
         $translations = $this->load($file, $locale);
 
-        $value = $translations[$item] ?? null;
+        $value = $this->arr->get($item, $translations);
 
         // Fallback to default locale if not found
         if ($value === null && $locale !== $this->fallback) {
             $fallbackTranslations = $this->load($file, $this->fallback);
-            $value = $fallbackTranslations[$item] ?? null;
+            $value = $this->arr->get($item, $fallbackTranslations);
         }
 
         // Return key as-is if no translation found
@@ -85,11 +89,11 @@ class Lang
 
         [$file, $item] = $this->parseKey($key);
         $translations = $this->load($file, $locale);
-        $value = $translations[$item] ?? null;
+        $value = $this->arr->get($item, $translations);
 
         if ($value === null && $locale !== $this->fallback) {
             $fallbackTranslations = $this->load($file, $this->fallback);
-            $value = $fallbackTranslations[$item] ?? null;
+            $value = $this->arr->get($item, $fallbackTranslations);
         }
 
         if ($value === null) {
@@ -116,13 +120,13 @@ class Lang
         [$file, $item] = $this->parseKey($key);
         $translations = $this->load($file, $locale);
 
-        if (isset($translations[$item])) {
+        if ($this->arr->has($item, $translations)) {
             return true;
         }
 
         if ($locale !== $this->fallback) {
             $fallbackTranslations = $this->load($file, $this->fallback);
-            return isset($fallbackTranslations[$item]);
+            return $this->arr->has($item, $fallbackTranslations);
         }
 
         return false;

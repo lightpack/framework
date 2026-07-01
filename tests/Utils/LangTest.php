@@ -29,6 +29,13 @@ class LangTest extends TestCase
         file_put_contents($this->tempDir . '/en/validation.php', '<?php return [
             "required" => "The :field field is required.",
         ];');
+
+        file_put_contents($this->tempDir . '/en/forms.php', '<?php return [
+            "signup" => [
+                "title" => "Sign Up",
+                "submit" => "Create Account",
+            ],
+        ];');
     }
 
     protected function tearDown(): void
@@ -150,5 +157,26 @@ class LangTest extends TestCase
         $lang = new Lang('en', $this->tempDir);
         // Override to hi locale
         $this->assertEquals('नमस्ते', $lang->get('messages.hello', [], 'hi'));
+    }
+
+    public function testNestedTranslation()
+    {
+        $lang = new Lang('en', $this->tempDir);
+        $this->assertEquals('Sign Up', $lang->get('forms.signup.title'));
+        $this->assertEquals('Create Account', $lang->get('forms.signup.submit'));
+    }
+
+    public function testNestedHas()
+    {
+        $lang = new Lang('en', $this->tempDir);
+        $this->assertTrue($lang->has('forms.signup.title'));
+        $this->assertFalse($lang->has('forms.signup.nonexistent'));
+    }
+
+    public function testNestedFallbackToMissingKey()
+    {
+        $lang = new Lang('en', $this->tempDir);
+        // Missing nested key returns the full dot-notation key
+        $this->assertEquals('forms.signup.nonexistent', $lang->get('forms.signup.nonexistent'));
     }
 }
