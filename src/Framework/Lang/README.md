@@ -117,11 +117,11 @@ return [
 For languages with more than two plural forms, prefix each form with `{index}`:
 
 ```php
-// Arabic — 6 forms
-'articles' => '{0} لا مقالات|{1} مقالة واحدة|{2} مقالتان|{3} :count مقالات|{4} :count مقالة|{5} :count مقالة',
-
 // Russian — 3 forms
 'articles' => '{0} :count статей|{1} :count статья|{2} :count статьи',
+
+// Arabic — 6 forms (dual for exactly 2, unique to Arabic)
+'articles' => '{0} no articles|{1} one article|{2} two articles|{3} :count articles|{4} :count articles-many|{5} :count articles-other',
 ```
 
 Supported locales: `en`, `es`, `fr`, `de`, `it`, `pt`, `hi`, `bn`, `nl`, `sv`, `da`, `fi`, `tr` (singular/plural), `ja`, `ko`, `zh`, `fa` (no grammatical plural), `ru`, `uk`, `cs`, `sk` (3 Slavic forms), `pl` (3 Polish forms), `ro` (3 Romanian forms), `ar` (6 forms).
