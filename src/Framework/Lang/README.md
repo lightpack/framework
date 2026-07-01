@@ -5,7 +5,7 @@ A lightweight, file-based translation system for Lightpack. Zero dependencies �
 ## Features
 
 - **File-based translations** — PHP array files, no external formats
-- **Dot notation** — `messages.hello` maps to `app/Lang/en/messages.php` → `hello`
+- **Dot notation** — `messages.hello` maps to `app/Lang/en/messages.php` → `hello`. Nested arrays work too: `forms.signup.title`
 - **Placeholders** — `:name`, `:count` replacement
 - **Pluralization** — `choice('messages.items', 5)` with pipe syntax
 - **Fallback** — missing keys fall back to default locale automatically
@@ -28,6 +28,14 @@ return [
     'hello'   => 'नमस्ते',
     'welcome' => 'स्वागत है, :name!',
 ];
+
+// app/Lang/en/forms.php
+return [
+    'signup' => [
+        'title'  => 'Sign Up',
+        'submit' => 'Create Account',
+    ],
+];
 ```
 
 ### 2. Use in views or controllers
@@ -41,6 +49,9 @@ lang('messages.welcome', ['name' => 'John']);  // 'Welcome, John!'
 
 // Pluralization
 lang()->choice('messages.items', 5, ['count' => 5]);  // '5 items'
+
+// Nested arrays
+lang('forms.signup.title');   // 'Sign Up' — reads app/Lang/en/forms.php → ['signup']['title']
 ```
 
 ### 3. Auto-detect locale via filter
