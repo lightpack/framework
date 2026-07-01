@@ -134,7 +134,7 @@ class Lang
      *
      * Returns null if not found in either locale.
      */
-    private function resolve(string $file, string $item, string $locale): mixed
+    protected function resolve(string $file, string $item, string $locale): mixed
     {
         $value = $this->arr->get($item, $this->load($file, $locale));
 
@@ -152,7 +152,7 @@ class Lang
      * - Simple: ':count item|:count items' (no {n} prefix)
      * - Indexed: '{0} :count items|{1} :count item' (uses Pluralizer by locale)
      */
-    private function resolvePluralForm(array $parts, int $count, string $locale): string
+    protected function resolvePluralForm(array $parts, int $count, string $locale): string
     {
         $indexed = [];
         $hasIndexed = false;

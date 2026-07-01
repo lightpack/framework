@@ -132,6 +132,36 @@ Add custom rules via `lang()->setLocaleRule()`:
 lang()->setLocaleRule('tlh', fn($count) => $count === 1 ? 1 : 0);
 ```
 
+### Where to register custom rules
+
+Put this in an app-level provider registered in `boot/providers.php`:
+
+```php
+// app/Providers/LangCustomProvider.php
+namespace App\Providers;
+
+use Lightpack\Container\Container;
+use Lightpack\Support\ProviderInterface;
+
+class LangCustomProvider implements ProviderInterface
+{
+    public function register(Container $container)
+    {
+        lang()->setLocaleRule('tlh', fn(int $n) => $n === 1 ? 1 : 0);
+        lang()->setLocaleRule('my',  fn(int $n) => 0); // Burmese — no plural
+    }
+}
+```
+
+```php
+// boot/providers.php
+return [
+    App\Providers\LangCustomProvider::class,
+];
+```
+
+This runs after `LangProvider` has already registered the `lang` instance, so `lang()` is available.
+
 ## Architecture
 
 ```
@@ -153,13 +183,14 @@ This is **intentionally** a simple system. Before reaching for more, know what i
 ### What it does well
 
 - **Simple pluralization** — English-style `one|many` via pipe syntax
-- **Basic locales** — en, es, fr, de, hi, and any language with singular/plural only
+- **Complex plural forms** — Indexed `{0} form|{1} form|{2} form` for Arabic (6 forms), Russian (3), Polish (3), Romanian (3), and more
+- **20+ locales built-in** — covers most common languages with correct plural rules
+- **Extensible** — add any locale rule via `lang()->setLocaleRule()`
 - **Zero dependencies** — no ICU, no gettext, no JSON catalogs
 - **Small surface area** — learn it in 5 minutes
 
 ### What it does NOT do
 
-- **Complex plural forms** — Supported via indexed pipe syntax (`{0} form|{1} form`). No ICU dependency. Add more locales via `Pluralizer::setRule()`.
 - **JSON or database-backed translations** — PHP arrays are fast, cacheable, and IDE-friendly. If you need real-time translation management via an admin panel, you'll need a heavier library.
 
 This module is for teams that want to ship multilingual pages without learning a DSL or adding a dependency.

@@ -88,8 +88,10 @@ class Pluralizer
 
     /**
      * Languages with no grammatical plural (always form 0).
+     *
+     * The $count parameter is intentionally unused — kept for a uniform callable signature.
      */
-    private static function zero(): int
+    private static function zero(int $count): int
     {
         return 0;
     }
