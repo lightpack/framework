@@ -192,6 +192,7 @@ final class App
             \Lightpack\Settings\SettingsProvider::class,
             \Lightpack\Secrets\SecretsProvider::class,
             \Lightpack\Mail\MailProvider::class,
+            \Lightpack\Lang\LangProvider::class,
         ];
     }
 

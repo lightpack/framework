@@ -667,6 +667,24 @@ if (! function_exists('once')) {
     }
 }
 
+if (! function_exists('lang')) {
+    /**
+     * Returns the lang object or a translated string.
+     *
+     * @return \Lightpack\Lang\Lang|string
+     */
+    function lang(?string $key = null, array $replace = [], ?string $locale = null)
+    {
+        $lang = app('lang');
+
+        if ($key === null) {
+            return $lang;
+        }
+
+        return $lang->get($key, $replace, $locale);
+    }
+}
+
 if (! function_exists('optional')) {
     /**
      * Safely access properties/methods on a potentially null value.
