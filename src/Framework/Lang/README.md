@@ -101,7 +101,7 @@ return [
 
 ## Pluralization Syntax
 
-Use pipe `|` in your translation strings:
+### Simple (English-style singular/plural)
 
 ```php
 'items' => ':count item|:count items',
@@ -110,12 +110,33 @@ Use pipe `|` in your translation strings:
 - `choice('items', 1)` → `1 item`
 - `choice('items', 5)` → `5 items`
 
+### Indexed (Arabic, Russian, Polish, etc.)
+
+For languages with more than two plural forms, prefix each form with `{index}`:
+
+```php
+// Arabic — 6 forms
+'articles' => '{0} لا مقالات|{1} مقالة واحدة|{2} مقالتان|{3} :count مقالات|{4} :count مقالة|{5} :count مقالة',
+
+// Russian — 3 forms
+'articles' => '{0} :count статей|{1} :count статья|{2} :count статьи',
+```
+
+Supported locales: `en`, `es`, `fr`, `de`, `hi`, `ru`, `uk`, `pl`, `cs`, `sk`, `ar`, `ja`, `zh`, `ko`.
+
+Add custom rules via `Pluralizer::setRule()`:
+
+```php
+lang()->pluralizer->setRule('tlh', fn($count) => $count === 1 ? 1 : 0);
+```
+
 ## Architecture
 
 ```
 src/Framework/Lang/
 ├── Lang.php             # Core translation class
 ├── LangProvider.php     # Service provider (container binding)
+├── Pluralizer.php       # Plural form resolver (no ICU dependency)
 ├── SetLocaleFilter.php  # Locale auto-detection filter
 ├── LangView.php         # Console config template
 └── README.md            # This file
@@ -136,7 +157,7 @@ This is **intentionally** a simple system. Before reaching for more, know what i
 
 ### What it does NOT do
 
-- **Complex plural forms** — Russian, Arabic, Polish have 3-6 plural forms. This requires ICU MessageFormatter. If you need this, extend `choice()` with a library like `symfony/polyfill-intl-messageformatter`.
+- **Complex plural forms** — Supported via indexed pipe syntax (`{0} form|{1} form`). No ICU dependency. Add more locales via `Pluralizer::setRule()`.
 - **JSON or database-backed translations** — PHP arrays are fast, cacheable, and IDE-friendly. If you need real-time translation management via an admin panel, you'll need a heavier library.
 
 This module is for teams that want to ship multilingual pages without learning a DSL or adding a dependency.

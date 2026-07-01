@@ -14,6 +14,8 @@ class LangTest extends TestCase
         $this->tempDir = sys_get_temp_dir() . '/lightpack-lang-test-' . uniqid();
         @mkdir($this->tempDir . '/en', 0777, true);
         @mkdir($this->tempDir . '/hi', 0777, true);
+        @mkdir($this->tempDir . '/ar', 0777, true);
+        @mkdir($this->tempDir . '/ru', 0777, true);
 
         file_put_contents($this->tempDir . '/en/messages.php', '<?php return [
             "hello" => "Hello",
@@ -35,6 +37,14 @@ class LangTest extends TestCase
                 "title" => "Sign Up",
                 "submit" => "Create Account",
             ],
+        ];');
+
+        file_put_contents($this->tempDir . '/ar/messages.php', '<?php return [
+            "articles" => "{0} لا مقالات|{1} مقالة واحدة|{2} مقالتان|{3} :count مقالات|{4} :count مقالة|{5} :count مقالة",
+        ];');
+
+        file_put_contents($this->tempDir . '/ru/messages.php', '<?php return [
+            "articles" => "{0} :count статей|{1} :count статья|{2} :count статьи",
         ];');
     }
 
@@ -178,5 +188,35 @@ class LangTest extends TestCase
         $lang = new Lang('en', $this->tempDir);
         // Missing nested key returns the full dot-notation key
         $this->assertEquals('forms.signup.nonexistent', $lang->get('forms.signup.nonexistent'));
+    }
+
+    public function testArabicIndexedPlural()
+    {
+        $lang = new Lang('ar', $this->tempDir);
+        $this->assertEquals('لا مقالات', $lang->choice('messages.articles', 0, ['count' => 0]));
+        $this->assertEquals('مقالة واحدة', $lang->choice('messages.articles', 1, ['count' => 1]));
+        $this->assertEquals('مقالتان', $lang->choice('messages.articles', 2, ['count' => 2]));
+        $this->assertEquals('5 مقالات', $lang->choice('messages.articles', 5, ['count' => 5]));
+        $this->assertEquals('15 مقالة', $lang->choice('messages.articles', 15, ['count' => 15]));
+        $this->assertEquals('100 مقالة', $lang->choice('messages.articles', 100, ['count' => 100]));
+    }
+
+    public function testRussianIndexedPlural()
+    {
+        $lang = new Lang('ru', $this->tempDir);
+        $this->assertEquals('0 статей', $lang->choice('messages.articles', 0, ['count' => 0]));
+        $this->assertEquals('1 статья', $lang->choice('messages.articles', 1, ['count' => 1]));
+        $this->assertEquals('2 статьи', $lang->choice('messages.articles', 2, ['count' => 2]));
+        $this->assertEquals('5 статей', $lang->choice('messages.articles', 5, ['count' => 5]));
+        $this->assertEquals('21 статья', $lang->choice('messages.articles', 21, ['count' => 21]));
+        $this->assertEquals('25 статей', $lang->choice('messages.articles', 25, ['count' => 25]));
+    }
+
+    public function testSimplePluralStillWorks()
+    {
+        // Non-indexed format should still use simple singular/plural logic
+        $lang = new Lang('en', $this->tempDir);
+        $this->assertEquals('1 item', $lang->choice('messages.items', 1, ['count' => 1]));
+        $this->assertEquals('5 items', $lang->choice('messages.items', 5, ['count' => 5]));
     }
 }

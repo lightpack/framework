@@ -7,6 +7,7 @@ use Lightpack\Utils\Arr;
 class Lang
 {
     private Arr $arr;
+    private Pluralizer $pluralizer;
     protected string $locale;
     protected string $fallback;
     protected string $path;
@@ -15,6 +16,7 @@ class Lang
     public function __construct(?string $locale = null, ?string $path = null, ?string $fallback = null)
     {
         $this->arr = new Arr;
+        $this->pluralizer = new Pluralizer;
         $this->locale = $locale ?? $this->getConfig('lang.default', 'en');
         $this->fallback = $fallback ?? $this->getConfig('lang.fallback', 'en');
         $this->path = $path ?? $this->getConfig('lang.path', DIR_ROOT . '/app/Lang');
@@ -104,11 +106,42 @@ class Lang
 
         // Handle pipe syntax for pluralization
         if (is_string($value) && str_contains($value, '|')) {
-            $parts = explode('|', $value);
-            $value = $count === 1 ? trim($parts[0]) : trim($parts[1] ?? $parts[0]);
+            $parts = array_map('trim', explode('|', $value));
+            $value = $this->resolvePluralForm($parts, $count, $locale);
         }
 
         return $this->replacePlaceholders($value, $replace);
+    }
+
+    /**
+     * Resolve which plural form to use from pipe-separated parts.
+     *
+     * Supports two formats:
+     * - Simple: ':count item|:count items' (no {n} prefix, falls back to singular/plural)
+     * - Indexed: '{0} :count items|{1} :count item' (uses Pluralizer by locale)
+     */
+    private function resolvePluralForm(array $parts, int $count, string $locale): string
+    {
+        $indexed = [];
+        $hasIndexed = false;
+        $simple = [];
+
+        foreach ($parts as $i => $part) {
+            if (preg_match('/^\{(\d+)\}\s*/', $part, $matches)) {
+                $indexed[(int) $matches[1]] = preg_replace('/^\{\d+\}\s*/', '', $part);
+                $hasIndexed = true;
+            } else {
+                $simple[$i] = $part;
+            }
+        }
+
+        if ($hasIndexed) {
+            $form = $this->pluralizer->form($count, $locale);
+            return $indexed[$form] ?? end($indexed);
+        }
+
+        // Simple singular/plural fallback
+        return $count === 1 ? ($simple[0] ?? '') : ($simple[1] ?? $simple[0] ?? '');
     }
 
     /**
