@@ -26,20 +26,21 @@ class SetLocaleFilter implements FilterInterface
 {
     public function before(Request $request, array $params = [])
     {
+        $lang = lang();
         $supported = config('lang.supported', ['en']);
         $default = config('lang.default', 'en');
 
         // 1. Check URL path segment (e.g. /hi/about)
         $segment = $request->segments(0);
         if ($segment && in_array($segment, $supported)) {
-            lang()->setLocale($segment);
+            $lang->setLocale($segment);
             return;
         }
 
         // 2. Check session
         $sessionLocale = session()->get('locale');
         if ($sessionLocale && in_array($sessionLocale, $supported)) {
-            lang()->setLocale($sessionLocale);
+            $lang->setLocale($sessionLocale);
             return;
         }
 
@@ -48,13 +49,13 @@ class SetLocaleFilter implements FilterInterface
         if ($header) {
             $locale = $this->parseAcceptLanguage($header, $supported);
             if ($locale) {
-                lang()->setLocale($locale);
+                $lang->setLocale($locale);
                 return;
             }
         }
 
         // 4. Fall back to default
-        lang()->setLocale($default);
+        $lang->setLocale($default);
     }
 
     public function after(Request $request, Response $response, array $params = []): Response

@@ -6,8 +6,8 @@ use Lightpack\Utils\Arr;
 
 class Lang
 {
-    private Arr $arr;
-    private Pluralizer $pluralizer;
+    protected Arr $arr;
+    protected Pluralizer $pluralizer;
     protected string $locale;
     protected string $fallback;
     protected string $path;
@@ -39,6 +39,16 @@ class Lang
     }
 
     /**
+     * Register a custom plural rule for a locale.
+     *
+     * The callable receives an int $count and must return the form index (int).
+     */
+    public function setLocaleRule(string $locale, callable $rule): void
+    {
+        $this->pluralizer->setRule($locale, $rule);
+    }
+
+    /**
      * Get a translation by key.
      *
      * Supports dot notation: 'messages.hello'
@@ -53,22 +63,11 @@ class Lang
     {
         $locale = $locale ?? $this->locale;
 
-        // Parse file.key notation
         [$file, $item] = $this->parseKey($key);
 
-        // Load translations for this file and locale
-        $translations = $this->load($file, $locale);
+        $value = $this->resolve($file, $item, $locale);
 
-        $value = $this->arr->get($item, $translations);
-
-        // Fallback to default locale if not found
-        if ($value === null && $locale !== $this->fallback) {
-            $fallbackTranslations = $this->load($file, $this->fallback);
-            $value = $this->arr->get($item, $fallbackTranslations);
-        }
-
-        // Return key as-is if no translation found
-        if ($value === null) {
+        if (!is_string($value)) {
             return $key;
         }
 
@@ -78,70 +77,35 @@ class Lang
     /**
      * Get a translation with pluralization support.
      *
-     * Uses pipe syntax: '{count} item|{count} items'
+     * Simple format:  ':count item|:count items'
+     * Indexed format: '{0} :count items|{1} :count item'
      *
      * @param string $key Translation key
      * @param int $count The count to determine plural form
      * @param array $replace Placeholder replacements (count is auto-injected)
+     * @param string|null $locale Optional locale override
      * @return string
      */
-    public function choice(string $key, int $count, array $replace = []): string
+    public function choice(string $key, int $count, array $replace = [], ?string $locale = null): string
     {
-        $locale = $this->locale;
+        $locale = $locale ?? $this->locale;
 
         [$file, $item] = $this->parseKey($key);
-        $translations = $this->load($file, $locale);
-        $value = $this->arr->get($item, $translations);
 
-        if ($value === null && $locale !== $this->fallback) {
-            $fallbackTranslations = $this->load($file, $this->fallback);
-            $value = $this->arr->get($item, $fallbackTranslations);
-        }
+        $value = $this->resolve($file, $item, $locale);
 
-        if ($value === null) {
+        if (!is_string($value)) {
             return $key;
         }
 
         $replace['count'] = $count;
 
-        // Handle pipe syntax for pluralization
-        if (is_string($value) && str_contains($value, '|')) {
+        if (str_contains($value, '|')) {
             $parts = array_map('trim', explode('|', $value));
             $value = $this->resolvePluralForm($parts, $count, $locale);
         }
 
         return $this->replacePlaceholders($value, $replace);
-    }
-
-    /**
-     * Resolve which plural form to use from pipe-separated parts.
-     *
-     * Supports two formats:
-     * - Simple: ':count item|:count items' (no {n} prefix, falls back to singular/plural)
-     * - Indexed: '{0} :count items|{1} :count item' (uses Pluralizer by locale)
-     */
-    private function resolvePluralForm(array $parts, int $count, string $locale): string
-    {
-        $indexed = [];
-        $hasIndexed = false;
-        $simple = [];
-
-        foreach ($parts as $i => $part) {
-            if (preg_match('/^\{(\d+)\}\s*/', $part, $matches)) {
-                $indexed[(int) $matches[1]] = preg_replace('/^\{\d+\}\s*/', '', $part);
-                $hasIndexed = true;
-            } else {
-                $simple[$i] = $part;
-            }
-        }
-
-        if ($hasIndexed) {
-            $form = $this->pluralizer->form($count, $locale);
-            return $indexed[$form] ?? end($indexed);
-        }
-
-        // Simple singular/plural fallback
-        return $count === 1 ? ($simple[0] ?? '') : ($simple[1] ?? $simple[0] ?? '');
     }
 
     /**
@@ -163,6 +127,52 @@ class Lang
         }
 
         return false;
+    }
+
+    /**
+     * Resolve a translation value with automatic fallback to the fallback locale.
+     *
+     * Returns null if not found in either locale.
+     */
+    private function resolve(string $file, string $item, string $locale): mixed
+    {
+        $value = $this->arr->get($item, $this->load($file, $locale));
+
+        if ($value === null && $locale !== $this->fallback) {
+            $value = $this->arr->get($item, $this->load($file, $this->fallback));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Resolve which plural form to use from pipe-separated parts.
+     *
+     * Supports two formats:
+     * - Simple: ':count item|:count items' (no {n} prefix)
+     * - Indexed: '{0} :count items|{1} :count item' (uses Pluralizer by locale)
+     */
+    private function resolvePluralForm(array $parts, int $count, string $locale): string
+    {
+        $indexed = [];
+        $hasIndexed = false;
+        $simple = [];
+
+        foreach ($parts as $i => $part) {
+            if (preg_match('/^\{(\d+)\}\s*/', $part, $matches)) {
+                $indexed[(int) $matches[1]] = substr($part, strlen($matches[0]));
+                $hasIndexed = true;
+            } else {
+                $simple[$i] = $part;
+            }
+        }
+
+        if ($hasIndexed) {
+            $form = $this->pluralizer->form($count, $locale);
+            return $indexed[$form] ?? end($indexed);
+        }
+
+        return $count === 1 ? ($simple[0] ?? '') : ($simple[1] ?? $simple[0] ?? '');
     }
 
     /**
@@ -189,7 +199,6 @@ class Lang
         $segments = explode('.', $key, 2);
 
         if (count($segments) === 1) {
-            // If no dot, use 'messages' as default file
             return ['messages', $segments[0]];
         }
 

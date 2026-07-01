@@ -82,7 +82,7 @@ Locale detection order:
 // config/lang.php
 return [
     'default'    => get_env('APP_LOCALE', 'en'),
-    'fallback'   => 'en',
+    'fallback'   => get_env('APP_FALLBACK_LOCALE', 'en'),
     'supported'  => ['en', 'hi', 'es'],
     'path'       => DIR_ROOT . '/app/Lang',
 ];
@@ -95,9 +95,11 @@ return [
 | `lang('key')` | Get translation string |
 | `lang('key', ['name' => 'John'])` | Get with placeholder replacement |
 | `lang()->choice('key', 5)` | Pluralized translation |
+| `lang()->choice('key', 5, [], 'fr')` | Pluralized with locale override |
 | `lang()->has('key')` | Check if translation exists |
 | `lang()->setLocale('hi')` | Change locale manually |
 | `lang()->getLocale()` | Get current locale |
+| `lang()->setLocaleRule('xx', fn($n) => ...)` | Register custom plural rule |
 
 ## Pluralization Syntax
 
@@ -122,12 +124,12 @@ For languages with more than two plural forms, prefix each form with `{index}`:
 'articles' => '{0} :count статей|{1} :count статья|{2} :count статьи',
 ```
 
-Supported locales: `en`, `es`, `fr`, `de`, `hi`, `ru`, `uk`, `pl`, `cs`, `sk`, `ar`, `ja`, `zh`, `ko`.
+Supported locales: `en`, `es`, `fr`, `de`, `it`, `pt`, `hi`, `bn`, `nl`, `sv`, `da`, `fi`, `tr` (singular/plural), `ja`, `ko`, `zh`, `fa` (no grammatical plural), `ru`, `uk`, `cs`, `sk` (3 Slavic forms), `pl` (3 Polish forms), `ro` (3 Romanian forms), `ar` (6 forms).
 
-Add custom rules via `Pluralizer::setRule()`:
+Add custom rules via `lang()->setLocaleRule()`:
 
 ```php
-lang()->pluralizer->setRule('tlh', fn($count) => $count === 1 ? 1 : 0);
+lang()->setLocaleRule('tlh', fn($count) => $count === 1 ? 1 : 0);
 ```
 
 ## Architecture

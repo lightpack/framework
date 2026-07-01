@@ -219,4 +219,65 @@ class LangTest extends TestCase
         $this->assertEquals('1 item', $lang->choice('messages.items', 1, ['count' => 1]));
         $this->assertEquals('5 items', $lang->choice('messages.items', 5, ['count' => 5]));
     }
+
+    public function testGetReturnsKeyWhenValueIsArray()
+    {
+        // lang('forms.signup') resolves to an array (not a leaf) — should return the key, not blow up
+        $lang = new Lang('en', $this->tempDir);
+        $this->assertEquals('forms.signup', $lang->get('forms.signup'));
+    }
+
+    public function testChoiceReturnsKeyWhenValueIsArray()
+    {
+        // choice() on a non-leaf key should also return the key safely
+        $lang = new Lang('en', $this->tempDir);
+        $this->assertEquals('forms.signup', $lang->choice('forms.signup', 3));
+    }
+
+    public function testChoiceWithLocaleOverride()
+    {
+        // choice() should respect the locale override parameter
+        $lang = new Lang('en', $this->tempDir);
+        // Russian locale override: 1 → form 1 (статья)
+        $this->assertEquals('1 статья', $lang->choice('messages.articles', 1, ['count' => 1], 'ru'));
+        // Russian locale override: 5 → form 0 (статей)
+        $this->assertEquals('5 статей', $lang->choice('messages.articles', 5, ['count' => 5], 'ru'));
+    }
+
+    public function testSetLocaleRule()
+    {
+        // Custom rule: always singular (form 1)
+        $lang = new Lang('en', $this->tempDir);
+        $lang->setLocaleRule('xx', fn(int $n) => 1);
+        // Simple pipe — form index from custom rule will pick form[1] = "items" (plural side)
+        // But our simple format doesn't use indexed forms, so this tests the delegation works
+        $lang->setLocale('xx');
+        // With simple format, custom rules don't affect outcome (no {n} prefix)
+        // Verify setLocaleRule doesn't throw and the lang instance works normally
+        $this->assertEquals('5 items', $lang->choice('messages.items', 5, ['count' => 5]));
+    }
+
+    public function testSetLocaleRuleIndexed()
+    {
+        // Custom rule + indexed format
+        $lang = new Lang('ru', $this->tempDir);
+        // Override Russian to always return form 0 (many)
+        $lang->setLocaleRule('ru', fn(int $n) => 0);
+        $this->assertEquals('1 статей', $lang->choice('messages.articles', 1, ['count' => 1]));
+    }
+
+    public function testRomanianIndexedPlural()
+    {
+        // ro: 1 → one (form 1); 0 and 2-19 → few (form 2); 20+ → other (form 0)
+        @mkdir($this->tempDir . '/ro', 0777, true);
+        file_put_contents($this->tempDir . '/ro/messages.php', '<?php return [
+            "articles" => "{0} :count articole|{1} :count articol|{2} :count articole",
+        ];');
+
+        $lang = new Lang('ro', $this->tempDir);
+        $this->assertEquals('1 articol', $lang->choice('messages.articles', 1, ['count' => 1]));
+        $this->assertEquals('2 articole', $lang->choice('messages.articles', 2, ['count' => 2]));
+        $this->assertEquals('19 articole', $lang->choice('messages.articles', 19, ['count' => 19]));
+        $this->assertEquals('20 articole', $lang->choice('messages.articles', 20, ['count' => 20]));
+    }
 }

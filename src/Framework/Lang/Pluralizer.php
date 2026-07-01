@@ -32,9 +32,16 @@ class Pluralizer
         'it' => [self::class, 'english'],
         'pt' => [self::class, 'english'],
         'hi' => [self::class, 'english'],
-        'ja' => [self::class, 'zero'],   // No grammatical plural
+        'bn' => [self::class, 'english'], // Bengali
+        'nl' => [self::class, 'english'], // Dutch
+        'sv' => [self::class, 'english'], // Swedish
+        'da' => [self::class, 'english'], // Danish
+        'fi' => [self::class, 'english'], // Finnish
+        'tr' => [self::class, 'english'], // Turkish
+        'ja' => [self::class, 'zero'],    // No grammatical plural
         'ko' => [self::class, 'zero'],
         'zh' => [self::class, 'zero'],
+        'fa' => [self::class, 'zero'],    // Persian
 
         // Slavic languages (1, few, many)
         'ru' => [self::class, 'russian'],
@@ -42,6 +49,9 @@ class Pluralizer
         'pl' => [self::class, 'polish'],
         'cs' => [self::class, 'russian'],
         'sk' => [self::class, 'russian'],
+
+        // Romanian (3 forms: one, few, other)
+        'ro' => [self::class, 'romanian'],
 
         // Arabic (6 forms)
         'ar' => [self::class, 'arabic'],
@@ -79,7 +89,7 @@ class Pluralizer
     /**
      * Languages with no grammatical plural (always form 0).
      */
-    private static function zero(int $count): int
+    private static function zero(): int
     {
         return 0;
     }
@@ -128,6 +138,27 @@ class Pluralizer
         }
 
         return 0; // many
+    }
+
+    /**
+     * Romanian:
+     * 1 → form 1 (one)
+     * 0, 2-19, 102-119, etc. → form 2 (few)
+     * 20+, 100, 200, etc. (mod 100 not in 1-19) → form 0 (other)
+     */
+    private static function romanian(int $count): int
+    {
+        if ($count === 1) {
+            return 1; // one
+        }
+
+        $mod100 = $count % 100;
+
+        if ($count === 0 || ($mod100 >= 1 && $mod100 <= 19)) {
+            return 2; // few
+        }
+
+        return 0; // other
     }
 
     /**
