@@ -13,6 +13,7 @@ class NumericRule
     public function __construct()
     {
         $this->message = 'Must be a numeric value';
+        $this->langKey = 'validation.numeric';
     }
 
     public function __invoke($value): bool

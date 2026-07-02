@@ -19,6 +19,8 @@ class RequiredUnlessRule
         private Arr $arr
     ) {
         $this->message = "This field is required unless {$field} is {$value}";
+        $this->langKey = 'validation.required_unless';
+        $this->messageParams = ['field' => $field, 'value' => $value];
     }
 
     public function __invoke($value, array $data = []): bool

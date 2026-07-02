@@ -14,9 +14,15 @@ class AfterRule
         private readonly string $date,
         private readonly ?string $format = null
     ) {
-        $this->message = $format
-            ? "Date must be after {$date} (format: {$format})"
-            : "Date must be after {$date}";
+        if ($format) {
+            $this->message = "Date must be after {$date} (format: {$format})";
+            $this->langKey = 'validation.after_format';
+            $this->messageParams = ['date' => $date, 'format' => $format];
+        } else {
+            $this->message = "Date must be after {$date}";
+            $this->langKey = 'validation.after';
+            $this->messageParams = ['date' => $date];
+        }
     }
 
     public function __invoke($value): bool

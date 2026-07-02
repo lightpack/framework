@@ -13,6 +13,7 @@ class HasLowercaseRule
     public function __construct()
     {
         $this->message = 'Must contain at least one lowercase letter';
+        $this->langKey = 'validation.has_lowercase';
     }
 
     public function __invoke($value): bool

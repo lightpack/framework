@@ -15,6 +15,8 @@ class HasSymbolRule
     public function __construct()
     {
         $this->message = 'Must contain at least one special character (' . self::SPECIAL_CHARS . ')';
+        $this->langKey = 'validation.has_symbol';
+        $this->messageParams = ['chars' => self::SPECIAL_CHARS];
     }
 
     public function __invoke($value): bool

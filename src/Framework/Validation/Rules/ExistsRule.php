@@ -18,7 +18,8 @@ class ExistsRule
         private array $where = []
     ) {
         $this->columns = (array) $columns;
-        $this->message = "The selected value does not exist";
+        $this->message = 'The selected value does not exist';
+        $this->langKey = 'validation.exists';
     }
 
     public function __invoke($value, array $data = []): bool

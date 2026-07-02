@@ -68,6 +68,10 @@ class CreateConfig extends Command
             $this->output->info(" Overwriting existing config at {$targetPath}");
         }
 
+        if (! is_dir(dirname($targetPath))) {
+            mkdir(dirname($targetPath), 0755, true);
+        }
+
         file_put_contents($targetPath, $template);
         $this->output->newline();
         $this->output->success("✓ Config created at {$targetPath}");

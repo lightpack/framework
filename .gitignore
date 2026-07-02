@@ -4,13 +4,18 @@ composer.phar
 composer.lock
 
 # IDE and Editor files
-.idea/
 .vscode/
+.idea/
+.cursor/
+.cursorrules
+.devin/
+.codex/
+.DS_Store
+Thumbs.db
 *.sublime-project
 *.sublime-workspace
 *.swp
 *.swo
-.DS_Store
 
 # PHP development files
 .phpunit.result.cache

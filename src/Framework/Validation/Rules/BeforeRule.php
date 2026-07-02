@@ -14,9 +14,15 @@ class BeforeRule
         private readonly string $date,
         private readonly ?string $format = null
     ) {
-        $this->message = $format
-            ? "Date must be before {$date} (format: {$format})"
-            : "Date must be before {$date}";
+        if ($format) {
+            $this->message = "Date must be before {$date} (format: {$format})";
+            $this->langKey = 'validation.before_format';
+            $this->messageParams = ['date' => $date, 'format' => $format];
+        } else {
+            $this->message = "Date must be before {$date}";
+            $this->langKey = 'validation.before';
+            $this->messageParams = ['date' => $date];
+        }
     }
 
     public function __invoke($value): bool

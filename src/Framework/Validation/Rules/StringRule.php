@@ -13,6 +13,7 @@ class StringRule
     public function __construct()
     {
         $this->message = 'Must be a string value';
+        $this->langKey = 'validation.string';
     }
 
     public function __invoke($value): bool

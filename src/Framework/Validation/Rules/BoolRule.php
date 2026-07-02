@@ -13,6 +13,7 @@ class BoolRule
     public function __construct()
     {
         $this->message = 'Must be a boolean value';
+        $this->langKey = 'validation.bool';
     }
 
     public function __invoke($value): bool

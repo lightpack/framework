@@ -13,6 +13,7 @@ class UrlRule
     public function __construct()
     {
         $this->message = 'Must be a valid URL';
+        $this->langKey = 'validation.url';
     }
 
     public function __invoke($value): bool

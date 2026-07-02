@@ -15,6 +15,8 @@ class MinRule
         private readonly ?string $type = null
     ) {
         $this->message = "Must not be less than {$min}";
+        $this->langKey = 'validation.min';
+        $this->messageParams = ['min' => $min];
     }
 
     public function __invoke($value): bool

@@ -117,6 +117,9 @@
         <testsuite name="Uploads">
             <directory>./tests/Uploads</directory>
         </testsuite>
+        <testsuite name="Lang">
+            <directory>./tests/Lang</directory>
+        </testsuite>
         <testsuite name="Utils">
             <directory>./tests/Utils</directory>
         </testsuite>

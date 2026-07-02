@@ -13,6 +13,8 @@ class RegexRule
     public function __construct(private readonly string $pattern)
     {
         $this->message = "Must match pattern: {$pattern}";
+        $this->langKey = 'validation.regex';
+        $this->messageParams = ['pattern' => $pattern];
     }
 
     public function __invoke($value): bool

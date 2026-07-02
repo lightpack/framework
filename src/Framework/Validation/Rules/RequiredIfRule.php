@@ -19,6 +19,8 @@ class RequiredIfRule
         private readonly Arr $arr
     ) {
         $this->message = "This field is required when {$field} is {$value}";
+        $this->langKey = 'validation.required_if';
+        $this->messageParams = ['field' => $field, 'value' => $value];
     }
 
     public function __invoke($value, array $data = []): bool

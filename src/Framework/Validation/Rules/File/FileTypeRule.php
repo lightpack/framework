@@ -16,6 +16,8 @@ class FileTypeRule
     {
         $this->allowedTypes = (array)$types;
         $this->message = 'File type must be: ' . implode(', ', $this->allowedTypes);
+        $this->langKey = 'validation.file_type';
+        $this->messageParams = ['types' => implode(', ', $this->allowedTypes)];
     }
 
     public function __invoke($value, array $data = []): bool

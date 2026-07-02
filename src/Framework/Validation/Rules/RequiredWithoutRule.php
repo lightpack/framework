@@ -22,6 +22,8 @@ class RequiredWithoutRule
         $this->fields = (array) $fields;
         $fieldList = implode(', ', $this->fields);
         $this->message = "This field is required when {$fieldList} is not present";
+        $this->langKey = 'validation.required_without';
+        $this->messageParams = ['fields' => $fieldList];
     }
 
     public function __invoke($value, array $data = []): bool

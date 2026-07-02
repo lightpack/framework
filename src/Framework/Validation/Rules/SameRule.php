@@ -16,6 +16,8 @@ class SameRule
         private readonly Arr $arr
     ) {
         $this->message = "Must match {$field}";
+        $this->langKey = 'validation.same';
+        $this->messageParams = ['field' => $field];
     }
 
     public function __invoke($value, array $data = []): bool

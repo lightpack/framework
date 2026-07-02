@@ -16,6 +16,8 @@ class DifferentRule
         private readonly Arr $arr
     ) {
         $this->message = "Must be different from {$field}";
+        $this->langKey = 'validation.different';
+        $this->messageParams = ['field' => $field];
     }
 
     public function __invoke($value, array $data = []): bool

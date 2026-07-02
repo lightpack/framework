@@ -13,6 +13,7 @@ class IntRule
     public function __construct()
     {
         $this->message = 'Must be an integer';
+        $this->langKey = 'validation.int';
     }
 
     public function __invoke($value): bool

@@ -13,6 +13,8 @@ class LengthRule
     public function __construct(private readonly int $length)
     {
         $this->message = "Length must be exactly {$length} characters";
+        $this->langKey = 'validation.length';
+        $this->messageParams = ['length' => $length];
     }
 
     public function __invoke($value): bool

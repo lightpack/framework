@@ -13,6 +13,7 @@ class FloatRule
     public function __construct()
     {
         $this->message = 'Must be a floating point number';
+        $this->langKey = 'validation.float';
     }
 
     public function __invoke($value): bool

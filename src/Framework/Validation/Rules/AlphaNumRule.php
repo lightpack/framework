@@ -13,6 +13,7 @@ class AlphaNumRule
     public function __construct()
     {
         $this->message = 'Must contain only letters and numbers';
+        $this->langKey = 'validation.alpha_num';
     }
 
     public function __invoke($value): bool

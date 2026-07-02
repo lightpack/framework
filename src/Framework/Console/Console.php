@@ -54,6 +54,7 @@ use Lightpack\Deploy\Commands\ServerRunCommand;
 use Lightpack\Deploy\Commands\SiteAddCommand;
 use Lightpack\Deploy\Commands\SiteRemoveCommand;
 use Lightpack\Deploy\Commands\SslCommand;
+use Lightpack\Lang\Commands\CreateLangCommand;
 
 class Console
 {
@@ -110,6 +111,7 @@ class Console
         'watch' => WatchCommand::class,
         'jobs:retry' => RetryFailedJobs::class,
         'create:tool' => CreateTool::class,
+        'create:lang' => CreateLangCommand::class,
     ];
 
     public static function register(string $command, Command $handler)

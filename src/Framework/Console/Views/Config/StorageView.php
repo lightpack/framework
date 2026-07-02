@@ -9,10 +9,6 @@ class StorageView
         return <<<'PHP'
 <?php
 
-/**
- * Storage paths.
- */
-
 return [
     'storage' => [
         'driver' => get_env('STORAGE_DRIVER', 'local'), // s3

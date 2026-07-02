@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.0] - 2026-07-02
+
+### Features
+
+- **Lang module**: Support for multiple locales.
+- **`create:lang` command**: New interactive console command to scaffold language files.
+- **Validation stub**: Make it easy to override validation messages for different locales.
+
 ## [0.14.0] - 2026-06-30
 
 ### Features

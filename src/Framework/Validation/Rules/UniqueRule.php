@@ -13,6 +13,7 @@ class UniqueRule
     public function __construct()
     {
         $this->message = 'Values must be unique';
+        $this->langKey = 'validation.unique';
     }
 
     public function __invoke($value): bool
