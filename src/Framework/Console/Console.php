@@ -29,6 +29,7 @@ use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ServeCommand;
 use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\WatchCommand;
+use Lightpack\Lang\Commands\CreateLangCommand;
 use Lightpack\Deploy\Commands\DbBackupCommand;
 use Lightpack\Deploy\Commands\DbCreateCommand;
 use Lightpack\Deploy\Commands\DbDropCommand;
@@ -110,6 +111,7 @@ class Console
         'watch' => WatchCommand::class,
         'jobs:retry' => RetryFailedJobs::class,
         'create:tool' => CreateTool::class,
+        'create:lang' => CreateLangCommand::class,
     ];
 
     public static function register(string $command, Command $handler)
