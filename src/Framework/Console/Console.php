@@ -29,7 +29,6 @@ use Lightpack\Console\Commands\SeedCommand;
 use Lightpack\Console\Commands\ServeCommand;
 use Lightpack\Console\Commands\UnlinkStorage;
 use Lightpack\Console\Commands\WatchCommand;
-use Lightpack\Lang\Commands\CreateLangCommand;
 use Lightpack\Deploy\Commands\DbBackupCommand;
 use Lightpack\Deploy\Commands\DbCreateCommand;
 use Lightpack\Deploy\Commands\DbDropCommand;
@@ -55,6 +54,7 @@ use Lightpack\Deploy\Commands\ServerRunCommand;
 use Lightpack\Deploy\Commands\SiteAddCommand;
 use Lightpack\Deploy\Commands\SiteRemoveCommand;
 use Lightpack\Deploy\Commands\SslCommand;
+use Lightpack\Lang\Commands\CreateLangCommand;
 
 class Console
 {
