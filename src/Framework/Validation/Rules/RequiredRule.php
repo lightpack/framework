@@ -15,6 +15,7 @@ class RequiredRule
     public function __construct()
     {
         $this->message = 'This field is required';
+        $this->langKey = 'validation.required';
     }
 
     public function __invoke($value): bool

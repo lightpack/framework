@@ -17,7 +17,7 @@ class MultipleFileRule
     {
         $this->min = $min;
         $this->max = $max;
-        $this->message = $this->buildMessage();
+        $this->buildMessage();
     }
 
     public function __invoke($value, array $data = []): bool
@@ -43,12 +43,16 @@ class MultipleFileRule
 
         if ($this->min !== null && $count < $this->min) {
             $this->message = "Must upload at least {$this->min} files";
+            $this->langKey = 'validation.multiple_file_min';
+            $this->messageParams = ['min' => $this->min];
 
             return false;
         }
 
         if ($this->max !== null && $count > $this->max) {
             $this->message = "Cannot upload more than {$this->max} files";
+            $this->langKey = 'validation.multiple_file_max';
+            $this->messageParams = ['max' => $this->max];
 
             return false;
         }
@@ -56,20 +60,23 @@ class MultipleFileRule
         return true;
     }
 
-    private function buildMessage(): string
+    private function buildMessage(): void
     {
         if ($this->min !== null && $this->max !== null) {
-            return sprintf('Number of files must be between %d and %d', $this->min, $this->max);
+            $this->message = sprintf('Number of files must be between %d and %d', $this->min, $this->max);
+            $this->langKey = 'validation.multiple_file_between';
+            $this->messageParams = ['min' => $this->min, 'max' => $this->max];
+        } elseif ($this->min !== null) {
+            $this->message = sprintf('At least %d files must be uploaded', $this->min);
+            $this->langKey = 'validation.multiple_file_min';
+            $this->messageParams = ['min' => $this->min];
+        } elseif ($this->max !== null) {
+            $this->message = sprintf('No more than %d files can be uploaded', $this->max);
+            $this->langKey = 'validation.multiple_file_max';
+            $this->messageParams = ['max' => $this->max];
+        } else {
+            $this->message = 'Invalid number of files';
+            $this->langKey = 'validation.multiple_file';
         }
-
-        if ($this->min !== null) {
-            return sprintf('At least %d files must be uploaded', $this->min);
-        }
-
-        if ($this->max !== null) {
-            return sprintf('No more than %d files can be uploaded', $this->max);
-        }
-
-        return 'Invalid number of files';
     }
 }

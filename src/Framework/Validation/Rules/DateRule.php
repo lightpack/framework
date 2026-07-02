@@ -12,9 +12,14 @@ class DateRule
 
     public function __construct(private readonly ?string $format = null)
     {
-        $this->message = $format
-            ? "Must be a valid date in format {$format}"
-            : 'Must be a valid date';
+        if ($format) {
+            $this->message = "Must be a valid date in format {$format}";
+            $this->langKey = 'validation.date_format';
+            $this->messageParams = ['format' => $format];
+        } else {
+            $this->message = 'Must be a valid date';
+            $this->langKey = 'validation.date';
+        }
     }
 
     public function __invoke($value): bool

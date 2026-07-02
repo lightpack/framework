@@ -12,13 +12,17 @@ class IpRule
 
     public function __construct(private ?string $version = null)
     {
-        $this->message = 'Must be a valid IP address';
-
         $this->version = $version ?? '';
+
         if ($this->version === 'v4') {
             $this->message = 'Must be a valid IPv4 address';
+            $this->langKey = 'validation.ip_v4';
         } elseif ($this->version === 'v6') {
             $this->message = 'Must be a valid IPv6 address';
+            $this->langKey = 'validation.ip_v6';
+        } else {
+            $this->message = 'Must be a valid IP address';
+            $this->langKey = 'validation.ip';
         }
     }
 

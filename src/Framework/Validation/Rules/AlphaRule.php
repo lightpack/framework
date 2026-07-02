@@ -13,6 +13,7 @@ class AlphaRule
     public function __construct()
     {
         $this->message = 'Must contain only alphabetic characters';
+        $this->langKey = 'validation.alpha';
     }
 
     public function __invoke($value): bool

@@ -22,6 +22,8 @@ class RequiredWithRule
         $this->fields = (array) $fields;
         $fieldList = implode(', ', $this->fields);
         $this->message = "This field is required when {$fieldList} is present";
+        $this->langKey = 'validation.required_with';
+        $this->messageParams = ['fields' => $fieldList];
     }
 
     public function __invoke($value, array $data = []): bool

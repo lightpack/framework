@@ -23,6 +23,7 @@ class ImageRule
         ], $constraints);
 
         $this->message = 'Invalid image dimensions';
+        $this->langKey = 'validation.image_dimensions';
     }
 
     public function __invoke($value, array $data = []): bool
@@ -59,6 +60,8 @@ class ImageRule
     {
         if (! $this->isImage($path)) {
             $this->message = 'Invalid image file';
+            $this->langKey = 'validation.image';
+            $this->messageParams = [];
 
             return false;
         }
@@ -67,24 +70,32 @@ class ImageRule
 
         if ($this->constraints['min_width'] && $this->dimensions['width'] < $this->constraints['min_width']) {
             $this->message = sprintf('Image width must be at least %d pixels', $this->constraints['min_width']);
+            $this->langKey = 'validation.image_min_width';
+            $this->messageParams = ['min_width' => $this->constraints['min_width']];
 
             return false;
         }
 
         if ($this->constraints['max_width'] && $this->dimensions['width'] > $this->constraints['max_width']) {
             $this->message = sprintf('Image width must not exceed %d pixels', $this->constraints['max_width']);
+            $this->langKey = 'validation.image_max_width';
+            $this->messageParams = ['max_width' => $this->constraints['max_width']];
 
             return false;
         }
 
         if ($this->constraints['min_height'] && $this->dimensions['height'] < $this->constraints['min_height']) {
             $this->message = sprintf('Image height must be at least %d pixels', $this->constraints['min_height']);
+            $this->langKey = 'validation.image_min_height';
+            $this->messageParams = ['min_height' => $this->constraints['min_height']];
 
             return false;
         }
 
         if ($this->constraints['max_height'] && $this->dimensions['height'] > $this->constraints['max_height']) {
             $this->message = sprintf('Image height must not exceed %d pixels', $this->constraints['max_height']);
+            $this->langKey = 'validation.image_max_height';
+            $this->messageParams = ['max_height' => $this->constraints['max_height']];
 
             return false;
         }

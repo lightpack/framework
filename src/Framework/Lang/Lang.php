@@ -17,9 +17,9 @@ class Lang
     {
         $this->arr = new Arr;
         $this->pluralizer = new Pluralizer;
-        $this->locale = $locale ?? $this->getConfig('lang.default', 'en');
-        $this->fallback = $fallback ?? $this->getConfig('lang.fallback', 'en');
-        $this->path = $path ?? $this->getConfig('lang.path', DIR_ROOT . '/app/Lang');
+        $this->locale = $locale ?? $this->getConfig('app.lang.default', 'en');
+        $this->fallback = $fallback ?? $this->getConfig('app.lang.fallback', 'en');
+        $this->path = $path ?? $this->getConfig('app.lang.path', DIR_ROOT . '/lang');
     }
 
     /**
@@ -67,7 +67,7 @@ class Lang
 
         $value = $this->resolve($file, $item, $locale);
 
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $key;
         }
 
@@ -94,7 +94,7 @@ class Lang
 
         $value = $this->resolve($file, $item, $locale);
 
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $key;
         }
 
@@ -123,6 +123,7 @@ class Lang
 
         if ($locale !== $this->fallback) {
             $fallbackTranslations = $this->load($file, $this->fallback);
+
             return $this->arr->has($item, $fallbackTranslations);
         }
 
@@ -169,6 +170,7 @@ class Lang
 
         if ($hasIndexed) {
             $form = $this->pluralizer->form($count, $locale);
+
             return $indexed[$form] ?? end($indexed);
         }
 

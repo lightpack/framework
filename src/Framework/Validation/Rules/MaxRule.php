@@ -15,6 +15,8 @@ class MaxRule
         private readonly ?string $type = null
     ) {
         $this->message = "Must not be greater than {$max}";
+        $this->langKey = 'validation.max';
+        $this->messageParams = ['max' => $max];
     }
 
     public function __invoke($value): bool

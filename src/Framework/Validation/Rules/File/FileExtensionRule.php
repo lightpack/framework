@@ -21,6 +21,8 @@ class FileExtensionRule
     {
         $this->allowedExtensions = array_map('strtolower', (array)$extensions);
         $this->message = 'File extension must be: ' . implode(', ', $this->allowedExtensions);
+        $this->langKey = 'validation.file_extension';
+        $this->messageParams = ['extensions' => implode(', ', $this->allowedExtensions)];
     }
 
     public function __invoke($value, array $data = []): bool

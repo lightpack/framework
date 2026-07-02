@@ -19,7 +19,7 @@ class DbUniqueRule
         private string $idColumn = 'id'
     ) {
         $this->columns = (array) $columns;
-        $this->message = $this->buildMessage();
+        $this->buildMessage();
     }
 
     public function __invoke($value, array $data = []): bool
@@ -41,14 +41,17 @@ class DbUniqueRule
         return $query->count() === 0;
     }
 
-    private function buildMessage(): string
+    private function buildMessage(): void
     {
         if (count($this->columns) === 1) {
-            return "The {$this->columns[0]} has already been taken";
+            $this->message = "The {$this->columns[0]} has already been taken";
+            $this->langKey = 'validation.db_unique';
+            $this->messageParams = ['column' => $this->columns[0]];
+        } else {
+            $fields = implode(', ', $this->columns);
+            $this->message = "The combination of {$fields} has already been taken";
+            $this->langKey = 'validation.db_unique_composite';
+            $this->messageParams = ['fields' => $fields];
         }
-
-        $fields = implode(', ', $this->columns);
-
-        return "The combination of {$fields} has already been taken";
     }
 }

@@ -11,9 +11,9 @@ class LangProvider implements ProviderInterface
     {
         $container->register('lang', function ($container) {
             return new Lang(
-                config('lang.default', 'en'),
-                config('lang.path', DIR_ROOT . '/app/Lang'),
-                config('lang.fallback', 'en')
+                config('app.lang.default', 'en'),
+                config('app.lang.path', DIR_ROOT . '/lang'),
+                config('app.lang.fallback', 'en')
             );
         });
 

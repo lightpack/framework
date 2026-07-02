@@ -13,6 +13,7 @@ class SlugRule
     public function __construct()
     {
         $this->message = 'Must be a valid URL slug';
+        $this->langKey = 'validation.slug';
     }
 
     public function __invoke($value): bool

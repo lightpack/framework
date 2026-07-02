@@ -248,7 +248,7 @@ class LangTest extends TestCase
     {
         // Custom rule: always singular (form 1)
         $lang = new Lang('en', $this->tempDir);
-        $lang->setLocaleRule('xx', fn(int $n) => 1);
+        $lang->setLocaleRule('xx', fn (int $n) => 1);
         // Simple pipe — form index from custom rule will pick form[1] = "items" (plural side)
         // But our simple format doesn't use indexed forms, so this tests the delegation works
         $lang->setLocale('xx');
@@ -262,7 +262,7 @@ class LangTest extends TestCase
         // Custom rule + indexed format
         $lang = new Lang('ru', $this->tempDir);
         // Override Russian to always return form 0 (many)
-        $lang->setLocaleRule('ru', fn(int $n) => 0);
+        $lang->setLocaleRule('ru', fn (int $n) => 0);
         $this->assertEquals('1 статей', $lang->choice('messages.articles', 1, ['count' => 1]));
     }
 

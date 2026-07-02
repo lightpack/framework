@@ -13,6 +13,7 @@ class HasNumberRule
     public function __construct()
     {
         $this->message = 'Must contain at least one numeric digit (0-9)';
+        $this->langKey = 'validation.has_number';
     }
 
     public function __invoke($value): bool

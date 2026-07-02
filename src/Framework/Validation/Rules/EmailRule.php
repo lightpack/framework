@@ -13,6 +13,7 @@ class EmailRule
     public function __construct()
     {
         $this->message = 'Must be a valid email address';
+        $this->langKey = 'validation.email';
     }
 
     public function __invoke($value): bool

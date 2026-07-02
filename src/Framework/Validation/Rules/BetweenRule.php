@@ -15,6 +15,8 @@ class BetweenRule
         private readonly int|float $max
     ) {
         $this->message = "Must be between {$min} and {$max}";
+        $this->langKey = 'validation.between';
+        $this->messageParams = ['min' => $min, 'max' => $max];
     }
 
     public function __invoke($value, array $data = []): bool

@@ -16,6 +16,8 @@ class FileSizeRule
     {
         $this->maxBytes = $this->parseSize($size);
         $this->message = "File size must not exceed {$size}";
+        $this->langKey = 'validation.file_size';
+        $this->messageParams = ['size' => $size];
     }
 
     public function __invoke($value, array $data = []): bool
