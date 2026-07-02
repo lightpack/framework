@@ -108,7 +108,15 @@ Create the equivalent file for every locale you support (`hi`, `fr`, etc.) with 
 
 ### Available keys and placeholders
 
-See `src/Framework/Validation/validation.stub.php` — copy it to `lang/{locale}/validation.php` for a complete, commented list of every key with its default message and placeholders. Override only the keys you need.
+See `src/Framework/Lang/stubs/validation.stub.php` — copy it to `lang/{locale}/validation.php` for a complete, commented list of every key with its default message and placeholders. Override only the keys you need.
+
+Or use the console command:
+
+```bash
+php console create:lang --support=validation
+```
+
+This copies the stub directly into `lang/en/validation.php` (use `--locale=fr` for a different locale, `--force` to overwrite).
 
 > **Note:** `FileRule` (PHP upload error codes) is the only rule that does not use lang keys. Its messages are system-level PHP error descriptions. The message can still be overridden with `setMessage()` directly on the rule object.
 
@@ -192,10 +200,14 @@ This runs after `LangProvider` has already registered the `lang` instance, so `l
 
 ```
 src/Framework/Lang/
-├── Lang.php             # Core translation class
-├── LangProvider.php     # Service provider (container binding)
-├── Pluralizer.php       # Plural form resolver (no ICU dependency)
-└── README.md            # This file
+├── Commands/
+│   └── CreateLangCommand.php  # Console command: create:lang
+├── stubs/
+│   └── validation.stub.php    # Full list of validation keys (copy me)
+├── Lang.php              # Core translation class
+├── LangProvider.php      # Service provider (container binding)
+├── Pluralizer.php        # Plural form resolver (no ICU dependency)
+└── README.md             # This file
 ```
 
 The `Lang` class is registered as `'lang'` in the container and exposed via the `lang()` helper.
