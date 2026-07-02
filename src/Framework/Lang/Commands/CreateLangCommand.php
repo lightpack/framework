@@ -4,11 +4,39 @@ namespace Lightpack\Lang\Commands;
 
 use Lightpack\Console\Command;
 
+/**
+ * Create a language file.
+ *
+ * Usage:
+ *   php console create:lang [name] [--locale=en] [--force]
+ *   php console create:lang --support=validation [--locale=en] [--force]
+ *
+ * Examples:
+ *   php console create:lang                       # prompts for locale and file name
+ *   php console create:lang forms --locale=hi      # creates lang/hi/forms.php
+ *   php console create:lang --support=validation   # copies validation stub to lang/en/validation.php
+ */
 class CreateLangCommand extends Command
 {
     public function run()
     {
-        $locale = $this->args->get('locale', 'en');
+        $locale = $this->args->get('locale');
+
+        if ($locale === null || $locale === '') {
+            $locale = $this->prompt->ask('Enter locale (default: en)');
+            $locale = trim($locale);
+
+            if ($locale === '') {
+                $locale = 'en';
+            }
+        }
+
+        if (! preg_match('/^[a-zA-Z_-]+$/', $locale)) {
+            $this->output->error('Locale can only contain letters, underscores, and hyphens.');
+
+            return self::FAILURE;
+        }
+
         $support = $this->args->get('support');
         $force = $this->args->has('force');
 
