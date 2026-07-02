@@ -1,14 +1,7 @@
 <?php
 
 /**
- * Validation language Keys
- *
- * Copy this file to: lang/{locale}/validation.php
- *
- * Each key below corresponds to a built-in validation rule.
- * Placeholders (prefixed with :) are replaced at runtime.
- * Override only the keys you need — missing keys fall back to
- * the English default hardcoded in each rule.
+ * Validation language Keys.
  */
 
 return [

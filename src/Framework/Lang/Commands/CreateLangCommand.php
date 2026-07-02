@@ -20,6 +20,32 @@ class CreateLangCommand extends Command
 {
     public function run()
     {
+        $force = $this->args->has('force');
+        $support = $this->args->get('support');
+
+        if ($support === '') {
+            $this->showError(
+                'You must provide a value for --support.',
+                null,
+                array_keys(self::getSupportedLangs())
+            );
+
+            return self::FAILURE;
+        }
+
+        if ($support) {
+            $supported = self::getSupportedLangs();
+            if (! isset($supported[$support])) {
+                $this->showError(
+                    "Unknown support lang: '{$support}'.",
+                    null,
+                    array_keys($supported)
+                );
+
+                return self::FAILURE;
+            }
+        }
+
         $locale = $this->args->get('locale');
 
         if ($locale === null || $locale === '') {
@@ -37,10 +63,8 @@ class CreateLangCommand extends Command
             return self::FAILURE;
         }
 
-        $support = $this->args->get('support');
-        $force = $this->args->has('force');
-
         $langDir = DIR_ROOT . '/lang/' . $locale;
+        $displayDir = './lang/' . $locale;
 
         if ($support === 'validation') {
             $sourcePath = __DIR__ . '/../stubs/validation.stub.php';
@@ -67,7 +91,7 @@ class CreateLangCommand extends Command
             $content = file_get_contents($sourcePath);
             file_put_contents($targetPath, $content);
             $this->output->newline();
-            $this->output->success("✓ Validation lang file created at {$targetPath}");
+            $this->output->success("✓ Validation lang file created at {$displayDir}/validation.php");
 
             return self::SUCCESS;
         }
@@ -90,6 +114,7 @@ class CreateLangCommand extends Command
         }
 
         $targetPath = $langDir . '/' . $name . '.php';
+        $displayPath = $displayDir . '/' . $name . '.php';
 
         if (file_exists($targetPath) && ! $force) {
             $this->output->error("File already exists: {$targetPath}");
@@ -106,9 +131,27 @@ class CreateLangCommand extends Command
         $template = $this->getTemplate($name);
         file_put_contents($targetPath, $template);
         $this->output->newline();
-        $this->output->success("✓ Lang file created at {$targetPath}");
+        $this->output->success("✓ Lang file created at {$displayPath}");
 
         return self::SUCCESS;
+    }
+
+    protected function showError(string $error, ?string $tip = null, ?array $supported = null): void
+    {
+        $this->output->newline();
+        $this->output->error($error);
+
+        if ($tip) {
+            $this->output->newline();
+            $this->output->info('[Tip]: ');
+            $this->output->line($tip);
+        }
+
+        if ($supported) {
+            $this->output->newline();
+            $this->output->info('[Supported]: ');
+            $this->output->line(implode(', ', $supported));
+        }
     }
 
     protected function getTemplate(string $name): string
@@ -120,5 +163,16 @@ return [
     //
 ];
 PHP;
+    }
+
+    /**
+     * Returns an array of supported language stubs.
+     * Key: support name, Value: stub file name.
+     */
+    protected static function getSupportedLangs(): array
+    {
+        return [
+            'validation' => 'validation.stub.php',
+        ];
     }
 }
