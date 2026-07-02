@@ -9,12 +9,6 @@ class SessionView
         return <<<'PHP'
 <?php
 
-/**
- * ------------------------------------------------------------
- * Session settings.
- * ------------------------------------------------------------
- */
-
 return [
     'session' => [
         'driver' => get_env('SESSION_DRIVER', 'file'),
