@@ -18,8 +18,6 @@ return [
         'lang' => [
             'default' => get_env('APP_LOCALE', 'en'),
             'fallback' => get_env('APP_FALLBACK_LOCALE', 'en'),
-            'supported' => ['en'],
-            'path' => DIR_ROOT . '/lang',
         ],
     ],
 ];

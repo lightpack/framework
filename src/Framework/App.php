@@ -122,7 +122,7 @@ final class App
 
         $container = Container::getInstance();
         $logger = $container->get('logger');
-        $environment = $container->get('config')->get('app.env');
+        $environment = $container->get('config')->get('app.env') ?? 'development';
         $exceptionRenderer = new ExceptionRenderer($environment);
         $handler = new Handler($logger, $exceptionRenderer);
 
