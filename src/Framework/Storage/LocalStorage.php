@@ -130,6 +130,18 @@ class LocalStorage extends File implements StorageInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function delete(string $path): bool
+    {
+        if (! str_starts_with($path, $this->storageDir)) {
+            $path = $this->storageDir . '/' . ltrim($path, '/');
+        }
+
+        return parent::delete($path);
+    }
+
+    /**
     * @inheritDoc
     */
     public function removeDir(string $directory, bool $delete = true): void

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.1] - 2026-08-19
+
+### Fixed
+
+- `LocalStorage::delete()` now prepends `$storageDir` before delegating to `File::delete()`.
+
 ## [0.18.0] - 2026-08-19
 
 ### Added
